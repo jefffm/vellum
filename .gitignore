@@ -17,3 +17,13 @@ dist-server/
 .beads/*.db
 .beads/*.db-shm
 .beads/*.db-wal
+
+# Test/tool output
+coverage/
+*.tmp
+
+# OS
+.DS_Store
+
+# Pi coding agent sessions
+.pi/

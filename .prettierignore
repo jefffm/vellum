@@ -1,0 +1,7 @@
+node_modules
+dist
+dist-server
+*.svg
+*.pdf
+*.midi
+package-lock.json

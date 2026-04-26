@@ -35,5 +35,8 @@ constraints:
   - "Campanella especially effective due to re-entrant tuning"
   - "French stringing: no true bass below G3 (course 3 open)"
   - "Italian stringing: bass available on courses 4-5 via bourdons"
+range:
+  lowest: "G3"
+  highest: "A5"
 notation: "french-letter"
 

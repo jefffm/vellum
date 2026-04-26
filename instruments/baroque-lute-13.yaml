@@ -31,5 +31,7 @@ constraints:
   - "Campanella encouraged -- let notes ring across courses"
   - "Brise (broken chord) texture is idiomatic, especially in French style"
   - "Right-hand thumb-under technique for bass runs"
+range:
+  lowest: "A1"
+  highest: "C5"
 notation: "french-letter"
-
