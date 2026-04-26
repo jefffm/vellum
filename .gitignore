@@ -1,0 +1,18 @@
+# bv (beads viewer) local config and caches
+.bv/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Beads local database/cache files
+.beads/*.db
+.beads/*.db-shm
+.beads/*.db-wal
