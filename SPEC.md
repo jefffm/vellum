@@ -38,14 +38,18 @@ Browser
 │  ┌──────────────────────────────────────────────────────────┐ │
 │  │  Agent instance (pi-agent-core)                           │ │
 │  │  • Tools array: compile, tabulate, voicings,              │ │
-│  │    check_playability, transpose, diapasons, fretboard     │ │
+│  │    check_playability, transpose, diapasons, fretboard,    │ │
+│  │    analyze, lint, theory                                  │ │
 │  │  • System prompt with instrument profiles                 │ │
 │  │  • LLM calls → streamProxy → server /api/stream           │ │
 │  │                                                            │ │
 │  │  Each tool's execute() calls server REST API:              │ │
 │  │    fetch("/api/compile", { body: lySource })               │ │
-│  │    fetch("/api/instruments/baroque-lute-13")               │ │
+│  │    fetch("/api/analyze", { body: musicxml })               │ │
+│  │    fetch("/api/lint", { body: passage })                   │ │
 │  │    etc.                                                    │ │
+│  │                                                            │ │
+│  │  theory() runs locally via tonal.js (no server call)       │ │
 │  └──────────────────────────────────────────────────────────┘ │
 │                                                               │
 │  pi-web-ui                                                    │
@@ -92,10 +96,40 @@ servoid (NixOS)        │
 │  ├─ POST /api/arrangements    Save arrangement (.ly + metadata)  │
 │  ├─ GET  /api/arrangements/:id  Retrieve arrangement             │
 │  │                                                               │
-│  └─ GET  /api/templates/:name  LilyPond template source          │
+│  ├─ GET  /api/templates/:name  LilyPond template source          │
+│  │                                                               │
+│  ├─ POST /api/analyze         Accepts MusicXML string. Calls     │
+│  │                            music21 (Python subprocess):       │
+│  │                            parse → chordify → key analysis    │
+│  │                            → Roman numerals. Returns:         │
+│  │                            { key, chords[], voices[], time }  │
+│  │                                                               │
+│  ├─ POST /api/lint            Accepts passage (LilyPond or       │
+│  │                            structured note data). Calls       │
+│  │                            music21 voice leading analysis.    │
+│  │                            Returns: { violations[] } with     │
+│  │                            measure/beat locations             │
+│  │                                                               │
+│  ├─ POST /api/chordify        Accepts MusicXML. Returns          │
+│  │                            chord-per-beat reduction via        │
+│  │                            music21 chordify()                 │
+│  │                                                               │
+│  ├─ POST /api/realize         (v2) Figured bass realization      │
+│  │                            via music21 figuredBass.realizer   │
+│  │                                                               │
+│  │  ┌───────────────────────────────────────────────────────┐   │
+│  │  │  Music Theory Engine (Python / music21)                │   │
+│  │  │  Called as subprocess by /api/analyze, /api/lint,      │   │
+│  │  │  /api/chordify, /api/realize                           │   │
+│  │  │  Same deployment pattern as LilyPond — pinned via Nix  │   │
+│  │  └───────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  LilyPond (Nix package, pinned 2.24.x)                          │
 │  └─ Called as subprocess by /api/compile                         │
+│                                                                 │
+│  music21 (Nix package, python3Packages.music21)                  │
+│  └─ Called as subprocess by /api/analyze, /api/lint,             │
+│     /api/chordify, /api/realize                                  │
 │                                                                 │
 │  instruments/*.yaml + *.ily   (served via /api/instruments)      │
 │  templates/*.ly               (served via /api/templates)        │
@@ -110,7 +144,7 @@ servoid (NixOS)        │
 
 **LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
 
-**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check_playability) *could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. For v1, all tools call the server.
+**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check_playability) *could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
 
 **Instrument profiles: dual location.** YAML profiles are served to the browser (for system prompts and tool context). `.ily` include files stay on the server (only LilyPond needs them). Both live in `instruments/` on disk; the server API handles the split.
 
@@ -124,6 +158,9 @@ A general-purpose agent with bash access can technically run LilyPond. But:
 | `bash lilypond foo.ly` → 200 lines of stderr | `compile()` → structured errors: "Bar 8: stretch violation on course 3" |
 | LLM invents fret positions from training data | `tabulate()` returns all valid positions with idiomatic ranking |
 | No verification until compile fails | `check_playability()` catches impossible fingerings before compilation |
+| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js |
+| LLM guesses at chord progressions from SATB score | `analyze()` returns Roman numeral analysis via music21 |
+| No voice leading verification | `lint()` catches parallel fifths, voice crossing, spacing errors |
 | Human reads PDF to check quality | Browser shows live preview, fretboard diagrams, MIDI playback |
 
 The LLM makes **musical decisions**. The tools handle **mechanical correctness**. That's the split that matters.
@@ -150,6 +187,7 @@ Pi-mono provides the agent infrastructure. Vellum provides the domain-specific t
 
 - **pi-web-ui** — `ChatPanel` + `ArtifactsPanel` web components (the entire UI shell)
 - **pi-agent-core** — `Agent` class, `AgentTool<T>` definitions (runs in browser)
+- **tonal.js** — browser-side music theory library for instant lookups (intervals, chord detection, scale membership, Roman numeral parsing). Powers the `theory` tool with zero server round-trip
 - **Vite** — build tool, bundles the browser application
 - **Custom tool renderers** — `registerToolRenderer()` for inline SVG preview, fretboard diagrams, playability reports in the chat stream
 
@@ -157,6 +195,7 @@ Pi-mono provides the agent infrastructure. Vellum provides the domain-specific t
 
 - **Node.js** ≥ 20 + **Express** — API server, static asset serving, LLM proxy
 - **LilyPond** ≥ 2.24 — music engraving subprocess, pinned as a Nix dependency
+- **Python 3** + **music21** — music theory engine subprocess. Handles MusicXML parsing, harmonic analysis (chordify, key detection, Roman numerals), voice leading lint (parallel fifths/octaves, voice crossing, spacing), and figured bass realization (v2). Pinned as a Nix dependency (`python3Packages.music21`)
 - **NixOS** — deployment target (servoid)
 - **Traefik** — reverse proxy with mTLS via step-ca
 - **systemd** — process management
@@ -461,6 +500,141 @@ Renders a visual SVG fretboard diagram showing finger positions.
 
 **Returns to UI:** `{ svg: string }` — rendered SVG diagram, displayed inline via tool renderer and optionally in ArtifactsPanel.
 
+### Three-Layer Tool Architecture
+
+The tools form three layers. Each layer answers a different question:
+
+```
+Layer 3: Musical Judgment (LLM)         — "Does this sound good?"
+         Voice leading, arrangement decisions, idiom, style choices.
+         This is what the LLM is uniquely good at.
+
+Layer 2: Music Theory (analyze, lint, theory)  — "Is this correct music theory?"
+         Harmonic analysis, key detection, Roman numerals, voice leading
+         rules (parallel 5ths/8ves, voice crossing), interval math,
+         chord identification. Deterministic — no LLM needed.
+
+Layer 1: Instrument Mechanics (tabulate, voicings, check_playability, etc.)
+                                         — "Can this be played?"
+         Pitch-to-fret mapping, stretch validation, course conflicts,
+         re-entrant tuning, diapason availability. Instrument-specific.
+```
+
+Without Layer 2, the LLM must do interval arithmetic, chord identification, voice leading rule checks, and harmonic analysis in its head — all operations where it makes errors. The theory layer catches a class of errors the instrument tools (Layer 1) can't see: `check_playability` tells you whether something is physically possible; `lint` tells you whether it has parallel fifths.
+
+### analyze
+
+Parses a score and returns harmonic analysis. Server-side — calls music21 via Python subprocess. This is the critical first step for any conversion workflow (hymnal → guitar, voice+piano → lute, etc.).
+
+**Parameters:**
+```typescript
+const AnalyzeParams = Type.Object({
+  source: Type.String({ description: "MusicXML source as string, or base64-encoded MusicXML file" }),
+  format: Type.Optional(Type.Union([
+    Type.Literal("musicxml"),
+    Type.Literal("lilypond")
+  ], { default: "musicxml" }))
+});
+```
+
+**Server endpoint:** `POST /api/analyze`
+
+**music21 operations:** `converter.parse()` → `score.analyze('key')` → `score.chordify()` → `roman.romanNumeralFromChord()` for each chord → extract part ranges
+
+**Returns to LLM:**
+```
+Key: D major
+Time: 4/4
+Voices: Soprano (D4–D5), Alto (A3–A4), Tenor (D3–D4), Bass (G2–D3)
+Chord progression (Roman numerals):
+  Bar 1: I | V6 | vi | IV
+  Bar 2: ii | V7 | I | I
+  ...
+```
+
+**Returns to UI:** `{ key, timeSignature, voices[], chords[] }` — structured analysis data, potentially rendered as a chord chart.
+
+### lint
+
+Checks a passage for voice leading rule violations. Server-side — calls music21's `voiceLeading.VoiceLeadingQuartet` analysis.
+
+**Parameters:**
+```typescript
+const LintParams = Type.Object({
+  source: Type.String({ description: "LilyPond or MusicXML passage to check" }),
+  format: Type.Optional(Type.Union([
+    Type.Literal("lilypond"),
+    Type.Literal("musicxml")
+  ], { default: "lilypond" })),
+  rules: Type.Optional(Type.Array(Type.Union([
+    Type.Literal("parallel_fifths"),
+    Type.Literal("parallel_octaves"),
+    Type.Literal("voice_crossing"),
+    Type.Literal("spacing"),
+    Type.Literal("direct_octaves"),
+    Type.Literal("unresolved_leading_tone"),
+    Type.Literal("all")
+  ]), { default: ["all"] }))
+});
+```
+
+**Server endpoint:** `POST /api/lint`
+
+**music21 operations:** Parse score → extract voice pairs → `VoiceLeadingQuartet` analysis for parallel motion, voice crossing, spacing; leading tone resolution check
+
+**Returns to LLM:**
+```
+3 violations found:
+  Bar 4, beat 1: Parallel fifths between soprano (A4→B4) and bass (D3→E3)
+  Bar 7, beat 3: Voice crossing — alto (G4) above soprano (F4)
+  Bar 12, beat 1: Unresolved leading tone — C# in tenor moves to A instead of D
+```
+
+**Returns to UI:** `{ violations[] }` with measure/beat locations, voice names, and violation types. Rendered inline as a diagnostic report.
+
+### theory
+
+Browser-side music theory calculations via tonal.js. No server round-trip — instant results for quick lookups during arrangement. This is the lightweight complement to the server-side music21 tools.
+
+**Parameters:**
+```typescript
+const TheoryParams = Type.Object({
+  operation: Type.Union([
+    Type.Literal("interval"),       // distance between two notes
+    Type.Literal("transpose"),      // transpose a pitch by an interval
+    Type.Literal("chord_detect"),   // identify chord from notes
+    Type.Literal("chord_notes"),    // spell out a chord's notes
+    Type.Literal("scale_notes"),    // notes in a scale
+    Type.Literal("scale_chords"),   // diatonic chords in a key
+    Type.Literal("roman_parse"),    // parse Roman numeral → chord in key
+    Type.Literal("enharmonic"),     // enharmonic equivalents
+  ]),
+  args: Type.Record(Type.String(), Type.Any(), {
+    description: "Operation-specific arguments. interval: {from, to}. " +
+      "transpose: {note, interval}. chord_detect: {notes: string[]}. " +
+      "chord_notes: {chord}. scale_notes: {tonic, scale}. " +
+      "scale_chords: {tonic, scale}. roman_parse: {numeral, key}. " +
+      "enharmonic: {note}."
+  })
+});
+```
+
+**Runs in browser** — no `fetch()` call. Uses `@tonaljs/tonal` directly.
+
+**Example operations:**
+```
+theory("interval", { from: "C4", to: "G4" })        → "P5"
+theory("transpose", { note: "F#4", interval: "m3" }) → "A4"
+theory("chord_detect", { notes: ["C", "E", "G"] })   → "C major"
+theory("chord_notes", { chord: "Dm7" })               → ["D", "F", "A", "C"]
+theory("scale_chords", { tonic: "A", scale: "minor" })→ ["Am", "Bdim", "C", "Dm", "Em", "F", "G"]
+theory("roman_parse", { numeral: "V7", key: "D" })    → "A7" → ["A", "C#", "E", "G"]
+```
+
+**Returns to LLM:** Text result of the calculation.
+
+**Returns to UI:** `{ operation, result }` — no special renderer needed; text is sufficient.
+
 
 
 ---
@@ -476,7 +650,8 @@ The main browser entry point creates the Agent, registers tool renderers, and wi
 import { Agent } from "@mariozechner/pi-agent-core";
 import { ChatPanel, ArtifactsPanel, registerToolRenderer } from "@mariozechner/pi-web-ui";
 import { compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
-         transposeTool, diapasonsTool, fretboardTool } from "./tools";
+         transposeTool, diapasonsTool, fretboardTool,
+         analyzeTool, lintTool, theoryTool } from "./tools";
 import { compileRenderer, fretboardRenderer, playabilityRenderer } from "./renderers";
 
 // Register custom tool renderers (inline visual feedback in chat)
@@ -493,6 +668,7 @@ const agent = new Agent({
     tools: [
       compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
       transposeTool, diapasonsTool, fretboardTool,
+      analyzeTool, lintTool, theoryTool,
     ],
     systemPrompt: buildSystemPrompt(instruments),
   },
@@ -522,14 +698,19 @@ You have access to domain-specific tools for mechanical correctness. Use them:
 - Call `check_playability` to validate before presenting to the user
 - Call `compile` after generating or modifying LilyPond source
 - Call `diapasons` when working in a new key on baroque lute or theorbo
+- Call `analyze` when given a MusicXML file — get key, chord progression, voice ranges
+- Call `lint` after generating an arrangement — catch parallel fifths, voice crossing, spacing errors
+- Call `theory` for quick music theory lookups — intervals, chord names, scale degrees
 
 ## Workflow
 1. When given a source file (.ly, MusicXML), read it first
-2. When arranging from memory, warn the user: "I'm working from memory —
+2. When given MusicXML, call `analyze` to get harmonic analysis before arranging
+3. When arranging from memory, warn the user: "I'm working from memory —
    please verify the pitches against a reference score"
-3. Use tools for all mechanical decisions (positions, voicings, playability)
-4. Always compile and verify before presenting the final result
-5. After a successful compile, use the artifacts tool to update the tablature
+4. Use tools for all mechanical decisions (positions, voicings, playability)
+5. After generating an arrangement, call `lint` to verify voice leading
+6. Always compile and verify before presenting the final result
+7. After a successful compile, use the artifacts tool to update the tablature
    preview in the side panel
 
 ## Instruments
@@ -797,7 +978,7 @@ The LLM accepts multiple input formats. **Source files are the preferred v1 work
 3. **Guitar tablature** — parsed, notes extracted, remapped via `tabulate()` tool
 4. **Natural language** — "Arrange Greensleeves for baroque lute" → LLM uses its training data. **Best-effort only — LLM must disclose it is working from memory and recommend pitch verification.**
 5. **Figured bass** — bass line + figures → LLM realizes the harmony (historically authentic workflow)
-6. **MusicXML file** — parsed into pitches, durations, voices (v2, via import tool)
+6. **MusicXML file** — parsed via music21's `converter.parse()` into key, chord progression, voice ranges. **Primary v1 input for conversion workflows** (hymnal → guitar, piano → lute). The `analyze` tool handles this.
 
 ### Arrangement Process
 
@@ -806,32 +987,44 @@ The LLM follows this process, using native tools for mechanical steps:
 ```
 1. SOURCE VERIFICATION
    - If source file provided: read and parse
+   - If MusicXML: call analyze(source) for key, chord progression, voice ranges
    - If from memory: warn user, recommend verification against reference score
    - Call diapasons(key) for lute/theorbo to set bass string tuning
 
-2. PITCH MAPPING (via tabulate tool)
+2. HARMONIC ANALYSIS (via analyze + theory tools)
+   - If multi-voice input (SATB, piano): analyze() returns Roman numeral
+     progression, voice ranges, key — this is the harmonic blueprint
+   - Use theory() for quick lookups: chord spelling, scale degrees, intervals
+   - LLM reads the analysis and plans the arrangement strategy
+
+3. PITCH MAPPING (via tabulate tool)
    - For each note, call tabulate(pitch, instrument) to get valid positions
    - Score each option: open string preferred > low fret > high fret
    - Diapasons: exact pitch must match current tuning scheme
 
-3. VOICE LEADING (LLM musical judgment)
+4. VOICE LEADING (LLM musical judgment)
    - Minimize left-hand movement between chords
    - Prefer common tones held across beats
    - Respect voice independence (bass, tenor, soprano lines)
    - Drop notes that create impossible stretches — prefer musical coherence
 
-4. PLAYABILITY CHECK (via check_playability tool)
+5. PLAYABILITY CHECK (via check_playability tool)
    - Call check_playability(bars, instrument) to validate
    - Fix any violations before proceeding
    - Use voicings(chord, instrument) to find alternatives
 
-5. IDIOM LAYER (LLM musical judgment)
+6. THEORY CHECK (via lint tool)
+   - Call lint(passage) to check for voice leading errors
+   - Fix parallel fifths/octaves, voice crossing, spacing issues
+   - Re-run lint after fixes to confirm clean
+
+7. IDIOM LAYER (LLM musical judgment)
    - Brisé: break chords into arpeggiated figures where appropriate
    - Campanella: route scalar passages across courses for ringing effect
    - Ornamentation: add period-appropriate ornaments (see Ornaments section)
    - Style brisé specifically for French baroque lute
 
-6. OUTPUT GENERATION
+8. OUTPUT GENERATION
    - Generate LilyPond tablature notation using appropriate template
    - Call compile() to render — system prompt instructs this explicitly
    - If compilation errors, parse structured feedback, fix, recompile
@@ -1057,27 +1250,48 @@ Agent:
 ```
 User: "I have 'All Creatures of Our God and King' from my hymnal in D major,
        SATB + organ. Arrange it for baroque guitar."
+       [uploads MusicXML file]
 
 Agent:
-1. Reads the uploaded source (MusicXML or .ly)
-2. Analyzes: 4-voice SATB, D major, melody in soprano, Alleluia refrains
-3. "D major isn't ideal for baroque guitar — I'll transpose to A minor.
-    That puts the melody on courses 1-2 with open strings available.
+1. analyze(uploaded_musicxml)
+   → Key: D major, Time: 3/4
+   → Voices: Soprano (D4–E5), Alto (A3–B4), Tenor (D3–A3), Bass (G2–D3)
+   → Chord progression: I | V6 | vi | IV | ii | V7 | I ...
+   → Identifies Alleluia refrains (repeated descending I–V–vi–IV pattern)
+
+2. LLM reads analysis + baroque-guitar-5 profile:
+   "D major isn't ideal for baroque guitar — I'll transpose to A minor.
+    theory('scale_chords', {tonic: 'A', scale: 'minor'}) confirms
+    Am, Bdim, C, Dm, Em, F, G — all idiomatic open-position chords.
     Which stringing? French (full re-entrant), Italian, or mixed?"
-4. User picks French
-5. Extracts melody (soprano) + chord analysis from inner voices
-6. For verses: punteado arrangement
+
+3. User picks French
+
+4. Plans arrangement from chordify results:
+   - Verses: punteado — melody (soprano) on courses 1-3, bass reduced for courses 4-5
+   - Alleluias: rasgueado — strummed chords from the Roman numeral progression
+
+5. For verses: punteado arrangement
    - Melody on courses 1-3 via tabulate()
-   - Bass line simplified for courses 4-5 (re-entrant — octave higher)
+   - Bass line simplified for re-entrant courses 4-5
    - check_playability() → clean
-7. For Alleluia refrains: rasgueado arrangement
+
+6. For Alleluia refrains: rasgueado arrangement
    - voicings(chord, "baroque-guitar-5", stringing="french")
    - Strummed chords with rhythm notation
+
+7. lint(arrangement) → checks voice leading in punteado sections
+   → "Bar 6, beat 1: parallel fifths between melody and bass"
+   → Fixes the voicing, re-runs lint → clean
+
 8. Adds period-appropriate ornaments (mordents on cadences)
+
 9. compile() → French tab preview (punteado sections)
    + alfabeto notation for rasgueado sections
-10. "Bars 5-8 have a wide tenor-bass gap — I dropped the alto D
-     and doubled the root in the strummed chord instead."
+
+10. "Bars 5-8 had a wide tenor-bass gap — I dropped the alto D
+     and doubled the root in the strummed chord instead.
+     lint() confirms no voice leading violations in the final version."
 ```
 
 ---
@@ -1087,10 +1301,11 @@ Agent:
 An arrangement is "good" if:
 
 1. **Playable** — no impossible stretches, fingerings are natural (`check_playability` passes)
-2. **Musical** — voice leading is smooth, bass line makes harmonic sense
-3. **Idiomatic** — sounds like it belongs on the instrument, not like a mechanical transposition
-4. **Complete** — no missing notes that the instrument could have handled
-5. **Readable** — tablature is clear, rhythmic notation is correct, page layout is clean
+2. **Theoretically sound** — no parallel fifths/octaves, voice crossing, or spacing violations (`lint` passes)
+3. **Musical** — voice leading is smooth, bass line makes harmonic sense
+4. **Idiomatic** — sounds like it belongs on the instrument, not like a mechanical transposition
+5. **Complete** — no missing notes that the instrument could have handled
+6. **Readable** — tablature is clear, rhythmic notation is correct, page layout is clean
 
 The LLM should flag when it makes compromises (dropped notes, simplified voicing) and explain why.
 
@@ -1115,7 +1330,9 @@ vellum/
 │   │                          #   tool renderer registration
 │   ├── tools.ts               # All AgentTool<T> definitions (compile, tabulate,
 │   │                          #   voicings, check_playability, transpose,
-│   │                          #   diapasons, fretboard)
+│   │                          #   diapasons, fretboard, analyze, lint, theory)
+│   ├── theory.ts              # tonal.js wrapper — browser-side music theory
+│   │                          #   calculations for the theory tool
 │   ├── renderers.ts           # registerToolRenderer() implementations for
 │   │                          #   compile (SVG), fretboard (SVG), playability
 │   ├── prompts.ts             # System prompt builder — instrument profile
@@ -1128,6 +1345,13 @@ vellum/
 │       │                      #   streamProxy endpoint
 │       ├── compile.ts         # POST /api/compile — LilyPond subprocess,
 │       │                      #   stderr parsing into structured errors
+│       ├── theory.ts          # POST /api/analyze, /api/lint, /api/chordify,
+│       │                      #   /api/realize — calls theory.py subprocess
+│       ├── theory.py          # Python CLI script wrapping music21:
+│       │                      #   python3 theory.py analyze < input.xml
+│       │                      #   python3 theory.py lint < input.ly
+│       │                      #   python3 theory.py chordify < input.xml
+│       │                      #   Returns JSON to stdout
 │       ├── instruments.ts     # GET /api/instruments — serves YAML profiles
 │       ├── arrangements.ts    # GET/POST /api/arrangements — persistence
 │       └── templates.ts       # GET /api/templates — LilyPond template source
@@ -1203,13 +1427,14 @@ services.vellum = {
 The NixOS module provides:
 - **systemd service** — runs the Express server (serves browser assets + API + LLM proxy)
 - **LilyPond dependency** — `pkgs.lilypond` pinned at 2.24.x, reproducible, no version drift
+- **music21 dependency** — `pkgs.python3.withPackages (ps: [ ps.music21 ])` pinned via Nix. Called as subprocess by the theory API endpoints. Same deployment pattern as LilyPond — no separate Python service, no virtualenv, just a Nix-managed Python with music21 available
 - **Traefik integration** — reverse proxy with mTLS via step-ca
 - **Secrets management** — API keys injected at runtime, never in the repo
 - **Data directory** — `/var/lib/vellum/arrangements/` for saved arrangements
 
 The Nix build:
 1. `buildNpmPackage` builds the Express server + Vite browser bundle
-2. LilyPond is a runtime dependency, not a build dependency
+2. LilyPond and Python+music21 are runtime dependencies, not build dependencies
 3. The `xlsx` CDN tarball URL in pi-web-ui's dependency tree may need lockfile patching for `fetchNpmDeps` — test early
 
 This follows the same deployment pattern as the existing A2A adapter and Hermes agent on servoid.
@@ -1220,16 +1445,22 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 
 ### Infrastructure
 - [ ] Set up pi-mono packages (`pi-agent-core`, `pi-web-ui`, `pi-ai`)
-- [ ] Express server with API endpoints (`/api/stream`, `/api/compile`, `/api/instruments`, `/api/arrangements`, `/api/templates`)
+- [ ] Express server with API endpoints (`/api/stream`, `/api/compile`, `/api/analyze`, `/api/lint`, `/api/chordify`, `/api/instruments`, `/api/arrangements`, `/api/templates`)
 - [ ] `streamProxy` integration for LLM API key security
-- [ ] Vite build pipeline for browser bundle
+- [ ] Vite build pipeline for browser bundle (including tonal.js)
 - [ ] Install LilyPond via Nix (2.24.x)
+- [ ] Install Python 3 + music21 via Nix (`python3Packages.music21`)
 - [ ] Create `flake.nix` with package + NixOS module
 - [ ] Deploy on servoid behind Traefik
 
 ### Tools
-- [ ] Define all `AgentTool<T>` objects with TypeBox schemas: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`
+- [ ] Define all `AgentTool<T>` objects with TypeBox schemas: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`, `analyze`, `lint`, `theory`
 - [ ] Implement server-side `POST /api/compile` with LilyPond subprocess and structured error parsing
+- [ ] Implement server-side `POST /api/analyze` — music21 subprocess: MusicXML → key, Roman numerals, voice ranges, time signature
+- [ ] Implement server-side `POST /api/lint` — music21 subprocess: voice leading rule checking (parallel 5ths/8ves, voice crossing, spacing, unresolved leading tones)
+- [ ] Implement server-side `POST /api/chordify` — music21 subprocess: multi-voice → chord-per-beat reduction
+- [ ] Implement `server/theory.py` — Python CLI wrapping music21 (analyze, lint, chordify subcommands, JSON output)
+- [ ] Implement browser-side `theory` tool — tonal.js wrapper for instant interval/chord/scale lookups
 - [ ] Implement `tabulate` — pitch → position lookup against instrument profiles
 - [ ] Implement `voicings` — chord voicing enumeration with stretch/campanella ranking
 - [ ] Implement `check_playability` — stretch, same-course, RH pattern validation + difficulty rating
@@ -1293,6 +1524,7 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - **Tune is from 1623** (*Geistliche Kirchengesäng*, Cologne) — literally contemporaneous with the baroque guitar's golden age
 - **Text by St. Francis of Assisi** (Canticle of the Sun, ~1225) — public domain, significant in Catholic tradition
 - **Tests the hardest conversion pipeline** — SATB/organ → 5-course baroque guitar requires harmonic reduction, voice thinning, key transposition, and style decisions (rasgueado vs. punteado)
+- **Exercises the full music21 pipeline** — MusicXML from hymnary.org is parsed directly by music21's `converter.parse()`, voices extracted automatically via `score.parts[]`, and `chordify()` produces the harmonic analysis the LLM needs for arrangement decisions
 - **The Alleluia refrains** — repeated descending figures that naturally call for rasgueado (strummed) treatment, while verses suit punteado (plucked) melody + bass
 - **Transposition test** — hymnals usually print this in D or Eb major; baroque guitar wants A minor or G major for idiomatic open-string usage with re-entrant tuning
 - **Re-entrant tuning payoff** — courses 4-5 sounding an octave higher means strummed chords ring with natural brightness that organ can't replicate
@@ -1300,33 +1532,33 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 
 **The conversion workflow this validates:**
 ```
-Input:  SATB hymnal setting (PDF scan or MusicXML from hymnary.org)
-Step 1: Extract melody (soprano) + harmony (chord analysis from SATB voices)
-Step 2: Transpose to baroque-guitar-friendly key (D major → A minor or G major)
-Step 3: Arrange verses as punteado (melody on courses 1-3, bass on 4-5)
-Step 4: Arrange Alleluia refrains as rasgueado (alfabeto chord notation)
-Step 5: Add period-appropriate ornaments
-Output: French letter tab or number tab PDF + optional voice line
+Input:  SATB hymnal setting (MusicXML from hymnary.org)
+Step 1: analyze(musicxml) → key, Roman numeral progression, voice ranges
+Step 2: LLM + theory() decides target key (D major → A minor or G major)
+Step 3: LLM plans arrangement from chordify results (verses=punteado, Alleluias=rasgueado)
+Step 4: Generate arrangement using tabulate() + voicings() + check_playability()
+Step 5: lint(arrangement) → fix voice leading errors → re-lint until clean
+Step 6: compile() → French letter tab or number tab PDF + optional voice line
 ```
 
 **Test scenarios:**
-1. Upload SATB hymnal setting (MusicXML) → analyze harmony → produce baroque guitar arrangement
+1. Upload SATB hymnal setting (MusicXML) → `analyze()` → `chordify()` → produce baroque guitar arrangement
 2. Generate both punteado (plucked) and rasgueado (strummed) sections within one piece
 3. Test alfabeto chord notation for strummed passages
-4. Convert the same hymn to classical guitar (compare voicing decisions)
-5. Produce a voice + guitar version (melody line + guitar accompaniment)
+4. `lint()` the final arrangement — verify zero voice leading violations
+5. Convert the same hymn to classical guitar (compare voicing decisions)
+6. Produce a voice + guitar version (melody line + guitar accompaniment)
 
 ## v2 Scope
 
 - [ ] OSMD/VexFlow interactive score rendering for standard notation (guitar, piano, voice — **not** tablature, which stays LilyPond SVG)
 - [ ] MIDI playback via Web Audio API (HTML artifact with embedded player)
 - [ ] Bar-click interaction (click a bar → agent knows which bar to revoice)
-- [ ] MusicXML import tool (JS parser)
 - [ ] MusicXML export (via MuseScore CLI on server, or custom writer)
 - [ ] Fretboard visualization with position overlay (interactive, beyond static SVG)
 - [ ] Arrangement library with server-side session persistence (beyond IndexedDB)
 - [ ] Session branching for "try it this way" workflows
-- [ ] Figured bass realization workflow
+- [ ] Figured bass realization workflow (`POST /api/realize` via music21's `figuredBass.realizer` — endpoint defined in v1, implementation deferred)
 - [ ] Batch conversion (whole suites at once)
 - [ ] Configurable ornament table per style period (Gaultier, Mouton, Weiss defaults)
 - [ ] Additional instrument profiles: archlute, mandora, vihuela, 7-course Dowland lute, 10-course Renaissance lute
@@ -1357,20 +1589,26 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 - The `ArtifactsPanel` handles the tablature workbench with no custom code (SVG is a built-in artifact type)
 - `streamProxy` solves the API key security problem cleanly
 
-### Alternative Considered: Python + music21
+### Complement: Python + music21 (Server-Side Theory Engine)
 
-**Strengths:**
-- **music21** is the only comprehensive music theory library in any language
-- Fastest prototype path for parsing and transposition
+**Role:** Server-side music theory analysis engine, deployed alongside LilyPond as a subprocess dependency.
 
-**Weaknesses:**
-- Runtime type errors in production
-- Dependency management fragility
-- music21 doesn't help with the hard part (instrument-specific tab math, playability)
-- No web UI path without a second language
-- The LLM handles what music21 is best at (musical analysis, arrangement decisions)
+**Why music21 and not just tonal.js:**
+- **MusicXML parsing** — music21 has native `converter.parse()` for full score ingestion. tonal.js has no file I/O at all. The hymnal conversion workflow requires reading MusicXML files with multiple SATB voices — music21 does this trivially, tonal.js can't start.
+- **`chordify()`** — reduces any multi-voice score to a chord-per-beat analysis. This is THE critical operation for hymnal → guitar conversion. tonal.js can detect a chord from a set of notes, but can't extract those notes from a score.
+- **Voice leading analysis** — `VoiceLeadingQuartet` with methods for parallel fifths, parallel octaves, contrary motion, voice crossing, spacing. tonal.js's `@tonaljs/voice-leading` is about jazz voicing smoothness, not counterpoint rule checking.
+- **Key detection** — Krumhansl-Schmuckler algorithm: `score.analyze('key')`. Signal processing on pitch class distributions. tonal.js can tell you what chords fit a key but can't determine a key from a passage.
+- **Roman numeral analysis** — `roman.romanNumeralFromChord(chord, key)` with full inversion awareness. tonal.js parses Roman numeral *symbols* but can't derive them from music.
+- **Figured bass realization** (v2) — `figuredBass.realizer` engine. tonal.js has nothing comparable.
 
-**Verdict:** music21 solves the wrong problem. The LLM replaces its analytical capabilities; custom tools replace its computational ones.
+**Why tonal.js complements music21:**
+- Runs in the browser — instant results, no server round-trip for simple lookups
+- Covers interval math, chord spelling, scale membership, enharmonic equivalents
+- The LLM uses `theory()` mid-conversation for quick calculations while `analyze()` and `lint()` handle the heavy analysis
+
+**Deployment:** Same pattern as LilyPond — subprocess call, not a separate service. `python3 theory.py analyze < input.xml` → JSON to stdout. No migration debt; the API surface (JSON in, JSON out) is implementation-agnostic. If music21 were ever replaced, only `server/theory.py` changes.
+
+**Previous verdict (revised):** The original assessment that "music21 solves the wrong problem" was incorrect. Music21's analytical capabilities *complement* the LLM rather than competing with it. The LLM makes musical *judgment* calls; music21 provides deterministic *analysis* the LLM can reason about. The LLM should never do interval arithmetic or chord identification when a library can do it perfectly.
 
 ### Alternative Considered: Custom TypeScript + Rust/WASM
 
@@ -1405,6 +1643,8 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 - [pi-mono](https://github.com/badlogic/pi-mono) — AI agent toolkit (coding agent, unified LLM API, web UI components)
 - [pi-web-ui](https://www.npmjs.com/package/@mariozechner/pi-web-ui) — Reusable web UI components for AI chat interfaces
 - [pi-agent-core](https://www.npmjs.com/package/@mariozechner/pi-agent-core) — Agent loop, tool framework, streamProxy
+- [music21](https://web.mit.edu/music21/) — MIT's computational musicology toolkit (Python). MusicXML parsing, harmonic analysis, voice leading, figured bass realization
+- [tonal.js](https://github.com/tonaljs/tonal) — TypeScript music theory library. Intervals, chords, scales, keys, voicings, Roman numerals
 - [LilyPond Tablature docs](https://lilypond.org/doc/v2.24/Documentation/notation/common-notation-for-fretted-strings) — fretted string notation
 - [LilyPond Lute tablature](https://lilypond.org/doc/v2.24/Documentation/notation/lute-tablatures) — French tab, diapasons, `fret-letter-tablature-format`
 - [Fronimo](https://sites.google.com/view/fronimo/home) — reference for historical tablature rendering
