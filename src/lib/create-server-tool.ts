@@ -1,5 +1,5 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
-import type { Static, TSchema } from "typebox";
+import type { Static, TSchema } from "@sinclair/typebox";
 import { toolError, toolResult } from "./tool-helpers.js";
 
 export type CreateServerToolConfig<TParams extends TSchema, TDetails> = {

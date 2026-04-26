@@ -275,11 +275,13 @@ function qualityForFret(fret: number): TabPosition["quality"] {
 }
 
 function fretSpan(positions: TabPosition[]): number {
-  if (positions.length <= 1) {
+  const frettedPositions = positions.filter((position) => position.fret > 0);
+
+  if (frettedPositions.length <= 1) {
     return 0;
   }
 
-  const frets = positions.map((position) => position.fret);
+  const frets = frettedPositions.map((position) => position.fret);
   return Math.max(...frets) - Math.min(...frets);
 }
 
