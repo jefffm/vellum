@@ -8,7 +8,7 @@ Vellum is an LLM-powered music arrangement tool for historical plucked string in
 
 **The key insight:** The LLM handles musical intelligence — arrangement decisions, voice leading, idiomatic writing. The code provides **native domain-specific tools** that handle mechanical correctness, shrinking the LLM's error surface to just musical judgment. This is the agent harness thesis in practice: the harness shapes what the model can do, making it more effective within a domain than a general-purpose agent with bash access.
 
-**The product is a pi-mono web app** — a custom web application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit, deployed as a NixOS module on servoid. The browser provides the conversational interface and a live tablature workbench. The server runs the agent, LilyPond, and custom tools.
+**The product is a pi-mono web app** — a custom web application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit, deployed as a NixOS module on servoid. The browser hosts the conversational agent and a live tablature workbench. The server provides tool backends (LilyPond compilation, instrument data) and proxies LLM API calls.
 
 ---
 
@@ -26,58 +26,93 @@ Arranging music for historical lute-family instruments is hard:
 
 ## Architecture
 
+### Client-Server Split
+
+The Agent runs **in the browser**. Tools that need server resources (LilyPond, file storage) make HTTP calls to the Vellum server API. LLM API calls are proxied through the server to keep API keys secure.
+
 ```
-Browser (any device)
-┌─────────────────────────────────────────────────────┐
-│  pi-web-ui ChatPanel                                 │
-│  ┌──────────────────────┐  ┌──────────────────────┐ │
-│  │  AgentInterface       │  │  Tablature Workbench │ │
-│  │  (conversation)       │  │                      │ │
-│  │                       │  │  • SVG/PDF preview   │ │
-│  │  "Arrange Bach        │  │  • OSMD score view   │ │
-│  │   BWV 996 for         │  │  • Fretboard diagram │ │
-│  │   baroque lute"       │  │  • MIDI playback     │ │
-│  │                       │  │    (Web Audio API)   │ │
-│  │  [tool calls visible  │  │  • Tab diff view     │ │
-│  │   in chat stream]     │  │                      │ │
-│  │                       │  │  [updates live as    │ │
-│  │                       │  │   agent works]       │ │
-│  └──────────────────────┘  └──────────────────────┘ │
-└─────────────────┬───────────────────────────────────┘
-                  │  HTTPS (mTLS via step-ca)
-                  │
-servoid (NixOS)   │
-┌─────────────────┴───────────────────────────────────┐
-│  Vellum server (Node.js)                             │
-│                                                       │
-│  ┌─────────────────────────────────────────────────┐ │
-│  │  pi-agent-core                                   │ │
-│  │  Agent loop + custom tools + event hooks         │ │
-│  │                                                   │ │
-│  │  Tools:                                           │ │
-│  │  • compile(file) → LilyPond → SVG/PDF            │ │
-│  │  • tabulate(pitch, instrument) → positions        │ │
-│  │  • voicings(chord, instrument) → ranked options   │ │
-│  │  • check_playability(passage) → violations        │ │
-│  │  • transpose(source, interval) → validated result │ │
-│  │  • diapasons(key) → tuning scheme                 │ │
-│  │  • fretboard(chord) → SVG diagram                │ │
-│  │                                                   │ │
-│  │  Hooks:                                           │ │
-│  │  • Auto-compile on .ly write → preview update     │ │
-│  │  • LilyPond stderr → structured error parsing     │ │
-│  │  • Instrument profile auto-injection              │ │
-│  └──────────────────────┬──────────────────────────┘ │
-│                         │                             │
-│  ┌──────────────────────┴──────────────────────────┐ │
-│  │  LilyPond (Nix package, pinned version)          │ │
-│  │  Called as subprocess by compile tool             │ │
-│  │  Produces SVG / PDF / MIDI                       │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                       │
-│  Traefik → vellum.aoeu.pw                            │
-└─────────────────────────────────────────────────────┘
+Browser
+┌─────────────────────────────────────────────────────────────┐
+│                                                               │
+│  src/main.ts                                                  │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │  Agent instance (pi-agent-core)                           │ │
+│  │  • Tools array: compile, tabulate, voicings,              │ │
+│  │    check_playability, transpose, diapasons, fretboard     │ │
+│  │  • System prompt with instrument profiles                 │ │
+│  │  • LLM calls → streamProxy → server /api/stream           │ │
+│  │                                                            │ │
+│  │  Each tool's execute() calls server REST API:              │ │
+│  │    fetch("/api/compile", { body: lySource })               │ │
+│  │    fetch("/api/instruments/baroque-lute-13")               │ │
+│  │    etc.                                                    │ │
+│  └──────────────────────────────────────────────────────────┘ │
+│                                                               │
+│  pi-web-ui                                                    │
+│  ┌─────────────────────────┐  ┌────────────────────────────┐ │
+│  │  ChatPanel               │  │  ArtifactsPanel            │ │
+│  │  (AgentInterface)        │  │  (tablature workbench)     │ │
+│  │                          │  │                            │ │
+│  │  Conversation stream     │  │  • tablature.svg (compiled │ │
+│  │  with inline tool        │  │    LilyPond output)        │ │
+│  │  renderers:              │  │  • fretboard.svg           │ │
+│  │                          │  │  • arrangement.ly (source) │ │
+│  │  • compile → SVG preview │  │  • MIDI player (HTML       │ │
+│  │  • fretboard → diagram   │  │    artifact, v2)           │ │
+│  │  • playability → report  │  │                            │ │
+│  └─────────────────────────┘  └────────────────────────────┘ │
+│                                                               │
+└──────────────────────┬────────────────────────────────────────┘
+                       │  HTTPS (mTLS via step-ca)
+                       │
+servoid (NixOS)        │
+┌──────────────────────┴────────────────────────────────────────┐
+│  Vellum Server (Express)                                       │
+│                                                                 │
+│  Static Assets                                                  │
+│  └─ Serves built browser bundle (Vite output)                   │
+│                                                                 │
+│  API Endpoints                                                  │
+│  ├─ POST /api/stream          LLM proxy (streamProxy from       │
+│  │                            pi-agent-core; keeps API keys      │
+│  │                            server-side)                       │
+│  │                                                               │
+│  ├─ POST /api/compile         Accepts .ly source string.         │
+│  │                            Writes temp file, runs LilyPond    │
+│  │                            subprocess, returns:               │
+│  │                            { svg, pdf?, midi?, errors[] }     │
+│  │                                                               │
+│  ├─ POST /api/validate        Syntax-only check (LilyPond       │
+│  │                            --loglevel=ERROR, no output)       │
+│  │                                                               │
+│  ├─ GET  /api/instruments     List all instrument profiles       │
+│  ├─ GET  /api/instruments/:id Single instrument profile (YAML)   │
+│  │                                                               │
+│  ├─ GET  /api/arrangements    List saved arrangements            │
+│  ├─ POST /api/arrangements    Save arrangement (.ly + metadata)  │
+│  ├─ GET  /api/arrangements/:id  Retrieve arrangement             │
+│  │                                                               │
+│  └─ GET  /api/templates/:name  LilyPond template source          │
+│                                                                 │
+│  LilyPond (Nix package, pinned 2.24.x)                          │
+│  └─ Called as subprocess by /api/compile                         │
+│                                                                 │
+│  instruments/*.yaml + *.ily   (served via /api/instruments)      │
+│  templates/*.ly               (served via /api/templates)        │
+│                                                                 │
+│  Traefik → vellum.aoeu.pw                                       │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Key Design Decisions
+
+**Agent in browser, not server.** Pi-web-ui's `ChatPanel` requires a local `Agent` instance via `chatPanel.setAgent(agent)`. Running the Agent server-side would require a custom WebSocket/SSE transport layer and lose most of pi-web-ui's built-in functionality. Browser-side Agent with server API calls is the natural pi-mono pattern.
+
+**LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
+
+**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check_playability) *could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. For v1, all tools call the server.
+
+**Instrument profiles: dual location.** YAML profiles are served to the browser (for system prompts and tool context). `.ily` include files stay on the server (only LilyPond needs them). Both live in `instruments/` on disk; the server API handles the split.
 
 ### Why Native Tools Beat Generic Agent + Bash
 
@@ -94,6 +129,7 @@ A general-purpose agent with bash access can technically run LilyPond. But:
 The LLM makes **musical decisions**. The tools handle **mechanical correctness**. That's the split that matters.
 
 
+
 ---
 
 ## Technology Stack
@@ -104,146 +140,421 @@ Vellum is built on [pi-mono](https://github.com/badlogic/pi-mono), an open-sourc
 
 | Package | Role in Vellum |
 |---|---|
-| `pi-agent-core` | Agent loop, tool execution, event system |
-| `pi-web-ui` | Chat panel, artifacts panel (customized as tablature workbench) |
-| `pi-ai` | Multi-provider LLM API (Anthropic, OpenAI, Google, etc.) |
+| `pi-agent-core` | Agent loop, tool definitions (`AgentTool<T>`), tool execution, `streamProxy` for LLM API proxying |
+| `pi-web-ui` | `ChatPanel`, `AgentInterface`, `ArtifactsPanel`, `registerToolRenderer()`, `SessionsStore` (IndexedDB) |
+| `pi-ai` | Multi-provider LLM API (Anthropic, OpenAI, Google, etc.) — consumed via streamProxy on the server |
 
 Pi-mono provides the agent infrastructure. Vellum provides the domain-specific tools, instrument knowledge, and UI customizations that transform a generic agent into a music arrangement specialist.
 
+### Browser Stack
+
+- **pi-web-ui** — `ChatPanel` + `ArtifactsPanel` web components (the entire UI shell)
+- **pi-agent-core** — `Agent` class, `AgentTool<T>` definitions (runs in browser)
+- **Vite** — build tool, bundles the browser application
+- **Custom tool renderers** — `registerToolRenderer()` for inline SVG preview, fretboard diagrams, playability reports in the chat stream
+
 ### Server Stack
 
-- **Node.js** ≥ 20 — runtime for pi-agent-core + Vellum server
-- **LilyPond** ≥ 2.24 — music engraving, pinned as a Nix dependency
+- **Node.js** ≥ 20 + **Express** — API server, static asset serving, LLM proxy
+- **LilyPond** ≥ 2.24 — music engraving subprocess, pinned as a Nix dependency
 - **NixOS** — deployment target (servoid)
 - **Traefik** — reverse proxy with mTLS via step-ca
 - **systemd** — process management
-
-### Browser Stack
-
-- **pi-web-ui** — ChatPanel + AgentInterface web components
-- **OSMD / VexFlow** — interactive score rendering (v2, for guitar/piano; lute tab via LilyPond SVG)
-- **Web Audio API** — MIDI playback (v2)
 
 ---
 
 ## Custom Tools
 
-Each tool is registered via pi's `registerTool()` API. The LLM calls them as native tool calls — not bash commands, not prompt instructions.
+Tools are defined as `AgentTool<T>` objects using TypeBox schemas and passed to the `Agent` constructor. The LLM calls them as native tool calls. Each tool's `execute()` method makes an HTTP request to the Vellum server API for anything requiring server resources.
+
+### Tool Definition Pattern
+
+All Vellum tools follow this pattern:
+
+```typescript
+import { Type, type Static } from "@sinclair/typebox";
+import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
+
+// TypeBox schema for parameters
+const CompileParams = Type.Object({
+  source: Type.String({ description: "LilyPond source code to compile" }),
+  format: Type.Optional(Type.Union([
+    Type.Literal("svg"),
+    Type.Literal("pdf"),
+    Type.Literal("both")
+  ], { default: "svg" }))
+});
+
+// Tool result details type (for UI rendering via registerToolRenderer)
+interface CompileDetails {
+  svg?: string;
+  pdf?: string;     // base64-encoded
+  midi?: string;    // base64-encoded
+  errors: CompileError[];
+}
+
+// AgentTool definition
+const compileTool: AgentTool<typeof CompileParams, CompileDetails> = {
+  name: "compile",
+  description: "Compile LilyPond source into rendered tablature/notation. " +
+    "Returns SVG for preview and structured errors if compilation fails. " +
+    "Call this after generating or modifying LilyPond source.",
+  parameters: CompileParams,
+
+  async execute(
+    toolCallId: string,
+    params: Static<typeof CompileParams>,
+    signal?: AbortSignal,
+    onUpdate?: AgentToolUpdateCallback<CompileDetails>
+  ): Promise<AgentToolResult<CompileDetails>> {
+    // Call server API
+    const res = await fetch("/api/compile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+      signal,  // respect cancellation
+    });
+    const data = await res.json();
+
+    if (data.errors?.length > 0) {
+      return {
+        content: [{
+          type: "text",
+          text: `Compilation failed with ${data.errors.length} error(s):\n` +
+            data.errors.map((e: CompileError) =>
+              `  Bar ${e.bar}, beat ${e.beat}: ${e.message}`
+            ).join("\n")
+        }],
+        details: { errors: data.errors, svg: undefined, pdf: undefined, midi: undefined },
+      };
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: `Compiled successfully. SVG rendered (${data.barCount} bars, ${data.voiceCount} voices). No errors.`
+      }],
+      details: {
+        svg: data.svg,
+        pdf: data.pdf,
+        midi: data.midi,
+        errors: [],
+      },
+    };
+  }
+};
+```
+
+**Key points:**
+- `content` is what the LLM sees — concise text summaries, never raw SVG/binary data
+- `details` carries structured data for the custom tool renderer — SVGs, diagrams, full error objects
+- `signal` enables aborting long LilyPond compilations
+- `onUpdate` can stream partial results (e.g., compilation progress)
+
+### Tool Renderers
+
+Custom tool renderers display visual results inline in the chat stream:
+
+```typescript
+import { registerToolRenderer } from "@mariozechner/pi-web-ui";
+
+registerToolRenderer("compile", {
+  render(params, result) {
+    if (result.details?.svg) {
+      const container = document.createElement("div");
+      container.className = "compile-result";
+      container.innerHTML = result.details.svg;
+      return container;
+    }
+    return null; // fall back to default text rendering
+  }
+});
+
+registerToolRenderer("fretboard", {
+  render(params, result) {
+    if (result.details?.svg) {
+      const container = document.createElement("div");
+      container.className = "fretboard-diagram";
+      container.innerHTML = result.details.svg;
+      return container;
+    }
+    return null;
+  }
+});
+```
 
 ### compile
 
+Runs LilyPond as subprocess on the server. On success, returns rendered artifacts. On failure, parses stderr into structured errors with bar numbers and line references.
+
+**Parameters:**
 ```typescript
-compile({ file: string }) → {
-  success: boolean,
-  svg?: string,          // rendered tablature (inline preview)
-  pdf?: string,          // path to PDF artifact
-  midi?: string,         // path to MIDI artifact
-  errors?: CompileError[] // structured: { bar, line, type, message }
+{
+  source: string,          // LilyPond source code
+  format?: "svg" | "pdf" | "both"  // output format (default: "svg")
 }
 ```
 
-Runs LilyPond as subprocess. On success, returns rendered artifacts. On failure, parses stderr into structured errors with bar numbers and line references. The auto-compile hook triggers this automatically on any `.ly` file write.
+**Returns to LLM (`content`):** Text summary — "Compiled successfully. 42 bars, 3 voices." or structured error list.
+
+**Returns to UI (`details`):**
+```typescript
+{
+  svg?: string,            // rendered tablature SVG
+  pdf?: string,            // base64-encoded PDF
+  midi?: string,           // base64-encoded MIDI
+  errors: CompileError[]   // structured: { bar, beat, line, type, message }
+}
+```
+
+**Server endpoint:** `POST /api/compile` — writes temp `.ly` file, invokes `lilypond` subprocess, parses output. LilyPond stderr is parsed into structured `CompileError` objects (bar number, beat, error type, human-readable message) rather than passing raw Guile stack traces to the LLM.
 
 ### tabulate
 
+Returns all valid course/fret positions for a pitch on the target instrument, ranked by idiomatic quality.
+
+**Parameters:**
 ```typescript
-tabulate({ pitch: string, instrument: string }) → TabPosition[] 
-// e.g. tabulate("F4", "baroque-lute-13")
-// → [{ course: 1, fret: 0, quality: "open" },
-//    { course: 2, fret: 3, quality: "fretted" }]
+{
+  pitch: string,           // e.g. "F4", "A3"
+  instrument: string       // instrument profile ID
+}
 ```
 
-Returns all valid course/fret positions for a pitch on the target instrument, ranked by idiomatic quality (open string > low fret > high fret). The LLM uses this to make informed placement decisions instead of guessing from training data.
+**Returns to LLM:** Text listing of positions with quality ratings.
+
+**Returns to UI:** `{ positions: TabPosition[] }` — for potential fretboard highlighting.
+
+```typescript
+// TabPosition
+{ course: number, fret: number, quality: "open" | "low_fret" | "high_fret" | "diapason" }
+// e.g. tabulate("F4", "baroque-lute-13")
+// → [{ course: 1, fret: 0, quality: "open" },
+//    { course: 2, fret: 3, quality: "low_fret" }]
+```
+
+Ranking: open string > low fret (1-3) > high fret (4-8). Diapason courses return only if the pitch exactly matches the open tuning. The LLM uses this to make informed placement decisions instead of guessing from training data.
 
 ### voicings
 
+Enumerates all playable voicings for a chord, ranked by stretch, idiomatic quality, and campanella potential.
+
+**Parameters:**
 ```typescript
-voicings({ 
-  notes: string[],        // e.g. ["F4", "A3", "D3"]
+{
+  notes: string[],         // e.g. ["F4", "A3", "D3"]
   instrument: string,
-  max_stretch?: number    // max fret span, default 4
-}) → Voicing[]
-// → [{ positions: [...], stretch: 2, campanella_score: 0.8 },
-//    { positions: [...], stretch: 3, campanella_score: 0.4 }]
+  max_stretch?: number     // max fret span (default: 4 for lute, 5 for guitar)
+}
 ```
 
-Enumerates all playable voicings for a chord, ranked by stretch, idiomatic quality, and campanella potential. The LLM picks from real options instead of inventing positions.
+**Returns to LLM:** Top 5 voicings with stretch and quality scores.
+
+**Returns to UI:** `{ voicings: Voicing[] }` — full list with positions for fretboard rendering.
+
+```typescript
+// Voicing
+{ positions: TabPosition[], stretch: number, campanella_score: number, open_strings: number }
+```
 
 ### check_playability
 
+Validates a passage against instrument-specific constraints: fret stretch, same-course conflicts, right-hand pattern feasibility.
+
+**Parameters:**
 ```typescript
-check_playability({
-  bars: Bar[],            // structured passage (not .ly source)
+{
+  bars: Bar[],             // structured passage (notes with positions)
   instrument: string
-}) → PlayabilityReport {
-  violations: Violation[], // { bar, type, description }
-  difficulty: "beginner" | "intermediate" | "advanced",
-  flagged_bars: number[]
 }
 ```
 
-Validates a passage against instrument-specific constraints: fret stretch, same-course conflicts, right-hand pattern feasibility. Catches impossible fingerings before compilation.
+**Returns to LLM:** Violation list and difficulty rating.
+
+**Returns to UI:** `{ violations: Violation[], difficulty: string, flagged_bars: number[] }`.
+
+```typescript
+// Violation
+{ bar: number, type: "stretch" | "same_course" | "rh_pattern" | "out_of_range", description: string }
+```
+
+**Difficulty algorithm (v1 minimum viable):**
+- Count violations (any → at least "intermediate")
+- Max fret stretch per chord (>4 lute / >5 guitar = "advanced")
+- Position shifts per bar (>2 = adds difficulty)
+- Simultaneous voice count (>3 sustained = "advanced" on lute)
+- Simple weighted sum → beginner / intermediate / advanced
 
 ### transpose
 
+Transposes and validates against instrument range. Suggests idiomatic keys for the target instrument.
+
+**Parameters:**
 ```typescript
-transpose({
-  source: string,         // .ly file or passage
-  interval: string,       // e.g. "m3 up", "P5 down"
+{
+  source: string,          // .ly passage or structured notes
+  interval: string,        // e.g. "m3 up", "P5 down"
   instrument: string
-}) → {
-  result: string,         // transposed .ly source
-  out_of_range: Note[],   // notes that fell outside instrument range
-  suggested_key?: string  // idiomatic key for target instrument
 }
 ```
 
-Transposes and validates against instrument range. Suggests idiomatic keys for the target instrument (e.g., D minor, F major, A minor for baroque lute).
+**Returns to LLM:** Transposed result with out-of-range warnings and key suggestions.
+
+**Returns to UI:** `{ result: string, out_of_range: Note[], suggested_key?: string }`.
+
+**Idiomatic keys by instrument:**
+
+| Instrument | Good keys | Why |
+|---|---|---|
+| Baroque lute (d-minor) | D minor, A minor, F major, G minor, C major | Open strings align with key center |
+| Baroque guitar | A minor, E minor, C major, G major, D minor | Standard guitar-adjacent keys |
+| Renaissance lute (G) | G major, D minor, C major, A minor | Open-string keys |
+| Theorbo | D minor, G minor, A minor | Continuo keys, diapason alignment |
+| Classical guitar | E minor, A minor, D major, G major, C major | Standard repertoire keys |
 
 ### diapasons
 
+Returns the conventional diapason tuning for a key center. Lutenists retune bass courses per piece — this tool provides the historically informed default.
+
+**Parameters:**
 ```typescript
-diapasons({ key: string }) → DiapasonTuning {
-  courses: { course: number, pitch: string }[],
-  notes: string  // human-readable: "Standard D minor: G-F-E-D-C-B-A"
+{
+  key: string,             // e.g. "D minor", "A minor", "G minor"
+  instrument?: string      // default: "baroque-lute-13"
 }
 ```
 
-Returns the conventional diapason tuning for a key center. Lutenists retune bass courses per piece — this tool provides the historically informed default.
+**Returns to LLM:** Human-readable tuning description.
+
+**Returns to UI:** `{ courses: DiapasonCourse[] }`.
+
+**Standard diapason tuning schemes (baroque lute, courses 7→13):**
+
+| Key Center | 7 | 8 | 9 | 10 | 11 | 12 | 13 | Name |
+|---|---|---|---|---|---|---|---|---|
+| D minor / F major | G | F | E♭ | D | C | B♭ | A | *Accord ordinaire* (standard) |
+| A minor / C major | G | F | E♮ | D | C | B♮ | A | Natural 3rd and 7th |
+| G minor / B♭ major | G | F | E♭ | D | C | B♭ | A | Same as standard (coincidence) |
+| D major (rare) | G | F♯ | E♮ | D | C♯ | B♮ | A | Sharp keys (Weiss) |
+| E minor | G | F♯ | E♮ | D | C♮ | B♮ | A | Natural with F♯ |
+
+The tool also supports per-piece override for non-standard tunings found in some Weiss and Mouton manuscripts.
+
+**LilyPond integration:** The tool output maps directly to `additionalBassStrings` in the `.ily` include:
+```lilypond
+additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % D minor standard
+```
 
 ### fretboard
 
+Renders a visual SVG fretboard diagram showing finger positions.
+
+**Parameters:**
 ```typescript
-fretboard({
+{
   positions: TabPosition[],
   instrument: string
-}) → string // SVG diagram
+}
 ```
 
-Renders a visual SVG fretboard diagram showing finger positions. Displayed inline in the chat stream and in the tablature workbench.
+**Returns to LLM:** Text description of the diagram ("Fretboard showing D minor chord: course 1 open, course 3 fret 2...").
+
+**Returns to UI:** `{ svg: string }` — rendered SVG diagram, displayed inline via tool renderer and optionally in ArtifactsPanel.
+
+
 
 ---
 
-## Event Hooks
+## Agent Setup
 
-### Auto-Compile
+### Browser Entry Point
 
-Every time a `.ly` file is written, the hook triggers `compile()` and pushes the rendered SVG to the tablature workbench. The human sees the arrangement update in real-time as the agent works.
+The main browser entry point creates the Agent, registers tool renderers, and wires up the ChatPanel:
 
-### Error Parser
+```typescript
+// src/main.ts
+import { Agent } from "@mariozechner/pi-agent-core";
+import { ChatPanel, ArtifactsPanel, registerToolRenderer } from "@mariozechner/pi-web-ui";
+import { compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
+         transposeTool, diapasonsTool, fretboardTool } from "./tools";
+import { compileRenderer, fretboardRenderer, playabilityRenderer } from "./renderers";
 
-LilyPond stderr is cryptic Guile stack traces. The hook intercepts compilation failures and re-presents them as structured messages: "Bar 8, beat 3: voice collision on course 3 — two notes assigned to the same course simultaneously."
+// Register custom tool renderers (inline visual feedback in chat)
+registerToolRenderer("compile", compileRenderer);
+registerToolRenderer("fretboard", fretboardRenderer);
+registerToolRenderer("check_playability", playabilityRenderer);
 
-### Profile Auto-Injection
+// Load instrument profiles for system prompt
+const instruments = await fetch("/api/instruments").then(r => r.json());
 
-When the LLM's conversation mentions an instrument (e.g., "arrange for baroque lute"), the hook detects the reference and pre-loads the instrument profile into context. No manual "please load the profile" step.
+// Create Agent with all tools
+const agent = new Agent({
+  initialState: {
+    tools: [
+      compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
+      transposeTool, diapasonsTool, fretboardTool,
+    ],
+    systemPrompt: buildSystemPrompt(instruments),
+  },
+  // LLM calls proxied through server (API keys stay server-side)
+  streamProxy: "/api/stream",
+});
 
+// Wire up the UI
+const chatPanel = document.querySelector("chat-panel") as ChatPanel;
+chatPanel.setAgent(agent);
+```
+
+### System Prompt Design
+
+The system prompt establishes the LLM's role and injects instrument knowledge:
+
+```markdown
+You are Vellum, a music arrangement specialist for historical plucked string
+instruments, classical guitar, piano, and voice. You have expert knowledge of
+baroque lute, baroque guitar, Renaissance lute, theorbo, and classical guitar
+idioms.
+
+## Your Tools
+You have access to domain-specific tools for mechanical correctness. Use them:
+- Call `tabulate` to find valid positions — never guess fret/course placements
+- Call `voicings` to enumerate chord options — pick from real alternatives
+- Call `check_playability` to validate before presenting to the user
+- Call `compile` after generating or modifying LilyPond source
+- Call `diapasons` when working in a new key on baroque lute or theorbo
+
+## Workflow
+1. When given a source file (.ly, MusicXML), read it first
+2. When arranging from memory, warn the user: "I'm working from memory —
+   please verify the pitches against a reference score"
+3. Use tools for all mechanical decisions (positions, voicings, playability)
+4. Always compile and verify before presenting the final result
+5. After a successful compile, use the artifacts tool to update the tablature
+   preview in the side panel
+
+## Instruments
+[Instrument profiles injected here — tunings, constraints, notation type]
+```
+
+**Source-file-first workflow:** The system prompt explicitly instructs the LLM to prefer source files over memory recall. LLMs cannot reliably recall specific pitches (see OQ-02 research). When no source is provided, the LLM must disclose this and recommend verification. This is a v1 design constraint, not a limitation to fix later.
+
+### Auto-Compile Behavior
+
+There is no file-system hook for auto-compilation. The Agent runs in the browser — there is no file system to watch. Instead, auto-compile is handled by **prompt instruction**: the system prompt tells the LLM to call the `compile` tool after generating or modifying LilyPond source. This is simpler and more reliable than event-based triggering.
+
+After a successful compile, the LLM is instructed to call the built-in `artifacts` tool to create or update `tablature.svg` in the ArtifactsPanel. This gives the user a persistent side-panel preview that updates as the arrangement evolves.
+
+### Profile Injection
+
+Instrument profiles are loaded from the server at initialization and included in the system prompt. When the user mentions a specific instrument mid-conversation, the LLM already has the profile in context — no runtime hook needed.
+
+For conversations that switch instruments, the full profile set is included in the system prompt (they're small — ~50 lines each in YAML). If context limits become an issue with very long arrangements, profiles can be lazy-loaded via a `get_instrument` tool call, but this is unlikely to be needed in v1.
 
 ---
 
 ## Instrument Profiles
 
-Each supported instrument is defined as a YAML profile (for tool logic) and a LilyPond include file (.ily, for engraving). Profiles are loaded by the tools and injected into the LLM context via prompt templates.
+Each supported instrument is defined as a YAML profile (for tool logic and system prompts) and a LilyPond include file (.ily, for engraving). Profiles are served to the browser via `GET /api/instruments/:id` and loaded into the system prompt at session start.
 
 ### Baroque Lute (13-course, d-minor)
 
@@ -269,10 +580,12 @@ tuning:                    # highest to lowest
   - { course: 12, pitch: "b,,", note: "B1" }   # sometimes Bb
   - { course: 13, pitch: "a,,", note: "A1" }
 frets: 8                   # typically 8 frets on the neck
-action:                    # Jeff's lute specs
-  treble_8th_fret: "2.4-2.8mm"
-  bass_8th_fret: "3.5-4.5mm"
-  bridge_spacing: "155mm"
+diapason_schemes:          # standard tunings by key (courses 7-13)
+  d_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]     # accord ordinaire
+  a_minor: ["G", "F", "E",  "D", "C", "B",  "A"]     # natural 3rd/7th
+  g_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]     # same as standard
+  d_major: ["G", "F#", "E", "D", "C#", "B",  "A"]    # sharp keys
+  e_minor: ["G", "F#", "E", "D", "C",  "B",  "A"]    # natural with F#
 constraints:
   - "Diapasons (courses 7-13) cannot be fretted — open only"
   - "Maximum left-hand stretch: ~4 frets on upper courses"
@@ -291,18 +604,36 @@ name: "5-Course Baroque Guitar"
 courses: 5
 fretted_courses: 5
 open_courses: 0
-tuning:                    # re-entrant: 4th and 5th courses have octave strings
+tuning:                    # nominal pitches (actual sounding depends on stringing)
   - { course: 1, pitch: "e'",  note: "E4" }
   - { course: 2, pitch: "b",   note: "B3" }
   - { course: 3, pitch: "g",   note: "G3" }
-  - { course: 4, pitch: "d'",  note: "D4", re_entrant: true }   # bourdon + octave
-  - { course: 5, pitch: "a",   note: "A3", re_entrant: true }   # bourdon + octave
+  - { course: 4, pitch: "d'",  note: "D4", re_entrant: true }
+  - { course: 5, pitch: "a",   note: "A3", re_entrant: true }
 frets: 8
+stringing: "french"        # default; options: "french", "italian", "mixed"
+# Stringing variants (per OQ-04 / OQ-18 research):
+#
+# | Variant  | Course 5       | Course 4       | Origin              |
+# |----------|--------------- |----------------|---------------------|
+# | french   | a/a (unison)   | d/d' (octave)  | de Visée, Campion   |
+# | italian  | A/a (bourdon)  | d/d' (octave)  | Foscarini, Corbetta |
+# | mixed    | a/a (unison)   | d/d' (octave)  | Modern compromise   |
+#
+# French: fully re-entrant, maximum campanella, no bass below G3
+# Italian: bourdons on 4+5, bass foundation, continuo-ready
+# Mixed: bourdon on 4 only, partial bass
+#
+# The stringing parameter affects tabulate() and voicings() ranking:
+# - French stringing favors campanella scoring
+# - Italian stringing favors bass-line completeness
 constraints:
-  - "Re-entrant tuning: courses 4-5 sound higher than expected"
+  - "Re-entrant tuning: courses 4-5 sound higher than expected (depends on stringing)"
   - "Strummed (rasgueado) and plucked (punteado) styles"
   - "Alfabeto chord notation for strummed passages"
   - "Campanella especially effective due to re-entrant tuning"
+  - "French stringing: no true bass below G3 (course 3 open)"
+  - "Italian stringing: bass available on courses 4-5 via bourdons"
 notation: "french-letter"  # or italian-number depending on source tradition
 ```
 
@@ -326,6 +657,7 @@ constraints:
   - "All courses fretted"
   - "Thumb-index alternation standard"
   - "Simpler voice leading than baroque lute"
+  - "Intabulation of vocal polyphony is core repertoire"
 notation: "italian-number"  # or french-letter
 ```
 
@@ -451,52 +783,59 @@ Voice profiles enable:
 Additional profiles can be added: archlute, mandora, vihuela, 7-course Dowland-era lute, etc.
 
 
+
 ---
 
 ## Arrangement Engine — How the LLM Thinks
 
 ### Input Types
 
-The LLM accepts multiple input formats:
+The LLM accepts multiple input formats. **Source files are the preferred v1 workflow** — the LLM should not be trusted to recall specific pitches from memory (see research in OPEN-QUESTIONS.md OQ-02).
 
-1. **Natural language** — "Arrange Greensleeves for baroque lute" → LLM uses its knowledge of the melody
-2. **MusicXML file** — parsed into pitches, durations, voices (v2, via import tool)
-3. **LilyPond source** — read directly, modify
-4. **Guitar tablature** — parsed, notes extracted, remapped via `tabulate()` tool
-5. **Lead sheet** — melody + chord symbols → LLM creates full arrangement
-6. **Figured bass** — bass line + figures → LLM realizes the harmony (historically authentic workflow)
+1. **LilyPond source** — read directly, modify. **Primary v1 input.**
+2. **Lead sheet** — melody + chord symbols → LLM creates full arrangement. **Primary v1 input.**
+3. **Guitar tablature** — parsed, notes extracted, remapped via `tabulate()` tool
+4. **Natural language** — "Arrange Greensleeves for baroque lute" → LLM uses its training data. **Best-effort only — LLM must disclose it is working from memory and recommend pitch verification.**
+5. **Figured bass** — bass line + figures → LLM realizes the harmony (historically authentic workflow)
+6. **MusicXML file** — parsed into pitches, durations, voices (v2, via import tool)
 
 ### Arrangement Process
 
 The LLM follows this process, using native tools for mechanical steps:
 
 ```
-1. PITCH MAPPING (via tabulate tool)
+1. SOURCE VERIFICATION
+   - If source file provided: read and parse
+   - If from memory: warn user, recommend verification against reference score
+   - Call diapasons(key) for lute/theorbo to set bass string tuning
+
+2. PITCH MAPPING (via tabulate tool)
    - For each note, call tabulate(pitch, instrument) to get valid positions
    - Score each option: open string preferred > low fret > high fret
-   - Diapasons: exact pitch must match (call diapasons(key) for tuning)
+   - Diapasons: exact pitch must match current tuning scheme
 
-2. VOICE LEADING (LLM musical judgment)
+3. VOICE LEADING (LLM musical judgment)
    - Minimize left-hand movement between chords
    - Prefer common tones held across beats
    - Respect voice independence (bass, tenor, soprano lines)
    - Drop notes that create impossible stretches — prefer musical coherence
 
-3. PLAYABILITY CHECK (via check_playability tool)
+4. PLAYABILITY CHECK (via check_playability tool)
    - Call check_playability(bars, instrument) to validate
    - Fix any violations before proceeding
    - Use voicings(chord, instrument) to find alternatives
 
-4. IDIOM LAYER (LLM musical judgment)
+5. IDIOM LAYER (LLM musical judgment)
    - Brisé: break chords into arpeggiated figures where appropriate
    - Campanella: route scalar passages across courses for ringing effect
-   - Ornamentation: add period-appropriate ornaments
+   - Ornamentation: add period-appropriate ornaments (see Ornaments section)
    - Style brisé specifically for French baroque lute
 
-5. OUTPUT GENERATION
-   - Generate LilyPond tablature notation
-   - compile() auto-triggers via hook → preview updates live
-   - If compilation errors, error-parser hook provides structured feedback
+6. OUTPUT GENERATION
+   - Generate LilyPond tablature notation using appropriate template
+   - Call compile() to render — system prompt instructs this explicitly
+   - If compilation errors, parse structured feedback, fix, recompile
+   - On success, call artifacts tool to update tablature.svg in side panel
    - Iterate until clean
 ```
 
@@ -517,94 +856,200 @@ Converting between instruments (e.g., guitar → lute):
 ### Why LilyPond
 
 - **Text-based input** — LLM generates it natively, no binary format issues
-- **Tablature support** — `\new TabStaff` with custom tunings
+- **Tablature support** — `\new TabStaff` with custom tunings, including French letter tab
 - **Publication quality** — best open-source music engraving available
 - **Programmable** — Scheme extensions for custom behavior
 - **Free** — no licensing issues
 
 ### Server-Side Only
 
-LilyPond is a C++ program depending on Guile (Scheme), Pango, Fontconfig, and GhostScript. It cannot run in the browser. All compilation happens server-side via the `compile` tool. The browser receives rendered SVG/PDF artifacts.
+LilyPond is a C++ program depending on Guile (Scheme), Pango, Fontconfig, and GhostScript. It cannot run in the browser. All compilation happens server-side via `POST /api/compile`. The browser receives rendered SVG/PDF artifacts.
 
 ### French Letter Tablature
 
-French letter tab (the native notation for baroque lute) requires:
-1. A `TabStaff` with `tablatureFormat = #fret-letter-tablature-format` for the letters
-2. A separate `RhythmicStaff` above for rhythm flags
-3. Careful vertical alignment between the two staves
+French letter tab is the native notation for baroque lute. LilyPond 2.24 has full support:
 
-This is more complex than standard guitar tab and requires a dedicated template (`french-tab.ly`).
+```lilypond
+\version "2.24.0"
+
+% Rhythm flags (above the tab)
+rhythm = \relative {
+  \autoBeamOff
+  d'4 a f d8 a |
+  % ...
+}
+
+% Music (the actual notes — shared between tab and hidden MIDI staff)
+music = \relative {
+  \voiceOne
+  d'4 a f d8 a |
+  % ...
+}
+
+\score {
+  <<
+    % Rhythm staff: flags only, no staff lines
+    \new RhythmicStaff \with {
+      \override StaffSymbol.line-count = 0
+      \autoBeamOff
+      \remove Bar_engraver
+      \override VerticalAxisGroup.staff-staff-spacing.basic-distance = 6
+    } \rhythm
+
+    % Tab staff: French letter notation with diapasons
+    \new TabStaff \with {
+      tablatureFormat = #fret-letter-tablature-format
+      stringTunings = \stringTuning <f' d' a f d a,>       % fretted courses 1-6
+      additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % diapasons 7-13
+    } \music
+
+    % Hidden staff for correct MIDI output
+    \new Staff \with {
+      \remove "Staff_symbol_engraver"
+      \override NoteHead.no-ledgers = ##t
+      \override NoteHead.transparent = ##t
+      \override Rest.transparent = ##t
+      \override Dots.transparent = ##t
+      \override Stem.transparent = ##t
+    } \music
+  >>
+
+  \layout { }
+  \midi { \tempo 4 = 72 }
+}
+```
+
+**Key LilyPond features for lute tablature:**
+
+| Feature | Syntax | Purpose |
+|---|---|---|
+| French letters | `tablatureFormat = #fret-letter-tablature-format` | a=open, b=1st fret, c=2nd, etc. |
+| Diapasons | `additionalBassStrings = \stringTuning <...>` | Bass courses below staff, printed as a, /a, //a |
+| Custom fret labels | `fretLabels = #'("a" "b" "c" ...)` | Override default letter mapping if needed |
+| Rhythm flags | `\new RhythmicStaff` above `TabStaff` | Separate rhythm notation above tab |
+| Hidden MIDI staff | `\new Staff \with { ... transparent ... }` | Correct MIDI output (see below) |
+
+### MIDI Output
+
+LilyPond's MIDI from `TabStaff` with custom tunings works for basic cases but has edge cases with `additionalBassStrings`. The reliable pattern is a **hidden parallel Staff** that shares the same music expression:
+
+- The hidden `Staff` produces correct MIDI with proper pitch mapping
+- The visible `TabStaff` handles notation display only (`midiInstrument = ##f` if needed)
+- Both reference the same `\music` variable — no duplication
+
+This pattern is built into all LilyPond templates.
+
+**MIDI instrument mapping:** General MIDI has no "baroque lute." Closest: `"acoustic guitar (nylon)"` (program 25). For theorbo continuo, `"acoustic bass"` (program 33) may be more appropriate for the diapason register.
+
+### Ornaments in Tablature
+
+The six standard baroque lute ornaments for v1, using LilyPond builtins:
+
+| Ornament | French Name | LilyPond | Tab Display | Usage |
+|---|---|---|---|---|
+| Trill | tremblement | `\trill` | Symbol above letter | Very common, most accented notes |
+| Mordent | martellement | `\mordent` | Symbol above letter | Alternation with note below |
+| Appoggiatura | port de voix | `\appoggiatura` | Small grace note | Ascending approach note |
+| Slur | tirade/coulé | `( )` | Arc between letters | Hammer-on / pull-off |
+| Staccato | étouffé | `\staccato` | Dot | Muted/stopped note |
+| Turn | double cadence | `\turn` | Symbol above letter | Upper-lower neighbor figure |
+
+Ornament symbols render above the TabStaff by default. With the RhythmicStaff layout, they appear in the rhythm line area. A full configurable ornament table per style period (Gaultier vs. Mouton vs. Weiss) is a v2 refinement.
 
 ### Output Formats
 
 LilyPond produces:
-- **SVG** — primary output for browser display
+- **SVG** — primary output for browser display (inline in chat via tool renderer, persistent in ArtifactsPanel)
 - **PDF** — for download/print
-- **MIDI** — for playback
-- **PNG** — for static display
+- **MIDI** — for playback (via hidden Staff pattern)
+- **PNG** — for static display (fallback)
 
 ---
 
 ## Workflow Examples
 
-### Example 1: Arrange from Knowledge
+### Example 1: Arrange from Source File
 
 ```
-User: "Arrange Greensleeves for baroque lute. Simple version,
+User: [uploads greensleeves.ly]
+      "Arrange this for baroque lute. Simple version,
        mostly single line with bass notes."
 
 Agent:
-1. Profile-detect hook loads baroque-lute-13
-2. Calls diapasons("A minor") → gets diapason tuning
-3. Calls tabulate() for each melody note → gets course/fret positions
-4. Writes .ly source using template
-5. Auto-compile hook fires → preview appears in workbench
-6. Calls check_playability() → no violations
-7. Returns arrangement with PDF + .ly
+1. Reads uploaded .ly source — extracts melody and harmony
+2. Loads baroque-lute-13 profile (already in system prompt)
+3. Calls diapasons("A minor") → gets diapason tuning
+4. Calls tabulate() for each melody note → gets course/fret positions
+5. Writes .ly source using french-tab.ly template
+6. Calls compile() → SVG rendered, shown inline via tool renderer
+7. Calls check_playability() → no violations
+8. Calls artifacts tool to update tablature.svg in side panel
+9. Returns arrangement with explanation of voicing choices
 ```
 
-### Example 2: Convert Guitar to Lute
+### Example 2: Arrange from Memory (Best-Effort)
 
 ```
-User: [uploads guitar-tab.musicxml]
+User: "Arrange Greensleeves for baroque lute."
+
+Agent:
+1. No source file detected — warns user:
+   "I'm working from memory. Greensleeves is well-known, but I recommend
+    verifying the pitches against a reference score (e.g., from IMSLP or
+    the Mutopia Project)."
+2. Proceeds with best-effort arrangement using training data
+3. Calls diapasons("A minor") → gets diapason tuning
+4. Calls tabulate() for each note → validates against instrument
+5. Writes .ly → compile() → preview
+6. Flags any passages where it's uncertain about the source pitches
+```
+
+### Example 3: Convert Guitar to Lute
+
+```
+User: [uploads guitar-arrangement.ly]
       "Convert this guitar arrangement to baroque lute."
 
 Agent:
-1. Parses MusicXML → extracts pitches + durations
+1. Reads .ly source → extracts pitches + durations
 2. For each note: tabulate(pitch, "baroque-lute-13") → lute positions
 3. Calls voicings() for chords that need revoicing
 4. Calls check_playability() → flags 3 bars with stretch violations
 5. Revoices flagged bars using voicings(chord, max_stretch=3)
-6. Writes .ly → auto-compile → preview
-7. Adjusts idiom (guitar hammer-ons → lute mordents)
+6. Writes .ly → compile() → SVG preview inline
+7. Updates tablature.svg in side panel via artifacts tool
+8. Adjusts idiom (guitar hammer-ons → lute mordents, arpeggios → brisé)
 ```
 
-### Example 3: Iterative Editing
+### Example 4: Iterative Editing
 
 ```
 User: "The stretch in bar 8 is too wide. Can you revoice that chord?"
 
 Agent:
-1. Reads current .ly source, identifies bar 8
+1. Identifies bar 8 in current arrangement
 2. Extracts chord pitches → calls voicings(pitches, instrument, max_stretch=3)
 3. Gets 4 alternatives ranked by quality
 4. Picks the best, explains the trade-off ("dropped the tenor D3")
-5. Edits .ly → auto-compile → workbench updates live
+5. Edits .ly source → compile() → preview updates inline
+6. Updates tablature.svg in side panel
 ```
 
-### Example 4: Instrument Swap
+### Example 5: Instrument Swap
 
 ```
 User: "Now give me this same piece for baroque guitar."
 
 Agent:
-1. Profile-detect hook loads baroque-guitar-5
-2. For each note: tabulate(pitch, "baroque-guitar-5")
-3. Drops bass lines that don't fit (5 courses vs 13)
-4. Adjusts for re-entrant tuning on courses 4-5
-5. check_playability() → clean
-6. May suggest rasgueado for chordal passages
-7. New .ly → auto-compile → new preview in workbench
+1. Loads baroque-guitar-5 profile (already in system prompt)
+2. Asks: "Which stringing? French (no bourdons, full campanella),
+   Italian (with bourdons, bass available), or mixed?"
+3. User picks French
+4. For each note: tabulate(pitch, "baroque-guitar-5")
+5. Drops bass lines that don't fit (5 courses, no bass below G3 with French stringing)
+6. check_playability() → clean
+7. May suggest rasgueado for chordal passages
+8. New .ly → compile() → new preview
 ```
 
 ---
@@ -622,6 +1067,7 @@ An arrangement is "good" if:
 The LLM should flag when it makes compromises (dropped notes, simplified voicing) and explain why.
 
 
+
 ---
 
 ## File Structure
@@ -634,29 +1080,29 @@ vellum/
 ├── README.md
 ├── package.json               # Node.js project root
 ├── tsconfig.json
+├── vite.config.ts             # Vite config for browser bundle
 │
 ├── src/
-│   ├── server.ts              # Express/Fastify server + pi-agent-core setup
-│   ├── extension.ts           # Main pi extension: registers tools, hooks
-│   ├── tools/
-│   │   ├── compile.ts         # LilyPond compile + preview
-│   │   ├── tabulate.ts        # Pitch → tab position mapping
-│   │   ├── playability.ts     # Stretch/collision checking
-│   │   ├── voicings.ts        # Chord voicing enumeration
-│   │   ├── transpose.ts       # Transposition with range validation
-│   │   ├── diapasons.ts       # Key-specific diapason tuning
-│   │   └── fretboard.ts       # SVG fret diagram renderer
-│   ├── hooks/
-│   │   ├── auto-compile.ts    # Compile on .ly save
-│   │   ├── error-parser.ts    # LilyPond stderr → structured errors
-│   │   └── profile-detect.ts  # Auto-load instrument on mention
-│   └── web/
-│       ├── app.ts             # pi-web-ui ChatPanel + custom artifact panel
-│       └── artifacts/
-│           ├── tablature.ts   # SVG/PDF tablature renderer
-│           ├── score.ts       # OSMD/VexFlow interactive score (v2)
-│           ├── fretboard.ts   # Fretboard diagram component
-│           └── player.ts      # MIDI playback via Web Audio (v2)
+│   ├── main.ts                # Browser entry: Agent setup, ChatPanel wiring,
+│   │                          #   tool renderer registration
+│   ├── tools.ts               # All AgentTool<T> definitions (compile, tabulate,
+│   │                          #   voicings, check_playability, transpose,
+│   │                          #   diapasons, fretboard)
+│   ├── renderers.ts           # registerToolRenderer() implementations for
+│   │                          #   compile (SVG), fretboard (SVG), playability
+│   ├── prompts.ts             # System prompt builder — instrument profile
+│   │                          #   injection, workflow instructions
+│   ├── types.ts               # Shared TypeBox schemas, TypeScript interfaces
+│   │                          #   (TabPosition, Voicing, CompileError, etc.)
+│   │
+│   └── server/
+│       ├── index.ts           # Express server: static assets, API routes,
+│       │                      #   streamProxy endpoint
+│       ├── compile.ts         # POST /api/compile — LilyPond subprocess,
+│       │                      #   stderr parsing into structured errors
+│       ├── instruments.ts     # GET /api/instruments — serves YAML profiles
+│       ├── arrangements.ts    # GET/POST /api/arrangements — persistence
+│       └── templates.ts       # GET /api/templates — LilyPond template source
 │
 ├── instruments/               # Instrument profile definitions
 │   ├── baroque-lute-13.yaml
@@ -677,27 +1123,35 @@ vellum/
 │   ├── voice-bass.yaml
 │   └── voice.ily
 │
-├── templates/                 # LilyPond boilerplate
-│   ├── solo-tab.ly            # Tab only
-│   ├── tab-and-staff.ly       # Tab + standard notation
-│   ├── french-tab.ly          # French letter tab (RhythmicStaff + TabStaff)
+├── templates/                 # LilyPond boilerplate templates
+│   ├── solo-tab.ly            # Tab only (guitar number tab)
+│   ├── tab-and-staff.ly       # Tab + standard notation side by side
+│   ├── french-tab.ly          # French letter tab: RhythmicStaff + TabStaff
+│   │                          #   + hidden Staff for MIDI
 │   ├── grand-staff.ly         # Piano (treble + bass)
 │   ├── voice-and-tab.ly       # Voice line + lute/guitar tab
 │   ├── voice-and-piano.ly     # Voice line + piano accompaniment
 │   ├── satb.ly                # Four-part choral
 │   └── continuo.ly            # Figured bass realization
 │
-├── prompts/                   # pi prompt templates
-│   ├── arrange.md             # /arrange <piece> for <instrument>
-│   ├── convert.md             # /convert <source> to <target>
-│   ├── revoice.md             # /revoice bar <N>
-│   └── compile.md             # /compile — force recompile
-│
-├── arrangements/              # Completed arrangements
+├── arrangements/              # Saved arrangements (server-side)
 │   └── .../
-└── sources/                   # Input files (MusicXML, reference scores)
-    └── .../
+├── sources/                   # Input files (reference scores, lead sheets)
+│   └── .../
+│
+└── public/                    # Static assets served by Express
+    └── index.html             # Shell HTML that loads the Vite-built bundle
 ```
+
+**What changed from the original file structure:**
+- Removed `src/extension.ts` — Vellum is not a pi coding-agent extension
+- Removed `src/hooks/` directory — auto-compile is a prompt instruction, error parsing is in `server/compile.ts`, profile injection is in `prompts.ts`
+- Renamed `src/web/app.ts` → `src/main.ts` — this is the browser entry point
+- Added `src/server/` — Express server with API endpoints
+- Added `src/renderers.ts` — `registerToolRenderer()` implementations
+- Added `src/types.ts` — shared TypeBox schemas
+- Added `vite.config.ts` — browser build configuration
+- Added `public/` — static assets
 
 ---
 
@@ -719,10 +1173,16 @@ services.vellum = {
 ```
 
 The NixOS module provides:
-- **systemd service** — runs the Node.js server
-- **LilyPond dependency** — pinned, reproducible, no version drift
+- **systemd service** — runs the Express server (serves browser assets + API + LLM proxy)
+- **LilyPond dependency** — `pkgs.lilypond` pinned at 2.24.x, reproducible, no version drift
 - **Traefik integration** — reverse proxy with mTLS via step-ca
-- **Secrets management** — API keys never in the repo
+- **Secrets management** — API keys injected at runtime, never in the repo
+- **Data directory** — `/var/lib/vellum/arrangements/` for saved arrangements
+
+The Nix build:
+1. `buildNpmPackage` builds the Express server + Vite browser bundle
+2. LilyPond is a runtime dependency, not a build dependency
+3. The `xlsx` CDN tarball URL in pi-web-ui's dependency tree may need lockfile patching for `fetchNpmDeps` — test early
 
 This follows the same deployment pattern as the existing A2A adapter and Hermes agent on servoid.
 
@@ -730,34 +1190,89 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 
 ## v1 Scope
 
+### Infrastructure
 - [ ] Set up pi-mono packages (`pi-agent-core`, `pi-web-ui`, `pi-ai`)
-- [ ] Install LilyPond via Nix
-- [ ] Register custom tools: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`
-- [ ] Create instrument profiles (YAML + .ily) for all 7 instruments
-- [ ] Create LilyPond templates (solo-tab, tab+staff, french-tab, grand-staff, voice+tab, voice+piano, satb, continuo)
-- [ ] Wire up pi-web-ui ChatPanel with custom tablature artifact renderer (SVG/PDF inline)
-- [ ] Auto-compile hook (write .ly → compile → preview updates)
-- [ ] LilyPond error parser hook
-- [ ] Profile auto-injection hook
-- [ ] Create prompt templates (`/arrange`, `/convert`, `/revoice`, `/compile`)
-- [ ] Arrange one test piece end-to-end (BWV 996 Bourrée or Dowland "Flow My Tears")
+- [ ] Express server with API endpoints (`/api/stream`, `/api/compile`, `/api/instruments`, `/api/arrangements`, `/api/templates`)
+- [ ] `streamProxy` integration for LLM API key security
+- [ ] Vite build pipeline for browser bundle
+- [ ] Install LilyPond via Nix (2.24.x)
 - [ ] Create `flake.nix` with package + NixOS module
-- [ ] Deploy on servoid
+- [ ] Deploy on servoid behind Traefik
+
+### Tools
+- [ ] Define all `AgentTool<T>` objects with TypeBox schemas: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`
+- [ ] Implement server-side `POST /api/compile` with LilyPond subprocess and structured error parsing
+- [ ] Implement `tabulate` — pitch → position lookup against instrument profiles
+- [ ] Implement `voicings` — chord voicing enumeration with stretch/campanella ranking
+- [ ] Implement `check_playability` — stretch, same-course, RH pattern validation + difficulty rating
+- [ ] Implement `transpose` — interval transposition with range validation and idiomatic key suggestions
+- [ ] Implement `diapasons` — key → diapason tuning lookup table (5 standard schemes + override)
+- [ ] Implement `fretboard` — SVG fretboard diagram renderer
+
+### UI
+- [ ] Wire `ChatPanel` + `ArtifactsPanel` with custom tool renderers
+- [ ] `registerToolRenderer("compile", ...)` — inline SVG preview in chat
+- [ ] `registerToolRenderer("fretboard", ...)` — inline fretboard diagram
+- [ ] `registerToolRenderer("check_playability", ...)` — inline violation report
+
+### Instrument Data
+- [ ] Create instrument profiles (YAML + .ily) for all 7 instruments
+- [ ] Include diapason tuning schemes in baroque lute profile
+- [ ] Include stringing variants in baroque guitar profile
+- [ ] Create LilyPond templates: `french-tab.ly` (with RhythmicStaff + hidden MIDI Staff), `solo-tab.ly`, `tab-and-staff.ly`, `grand-staff.ly`, `voice-and-tab.ly`, `voice-and-piano.ly`, `satb.ly`, `continuo.ly`
+- [ ] French letter tablature working end-to-end (v1, not v2 — this is the native notation for the primary instrument)
+
+### Agent
+- [ ] System prompt with instrument profiles, workflow instructions, source-file-first guidance
+- [ ] Prompt instructions for auto-compile behavior (call compile after generating .ly)
+- [ ] Prompt instructions for artifacts panel updates (call artifacts tool after successful compile)
+
+### Validation
+- [ ] **Test piece: Dowland "Flow My Tears" (Lachrimae)** — see below
+- [ ] End-to-end: upload .ly source → arrange for baroque lute → French tab output → SVG preview → MIDI playback
+- [ ] End-to-end: convert guitar tab → baroque lute French tab
+- [ ] Verify LilyPond French tab template with polyphonic voices + diapasons + ornaments
+
+### Test Piece: Dowland "Flow My Tears" (Lachrimae)
+
+**Recommendation:** John Dowland's "Flow My Tears" (from *The Second Booke of Songs or Ayres*, 1600) as the primary v1 test piece.
+
+**Why this piece:**
+- **Voice + lute** — exercises the voice-and-tab template, the most complex layout
+- **Well-documented** — multiple modern editions available, public domain, IMSLP has facsimiles
+- **Intabulation opportunity** — the vocal line can be intabulated for solo lute, testing instrument conversion
+- **Tests diapasons** — the lute part uses bass courses that align with d-minor/A-minor diapason tuning
+- **Ornaments** — period-appropriate trills and mordents in the lute part
+- **Moderate difficulty** — intermediate-level lute writing, good for validating playability checks
+- **Cultural significance** — one of the most famous English lute songs, widely recognized
+
+**Test scenarios with this piece:**
+1. Upload Dowland .ly source → compile → French tab + voice line
+2. Arrange for solo lute (intabulation of the vocal part)
+3. Convert to classical guitar (test instrument swap)
+4. Revoice a passage (test iterative editing)
+5. Change key (test transposition + diapason retuning)
+
+**Secondary test piece:** BWV 996 Bourrée (Bach) — purely instrumental, tests baroque lute idiom without voice. Good for simpler validation if voice+tab proves complex.
 
 ## v2 Scope
 
-- [ ] OSMD/VexFlow interactive score rendering in browser (guitar/piano; lute via LilyPond SVG)
-- [ ] MIDI playback via Web Audio API
+- [ ] OSMD/VexFlow interactive score rendering for standard notation (guitar, piano, voice — **not** tablature, which stays LilyPond SVG)
+- [ ] MIDI playback via Web Audio API (HTML artifact with embedded player)
 - [ ] Bar-click interaction (click a bar → agent knows which bar to revoice)
-- [ ] MusicXML import tool (JS parser or Rust/WASM crate)
-- [ ] Fretboard visualization with position overlay
-- [ ] Arrangement library with session management
+- [ ] MusicXML import tool (JS parser)
+- [ ] MusicXML export (via MuseScore CLI on server, or custom writer)
+- [ ] Fretboard visualization with position overlay (interactive, beyond static SVG)
+- [ ] Arrangement library with server-side session persistence (beyond IndexedDB)
 - [ ] Session branching for "try it this way" workflows
 - [ ] Figured bass realization workflow
-- [ ] French letter tablature refinement (test LilyPond's `fret-letter-tablature-format`)
 - [ ] Batch conversion (whole suites at once)
-- [ ] Ornamentation table (configurable per style period)
-
+- [ ] Configurable ornament table per style period (Gaultier, Mouton, Weiss defaults)
+- [ ] Additional instrument profiles: archlute, mandora, vihuela, 7-course Dowland lute, 10-course Renaissance lute
+- [ ] Automated pitch verification tool (compare against melody database)
+- [ ] German tablature support (evaluate demand vs. effort)
+- [ ] Voice text underlay mechanics (lyrics aligned to notes)
+- [ ] Piano pedaling model (systematic Ped/senza ped markings)
 
 ---
 
@@ -769,57 +1284,55 @@ The core realization: **v1 needs almost no code for the musical intelligence.** 
 1. A conversational interface with visual feedback
 2. Native tools that handle mechanical correctness
 3. A way to run LilyPond server-side
+4. A clean client-server split that keeps API keys secure
 
-Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + artifacts panel, `pi-agent-core` agent loop). Vellum provides #2 (custom tools registered via pi's extension API). NixOS provides #3 (LilyPond pinned as a Nix dependency, deployed on servoid).
+Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-agent-core` Agent loop + tool framework). Vellum provides #2 (custom `AgentTool<T>` objects with server API backends). NixOS provides #3 and deployment (#4 via Traefik + mTLS + streamProxy).
 
 **Why pi-mono over building from scratch:**
-- Pi already provides the agent loop, tool registration, event system, web UI, and session persistence
+- Pi already provides the agent loop, tool framework, web UI, artifact display, session storage, and LLM proxy
 - Building these from scratch would replicate what pi does, but worse
-- Pi's extension system (`registerTool`, `on()` events) is the exact API surface Vellum needs
-- Pi's SDK mode allows embedding in a custom server — not locked into the terminal
-- The `pi-web-ui` artifacts panel supports custom artifact types (SVG tablature, fretboard diagrams)
+- Pi's `AgentTool<T>` pattern with TypeBox schemas maps perfectly to Vellum's domain tools
+- `registerToolRenderer()` enables inline visual feedback (SVG preview, fretboard diagrams) in the chat stream
+- The `ArtifactsPanel` handles the tablature workbench with no custom code (SVG is a built-in artifact type)
+- `streamProxy` solves the API key security problem cleanly
 
 ### Alternative Considered: Python + music21
 
 **Strengths:**
-- **music21** is the only comprehensive music theory library in any language — MusicXML, MIDI, LilyPond export, voice leading, counterpoint rules
+- **music21** is the only comprehensive music theory library in any language
 - Fastest prototype path for parsing and transposition
 
 **Weaknesses:**
 - Runtime type errors in production
-- Dependency management fragility (pip, venv conflicts)
+- Dependency management fragility
 - music21 doesn't help with the hard part (instrument-specific tab math, playability)
 - No web UI path without a second language
 - The LLM handles what music21 is best at (musical analysis, arrangement decisions)
 
-**Verdict:** music21 solves the wrong problem. Its strength is musical analysis; Vellum's hard problem is mechanical correctness for exotic instruments. The LLM replaces music21's analytical capabilities; custom tools replace its computational ones.
+**Verdict:** music21 solves the wrong problem. The LLM replaces its analytical capabilities; custom tools replace its computational ones.
 
 ### Alternative Considered: Custom TypeScript + Rust/WASM
 
 **Strengths:**
-- Maximum control, clean TypeScript/Rust boundary
-- Rust for correctness-critical math, TypeScript for everything else
+- Maximum control, Rust for correctness-critical math
 
 **Weaknesses:**
 - Rebuilds the agent loop, web UI, session management from scratch
-- The WASM bridge adds complexity (serde serialization, not zero-cost typed bindings)
 - LilyPond can't run in the browser anyway — WASM doesn't help with the main pipeline
-- Validates LilyPond source in Rust? No Rust LilyPond parser exists
-- Double-rewrite problem: TypeScript placeholder math → Rust rewrite
+- Over-engineered for v1
 
-**Verdict:** Over-engineered. Pi-mono provides the infrastructure; custom tools provide the domain expertise. The Rust/WASM engine could be revisited in v2 if tool performance becomes a bottleneck (e.g., batch voicing enumeration), but v1 doesn't need it.
+**Verdict:** Revisit in v2 if tool performance becomes a bottleneck (e.g., batch voicing enumeration).
 
 ### Alternative Considered: Pure Prompt Engineering (Skill file + bash)
 
 **Strengths:**
-- Zero code — just a SKILL.md with instrument profiles and `bash lilypond`
-- Works today in any agent harness
+- Zero code — just a system prompt with instrument profiles
 
 **Weaknesses:**
 - LLM invents fret positions from training data (error-prone)
-- Compilation errors come back as raw stderr (LLM wastes tokens parsing Guile stack traces)
+- Compilation errors come back as raw stderr
 - No visual feedback — human downloads PDF to check
-- No playability validation until a human reads the tab
+- No playability validation
 - Every arrangement burns tokens on mechanical correctness the tools should handle
 
 **Verdict:** This is where the project started. Native tools are the difference between "an agent that can sort of do this" and "an agent that's genuinely good at this."
@@ -828,11 +1341,15 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + artifacts panel, `pi
 
 ## References
 
-- [pi-mono](https://github.com/badlogic/pi-mono) — AI agent toolkit (coding agent CLI, unified LLM API, TUI & web UI libraries)
+- [pi-mono](https://github.com/badlogic/pi-mono) — AI agent toolkit (coding agent, unified LLM API, web UI components)
 - [pi-web-ui](https://www.npmjs.com/package/@mariozechner/pi-web-ui) — Reusable web UI components for AI chat interfaces
-- [LilyPond Tablature docs](https://lilypond.org/doc/v2.24/Documentation/notation/common-notation-for-fretted-strings)
+- [pi-agent-core](https://www.npmjs.com/package/@mariozechner/pi-agent-core) — Agent loop, tool framework, streamProxy
+- [LilyPond Tablature docs](https://lilypond.org/doc/v2.24/Documentation/notation/common-notation-for-fretted-strings) — fretted string notation
+- [LilyPond Lute tablature](https://lilypond.org/doc/v2.24/Documentation/notation/lute-tablatures) — French tab, diapasons, `fret-letter-tablature-format`
 - [Fronimo](https://sites.google.com/view/fronimo/home) — reference for historical tablature rendering
 - [MEI Tablature encoding](https://music-encoding.org/guidelines/v5/content/tablature.html) — future interchange format
-- [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) — browser-based MusicXML rendering
+- [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) — browser MusicXML rendering (standard notation only, not tablature)
 - Nigel North, *Continuo Playing on the Lute, Archlute and Theorbo* — baroque lute tuning reference
 - Robert Dowland, *Varietie of Lute Lessons* (1610) — ornament tables
+- James Tyler & Paul Sparks, *The Guitar and its Music* (2002) — baroque guitar stringing evidence
+- Gaspar Sanz, *Instrucción de música sobre la guitarra española* (1674) — stringing taxonomy
