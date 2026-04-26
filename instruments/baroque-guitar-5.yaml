@@ -1,0 +1,39 @@
+id: baroque-guitar-5
+name: "5-Course Baroque Guitar"
+courses: 5
+fretted_courses: 5
+open_courses: 0
+tuning:
+  - { course: 1, pitch: "e'", note: "E4" }
+  - { course: 2, pitch: "b", note: "B3" }
+  - { course: 3, pitch: "g", note: "G3" }
+  - { course: 4, pitch: "d'", note: "D4", re_entrant: true }
+  - { course: 5, pitch: "a", note: "A3", re_entrant: true }
+frets: 8
+stringing:
+  default: "french"
+  variants:
+    french:
+      course5: "a/a unison"
+      course4: "d/d' octave"
+      origin: "de Visee, Campion"
+      description: "Fully re-entrant, maximum campanella, no bass below G3."
+    italian:
+      course5: "A/a bourdon+octave"
+      course4: "d/d' octave"
+      origin: "Foscarini, Corbetta"
+      description: "Bourdons on lower courses provide bass foundation for continuo."
+    mixed:
+      course5: "a/a unison"
+      course4: "d/d' octave"
+      origin: "Modern compromise"
+      description: "Partial bass color with re-entrant upper-course behavior."
+constraints:
+  - "Re-entrant tuning: courses 4-5 sound higher than expected (depends on stringing)"
+  - "Strummed (rasgueado) and plucked (punteado) styles"
+  - "Alfabeto chord notation for strummed passages"
+  - "Campanella especially effective due to re-entrant tuning"
+  - "French stringing: no true bass below G3 (course 3 open)"
+  - "Italian stringing: bass available on courses 4-5 via bourdons"
+notation: "french-letter"
+

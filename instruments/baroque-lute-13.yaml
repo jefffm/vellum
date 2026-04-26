@@ -1,0 +1,35 @@
+id: baroque-lute-13
+name: "13-Course Baroque Lute (d-minor)"
+courses: 13
+fretted_courses: 6
+open_courses: 7
+tuning:
+  - { course: 1, pitch: "f'", note: "F4" }
+  - { course: 2, pitch: "d'", note: "D4" }
+  - { course: 3, pitch: "a", note: "A3" }
+  - { course: 4, pitch: "f", note: "F3" }
+  - { course: 5, pitch: "d", note: "D3" }
+  - { course: 6, pitch: "a,", note: "A2" }
+  - { course: 7, pitch: "g,", note: "G2" }
+  - { course: 8, pitch: "f,", note: "F2" }
+  - { course: 9, pitch: "e,", note: "E2" }
+  - { course: 10, pitch: "d,", note: "D2" }
+  - { course: 11, pitch: "c,", note: "C2" }
+  - { course: 12, pitch: "b,,", note: "B1" }
+  - { course: 13, pitch: "a,,", note: "A1" }
+frets: 8
+diapason_schemes:
+  d_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]
+  a_minor: ["G", "F", "E", "D", "C", "B", "A"]
+  g_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]
+  d_major: ["G", "F#", "E", "D", "C#", "B", "A"]
+  e_minor: ["G", "F#", "E", "D", "C", "B", "A"]
+constraints:
+  - "Diapasons (courses 7-13) cannot be fretted -- open only"
+  - "Maximum left-hand stretch: ~4 frets on upper courses"
+  - "Thumb plays courses 4-13; index-middle alternate on 1-3"
+  - "Campanella encouraged -- let notes ring across courses"
+  - "Brise (broken chord) texture is idiomatic, especially in French style"
+  - "Right-hand thumb-under technique for bass runs"
+notation: "french-letter"
+
