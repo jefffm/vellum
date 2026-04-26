@@ -1052,6 +1052,34 @@ Agent:
 8. New .ly → compile() → new preview
 ```
 
+### Example 6: Hymnal Conversion (SATB → Baroque Guitar)
+
+```
+User: "I have 'All Creatures of Our God and King' from my hymnal in D major,
+       SATB + organ. Arrange it for baroque guitar."
+
+Agent:
+1. Reads the uploaded source (MusicXML or .ly)
+2. Analyzes: 4-voice SATB, D major, melody in soprano, Alleluia refrains
+3. "D major isn't ideal for baroque guitar — I'll transpose to A minor.
+    That puts the melody on courses 1-2 with open strings available.
+    Which stringing? French (full re-entrant), Italian, or mixed?"
+4. User picks French
+5. Extracts melody (soprano) + chord analysis from inner voices
+6. For verses: punteado arrangement
+   - Melody on courses 1-3 via tabulate()
+   - Bass line simplified for courses 4-5 (re-entrant — octave higher)
+   - check_playability() → clean
+7. For Alleluia refrains: rasgueado arrangement
+   - voicings(chord, "baroque-guitar-5", stringing="french")
+   - Strummed chords with rhythm notation
+8. Adds period-appropriate ornaments (mordents on cadences)
+9. compile() → French tab preview (punteado sections)
+   + alfabeto notation for rasgueado sections
+10. "Bars 5-8 have a wide tenor-bass gap — I dropped the alto D
+     and doubled the root in the strummed chord instead."
+```
+
 ---
 
 ## Quality Criteria
@@ -1229,8 +1257,10 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 
 ### Validation
 - [ ] **Test piece: Dowland "Flow My Tears" (Lachrimae)** — see below
+- [ ] **Test piece: "All Creatures of Our God and King" (LASST UNS ERFREUEN)** — hymnal SATB → baroque guitar conversion
 - [ ] End-to-end: upload .ly source → arrange for baroque lute → French tab output → SVG preview → MIDI playback
 - [ ] End-to-end: convert guitar tab → baroque lute French tab
+- [ ] End-to-end: SATB hymnal → baroque guitar (punteado + rasgueado)
 - [ ] Verify LilyPond French tab template with polyphonic voices + diapasons + ornaments
 
 ### Test Piece: Dowland "Flow My Tears" (Lachrimae)
@@ -1254,6 +1284,37 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 5. Change key (test transposition + diapason retuning)
 
 **Secondary test piece:** BWV 996 Bourrée (Bach) — purely instrumental, tests baroque lute idiom without voice. Good for simpler validation if voice+tab proves complex.
+
+### Test Piece 3: "All Creatures of Our God and King" (LASST UNS ERFREUEN)
+
+**Hymnal → baroque guitar conversion test.** This tests the full real-world workflow: take a standard SATB + organ hymn setting and produce a playable baroque guitar arrangement.
+
+**Why this piece:**
+- **Tune is from 1623** (*Geistliche Kirchengesäng*, Cologne) — literally contemporaneous with the baroque guitar's golden age
+- **Text by St. Francis of Assisi** (Canticle of the Sun, ~1225) — public domain, significant in Catholic tradition
+- **Tests the hardest conversion pipeline** — SATB/organ → 5-course baroque guitar requires harmonic reduction, voice thinning, key transposition, and style decisions (rasgueado vs. punteado)
+- **The Alleluia refrains** — repeated descending figures that naturally call for rasgueado (strummed) treatment, while verses suit punteado (plucked) melody + bass
+- **Transposition test** — hymnals usually print this in D or Eb major; baroque guitar wants A minor or G major for idiomatic open-string usage with re-entrant tuning
+- **Re-entrant tuning payoff** — courses 4-5 sounding an octave higher means strummed chords ring with natural brightness that organ can't replicate
+- **Real liturgical use** — the output is something you could actually play at Mass or at home
+
+**The conversion workflow this validates:**
+```
+Input:  SATB hymnal setting (PDF scan or MusicXML from hymnary.org)
+Step 1: Extract melody (soprano) + harmony (chord analysis from SATB voices)
+Step 2: Transpose to baroque-guitar-friendly key (D major → A minor or G major)
+Step 3: Arrange verses as punteado (melody on courses 1-3, bass on 4-5)
+Step 4: Arrange Alleluia refrains as rasgueado (alfabeto chord notation)
+Step 5: Add period-appropriate ornaments
+Output: French letter tab or number tab PDF + optional voice line
+```
+
+**Test scenarios:**
+1. Upload SATB hymnal setting (MusicXML) → analyze harmony → produce baroque guitar arrangement
+2. Generate both punteado (plucked) and rasgueado (strummed) sections within one piece
+3. Test alfabeto chord notation for strummed passages
+4. Convert the same hymn to classical guitar (compare voicing decisions)
+5. Produce a voice + guitar version (melody line + guitar accompaniment)
 
 ## v2 Scope
 
