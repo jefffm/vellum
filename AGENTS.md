@@ -84,14 +84,14 @@ acceptance criteria and test specifications. Follow them.
 
 These are factored out specifically to prevent code duplication. Use them.
 
-| Abstraction | File | Purpose |
-|---|---|---|
-| `createServerTool` | `src/lib/create-server-tool.ts` | Browser tool factory — config → AgentTool with fetch |
-| `toolResult` / `toolError` | `src/lib/tool-helpers.ts` | Uniform tool result builders |
-| `SubprocessRunner` | `src/server/lib/subprocess.ts` | Temp files + spawn + timeout + cleanup |
-| `createApiRoute` | `src/server/lib/create-route.ts` | Express route factory with validation |
-| `InstrumentModel` | `src/lib/instrument-model.ts` | Core domain model — wraps profile, provides pitch↔position |
-| `TestHarness` | `test/lib/` | TestServer + tableTest() + fixture loader |
+| Abstraction                | File                             | Purpose                                                    |
+| -------------------------- | -------------------------------- | ---------------------------------------------------------- |
+| `createServerTool`         | `src/lib/create-server-tool.ts`  | Browser tool factory — config → AgentTool with fetch       |
+| `toolResult` / `toolError` | `src/lib/tool-helpers.ts`        | Uniform tool result builders                               |
+| `SubprocessRunner`         | `src/server/lib/subprocess.ts`   | Temp files + spawn + timeout + cleanup                     |
+| `createApiRoute`           | `src/server/lib/create-route.ts` | Express route factory with validation                      |
+| `InstrumentModel`          | `src/lib/instrument-model.ts`    | Core domain model — wraps profile, provides pitch↔position |
+| `TestHarness`              | `test/lib/`                      | TestServer + tableTest() + fixture loader                  |
 
 When adding a new tool or endpoint, check if these already handle your boilerplate.
 
@@ -102,14 +102,92 @@ When adding a new tool or endpoint, check if these already handle your boilerpla
 - **Server tests:** use `TestServer` from `test/lib/test-server.ts` (starts Express, provides .post/.get)
 - **Fixtures:** `test/fixtures/` — MusicXML and LilyPond sample files
 - Write tests alongside implementation. Every bead specifies its test cases.
+- **Targeted formatting:** prefer `npx prettier --write <changed files>` before committing. Avoid `npm run format` unless intentionally formatting the whole repo.
+- **Nix-only integration deps:** LilyPond and music21 integration checks require `nix develop`. Outside Nix, still validate Python syntax with `python3 -m py_compile src/server/theory.py`.
+
+### Browser Smoke Test
+
+Use this when changing browser tools, Vite imports, `main.ts`, or API calls from the frontend.
+
+```bash
+# Terminal 1: Vite frontend
+npm run dev -- --host 127.0.0.1
+
+# Optional terminal 2: Express server for /api proxy checks
+npm run server
+
+# Linux Chrome fallback if browser-tools/browser-start.js is hardcoded for macOS:
+google-chrome-stable \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.cache/browser-tools" \
+  --no-first-run \
+  --no-default-browser-check \
+  --headless=new \
+  --disable-gpu \
+  --no-sandbox
+
+# Navigate and smoke-check app state
+/home/jeff/.pi/agent/skills/pi-skills/browser-tools/browser-nav.js http://127.0.0.1:5173
+/home/jeff/.pi/agent/skills/pi-skills/browser-tools/browser-eval.js \
+'JSON.stringify({title: document.title, ready: document.querySelector("#artifacts-panel")?.dataset.ready})'
+```
+
+### Browser Tool Execution Check
+
+This catches Vite/browser import issues (`?raw` YAML imports, `tonal`, accidental server imports) and verifies browser-only tools do not fetch.
+
+```bash
+/home/jeff/.pi/agent/skills/pi-skills/browser-tools/browser-eval.js '
+(async function() {
+  const mod = await import("/src/tools.ts?t=" + Date.now());
+  const calls = [];
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    calls.push(String(args[0]));
+    return originalFetch(...args);
+  };
+  try {
+    const tab = await mod.tabulateTool.execute("check", {
+      pitch: "F4",
+      instrument: "baroque-lute-13"
+    });
+    const theory = await mod.theoryTool.execute("check", {
+      operation: "interval",
+      args: { from: "C4", to: "G4" }
+    });
+    return JSON.stringify({
+      tools: mod.tools.map(t => t.name),
+      tab: tab.details,
+      theory: theory.details,
+      fetchCallsDuringExecute: calls
+    }, null, 2);
+  } finally {
+    window.fetch = originalFetch;
+  }
+})()
+'
+```
+
+### Beads Recovery
+
+If `br close` / `br update` fails with SQLite FK/cache errors:
+
+```bash
+br doctor --repair
+br sync --import-only --rebuild
+```
+
+Only edit `.beads/issues.jsonl` directly as a last resort, then run `br sync --import-only --rebuild` and verify with `br show <id>`.
 
 ## Instruments
 
 7 profiles defined in `instruments/*.yaml`. Two built (v1 priority):
+
 - `baroque-lute-13` — 13-course d-minor tuning, French letter tab, 8 frets, 7 diapason courses
 - `baroque-guitar-5` — 5-course re-entrant tuning, 3 stringing variants, French letter tab
 
 Key domain concepts:
+
 - **Course** ≠ string (a course may be double-strung)
 - **Diapason** = unfretted bass course (open pitch only)
 - **Re-entrant tuning** = course pitched higher than its neighbor (baroque guitar courses 4-5)
