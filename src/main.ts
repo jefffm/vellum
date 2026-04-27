@@ -90,7 +90,9 @@ export async function main(): Promise<void> {
     return;
   }
 
-  await chatPanel.setAgent(agent);
+  await chatPanel.setAgent(agent, {
+    toolsFactory: () => vellumTools,
+  });
   markArtifactsPanelReady();
 }
 
