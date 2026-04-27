@@ -45,6 +45,7 @@ describe("buildSystemPrompt", () => {
 
     expect(prompt).toContain("immediately call the `compile` tool with SVG output");
     expect(prompt).toContain("without asking the user for permission");
+    expect(prompt).toContain('Do not send interim text like "I\'ll do that next"');
     expect(prompt).toContain("at most 3 compile attempts");
     expect(prompt).toContain('Never say variants of "proceed and I will compile/fix it"');
     expect(prompt).toContain("Only report success after `compile` returns an SVG or PDF artifact");

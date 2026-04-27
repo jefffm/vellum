@@ -17,6 +17,7 @@ import { diapasonsTool } from "./diapasons.js";
 import { fretboardTool } from "./fretboard.js";
 import { loadAllBrowserProfiles } from "./lib/browser-profiles.js";
 import { installCompileRetryGuard } from "./lib/compile-retry-guard.js";
+import { installDebugExport } from "./lib/debug-export.js";
 import { buildSystemPrompt } from "./prompts.js";
 import { registerRenderers } from "./renderers.js";
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
@@ -365,6 +366,7 @@ export async function main(): Promise<void> {
   });
   installActivityIndicator(agent);
   installCompileRetryGuard(agent);
+  installDebugExport(agent);
   installCompileArtifactPreview(agent);
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();

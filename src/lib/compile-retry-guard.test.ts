@@ -68,17 +68,7 @@ describe("evaluateCompileRetryEvent", () => {
 
 describe("installCompileRetryGuard", () => {
   it("steers only until the retry limit and resets after success", () => {
-    const listeners: Array<(event: AgentEvent) => void> = [];
-    const steer = vi.fn();
-    const agent = {
-      subscribe: (listener: (event: AgentEvent, signal: AbortSignal) => void | Promise<void>) => {
-        listeners.push((event) => {
-          void listener(event, new AbortController().signal);
-        });
-        return () => undefined;
-      },
-      steer,
-    };
+    const { agent, listeners, steer } = createGuardAgent();
 
     installCompileRetryGuard(agent, { maxAttempts: 2, now: () => 123 });
 
@@ -97,4 +87,62 @@ describe("installCompileRetryGuard", () => {
     expect(steer.mock.calls[1][0].content).toContain("retry limit has been reached");
     expect(steer.mock.calls[2][0].content).toContain("1/2");
   });
+
+  it("queues a follow-up when the model stops with text instead of recompiling", () => {
+    const { agent, listeners, followUp } = createGuardAgent();
+
+    installCompileRetryGuard(agent, { maxAttempts: 3, now: () => 456 });
+
+    listeners[0](compileFailure("first"));
+    listeners[0]({
+      type: "turn_end",
+      toolResults: [],
+      message: {
+        role: "assistant",
+        content: [{ type: "text", text: "I can fix this. Proceed?" }],
+        api: "openai-codex-responses",
+        provider: "openai-codex",
+        model: "gpt-5.3-codex",
+        usage: emptyUsage(),
+        stopReason: "stop",
+        timestamp: 2,
+      },
+    });
+
+    expect(followUp).toHaveBeenCalledTimes(1);
+    expect(followUp.mock.calls[0][0]).toMatchObject({
+      role: "user",
+      timestamp: 456,
+      content: expect.stringContaining("Continue now without waiting for user approval"),
+    });
+  });
 });
+
+function createGuardAgent() {
+  const listeners: Array<(event: AgentEvent) => void> = [];
+  const steer = vi.fn();
+  const followUp = vi.fn();
+  const agent = {
+    subscribe: (listener: (event: AgentEvent, signal: AbortSignal) => void | Promise<void>) => {
+      listeners.push((event) => {
+        void listener(event, new AbortController().signal);
+      });
+      return () => undefined;
+    },
+    steer,
+    followUp,
+  };
+
+  return { agent, listeners, steer, followUp };
+}
+
+function emptyUsage() {
+  return {
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cacheWrite: 0,
+    totalTokens: 0,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+  };
+}

@@ -9,7 +9,7 @@ export type CompileRetryGuardOptions = {
   now?: () => number;
 };
 
-type CompileRetryAgent = Pick<Agent, "subscribe" | "steer">;
+type CompileRetryAgent = Pick<Agent, "subscribe" | "steer" | "followUp">;
 
 export function installCompileRetryGuard(
   agent: CompileRetryAgent,
@@ -18,12 +18,16 @@ export function installCompileRetryGuard(
   const maxAttempts = options.maxAttempts ?? DEFAULT_COMPILE_RETRY_LIMIT;
   const now = options.now ?? Date.now;
   let failedAttempts = 0;
+  let awaitingRetryCompile = false;
+  let stalledTurns = 0;
 
   agent.subscribe((event) => {
     const action = evaluateCompileRetryEvent(event, failedAttempts, maxAttempts);
 
     if (action.resetAttempts) {
       failedAttempts = 0;
+      awaitingRetryCompile = false;
+      stalledTurns = 0;
     }
 
     if (action.failedAttempts !== undefined) {
@@ -31,7 +35,27 @@ export function installCompileRetryGuard(
     }
 
     if (action.message) {
+      awaitingRetryCompile = !action.retryLimitReached;
+      stalledTurns = 0;
       agent.steer({ role: "user", content: action.message, timestamp: now() });
+      return;
+    }
+
+    if (
+      awaitingRetryCompile &&
+      event.type === "turn_end" &&
+      event.toolResults.length === 0 &&
+      isAssistantTextOnly(event.message) &&
+      failedAttempts < maxAttempts
+    ) {
+      stalledTurns += 1;
+      if (stalledTurns <= maxAttempts) {
+        agent.followUp({
+          role: "user",
+          content: buildStallRecoveryMessage(maxAttempts),
+          timestamp: now(),
+        });
+      }
     }
   });
 }
@@ -40,6 +64,7 @@ export type CompileRetryAction = {
   resetAttempts?: boolean;
   failedAttempts?: number;
   message?: string;
+  retryLimitReached?: boolean;
 };
 
 export function evaluateCompileRetryEvent(
@@ -74,6 +99,7 @@ export function evaluateCompileRetryEvent(
   if (nextFailedAttempts >= maxAttempts) {
     return {
       failedAttempts: nextFailedAttempts,
+      retryLimitReached: true,
       message: [
         `Compile attempt ${nextFailedAttempts}/${maxAttempts} failed. The bounded compile retry limit has been reached.`,
         "Do not ask the user for permission and do not claim success.",
@@ -96,6 +122,33 @@ export function evaluateCompileRetryEvent(
       finalErrors,
     ].join("\n"),
   };
+}
+
+function buildStallRecoveryMessage(maxAttempts: number): string {
+  return [
+    "You stopped after an interim text response, but this task is still inside the mandatory compile repair workflow.",
+    "Continue now without waiting for user approval: revise the LilyPond source and call `compile` again with SVG output.",
+    `Stay within the bounded compile retry limit of ${maxAttempts} compile attempts, and report honest failure if the limit is reached.`,
+  ].join("\n");
+}
+
+function isAssistantTextOnly(message: AgentMessage): boolean {
+  if (!message || typeof message !== "object") {
+    return false;
+  }
+
+  const candidate = message as { role?: unknown; content?: unknown };
+  if (candidate.role !== "assistant" || !Array.isArray(candidate.content)) {
+    return false;
+  }
+
+  return candidate.content.length > 0 && candidate.content.every(isNonToolContent);
+}
+
+function isNonToolContent(content: unknown): boolean {
+  return (
+    !content || typeof content !== "object" || (content as { type?: unknown }).type !== "toolCall"
+  );
 }
 
 function isCompileResult(value: unknown): value is CompileResult {

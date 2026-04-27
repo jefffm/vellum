@@ -61,6 +61,7 @@ function buildWorkflow(): string {
     "## Auto-Compile",
     "",
     "After generating or modifying any LilyPond source, immediately call the `compile` tool with SVG output in the same workflow.",
+    'Do not send interim text like "I\'ll do that next", "I can fix this", or "proceed?" when the next required action is a tool call; call the tool in the same assistant turn.',
     "Do not present LilyPond code to the user without compiling it first, and do not claim completion before a successful compile artifact exists.",
     "If `compile` returns errors, diagnose the errors, revise the LilyPond source, and call `compile` again without asking the user for permission.",
     "Use a bounded retry loop: make at most 3 compile attempts for a generated source request, then stop and honestly report failure with the final errors.",
