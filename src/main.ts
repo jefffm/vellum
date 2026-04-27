@@ -1,6 +1,16 @@
 import { Agent, streamProxy } from "@mariozechner/pi-agent-core";
 import { getModel } from "@mariozechner/pi-ai";
-import { ChatPanel } from "@mariozechner/pi-web-ui";
+import {
+  AppStorage,
+  ChatPanel,
+  CustomProvidersStore,
+  IndexedDBStorageBackend,
+  ProviderKeysStore,
+  SessionsStore,
+  SettingsStore,
+  setAppStorage,
+} from "@mariozechner/pi-web-ui";
+import "@mariozechner/pi-web-ui/app.css";
 import type { AgentTool, StreamFn } from "@mariozechner/pi-agent-core";
 
 import { diapasonsTool } from "./diapasons.js";
@@ -13,6 +23,38 @@ import { tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool } from "./
 import { transposeTool } from "./transpose.js";
 
 import "./styles.css";
+
+let appStorageInitialized = false;
+
+export function initializeAppStorage(): void {
+  if (appStorageInitialized) {
+    return;
+  }
+
+  const settings = new SettingsStore();
+  const providerKeys = new ProviderKeysStore();
+  const sessions = new SessionsStore();
+  const customProviders = new CustomProvidersStore();
+  const backend = new IndexedDBStorageBackend({
+    dbName: "vellum",
+    version: 1,
+    stores: [
+      settings.getConfig(),
+      SessionsStore.getMetadataConfig(),
+      providerKeys.getConfig(),
+      customProviders.getConfig(),
+      sessions.getConfig(),
+    ],
+  });
+
+  settings.setBackend(backend);
+  providerKeys.setBackend(backend);
+  customProviders.setBackend(backend);
+  sessions.setBackend(backend);
+
+  setAppStorage(new AppStorage(settings, providerKeys, sessions, customProviders, backend));
+  appStorageInitialized = true;
+}
 
 export const vellumTools: AgentTool[] = [
   tabulateTool,
@@ -40,14 +82,20 @@ export function createAgent(): Agent {
   const instruments = loadAllBrowserProfiles();
   const systemPrompt = buildSystemPrompt(instruments);
 
-  return new Agent({
+  const agent = new Agent({
     initialState: {
       systemPrompt,
       tools: vellumTools,
-      model: getModel("openai-codex", "gpt-5.1-codex-mini"),
+      model: getModel("openai-codex", "gpt-5.3-codex"),
     },
     streamFn: createStreamFn(),
   });
+
+  agent.subscribe(() => {
+    agent.state.messages = agent.state.messages;
+  });
+
+  return agent;
 }
 
 function resolveChatPanel(): ChatPanel | undefined {
@@ -80,6 +128,7 @@ function markArtifactsPanelReady(): void {
 }
 
 export async function main(): Promise<void> {
+  initializeAppStorage();
   registerRenderers();
 
   const agent = createAgent();
@@ -91,6 +140,7 @@ export async function main(): Promise<void> {
   }
 
   await chatPanel.setAgent(agent, {
+    onApiKeyRequired: async () => true,
     toolsFactory: () => vellumTools,
   });
   markArtifactsPanelReady();

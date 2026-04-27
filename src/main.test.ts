@@ -59,7 +59,7 @@ describe("browser entry wiring", () => {
     const agent = createAgent();
 
     expect(agent.state.model.provider).toBe("openai-codex");
-    expect(agent.state.model.id).toBe("gpt-5.1-codex-mini");
+    expect(agent.state.model.id).toBe("gpt-5.3-codex");
     expect(agent.state.systemPrompt).toContain("Vellum");
     expect(agent.state.tools.map((tool) => tool.name)).toEqual(
       vellumTools.map((tool) => tool.name)
