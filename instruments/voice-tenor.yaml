@@ -1,0 +1,10 @@
+id: voice-tenor
+name: "Tenor Voice"
+type: voice
+constraints:
+  - "Typical tenor range for choral and solo writing"
+range:
+  lowest: "C3"
+  highest: "A4"
+clef: "treble_8"
+notation: "standard"

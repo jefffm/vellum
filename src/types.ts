@@ -176,6 +176,40 @@ export const InstrumentProfileSchema = Type.Intersect([
 
 export type InstrumentProfile = Static<typeof InstrumentProfileSchema>;
 
+export const ArrangementMetadataSchema = Type.Record(Type.String(), Type.Any());
+
+export type ArrangementMetadata = Static<typeof ArrangementMetadataSchema>;
+
+export const CreateArrangementSchema = Type.Object({
+  title: Type.String({ minLength: 1 }),
+  instrument: Type.String({ minLength: 1 }),
+  lySource: Type.String({ minLength: 1 }),
+  metadata: Type.Optional(ArrangementMetadataSchema),
+});
+
+export type CreateArrangement = Static<typeof CreateArrangementSchema>;
+
+export const ArrangementSchema = Type.Object({
+  id: Type.String(),
+  title: Type.String(),
+  instrument: Type.String(),
+  lySource: Type.String(),
+  metadata: Type.Optional(ArrangementMetadataSchema),
+  createdAt: Type.String(),
+  updatedAt: Type.String(),
+});
+
+export type Arrangement = Static<typeof ArrangementSchema>;
+
+export const ArrangementSummarySchema = Type.Object({
+  id: Type.String(),
+  title: Type.String(),
+  instrument: Type.String(),
+  createdAt: Type.String(),
+});
+
+export type ArrangementSummary = Static<typeof ArrangementSummarySchema>;
+
 export const CompileParamsSchema = Type.Object({
   source: Type.String({ minLength: 1, description: "LilyPond source code" }),
   format: Type.Optional(

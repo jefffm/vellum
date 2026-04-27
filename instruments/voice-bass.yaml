@@ -1,0 +1,10 @@
+id: voice-bass
+name: "Bass Voice"
+type: voice
+constraints:
+  - "Typical bass range for choral and solo writing"
+range:
+  lowest: "E2"
+  highest: "E4"
+clef: "bass"
+notation: "standard"

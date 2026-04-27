@@ -3,6 +3,7 @@
 
 % ============================================
 % French Letter Tablature Template
+% Uses fret-letter-tablature-format via luteTabFormat.
 % 13-Course Baroque Lute, d-minor accord
 % ============================================
 

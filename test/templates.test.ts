@@ -35,11 +35,11 @@ function compileTemplate(templateFile: string): {
 } {
   const stem = path.basename(templateFile, ".ly");
   const outputPath = path.join(OUTPUT_DIR, stem);
-  const templatePath = path.join("templates", templateFile);
+  const templatePath = path.join(TEMPLATES_DIR, templateFile);
 
   try {
     execSync(
-      `lilypond --svg -I instruments -I templates -o "${outputPath}" "${templatePath}"`,
+      `lilypond --svg -I "${path.resolve(PROJECT_ROOT, "instruments")}" -I "${TEMPLATES_DIR}" -o "${outputPath}" "${templatePath}"`,
       {
         cwd: PROJECT_ROOT,
         stdio: ["pipe", "pipe", "pipe"],

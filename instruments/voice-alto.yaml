@@ -1,0 +1,10 @@
+id: voice-alto
+name: "Alto Voice"
+type: voice
+constraints:
+  - "Typical alto range for choral and solo writing"
+range:
+  lowest: "F3"
+  highest: "D5"
+clef: "treble"
+notation: "standard"

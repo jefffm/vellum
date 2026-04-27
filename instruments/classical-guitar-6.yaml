@@ -1,0 +1,25 @@
+id: classical-guitar-6
+name: "6-String Classical Guitar"
+type: fretted
+courses: 6
+strings: 6
+fretted_courses: 6
+fretted_strings: 6
+open_courses: 0
+open_strings: 0
+tuning:
+  - { course: 1, string: 1, pitch: "e'", note: "E4" }
+  - { course: 2, string: 2, pitch: "b", note: "B3" }
+  - { course: 3, string: 3, pitch: "g", note: "G3" }
+  - { course: 4, string: 4, pitch: "d", note: "D3" }
+  - { course: 5, string: 5, pitch: "a,", note: "A2" }
+  - { course: 6, string: 6, pitch: "e,", note: "E2" }
+frets: 19
+constraints:
+  - "Standard EADGBE tuning"
+  - "Maximum left-hand stretch: ~4 frets in first position"
+  - "Use idiomatic position shifts for high frets"
+range:
+  lowest: "E2"
+  highest: "B5"
+notation: "number-tab"

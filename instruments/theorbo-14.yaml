@@ -1,0 +1,36 @@
+id: theorbo-14
+name: "14-Course Theorbo"
+type: fretted
+courses: 14
+fretted_courses: 6
+open_courses: 8
+tuning:
+  - { course: 1, pitch: "a", note: "A3", re_entrant: true }
+  - { course: 2, pitch: "e", note: "E3", re_entrant: true }
+  - { course: 3, pitch: "b,", note: "B2" }
+  - { course: 4, pitch: "g,", note: "G2" }
+  - { course: 5, pitch: "d,", note: "D2" }
+  - { course: 6, pitch: "a,,", note: "A1" }
+  - { course: 7, pitch: "g,,", note: "G1" }
+  - { course: 8, pitch: "f,,", note: "F1" }
+  - { course: 9, pitch: "e,,", note: "E1" }
+  - { course: 10, pitch: "d,,", note: "D1" }
+  - { course: 11, pitch: "c,,", note: "C1" }
+  - { course: 12, pitch: "bes,,,", note: "Bb0" }
+  - { course: 13, pitch: "a,,,", note: "A0" }
+  - { course: 14, pitch: "g,,,", note: "G0" }
+frets: 8
+diapason_schemes:
+  g_major: ["G", "F#", "E", "D", "C", "B", "A", "G"]
+  c_major: ["G", "F", "E", "D", "C", "B", "A", "G"]
+  d_minor: ["G", "F", "E", "D", "C", "Bb", "A", "G"]
+  a_minor: ["G", "F", "E", "D", "C", "B", "A", "G"]
+constraints:
+  - "Courses 1-2 are re-entrant and sound an octave lower than baroque lute upper courses"
+  - "Diapasons (courses 7-14) cannot be fretted -- open only"
+  - "Used for basso continuo and solo repertory with extended bass range"
+  - "Maximum left-hand stretch: ~4 frets on stopped courses"
+range:
+  lowest: "G0"
+  highest: "F4"
+notation: "french-letter"

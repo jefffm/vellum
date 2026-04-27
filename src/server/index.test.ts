@@ -36,9 +36,12 @@ describe("server API endpoints", () => {
     expect(response.headers.get("content-type")).toContain("application/json");
     expect(json.ok).toBe(true);
     if (json.ok) {
-      expect(json.data.length).toBeGreaterThanOrEqual(2);
+      expect(json.data).toHaveLength(10);
       expect(json.data).toContainEqual(
         expect.objectContaining({ id: "baroque-lute-13", name: expect.any(String), courses: 13 })
+      );
+      expect(json.data).toContainEqual(
+        expect.objectContaining({ id: "piano", name: expect.any(String), type: "keyboard" })
       );
     }
   });

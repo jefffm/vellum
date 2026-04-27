@@ -12,6 +12,13 @@ import { createCompileRoute } from "./lib/compile-route.js";
 import { createStreamRoute } from "./lib/stream-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
+import { createTemplateGetRoute, createTemplateListRoute } from "./lib/template-route.js";
+import {
+  createArrangementCreateRoute,
+  createArrangementDeleteRoute,
+  createArrangementGetRoute,
+  createArrangementListRoute,
+} from "./lib/arrangement-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -78,6 +85,14 @@ export function createApiRouter(): Router {
   router.post("/chordify", createChordifyRoute());
   router.post("/analyze", createAnalyzeRoute());
   router.post("/lint", createLintRoute());
+
+  router.get("/templates", createTemplateListRoute());
+  router.get("/templates/:name", createTemplateGetRoute());
+
+  router.get("/arrangements", createArrangementListRoute());
+  router.get("/arrangements/:id", createArrangementGetRoute());
+  router.post("/arrangements", createArrangementCreateRoute());
+  router.delete("/arrangements/:id", createArrangementDeleteRoute());
 
   router.get(
     "/instruments",

@@ -1,0 +1,11 @@
+id: piano
+name: "Piano"
+type: keyboard
+staves: 2
+constraints:
+  - "88-key range from A0 to C8"
+  - "Grand staff notation with treble and bass clefs"
+range:
+  lowest: "A0"
+  highest: "C8"
+notation: "standard"

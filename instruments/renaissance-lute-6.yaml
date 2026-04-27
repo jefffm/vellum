@@ -1,0 +1,22 @@
+id: renaissance-lute-6
+name: "6-Course Renaissance Lute (G tuning)"
+type: fretted
+courses: 6
+fretted_courses: 6
+open_courses: 0
+tuning:
+  - { course: 1, pitch: "g'", note: "G4" }
+  - { course: 2, pitch: "d'", note: "D4" }
+  - { course: 3, pitch: "a", note: "A3" }
+  - { course: 4, pitch: "f", note: "F3" }
+  - { course: 5, pitch: "c", note: "C3" }
+  - { course: 6, pitch: "g,", note: "G2" }
+frets: 8
+constraints:
+  - "Six fretted courses in Renaissance G tuning"
+  - "Maximum left-hand stretch: ~4 frets"
+  - "Idiomatic for polyphonic contrapuntal textures"
+range:
+  lowest: "G2"
+  highest: "Eb5"
+notation: "italian-number"

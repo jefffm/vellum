@@ -1,0 +1,10 @@
+id: voice-soprano
+name: "Soprano Voice"
+type: voice
+constraints:
+  - "Typical soprano range for choral and solo writing"
+range:
+  lowest: "C4"
+  highest: "A5"
+clef: "treble"
+notation: "standard"
