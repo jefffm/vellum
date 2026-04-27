@@ -20,6 +20,7 @@ import { buildSystemPrompt } from "./prompts.js";
 import { registerRenderers } from "./renderers.js";
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
 import { tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool } from "./tools.js";
+import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
 
 import "./styles.css";
@@ -200,7 +201,149 @@ function markArtifactsPanelReady(): void {
   const artifactsPanel = document.querySelector<HTMLDivElement>("#artifacts-panel");
   if (artifactsPanel) {
     artifactsPanel.dataset.ready = "true";
+    if (!artifactsPanel.hasChildNodes()) {
+      renderArtifactPlaceholder(artifactsPanel);
+    }
   }
+}
+
+function renderArtifactPlaceholder(panel: HTMLElement): void {
+  panel.replaceChildren();
+  const placeholder = document.createElement("section");
+  placeholder.className = "artifact-placeholder";
+  placeholder.innerHTML = `
+    <div class="artifact-placeholder-card">
+      <div class="artifact-placeholder-icon" aria-hidden="true">♬</div>
+      <h1>Score preview</h1>
+      <p>Compile LilyPond to open notation here in the full-size preview panel.</p>
+    </div>
+  `;
+  panel.append(placeholder);
+}
+
+function isCompileResult(value: unknown): value is CompileResult {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<CompileResult>;
+  return Array.isArray(candidate.errors);
+}
+
+function formatCompileMeta(details: CompileResult): string {
+  const parts = [
+    details.barCount ? `${details.barCount} bars` : undefined,
+    details.voiceCount ? `${details.voiceCount} voices` : undefined,
+    details.pdf ? "PDF available" : undefined,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" · ") : "Compiled successfully";
+}
+
+function setPreviewZoom(panel: HTMLElement, mode: "fit" | "zoom", zoomPercent: number): void {
+  const content = panel.querySelector<HTMLElement>(".artifact-preview-content");
+  if (!content) {
+    return;
+  }
+
+  const nextZoom = Math.min(300, Math.max(50, zoomPercent));
+  content.dataset.zoomMode = mode;
+  content.style.width = mode === "fit" ? "100%" : `${nextZoom}%`;
+
+  const zoomLabel = panel.querySelector<HTMLElement>("[data-artifact-zoom-label]");
+  if (zoomLabel) {
+    zoomLabel.textContent = mode === "fit" ? "Fit width" : `${nextZoom}%`;
+  }
+}
+
+export function renderCompilePreview(panel: HTMLElement, details: CompileResult): boolean {
+  if (details.errors.length > 0 || (!details.svg && !details.pdf)) {
+    return false;
+  }
+
+  panel.replaceChildren();
+  panel.dataset.preview = "compile";
+
+  const shell = document.createElement("section");
+  shell.className = "artifact-preview-shell";
+  shell.innerHTML = `
+    <header class="artifact-preview-header">
+      <div>
+        <p class="artifact-preview-eyebrow">Compile output</p>
+        <h1>Score preview</h1>
+        <p class="artifact-preview-meta"></p>
+      </div>
+      <div class="artifact-preview-controls" aria-label="Preview zoom controls">
+        <button type="button" data-artifact-fit>Fit width</button>
+        <button type="button" data-artifact-zoom-out aria-label="Zoom out">−</button>
+        <span data-artifact-zoom-label>Fit width</span>
+        <button type="button" data-artifact-zoom-in aria-label="Zoom in">+</button>
+      </div>
+    </header>
+    <div class="artifact-preview-viewport">
+      <div class="artifact-preview-content" data-zoom-mode="fit"></div>
+    </div>
+  `;
+
+  const meta = shell.querySelector<HTMLElement>(".artifact-preview-meta");
+  if (meta) {
+    meta.textContent = formatCompileMeta(details);
+  }
+
+  const content = shell.querySelector<HTMLElement>(".artifact-preview-content");
+  if (!content) {
+    return false;
+  }
+
+  if (details.svg) {
+    content.innerHTML = details.svg;
+  } else if (details.pdf) {
+    const iframe = document.createElement("iframe");
+    iframe.className = "artifact-preview-pdf";
+    iframe.title = "Compiled PDF preview";
+    iframe.src = `data:application/pdf;base64,${details.pdf}`;
+    content.append(iframe);
+  }
+
+  let zoomPercent = 100;
+  shell.querySelector<HTMLButtonElement>("[data-artifact-fit]")?.addEventListener("click", () => {
+    zoomPercent = 100;
+    setPreviewZoom(panel, "fit", zoomPercent);
+  });
+  shell
+    .querySelector<HTMLButtonElement>("[data-artifact-zoom-out]")
+    ?.addEventListener("click", () => {
+      zoomPercent -= 25;
+      setPreviewZoom(panel, "zoom", zoomPercent);
+    });
+  shell
+    .querySelector<HTMLButtonElement>("[data-artifact-zoom-in]")
+    ?.addEventListener("click", () => {
+      zoomPercent += 25;
+      setPreviewZoom(panel, "zoom", zoomPercent);
+    });
+
+  panel.append(shell);
+  setPreviewZoom(panel, "fit", zoomPercent);
+  return true;
+}
+
+function installCompileArtifactPreview(agent: Agent): void {
+  agent.subscribe((event) => {
+    if (event.type !== "tool_execution_end" || event.toolName !== "compile" || event.isError) {
+      return;
+    }
+
+    const details = (event.result as { details?: unknown }).details;
+    if (!isCompileResult(details) || details.errors.length > 0) {
+      return;
+    }
+
+    const artifactsPanel = document.querySelector<HTMLElement>("#artifacts-panel");
+    if (artifactsPanel) {
+      renderCompilePreview(artifactsPanel, details);
+    }
+  });
 }
 
 export async function main(): Promise<void> {
@@ -220,6 +363,7 @@ export async function main(): Promise<void> {
     toolsFactory: () => vellumTools,
   });
   installActivityIndicator(agent);
+  installCompileArtifactPreview(agent);
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();
 }

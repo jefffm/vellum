@@ -40,7 +40,7 @@ describe("tool renderers", () => {
     expect(getToolRenderer("check_playability")).toBeDefined();
   });
 
-  it("renders successful compile SVGs as custom content", async () => {
+  it("renders successful compile SVGs as a compact preview-opened summary", async () => {
     const compile = await getRegisteredRenderer<unknown, CompileResult>("compile");
 
     const result = compile.render(
@@ -50,6 +50,8 @@ describe("tool renderers", () => {
     );
 
     expect(result.isCustom).toBe(true);
+    expect(templateText(result.content)).toContain("preview opened");
+    expect(templateText(result.content)).not.toContain("<svg");
   });
 
   it("falls back for compile results with no details", async () => {

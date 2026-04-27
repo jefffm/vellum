@@ -37,14 +37,21 @@ const compileRenderer: ToolRenderer<unknown, CompileResult> = {
       };
     }
 
-    if (details.svg) {
+    if (details.svg || details.pdf) {
+      const summary = [
+        details.barCount ? `${details.barCount} bars` : undefined,
+        details.voiceCount ? `${details.voiceCount} voices` : undefined,
+        details.pdf ? "PDF available" : undefined,
+      ].filter(Boolean);
+
       return {
         content: html`
-          <div
-            class="compile-result"
-            style="overflow-x:auto; max-width:100%; border:1px solid #e0e0e0; border-radius:8px; padding:12px; background:#fff;"
-          >
-            ${unsafeHTML(details.svg)}
+          <div class="compile-summary" role="status">
+            <span class="compile-summary-icon" aria-hidden="true">✓</span>
+            <span>
+              <strong>Compiled successfully</strong> — preview opened
+              ${summary.length > 0 ? html`<small>${summary.join(" · ")}</small>` : ""}
+            </span>
           </div>
         `,
         isCustom: true,
