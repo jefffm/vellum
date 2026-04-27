@@ -271,7 +271,7 @@ export class InstrumentModel {
 
 function qualityForFret(fret: number): TabPosition["quality"] {
   if (fret === 0) return "open";
-  return fret <= 4 ? "low_fret" : "high_fret";
+  return fret <= 3 ? "low_fret" : "high_fret";
 }
 
 function fretSpan(positions: TabPosition[]): number {

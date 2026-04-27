@@ -125,8 +125,8 @@ describe("InstrumentModel", () => {
     expect(
       lute
         .isPlayable([
-          { course: 1, fret: 0, quality: "open" },
-          { course: 3, fret: 5, quality: "high_fret" },
+          { course: 1, fret: 1, quality: "low_fret" },
+          { course: 3, fret: 7, quality: "high_fret" },
         ])
         .violations.map((violation) => violation.type)
     ).toContain("stretch");
