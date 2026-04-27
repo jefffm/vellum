@@ -120,6 +120,18 @@ function hasSetAgent(element: Element): element is ChatPanel {
   return typeof (element as Partial<ChatPanel>).setAgent === "function";
 }
 
+function refreshChatPanelWhenAgentSettles(agent: Agent, chatPanel: ChatPanel): void {
+  agent.subscribe((event) => {
+    if (event.type !== "agent_end") {
+      return;
+    }
+
+    window.setTimeout(() => {
+      chatPanel.agentInterface?.requestUpdate();
+    }, 0);
+  });
+}
+
 function markArtifactsPanelReady(): void {
   const artifactsPanel = document.querySelector<HTMLDivElement>("#artifacts-panel");
   if (artifactsPanel) {
@@ -143,6 +155,7 @@ export async function main(): Promise<void> {
     onApiKeyRequired: async () => true,
     toolsFactory: () => vellumTools,
   });
+  refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();
 }
 
