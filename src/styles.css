@@ -12,27 +12,90 @@
   color: #202124;
 }
 
+html,
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #app {
   display: grid;
   grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 chat-panel,
 pi-chat-panel {
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   border-right: 1px solid #d7d7d2;
+}
+
+pi-chat-panel .flex-1,
+chat-panel .flex-1 {
+  min-height: 0;
 }
 
 #artifacts-panel {
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
   background: #ffffff;
+}
+
+#agent-activity-indicator {
+  position: fixed;
+  left: 1rem;
+  bottom: 6.25rem;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d7d7d2;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #202124;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+#agent-activity-indicator[data-active="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.agent-activity-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #c9c9c2;
+  border-top-color: #202124;
+  border-radius: 999px;
+  animation: agent-activity-spin 800ms linear infinite;
+}
+
+.agent-activity-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes agent-activity-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 800px) {
