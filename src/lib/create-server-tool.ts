@@ -1,5 +1,6 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 import type { Static, TSchema } from "@sinclair/typebox";
+import { errorMessage } from "./errors.js";
 import { toolError, toolResult } from "./tool-helpers.js";
 
 export type CreateServerToolConfig<TParams extends TSchema, TDetails> = {
@@ -107,18 +108,6 @@ function httpErrorMessage(response: Response, body: unknown): string {
   }
 
   return `HTTP ${response.status} ${response.statusText}`.trim();
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-
-  if (typeof error === "string" && error.length > 0) {
-    return error;
-  }
-
-  return "Network request failed";
 }
 
 function isAbortError(error: unknown): boolean {

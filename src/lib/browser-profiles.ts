@@ -3,6 +3,7 @@ import yaml from "js-yaml";
 import lute13ProfileYaml from "../../instruments/baroque-lute-13.yaml?raw";
 import guitar5ProfileYaml from "../../instruments/baroque-guitar-5.yaml?raw";
 import { InstrumentProfile, InstrumentProfileSchema } from "../types.js";
+import { errorMessage } from "./errors.js";
 
 const profileSources: Record<string, string> = {
   "baroque-lute-13": lute13ProfileYaml,
@@ -55,16 +56,4 @@ export function loadAllBrowserProfiles(): InstrumentProfile[] {
   return Object.keys(profileSources)
     .sort()
     .map((id) => loadBrowserProfile(id));
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-
-  if (typeof error === "string" && error.length > 0) {
-    return error;
-  }
-
-  return "Unknown error";
 }

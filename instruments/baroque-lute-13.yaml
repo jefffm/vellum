@@ -12,10 +12,10 @@ tuning:
   - { course: 6, pitch: "a,", note: "A2" }
   - { course: 7, pitch: "g,", note: "G2" }
   - { course: 8, pitch: "f,", note: "F2" }
-  - { course: 9, pitch: "e,", note: "E2" }
+  - { course: 9, pitch: "ees,", note: "Eb2" }
   - { course: 10, pitch: "d,", note: "D2" }
   - { course: 11, pitch: "c,", note: "C2" }
-  - { course: 12, pitch: "b,,", note: "B1" }
+  - { course: 12, pitch: "bes,,", note: "Bb1" }
   - { course: 13, pitch: "a,,", note: "A1" }
 frets: 8
 diapason_schemes:

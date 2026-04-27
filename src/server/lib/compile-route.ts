@@ -1,5 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import path from "node:path";
+import process from "node:process";
 import {
   CompileParamsSchema,
   type CompileError,
@@ -8,6 +10,14 @@ import {
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
 import { SubprocessRunner, type SubprocessResult } from "./subprocess.js";
+
+function lilypondIncludeDirs(): string[] {
+  const base = process.cwd();
+  return [
+    process.env.VELLUM_INSTRUMENTS_DIR ?? path.join(base, "instruments"),
+    path.join(base, "templates"),
+  ];
+}
 
 export type CompileRouteOptions = {
   runner?: Pick<SubprocessRunner, "run">;
@@ -80,9 +90,10 @@ async function runLilyPond(
   args: string[],
   timeout: number
 ): Promise<SubprocessResult> {
+  const includeArgs = lilypondIncludeDirs().flatMap((dir) => ["-I", dir]);
   return await runner.run({
     command: "lilypond",
-    args,
+    args: [...includeArgs, ...args],
     inputFile: { name: "source.ly", content: source },
     timeout,
     outputGlobs: ["*.svg", "*.pdf", "*.midi", "*.mid"],
@@ -170,7 +181,8 @@ function buildLineToBarMap(source: string): Map<number, number> {
     map.set(lineNumber, currentBar);
 
     // Count bar checks (|) and \bar commands on this line
-    // Exclude | inside \stringTuning <...> and comments
+    // Strip comments before counting; \stringTuning <...> blocks are not stripped
+    // (no current .ily files contain | in stringTuning, so this is safe for now)
     const stripped = sourceLines[i].replace(/%.*$/, "");
     const barChecks = (stripped.match(/\|/g) ?? []).length;
     const barCommands = (stripped.match(/\\bar\b/g) ?? []).length;
@@ -210,7 +222,8 @@ function readBase64Artifact(files: Map<string, Buffer>, extension: string): stri
 }
 
 function countBars(source: string): number | undefined {
-  const count = (source.match(/\|/g) ?? []).length;
+  const stripped = source.replace(/%.*$/gm, "");
+  const count = (stripped.match(/\|/g) ?? []).length;
   return count > 0 ? count : undefined;
 }
 

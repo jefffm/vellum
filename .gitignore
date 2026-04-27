@@ -27,3 +27,6 @@ coverage/
 
 # Pi coding agent sessions
 .pi/
+
+# npm config (may contain proxy credentials)
+.npmrc

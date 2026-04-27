@@ -1,6 +1,7 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 import { InstrumentModel } from "./lib/instrument-model.js";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
+import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
 import { formatPositions, toolError, toolResult } from "./lib/tool-helpers.js";
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
@@ -264,16 +265,4 @@ function formatVoicings(voicings: Voicing[]): string {
       return `${index + 1}. stretch ${voicing.stretch}, open strings ${voicing.open_strings}, campanella ${voicing.campanella_score}: ${positions}`;
     })
     .join("\n");
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-
-  if (typeof error === "string" && error.length > 0) {
-    return error;
-  }
-
-  return "Tool execution failed";
 }

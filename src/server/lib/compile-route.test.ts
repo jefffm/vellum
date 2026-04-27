@@ -44,9 +44,14 @@ describe("createCompileRoute", () => {
       expect(json.data.svg).toContain("<svg");
       expect(json.data.errors).toEqual([]);
     }
-    expect(run).toHaveBeenCalledWith(
-      expect.objectContaining({ command: "lilypond", args: ["--svg", "-o", "output", "source.ly"] })
-    );
+    expect(run).toHaveBeenCalledWith(expect.objectContaining({ command: "lilypond" }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callArgs = (run.mock.calls as any[][])[0][0].args as string[];
+    expect(callArgs).toContain("--svg");
+    expect(callArgs).toContain("-o");
+    expect(callArgs).toContain("output");
+    expect(callArgs).toContain("source.ly");
+    expect(callArgs).toContain("-I");
   });
 
   it("returns base64 PDFs", async () => {
