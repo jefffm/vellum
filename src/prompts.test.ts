@@ -20,6 +20,9 @@ describe("buildSystemPrompt", () => {
       "analyze",
       "lint",
       "theory",
+      "transpose",
+      "diapasons",
+      "fretboard",
     ]) {
       expect(prompt).toContain(`\`${tool}\``);
     }

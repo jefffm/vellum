@@ -302,3 +302,16 @@ export const TheoryParamsSchema = Type.Object({
 });
 
 export type TheoryParams = Static<typeof TheoryParamsSchema>;
+
+export const ValidateParamsSchema = Type.Object({
+  source: Type.String({ minLength: 1, description: "LilyPond source to validate" }),
+});
+
+export type ValidateParams = Static<typeof ValidateParamsSchema>;
+
+export const ValidateResultSchema = Type.Object({
+  valid: Type.Boolean(),
+  errors: Type.Array(CompileErrorSchema),
+});
+
+export type ValidateResult = Static<typeof ValidateResultSchema>;

@@ -11,7 +11,7 @@ import {
 import { createApiRoute } from "./create-route.js";
 import { SubprocessRunner, type SubprocessResult } from "./subprocess.js";
 
-function lilypondIncludeDirs(): string[] {
+export function lilypondIncludeDirs(): string[] {
   const base = process.cwd();
   return [
     process.env.VELLUM_INSTRUMENTS_DIR ?? path.join(base, "instruments"),

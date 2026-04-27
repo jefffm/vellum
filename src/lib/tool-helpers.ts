@@ -1,5 +1,8 @@
 import type { AgentToolResult } from "@mariozechner/pi-agent-core";
 import type { LintViolation, TabPosition } from "../types.js";
+import { InstrumentModel } from "./instrument-model.js";
+import { loadBrowserProfile } from "./browser-profiles.js";
+import { errorMessage } from "./errors.js";
 
 export function toolResult<T>(text: string, details: T): AgentToolResult<T> {
   return {
@@ -36,4 +39,16 @@ export function formatPositions(positions: TabPosition[]): string {
   return positions
     .map((position) => `Course ${position.course}, fret ${position.fret} (${position.quality})`)
     .join("\n");
+}
+
+export function instrumentTool<TDetails>(
+  instrument: string,
+  handler: (model: InstrumentModel) => AgentToolResult<TDetails>
+): AgentToolResult<TDetails> {
+  try {
+    const model = InstrumentModel.fromProfile(loadBrowserProfile(instrument));
+    return handler(model);
+  } catch (error) {
+    return toolError<TDetails>(errorMessage(error));
+  }
 }

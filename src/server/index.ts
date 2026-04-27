@@ -11,6 +11,7 @@ import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
 import { createStreamRoute } from "./lib/stream-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
+import { createValidateRoute } from "./lib/validate-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -73,6 +74,7 @@ export function createApiRouter(): Router {
 
   router.post("/stream", createStreamRoute());
   router.post("/compile", createCompileRoute());
+  router.post("/validate", createValidateRoute());
   router.post("/chordify", createChordifyRoute());
   router.post("/analyze", createAnalyzeRoute());
   router.post("/lint", createLintRoute());

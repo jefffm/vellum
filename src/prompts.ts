@@ -33,6 +33,9 @@ function buildTools(): string {
     "- Call `analyze` when given a MusicXML file — get key, chord progression, voice ranges",
     "- Call `lint` after generating an arrangement — catch parallel fifths, voice crossing, spacing errors",
     "- Call `theory` for quick music theory lookups — intervals, chord names, scale degrees, Roman numerals",
+    "- Call `transpose` to transpose pitches by interval — validates range and suggests idiomatic keys",
+    "- Call `diapasons` to look up bass string tuning for a key — returns pitches and LilyPond syntax",
+    "- Call `fretboard` to render an SVG fretboard diagram showing finger positions",
   ].join("\n");
 }
 

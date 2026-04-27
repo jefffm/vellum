@@ -3,8 +3,11 @@ import { InstrumentModel } from "./lib/instrument-model.js";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
-import { formatPositions, toolError, toolResult } from "./lib/tool-helpers.js";
+import { formatPositions, instrumentTool, toolError, toolResult } from "./lib/tool-helpers.js";
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
+import { transposeTool } from "./transpose.js";
+import { diapasonsTool } from "./diapasons.js";
+import { fretboardTool } from "./fretboard.js";
 import {
   CheckPlayabilityParamsSchema,
   TabulateParamsSchema,
@@ -104,19 +107,10 @@ export const tools = [
   compileTool,
   analyzeTool,
   lintTool,
+  transposeTool,
+  diapasonsTool,
+  fretboardTool,
 ];
-
-function instrumentTool<TDetails>(
-  instrument: string,
-  handler: (model: InstrumentModel) => AgentToolResult<TDetails>
-): AgentToolResult<TDetails> {
-  try {
-    const model = InstrumentModel.fromProfile(loadBrowserProfile(instrument));
-    return handler(model);
-  } catch (error) {
-    return toolError<TDetails>(errorMessage(error));
-  }
-}
 
 function formatTheoryResult(operation: string, result: TheoryValue): string {
   if (Array.isArray(result)) {
