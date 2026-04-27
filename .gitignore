@@ -12,6 +12,7 @@ dist-server/
 .env
 .env.*
 !.env.example
+.venv/
 
 # Beads local database/cache files
 .beads/*.db

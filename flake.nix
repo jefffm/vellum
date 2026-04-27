@@ -32,7 +32,21 @@
             ];
 
             shellHook = ''
-              echo "Vellum dev shell: Node $(node --version), npm $(npm --version)"
+              if [ ! -d .venv ]; then
+                python -m venv .venv
+                .venv/bin/pip install -r requirements-python.txt
+              fi
+              source .venv/bin/activate
+              python - <<'PY'
+try:
+    import music21  # noqa: F401
+except Exception:
+    raise SystemExit(1)
+PY
+              if [ $? -ne 0 ]; then
+                pip install -r requirements-python.txt
+              fi
+              echo "Vellum dev shell: Node $(node --version), npm $(npm --version), Python $(python --version)"
             '';
           };
         });
