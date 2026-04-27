@@ -220,7 +220,8 @@ export class InstrumentModel {
   }
 
   static async load(id: string): Promise<InstrumentModel> {
-    const { loadProfile } = await import("../server/profiles.js");
+    const serverProfilesModule = "../server/profiles.js";
+    const { loadProfile } = await import(serverProfilesModule);
     return new InstrumentModel(loadProfile(id));
   }
 
