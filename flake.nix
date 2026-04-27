@@ -19,14 +19,16 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-          pythonWithMusic21 = pkgs.python3.withPackages (ps: [ ps.music21 ]);
+          python = pkgs.python3.withPackages (ps: [
+            ps.pip
+          ]);
         in
         {
           default = pkgs.mkShell {
             packages = [
               pkgs.nodejs_20
               pkgs.lilypond
-              pythonWithMusic21
+              python
             ];
 
             shellHook = ''
