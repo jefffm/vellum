@@ -74,10 +74,14 @@ async function compileLilyPond(
     }
   }
 
+  const failed = runs.some((run) => run.exitCode !== 0);
+
   return {
-    svg: readTextArtifact(files, ".svg"),
-    pdf: readBase64Artifact(files, ".pdf"),
-    midi: readBase64Artifact(files, ".midi") ?? readBase64Artifact(files, ".mid"),
+    svg: failed ? undefined : readTextArtifact(files, ".svg"),
+    pdf: failed ? undefined : readBase64Artifact(files, ".pdf"),
+    midi: failed
+      ? undefined
+      : (readBase64Artifact(files, ".midi") ?? readBase64Artifact(files, ".mid")),
     errors,
     barCount: countBars(params.source),
     voiceCount: countVoices(params.source),

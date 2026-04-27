@@ -73,13 +73,18 @@ describe("createCompileRoute", () => {
 
   it("returns structured errors on LilyPond failure", async () => {
     const run = vi.fn(async () =>
-      subprocessResult({ exitCode: 1, stderr: "source.ly:2:9: error: syntax error, unexpected }" })
+      subprocessResult({
+        exitCode: 1,
+        stderr: "source.ly:2:9: error: syntax error, unexpected }",
+        files: new Map([["output.svg", Buffer.from("<svg>partial output</svg>")]]),
+      })
     );
     const server = await listen(createCompileRoute({ runner: { run } }));
     servers.push(server);
 
     const response = await postCompile(server, { source: "{ invalid !!! }" });
     const json = (await response.json()) as ApiEnvelope<{
+      svg?: string;
       errors: Array<{ line: number; message: string }>;
     }>;
 
@@ -89,6 +94,7 @@ describe("createCompileRoute", () => {
       expect(json.data.errors).toContainEqual(
         expect.objectContaining({ line: 2, message: "syntax error, unexpected }" })
       );
+      expect(json.data.svg).toBeUndefined();
     }
   });
 
