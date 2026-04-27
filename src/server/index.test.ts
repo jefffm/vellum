@@ -11,7 +11,7 @@ type InstrumentSummary = {
   strings?: number;
 };
 
-describe("server instrument endpoints", () => {
+describe("server API endpoints", () => {
   const servers: Server[] = [];
 
   afterEach(async () => {
@@ -67,6 +67,22 @@ describe("server instrument endpoints", () => {
     const json = (await response.json()) as ApiEnvelope<unknown>;
 
     expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(json.ok).toBe(false);
+  });
+
+  it.each(["chordify", "analyze", "lint"])("registers the /api/%s theory route", async (route) => {
+    const server = await listen();
+    servers.push(server);
+
+    const response = await fetch(`${serverUrl(server)}/api/${route}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const json = (await response.json()) as ApiEnvelope<unknown>;
+
+    expect(response.status).toBe(400);
     expect(response.headers.get("content-type")).toContain("application/json");
     expect(json.ok).toBe(false);
   });

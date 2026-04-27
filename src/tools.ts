@@ -3,6 +3,7 @@ import { InstrumentModel } from "./lib/instrument-model.js";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
 import { formatPositions, toolError, toolResult } from "./lib/tool-helpers.js";
+import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
 import {
   CheckPlayabilityParamsSchema,
   TabulateParamsSchema,
@@ -94,7 +95,15 @@ export const theoryTool: AgentTool<
   },
 };
 
-export const tools = [tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool];
+export const tools = [
+  tabulateTool,
+  voicingsTool,
+  checkPlayabilityTool,
+  theoryTool,
+  compileTool,
+  analyzeTool,
+  lintTool,
+];
 
 function instrumentTool<TDetails>(
   instrument: string,
