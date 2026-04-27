@@ -7,6 +7,7 @@ import type {
   SimpleStreamOptions,
 } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
+import { resolveOpenAICodexApiKeyFromPiAuth } from "./pi-auth.js";
 
 export type StreamSimple = (
   model: Model<string>,
@@ -14,9 +15,11 @@ export type StreamSimple = (
   options?: SimpleStreamOptions
 ) => AsyncIterable<AssistantMessageEvent>;
 
+export type ApiKeyResolver = (provider: string) => Promise<string | undefined> | string | undefined;
+
 export type StreamRouteOptions = {
   streamSimpleImpl?: StreamSimple;
-  resolveApiKey?: (provider: string) => string | undefined;
+  resolveApiKey?: ApiKeyResolver;
 };
 
 type StreamProxyRequest = {
@@ -27,7 +30,7 @@ type StreamProxyRequest = {
 
 export function createStreamRoute(options: StreamRouteOptions = {}): RequestHandler {
   const streamSimpleImpl = options.streamSimpleImpl ?? (streamSimple as StreamSimple);
-  const resolveApiKey = options.resolveApiKey ?? resolveApiKeyFromEnvironment;
+  const resolveApiKey = options.resolveApiKey ?? resolveApiKeyForProvider;
 
   return async (request, response) => {
     const parsed = parseStreamRequest(request.body);
@@ -37,12 +40,19 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
       return;
     }
 
-    const apiKey = resolveApiKey(parsed.request.model.provider);
+    let apiKey: string | undefined;
+
+    try {
+      apiKey = await resolveApiKey(parsed.request.model.provider);
+    } catch (error) {
+      response.status(500).json({ error: errorMessage(error) });
+      return;
+    }
 
     if (!apiKey) {
       response
         .status(500)
-        .json({ error: `No API key configured for ${parsed.request.model.provider}` });
+        .json({ error: missingCredentialsMessage(parsed.request.model.provider) });
       return;
     }
 
@@ -79,6 +89,20 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
       }
     }
   };
+}
+
+export async function resolveApiKeyForProvider(provider: string): Promise<string | undefined> {
+  const apiKey = resolveApiKeyFromEnvironment(provider);
+
+  if (apiKey) {
+    return apiKey;
+  }
+
+  if (provider === "openai-codex") {
+    return resolveOpenAICodexApiKeyFromPiAuth();
+  }
+
+  return undefined;
 }
 
 export function resolveApiKeyFromEnvironment(provider: string): string | undefined {
@@ -196,6 +220,14 @@ function toProxyEvent(event: AssistantMessageEvent): Record<string, unknown> {
         usage: event.error.usage,
       };
   }
+}
+
+function missingCredentialsMessage(provider: string): string {
+  if (provider === "openai-codex") {
+    return "No API key or pi OAuth credentials configured for openai-codex. Run pi, /login, and choose ChatGPT Plus/Pro (Codex).";
+  }
+
+  return `No API key configured for ${provider}`;
 }
 
 function writeSse(

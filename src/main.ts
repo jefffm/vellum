@@ -44,7 +44,7 @@ export function createAgent(): Agent {
     initialState: {
       systemPrompt,
       tools: vellumTools,
-      model: getModel("anthropic", "claude-sonnet-4-20250514"),
+      model: getModel("openai-codex", "gpt-5.1-codex-mini"),
     },
     streamFn: createStreamFn(),
   });

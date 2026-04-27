@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AssistantMessage, Model } from "@mariozechner/pi-ai";
 import {
   createStreamRoute,
+  resolveApiKeyForProvider,
   resolveApiKeyFromEnvironment,
   type StreamSimple,
 } from "./stream-route.js";
@@ -39,7 +40,24 @@ describe("createStreamRoute", () => {
     expect(JSON.stringify(json)).not.toContain("secret-key");
   });
 
-  it("streams proxy SSE events and injects the server-side API key", async () => {
+  it("returns an actionable error when openai-codex credentials are missing", async () => {
+    const server = await listen(createStreamRoute({ resolveApiKey: () => undefined }));
+    servers.push(server);
+
+    const response = await fetch(`${serverUrl(server)}/api/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validRequest({}, openAICodexModel())),
+    });
+    const json = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(500);
+    expect(json.error).toBe(
+      "No API key or pi OAuth credentials configured for openai-codex. Run pi, /login, and choose ChatGPT Plus/Pro (Codex)."
+    );
+  });
+
+  it("awaits async API key resolvers and injects the server-side API key", async () => {
     const streamSimpleImpl = vi.fn<StreamSimple>(async function* (_model, _context, options) {
       expect(options?.apiKey).toBe("secret-key");
       yield { type: "start", partial: assistantMessage() };
@@ -60,7 +78,7 @@ describe("createStreamRoute", () => {
       yield { type: "done", reason: "stop", message: assistantMessage("hello") };
     });
     const server = await listen(
-      createStreamRoute({ streamSimpleImpl, resolveApiKey: () => "secret-key" })
+      createStreamRoute({ streamSimpleImpl, resolveApiKey: async () => "secret-key" })
     );
     servers.push(server);
 
@@ -86,11 +104,21 @@ describe("createStreamRoute", () => {
 
     expect(resolveApiKeyFromEnvironment("anthropic")).toBe("anthropic-secret");
   });
+
+  it("resolves existing environment keys for openai-codex before pi auth", async () => {
+    vi.stubEnv("OPENAI_CODEX_API_KEY", "codex-env-secret");
+    vi.stubEnv("VELLUM_PI_AUTH_FILE", "/path/that/does/not/exist.json");
+
+    await expect(resolveApiKeyForProvider("openai-codex")).resolves.toBe("codex-env-secret");
+  });
 });
 
-function validRequest(options: Record<string, unknown> = {}) {
+function validRequest(
+  options: Record<string, unknown> = {},
+  requestModel: Model<string> = model()
+) {
   return {
-    model: model(),
+    model: requestModel,
     context: { messages: [] },
     options,
   };
@@ -104,6 +132,21 @@ function model(): Model<string> {
     api: "anthropic-messages",
     baseUrl: "https://api.anthropic.com",
     reasoning: false,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 1000,
+    maxTokens: 100,
+  };
+}
+
+function openAICodexModel(): Model<string> {
+  return {
+    id: "gpt-5.1-codex-mini",
+    name: "GPT-5.1 Codex Mini",
+    provider: "openai-codex",
+    api: "openai-codex-responses",
+    baseUrl: "https://chatgpt.com/backend-api",
+    reasoning: true,
     input: ["text"],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     contextWindow: 1000,
