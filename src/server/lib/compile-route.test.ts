@@ -160,6 +160,13 @@ describe("parseLilyPondErrors", () => {
     expect(errors[0].type).toBe("undefined_variable");
   });
 
+  it("classifies automatic string assignment failures", () => {
+    const stderr = "source.ly:25:5: error: No string for pitch #<Pitch g, > (given frets ())";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].type).toBe("string_assignment");
+  });
+
   it("classifies note out of range", () => {
     const stderr = "source.ly:8:1: warning: pitch out of range";
     const errors = parseLilyPondErrors(stderr);

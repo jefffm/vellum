@@ -11,14 +11,24 @@ import {
 export const compileTool = createServerTool<typeof CompileParamsSchema, CompileResult>({
   name: "compile",
   label: "Compile",
-  description: "Compile LilyPond source into SVG/PDF notation output.",
+  description:
+    "Compile LilyPond source into SVG/PDF notation output. Mandatory after generating or modifying LilyPond; on errors, revise and recompile without asking the user until the bounded retry limit is reached.",
   parameters: CompileParamsSchema,
   endpoint: "/api/compile",
   formatContent: (result) => {
     if (result.errors.length > 0) {
-      return `Compilation failed with ${result.errors.length} error(s):\n${result.errors
-        .map((error) => `  Line ${error.line}: ${error.message}`)
-        .join("\n")}`;
+      const lines = result.errors.map((error) => `  Line ${error.line}: ${error.message}`);
+      const hasStringAssignmentError = result.errors.some(
+        (error) => error.type === "string_assignment" || /no string for pitch/i.test(error.message)
+      );
+
+      if (hasStringAssignmentError) {
+        lines.push(
+          "Hint: LilyPond could not infer playable strings/frets. Use tabulate/voicings/check_playability and explicit tab-first course/fret mappings instead of automatic string assignment."
+        );
+      }
+
+      return `Compilation failed with ${result.errors.length} error(s):\n${lines.join("\n")}`;
     }
 
     const parts = ["Compiled successfully."];

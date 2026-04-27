@@ -162,6 +162,9 @@ function classifyError(_line: string, message: string): string {
   if (/syntax error|unexpected/i.test(lower)) {
     return "syntax";
   }
+  if (/no string for pitch|cannot find string|no fret/i.test(lower)) {
+    return "string_assignment";
+  }
   if (/out of range|too high|too low/i.test(lower)) {
     return "note_out_of_range";
   }

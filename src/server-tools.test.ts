@@ -48,6 +48,37 @@ describe("server fetch wrapper tools", () => {
     }
   });
 
+  it("adds tab-first guidance for LilyPond string assignment errors", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          ok: true,
+          data: {
+            errors: [
+              {
+                bar: 1,
+                beat: 0,
+                line: 25,
+                type: "string_assignment",
+                message: "No string for pitch #<Pitch g, > (given frets ())",
+              },
+            ],
+          },
+        })
+      )
+    );
+
+    const result = await compileTool.execute("call-1", { source: "{ g4 }" });
+
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
+      expect(result.content[0].text).toContain("No string for pitch");
+      expect(result.content[0].text).toContain("tabulate/voicings/check_playability");
+      expect(result.content[0].text).toContain("explicit tab-first course/fret mappings");
+    }
+  });
+
   it("formats analyze responses with key, voices, and chords", async () => {
     vi.stubGlobal(
       "fetch",

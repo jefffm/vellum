@@ -16,6 +16,7 @@ import type { AgentEvent, AgentTool, StreamFn } from "@mariozechner/pi-agent-cor
 import { diapasonsTool } from "./diapasons.js";
 import { fretboardTool } from "./fretboard.js";
 import { loadAllBrowserProfiles } from "./lib/browser-profiles.js";
+import { installCompileRetryGuard } from "./lib/compile-retry-guard.js";
 import { buildSystemPrompt } from "./prompts.js";
 import { registerRenderers } from "./renderers.js";
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
@@ -363,6 +364,7 @@ export async function main(): Promise<void> {
     toolsFactory: () => vellumTools,
   });
   installActivityIndicator(agent);
+  installCompileRetryGuard(agent);
   installCompileArtifactPreview(agent);
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();

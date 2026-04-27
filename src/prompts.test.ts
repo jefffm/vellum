@@ -40,6 +40,18 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("verify the pitches against a reference score");
   });
 
+  it("includes mandatory compile and bounded retry policy", () => {
+    const prompt = buildSystemPrompt([]);
+
+    expect(prompt).toContain("immediately call the `compile` tool with SVG output");
+    expect(prompt).toContain("without asking the user for permission");
+    expect(prompt).toContain("at most 3 compile attempts");
+    expect(prompt).toContain('Never say variants of "proceed and I will compile/fix it"');
+    expect(prompt).toContain("Only report success after `compile` returns an SVG or PDF artifact");
+    expect(prompt).toContain("tab-first validated generation");
+    expect(prompt).toContain("No string for pitch");
+  });
+
   it("works with an empty instrument list", () => {
     const prompt = buildSystemPrompt([]);
 
