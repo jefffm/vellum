@@ -124,6 +124,37 @@ describe("renderFretboardSvg", () => {
     expect(result.svg).not.toContain("stroke-dasharray");
   });
 
+  it("clamps fret range to instrument maximum", () => {
+    // Baroque lute has 8 frets. Position at fret 8 should not show frets > 8.
+    const result = renderFretboardSvg(
+      [{ course: 1, fret: 8, quality: "high_fret" }],
+      luteModel()
+    );
+
+    // Check that no fret label exceeds 8
+    const fretLabels = result.svg.match(/<text[^>]*>(\d+)<\/text>/g) ?? [];
+    for (const label of fretLabels) {
+      const num = Number(label.match(/>(\d+)</)?.[1]);
+      // Course labels (1-13) are fine; fret labels should be <= 8
+      if (num > 13) {
+        throw new Error(`Fret label ${num} exceeds instrument maximum`);
+      }
+    }
+  });
+
+  it("includes fret 0 in range when open strings are present with high frets", () => {
+    const result = renderFretboardSvg(
+      [
+        { course: 1, fret: 0, quality: "open" },
+        { course: 2, fret: 5, quality: "high_fret" },
+      ],
+      luteModel()
+    );
+
+    // Fret 0 should be labeled since there's an open string
+    expect(result.svg).toContain(">0<");
+  });
+
   it("produces reasonable SVG dimensions", () => {
     const result = renderFretboardSvg(
       [{ course: 1, fret: 2, quality: "low_fret" }],

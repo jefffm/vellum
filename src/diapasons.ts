@@ -38,13 +38,13 @@ const PITCH_TO_LILYPOND: Record<string, string> = {
 };
 
 function normalizeKeyToScheme(key: string): string {
-  return key
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/-/g, "_")
-    .replace(/^([a-g](?:#|b)?)m$/, "$1_minor")
-    .replace(/^([a-g](?:#|b)?)M$/, "$1_major");
+  let s = key.trim();
+
+  // Handle shorthand before lowercasing (case-sensitive: m = minor, M = major)
+  s = s.replace(/^([A-Ga-g](?:#|b)?)M$/, "$1_major");
+  s = s.replace(/^([A-Ga-g](?:#|b)?)m$/, "$1_minor");
+
+  return s.toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_");
 }
 
 function findScheme(

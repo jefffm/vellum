@@ -125,6 +125,24 @@ describe("diapasons tool", () => {
     expect(result.details.courses).toHaveLength(7);
   });
 
+  it("handles shorthand 'Dm' as d_minor", async () => {
+    const result = await diapasonsTool.execute("call-1", {
+      key: "Dm",
+      instrument: "baroque-lute-13",
+    });
+
+    expect(result.details.schemeName).toBe("d_minor");
+  });
+
+  it("handles shorthand 'DM' as d_major", async () => {
+    const result = await diapasonsTool.execute("call-1", {
+      key: "DM",
+      instrument: "baroque-lute-13",
+    });
+
+    expect(result.details.schemeName).toBe("d_major");
+  });
+
   it("assigns correct course numbers starting after fretted courses", async () => {
     const result = await diapasonsTool.execute("call-1", {
       key: "D minor",

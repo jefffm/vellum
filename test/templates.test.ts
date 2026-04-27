@@ -38,16 +38,16 @@ function compileTemplate(templateFile: string): {
   const templatePath = path.join("templates", templateFile);
 
   try {
-    const stderr = execSync(
+    execSync(
       `lilypond --svg -I instruments -I templates -o "${outputPath}" "${templatePath}"`,
       {
         cwd: PROJECT_ROOT,
         stdio: ["pipe", "pipe", "pipe"],
         timeout: 30_000,
       }
-    ).toString();
+    );
 
-    return { exitCode: 0, stderr, outputDir: outputPath };
+    return { exitCode: 0, stderr: "", outputDir: outputPath };
   } catch (error: unknown) {
     const execError = error as { status?: number; stderr?: Buffer };
     return {

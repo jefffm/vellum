@@ -1,6 +1,5 @@
-import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
+import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { InstrumentModel } from "./lib/instrument-model.js";
-import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
 import { formatPositions, instrumentTool, toolError, toolResult } from "./lib/tool-helpers.js";

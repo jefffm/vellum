@@ -21,17 +21,27 @@ function computeFretRange(
   positions: TabPosition[],
   maxFrets: number
 ): { minFret: number; maxFret: number } {
+  const hasOpen = positions.some((p) => p.fret === 0);
   const frets = positions.map((p) => p.fret).filter((f) => f > 0);
 
   if (frets.length === 0) {
     return { minFret: 0, maxFret: Math.min(4, maxFrets) };
   }
 
-  const min = Math.max(0, Math.min(...frets) - 1);
-  const max = Math.min(maxFrets, Math.max(...frets) + 1);
-  const minWidth = 3; // Always show at least 3 frets for readability
+  // If any open strings are present, always start from fret 0
+  let minFret = hasOpen ? 0 : Math.max(0, Math.min(...frets) - 1);
+  let maxFret = Math.min(maxFrets, Math.max(...frets) + 1);
+  const minWidth = 3;
 
-  return { minFret: min, maxFret: Math.max(max, min + minWidth) };
+  // Ensure minimum width while staying within instrument bounds
+  if (maxFret - minFret < minWidth) {
+    maxFret = Math.min(maxFrets, minFret + minWidth);
+    if (maxFret - minFret < minWidth) {
+      minFret = Math.max(0, maxFret - minWidth);
+    }
+  }
+
+  return { minFret, maxFret };
 }
 
 export function renderFretboardSvg(
