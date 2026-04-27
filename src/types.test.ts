@@ -41,9 +41,15 @@ describe("TypeBox schema validation", () => {
 
   it("validates CompileParams", () => {
     expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"' })).toBe(true);
-    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "svg" })).toBe(true);
-    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "pdf" })).toBe(true);
-    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "both" })).toBe(true);
+    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "svg" })).toBe(
+      true
+    );
+    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "pdf" })).toBe(
+      true
+    );
+    expect(Value.Check(CompileParamsSchema, { source: '\\version "2.24.0"', format: "both" })).toBe(
+      true
+    );
   });
 
   it("rejects empty CompileParams source", () => {
@@ -65,9 +71,9 @@ describe("TypeBox schema validation", () => {
 
   it("validates Violation types", () => {
     for (const type of ["stretch", "same_course", "rh_pattern", "out_of_range"] as const) {
-      expect(
-        Value.Check(ViolationSchema, { bar: 1, type, description: `${type} violation` })
-      ).toBe(true);
+      expect(Value.Check(ViolationSchema, { bar: 1, type, description: `${type} violation` })).toBe(
+        true
+      );
     }
   });
 
@@ -84,9 +90,9 @@ describe("TypeBox schema validation", () => {
   });
 
   it("validates TabulateParams", () => {
-    expect(
-      Value.Check(TabulateParamsSchema, { pitch: "F4", instrument: "baroque-lute-13" })
-    ).toBe(true);
+    expect(Value.Check(TabulateParamsSchema, { pitch: "F4", instrument: "baroque-lute-13" })).toBe(
+      true
+    );
   });
 
   it("validates VoicingsParams", () => {

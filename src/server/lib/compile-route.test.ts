@@ -94,6 +94,69 @@ describe("createCompileRoute", () => {
   });
 });
 
+describe("parseLilyPondErrors", () => {
+  it("parses syntax error with line and type", () => {
+    const stderr =
+      "source.ly:15:5: error: syntax error, unexpected STRING\n  d'4 badtoken\n      ^";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].line).toBe(15);
+    expect(errors[0].type).toBe("syntax");
+  });
+
+  it("maps line to bar when source provided", () => {
+    const source = '\\version "2.24.0"\n{ a4 b c d |\n  e f g a |\n  badtoken\n}';
+    const stderr = "source.ly:4:3: error: syntax error, unexpected STRING";
+    const errors = parseLilyPondErrors(stderr, source);
+    expect(errors[0].bar).toBeGreaterThan(0);
+  });
+
+  it("classifies barcheck failure as barcheck type", () => {
+    const stderr = "source.ly:22:1: warning: barcheck failed at: 3/4";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].type).toBe("barcheck");
+  });
+
+  it("extracts beat from barcheck failure message", () => {
+    const stderr = "source.ly:22:1: warning: barcheck failed at: 3/4";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors[0].beat).toBe(3);
+  });
+
+  it("skips continuation lines", () => {
+    const stderr =
+      "source.ly:15:5: error: syntax error\n  d'4 badtoken\n      ^\nsource.ly:20:1: error: another error";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(2);
+  });
+
+  it("returns empty for clean compilation", () => {
+    const errors = parseLilyPondErrors("");
+    expect(errors).toHaveLength(0);
+  });
+
+  it("works without source (backward compatible)", () => {
+    const stderr = "source.ly:10:1: error: something wrong";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors[0].bar).toBe(0);
+  });
+
+  it("classifies undefined variable errors", () => {
+    const stderr = "source.ly:5:3: error: unknown escaped string: \\badCommand";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].type).toBe("undefined_variable");
+  });
+
+  it("classifies note out of range", () => {
+    const stderr = "source.ly:8:1: warning: pitch out of range";
+    const errors = parseLilyPondErrors(stderr);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].type).toBe("note_out_of_range");
+  });
+});
+
 function subprocessResult(overrides: Partial<SubprocessResult> = {}): SubprocessResult {
   return {
     stdout: "",

@@ -59,8 +59,7 @@ export function loadAllProfiles(): InstrumentProfile[] {
     }
 
     throw new ProfileLoadError(`Could not load instrument profiles: ${(error as Error).message}`, {
-      cause: error
+      cause: error,
     });
   }
 }
-

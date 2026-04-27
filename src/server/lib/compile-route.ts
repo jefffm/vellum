@@ -48,7 +48,7 @@ async function compileLilyPond(
     }
   }
 
-  const errors = runs.flatMap((run) => parseLilyPondErrors(run.stderr));
+  const errors = runs.flatMap((run) => parseLilyPondErrors(run.stderr, params.source));
 
   if (errors.length === 0) {
     for (const run of runs) {
@@ -89,19 +89,39 @@ async function runLilyPond(
   });
 }
 
-export function parseLilyPondErrors(stderr: string): CompileError[] {
+export function parseLilyPondErrors(stderr: string, source?: string): CompileError[] {
   const errors: CompileError[] = [];
+  const barMap = source ? buildLineToBarMap(source) : undefined;
+  const lines = stderr.split(/\r?\n/);
+  let skipContinuation = false;
 
-  for (const line of stderr.split(/\r?\n/)) {
-    const locationMatch = line.match(/(?:(?:[^:\s]+):)?(\d+):(\d+):\s*(?:error:)?\s*(.+)$/i);
-    if (locationMatch && /error|warning|syntax|unexpected/i.test(line)) {
+  for (const line of lines) {
+    // Skip continuation lines (context lines after an error)
+    if (skipContinuation) {
+      if (/^\s/.test(line) || /^\s*\^+\s*$/.test(line)) {
+        continue;
+      }
+      skipContinuation = false;
+    }
+
+    const locationMatch = line.match(
+      /(?:(?:[^:\s]+):)?(\d+):(\d+):\s*(?:error:|warning:)?\s*(.+)$/i
+    );
+    if (locationMatch && /error|warning|syntax|unexpected|barcheck/i.test(line)) {
+      const lineNumber = Number(locationMatch[1]);
+      const message = locationMatch[3].trim();
+      const type = classifyError(line, message);
+      const bar = barMap ? lookupBar(barMap, lineNumber) : 0;
+      const beat = extractBeat(message);
+
       errors.push({
-        bar: 0,
-        beat: 0,
-        line: Number(locationMatch[1]),
-        type: line.toLowerCase().includes("warning") ? "warning" : "lilypond",
-        message: locationMatch[3].trim(),
+        bar,
+        beat,
+        line: lineNumber,
+        type,
+        message,
       });
+      skipContinuation = true;
       continue;
     }
 
@@ -114,10 +134,59 @@ export function parseLilyPondErrors(stderr: string): CompileError[] {
         type: "lilypond",
         message: genericError[1].trim(),
       });
+      skipContinuation = true;
     }
   }
 
   return errors;
+}
+
+function classifyError(_line: string, message: string): string {
+  const lower = message.toLowerCase();
+
+  if (/syntax error|unexpected/i.test(lower)) {
+    return "syntax";
+  }
+  if (/out of range|too high|too low/i.test(lower)) {
+    return "note_out_of_range";
+  }
+  if (/unknown|undefined|not defined/i.test(lower)) {
+    return "undefined_variable";
+  }
+  if (/barcheck failed/i.test(lower)) {
+    return "barcheck";
+  }
+
+  return "lilypond";
+}
+
+function buildLineToBarMap(source: string): Map<number, number> {
+  const map = new Map<number, number>();
+  const sourceLines = source.split(/\r?\n/);
+  let currentBar = 1;
+
+  for (let i = 0; i < sourceLines.length; i++) {
+    const lineNumber = i + 1;
+    map.set(lineNumber, currentBar);
+
+    // Count bar checks (|) and \bar commands on this line
+    // Exclude | inside \stringTuning <...> and comments
+    const stripped = sourceLines[i].replace(/%.*$/, "");
+    const barChecks = (stripped.match(/\|/g) ?? []).length;
+    const barCommands = (stripped.match(/\\bar\b/g) ?? []).length;
+    currentBar += barChecks + barCommands;
+  }
+
+  return map;
+}
+
+function lookupBar(map: Map<number, number>, lineNumber: number): number {
+  return map.get(lineNumber) ?? 0;
+}
+
+function extractBeat(message: string): number {
+  const beatMatch = message.match(/barcheck failed at:\s*(\d+)/);
+  return beatMatch ? Number(beatMatch[1]) : 0;
 }
 
 function readTextArtifact(files: Map<string, Buffer>, extension: string): string | undefined {
