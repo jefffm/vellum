@@ -500,7 +500,9 @@ export function engrave(params: EngraveParams): EngraveResult {
 }
 
 /**
- * Build the complete LyFile for the given template strategy.
+ * Guard structural invariants for direct engrave() callers.
+ * HTTP routes perform full TypeBox decoding before calling engrave(), but tests
+ * and server-side callers can construct EngraveParams values directly.
  */
 function validateStructure(params: EngraveParams): void {
   const errors: ValidationDetail[] = [];
@@ -528,6 +530,9 @@ function validateStructure(params: EngraveParams): void {
   }
 }
 
+/**
+ * Build the complete LyFile for the given template strategy.
+ */
 function buildLyFile(
   params: EngraveParams,
   vars: InstrumentLyVars,

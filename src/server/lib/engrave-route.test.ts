@@ -65,6 +65,18 @@ describe("createEngraveRoute", () => {
     expect(json.ok).toBe(false);
   });
 
+  it("returns 400 for valid JSON missing only instrument", async () => {
+    const server = await listen(createEngraveRoute());
+    servers.push(server);
+
+    const body = { template: "solo-tab", bars: minimalParams().bars };
+    const response = await postEngrave(server, body);
+    const json = (await response.json()) as ApiEnvelope<EngraveResult>;
+
+    expect(response.status).toBe(400);
+    expect(json.ok).toBe(false);
+  });
+
   it("returns 400 for malformed JSON", async () => {
     const server = await listen(createEngraveRoute());
     servers.push(server);

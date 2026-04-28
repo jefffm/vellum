@@ -123,6 +123,8 @@ function expectTemplateStructure(source: string, template: EngraveTemplateId): v
 
 describe("engrave integration — golden structural output", () => {
   const cases: Array<[EngraveTemplateId, string]> = [
+    // The Wave 11 brief named baroque-lute-11, but the current registry has
+    // baroque-lute-13 as the implemented baroque lute profile.
     ["solo-tab", "baroque-lute-13"],
     ["french-tab", "baroque-lute-13"],
     ["tab-and-staff", "classical-guitar-6"],
