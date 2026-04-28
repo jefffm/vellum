@@ -569,6 +569,8 @@ describe("engrave — full pipeline", () => {
     expect(result.source).toContain("\\new TabStaff");
     expect(result.source).toContain("additionalBassStrings");
     expect(result.source).toContain("\\autoBeamOff");
+    expect(result.source).toContain("f'4 \\1");
+    expect(result.source).toContain("f'4 \\2");
   });
 
   it("produces valid LilyPond for tab-and-staff", () => {

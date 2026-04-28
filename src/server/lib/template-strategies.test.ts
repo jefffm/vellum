@@ -27,6 +27,15 @@ function note(duration = "4"): LyLeaf {
   return { type: "note", pitch: "c'", duration, indicators: [] };
 }
 
+function stringNote(course: number): LyLeaf {
+  return {
+    type: "note",
+    pitch: "c'",
+    duration: "4",
+    indicators: [{ kind: "literal", text: `\\${course}`, site: "after" }],
+  };
+}
+
 function params(overrides: Partial<EngraveParams> = {}): EngraveParams {
   return {
     instrument: "classical-guitar-6",
@@ -136,6 +145,26 @@ describe("template strategies", () => {
       expect(contextNames(result.scoreChildren)).not.toEqual(
         expect.arrayContaining(["RhythmicStaff"])
       );
+    });
+
+    it("keeps explicit string indicators on tab leaves but strips them from notation", () => {
+      const result = buildTabAndStaff(
+        [stringNote(2)],
+        guitarVars,
+        params({ template: "tab-and-staff" })
+      );
+
+      const notationStaff = result.scoreChildren[0] as LyContainer;
+      const notationLeaf = firstVoice(notationStaff).children[0] as LyLeaf;
+      const tabStaff = result.scoreChildren[1] as LyContainer;
+      const tabLeaf = firstVoice(tabStaff).children[0] as LyLeaf;
+
+      expect(notationLeaf.indicators).not.toContainEqual({
+        kind: "literal",
+        text: "\\2",
+        site: "after",
+      });
+      expect(tabLeaf.indicators).toContainEqual({ kind: "literal", text: "\\2", site: "after" });
     });
   });
 

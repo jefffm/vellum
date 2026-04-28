@@ -34,7 +34,7 @@ export function buildSoloTab(
   return {
     scoreChildren: [
       lyTabStaff([lyVoice("music", musicLeaves)], { withBlock }),
-      buildHiddenMidiStaff(musicLeaves),
+      buildHiddenMidiStaff(stripTabStringIndicators(musicLeaves)),
     ],
   };
 }
@@ -58,7 +58,7 @@ export function buildFrenchTab(
         indicators: [{ kind: "literal", text: "\\autoBeamOff", site: "before" }],
       }),
       lyTabStaff([lyVoice("music", musicLeaves)], { withBlock }),
-      buildHiddenMidiStaff(musicLeaves),
+      buildHiddenMidiStaff(stripTabStringIndicators(musicLeaves)),
     ],
   };
 }
@@ -72,7 +72,7 @@ export function buildTabAndStaff(
 
   return {
     scoreChildren: [
-      lyStaff([lyVoice("notation", musicLeaves)], {
+      lyStaff([lyVoice("notation", stripTabStringIndicators(musicLeaves))], {
         indicators: [{ kind: "literal", text: '\\clef "treble_8"', site: "before" }],
       }),
       lyTabStaff([lyVoice("tab", musicLeaves)], { withBlock }),
@@ -329,4 +329,27 @@ export function buildLyricsContent(params: EngraveParams): string | null {
  */
 export function serializeLeavesInlineArray(leaves: LyLeaf[]): string {
   return leaves.map((leaf) => serializeLeafInline(leaf)).join(" ");
+}
+
+function stripTabStringIndicators(leaves: LyLeaf[]): LyLeaf[] {
+  return leaves.map((leaf) => {
+    if (leaf.type === "chord") {
+      return {
+        ...leaf,
+        pitches: leaf.pitches.map((pitch) => pitch.replace(/\\\d+$/, "")),
+      };
+    }
+
+    return {
+      ...leaf,
+      indicators: leaf.indicators.filter(
+        (indicator) =>
+          !(
+            indicator.kind === "literal" &&
+            indicator.site === "after" &&
+            /^\\\d+$/.test(indicator.text)
+          )
+      ),
+    };
+  });
 }

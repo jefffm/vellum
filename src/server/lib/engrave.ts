@@ -419,7 +419,10 @@ function resolveEvent(
     if (event.input === "position") {
       const pitch = model.soundingPitch(event.course, event.fret);
       const lyPitch = scientificToLilyPond(pitch);
-      return lyNote(lyPitch, event.duration, allIndicators);
+      return lyNote(lyPitch, event.duration, [
+        ...allIndicators,
+        { kind: "literal", text: `\\${event.course}`, site: "after" },
+      ]);
     } else {
       const lyPitch = scientificToLilyPond(event.pitch);
       return lyNote(lyPitch, event.duration, allIndicators);
@@ -432,7 +435,7 @@ function resolveEvent(
     for (const pos of event.positions) {
       if (pos.input === "position") {
         const pitch = model.soundingPitch(pos.course, pos.fret);
-        pitches.push(scientificToLilyPond(pitch));
+        pitches.push(`${scientificToLilyPond(pitch)}\\${pos.course}`);
       } else {
         pitches.push(scientificToLilyPond(pos.pitch));
       }
