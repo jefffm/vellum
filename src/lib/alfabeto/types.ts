@@ -59,7 +59,7 @@ export interface AlfabetoMatch {
   readonly letter: string;
   readonly chord: string;
   readonly positions: TabPosition[];
-  readonly source: "standard" | "barre";
+  readonly source: "standard" | "barre" | "superset";
   readonly barreAt?: number;
   readonly baseShape?: string;
 }

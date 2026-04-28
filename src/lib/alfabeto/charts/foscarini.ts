@@ -16,7 +16,7 @@ import { TYLER_UNIVERSAL } from "./tyler-universal.js";
 /** Foscarini's L shape: C minor with added 9th (D on c2). */
 const foscariniL: AlfabetoShapeEntry = {
   letter: "L",
-  chord: "C minor",
+  chord: "C minor add9",
   frets: [3, 3, 0, 1, 3],
   category: "standard",
 };

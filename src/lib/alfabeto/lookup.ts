@@ -98,6 +98,20 @@ function setsEqual(a: Set<number>, b: Set<number>): boolean {
 }
 
 /**
+ * Returns true if `a` is a proper superset of `b` (contains all of b's
+ * elements plus at least one extra).
+ */
+function isProperSuperset(a: Set<number>, b: Set<number>): boolean {
+  if (a.size <= b.size) return false;
+
+  for (const v of b) {
+    if (!a.has(v)) return false;
+  }
+
+  return true;
+}
+
+/**
  * Look up alfabeto shapes matching a chord.
  *
  * Accepts either a chord name or explicit pitch classes.
@@ -123,6 +137,7 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
   }
 
   const standardMatches: AlfabetoMatch[] = [];
+  const supersetMatches: AlfabetoMatch[] = [];
   const lowBarreMatches: AlfabetoMatch[] = [];
   const highBarreMatches: AlfabetoMatch[] = [];
 
@@ -136,6 +151,15 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
         chord: shape.chord,
         positions: shapeToPositions(shape),
         source: "standard",
+      });
+    } else if (isProperSuperset(pitchClasses, targetPitchClasses)) {
+      // Shape contains all target pitch classes plus extras (e.g. Foscarini L
+      // for C minor — produces C, D, Eb, G which is a superset of C, Eb, G).
+      supersetMatches.push({
+        letter: shape.letter,
+        chord: shape.chord,
+        positions: shapeToPositions(shape),
+        source: "superset",
       });
     }
 
@@ -168,11 +192,12 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
   };
 
   standardMatches.sort(sortByPosition);
+  supersetMatches.sort(sortByPosition);
   lowBarreMatches.sort(sortByPosition);
   highBarreMatches.sort(sortByPosition);
 
   return {
-    matches: [...standardMatches, ...lowBarreMatches, ...highBarreMatches],
+    matches: [...standardMatches, ...supersetMatches, ...lowBarreMatches, ...highBarreMatches],
     chartId,
   };
 }

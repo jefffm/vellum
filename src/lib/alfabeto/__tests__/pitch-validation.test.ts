@@ -94,6 +94,7 @@ describe("pitch validation — Foscarini", () => {
 
     expect(tylerL.frets[1]).toBe(4); // Tyler c2=4 (Eb4)
     expect(foscariniL.frets[1]).toBe(3); // Foscarini c2=3 (D4)
+    expect(foscariniL.chord).toBe("C minor add9");
   });
 
   it("Foscarini has M† (Eb minor)", () => {

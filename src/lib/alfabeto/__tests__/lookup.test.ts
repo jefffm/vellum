@@ -94,13 +94,13 @@ describe("alfabetoLookup", () => {
 
     if (result.matches.length >= 2) {
       const firstBarre = result.matches.findIndex((m) => m.source === "barre");
-      const lastStandard = result.matches
-        .map((m, i) => (m.source === "standard" ? i : -1))
+      const lastNonBarre = result.matches
+        .map((m, i) => (m.source === "standard" || m.source === "superset" ? i : -1))
         .filter((i) => i >= 0)
         .pop();
 
-      if (firstBarre >= 0 && lastStandard !== undefined) {
-        expect(lastStandard).toBeLessThan(firstBarre);
+      if (firstBarre >= 0 && lastNonBarre !== undefined) {
+        expect(lastNonBarre).toBeLessThan(firstBarre);
       }
     }
   });
@@ -144,6 +144,32 @@ describe("alfabetoLookup", () => {
     const letters = standard.map((m) => m.letter);
 
     expect(letters).toContain("M\u2020");
+  });
+
+  it("Foscarini L surfaces as superset match for C minor", () => {
+    const result = alfabetoLookup({
+      chordName: "C minor",
+      chartId: "foscarini",
+    });
+
+    const superset = result.matches.filter((m) => m.source === "superset");
+    expect(superset.map((m) => m.letter)).toContain("L");
+    expect(superset.find((m) => m.letter === "L")!.chord).toBe("C minor add9");
+  });
+
+  it("superset matches rank after exact standard matches", () => {
+    const result = alfabetoLookup({
+      chordName: "C minor",
+      chartId: "foscarini",
+    });
+
+    const sources = result.matches.map((m) => m.source);
+    const lastStandard = sources.lastIndexOf("standard");
+    const firstSuperset = sources.indexOf("superset");
+
+    if (lastStandard >= 0 && firstSuperset >= 0) {
+      expect(lastStandard).toBeLessThan(firstSuperset);
+    }
   });
 
   it("returns empty for unrecognized chord", () => {
