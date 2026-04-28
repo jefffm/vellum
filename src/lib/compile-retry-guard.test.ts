@@ -21,6 +21,14 @@ const compileFailure = (message = "No string for pitch #<Pitch g, > (given frets
     },
   }) satisfies AgentEvent;
 
+const environmentFailure = () => {
+  const event = compileFailure(
+    "LilyPond executable not found on PATH. Install LilyPond or run nix develop."
+  );
+  event.result.details.errors[0].type = "environment";
+  return event;
+};
+
 const compileSuccess = {
   type: "tool_execution_end",
   toolCallId: "compile-2",
@@ -53,6 +61,17 @@ describe("evaluateCompileRetryEvent", () => {
     expect(action.message).toContain("Do not call `compile` again");
     expect(action.message).toContain("honest failure summary");
     expect(action.message).toContain("syntax error");
+  });
+
+  it("stops immediately for environment failures", () => {
+    const action = evaluateCompileRetryEvent(environmentFailure(), 0, DEFAULT_COMPILE_RETRY_LIMIT);
+
+    expect(action.failedAttempts).toBe(0);
+    expect(action.retryLimitReached).toBe(true);
+    expect(action.message).toContain("local environment");
+    expect(action.message).toContain("Do not retry `compile`");
+    expect(action.message).toContain("LilyPond executable not found");
+    expect(action.message).toContain("nix develop");
   });
 
   it("does not queue steering for a successful compile", () => {

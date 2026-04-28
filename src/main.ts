@@ -21,7 +21,13 @@ import { installDebugExport } from "./lib/debug-export.js";
 import { buildSystemPrompt } from "./prompts.js";
 import { registerRenderers } from "./renderers.js";
 import { analyzeTool, compileTool, engraveTool, lintTool } from "./server-tools.js";
-import { tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool } from "./tools.js";
+import {
+  alfabetoLookupTool,
+  tabulateTool,
+  voicingsTool,
+  checkPlayabilityTool,
+  theoryTool,
+} from "./tools.js";
 import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
 
@@ -63,6 +69,7 @@ export const vellumTools: AgentTool[] = [
   tabulateTool,
   voicingsTool,
   checkPlayabilityTool,
+  alfabetoLookupTool,
   theoryTool,
   compileTool,
   engraveTool,

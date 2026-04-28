@@ -48,6 +48,37 @@ describe("server fetch wrapper tools", () => {
     }
   });
 
+  it("adds environment guidance when LilyPond is unavailable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          ok: true,
+          data: {
+            errors: [
+              {
+                bar: 0,
+                beat: 0,
+                line: 0,
+                type: "environment",
+                message: "LilyPond executable not found on PATH. Run nix develop.",
+              },
+            ],
+          },
+        })
+      )
+    );
+
+    const result = await compileTool.execute("call-1", { source: "{ c'4 }" });
+
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
+      expect(result.content[0].text).toContain("LilyPond executable not found");
+      expect(result.content[0].text).toContain("local environment problem");
+      expect(result.content[0].text).toContain("Do not claim success");
+    }
+  });
+
   it("adds tab-first guidance for LilyPond string assignment errors", async () => {
     vi.stubGlobal(
       "fetch",

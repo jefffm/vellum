@@ -89,6 +89,21 @@ export function evaluateCompileRetryEvent(
     return { resetAttempts: true };
   }
 
+  if (hasEnvironmentError(details.errors)) {
+    return {
+      failedAttempts,
+      retryLimitReached: true,
+      message: [
+        "Compile could not run because the local environment is missing a required executable or dependency.",
+        "Do not retry `compile` for the same source, do not create final artifacts, and do not claim success.",
+        "Reply with an honest blocked-by-environment summary and include the error below.",
+        "If the error says LilyPond is unavailable, tell the user to install LilyPond or run Vellum inside `nix develop`.",
+        "",
+        formatCompileErrors(details.errors),
+      ].join("\n"),
+    };
+  }
+
   if (failedAttempts >= maxAttempts) {
     return { failedAttempts };
   }
@@ -158,6 +173,10 @@ function isCompileResult(value: unknown): value is CompileResult {
 
   const candidate = value as Partial<CompileResult>;
   return Array.isArray(candidate.errors);
+}
+
+function hasEnvironmentError(errors: CompileError[]): boolean {
+  return errors.some((error) => error.type === "environment");
 }
 
 function formatCompileErrors(errors: CompileError[]): string {

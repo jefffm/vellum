@@ -16,6 +16,7 @@ describe("buildSystemPrompt", () => {
       "tabulate",
       "voicings",
       "check_playability",
+      "alfabeto_lookup",
       "engrave",
       "compile",
       "analyze",
@@ -53,7 +54,11 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("voice-and-tab");
     expect(prompt).toContain("unsupported v2 templates");
     expect(prompt).toContain("grand-staff");
-    expect(prompt).toContain("For edits to an existing LilyPond file");
+    expect(prompt).toContain("alfabeto");
+    expect(prompt).toContain('type: "alfabeto"');
+    expect(prompt).toContain("When converting an existing LilyPond file");
+    expect(prompt).toContain("do not hand-write replacement TabStaff LilyPond");
+    expect(prompt).toContain("For small edits to an existing LilyPond file");
   });
 
   it("includes mandatory compile and bounded retry policy", () => {
@@ -62,6 +67,8 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("immediately call the `compile` tool with SVG output");
     expect(prompt).toContain("without asking the user for permission");
     expect(prompt).toContain('Do not send interim text like "I\'ll do that next"');
+    expect(prompt).toContain("missing LilyPond");
+    expect(prompt).toContain("do not create a final artifact");
     expect(prompt).toContain("at most 3 compile attempts");
     expect(prompt).toContain('Never say variants of "proceed and I will compile/fix it"');
     expect(prompt).toContain("Only report success after `compile` returns an SVG or PDF artifact");

@@ -337,6 +337,33 @@ export const TheoryParamsSchema = Type.Object({
 
 export type TheoryParams = Static<typeof TheoryParamsSchema>;
 
+export const AlfabetoChartIdSchema = Type.Union([
+  Type.Literal("tyler-universal"),
+  Type.Literal("foscarini"),
+]);
+
+export type AlfabetoChartId = Static<typeof AlfabetoChartIdSchema>;
+
+export const AlfabetoLookupParamsSchema = Type.Object({
+  chordName: Type.Optional(
+    Type.String({
+      minLength: 1,
+      description: 'Chord name to look up, e.g. "G major", "Dm", "Bb".',
+    })
+  ),
+  pitchClasses: Type.Optional(
+    Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
+      minItems: 1,
+      description: "MIDI pitch classes (0-11) to match instead of chordName.",
+    })
+  ),
+  chartId: Type.Optional(AlfabetoChartIdSchema),
+  maxFret: Type.Optional(Type.Integer({ minimum: 0, maximum: 12 })),
+  includeBarreVariants: Type.Optional(Type.Boolean()),
+});
+
+export type AlfabetoLookupParams = Static<typeof AlfabetoLookupParamsSchema>;
+
 export const ValidateParamsSchema = Type.Object({
   source: Type.String({ minLength: 1, description: "LilyPond source to validate" }),
 });

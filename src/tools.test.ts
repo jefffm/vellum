@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkPlayabilityTool, tabulateTool, theoryTool, voicingsTool } from "./tools.js";
+import {
+  alfabetoLookupTool,
+  checkPlayabilityTool,
+  tabulateTool,
+  theoryTool,
+  voicingsTool,
+} from "./tools.js";
 
 describe("instrument browser tools", () => {
   it("tabulates open and fretted lute positions", async () => {
@@ -123,6 +129,27 @@ describe("instrument browser tools", () => {
     expect(result.details.violations).toEqual([]);
     expect(result.details.difficulty).toBe("beginner");
     expect(result.details.flagged_bars).toEqual([]);
+  });
+
+  it("looks up alfabeto shapes without fetching", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const result = await alfabetoLookupTool.execute("call-1", {
+      chordName: "G major",
+      chartId: "tyler-universal",
+    });
+
+    expect(result.details.chartId).toBe("tyler-universal");
+    expect(result.details.matches[0]).toEqual(
+      expect.objectContaining({ letter: "A", chord: "G major", source: "standard" })
+    );
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
+      expect(result.content[0].text).toContain("alfabeto match");
+      expect(result.content[0].text).toContain("A — G major");
+    }
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
   });
 
   it("runs theory lookups without fetching", async () => {

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import path from "node:path";
 import process from "node:process";
 import { createCompileRoute, lilypondIncludeDirs, parseLilyPondErrors } from "./compile-route.js";
-import type { SubprocessResult } from "./subprocess.js";
+import { SubprocessError, type SubprocessResult } from "./subprocess.js";
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -97,6 +97,33 @@ describe("createCompileRoute", () => {
         expect.objectContaining({ line: 2, message: "syntax error, unexpected }" })
       );
       expect(json.data.svg).toBeUndefined();
+    }
+  });
+
+  it("returns structured environment errors when LilyPond cannot be spawned", async () => {
+    const run = vi.fn(async () => {
+      throw new SubprocessError("Failed to spawn lilypond: spawn lilypond ENOENT");
+    });
+    const server = await listen(createCompileRoute({ runner: { run } }));
+    servers.push(server);
+
+    const response = await postCompile(server, { source: "{ c'4 }" });
+    const json = (await response.json()) as ApiEnvelope<{
+      svg?: string;
+      errors: Array<{ type: string; message: string }>;
+    }>;
+
+    expect(response.status).toBe(200);
+    expect(json.ok).toBe(true);
+    if (json.ok) {
+      expect(json.data.svg).toBeUndefined();
+      expect(json.data.errors).toEqual([
+        expect.objectContaining({
+          type: "environment",
+          message: expect.stringContaining("LilyPond executable not found"),
+        }),
+      ]);
+      expect(json.data.errors[0].message).toContain("nix develop");
     }
   });
 

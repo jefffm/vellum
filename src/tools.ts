@@ -1,4 +1,5 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
+import { alfabetoLookup, type AlfabetoLookupResult } from "./lib/alfabeto/index.js";
 import { InstrumentModel } from "./lib/instrument-model.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
@@ -8,6 +9,7 @@ import { transposeTool } from "./transpose.js";
 import { diapasonsTool } from "./diapasons.js";
 import { fretboardTool } from "./fretboard.js";
 import {
+  AlfabetoLookupParamsSchema,
   CheckPlayabilityParamsSchema,
   TabulateParamsSchema,
   TheoryParamsSchema,
@@ -76,6 +78,25 @@ export const checkPlayabilityTool: AgentTool<
     }),
 };
 
+export const alfabetoLookupTool: AgentTool<
+  typeof AlfabetoLookupParamsSchema,
+  AlfabetoLookupResult
+> = {
+  name: "alfabeto_lookup",
+  label: "Alfabeto Lookup",
+  description:
+    "Look up historical baroque guitar alfabeto chord symbols and course/fret shapes from supported charts. Use for rasgueado/strummed alfabeto passages before engraving alfabeto events.",
+  parameters: AlfabetoLookupParamsSchema,
+  execute: async (_toolCallId, params) => {
+    try {
+      const result = alfabetoLookup(params);
+      return toolResult(formatAlfabetoLookup(result, params.chordName), result);
+    } catch (error) {
+      return toolError(errorMessage(error));
+    }
+  },
+};
+
 export const theoryTool: AgentTool<
   typeof TheoryParamsSchema,
   { operation: string; result: TheoryValue }
@@ -102,6 +123,7 @@ export const tools = [
   tabulateTool,
   voicingsTool,
   checkPlayabilityTool,
+  alfabetoLookupTool,
   theoryTool,
   compileTool,
   engraveTool,
@@ -111,6 +133,33 @@ export const tools = [
   diapasonsTool,
   fretboardTool,
 ];
+
+function formatAlfabetoLookup(result: AlfabetoLookupResult, chordName?: string): string {
+  const label = chordName ? ` for ${chordName}` : "";
+
+  if (result.matches.length === 0) {
+    return `No alfabeto matches found${label} in ${result.chartId}.`;
+  }
+
+  const lines = [`${result.matches.length} alfabeto match(es)${label} in ${result.chartId}:`];
+
+  for (const [index, match] of result.matches.slice(0, 8).entries()) {
+    const source =
+      match.source === "barre"
+        ? `barre at fret ${match.barreAt} from ${match.baseShape}`
+        : "standard";
+    const positions = match.positions
+      .map((position) => `course ${position.course} fret ${position.fret}`)
+      .join(", ");
+    lines.push(`${index + 1}. ${match.letter} — ${match.chord} (${source}): ${positions}`);
+  }
+
+  if (result.matches.length > 8) {
+    lines.push(`...and ${result.matches.length - 8} more.`);
+  }
+
+  return lines.join("\n");
+}
 
 function formatTheoryResult(operation: string, result: TheoryValue): string {
   if (Array.isArray(result)) {

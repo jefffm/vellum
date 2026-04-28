@@ -10,6 +10,7 @@ import {
   VoicingSchema,
   ViolationSchema,
   LintViolationSchema,
+  AlfabetoLookupParamsSchema,
   AnalysisResultSchema,
   TheoryParamsSchema,
 } from "./types.js";
@@ -114,6 +115,25 @@ describe("TypeBox schema validation", () => {
         chords: [{ bar: 1, beat: 1, pitches: ["D4", "F4", "A4"], romanNumeral: "i" }],
       })
     ).toBe(true);
+  });
+
+  it("validates AlfabetoLookupParams", () => {
+    expect(
+      Value.Check(AlfabetoLookupParamsSchema, {
+        chordName: "G major",
+        chartId: "tyler-universal",
+        maxFret: 8,
+        includeBarreVariants: true,
+      })
+    ).toBe(true);
+    expect(
+      Value.Check(AlfabetoLookupParamsSchema, {
+        pitchClasses: [7, 11, 2],
+        chartId: "foscarini",
+      })
+    ).toBe(true);
+    expect(Value.Check(AlfabetoLookupParamsSchema, { pitchClasses: [99] })).toBe(false);
+    expect(Value.Check(AlfabetoLookupParamsSchema, { chartId: "unknown" })).toBe(false);
   });
 
   it("validates TheoryParams operations", () => {
