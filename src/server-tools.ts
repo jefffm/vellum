@@ -46,6 +46,9 @@ export const engraveTool = createServerTool<typeof EngraveParamsSchema, EngraveR
   description:
     "Generate valid LilyPond source from structured musical data (positions, pitches, durations). " +
     "Use after tabulate/voicings to produce notation without hand-writing LilyPond syntax. " +
+    "For a tab position note, use exactly { type: 'note', input: 'position', course, fret, duration }; " +
+    "for a pitch note, use exactly { type: 'note', input: 'pitch', pitch, duration }. " +
+    "Do not put a pitch name in the input field. " +
     "Validates all input, resolves pitches, and builds output matching the chosen template.",
   parameters: EngraveParamsSchema,
   endpoint: "/api/engrave",
