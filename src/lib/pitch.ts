@@ -1,5 +1,30 @@
 import { Note } from "tonal";
 
+/**
+ * Map from scientific pitch-class names (e.g. "C", "Eb", "F#") to LilyPond
+ * note names (e.g. "c", "ees", "fis"). Shared between pitch utilities and
+ * the diapasons tool.
+ */
+export const PITCH_TO_LILYPOND: Record<string, string> = {
+  C: "c",
+  "C#": "cis",
+  Db: "des",
+  D: "d",
+  "D#": "dis",
+  Eb: "ees",
+  E: "e",
+  F: "f",
+  "F#": "fis",
+  Gb: "ges",
+  G: "g",
+  "G#": "gis",
+  Ab: "aes",
+  A: "a",
+  "A#": "ais",
+  Bb: "bes",
+  B: "b",
+};
+
 export const MIDI_MAP = {
   C: 0,
   "C#": 1,
@@ -78,4 +103,52 @@ export function transposeNote(note: string, semitones: number): string {
   }
 
   return midiToNote(noteToMidi(note) + semitones);
+}
+
+/**
+ * Convert an accidental string (e.g. "#", "b", "##", "bb") to LilyPond
+ * accidental suffix (e.g. "is", "es", "isis", "eses").
+ */
+function accidentalToLy(acc: string): string {
+  return acc.replace(/#/g, "is").replace(/b/g, "es");
+}
+
+/**
+ * Convert a numeric octave to LilyPond octave marks.
+ *
+ * LilyPond uses octave 3 as the unmarked octave:
+ *   C3 = c (no mark)
+ *   C4 = c'    (one tick up)
+ *   C5 = c''   (two ticks up)
+ *   C2 = c,    (one comma down)
+ *   C1 = c,,   (two commas down)
+ */
+function octaveToLyMark(octave: number): string {
+  const offset = octave - 3;
+
+  if (offset > 0) return "'".repeat(offset);
+  if (offset < 0) return ",".repeat(-offset);
+
+  return "";
+}
+
+/**
+ * Convert scientific pitch notation to LilyPond absolute pitch.
+ *
+ * Examples:
+ *   "C4"  → "c'"        "A2"  → "a,"       "Eb3" → "ees"
+ *   "F#5" → "fis''"     "Bb1" → "bes,,"    "D6"  → "d'''"
+ *   "G4"  → "g'"        "A1"  → "a,,"
+ *
+ * Enharmonic spelling is preserved from the input: if the caller provides
+ * "Eb3" the output is "ees"; if "D#3" the output is "dis".
+ */
+export function scientificToLilyPond(note: string): string {
+  const parsed = parsePitch(note);
+  const pitchClass = parsed.letter + parsed.accidental;
+  const lyName =
+    PITCH_TO_LILYPOND[pitchClass] ??
+    parsed.letter.toLowerCase() + accidentalToLy(parsed.accidental);
+
+  return lyName + octaveToLyMark(parsed.octave);
 }

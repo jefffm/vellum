@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   MIDI_MAP,
+  PITCH_TO_LILYPOND,
   midiToNote,
   noteToMidi,
   parsePitch,
+  scientificToLilyPond,
   semitonesBetween,
   transposeNote,
 } from "./pitch.js";
@@ -68,5 +70,103 @@ describe("pitch utilities", () => {
     expect(() => noteToMidi("not-a-note")).toThrow(/invalid pitch/i);
     expect(() => midiToNote(128)).toThrow(/invalid midi/i);
     expect(() => parsePitch("H4")).toThrow(/invalid pitch/i);
+  });
+});
+
+describe("PITCH_TO_LILYPOND", () => {
+  it("maps all 17 standard pitch classes", () => {
+    expect(Object.keys(PITCH_TO_LILYPOND)).toHaveLength(17);
+  });
+
+  it("maps naturals to lowercase", () => {
+    expect(PITCH_TO_LILYPOND.C).toBe("c");
+    expect(PITCH_TO_LILYPOND.D).toBe("d");
+    expect(PITCH_TO_LILYPOND.G).toBe("g");
+    expect(PITCH_TO_LILYPOND.B).toBe("b");
+  });
+
+  it("maps sharps to -is suffix", () => {
+    expect(PITCH_TO_LILYPOND["C#"]).toBe("cis");
+    expect(PITCH_TO_LILYPOND["F#"]).toBe("fis");
+    expect(PITCH_TO_LILYPOND["G#"]).toBe("gis");
+  });
+
+  it("maps flats to -es suffix with E/A exceptions", () => {
+    expect(PITCH_TO_LILYPOND.Eb).toBe("ees");
+    expect(PITCH_TO_LILYPOND.Ab).toBe("aes");
+    expect(PITCH_TO_LILYPOND.Bb).toBe("bes");
+    expect(PITCH_TO_LILYPOND.Db).toBe("des");
+    expect(PITCH_TO_LILYPOND.Gb).toBe("ges");
+  });
+});
+
+describe("scientificToLilyPond", () => {
+  it("converts notes in the unmarked octave (octave 3)", () => {
+    expect(scientificToLilyPond("C3")).toBe("c");
+    expect(scientificToLilyPond("D3")).toBe("d");
+    expect(scientificToLilyPond("G3")).toBe("g");
+    expect(scientificToLilyPond("B3")).toBe("b");
+  });
+
+  it("adds ticks for octaves above 3", () => {
+    expect(scientificToLilyPond("C4")).toBe("c'");
+    expect(scientificToLilyPond("G4")).toBe("g'");
+    expect(scientificToLilyPond("A4")).toBe("a'");
+    expect(scientificToLilyPond("C5")).toBe("c''");
+    expect(scientificToLilyPond("D6")).toBe("d'''");
+    expect(scientificToLilyPond("E7")).toBe("e''''");
+  });
+
+  it("adds commas for octaves below 3", () => {
+    expect(scientificToLilyPond("A2")).toBe("a,");
+    expect(scientificToLilyPond("C2")).toBe("c,");
+    expect(scientificToLilyPond("A1")).toBe("a,,");
+    expect(scientificToLilyPond("C1")).toBe("c,,");
+    expect(scientificToLilyPond("C0")).toBe("c,,,");
+  });
+
+  it("handles sharps", () => {
+    expect(scientificToLilyPond("F#3")).toBe("fis");
+    expect(scientificToLilyPond("C#4")).toBe("cis'");
+    expect(scientificToLilyPond("G#5")).toBe("gis''");
+    expect(scientificToLilyPond("F#5")).toBe("fis''");
+  });
+
+  it("handles flats", () => {
+    expect(scientificToLilyPond("Eb3")).toBe("ees");
+    expect(scientificToLilyPond("Bb1")).toBe("bes,,");
+    expect(scientificToLilyPond("Ab4")).toBe("aes'");
+    expect(scientificToLilyPond("Db3")).toBe("des");
+    expect(scientificToLilyPond("Gb2")).toBe("ges,");
+  });
+
+  it("preserves enharmonic spelling", () => {
+    // D# vs Eb — same MIDI note, different LilyPond output
+    expect(scientificToLilyPond("D#3")).toBe("dis");
+    expect(scientificToLilyPond("Eb3")).toBe("ees");
+    // A# vs Bb
+    expect(scientificToLilyPond("A#2")).toBe("ais,");
+    expect(scientificToLilyPond("Bb2")).toBe("bes,");
+  });
+
+  it("handles baroque lute range pitches", () => {
+    // Baroque lute fretted courses: F4, D4, A3, F3, D3, A2
+    expect(scientificToLilyPond("F4")).toBe("f'");
+    expect(scientificToLilyPond("D4")).toBe("d'");
+    expect(scientificToLilyPond("A3")).toBe("a");
+    expect(scientificToLilyPond("F3")).toBe("f");
+    expect(scientificToLilyPond("D3")).toBe("d");
+    expect(scientificToLilyPond("A2")).toBe("a,");
+  });
+
+  it("handles theorbo diapason range", () => {
+    // Theorbo bass strings go very low
+    expect(scientificToLilyPond("G1")).toBe("g,,");
+    expect(scientificToLilyPond("A0")).toBe("a,,,");
+  });
+
+  it("throws on invalid pitch input", () => {
+    expect(() => scientificToLilyPond("XY9")).toThrow(/invalid pitch/i);
+    expect(() => scientificToLilyPond("")).toThrow(/invalid pitch/i);
   });
 });

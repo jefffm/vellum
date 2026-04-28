@@ -1,6 +1,7 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { errorMessage } from "./lib/errors.js";
+import { PITCH_TO_LILYPOND } from "./lib/pitch.js";
 import { toolError, toolResult } from "./lib/tool-helpers.js";
 import { DiapasonsParamsSchema } from "./types.js";
 
@@ -15,26 +16,6 @@ export type DiapasonsResult = {
   courses: DiapasonCourse[];
   lilypondSyntax: string;
   warning?: string;
-};
-
-const PITCH_TO_LILYPOND: Record<string, string> = {
-  C: "c",
-  "C#": "cis",
-  Db: "des",
-  D: "d",
-  "D#": "dis",
-  Eb: "ees",
-  E: "e",
-  F: "f",
-  "F#": "fis",
-  Gb: "ges",
-  G: "g",
-  "G#": "gis",
-  Ab: "aes",
-  A: "a",
-  "A#": "ais",
-  Bb: "bes",
-  B: "b",
 };
 
 function normalizeKeyToScheme(key: string): string {
@@ -63,9 +44,7 @@ function findScheme(
 
   if (rootMatch) {
     const root = rootMatch[1].toLowerCase();
-    const candidates = Object.keys(schemes).filter((schemeName) =>
-      schemeName.startsWith(root)
-    );
+    const candidates = Object.keys(schemes).filter((schemeName) => schemeName.startsWith(root));
 
     if (candidates.length > 0) {
       // Prefer minor if ambiguous
