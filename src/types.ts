@@ -358,7 +358,7 @@ export const AlfabetoLookupParamsSchema = Type.Object({
     })
   ),
   chartId: Type.Optional(AlfabetoChartIdSchema),
-  maxFret: Type.Optional(Type.Integer({ minimum: 0, maximum: 12 })),
+  maxFret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
   includeBarreVariants: Type.Optional(Type.Boolean()),
 });
 

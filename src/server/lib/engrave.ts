@@ -530,7 +530,22 @@ function resolveEvent(
   return lyRest(rest.duration, rest.spacer ?? false, [...indicators]);
 }
 
+/** Cache alfabeto lookups so validation + codegen don't repeat work on the same event. */
+const alfabetoMatchCache = new WeakMap<AlfabetoEvent, AlfabetoMatch | undefined>();
+
 function selectAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
+  const cached = alfabetoMatchCache.get(event);
+  if (cached !== undefined) return cached;
+  // WeakMap returns undefined for missing keys AND for cached undefined values.
+  // Use has() to distinguish "not cached" from "cached as no-match".
+  if (alfabetoMatchCache.has(event)) return undefined;
+
+  const match = resolveAlfabetoMatch(event);
+  alfabetoMatchCache.set(event, match);
+  return match;
+}
+
+function resolveAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
   const chartId = event.chartId ?? "tyler-universal";
 
   if (event.letter && !event.chordName && !event.pitchClasses) {

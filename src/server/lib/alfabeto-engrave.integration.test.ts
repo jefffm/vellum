@@ -57,4 +57,61 @@ describe("alfabeto engrave integration", () => {
       )
     ).toThrow(EngraveValidationError);
   });
+
+  it("resolves barré transposition for chords not in the base chart", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              {
+                type: "alfabeto",
+                chordName: "C# minor",
+                includeBarreVariants: true,
+                duration: "1",
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    // C# minor should resolve via barré transposition (e.g. K barred at fret 3)
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain("^\\markup");
+    // Should produce a 5-course chord
+    expect(result.source).toMatch(/<[^>]*\\1[^>]*\\2[^>]*\\3[^>]*\\4[^>]*\\5[^>]*>/);
+  });
+
+  it("renders alfabeto events using the Foscarini chart", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              {
+                type: "alfabeto",
+                letter: "A",
+                chartId: "foscarini",
+                duration: "2",
+              },
+              {
+                type: "alfabeto",
+                chordName: "G major",
+                chartId: "foscarini",
+                duration: "2",
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain('^\\markup { "A" }');
+    // Both events should produce 5-course chords
+    const chordMatches = result.source.match(/<[^>]*\\1[^>]*\\2[^>]*\\3[^>]*\\4[^>]*\\5[^>]*>/g);
+    expect(chordMatches).not.toBeNull();
+    expect(chordMatches!.length).toBeGreaterThanOrEqual(2);
+  });
 });
