@@ -9,6 +9,7 @@ import {
   eventsToRhythmLeaves,
   resolveInstrument,
   validateEvents,
+  validateMelody,
   EngraveValidationError,
 } from "./engrave.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
@@ -132,7 +133,7 @@ describe("engrave — step 2: validateEvents", () => {
         ],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).not.toThrow();
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).not.toThrow();
   });
 
   it("rejects course out of range", () => {
@@ -141,7 +142,9 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "position", course: 10, fret: 0, duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).toThrow(EngraveValidationError);
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
   });
 
   it("rejects fret out of range", () => {
@@ -150,7 +153,9 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "position", course: 1, fret: 99, duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).toThrow(EngraveValidationError);
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
   });
 
   it("rejects fret > 0 on diapason course", () => {
@@ -160,7 +165,9 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "position", course: 10, fret: 2, duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, luteModel)).toThrow(/diapason/i);
+    expect(() =>
+      validateEvents(bars, luteModel, minimalParams({ instrument: "baroque-lute-13" }))
+    ).toThrow(/diapason/i);
   });
 
   it("accepts fret 0 on diapason course", () => {
@@ -169,7 +176,9 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "position", course: 10, fret: 0, duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, luteModel)).not.toThrow();
+    expect(() =>
+      validateEvents(bars, luteModel, minimalParams({ instrument: "baroque-lute-13" }))
+    ).not.toThrow();
   });
 
   it("accepts valid pitch-mode events", () => {
@@ -181,7 +190,7 @@ describe("engrave — step 2: validateEvents", () => {
         ],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).not.toThrow();
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).not.toThrow();
   });
 
   it("rejects invalid pitch string", () => {
@@ -190,7 +199,9 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "pitch", pitch: "XY9", duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).toThrow(EngraveValidationError);
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
   });
 
   it("rejects invalid duration", () => {
@@ -199,7 +210,7 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "foo" }],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).toThrow(/duration/i);
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(/duration/i);
   });
 
   it("accepts valid durations with dots", () => {
@@ -211,7 +222,7 @@ describe("engrave — step 2: validateEvents", () => {
         ],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).not.toThrow();
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).not.toThrow();
   });
 
   it("validates chord position entries", () => {
@@ -229,20 +240,41 @@ describe("engrave — step 2: validateEvents", () => {
         ],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).toThrow(EngraveValidationError);
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
   });
 
-  it("warns on excessive stretch", () => {
+  it("warns on excessive stretch within a chord", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [
+          {
+            type: "chord",
+            positions: [
+              { input: "position", course: 1, fret: 1 },
+              { input: "position", course: 2, fret: 9 },
+            ],
+            duration: "4",
+          },
+        ],
+      },
+    ];
+    const { warnings } = validateEvents(bars, guitarModel, minimalParams());
+    expect(warnings.some((w) => w.includes("stretch"))).toBe(true);
+  });
+
+  it("does not warn on stretch across sequential notes", () => {
     const bars: EngraveBar[] = [
       {
         events: [
           { type: "note", input: "position", course: 1, fret: 1, duration: "4" },
-          { type: "note", input: "position", course: 2, fret: 9, duration: "4" },
+          { type: "note", input: "position", course: 2, fret: 12, duration: "4" },
         ],
       },
     ];
-    const { warnings } = validateEvents(bars, guitarModel);
-    expect(warnings.some((w) => w.includes("stretch"))).toBe(true);
+    const { warnings } = validateEvents(bars, guitarModel, minimalParams());
+    expect(warnings.some((w) => w.includes("stretch"))).toBe(false);
   });
 
   it("accepts rests", () => {
@@ -251,7 +283,7 @@ describe("engrave — step 2: validateEvents", () => {
         events: [{ type: "rest", duration: "4" }],
       },
     ];
-    expect(() => validateEvents(bars, guitarModel)).not.toThrow();
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).not.toThrow();
   });
 });
 
@@ -432,7 +464,7 @@ describe("engrave — step 3: eventsToRhythmLeaves", () => {
         ],
       },
     ];
-    const leaves = eventsToRhythmLeaves(bars);
+    const leaves = eventsToRhythmLeaves(bars, minimalParams());
     expect(leaves).toHaveLength(2);
 
     // First leaf: note → dummy note c'
@@ -452,7 +484,7 @@ describe("engrave — step 3: eventsToRhythmLeaves", () => {
         events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "4" }],
       },
     ];
-    const leaves = eventsToRhythmLeaves(bars);
+    const leaves = eventsToRhythmLeaves(bars, minimalParams());
     const barCheck = leaves[0].indicators.find((i) => i.kind === "bar_check");
     expect(barCheck).toBeDefined();
   });
@@ -607,15 +639,21 @@ describe("engrave — full pipeline", () => {
     expect(result1.warnings).toEqual(result2.warnings);
   });
 
-  it("returns warnings for stretch violations", () => {
+  it("returns warnings for stretch violations in chords", () => {
     const params: EngraveParams = {
       instrument: "classical-guitar-6",
       template: "solo-tab",
       bars: [
         {
           events: [
-            { type: "note", input: "position", course: 1, fret: 1, duration: "4" },
-            { type: "note", input: "position", course: 1, fret: 12, duration: "4" },
+            {
+              type: "chord",
+              positions: [
+                { input: "position", course: 1, fret: 1 },
+                { input: "position", course: 2, fret: 12 },
+              ],
+              duration: "4",
+            },
           ],
         },
       ],
@@ -672,5 +710,201 @@ describe("engrave — full pipeline", () => {
       expect(result.source).toContain(`\\include "instruments/${instrument}.ily"`);
       expect(result.source).toContain("\\new TabStaff");
     }
+  });
+});
+
+describe("engrave — validateMelody", () => {
+  it("accepts valid melody events", () => {
+    expect(() =>
+      validateMelody({
+        bars: [
+          {
+            events: [
+              { type: "note", pitch: "C4", duration: "4" },
+              { type: "note", pitch: "Eb3", duration: "4" },
+              { type: "rest", duration: "2" },
+            ],
+          },
+        ],
+      })
+    ).not.toThrow();
+  });
+
+  it("rejects invalid melody pitch", () => {
+    expect(() =>
+      validateMelody({
+        bars: [
+          {
+            events: [{ type: "note", pitch: "XY9", duration: "4" }],
+          },
+        ],
+      })
+    ).toThrow(EngraveValidationError);
+  });
+
+  it("rejects invalid melody duration", () => {
+    expect(() =>
+      validateMelody({
+        bars: [
+          {
+            events: [{ type: "note", pitch: "C4", duration: "banana" }],
+          },
+        ],
+      })
+    ).toThrow(EngraveValidationError);
+  });
+
+  it("error includes bar and event numbers", () => {
+    try {
+      validateMelody({
+        bars: [
+          { events: [{ type: "note", pitch: "C4", duration: "4" }] },
+          { events: [{ type: "note", pitch: "ZZZ", duration: "4" }] },
+        ],
+      });
+      expect.fail("Should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(EngraveValidationError);
+      const err = e as EngraveValidationError;
+      expect(err.details[0].bar).toBe(2);
+      expect(err.details[0].event).toBe(1);
+    }
+  });
+});
+
+describe("engrave — time/key validation", () => {
+  const guitarModel = loadModel("classical-guitar-6");
+
+  it("rejects invalid global time signature", () => {
+    const bars: EngraveBar[] = [{ events: [{ type: "rest", duration: "4" }] }];
+    const params = minimalParams({ time: "waltz" });
+    expect(() => validateEvents(bars, guitarModel, params)).toThrow(EngraveValidationError);
+  });
+
+  it("rejects invalid per-bar time signature", () => {
+    const bars: EngraveBar[] = [{ events: [{ type: "rest", duration: "4" }], time: "nope" }];
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
+  });
+
+  it("rejects invalid global key tonic", () => {
+    const params = minimalParams({ key: { tonic: "xyz", mode: "major" } });
+    const bars: EngraveBar[] = [{ events: [{ type: "rest", duration: "4" }] }];
+    expect(() => validateEvents(bars, guitarModel, params)).toThrow(EngraveValidationError);
+  });
+
+  it("rejects invalid global key mode", () => {
+    const params = minimalParams({ key: { tonic: "c", mode: "banana" } });
+    const bars: EngraveBar[] = [{ events: [{ type: "rest", duration: "4" }] }];
+    expect(() => validateEvents(bars, guitarModel, params)).toThrow(EngraveValidationError);
+  });
+
+  it("rejects invalid per-bar key", () => {
+    const bars: EngraveBar[] = [
+      { events: [{ type: "rest", duration: "4" }], key: { tonic: "zzz", mode: "major" } },
+    ];
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(
+      EngraveValidationError
+    );
+  });
+
+  it("accepts valid time and key", () => {
+    const params = minimalParams({ time: "6/8", key: { tonic: "d", mode: "minor" } });
+    const bars: EngraveBar[] = [{ events: [{ type: "rest", duration: "4" }] }];
+    expect(() => validateEvents(bars, guitarModel, params)).not.toThrow();
+  });
+});
+
+describe("engrave — voice-and-tab variable references", () => {
+  it("score references melody, lyricsText, and lute variables", () => {
+    const params: EngraveParams = {
+      instrument: "classical-guitar-6",
+      template: "voice-and-tab",
+      time: "4/4",
+      bars: [
+        {
+          events: [
+            { type: "note", input: "position", course: 1, fret: 0, duration: "4" },
+            { type: "note", input: "position", course: 2, fret: 1, duration: "4" },
+            { type: "note", input: "position", course: 3, fret: 0, duration: "4" },
+            { type: "note", input: "position", course: 4, fret: 2, duration: "4" },
+          ],
+        },
+      ],
+      melody: {
+        bars: [
+          {
+            events: [
+              { type: "note", pitch: "C4", duration: "4", lyric: "Sing" },
+              { type: "note", pitch: "D4", duration: "4", lyric: "now" },
+              { type: "note", pitch: "E4", duration: "4", lyric: "a" },
+              { type: "note", pitch: "F4", duration: "4", lyric: "song" },
+            ],
+          },
+        ],
+      },
+    };
+    const result = engrave(params);
+    // Variable definitions
+    expect(result.source).toContain("melody = {");
+    expect(result.source).toContain("lyricsText = \\lyricmode");
+    expect(result.source).toContain("lute = {");
+    // Variable references in score
+    expect(result.source).toContain("\\melody");
+    expect(result.source).toContain("\\lyricsText");
+    expect(result.source).toContain("\\lute");
+    // NO placeholder c'1 note
+    expect(result.source).not.toContain("c'1");
+  });
+
+  it("rejects invalid melody pitch in full pipeline", () => {
+    const params: EngraveParams = {
+      instrument: "classical-guitar-6",
+      template: "voice-and-tab",
+      bars: [
+        {
+          events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "4" }],
+        },
+      ],
+      melody: {
+        bars: [
+          {
+            events: [{ type: "note", pitch: "INVALID", duration: "4" }],
+          },
+        ],
+      },
+    };
+    expect(() => engrave(params)).toThrow(EngraveValidationError);
+  });
+});
+
+describe("engrave — rhythm leaves with indicators", () => {
+  it("attaches time/key/pickup to first rhythm leaf", () => {
+    const bars: EngraveBar[] = [
+      { events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "4" }] },
+    ];
+    const params = minimalParams({ time: "4/4", key: { tonic: "c", mode: "major" }, pickup: "4" });
+    const leaves = eventsToRhythmLeaves(bars, params);
+    const timeSig = leaves[0].indicators.find((i) => i.kind === "time_signature");
+    const keySig = leaves[0].indicators.find((i) => i.kind === "key_signature");
+    const partial = leaves[0].indicators.find((i) => i.kind === "partial");
+    expect(timeSig).toBeDefined();
+    expect(keySig).toBeDefined();
+    expect(partial).toBeDefined();
+  });
+
+  it("attaches per-bar time override to rhythm leaves", () => {
+    const bars: EngraveBar[] = [
+      { events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "4" }] },
+      {
+        events: [{ type: "note", input: "position", course: 1, fret: 0, duration: "4" }],
+        time: "3/4",
+      },
+    ];
+    const params = minimalParams();
+    const leaves = eventsToRhythmLeaves(bars, params);
+    const timeSig = leaves[1].indicators.find((i) => i.kind === "time_signature");
+    expect(timeSig).toBeDefined();
   });
 });

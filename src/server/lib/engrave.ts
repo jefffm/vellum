@@ -17,14 +17,13 @@ import type {
   EngraveParams,
   EngraveResult,
   EngraveMusicEvent,
+  Melody,
   PitchNote,
   PositionNote,
   RestEvent,
 } from "../../lib/engrave-schema.js";
 import {
   type InstrumentLyVars,
-  ENGRAVE_INSTRUMENT_IDS,
-  ENGRAVE_TEMPLATE_IDS,
   type EngraveTemplateId,
   getInstrumentLyVars,
   validateTemplateId,
@@ -47,7 +46,9 @@ import {
   lyTabStaff,
   lyVoice,
   serializeFile,
+  serializeLeafInline,
 } from "../../lib/ly-tree.js";
+import { parseTimeSignature, validateKeySignature } from "../../lib/music-utils.js";
 import { loadProfile } from "../profiles.js";
 import { parsePitch, scientificToLilyPond } from "../../lib/pitch.js";
 
@@ -64,7 +65,7 @@ export class EngraveValidationError extends Error {
 }
 
 export type ValidationDetail = {
-  bar: number; // 1-based
+  bar: number; // 1-based (0 for global/structural errors)
   event?: number; // 1-based within bar
   field?: string;
   message: string;
@@ -87,16 +88,11 @@ export type ResolvedInstrument = {
 };
 
 export function resolveInstrument(params: EngraveParams): ResolvedInstrument {
-  // Validate instrument
   const vars = getInstrumentLyVars(params.instrument);
 
-  // Validate template
   validateTemplateId(params.template);
   const templateId = params.template as EngraveTemplateId;
 
-  // Load instrument model for validation
-  // We construct from the vars — for the engine we need the YAML profile
-  // loaded via the server-side loader
   const model = loadInstrumentModel(params.instrument);
 
   // Template-specific validation
@@ -124,9 +120,6 @@ export function resolveInstrument(params: EngraveParams): ResolvedInstrument {
   return { vars, model, templateId };
 }
 
-/**
- * Load an InstrumentModel synchronously from the YAML profile.
- */
 function loadInstrumentModel(instrumentId: string): InstrumentModel {
   const profile = loadProfile(instrumentId);
   return InstrumentModel.fromProfile(profile);
@@ -134,15 +127,82 @@ function loadInstrumentModel(instrumentId: string): InstrumentModel {
 
 // === Step 2: Event validation ===
 
-export function validateEvents(bars: EngraveBar[], model: InstrumentModel): { warnings: string[] } {
+/**
+ * Validate all tab bar events. Also validates global and per-bar time/key signatures.
+ */
+export function validateEvents(
+  bars: EngraveBar[],
+  model: InstrumentModel,
+  params: EngraveParams
+): { warnings: string[] } {
   const errors: ValidationDetail[] = [];
   const warnings: string[] = [];
   const maxStretch = model.maxStretch();
 
+  // Validate global time signature
+  if (params.time) {
+    try {
+      parseTimeSignature(params.time);
+    } catch (e) {
+      errors.push({
+        bar: 0,
+        field: "time",
+        message: `Invalid global time signature: ${(e as Error).message}`,
+      });
+    }
+  }
+
+  // Validate global key signature
+  if (params.key) {
+    try {
+      validateKeySignature(params.key.tonic, params.key.mode);
+    } catch (e) {
+      errors.push({
+        bar: 0,
+        field: "key",
+        message: `Invalid global key signature: ${(e as Error).message}`,
+      });
+    }
+  }
+
+  // Validate pickup duration
+  if (params.pickup && !isValidDuration(params.pickup)) {
+    errors.push({
+      bar: 0,
+      field: "pickup",
+      message: `Invalid pickup duration "${params.pickup}"`,
+    });
+  }
+
   for (let barIdx = 0; barIdx < bars.length; barIdx++) {
     const bar = bars[barIdx];
     const barNum = barIdx + 1;
-    const positionFrets: number[] = []; // for stretch check
+
+    // Validate per-bar time override
+    if (bar.time) {
+      try {
+        parseTimeSignature(bar.time);
+      } catch (e) {
+        errors.push({
+          bar: barNum,
+          field: "time",
+          message: `Invalid time signature: ${(e as Error).message}`,
+        });
+      }
+    }
+
+    // Validate per-bar key override
+    if (bar.key) {
+      try {
+        validateKeySignature(bar.key.tonic, bar.key.mode);
+      } catch (e) {
+        errors.push({
+          bar: barNum,
+          field: "key",
+          message: `Invalid key signature: ${(e as Error).message}`,
+        });
+      }
+    }
 
     for (let evIdx = 0; evIdx < bar.events.length; evIdx++) {
       const event = bar.events[evIdx];
@@ -160,37 +220,35 @@ export function validateEvents(bars: EngraveBar[], model: InstrumentModel): { wa
 
       if (event.type === "note") {
         if (event.input === "position") {
-          validatePositionNote(event, model, barNum, evNum, errors);
-          positionFrets.push(event.fret);
+          validatePositionEntry(event.course, event.fret, model, barNum, evNum, errors);
         } else {
-          validatePitchNote(event, barNum, evNum, errors);
+          validatePitchEntry(event.pitch, barNum, evNum, errors);
         }
       } else if (event.type === "chord") {
+        // Stretch check: only within this chord (simultaneous notes)
+        const chordFrets: number[] = [];
+
         for (const pos of event.positions) {
           if (pos.input === "position") {
             validatePositionEntry(pos.course, pos.fret, model, barNum, evNum, errors);
-            positionFrets.push(pos.fret);
+            chordFrets.push(pos.fret);
           } else {
             validatePitchEntry(pos.pitch, barNum, evNum, errors);
           }
         }
-      }
-      // Rests: only duration validation (already done above)
-    }
 
-    // Stretch check for position-mode events in this bar
-    if (positionFrets.length >= 2) {
-      const frettedOnly = positionFrets.filter((f) => f > 0);
-
-      if (frettedOnly.length >= 2) {
-        const span = Math.max(...frettedOnly) - Math.min(...frettedOnly);
-
-        if (span > maxStretch) {
-          warnings.push(
-            `Bar ${barNum}: fret span ${span} exceeds comfortable stretch of ${maxStretch} frets`
-          );
+        // Per-chord stretch check
+        const frettedOnly = chordFrets.filter((f) => f > 0);
+        if (frettedOnly.length >= 2) {
+          const span = Math.max(...frettedOnly) - Math.min(...frettedOnly);
+          if (span > maxStretch) {
+            warnings.push(
+              `Bar ${barNum}, event ${evNum}: chord fret span ${span} exceeds comfortable stretch of ${maxStretch} frets`
+            );
+          }
         }
       }
+      // Rests: only duration validation (already done above)
     }
   }
 
@@ -205,14 +263,51 @@ export function validateEvents(bars: EngraveBar[], model: InstrumentModel): { wa
   return { warnings };
 }
 
-function validatePositionNote(
-  event: PositionNote,
-  model: InstrumentModel,
-  barNum: number,
-  evNum: number,
-  errors: ValidationDetail[]
-): void {
-  validatePositionEntry(event.course, event.fret, model, barNum, evNum, errors);
+/**
+ * Validate melody events (pitches and durations). Called for voice-and-tab template.
+ */
+export function validateMelody(melody: Melody): void {
+  const errors: ValidationDetail[] = [];
+
+  for (let barIdx = 0; barIdx < melody.bars.length; barIdx++) {
+    const bar = melody.bars[barIdx];
+    const barNum = barIdx + 1;
+
+    for (let evIdx = 0; evIdx < bar.events.length; evIdx++) {
+      const event = bar.events[evIdx];
+      const evNum = evIdx + 1;
+
+      if (!isValidDuration(event.duration)) {
+        errors.push({
+          bar: barNum,
+          event: evNum,
+          field: "melody.duration",
+          message: `Invalid melody duration "${event.duration}"`,
+        });
+      }
+
+      if (event.type === "note") {
+        try {
+          parsePitch(event.pitch);
+        } catch {
+          errors.push({
+            bar: barNum,
+            event: evNum,
+            field: "melody.pitch",
+            message: `Invalid melody pitch "${event.pitch}". Expected scientific notation like "C4", "Eb3", "F#5"`,
+          });
+        }
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    const summary = errors
+      .slice(0, 5)
+      .map((e) => `Melody bar ${e.bar}, event ${e.event}: ${e.message}`)
+      .join("; ");
+    throw new EngraveValidationError(`Melody validation failed: ${summary}`, errors);
+  }
 }
 
 function validatePositionEntry(
@@ -232,7 +327,7 @@ function validatePositionEntry(
       field: "course",
       message: `Course ${course} out of range [1, ${courseCount}]`,
     });
-    return; // skip further checks that depend on valid course
+    return;
   }
 
   const maxFrets = model.maxFrets();
@@ -247,7 +342,6 @@ function validatePositionEntry(
     return;
   }
 
-  // Diapason courses must be fret 0
   if (model.isDiapason(course) && fret !== 0) {
     errors.push({
       bar: barNum,
@@ -256,15 +350,6 @@ function validatePositionEntry(
       message: `Course ${course} is a diapason (open string only) — fret must be 0, got ${fret}`,
     });
   }
-}
-
-function validatePitchNote(
-  event: PitchNote,
-  barNum: number,
-  evNum: number,
-  errors: ValidationDetail[]
-): void {
-  validatePitchEntry(event.pitch, barNum, evNum, errors);
 }
 
 function validatePitchEntry(
@@ -288,6 +373,42 @@ function validatePitchEntry(
 // === Step 3: Pitch resolution and leaf construction ===
 
 /**
+ * Build leading indicators (time/key/pickup) for a leaf position.
+ */
+function buildLeadingIndicators(
+  params: EngraveParams,
+  bar: EngraveBar,
+  isFirstLeaf: boolean,
+  isFirstBar: boolean,
+  isFirstInBar: boolean
+): LyIndicator[] {
+  const indicators: LyIndicator[] = [];
+
+  if (isFirstLeaf) {
+    if (params.pickup) {
+      indicators.push({ kind: "partial", duration: params.pickup });
+    }
+    if (params.key) {
+      indicators.push({ kind: "key_signature", tonic: params.key.tonic, mode: params.key.mode });
+    }
+    if (params.time) {
+      indicators.push({ kind: "time_signature", ...parseTimeSignature(params.time) });
+    }
+  }
+
+  if (isFirstInBar && !isFirstBar) {
+    if (bar.key) {
+      indicators.push({ kind: "key_signature", tonic: bar.key.tonic, mode: bar.key.mode });
+    }
+    if (bar.time) {
+      indicators.push({ kind: "time_signature", ...parseTimeSignature(bar.time) });
+    }
+  }
+
+  return indicators;
+}
+
+/**
  * Convert validated events to LyLeaf nodes with resolved pitches and indicators.
  */
 export function eventsToLeaves(
@@ -306,46 +427,10 @@ export function eventsToLeaves(
       const event = bar.events[evIdx];
       const isLastInBar = evIdx === bar.events.length - 1;
       const isFirstInBar = evIdx === 0;
-      const indicators: LyIndicator[] = [];
 
-      // Global indicators on the very first leaf
-      if (isFirstLeaf) {
-        if (params.pickup) {
-          indicators.push({ kind: "partial", duration: params.pickup });
-        }
-
-        if (params.key) {
-          indicators.push({
-            kind: "key_signature",
-            tonic: params.key.tonic,
-            mode: params.key.mode,
-          });
-        }
-
-        if (params.time) {
-          indicators.push({ kind: "time_signature", ...parseTimeSignature(params.time) });
-        }
-      }
-
-      // Per-bar overrides on the first event of the bar
-      if (isFirstInBar && !isFirstBar) {
-        if (bar.key) {
-          indicators.push({ kind: "key_signature", tonic: bar.key.tonic, mode: bar.key.mode });
-        }
-
-        if (bar.time) {
-          indicators.push({ kind: "time_signature", ...parseTimeSignature(bar.time) });
-        }
-      }
-
-      // Also handle first-bar per-bar overrides (in case global AND per-bar are set)
-      if (isFirstInBar && isFirstBar && !isFirstLeaf) {
-        // This shouldn't happen since isFirstLeaf = true on barIdx 0, evIdx 0
-      }
-
+      const indicators = buildLeadingIndicators(params, bar, isFirstLeaf, isFirstBar, isFirstInBar);
       const leaf = resolveEvent(event, model, indicators);
 
-      // Post-event indicators
       if (isLastInBar) {
         leaf.indicators.push({ kind: "bar_check" });
       }
@@ -393,7 +478,6 @@ function resolveEvent(
     }
 
     const afterIndicators: LyIndicator[] = [];
-
     if (event.tie) afterIndicators.push({ kind: "tie" });
 
     return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
@@ -419,51 +503,39 @@ function noteIndicators(event: PositionNote | PitchNote): LyIndicator[] {
  * Generate rhythm-only leaves for the french-tab RhythmicStaff.
  * Notes/chords → spacer note with same duration (rhythm flags only).
  * Rests → spacer rests (invisible).
+ *
+ * Also attaches time/key/pickup indicators matching the main voice.
  */
-export function eventsToRhythmLeaves(bars: EngraveBar[]): LyLeaf[] {
+export function eventsToRhythmLeaves(bars: EngraveBar[], params: EngraveParams): LyLeaf[] {
   const leaves: LyLeaf[] = [];
+  let isFirstLeaf = true;
 
   for (let barIdx = 0; barIdx < bars.length; barIdx++) {
     const bar = bars[barIdx];
+    const isFirstBar = barIdx === 0;
 
     for (let evIdx = 0; evIdx < bar.events.length; evIdx++) {
       const event = bar.events[evIdx];
       const isLastInBar = evIdx === bar.events.length - 1;
-      const indicators: LyIndicator[] = [];
+      const isFirstInBar = evIdx === 0;
+
+      const indicators = buildLeadingIndicators(params, bar, isFirstLeaf, isFirstBar, isFirstInBar);
 
       if (isLastInBar) {
         indicators.push({ kind: "bar_check" });
       }
 
       if (event.type === "rest") {
-        // Spacer rest on rhythm staff
         leaves.push(lyRest(event.duration, true, indicators));
       } else {
-        // Dummy note for rhythm display — use 'c' as dummy pitch
-        // The RhythmicStaff only shows stems and flags, no noteheads
         leaves.push(lyNote("c'", event.duration, indicators));
       }
+
+      isFirstLeaf = false;
     }
   }
 
   return leaves;
-}
-
-function parseTimeSignature(time: string): { numerator: number; denominator: number } {
-  const parts = time.split("/");
-
-  if (parts.length !== 2) {
-    throw new Error(`Invalid time signature: "${time}". Expected format: "4/4", "3/4", "6/8"`);
-  }
-
-  const numerator = parseInt(parts[0], 10);
-  const denominator = parseInt(parts[1], 10);
-
-  if (isNaN(numerator) || isNaN(denominator) || numerator < 1 || denominator < 1) {
-    throw new Error(`Invalid time signature: "${time}"`);
-  }
-
-  return { numerator, denominator };
 }
 
 // === Step 4: \with block generation ===
@@ -471,14 +543,14 @@ function parseTimeSignature(time: string): { numerator: number; denominator: num
 /**
  * Build the \with block entries for a TabStaff based on instrument vars.
  */
-export function buildTabStaffWithBlock(vars: InstrumentLyVars, _diapasonScheme?: string): string[] {
+export function buildTabStaffWithBlock(vars: InstrumentLyVars): string[] {
   const entries: string[] = [];
   entries.push(`tablatureFormat = \\${vars.tabFormat}`);
   entries.push(`stringTunings = \\${vars.stringTunings}`);
 
   if (vars.diapasons) {
-    // TODO: when diapasonScheme override is provided, generate inline
-    // additionalBassStrings from the scheme. For now, reference the .ily default.
+    // TODO: future diapason scheme override support — generate inline
+    // additionalBassStrings from a scheme parameter. For now, reference the .ily default.
     entries.push(`additionalBassStrings = \\${vars.diapasons}`);
   }
 
@@ -516,8 +588,13 @@ export function engrave(params: EngraveParams): EngraveResult {
   // Step 1: Resolve instrument and template
   const { vars, model, templateId } = resolveInstrument(params);
 
-  // Step 2: Validate events
-  const { warnings } = validateEvents(params.bars, model);
+  // Step 2: Validate events (tab + global time/key)
+  const { warnings } = validateEvents(params.bars, model, params);
+
+  // Step 2b: Validate melody if present
+  if (params.melody) {
+    validateMelody(params.melody);
+  }
 
   // Step 3: Resolve pitches → LyLeaf[]
   const musicLeaves = eventsToLeaves(params.bars, params, model);
@@ -549,7 +626,7 @@ function buildLyFile(
   if (params.composer) header.composer = params.composer;
 
   const variables: LyVariable[] = [];
-  const withBlock = buildTabStaffWithBlock(vars, params.diapason_scheme);
+  const withBlock = buildTabStaffWithBlock(vars);
 
   let scoreChildren: (LyLeaf | LyContainer)[];
   const templateWarnings: string[] = [];
@@ -563,7 +640,7 @@ function buildLyFile(
       break;
 
     case "french-tab": {
-      const rhythmLeaves = eventsToRhythmLeaves(params.bars);
+      const rhythmLeaves = eventsToRhythmLeaves(params.bars, params);
       scoreChildren = [
         lyRhythmicStaff([lyVoice("rhythm", rhythmLeaves)], {
           withBlock: [
@@ -589,11 +666,15 @@ function buildLyFile(
       break;
 
     case "voice-and-tab": {
-      // Build melody variable content
+      // Build melody and lyrics content
       const melodyLeaves = buildMelodyLeaves(params);
       const lyricsContent = buildLyricsContent(params);
 
-      variables.push({ name: "melody", body: serializeLeavesInline(melodyLeaves) });
+      // Define variables
+      variables.push({
+        name: "melody",
+        body: serializeLeavesInlineArray(melodyLeaves),
+      });
 
       if (lyricsContent) {
         variables.push({
@@ -603,18 +684,35 @@ function buildLyFile(
         });
       }
 
-      variables.push({ name: "lute", body: serializeLeavesInline(musicLeaves) });
+      variables.push({
+        name: "lute",
+        body: serializeLeavesInlineArray(musicLeaves),
+      });
 
+      // Build score referencing variables via literal indicators
       scoreChildren = [
         lyContainer("Staff", {
           name: "voice",
           simultaneous: true,
           children: [
-            lyVoice("melody", [lyNote("c'", "1")]), // placeholder — uses \melody variable
+            lyVoice("melody", [], {
+              indicators: [{ kind: "literal", text: "\\melody", site: "before" }],
+            }),
           ],
         }),
-        lyLyrics("melody", []),
-        lyTabStaff([lyVoice("tab", musicLeaves)], { withBlock }),
+        lyLyrics("melody", [], {
+          indicators: lyricsContent
+            ? [{ kind: "literal", text: "\\lyricsText", site: "before" }]
+            : [],
+        }),
+        lyTabStaff(
+          [
+            lyVoice("tab", [], {
+              indicators: [{ kind: "literal", text: "\\lute", site: "before" }],
+            }),
+          ],
+          { withBlock }
+        ),
       ];
       break;
     }
@@ -684,35 +782,8 @@ function buildLyricsContent(params: EngraveParams): string | null {
 
 /**
  * Serialize a flat array of leaves into an inline string (for variable bodies).
+ * Uses the shared serializeLeafInline from ly-tree.ts.
  */
-function serializeLeavesInline(leaves: LyLeaf[]): string {
-  return leaves
-    .map((leaf) => {
-      let core: string;
-
-      switch (leaf.type) {
-        case "note":
-          core = `${leaf.pitch}${leaf.duration}`;
-          break;
-        case "chord":
-          core = `<${leaf.pitches.join(" ")}>${leaf.duration}`;
-          break;
-        case "rest":
-          core = `${leaf.spacer ? "s" : "r"}${leaf.duration}`;
-          break;
-      }
-
-      let suffix = "";
-
-      for (const ind of leaf.indicators) {
-        if (ind.kind === "tie") suffix += "~";
-        else if (ind.kind === "slur_start") suffix += "(";
-        else if (ind.kind === "slur_end") suffix += ")";
-        else if (ind.kind === "ornament") suffix += `\\${ind.name}`;
-        else if (ind.kind === "bar_check") suffix += " |";
-      }
-
-      return core + suffix;
-    })
-    .join(" ");
+function serializeLeavesInlineArray(leaves: LyLeaf[]): string {
+  return leaves.map((leaf) => serializeLeafInline(leaf)).join(" ");
 }

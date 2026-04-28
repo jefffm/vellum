@@ -331,20 +331,53 @@ function serializeLeaf(leaf: LyLeaf, indent: number): string {
     }
   }
 
-  let core: string;
+  out += `${pad}${leafCore(leaf)}${leafSuffix(leaf)}`;
 
-  switch (leaf.type) {
-    case "note":
-      core = `${leaf.pitch}${leaf.duration}`;
-      break;
-    case "chord":
-      core = `<${leaf.pitches.join(" ")}>${leaf.duration}`;
-      break;
-    case "rest":
-      core = `${leaf.spacer ? "s" : "r"}${leaf.duration}`;
-      break;
+  return out;
+}
+
+/**
+ * Serialize a leaf as a compact inline string (no indentation, no before-indicators on
+ * separate lines). Used for variable body content and other inline contexts.
+ *
+ * Before-indicators (time_signature, key_signature, partial, literal[before]) are
+ * emitted inline before the core, separated by spaces.
+ */
+export function serializeLeafInline(leaf: LyLeaf): string {
+  let prefix = "";
+
+  for (const ind of leaf.indicators) {
+    if (ind.kind === "time_signature") {
+      prefix += `\\time ${ind.numerator}/${ind.denominator} `;
+    } else if (ind.kind === "key_signature") {
+      prefix += `\\key ${ind.tonic} \\${ind.mode} `;
+    } else if (ind.kind === "partial") {
+      prefix += `\\partial ${ind.duration} `;
+    } else if (ind.kind === "literal" && ind.site === "before") {
+      prefix += `${ind.text} `;
+    }
   }
 
+  const core = leafCore(leaf);
+  const suffix = leafSuffix(leaf);
+
+  return prefix + core + suffix;
+}
+
+/** The core notation text for a leaf (pitch+duration, chord, rest). */
+function leafCore(leaf: LyLeaf): string {
+  switch (leaf.type) {
+    case "note":
+      return `${leaf.pitch}${leaf.duration}`;
+    case "chord":
+      return `<${leaf.pitches.join(" ")}>${leaf.duration}`;
+    case "rest":
+      return `${leaf.spacer ? "s" : "r"}${leaf.duration}`;
+  }
+}
+
+/** The post-notation suffix for a leaf (ties, slurs, ornaments, bar checks, literals). */
+function leafSuffix(leaf: LyLeaf): string {
   let suffix = "";
 
   for (const ind of leaf.indicators) {
@@ -356,9 +389,7 @@ function serializeLeaf(leaf: LyLeaf, indent: number): string {
     else if (ind.kind === "literal" && ind.site === "after") suffix += ` ${ind.text}`;
   }
 
-  out += `${pad}${core}${suffix}`;
-
-  return out;
+  return suffix;
 }
 
 /** Serialize an indicator as a standalone line (for container-level indicators). */
