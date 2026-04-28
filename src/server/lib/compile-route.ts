@@ -14,6 +14,7 @@ import { SubprocessRunner, type SubprocessResult } from "./subprocess.js";
 export function lilypondIncludeDirs(): string[] {
   const base = process.cwd();
   return [
+    base,
     process.env.VELLUM_INSTRUMENTS_DIR ?? path.join(base, "instruments"),
     path.join(base, "templates"),
   ];
