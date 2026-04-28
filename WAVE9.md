@@ -4,13 +4,13 @@
 
 4 beads building the test foundation, then exercising it with real pipeline tests. Also includes housekeeping: close beads already completed in earlier waves.
 
-| # | Bead | Title | Pri |
-|---|------|-------|-----|
-| 1 | 0xd.10 | TestHarness + table-driven test infrastructure | P0 |
-| 2 | 0xd.9 | Test fixtures: MusicXML and LilyPond sample files | P0 |
-| 3 | 0xd.2 | French tab pipeline test (real LilyPond) | P0 |
-| 4 | 0xd.4 | Tool chain pipeline test (tabulate → voicings → playability → compile) | P0 |
-| — | housekeeping | Close completed beads in tracker | — |
+| #   | Bead         | Title                                                                  | Pri |
+| --- | ------------ | ---------------------------------------------------------------------- | --- |
+| 1   | 0xd.10       | TestHarness + table-driven test infrastructure                         | P0  |
+| 2   | 0xd.9        | Test fixtures: MusicXML and LilyPond sample files                      | P0  |
+| 3   | 0xd.2        | French tab pipeline test (real LilyPond)                               | P0  |
+| 4   | 0xd.4        | Tool chain pipeline test (tabulate → voicings → playability → compile) | P0  |
+| —   | housekeeping | Close completed beads in tracker                                       | —   |
 
 After this wave: shared test infrastructure (TestServer, table-driven runner, fixture loader), 10 fixture files, and 2 end-to-end pipeline tests proving the full stack works.
 
@@ -49,19 +49,20 @@ cd ~/workspace/vellum && nix develop --command bash -c 'npm install && npm run t
 
 Before starting new work, update `.beads/issues.jsonl` to close beads that are already implemented but still marked "open":
 
-| Bead | Title | Why it's done |
-|------|-------|---------------|
-| vellum-gwf.3 | POST /api/validate | `validate-route.ts` exists with 7 passing tests |
+| Bead         | Title                                         | Why it's done                                                           |
+| ------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
+| vellum-gwf.3 | POST /api/validate                            | `validate-route.ts` exists with 7 passing tests                         |
 | vellum-gwf.4 | Integration test: compile French tab template | `test/templates.test.ts` compiles all templates including french-tab.ly |
-| vellum-i3r.4 | transpose tool | `src/transpose.ts` exists with 8 passing tests |
-| vellum-i3r.5 | diapasons tool | `src/diapasons.ts` exists with 14 passing tests |
-| vellum-i3r.6 | fretboard tool | `src/fretboard.ts` exists with 17 passing tests |
-| vellum-kyq.4 | Template compilation test suite | `test/templates.test.ts` auto-discovers all 8 templates |
-| vellum-8zf.6 | theory.py chordify subcommand | Already status "done", mark closed |
+| vellum-i3r.4 | transpose tool                                | `src/transpose.ts` exists with 8 passing tests                          |
+| vellum-i3r.5 | diapasons tool                                | `src/diapasons.ts` exists with 14 passing tests                         |
+| vellum-i3r.6 | fretboard tool                                | `src/fretboard.ts` exists with 17 passing tests                         |
+| vellum-kyq.4 | Template compilation test suite               | `test/templates.test.ts` auto-discovers all 8 templates                 |
+| vellum-8zf.6 | theory.py chordify subcommand                 | Already status "done", mark closed                                      |
 
 To close a bead, find its line in `.beads/issues.jsonl` and change `"status":"open"` (or `"status":"done"`) to `"status":"closed"`. Do this for all 7 beads listed above.
 
 Also close parent epics where all children are now closed:
+
 - **vellum-i3r** (Instrument Mechanics Tools) — all sub-beads done (i3r.4, i3r.5, i3r.6)
 - **vellum-kyq** (Epic 4: LilyPond Templates & Includes) — all sub-beads done (kyq.3, kyq.4)
 
@@ -88,7 +89,10 @@ export class TestServer {
 
   static async start(opts?: { port?: number }): Promise<TestServer>;
   async post(path: string, body: object): Promise<{ status: number; data: any }>;
-  async get(path: string, opts?: { raw?: boolean }): Promise<{ status: number; data: any; text?: string }>;
+  async get(
+    path: string,
+    opts?: { raw?: boolean }
+  ): Promise<{ status: number; data: any; text?: string }>;
   async delete(path: string): Promise<{ status: number; data: any }>;
   async stop(): Promise<void>;
   get baseUrl(): string;
@@ -96,6 +100,7 @@ export class TestServer {
 ```
 
 Implementation notes:
+
 - Use port 0 for random port assignment (or accept explicit port)
 - Use Node's built-in `fetch` (available in Node 20) for HTTP requests
 - `post()` sends JSON, parses JSON response
@@ -113,7 +118,7 @@ export type TestCase = { name: string; [key: string]: unknown };
 export function tableTest<TCase extends TestCase>(
   description: string,
   cases: TCase[],
-  run: (tc: TCase) => Promise<void> | void,
+  run: (tc: TCase) => Promise<void> | void
 ): void {
   describe(description, () => {
     for (const tc of cases) {
@@ -128,9 +133,9 @@ Keep it minimal. The value is in the convention (every case has a `name`, the ru
 #### 3. Fixture loader (`test/lib/fixtures.ts`)
 
 ```typescript
-export function fixtureDir(): string;                    // absolute path to test/fixtures/
-export function loadFixture(name: string): string;       // raw text by filename
-export function loadLyFixture(name: string): string;     // loads from test/fixtures/{name}.ly
+export function fixtureDir(): string; // absolute path to test/fixtures/
+export function loadFixture(name: string): string; // raw text by filename
+export function loadLyFixture(name: string): string; // loads from test/fixtures/{name}.ly
 export function loadMusicXMLFixture(name: string): string; // loads from test/fixtures/{name}.xml
 ```
 
@@ -179,22 +184,26 @@ Create `test/fixtures/` directory with real music data.
 All `.ly` fixtures must compile with LilyPond. They should use `\include` with paths relative to the project root's `instruments/` and `templates/` dirs (the compile route passes `-I instruments -I templates`). For fixture compilation tests, pass the same `-I` flags.
 
 1. **`d-minor-scale-lute.ly`** — D minor scale for 13-course baroque lute.
+
    ```lilypond
    \version "2.24.0"
    % D minor scale for baroque lute, French tab notation
    \include "../instruments/baroque-lute-13.ily"
-   
+
    music = \relative c' {
      d4 e f g a bes cis d
    }
    % ... use french-tab style TabStaff with baroque lute tuning
    ```
+
    Must use `\frenchtab` format from baroque-lute-13.ily. 8-note ascending scale, D4 to D5.
 
 2. **`polyphonic-lute.ly`** — Two-voice passage for baroque lute.
+
    ```lilypond
    % Two-voice polyphonic passage demonstrating voice layers in French tab
    ```
+
    Two voices using `\voiceOne` / `\voiceTwo` in a TabStaff. 4 bars, simple counterpoint. This tests that LilyPond correctly renders multiple voice layers in tab notation.
 
 3. **`diapason-test.ly`** — Passage using open bass strings (diapasons).
@@ -211,7 +220,7 @@ All `.ly` fixtures must compile with LilyPond. They should use `\include` with p
 
 #### MusicXML fixtures (4 files)
 
-MusicXML is a standard music interchange format. These don't need music21 to validate at this stage — they just need to be well-formed XML that music21 *will* parse later (bead 8zf.3). Hand-encode minimal but correct MusicXML.
+MusicXML is a standard music interchange format. These don't need music21 to validate at this stage — they just need to be well-formed XML that music21 _will_ parse later (bead 8zf.3). Hand-encode minimal but correct MusicXML.
 
 1. **`bach-chorale-cmaj.xml`** — Simple 4-voice SATB in C major.
    8 bars. Parts: Soprano, Alto, Tenor, Bass. Key signature: C major. Time signature: 4/4. Use a simple I-IV-V-I style progression. Each voice has whole notes or half notes — keep it simple.
@@ -256,6 +265,7 @@ Each MusicXML file needs this basic structure:
 ```
 
 Key rules:
+
 - `<divisions>` sets the divisions per quarter note (1 = quarter note has duration 1)
 - `<duration>` is relative to divisions: if divisions=1, duration=1 is a quarter, duration=4 is a whole
 - Each `<part>` has its own `<measure>` elements
@@ -270,22 +280,24 @@ Key rules:
 # Test Fixtures
 
 ## LilyPond Fixtures
-| File | Source | License |
-|------|--------|---------|
-| d-minor-scale-lute.ly | Hand-written | N/A |
-| polyphonic-lute.ly | Hand-written | N/A |
-| diapason-test.ly | Hand-written | N/A |
-| bwv996-bourree-opening.ly | J.S. Bach (1717) | Public domain |
-| flow-my-tears-opening.ly | John Dowland (1600) | Public domain |
-| simple-guitar.ly | Hand-written | N/A |
+
+| File                      | Source              | License       |
+| ------------------------- | ------------------- | ------------- |
+| d-minor-scale-lute.ly     | Hand-written        | N/A           |
+| polyphonic-lute.ly        | Hand-written        | N/A           |
+| diapason-test.ly          | Hand-written        | N/A           |
+| bwv996-bourree-opening.ly | J.S. Bach (1717)    | Public domain |
+| flow-my-tears-opening.ly  | John Dowland (1600) | Public domain |
+| simple-guitar.ly          | Hand-written        | N/A           |
 
 ## MusicXML Fixtures
-| File | Source | License |
-|------|--------|---------|
-| bach-chorale-cmaj.xml | Hand-encoded (Bach style) | N/A |
-| parallel-fifths.xml | Hand-written (deliberate errors) | N/A |
-| hymn-simple.xml | Hand-written | N/A |
-| all-creatures-satb.xml | LASST UNS ERFREUEN (1623) | Public domain |
+
+| File                   | Source                           | License       |
+| ---------------------- | -------------------------------- | ------------- |
+| bach-chorale-cmaj.xml  | Hand-encoded (Bach style)        | N/A           |
+| parallel-fifths.xml    | Hand-written (deliberate errors) | N/A           |
+| hymn-simple.xml        | Hand-written                     | N/A           |
+| all-creatures-satb.xml | LASST UNS ERFREUEN (1623)        | Public domain |
 ```
 
 ### Tests
@@ -303,6 +315,7 @@ The existing `test/templates.test.ts` auto-discovers `.ly` files in `templates/`
 For the LilyPond fixture compilation, pass `-I instruments -I templates` just like the compile route does. The fixtures use `\include "../instruments/..."` relative paths, so also pass the fixture directory itself.
 
 **Important:** The `.ly` fixtures in `test/fixtures/` use `\include` with paths relative to their own location. When compiling, you need to pass appropriate `-I` flags so LilyPond can find the instrument `.ily` files. Two approaches:
+
 - Use `\include "../instruments/baroque-lute-13.ily"` (relative from fixtures/ to project root) — works when compiling from the project root
 - Or use `-I` flags to add `instruments/` to the include path, and use `\include "baroque-lute-13.ily"` in the fixture
 
@@ -380,7 +393,7 @@ afterAll(async () => {
 - **This means the fixture `.ly` files for the E2E tests might need DIFFERENT include paths than the fixture `.ly` files used for direct LilyPond compilation in `fixtures.test.ts`.** Two options:
   1. Have the E2E fixtures use `\include "baroque-lute-13.ily"` (works with server's `-I` flags) and the compilation test in `fixtures.test.ts` pass matching `-I instruments` flags
   2. Have two versions of include paths (messy, avoid this)
-  
+
   **Prefer option 1:** All `.ly` fixtures use `\include "baroque-lute-13.ily"` (bare filename), and both `fixtures.test.ts` and the compile route pass `-I instruments`.
 
 - Read `src/server/lib/compile-route.ts` to understand what `-I` flags are passed. The function `lilypondIncludeDirs()` is exported — check its implementation and match your fixture include paths to what it provides.
@@ -418,6 +431,7 @@ melody pitches → tabulate() → positions → voicings() → best voicing
 ### Test cases
 
 1. **D minor scale → tabulate each note → all have baroque lute positions**
+
    ```typescript
    const pitches = ["D4", "E4", "F4", "G4", "A4", "Bb4", "C#5", "D5"];
    // For each pitch, call tabulate tool with instrument "baroque-lute-13"
@@ -425,6 +439,7 @@ melody pitches → tabulate() → positions → voicings() → best voicing
    ```
 
 2. **D minor chord → voicings → at least one option**
+
    ```typescript
    const chord = ["D3", "A3", "D4", "F4"];
    // Call voicings tool with these notes + instrument "baroque-lute-13"
@@ -433,6 +448,7 @@ melody pitches → tabulate() → positions → voicings() → best voicing
    ```
 
 3. **Best voicing → check_playability → no violations**
+
    ```typescript
    // Take the best voicing from test 2
    // Call check_playability tool
@@ -440,6 +456,7 @@ melody pitches → tabulate() → positions → voicings() → best voicing
    ```
 
 4. **Deliberately bad voicing → check_playability catches it**
+
    ```typescript
    // Construct a voicing with a 6+ fret stretch
    // Call check_playability
@@ -457,6 +474,7 @@ melody pitches → tabulate() → positions → voicings() → best voicing
 ### Tool import notes
 
 The browser-side tools are in:
+
 - `src/tools.ts` — exports tool definitions
 - `src/lib/instrument-model.ts` — `InstrumentModel` with `positionsForPitch()`, `voicingsFor()`, `checkPlayability()`
 - `src/lib/browser-profiles.ts` — `loadBrowserProfile()`

@@ -20,7 +20,7 @@ import { installCompileRetryGuard } from "./lib/compile-retry-guard.js";
 import { installDebugExport } from "./lib/debug-export.js";
 import { buildSystemPrompt } from "./prompts.js";
 import { registerRenderers } from "./renderers.js";
-import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
+import { analyzeTool, compileTool, engraveTool, lintTool } from "./server-tools.js";
 import { tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool } from "./tools.js";
 import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
@@ -65,6 +65,7 @@ export const vellumTools: AgentTool[] = [
   checkPlayabilityTool,
   theoryTool,
   compileTool,
+  engraveTool,
   analyzeTool,
   lintTool,
   transposeTool,

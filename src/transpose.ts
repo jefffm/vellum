@@ -42,9 +42,7 @@ export const transposeTool: AgentTool<typeof TransposeParamsSchema, TransposeRes
         const result = Note.transpose(pitch, params.interval);
 
         if (!result || result === "") {
-          return toolError(
-            `Could not transpose pitch "${pitch}" by interval "${params.interval}"`
-          );
+          return toolError(`Could not transpose pitch "${pitch}" by interval "${params.interval}"`);
         }
 
         transposed.push(result);

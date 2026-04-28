@@ -4,11 +4,11 @@
 
 3 beads that make Vellum deployable on a NixOS server (servoid).
 
-| # | Bead | Title | Pri |
-|---|------|-------|-----|
-| 1 | 1e9.1 | flake.nix package definition (buildNpmPackage) | P1 |
-| 2 | 1e9.2 | NixOS module (nixosModules.default) | P1 |
-| 3 | 1e9.3 | Deployment smoke test script | P1 |
+| #   | Bead  | Title                                          | Pri |
+| --- | ----- | ---------------------------------------------- | --- |
+| 1   | 1e9.1 | flake.nix package definition (buildNpmPackage) | P1  |
+| 2   | 1e9.2 | NixOS module (nixosModules.default)            | P1  |
+| 3   | 1e9.3 | Deployment smoke test script                   | P1  |
 
 ---
 
@@ -52,6 +52,7 @@ Replace the placeholder `packages.default` in `flake.nix` with a proper Nix pack
 ### Current state
 
 The flake.nix has a placeholder package that just copies source:
+
 ```nix
 packages.default = pkgs.stdenvNoCC.mkDerivation {
   pname = "vellum";
@@ -101,6 +102,7 @@ tsc -p tsconfig.server.json
 Start command: `node dist-server/server/index.js`
 
 The server resolves paths relative to `process.cwd()`:
+
 - `./dist/` — static files (Vite bundle)
 - `./instruments/` — YAML profiles + .ily LilyPond includes (overridable via `VELLUM_INSTRUMENTS_DIR`)
 - `./templates/` — .ly template files (overridable via `VELLUM_TEMPLATES_DIR`)
@@ -122,6 +124,7 @@ nix develop --command bash -c 'prefetch-npm-deps package-lock.json 2>/dev/null'
 ```
 
 If `prefetch-npm-deps` isn't in the dev shell, use:
+
 ```bash
 nix-build '<nixpkgs>' -A prefetch-npm-deps --no-out-link
 # Then run the resulting binary on package-lock.json
@@ -132,6 +135,7 @@ Or use `npmDepsHash = pkgs.lib.fakeHash;` first, run `nix build`, and grab the c
 ### Known gotcha: CDN fetches
 
 The `xlsx` package (a transitive dep of pi-web-ui) fetches from a CDN URL during npm install. If this breaks `buildNpmPackage`'s fixed-output derivation, try:
+
 - `npmFlags = [ "--ignore-scripts" ];` to skip postinstall scripts
 - Or `forceGitDeps = true;` if there are git deps
 - Or override the specific fetch in `npmOverrides`
@@ -139,13 +143,10 @@ The `xlsx` package (a transitive dep of pi-web-ui) fetches from a CDN URL during
 ### Server tsconfig include
 
 The `tsconfig.server.json` includes:
+
 ```json
 {
-  "include": [
-    "src/server/**/*.ts",
-    "src/lib/**/*.ts",
-    "src/types.ts"
-  ]
+  "include": ["src/server/**/*.ts", "src/lib/**/*.ts", "src/types.ts"]
 }
 ```
 
@@ -355,7 +356,7 @@ nixosModules.default = import ./nix/module.nix;
    - Option A: Use a Python venv overlay that pip-installs music21 at build time
    - Option B: Include a `requirements-python.txt` install step in the service startup
    - Option C: Create a small `python3Packages.music21` override
-   
+
    **Check first:** `nix-env -qaP 'python3.*music21'` or search https://search.nixos.org
 
 3. **API key loading:** Use systemd's `LoadCredential` to securely load the API key from a file (compatible with sops-nix and agenix). The wrapper script reads it into an env var.
@@ -500,9 +501,11 @@ echo "$PASS passed, $FAIL failed"
 1. **`nix build` on this machine:** The Hatch VM can run `nix build` but egress goes through a Fastly proxy. npm registry fetches might work (they're HTTPS) but could also be blocked. If `nix build` fails with network issues, document what happened and provide the correct `npmDepsHash` so Jeff can build on his own machine.
 
 2. **music21 in nixpkgs:** Check if `python3Packages.music21` exists:
+
    ```bash
    nix eval nixpkgs#python3Packages.music21.version 2>/dev/null || echo "NOT IN NIXPKGS"
    ```
+
    If it's not there, the module will need a Python environment that pip-installs music21. One approach: build a custom Python derivation. Another: use the venv approach from the dev shell. Document whichever approach you use.
 
 3. **`makeWrapper --chdir`:** This sets `cd` before exec. The server uses `process.cwd()` to find instruments/templates/dist. The `--chdir` to `$out/lib/vellum` means the server will find all its resources there. But arrangement writes (if any go to disk) would also go there — and `$out` is read-only. For now this is fine because arrangements are in-memory (Map), but flag it as a future concern.
@@ -510,9 +513,11 @@ echo "$PASS passed, $FAIL failed"
 4. **The `dist/` path in the package:** The Vite build outputs to `dist/`. The server serves these via `express.static(path.resolve(process.cwd(), "dist"))`. Since `--chdir` points to the package's lib dir, `dist/` will be found correctly.
 
 5. **tsconfig.server.json include paths:** The server build includes `src/server/**/*.ts`, `src/lib/**/*.ts`, and `src/types.ts`. It does NOT include `src/main.ts`, `src/renderers.ts`, `src/tools.ts`, `src/fretboard.ts`, `src/diapasons.ts`, `src/transpose.ts`, `src/theory.ts`, `src/prompts.ts`, `src/server-tools.ts`. However, the server code imports from `../types.js`, `./lib/...`, etc. Verify the server build works standalone:
+
    ```bash
    npx tsc -p tsconfig.server.json --noEmit 2>&1
    ```
+
    If there are missing imports, the server tsconfig might need additional includes.
 
 6. **Default model in main.ts:** Currently defaults to `getModel("openai-codex", "gpt-5.3-codex")`. For deployment with `ANTHROPIC_API_KEY`, the user will need to select Anthropic in the ChatPanel UI. This is a UX concern, not a deployment blocker — but worth noting in the module documentation.

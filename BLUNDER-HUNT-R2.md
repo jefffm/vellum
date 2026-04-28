@@ -16,15 +16,16 @@
 
 These are two fundamentally different API surfaces:
 
-| Coding-Agent Extension API | Standalone Web App API |
-|---|---|
-| `pi.registerTool({ name, parameters, execute })` | Create `AgentTool<T>` objects directly |
-| `pi.on("tool_call", handler)` | `Agent({ beforeToolCall, afterToolCall })` |
-| `pi.on("session_start", handler)` | `agent.subscribe(event => ...)` |
-| `pi.registerCommand("/foo", handler)` | No equivalent (not a CLI) |
-| Auto-discovered from `~/.pi/agent/extensions/` | Passed to `Agent({ initialState: { tools: [...] } })` |
+| Coding-Agent Extension API                       | Standalone Web App API                                |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| `pi.registerTool({ name, parameters, execute })` | Create `AgentTool<T>` objects directly                |
+| `pi.on("tool_call", handler)`                    | `Agent({ beforeToolCall, afterToolCall })`            |
+| `pi.on("session_start", handler)`                | `agent.subscribe(event => ...)`                       |
+| `pi.registerCommand("/foo", handler)`            | No equivalent (not a CLI)                             |
+| Auto-discovered from `~/.pi/agent/extensions/`   | Passed to `Agent({ initialState: { tools: [...] } })` |
 
-**Evidence:** 
+**Evidence:**
+
 - `pi.registerTool()` is defined in `ExtensionAPI` (packages/coding-agent/docs/extensions.md) — only available inside coding-agent extensions.
 - `pi-agent-core`'s `Agent` class takes tools via `initialState.tools: AgentTool[]` (packages/agent/src/types.ts).
 - `ChatPanel.setAgent()` accepts a `toolsFactory` callback for injecting tools in web apps (packages/web-ui/README.md).
@@ -43,11 +44,13 @@ These are two fundamentally different API surfaces:
 The spec doesn't explain how the browser-side ChatPanel communicates with server-side tools (LilyPond subprocess, instrument profiles on disk, etc.).
 
 **Evidence:**
+
 - `ChatPanel.setAgent(agent, options)` takes a local `Agent` instance (packages/web-ui/example/src/main.ts).
 - pi-agent-core has no built-in server-client transport for the Agent object.
 - The `streamProxy` function (packages/agent/src/proxy.ts) proxies **LLM calls** through a server, but tools still execute wherever the Agent runs.
 
 **Actual architecture must be one of:**
+
 1. **Agent in browser, tools call server APIs:** Agent runs in the browser. Tools are thin HTTP clients that call server endpoints (e.g., `fetch('/api/compile', ...)` for LilyPond). LLM calls go through `streamProxy` to keep API keys server-side.
 2. **Agent on server, custom event streaming:** Agent runs on the server. A custom WebSocket/SSE layer streams events to a custom browser UI that mimics ChatPanel. This loses most of pi-web-ui's value.
 
@@ -62,17 +65,18 @@ The spec doesn't explain how the browser-side ChatPanel communicates with server
 **Location:** SPEC.md §Event Hooks (auto-compile, error-parser, profile-detect)
 
 **Problem:** The spec describes three hooks using pi coding-agent event syntax:
+
 - "Auto-compile hook" — triggers on `.ly` file write
 - "Error parser hook" — intercepts LilyPond stderr
 - "Profile auto-injection hook" — detects instrument mentions
 
 The coding-agent extension event API (`pi.on("tool_call", ...)`, `pi.on("input", ...)`) is not available in standalone web apps. The equivalent mechanisms in pi-agent-core are:
 
-| Spec's Hook | Actual Mechanism |
-|---|---|
-| Auto-compile on .ly write | `afterToolCall` hook or explicit LLM tool chaining |
-| Error parser | Logic inside the `compile` tool's `execute()` method |
-| Profile auto-injection | `transformContext` or system prompt modification before each turn |
+| Spec's Hook               | Actual Mechanism                                                  |
+| ------------------------- | ----------------------------------------------------------------- |
+| Auto-compile on .ly write | `afterToolCall` hook or explicit LLM tool chaining                |
+| Error parser              | Logic inside the `compile` tool's `execute()` method              |
+| Profile auto-injection    | `transformContext` or system prompt modification before each turn |
 
 **Fix:** Redesign hooks as either (a) logic within tool execute() methods, (b) `beforeToolCall`/`afterToolCall` agent config hooks, (c) `agent.subscribe()` listeners, or (d) prompt template instructions that tell the LLM to call compile after generating .ly content.
 
@@ -83,11 +87,13 @@ The coding-agent extension event API (`pi.on("tool_call", ...)`, `pi.on("input",
 **Location:** SPEC.md §Event Hooks — Auto-Compile
 
 **Problem:** The spec says "Every time a `.ly` file is written, the hook triggers `compile()`." But in the pi-web-ui architecture:
+
 - The Agent runs in the browser — there's no file system.
 - `.ly` content exists in the agent's message history, not as files on disk.
 - The `compile` tool's `execute()` function would send content to a server API, which writes a temp file, runs LilyPond, and returns results.
 
 There is no "file write" event to hook into. The auto-compile must be triggered by either:
+
 1. The LLM explicitly calling the compile tool after generating .ly content (prompt instruction)
 2. An `afterToolCall` hook that checks if the previous tool produced .ly content
 
@@ -102,6 +108,7 @@ There is no "file write" event to hook into. The auto-compile must be triggered 
 **Problem:** The spec implies that `compile()` tool results automatically appear in the "tablature workbench" (ArtifactsPanel). But the ArtifactsPanel has its own built-in `artifacts` tool with a specific command protocol (`create`, `update`, `delete` with filename and content). A custom tool's return value doesn't automatically create artifacts in the panel.
 
 **Paths to display SVG in the ArtifactsPanel:**
+
 1. **LLM calls artifacts tool:** After compile returns SVG, the LLM calls the artifacts tool to create/update `tablature.svg`. Requires prompt instruction.
 2. **Custom tool renderer:** Register a `registerToolRenderer('compile', ...)` that shows SVG inline in the chat stream (not in the side panel).
 3. **Programmatic injection:** The compile tool's server-side logic pushes an ArtifactMessage into the agent's message queue. Requires custom code.
@@ -115,6 +122,7 @@ There is no "file write" event to hook into. The auto-compile must be triggered 
 **Location:** SPEC.md §File Structure
 
 **Problem:** Multiple file structure elements assume the coding-agent extension model:
+
 - `src/extension.ts` — "Main pi extension: registers tools, hooks" — should be `src/tools.ts` or `src/agent-setup.ts`
 - `src/hooks/auto-compile.ts`, `error-parser.ts`, `profile-detect.ts` — these aren't separate hook files in the standalone model; they're logic within the Agent config or tool implementations
 - `src/web/app.ts` — described as "pi-web-ui ChatPanel + custom artifact panel" — this is the main entry point, should be `src/main.ts`
@@ -129,6 +137,7 @@ There is no "file write" event to hook into. The auto-compile must be triggered 
 **Location:** SPEC.md §Browser Stack, §v2 Scope
 
 **Problem:** The spec claims OSMD/VexFlow for "interactive score rendering" in v2 for "guitar/piano." OSMD renders MusicXML, which does support `<staff-details><staff-type>tab</staff-type>`. However:
+
 - OSMD's tablature rendering is limited to standard number-on-lines guitar tab
 - No support for French letter tablature
 - No support for RhythmicStaff above TabStaff layout
@@ -145,6 +154,7 @@ For guitar/piano standard notation, OSMD works. For any lute tablature, it does 
 **Location:** BLUNDER-HUNT.md §N-1
 
 **Problem:** The previous blunder hunt flagged pi-mono as "a young, single-maintainer project" with risk of breaking changes. Current status:
+
 - 40,441 stars, 4,732 forks (as of 2026-04-26)
 - Active community PRs (event bus, OAuth, compaction hooks)
 - 11 open issues (very healthy ratio)
@@ -168,8 +178,8 @@ While still primarily maintained by badlogic (Mario Zechner), this is now a main
 
 ```typescript
 interface AgentToolResult<T> {
-  content: (TextContent | ImageContent)[];  // sent to LLM
-  details: T;                                // for UI rendering
+  content: (TextContent | ImageContent)[]; // sent to LLM
+  details: T; // for UI rendering
   terminate?: boolean;
 }
 ```
@@ -195,6 +205,7 @@ The `content` array is what the LLM sees (text/image). The `details` field carri
 **Location:** SPEC.md §Custom Tools
 
 **Problem:** The spec shows `execute(params)` but the actual signature is:
+
 ```typescript
 execute(toolCallId: string, params: Static<TParameters>, signal?: AbortSignal, onUpdate?: AgentToolUpdateCallback<TDetails>)
 ```
@@ -210,6 +221,7 @@ The `signal` parameter is important for tool cancellation. The `onUpdate` callba
 **Location:** SPEC.md §NixOS Deployment
 
 **Problem:** While pi-mono packages have no native deps (good), two Nix packaging caveats exist:
+
 1. `pi-web-ui` depends on `xlsx` via a CDN tarball URL (`https://cdn.sheetjs.com/...`) instead of the npm registry. Nix's `fetchNpmDeps` may not handle non-registry tarball URLs cleanly — may need manual patching of the lockfile.
 2. If consuming the pi-mono monorepo during build, `@typescript/native-preview` (tsgo) is a pre-built Go binary distributed via npm — may need `autoPatchelfHook` on NixOS.
 
@@ -222,6 +234,7 @@ The `signal` parameter is important for tool cancellation. The `onUpdate` callba
 ### O-R2-1: No LLM proxy server design
 
 The browser-side Agent needs API keys for LLM calls. Pi-mono provides `streamProxy` (packages/agent/src/proxy.ts) for routing LLM calls through a server. The spec doesn't mention this:
+
 - Server needs a `/api/stream` endpoint
 - Auth mechanism for the proxy (mTLS covers transport, but session auth?)
 - Which LLM provider(s) the proxy supports
@@ -231,6 +244,7 @@ The browser-side Agent needs API keys for LLM calls. Pi-mono provides `streamPro
 ### O-R2-2: No server API design for tool backends
 
 If tools run in the browser but execute on the server (C-R2-2), the server needs API endpoints:
+
 - `POST /api/compile` — accepts .ly content, returns SVG/PDF/MIDI
 - `POST /api/tabulate` — pitch lookup
 - `POST /api/voicings` — chord voicing enumeration
@@ -250,6 +264,7 @@ Pi-web-ui's `SessionsStore` uses IndexedDB (browser-only). If sessions should pe
 ### O-R2-4: Instrument profiles location unclear
 
 The spec shows `instruments/*.yaml` and `instruments/*.ily` files. In the browser-agent architecture:
+
 - YAML profiles need to be accessible to browser-side tool logic (loaded at build time or fetched from server)
 - `.ily` files need to be on the server (for LilyPond includes)
 
@@ -275,12 +290,12 @@ The compile tool signature shows `svg?: string` as an optional return field. But
 
 ## Summary
 
-| Severity | Count | Key themes |
-|---|---|---|
-| Critical | 2 | Wrong API surface, undefined client-server communication |
-| Significant | 6 | Hook design, artifact display, file structure, OSMD limits, project health update |
-| Minor | 4 | Tool return types, build pipeline, execute signature, Nix edge cases |
-| Omissions | 4 | LLM proxy, server API, session persistence, profile location |
-| Contradictions | 3 | Server vs browser runtime, SVG return type, French tab scope |
+| Severity       | Count | Key themes                                                                        |
+| -------------- | ----- | --------------------------------------------------------------------------------- |
+| Critical       | 2     | Wrong API surface, undefined client-server communication                          |
+| Significant    | 6     | Hook design, artifact display, file structure, OSMD limits, project health update |
+| Minor          | 4     | Tool return types, build pipeline, execute signature, Nix edge cases              |
+| Omissions      | 4     | LLM proxy, server API, session persistence, profile location                      |
+| Contradictions | 3     | Server vs browser runtime, SVG return type, French tab scope                      |
 
 **The spec is architecturally sound in its high-level vision** (LLM for musical intelligence, tools for mechanical correctness, pi-mono for infrastructure). But the implementation details consistently use the wrong pi-mono API surface (coding-agent extensions instead of standalone web app APIs), and the critical client-server communication layer is undefined. These need resolution before implementation begins.

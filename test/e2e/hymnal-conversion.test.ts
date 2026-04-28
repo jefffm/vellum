@@ -145,10 +145,7 @@ async function analyze(source: string): Promise<AnalysisResult> {
   return body.data;
 }
 
-async function compile(
-  source: string,
-  format?: "svg" | "pdf" | "both"
-): Promise<CompileResult> {
+async function compile(source: string, format?: "svg" | "pdf" | "both"): Promise<CompileResult> {
   const response = await server.post("/api/compile", format ? { source, format } : { source });
 
   expect(response.status).toBe(200);

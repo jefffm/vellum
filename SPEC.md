@@ -144,7 +144,7 @@ servoid (NixOS)        │
 
 **LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
 
-**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check_playability) *could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
+**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check*playability) \_could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
 
 **Instrument profiles: dual location.** YAML profiles are served to the browser (for system prompts and tool context). `.ily` include files stay on the server (only LilyPond needs them). Both live in `instruments/` on disk; the server API handles the split.
 
@@ -152,20 +152,18 @@ servoid (NixOS)        │
 
 A general-purpose agent with bash access can technically run LilyPond. But:
 
-| Generic agent | Vellum |
-|---|---|
-| LLM writes raw .ly hoping it compiles | LLM calls `voicings()` to get playable options, picks the best one |
-| `bash lilypond foo.ly` → 200 lines of stderr | `compile()` → structured errors: "Bar 8: stretch violation on course 3" |
-| LLM invents fret positions from training data | `tabulate()` returns all valid positions with idiomatic ranking |
-| No verification until compile fails | `check_playability()` catches impossible fingerings before compilation |
-| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js |
-| LLM guesses at chord progressions from SATB score | `analyze()` returns Roman numeral analysis via music21 |
-| No voice leading verification | `lint()` catches parallel fifths, voice crossing, spacing errors |
-| Human reads PDF to check quality | Browser shows live preview, fretboard diagrams, MIDI playback |
+| Generic agent                                          | Vellum                                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| LLM writes raw .ly hoping it compiles                  | LLM calls `voicings()` to get playable options, picks the best one      |
+| `bash lilypond foo.ly` → 200 lines of stderr           | `compile()` → structured errors: "Bar 8: stretch violation on course 3" |
+| LLM invents fret positions from training data          | `tabulate()` returns all valid positions with idiomatic ranking         |
+| No verification until compile fails                    | `check_playability()` catches impossible fingerings before compilation  |
+| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js                 |
+| LLM guesses at chord progressions from SATB score      | `analyze()` returns Roman numeral analysis via music21                  |
+| No voice leading verification                          | `lint()` catches parallel fifths, voice crossing, spacing errors        |
+| Human reads PDF to check quality                       | Browser shows live preview, fretboard diagrams, MIDI playback           |
 
 The LLM makes **musical decisions**. The tools handle **mechanical correctness**. That's the split that matters.
-
-
 
 ---
 
@@ -175,11 +173,11 @@ The LLM makes **musical decisions**. The tools handle **mechanical correctness**
 
 Vellum is built on [pi-mono](https://github.com/badlogic/pi-mono), an open-source AI agent toolkit:
 
-| Package | Role in Vellum |
-|---|---|
-| `pi-agent-core` | Agent loop, tool definitions (`AgentTool<T>`), tool execution, `streamProxy` for LLM API proxying |
-| `pi-web-ui` | `ChatPanel`, `AgentInterface`, `ArtifactsPanel`, `registerToolRenderer()`, `SessionsStore` (IndexedDB) |
-| `pi-ai` | Multi-provider LLM API (Anthropic, OpenAI, Google, etc.) — consumed via streamProxy on the server |
+| Package         | Role in Vellum                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------ |
+| `pi-agent-core` | Agent loop, tool definitions (`AgentTool<T>`), tool execution, `streamProxy` for LLM API proxying      |
+| `pi-web-ui`     | `ChatPanel`, `AgentInterface`, `ArtifactsPanel`, `registerToolRenderer()`, `SessionsStore` (IndexedDB) |
+| `pi-ai`         | Multi-provider LLM API (Anthropic, OpenAI, Google, etc.) — consumed via streamProxy on the server      |
 
 Pi-mono provides the agent infrastructure. Vellum provides the domain-specific tools, instrument knowledge, and UI customizations that transform a generic agent into a music arrangement specialist.
 
@@ -217,25 +215,24 @@ import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 // TypeBox schema for parameters
 const CompileParams = Type.Object({
   source: Type.String({ description: "LilyPond source code to compile" }),
-  format: Type.Optional(Type.Union([
-    Type.Literal("svg"),
-    Type.Literal("pdf"),
-    Type.Literal("both")
-  ], { default: "svg" }))
+  format: Type.Optional(
+    Type.Union([Type.Literal("svg"), Type.Literal("pdf"), Type.Literal("both")], { default: "svg" })
+  ),
 });
 
 // Tool result details type (for UI rendering via registerToolRenderer)
 interface CompileDetails {
   svg?: string;
-  pdf?: string;     // base64-encoded
-  midi?: string;    // base64-encoded
+  pdf?: string; // base64-encoded
+  midi?: string; // base64-encoded
   errors: CompileError[];
 }
 
 // AgentTool definition
 const compileTool: AgentTool<typeof CompileParams, CompileDetails> = {
   name: "compile",
-  description: "Compile LilyPond source into rendered tablature/notation. " +
+  description:
+    "Compile LilyPond source into rendered tablature/notation. " +
     "Returns SVG for preview and structured errors if compilation fails. " +
     "Call this after generating or modifying LilyPond source.",
   parameters: CompileParams,
@@ -251,28 +248,33 @@ const compileTool: AgentTool<typeof CompileParams, CompileDetails> = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
-      signal,  // respect cancellation
+      signal, // respect cancellation
     });
     const data = await res.json();
 
     if (data.errors?.length > 0) {
       return {
-        content: [{
-          type: "text",
-          text: `Compilation failed with ${data.errors.length} error(s):\n` +
-            data.errors.map((e: CompileError) =>
-              `  Bar ${e.bar}, beat ${e.beat}: ${e.message}`
-            ).join("\n")
-        }],
+        content: [
+          {
+            type: "text",
+            text:
+              `Compilation failed with ${data.errors.length} error(s):\n` +
+              data.errors
+                .map((e: CompileError) => `  Bar ${e.bar}, beat ${e.beat}: ${e.message}`)
+                .join("\n"),
+          },
+        ],
         details: { errors: data.errors, svg: undefined, pdf: undefined, midi: undefined },
       };
     }
 
     return {
-      content: [{
-        type: "text",
-        text: `Compiled successfully. SVG rendered (${data.barCount} bars, ${data.voiceCount} voices). No errors.`
-      }],
+      content: [
+        {
+          type: "text",
+          text: `Compiled successfully. SVG rendered (${data.barCount} bars, ${data.voiceCount} voices). No errors.`,
+        },
+      ],
       details: {
         svg: data.svg,
         pdf: data.pdf,
@@ -280,11 +282,12 @@ const compileTool: AgentTool<typeof CompileParams, CompileDetails> = {
         errors: [],
       },
     };
-  }
+  },
 };
 ```
 
 **Key points:**
+
 - `content` is what the LLM sees — concise text summaries, never raw SVG/binary data
 - `details` carries structured data for the custom tool renderer — SVGs, diagrams, full error objects
 - `signal` enables aborting long LilyPond compilations
@@ -306,7 +309,7 @@ registerToolRenderer("compile", {
       return container;
     }
     return null; // fall back to default text rendering
-  }
+  },
 });
 
 registerToolRenderer("fretboard", {
@@ -318,7 +321,7 @@ registerToolRenderer("fretboard", {
       return container;
     }
     return null;
-  }
+  },
 });
 ```
 
@@ -327,6 +330,7 @@ registerToolRenderer("fretboard", {
 Runs LilyPond as subprocess on the server. On success, returns rendered artifacts. On failure, parses stderr into structured errors with bar numbers and line references.
 
 **Parameters:**
+
 ```typescript
 {
   source: string,          // LilyPond source code
@@ -337,6 +341,7 @@ Runs LilyPond as subprocess on the server. On success, returns rendered artifact
 **Returns to LLM (`content`):** Text summary — "Compiled successfully. 42 bars, 3 voices." or structured error list.
 
 **Returns to UI (`details`):**
+
 ```typescript
 {
   svg?: string,            // rendered tablature SVG
@@ -353,6 +358,7 @@ Runs LilyPond as subprocess on the server. On success, returns rendered artifact
 Returns all valid course/fret positions for a pitch on the target instrument, ranked by idiomatic quality.
 
 **Parameters:**
+
 ```typescript
 {
   pitch: string,           // e.g. "F4", "A3"
@@ -379,6 +385,7 @@ Ranking: open string > low fret (1-3) > high fret (4-8). Diapason courses return
 Enumerates all playable voicings for a chord, ranked by stretch, idiomatic quality, and campanella potential.
 
 **Parameters:**
+
 ```typescript
 {
   notes: string[],         // e.g. ["F4", "A3", "D3"]
@@ -401,6 +408,7 @@ Enumerates all playable voicings for a chord, ranked by stretch, idiomatic quali
 Validates a passage against instrument-specific constraints: fret stretch, same-course conflicts, right-hand pattern feasibility.
 
 **Parameters:**
+
 ```typescript
 {
   bars: Bar[],             // structured passage (notes with positions)
@@ -418,6 +426,7 @@ Validates a passage against instrument-specific constraints: fret stretch, same-
 ```
 
 **Difficulty algorithm (v1 minimum viable):**
+
 - Count violations (any → at least "intermediate")
 - Max fret stretch per chord (>4 lute / >5 guitar = "advanced")
 - Position shifts per bar (>2 = adds difficulty)
@@ -429,6 +438,7 @@ Validates a passage against instrument-specific constraints: fret stretch, same-
 Transposes and validates against instrument range. Suggests idiomatic keys for the target instrument.
 
 **Parameters:**
+
 ```typescript
 {
   source: string,          // .ly passage or structured notes
@@ -443,19 +453,20 @@ Transposes and validates against instrument range. Suggests idiomatic keys for t
 
 **Idiomatic keys by instrument:**
 
-| Instrument | Good keys | Why |
-|---|---|---|
+| Instrument             | Good keys                                   | Why                                |
+| ---------------------- | ------------------------------------------- | ---------------------------------- |
 | Baroque lute (d-minor) | D minor, A minor, F major, G minor, C major | Open strings align with key center |
-| Baroque guitar | A minor, E minor, C major, G major, D minor | Standard guitar-adjacent keys |
-| Renaissance lute (G) | G major, D minor, C major, A minor | Open-string keys |
-| Theorbo | D minor, G minor, A minor | Continuo keys, diapason alignment |
-| Classical guitar | E minor, A minor, D major, G major, C major | Standard repertoire keys |
+| Baroque guitar         | A minor, E minor, C major, G major, D minor | Standard guitar-adjacent keys      |
+| Renaissance lute (G)   | G major, D minor, C major, A minor          | Open-string keys                   |
+| Theorbo                | D minor, G minor, A minor                   | Continuo keys, diapason alignment  |
+| Classical guitar       | E minor, A minor, D major, G major, C major | Standard repertoire keys           |
 
 ### diapasons
 
 Returns the conventional diapason tuning for a key center. Lutenists retune bass courses per piece — this tool provides the historically informed default.
 
 **Parameters:**
+
 ```typescript
 {
   key: string,             // e.g. "D minor", "A minor", "G minor"
@@ -469,17 +480,18 @@ Returns the conventional diapason tuning for a key center. Lutenists retune bass
 
 **Standard diapason tuning schemes (baroque lute, courses 7→13):**
 
-| Key Center | 7 | 8 | 9 | 10 | 11 | 12 | 13 | Name |
-|---|---|---|---|---|---|---|---|---|
-| D minor / F major | G | F | E♭ | D | C | B♭ | A | *Accord ordinaire* (standard) |
-| A minor / C major | G | F | E♮ | D | C | B♮ | A | Natural 3rd and 7th |
-| G minor / B♭ major | G | F | E♭ | D | C | B♭ | A | Same as standard (coincidence) |
-| D major (rare) | G | F♯ | E♮ | D | C♯ | B♮ | A | Sharp keys (Weiss) |
-| E minor | G | F♯ | E♮ | D | C♮ | B♮ | A | Natural with F♯ |
+| Key Center         | 7   | 8   | 9   | 10  | 11  | 12  | 13  | Name                           |
+| ------------------ | --- | --- | --- | --- | --- | --- | --- | ------------------------------ |
+| D minor / F major  | G   | F   | E♭  | D   | C   | B♭  | A   | _Accord ordinaire_ (standard)  |
+| A minor / C major  | G   | F   | E♮  | D   | C   | B♮  | A   | Natural 3rd and 7th            |
+| G minor / B♭ major | G   | F   | E♭  | D   | C   | B♭  | A   | Same as standard (coincidence) |
+| D major (rare)     | G   | F♯  | E♮  | D   | C♯  | B♮  | A   | Sharp keys (Weiss)             |
+| E minor            | G   | F♯  | E♮  | D   | C♮  | B♮  | A   | Natural with F♯                |
 
 The tool also supports per-piece override for non-standard tunings found in some Weiss and Mouton manuscripts.
 
 **LilyPond integration:** The tool output maps directly to `additionalBassStrings` in the `.ily` include:
+
 ```lilypond
 additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % D minor standard
 ```
@@ -489,6 +501,7 @@ additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % D minor st
 Renders a visual SVG fretboard diagram showing finger positions.
 
 **Parameters:**
+
 ```typescript
 {
   positions: TabPosition[],
@@ -527,13 +540,15 @@ Without Layer 2, the LLM must do interval arithmetic, chord identification, voic
 Parses a score and returns harmonic analysis. Server-side — calls music21 via Python subprocess. This is the critical first step for any conversion workflow (hymnal → guitar, voice+piano → lute, etc.).
 
 **Parameters:**
+
 ```typescript
 const AnalyzeParams = Type.Object({
-  source: Type.String({ description: "MusicXML source as string, or base64-encoded MusicXML file" }),
-  format: Type.Optional(Type.Union([
-    Type.Literal("musicxml"),
-    Type.Literal("lilypond")
-  ], { default: "musicxml" }))
+  source: Type.String({
+    description: "MusicXML source as string, or base64-encoded MusicXML file",
+  }),
+  format: Type.Optional(
+    Type.Union([Type.Literal("musicxml"), Type.Literal("lilypond")], { default: "musicxml" })
+  ),
 });
 ```
 
@@ -542,6 +557,7 @@ const AnalyzeParams = Type.Object({
 **music21 operations:** `converter.parse()` → `score.analyze('key')` → `score.chordify()` → `roman.romanNumeralFromChord()` for each chord → extract part ranges
 
 **Returns to LLM:**
+
 ```
 Key: D major
 Time: 4/4
@@ -559,22 +575,27 @@ Chord progression (Roman numerals):
 Checks a passage for voice leading rule violations. Server-side — calls music21's `voiceLeading.VoiceLeadingQuartet` analysis.
 
 **Parameters:**
+
 ```typescript
 const LintParams = Type.Object({
   source: Type.String({ description: "LilyPond or MusicXML passage to check" }),
-  format: Type.Optional(Type.Union([
-    Type.Literal("lilypond"),
-    Type.Literal("musicxml")
-  ], { default: "lilypond" })),
-  rules: Type.Optional(Type.Array(Type.Union([
-    Type.Literal("parallel_fifths"),
-    Type.Literal("parallel_octaves"),
-    Type.Literal("voice_crossing"),
-    Type.Literal("spacing"),
-    Type.Literal("direct_octaves"),
-    Type.Literal("unresolved_leading_tone"),
-    Type.Literal("all")
-  ]), { default: ["all"] }))
+  format: Type.Optional(
+    Type.Union([Type.Literal("lilypond"), Type.Literal("musicxml")], { default: "lilypond" })
+  ),
+  rules: Type.Optional(
+    Type.Array(
+      Type.Union([
+        Type.Literal("parallel_fifths"),
+        Type.Literal("parallel_octaves"),
+        Type.Literal("voice_crossing"),
+        Type.Literal("spacing"),
+        Type.Literal("direct_octaves"),
+        Type.Literal("unresolved_leading_tone"),
+        Type.Literal("all"),
+      ]),
+      { default: ["all"] }
+    )
+  ),
 });
 ```
 
@@ -583,6 +604,7 @@ const LintParams = Type.Object({
 **music21 operations:** Parse score → extract voice pairs → `VoiceLeadingQuartet` analysis for parallel motion, voice crossing, spacing; leading tone resolution check
 
 **Returns to LLM:**
+
 ```
 3 violations found:
   Bar 4, beat 1: Parallel fifths between soprano (A4→B4) and bass (D3→E3)
@@ -597,31 +619,34 @@ const LintParams = Type.Object({
 Browser-side music theory calculations via tonal.js. No server round-trip — instant results for quick lookups during arrangement. This is the lightweight complement to the server-side music21 tools.
 
 **Parameters:**
+
 ```typescript
 const TheoryParams = Type.Object({
   operation: Type.Union([
-    Type.Literal("interval"),       // distance between two notes
-    Type.Literal("transpose"),      // transpose a pitch by an interval
-    Type.Literal("chord_detect"),   // identify chord from notes
-    Type.Literal("chord_notes"),    // spell out a chord's notes
-    Type.Literal("scale_notes"),    // notes in a scale
-    Type.Literal("scale_chords"),   // diatonic chords in a key
-    Type.Literal("roman_parse"),    // parse Roman numeral → chord in key
-    Type.Literal("enharmonic"),     // enharmonic equivalents
+    Type.Literal("interval"), // distance between two notes
+    Type.Literal("transpose"), // transpose a pitch by an interval
+    Type.Literal("chord_detect"), // identify chord from notes
+    Type.Literal("chord_notes"), // spell out a chord's notes
+    Type.Literal("scale_notes"), // notes in a scale
+    Type.Literal("scale_chords"), // diatonic chords in a key
+    Type.Literal("roman_parse"), // parse Roman numeral → chord in key
+    Type.Literal("enharmonic"), // enharmonic equivalents
   ]),
   args: Type.Record(Type.String(), Type.Any(), {
-    description: "Operation-specific arguments. interval: {from, to}. " +
+    description:
+      "Operation-specific arguments. interval: {from, to}. " +
       "transpose: {note, interval}. chord_detect: {notes: string[]}. " +
       "chord_notes: {chord}. scale_notes: {tonic, scale}. " +
       "scale_chords: {tonic, scale}. roman_parse: {numeral, key}. " +
-      "enharmonic: {note}."
-  })
+      "enharmonic: {note}.",
+  }),
 });
 ```
 
 **Runs in browser** — no `fetch()` call. Uses `@tonaljs/tonal` directly.
 
 **Example operations:**
+
 ```
 theory("interval", { from: "C4", to: "G4" })        → "P5"
 theory("transpose", { note: "F#4", interval: "m3" }) → "A4"
@@ -635,8 +660,6 @@ theory("roman_parse", { numeral: "V7", key: "D" })    → "A7" → ["A", "C#", "
 
 **Returns to UI:** `{ operation, result }` — no special renderer needed; text is sufficient.
 
-
-
 ---
 
 ## Agent Setup
@@ -649,9 +672,18 @@ The main browser entry point creates the Agent, registers tool renderers, and wi
 // src/main.ts
 import { Agent } from "@mariozechner/pi-agent-core";
 import { ChatPanel, ArtifactsPanel, registerToolRenderer } from "@mariozechner/pi-web-ui";
-import { compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
-         transposeTool, diapasonsTool, fretboardTool,
-         analyzeTool, lintTool, theoryTool } from "./tools";
+import {
+  compileTool,
+  tabulateTool,
+  voicingsTool,
+  checkPlayabilityTool,
+  transposeTool,
+  diapasonsTool,
+  fretboardTool,
+  analyzeTool,
+  lintTool,
+  theoryTool,
+} from "./tools";
 import { compileRenderer, fretboardRenderer, playabilityRenderer } from "./renderers";
 
 // Register custom tool renderers (inline visual feedback in chat)
@@ -660,15 +692,22 @@ registerToolRenderer("fretboard", fretboardRenderer);
 registerToolRenderer("check_playability", playabilityRenderer);
 
 // Load instrument profiles for system prompt
-const instruments = await fetch("/api/instruments").then(r => r.json());
+const instruments = await fetch("/api/instruments").then((r) => r.json());
 
 // Create Agent with all tools
 const agent = new Agent({
   initialState: {
     tools: [
-      compileTool, tabulateTool, voicingsTool, checkPlayabilityTool,
-      transposeTool, diapasonsTool, fretboardTool,
-      analyzeTool, lintTool, theoryTool,
+      compileTool,
+      tabulateTool,
+      voicingsTool,
+      checkPlayabilityTool,
+      transposeTool,
+      diapasonsTool,
+      fretboardTool,
+      analyzeTool,
+      lintTool,
+      theoryTool,
     ],
     systemPrompt: buildSystemPrompt(instruments),
   },
@@ -692,7 +731,9 @@ baroque lute, baroque guitar, Renaissance lute, theorbo, and classical guitar
 idioms.
 
 ## Your Tools
+
 You have access to domain-specific tools for mechanical correctness. Use them:
+
 - Call `tabulate` to find valid positions — never guess fret/course placements
 - Call `voicings` to enumerate chord options — pick from real alternatives
 - Call `check_playability` to validate before presenting to the user
@@ -703,6 +744,7 @@ You have access to domain-specific tools for mechanical correctness. Use them:
 - Call `theory` for quick music theory lookups — intervals, chord names, scale degrees
 
 ## Workflow
+
 1. When given a source file (.ly, MusicXML), read it first
 2. When given MusicXML, call `analyze` to get harmonic analysis before arranging
 3. When arranging from memory, warn the user: "I'm working from memory —
@@ -714,6 +756,7 @@ You have access to domain-specific tools for mechanical correctness. Use them:
    preview in the side panel
 
 ## Instruments
+
 [Instrument profiles injected here — tunings, constraints, notation type]
 ```
 
@@ -743,30 +786,30 @@ Each supported instrument is defined as a YAML profile (for tool logic and syste
 id: baroque-lute-13
 name: "13-Course Baroque Lute (d-minor)"
 courses: 13
-fretted_courses: 6        # courses 1-6 have frets
-open_courses: 7           # courses 7-13 are diapasons (unfretted bass)
-tuning:                    # highest to lowest
-  - { course: 1, pitch: "f'",  note: "F4" }    # chanterelle
-  - { course: 2, pitch: "d'",  note: "D4" }
-  - { course: 3, pitch: "a",   note: "A3" }
-  - { course: 4, pitch: "f",   note: "F3" }
-  - { course: 5, pitch: "d",   note: "D3" }
-  - { course: 6, pitch: "a,",  note: "A2" }
+fretted_courses: 6 # courses 1-6 have frets
+open_courses: 7 # courses 7-13 are diapasons (unfretted bass)
+tuning: # highest to lowest
+  - { course: 1, pitch: "f'", note: "F4" } # chanterelle
+  - { course: 2, pitch: "d'", note: "D4" }
+  - { course: 3, pitch: "a", note: "A3" }
+  - { course: 4, pitch: "f", note: "F3" }
+  - { course: 5, pitch: "d", note: "D3" }
+  - { course: 6, pitch: "a,", note: "A2" }
   # Diapasons (open bass strings, tuned diatonically — varies by key)
-  - { course: 7,  pitch: "g,",  note: "G2" }
-  - { course: 8,  pitch: "f,",  note: "F2" }
-  - { course: 9,  pitch: "e,",  note: "E2" }
-  - { course: 10, pitch: "d,",  note: "D2" }
-  - { course: 11, pitch: "c,",  note: "C2" }
-  - { course: 12, pitch: "b,,", note: "B1" }   # sometimes Bb
+  - { course: 7, pitch: "g,", note: "G2" }
+  - { course: 8, pitch: "f,", note: "F2" }
+  - { course: 9, pitch: "e,", note: "E2" }
+  - { course: 10, pitch: "d,", note: "D2" }
+  - { course: 11, pitch: "c,", note: "C2" }
+  - { course: 12, pitch: "b,,", note: "B1" } # sometimes Bb
   - { course: 13, pitch: "a,,", note: "A1" }
-frets: 8                   # typically 8 frets on the neck
-diapason_schemes:          # standard tunings by key (courses 7-13)
-  d_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]     # accord ordinaire
-  a_minor: ["G", "F", "E",  "D", "C", "B",  "A"]     # natural 3rd/7th
-  g_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"]     # same as standard
-  d_major: ["G", "F#", "E", "D", "C#", "B",  "A"]    # sharp keys
-  e_minor: ["G", "F#", "E", "D", "C",  "B",  "A"]    # natural with F#
+frets: 8 # typically 8 frets on the neck
+diapason_schemes: # standard tunings by key (courses 7-13)
+  d_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"] # accord ordinaire
+  a_minor: ["G", "F", "E", "D", "C", "B", "A"] # natural 3rd/7th
+  g_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"] # same as standard
+  d_major: ["G", "F#", "E", "D", "C#", "B", "A"] # sharp keys
+  e_minor: ["G", "F#", "E", "D", "C", "B", "A"] # natural with F#
 constraints:
   - "Diapasons (courses 7-13) cannot be fretted — open only"
   - "Maximum left-hand stretch: ~4 frets on upper courses"
@@ -774,7 +817,7 @@ constraints:
   - "Campanella encouraged — let notes ring across courses"
   - "Brisé (broken chord) texture is idiomatic, especially in French style"
   - "Right-hand thumb-under technique for bass runs"
-notation: "french-letter"  # a=0, b=1, c=2, d=3, e=4, f=5, g=6, h=7
+notation: "french-letter" # a=0, b=1, c=2, d=3, e=4, f=5, g=6, h=7
 ```
 
 ### Baroque Guitar (5-course, re-entrant)
@@ -785,14 +828,14 @@ name: "5-Course Baroque Guitar"
 courses: 5
 fretted_courses: 5
 open_courses: 0
-tuning:                    # nominal pitches (actual sounding depends on stringing)
-  - { course: 1, pitch: "e'",  note: "E4" }
-  - { course: 2, pitch: "b",   note: "B3" }
-  - { course: 3, pitch: "g",   note: "G3" }
-  - { course: 4, pitch: "d'",  note: "D4", re_entrant: true }
-  - { course: 5, pitch: "a",   note: "A3", re_entrant: true }
+tuning: # nominal pitches (actual sounding depends on stringing)
+  - { course: 1, pitch: "e'", note: "E4" }
+  - { course: 2, pitch: "b", note: "B3" }
+  - { course: 3, pitch: "g", note: "G3" }
+  - { course: 4, pitch: "d'", note: "D4", re_entrant: true }
+  - { course: 5, pitch: "a", note: "A3", re_entrant: true }
 frets: 8
-stringing: "french"        # default; options: "french", "italian", "mixed"
+stringing: "french" # default; options: "french", "italian", "mixed"
 # Stringing variants (per OQ-04 / OQ-18 research):
 #
 # | Variant  | Course 5       | Course 4       | Origin              |
@@ -815,7 +858,7 @@ constraints:
   - "Campanella especially effective due to re-entrant tuning"
   - "French stringing: no true bass below G3 (course 3 open)"
   - "Italian stringing: bass available on courses 4-5 via bourdons"
-notation: "french-letter"  # or italian-number depending on source tradition
+notation: "french-letter" # or italian-number depending on source tradition
 ```
 
 ### Renaissance Lute (6-course, G)
@@ -827,19 +870,19 @@ courses: 6
 fretted_courses: 6
 open_courses: 0
 tuning:
-  - { course: 1, pitch: "g'",  note: "G4" }
-  - { course: 2, pitch: "d'",  note: "D4" }
-  - { course: 3, pitch: "a",   note: "A3" }
-  - { course: 4, pitch: "f",   note: "F3" }
-  - { course: 5, pitch: "c",   note: "C3" }
-  - { course: 6, pitch: "g,",  note: "G2" }
+  - { course: 1, pitch: "g'", note: "G4" }
+  - { course: 2, pitch: "d'", note: "D4" }
+  - { course: 3, pitch: "a", note: "A3" }
+  - { course: 4, pitch: "f", note: "F3" }
+  - { course: 5, pitch: "c", note: "C3" }
+  - { course: 6, pitch: "g,", note: "G2" }
 frets: 8
 constraints:
   - "All courses fretted"
   - "Thumb-index alternation standard"
   - "Simpler voice leading than baroque lute"
   - "Intabulation of vocal polyphony is core repertoire"
-notation: "italian-number"  # or french-letter
+notation: "italian-number" # or french-letter
 ```
 
 ### Theorbo (14-course)
@@ -852,18 +895,18 @@ fretted_courses: 6
 open_courses: 8
 tuning:
   # Fretted courses (1st and 2nd are an octave lower than on a standard lute)
-  - { course: 1, pitch: "a",   note: "A3" }    # octave down from lute
-  - { course: 2, pitch: "e",   note: "E3" }    # octave down from lute
-  - { course: 3, pitch: "b",   note: "B3" }
-  - { course: 4, pitch: "g",   note: "G3" }
-  - { course: 5, pitch: "d",   note: "D3" }
-  - { course: 6, pitch: "a,",  note: "A2" }
+  - { course: 1, pitch: "a", note: "A3" } # octave down from lute
+  - { course: 2, pitch: "e", note: "E3" } # octave down from lute
+  - { course: 3, pitch: "b", note: "B3" }
+  - { course: 4, pitch: "g", note: "G3" }
+  - { course: 5, pitch: "d", note: "D3" }
+  - { course: 6, pitch: "a,", note: "A2" }
   # Diapasons
-  - { course: 7,  pitch: "g,",  note: "G2" }
-  - { course: 8,  pitch: "f,",  note: "F2" }
-  - { course: 9,  pitch: "e,",  note: "E2" }
-  - { course: 10, pitch: "d,",  note: "D2" }
-  - { course: 11, pitch: "c,",  note: "C2" }
+  - { course: 7, pitch: "g,", note: "G2" }
+  - { course: 8, pitch: "f,", note: "F2" }
+  - { course: 9, pitch: "e,", note: "E2" }
+  - { course: 10, pitch: "d,", note: "D2" }
+  - { course: 11, pitch: "c,", note: "C2" }
   - { course: 12, pitch: "b,,", note: "B1" }
   - { course: 13, pitch: "a,,", note: "A1" }
   - { course: 14, pitch: "g,,", note: "G1" }
@@ -886,12 +929,12 @@ strings: 6
 fretted_strings: 6
 open_strings: 0
 tuning:
-  - { string: 1, pitch: "e'",  note: "E4" }
-  - { string: 2, pitch: "b",   note: "B3" }
-  - { string: 3, pitch: "g",   note: "G3" }
-  - { string: 4, pitch: "d",   note: "D3" }
-  - { string: 5, pitch: "a,",  note: "A2" }
-  - { string: 6, pitch: "e,",  note: "E2" }
+  - { string: 1, pitch: "e'", note: "E4" }
+  - { string: 2, pitch: "b", note: "B3" }
+  - { string: 3, pitch: "g", note: "G3" }
+  - { string: 4, pitch: "d", note: "D3" }
+  - { string: 5, pitch: "a,", note: "A2" }
+  - { string: 6, pitch: "e,", note: "E2" }
 frets: 19
 constraints:
   - "Standard concert tuning"
@@ -900,7 +943,7 @@ constraints:
   - "Barre chords available — full or partial"
   - "Harmonics at frets 5, 7, 12"
   - "Can handle up to 4 independent voices simultaneously"
-notation: "number-tab"  # standard guitar tablature (or standard notation)
+notation: "number-tab" # standard guitar tablature (or standard notation)
 ```
 
 ### Piano
@@ -910,9 +953,9 @@ id: piano
 name: "Piano"
 type: keyboard
 range:
-  lowest: "a,,,"   # A0
+  lowest: "a,,," # A0
   highest: "c''''''" # C8
-staves: 2           # treble + bass (grand staff)
+staves: 2 # treble + bass (grand staff)
 constraints:
   - "Maximum stretch: ~10th (large hands) or octave (average)"
   - "Each hand can play up to 5 simultaneous notes"
@@ -920,7 +963,7 @@ constraints:
   - "Wide dynamic range — can mark pp to ff"
   - "No pitch bending, vibrato, or microtones"
   - "Hands are semi-independent — voice crossing between staves is idiomatic"
-notation: "standard"  # grand staff, treble + bass clef
+notation: "standard" # grand staff, treble + bass clef
 ```
 
 ### Voice (SATB)
@@ -929,7 +972,7 @@ notation: "standard"  # grand staff, treble + bass clef
 id: voice-soprano
 name: "Soprano Voice"
 type: voice
-range: { lowest: "c'", highest: "a''" }    # C4–A5
+range: { lowest: "c'", highest: "a''" } # C4–A5
 clef: treble
 constraints:
   - "Monophonic — one note at a time"
@@ -941,29 +984,28 @@ constraints:
 ---
 id: voice-alto
 name: "Alto Voice"
-range: { lowest: "f", highest: "d''" }     # F3–D5
+range: { lowest: "f", highest: "d''" } # F3–D5
 clef: treble
 ---
 id: voice-tenor
 name: "Tenor Voice"
-range: { lowest: "c", highest: "a'" }      # C3–A4
+range: { lowest: "c", highest: "a'" } # C3–A4
 clef: "treble_8"
 ---
 id: voice-bass
 name: "Bass Voice"
-range: { lowest: "e,", highest: "e'" }     # E2–E4
+range: { lowest: "e,", highest: "e'" } # E2–E4
 clef: bass
 ```
 
 Voice profiles enable:
+
 - **Song arrangements** — melody line with lute/guitar accompaniment
 - **Continuo realization** — soprano line + figured bass → full texture
 - **Transcription** — vocal part extracted from a choral work for study
 - **Intabulation** — arranging vocal polyphony for solo lute (core Renaissance repertoire)
 
 Additional profiles can be added: archlute, mandora, vihuela, 7-course Dowland-era lute, etc.
-
-
 
 ---
 
@@ -1114,13 +1156,13 @@ music = \relative {
 
 **Key LilyPond features for lute tablature:**
 
-| Feature | Syntax | Purpose |
-|---|---|---|
-| French letters | `tablatureFormat = #fret-letter-tablature-format` | a=open, b=1st fret, c=2nd, etc. |
-| Diapasons | `additionalBassStrings = \stringTuning <...>` | Bass courses below staff, printed as a, /a, //a |
-| Custom fret labels | `fretLabels = #'("a" "b" "c" ...)` | Override default letter mapping if needed |
-| Rhythm flags | `\new RhythmicStaff` above `TabStaff` | Separate rhythm notation above tab |
-| Hidden MIDI staff | `\new Staff \with { ... transparent ... }` | Correct MIDI output (see below) |
+| Feature            | Syntax                                            | Purpose                                         |
+| ------------------ | ------------------------------------------------- | ----------------------------------------------- |
+| French letters     | `tablatureFormat = #fret-letter-tablature-format` | a=open, b=1st fret, c=2nd, etc.                 |
+| Diapasons          | `additionalBassStrings = \stringTuning <...>`     | Bass courses below staff, printed as a, /a, //a |
+| Custom fret labels | `fretLabels = #'("a" "b" "c" ...)`                | Override default letter mapping if needed       |
+| Rhythm flags       | `\new RhythmicStaff` above `TabStaff`             | Separate rhythm notation above tab              |
+| Hidden MIDI staff  | `\new Staff \with { ... transparent ... }`        | Correct MIDI output (see below)                 |
 
 ### MIDI Output
 
@@ -1138,20 +1180,21 @@ This pattern is built into all LilyPond templates.
 
 The six standard baroque lute ornaments for v1, using LilyPond builtins:
 
-| Ornament | French Name | LilyPond | Tab Display | Usage |
-|---|---|---|---|---|
-| Trill | tremblement | `\trill` | Symbol above letter | Very common, most accented notes |
-| Mordent | martellement | `\mordent` | Symbol above letter | Alternation with note below |
-| Appoggiatura | port de voix | `\appoggiatura` | Small grace note | Ascending approach note |
-| Slur | tirade/coulé | `( )` | Arc between letters | Hammer-on / pull-off |
-| Staccato | étouffé | `\staccato` | Dot | Muted/stopped note |
-| Turn | double cadence | `\turn` | Symbol above letter | Upper-lower neighbor figure |
+| Ornament     | French Name    | LilyPond        | Tab Display         | Usage                            |
+| ------------ | -------------- | --------------- | ------------------- | -------------------------------- |
+| Trill        | tremblement    | `\trill`        | Symbol above letter | Very common, most accented notes |
+| Mordent      | martellement   | `\mordent`      | Symbol above letter | Alternation with note below      |
+| Appoggiatura | port de voix   | `\appoggiatura` | Small grace note    | Ascending approach note          |
+| Slur         | tirade/coulé   | `( )`           | Arc between letters | Hammer-on / pull-off             |
+| Staccato     | étouffé        | `\staccato`     | Dot                 | Muted/stopped note               |
+| Turn         | double cadence | `\turn`         | Symbol above letter | Upper-lower neighbor figure      |
 
 Ornament symbols render above the TabStaff by default. With the RhythmicStaff layout, they appear in the rhythm line area. A full configurable ornament table per style period (Gaultier vs. Mouton vs. Weiss) is a v2 refinement.
 
 ### Output Formats
 
 LilyPond produces:
+
 - **SVG** — primary output for browser display (inline in chat via tool renderer, persistent in ArtifactsPanel)
 - **PDF** — for download/print
 - **MIDI** — for playback (via hidden Staff pattern)
@@ -1309,8 +1352,6 @@ An arrangement is "good" if:
 
 The LLM should flag when it makes compromises (dropped notes, simplified voicing) and explain why.
 
-
-
 ---
 
 ## File Structure
@@ -1396,6 +1437,7 @@ vellum/
 ```
 
 **What changed from the original file structure:**
+
 - Removed `src/extension.ts` — Vellum is not a pi coding-agent extension
 - Removed `src/hooks/` directory — auto-compile is a prompt instruction, error parsing is in `server/compile.ts`, profile injection is in `prompts.ts`
 - Renamed `src/web/app.ts` → `src/main.ts` — this is the browser entry point
@@ -1425,6 +1467,7 @@ services.vellum = {
 ```
 
 The NixOS module provides:
+
 - **systemd service** — runs the Express server (serves browser assets + API + LLM proxy)
 - **LilyPond dependency** — `pkgs.lilypond` pinned at 2.24.x, reproducible, no version drift
 - **music21 dependency** — `pkgs.python3.withPackages (ps: [ ps.music21 ])` pinned via Nix. Called as subprocess by the theory API endpoints. Same deployment pattern as LilyPond — no separate Python service, no virtualenv, just a Nix-managed Python with music21 available
@@ -1433,6 +1476,7 @@ The NixOS module provides:
 - **Data directory** — `/var/lib/vellum/arrangements/` for saved arrangements
 
 The Nix build:
+
 1. `buildNpmPackage` builds the Express server + Vite browser bundle
 2. LilyPond and Python+music21 are runtime dependencies, not build dependencies
 3. The `xlsx` CDN tarball URL in pi-web-ui's dependency tree may need lockfile patching for `fetchNpmDeps` — test early
@@ -1444,6 +1488,7 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 ## v1 Scope
 
 ### Infrastructure
+
 - [ ] Set up pi-mono packages (`pi-agent-core`, `pi-web-ui`, `pi-ai`)
 - [ ] Express server with API endpoints (`/api/stream`, `/api/compile`, `/api/analyze`, `/api/lint`, `/api/chordify`, `/api/instruments`, `/api/arrangements`, `/api/templates`)
 - [ ] `streamProxy` integration for LLM API key security
@@ -1454,6 +1499,7 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - [ ] Deploy on servoid behind Traefik
 
 ### Tools
+
 - [ ] Define all `AgentTool<T>` objects with TypeBox schemas: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`, `analyze`, `lint`, `theory`
 - [ ] Implement server-side `POST /api/compile` with LilyPond subprocess and structured error parsing
 - [ ] Implement server-side `POST /api/analyze` — music21 subprocess: MusicXML → key, Roman numerals, voice ranges, time signature
@@ -1469,12 +1515,14 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - [ ] Implement `fretboard` — SVG fretboard diagram renderer
 
 ### UI
+
 - [ ] Wire `ChatPanel` + `ArtifactsPanel` with custom tool renderers
 - [ ] `registerToolRenderer("compile", ...)` — inline SVG preview in chat
 - [ ] `registerToolRenderer("fretboard", ...)` — inline fretboard diagram
 - [ ] `registerToolRenderer("check_playability", ...)` — inline violation report
 
 ### Instrument Data
+
 - [ ] Create instrument profiles (YAML + .ily) for all 7 instruments
 - [ ] Include diapason tuning schemes in baroque lute profile
 - [ ] Include stringing variants in baroque guitar profile
@@ -1482,11 +1530,13 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - [ ] French letter tablature working end-to-end (v1, not v2 — this is the native notation for the primary instrument)
 
 ### Agent
+
 - [ ] System prompt with instrument profiles, workflow instructions, source-file-first guidance
 - [ ] Prompt instructions for auto-compile behavior (call compile after generating .ly)
 - [ ] Prompt instructions for artifacts panel updates (call artifacts tool after successful compile)
 
 ### Validation
+
 - [ ] **Test piece: Dowland "Flow My Tears" (Lachrimae)** — see below
 - [ ] **Test piece: "All Creatures of Our God and King" (LASST UNS ERFREUEN)** — hymnal SATB → baroque guitar conversion
 - [ ] End-to-end: upload .ly source → arrange for baroque lute → French tab output → SVG preview → MIDI playback
@@ -1496,9 +1546,10 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 
 ### Test Piece: Dowland "Flow My Tears" (Lachrimae)
 
-**Recommendation:** John Dowland's "Flow My Tears" (from *The Second Booke of Songs or Ayres*, 1600) as the primary v1 test piece.
+**Recommendation:** John Dowland's "Flow My Tears" (from _The Second Booke of Songs or Ayres_, 1600) as the primary v1 test piece.
 
 **Why this piece:**
+
 - **Voice + lute** — exercises the voice-and-tab template, the most complex layout
 - **Well-documented** — multiple modern editions available, public domain, IMSLP has facsimiles
 - **Intabulation opportunity** — the vocal line can be intabulated for solo lute, testing instrument conversion
@@ -1508,6 +1559,7 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - **Cultural significance** — one of the most famous English lute songs, widely recognized
 
 **Test scenarios with this piece:**
+
 1. Upload Dowland .ly source → compile → French tab + voice line
 2. Arrange for solo lute (intabulation of the vocal part)
 3. Convert to classical guitar (test instrument swap)
@@ -1521,7 +1573,8 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 **Hymnal → baroque guitar conversion test.** This tests the full real-world workflow: take a standard SATB + organ hymn setting and produce a playable baroque guitar arrangement.
 
 **Why this piece:**
-- **Tune is from 1623** (*Geistliche Kirchengesäng*, Cologne) — literally contemporaneous with the baroque guitar's golden age
+
+- **Tune is from 1623** (_Geistliche Kirchengesäng_, Cologne) — literally contemporaneous with the baroque guitar's golden age
 - **Text by St. Francis of Assisi** (Canticle of the Sun, ~1225) — public domain, significant in Catholic tradition
 - **Tests the hardest conversion pipeline** — SATB/organ → 5-course baroque guitar requires harmonic reduction, voice thinning, key transposition, and style decisions (rasgueado vs. punteado)
 - **Exercises the full music21 pipeline** — MusicXML from hymnary.org is parsed directly by music21's `converter.parse()`, voices extracted automatically via `score.parts[]`, and `chordify()` produces the harmonic analysis the LLM needs for arrangement decisions
@@ -1531,6 +1584,7 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - **Real liturgical use** — the output is something you could actually play at Mass or at home
 
 **The conversion workflow this validates:**
+
 ```
 Input:  SATB hymnal setting (MusicXML from hymnary.org)
 Step 1: analyze(musicxml) → key, Roman numeral progression, voice ranges
@@ -1542,6 +1596,7 @@ Step 6: compile() → French letter tab or number tab PDF + optional voice line
 ```
 
 **Test scenarios:**
+
 1. Upload SATB hymnal setting (MusicXML) → `analyze()` → `chordify()` → produce baroque guitar arrangement
 2. Generate both punteado (plucked) and rasgueado (strummed) sections within one piece
 3. Test alfabeto chord notation for strummed passages
@@ -1574,6 +1629,7 @@ Step 6: compile() → French letter tab or number tab PDF + optional voice line
 ### Chosen: pi-mono Web App + NixOS Deployment
 
 The core realization: **v1 needs almost no code for the musical intelligence.** The LLM does the arrangement. LilyPond does the engraving. What v1 needs is:
+
 1. A conversational interface with visual feedback
 2. Native tools that handle mechanical correctness
 3. A way to run LilyPond server-side
@@ -1582,6 +1638,7 @@ The core realization: **v1 needs almost no code for the musical intelligence.** 
 Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-agent-core` Agent loop + tool framework). Vellum provides #2 (custom `AgentTool<T>` objects with server API backends). NixOS provides #3 and deployment (#4 via Traefik + mTLS + streamProxy).
 
 **Why pi-mono over building from scratch:**
+
 - Pi already provides the agent loop, tool framework, web UI, artifact display, session storage, and LLM proxy
 - Building these from scratch would replicate what pi does, but worse
 - Pi's `AgentTool<T>` pattern with TypeBox schemas maps perfectly to Vellum's domain tools
@@ -1594,28 +1651,32 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 **Role:** Server-side music theory analysis engine, deployed alongside LilyPond as a subprocess dependency.
 
 **Why music21 and not just tonal.js:**
+
 - **MusicXML parsing** — music21 has native `converter.parse()` for full score ingestion. tonal.js has no file I/O at all. The hymnal conversion workflow requires reading MusicXML files with multiple SATB voices — music21 does this trivially, tonal.js can't start.
 - **`chordify()`** — reduces any multi-voice score to a chord-per-beat analysis. This is THE critical operation for hymnal → guitar conversion. tonal.js can detect a chord from a set of notes, but can't extract those notes from a score.
 - **Voice leading analysis** — `VoiceLeadingQuartet` with methods for parallel fifths, parallel octaves, contrary motion, voice crossing, spacing. tonal.js's `@tonaljs/voice-leading` is about jazz voicing smoothness, not counterpoint rule checking.
 - **Key detection** — Krumhansl-Schmuckler algorithm: `score.analyze('key')`. Signal processing on pitch class distributions. tonal.js can tell you what chords fit a key but can't determine a key from a passage.
-- **Roman numeral analysis** — `roman.romanNumeralFromChord(chord, key)` with full inversion awareness. tonal.js parses Roman numeral *symbols* but can't derive them from music.
+- **Roman numeral analysis** — `roman.romanNumeralFromChord(chord, key)` with full inversion awareness. tonal.js parses Roman numeral _symbols_ but can't derive them from music.
 - **Figured bass realization** (v2) — `figuredBass.realizer` engine. tonal.js has nothing comparable.
 
 **Why tonal.js complements music21:**
+
 - Runs in the browser — instant results, no server round-trip for simple lookups
 - Covers interval math, chord spelling, scale membership, enharmonic equivalents
 - The LLM uses `theory()` mid-conversation for quick calculations while `analyze()` and `lint()` handle the heavy analysis
 
 **Deployment:** Same pattern as LilyPond — subprocess call, not a separate service. `python3 theory.py analyze < input.xml` → JSON to stdout. No migration debt; the API surface (JSON in, JSON out) is implementation-agnostic. If music21 were ever replaced, only `server/theory.py` changes.
 
-**Previous verdict (revised):** The original assessment that "music21 solves the wrong problem" was incorrect. Music21's analytical capabilities *complement* the LLM rather than competing with it. The LLM makes musical *judgment* calls; music21 provides deterministic *analysis* the LLM can reason about. The LLM should never do interval arithmetic or chord identification when a library can do it perfectly.
+**Previous verdict (revised):** The original assessment that "music21 solves the wrong problem" was incorrect. Music21's analytical capabilities _complement_ the LLM rather than competing with it. The LLM makes musical _judgment_ calls; music21 provides deterministic _analysis_ the LLM can reason about. The LLM should never do interval arithmetic or chord identification when a library can do it perfectly.
 
 ### Alternative Considered: Custom TypeScript + Rust/WASM
 
 **Strengths:**
+
 - Maximum control, Rust for correctness-critical math
 
 **Weaknesses:**
+
 - Rebuilds the agent loop, web UI, session management from scratch
 - LilyPond can't run in the browser anyway — WASM doesn't help with the main pipeline
 - Over-engineered for v1
@@ -1625,9 +1686,11 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 ### Alternative Considered: Pure Prompt Engineering (Skill file + bash)
 
 **Strengths:**
+
 - Zero code — just a system prompt with instrument profiles
 
 **Weaknesses:**
+
 - LLM invents fret positions from training data (error-prone)
 - Compilation errors come back as raw stderr
 - No visual feedback — human downloads PDF to check
@@ -1650,7 +1713,7 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 - [Fronimo](https://sites.google.com/view/fronimo/home) — reference for historical tablature rendering
 - [MEI Tablature encoding](https://music-encoding.org/guidelines/v5/content/tablature.html) — future interchange format
 - [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) — browser MusicXML rendering (standard notation only, not tablature)
-- Nigel North, *Continuo Playing on the Lute, Archlute and Theorbo* — baroque lute tuning reference
-- Robert Dowland, *Varietie of Lute Lessons* (1610) — ornament tables
-- James Tyler & Paul Sparks, *The Guitar and its Music* (2002) — baroque guitar stringing evidence
-- Gaspar Sanz, *Instrucción de música sobre la guitarra española* (1674) — stringing taxonomy
+- Nigel North, _Continuo Playing on the Lute, Archlute and Theorbo_ — baroque lute tuning reference
+- Robert Dowland, _Varietie of Lute Lessons_ (1610) — ornament tables
+- James Tyler & Paul Sparks, _The Guitar and its Music_ (2002) — baroque guitar stringing evidence
+- Gaspar Sanz, _Instrucción de música sobre la guitarra española_ (1674) — stringing taxonomy

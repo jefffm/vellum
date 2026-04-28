@@ -81,6 +81,7 @@ A full multi-movement suite could exceed context limits. The spec doesn't discus
 ### N-1: pi-mono is a young, single-maintainer project
 
 Pi-mono is badlogic's (Mario Zechner) open-source project. It's actively developed and well-designed, but:
+
 - Breaking API changes are possible
 - Documentation may lag behind the code
 - Vellum depends on pi-mono's extension system working as expected

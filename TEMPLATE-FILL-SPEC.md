@@ -18,8 +18,8 @@ syntax to express the result. This consistently fails:
 - Full rewrites instead of surgical edits
 
 The compile retry guard (`src/lib/compile-retry-guard.ts`) catches failures and nudges
-the LLM to iterate, but by that point the LLM is debugging *syntax* rather than fixing
-*music*, and burns all 3 retries on structural mistakes.
+the LLM to iterate, but by that point the LLM is debugging _syntax_ rather than fixing
+_music_, and burns all 3 retries on structural mistakes.
 
 ## Proposal: `engrave` tool
 
@@ -29,13 +29,14 @@ metadata) and **generates complete, self-contained LilyPond source** ready for
 
 **This is a codegen engine, not a template filler.** The tool generates the entire
 LilyPond file programmatically — `\version`, `\include`, variable definitions, `\score`
-block, `\layout`, `\midi` — using template IDs only to determine the *staff layout
-structure* and instrument IDs to determine the *variable names and include paths*.
+block, `\layout`, `\midi` — using template IDs only to determine the _staff layout
+structure_ and instrument IDs to determine the _variable names and include paths_.
 Existing `.ly` template files are structural reference, not fill-in-the-blank forms.
 
 ### Why server-side
 
 The tool must:
+
 1. Read instrument `.ily` files to resolve variable names per instrument
 2. Access the instrument YAML profiles for validation (course ranges, frets, diapasons)
 3. Generate file paths for `\include` directives relative to the server's filesystem
@@ -55,7 +56,7 @@ exists on disk.
    It does not read or modify existing `.ly` template files. Template IDs map to
    codegen strategies (which staves to create, how to wire them).
 
-3. **Validate before emitting.** The tool rejects unplayable positions *before*
+3. **Validate before emitting.** The tool rejects unplayable positions _before_
    generating LilyPond, so the LLM gets actionable errors without burning a compile.
 
 4. **Absolute pitches only.** No `\relative` blocks anywhere in generated output.
@@ -67,18 +68,18 @@ exists on disk.
 
 The full current toolchain (10 tools in `vellumTools`):
 
-| Tool | Location | Relevance to `engrave` |
-|---|---|---|
-| `tabulate` | `src/tools.ts` (client) | LLM uses output to build `engrave` input |
-| `voicings` | `src/tools.ts` (client) | LLM uses output to build `engrave` input |
-| `check_playability` | `src/tools.ts` (client) | `engrave` runs equivalent validation internally |
-| `theory` | `src/tools.ts` (client) | LLM uses for harmonic analysis before arranging |
-| `diapasons` | `src/diapasons.ts` (client) | **Overlap** — already generates LilyPond diapason syntax. `engrave` delegates to equivalent logic for `additionalBassStrings` |
-| `transpose` | `src/tools.ts` (client) | LLM uses for key transposition |
-| `fretboard` | `src/tools.ts` (client) | LLM uses for visualization |
-| `compile` | `src/server-tools.ts` (server) | LLM calls after `engrave` to produce SVG/PDF |
-| `analyze` | `src/server-tools.ts` (server) | LLM uses for MusicXML → harmonic analysis |
-| `lint` | `src/server-tools.ts` (server) | LLM uses for voice-leading checks |
+| Tool                | Location                       | Relevance to `engrave`                                                                                                        |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `tabulate`          | `src/tools.ts` (client)        | LLM uses output to build `engrave` input                                                                                      |
+| `voicings`          | `src/tools.ts` (client)        | LLM uses output to build `engrave` input                                                                                      |
+| `check_playability` | `src/tools.ts` (client)        | `engrave` runs equivalent validation internally                                                                               |
+| `theory`            | `src/tools.ts` (client)        | LLM uses for harmonic analysis before arranging                                                                               |
+| `diapasons`         | `src/diapasons.ts` (client)    | **Overlap** — already generates LilyPond diapason syntax. `engrave` delegates to equivalent logic for `additionalBassStrings` |
+| `transpose`         | `src/tools.ts` (client)        | LLM uses for key transposition                                                                                                |
+| `fretboard`         | `src/tools.ts` (client)        | LLM uses for visualization                                                                                                    |
+| `compile`           | `src/server-tools.ts` (server) | LLM calls after `engrave` to produce SVG/PDF                                                                                  |
+| `analyze`           | `src/server-tools.ts` (server) | LLM uses for MusicXML → harmonic analysis                                                                                     |
+| `lint`              | `src/server-tools.ts` (server) | LLM uses for voice-leading checks                                                                                             |
 
 The `diapasons` tool (`src/diapasons.ts`) already contains `PITCH_TO_LILYPOND` (a
 note-name-to-LilyPond map) and `buildLilypondSyntax()` (octave comma logic for bass
@@ -96,47 +97,54 @@ const PositionNoteSchema = Type.Object({
   input: Type.Literal("position"),
   course: Type.Integer({ minimum: 1 }),
   fret: Type.Integer({ minimum: 0 }),
-  duration: Type.String(),              // LilyPond duration: "4", "8", "2.", "16"
+  duration: Type.String(), // LilyPond duration: "4", "8", "2.", "16"
   tie: Type.Optional(Type.Boolean()),
   slur_start: Type.Optional(Type.Boolean()),
   slur_end: Type.Optional(Type.Boolean()),
-  ornament: Type.Optional(Type.Union([
-    Type.Literal("trill"),
-    Type.Literal("mordent"),
-    Type.Literal("turn"),
-    Type.Literal("prall"),
-  ])),
+  ornament: Type.Optional(
+    Type.Union([
+      Type.Literal("trill"),
+      Type.Literal("mordent"),
+      Type.Literal("turn"),
+      Type.Literal("prall"),
+    ])
+  ),
 });
 
 const PitchNoteSchema = Type.Object({
   type: Type.Literal("note"),
   input: Type.Literal("pitch"),
-  pitch: Type.String(),                 // Scientific notation: "G4", "Eb3", "A2"
+  pitch: Type.String(), // Scientific notation: "G4", "Eb3", "A2"
   duration: Type.String(),
   tie: Type.Optional(Type.Boolean()),
   slur_start: Type.Optional(Type.Boolean()),
   slur_end: Type.Optional(Type.Boolean()),
-  ornament: Type.Optional(Type.Union([
-    Type.Literal("trill"),
-    Type.Literal("mordent"),
-    Type.Literal("turn"),
-    Type.Literal("prall"),
-  ])),
+  ornament: Type.Optional(
+    Type.Union([
+      Type.Literal("trill"),
+      Type.Literal("mordent"),
+      Type.Literal("turn"),
+      Type.Literal("prall"),
+    ])
+  ),
 });
 
 const ChordEventSchema = Type.Object({
   type: Type.Literal("chord"),
-  positions: Type.Array(Type.Union([
-    Type.Object({
-      input: Type.Literal("position"),
-      course: Type.Integer({ minimum: 1 }),
-      fret: Type.Integer({ minimum: 0 }),
-    }),
-    Type.Object({
-      input: Type.Literal("pitch"),
-      pitch: Type.String(),
-    }),
-  ]), { minItems: 2 }),
+  positions: Type.Array(
+    Type.Union([
+      Type.Object({
+        input: Type.Literal("position"),
+        course: Type.Integer({ minimum: 1 }),
+        fret: Type.Integer({ minimum: 0 }),
+      }),
+      Type.Object({
+        input: Type.Literal("pitch"),
+        pitch: Type.String(),
+      }),
+    ]),
+    { minItems: 2 }
+  ),
   duration: Type.String(),
   tie: Type.Optional(Type.Boolean()),
 });
@@ -144,7 +152,7 @@ const ChordEventSchema = Type.Object({
 const RestEventSchema = Type.Object({
   type: Type.Literal("rest"),
   duration: Type.String(),
-  spacer: Type.Optional(Type.Boolean()),  // true → "s" (invisible), false/omitted → "r"
+  spacer: Type.Optional(Type.Boolean()), // true → "s" (invisible), false/omitted → "r"
 });
 
 const EventSchema = Type.Union([
@@ -159,48 +167,59 @@ const EventSchema = Type.Union([
 const BarSchema = Type.Object({
   events: Type.Array(EventSchema, { minItems: 1 }),
   // Per-bar overrides (for mid-piece changes)
-  key: Type.Optional(Type.Object({
-    tonic: Type.String(),               // "d", "c", "g", "eb" (lowercase, flat = "b")
-    mode: Type.String(),                // "major", "minor", "dorian", etc.
-  })),
-  time: Type.Optional(Type.String()),   // "3/4", "6/8", etc.
+  key: Type.Optional(
+    Type.Object({
+      tonic: Type.String(), // "d", "c", "g", "eb" (lowercase, flat = "b")
+      mode: Type.String(), // "major", "minor", "dorian", etc.
+    })
+  ),
+  time: Type.Optional(Type.String()), // "3/4", "6/8", etc.
 });
 
 // --- Top-level params ---
 
 const EngraveParamsSchema = Type.Object({
-  instrument: Type.String({ minLength: 1 }),     // e.g. "baroque-lute-13"
-  template: Type.String({ minLength: 1 }),        // e.g. "french-tab", "solo-tab"
+  instrument: Type.String({ minLength: 1 }), // e.g. "baroque-lute-13"
+  template: Type.String({ minLength: 1 }), // e.g. "french-tab", "solo-tab"
   title: Type.Optional(Type.String()),
   composer: Type.Optional(Type.String()),
-  key: Type.Optional(Type.Object({
-    tonic: Type.String(),
-    mode: Type.String(),
-  })),
-  time: Type.Optional(Type.String()),             // default "4/4"
-  tempo: Type.Optional(Type.Integer()),           // BPM, default 72
-  pickup: Type.Optional(Type.String()),           // partial duration: "4", "8" → \partial 4
-  diapason_scheme: Type.Optional(Type.String()),  // e.g. "d_minor" — for lute-family
+  key: Type.Optional(
+    Type.Object({
+      tonic: Type.String(),
+      mode: Type.String(),
+    })
+  ),
+  time: Type.Optional(Type.String()), // default "4/4"
+  tempo: Type.Optional(Type.Integer()), // BPM, default 72
+  pickup: Type.Optional(Type.String()), // partial duration: "4", "8" → \partial 4
+  diapason_scheme: Type.Optional(Type.String()), // e.g. "d_minor" — for lute-family
 
   bars: Type.Array(BarSchema, { minItems: 1 }),
 
   // For voice-and-tab template: vocal melody as separate stream
-  melody: Type.Optional(Type.Object({
-    bars: Type.Array(Type.Object({
-      events: Type.Array(Type.Union([
+  melody: Type.Optional(
+    Type.Object({
+      bars: Type.Array(
         Type.Object({
-          type: Type.Literal("note"),
-          pitch: Type.String(),         // Scientific: "C5", "A4"
-          duration: Type.String(),
-          lyric: Type.Optional(Type.String()),
-        }),
-        Type.Object({
-          type: Type.Literal("rest"),
-          duration: Type.String(),
-        }),
-      ]), { minItems: 1 }),
-    })),
-  })),
+          events: Type.Array(
+            Type.Union([
+              Type.Object({
+                type: Type.Literal("note"),
+                pitch: Type.String(), // Scientific: "C5", "A4"
+                duration: Type.String(),
+                lyric: Type.Optional(Type.String()),
+              }),
+              Type.Object({
+                type: Type.Literal("rest"),
+                duration: Type.String(),
+              }),
+            ]),
+            { minItems: 1 }
+          ),
+        })
+      ),
+    })
+  ),
 });
 ```
 
@@ -238,6 +257,7 @@ order. No ambiguity about sequencing.
 absolute pitch notation (`g'`, `ees`, `a,`).
 
 The `diapasons` tool (`src/diapasons.ts`) has a partial implementation:
+
 - `PITCH_TO_LILYPOND` map handles note names (C→c, Eb→ees, F#→fis, etc.)
 - `buildLilypondSyntax()` does manual octave comma logic, but only for diapason
   courses and only for a narrow octave range (1-2 commas)
@@ -272,9 +292,10 @@ New function in `src/lib/pitch.ts`:
  * choosing the correct enharmonic.
  */
 export function scientificToLilyPond(note: string): string {
-  const parsed = parsePitch(note);  // existing function
-  const lyName = PITCH_TO_LILYPOND[parsed.letter + parsed.accidental]
-    ?? (parsed.letter.toLowerCase() + accidentalToLy(parsed.accidental));
+  const parsed = parsePitch(note); // existing function
+  const lyName =
+    PITCH_TO_LILYPOND[parsed.letter + parsed.accidental] ??
+    parsed.letter.toLowerCase() + accidentalToLy(parsed.accidental);
   const octaveMark = octaveToLyMark(parsed.octave);
   return lyName + octaveMark;
 }
@@ -303,7 +324,7 @@ actually come back as `"D#4"` → `"dis'"`. For key signatures with flats, this
 produces wrong enharmonic spellings (e.g. D minor should use Bb not A#).
 
 **v1 approach:** Accept the tonal.js spelling. The LilyPond output will be correct
-*syntactically* even if enharmonically ugly. Tab instruments don't show accidentals
+_syntactically_ even if enharmonically ugly. Tab instruments don't show accidentals
 on the staff, so it only matters for the hidden MIDI staff and `tab-and-staff` notation.
 
 **v2 enhancement:** Add a key-context-aware wrapper that respects the key signature
@@ -319,10 +340,10 @@ a registry mapping instrument IDs to their LilyPond variables:
 
 ```typescript
 type InstrumentLyVars = {
-  include: string;                        // path to .ily file
-  stringTunings: string;                  // LilyPond variable name
-  tabFormat: string;                      // LilyPond variable name
-  diapasons?: string;                     // only for instruments with diapason courses
+  include: string; // path to .ily file
+  stringTunings: string; // LilyPond variable name
+  tabFormat: string; // LilyPond variable name
+  diapasons?: string; // only for instruments with diapason courses
 };
 
 const INSTRUMENT_LY_VARS: Record<string, InstrumentLyVars> = {
@@ -368,6 +389,7 @@ The `\TabStaff \with { ... }` block differs based on whether the instrument has
 diapason courses:
 
 **Instruments WITH diapasons** (baroque lute, theorbo):
+
 ```lilypond
 \new TabStaff \with {
   tablatureFormat = \luteTabFormat
@@ -377,6 +399,7 @@ diapason courses:
 ```
 
 **Instruments WITHOUT diapasons** (classical guitar, renaissance lute, baroque guitar):
+
 ```lilypond
 \new TabStaff \with {
   tablatureFormat = \classicalGuitarTabFormat
@@ -457,14 +480,14 @@ covers exactly what `engrave` needs to generate.
 
 type LyNote = {
   type: "note";
-  pitch: string;          // absolute LilyPond pitch: "d'", "ees", "a,,"
-  duration: string;       // "4", "8", "2.", "16"
+  pitch: string; // absolute LilyPond pitch: "d'", "ees", "a,,"
+  duration: string; // "4", "8", "2.", "16"
   indicators: LyIndicator[];
 };
 
 type LyChord = {
   type: "chord";
-  pitches: string[];      // absolute LilyPond pitches
+  pitches: string[]; // absolute LilyPond pitches
   duration: string;
   indicators: LyIndicator[];
 };
@@ -472,7 +495,7 @@ type LyChord = {
 type LyRest = {
   type: "rest";
   duration: string;
-  spacer: boolean;        // true → "s" (invisible), false → "r"
+  spacer: boolean; // true → "s" (invisible), false → "r"
   indicators: LyIndicator[];
 };
 
@@ -507,23 +530,23 @@ type LyContextType =
 type LyContainer = {
   type: "container";
   context: LyContextType;
-  name?: string;                         // → = "name" in output
-  simultaneous: boolean;                 // true → << >>, false → { }
+  name?: string; // → = "name" in output
+  simultaneous: boolean; // true → << >>, false → { }
   children: (LyLeaf | LyContainer)[];
-  indicators: LyIndicator[];            // before-opening-brace indicators
-  withBlock?: Record<string, string>;    // → \with { key = value ... }
+  indicators: LyIndicator[]; // before-opening-brace indicators
+  withBlock?: Record<string, string>; // → \with { key = value ... }
 };
 
 // === Top-level file ===
 
 type LyFile = {
-  version: string;                       // "2.24.0"
-  includes: string[];                    // \include paths
-  header?: Record<string, string>;       // \header { title = "...", composer = "..." }
-  variables?: Record<string, string>;    // top-level variable definitions
-  score: LyContainer;                    // the \score block
-  layout: boolean;                       // emit \layout { }
-  midi?: { tempo: number };              // emit \midi { \tempo 4 = N }
+  version: string; // "2.24.0"
+  includes: string[]; // \include paths
+  header?: Record<string, string>; // \header { title = "...", composer = "..." }
+  variables?: Record<string, string>; // top-level variable definitions
+  score: LyContainer; // the \score block
+  layout: boolean; // emit \layout { }
+  midi?: { tempo: number }; // emit \midi { \tempo 4 = N }
 };
 ```
 
@@ -629,12 +652,9 @@ function serializeLeaf(leaf: LyLeaf): string {
     if (ind.kind === "slur_end") suffix += ")";
     if (ind.kind === "ornament") suffix += `\\${ind.name}`;
     if (ind.kind === "bar_check") suffix += " |";
-    if (ind.kind === "time_signature")
-      prefix += `\\time ${ind.numerator}/${ind.denominator}\n  `;
-    if (ind.kind === "key_signature")
-      prefix += `\\key ${ind.tonic} \\${ind.mode}\n  `;
-    if (ind.kind === "partial")
-      prefix += `\\partial ${ind.duration}\n  `;
+    if (ind.kind === "time_signature") prefix += `\\time ${ind.numerator}/${ind.denominator}\n  `;
+    if (ind.kind === "key_signature") prefix += `\\key ${ind.tonic} \\${ind.mode}\n  `;
+    if (ind.kind === "partial") prefix += `\\partial ${ind.duration}\n  `;
   }
 
   return prefix + core + suffix;
@@ -667,21 +687,19 @@ Each template strategy is a function that takes resolved music data and returns 
 
 ```typescript
 function buildSoloTab(
-  events: ResolvedEvent[],  // pitches already in LilyPond notation
+  events: ResolvedEvent[], // pitches already in LilyPond notation
   vars: InstrumentLyVars,
-  params: EngraveParams,
+  params: EngraveParams
 ): LyContainer {
-  const musicLeaves = eventsToLeaves(events);        // → LyLeaf[]
-  const musicVoice = lyVoice("Music", musicLeaves);  // → LyContainer
+  const musicLeaves = eventsToLeaves(events); // → LyLeaf[]
+  const musicVoice = lyVoice("Music", musicLeaves); // → LyContainer
 
   const tabStaff = lyContainer("TabStaff", {
     children: [musicVoice],
     withBlock: {
       tablatureFormat: `\\${vars.tabFormat}`,
       stringTunings: `\\${vars.stringTunings}`,
-      ...(vars.diapasons
-        ? { additionalBassStrings: `\\${vars.diapasons}` }
-        : {}),
+      ...(vars.diapasons ? { additionalBassStrings: `\\${vars.diapasons}` } : {}),
     },
   });
 
@@ -710,10 +728,10 @@ function buildSoloTab(
 function buildFrenchTab(
   events: ResolvedEvent[],
   vars: InstrumentLyVars,
-  params: EngraveParams,
+  params: EngraveParams
 ): LyContainer {
   const musicLeaves = eventsToLeaves(events);
-  const rhythmLeaves = eventsToRhythmLeaves(events);  // durations → spacer/note
+  const rhythmLeaves = eventsToRhythmLeaves(events); // durations → spacer/note
 
   const rhythmStaff = lyContainer("RhythmicStaff", {
     children: [lyVoice("Rhythm", rhythmLeaves)],
@@ -727,7 +745,9 @@ function buildFrenchTab(
 
   const tabStaff = lyContainer("TabStaff", {
     children: [lyVoice("Music", musicLeaves)],
-    withBlock: { /* same as solo-tab */ },
+    withBlock: {
+      /* same as solo-tab */
+    },
   });
 
   const midiStaff = buildHiddenMidiStaff(musicLeaves);
@@ -830,12 +850,12 @@ LLM calls engrave(params)
 
 `eventsToLeaves(bars: ResolvedBar[]): LyLeaf[]` iterates bars and events in order:
 
-| Event type | LyLeaf produced |
-|---|---|
-| note (position) | `LyNote { pitch: resolvedLyPitch, duration, indicators: [...] }` |
-| note (pitch) | `LyNote { pitch: scientificToLilyPond(pitch), duration, indicators: [...] }` |
-| chord | `LyChord { pitches: [resolvedLyPitch, ...], duration, indicators: [...] }` |
-| rest | `LyRest { duration, spacer, indicators: [] }` |
+| Event type      | LyLeaf produced                                                              |
+| --------------- | ---------------------------------------------------------------------------- |
+| note (position) | `LyNote { pitch: resolvedLyPitch, duration, indicators: [...] }`             |
+| note (pitch)    | `LyNote { pitch: scientificToLilyPond(pitch), duration, indicators: [...] }` |
+| chord           | `LyChord { pitches: [resolvedLyPitch, ...], duration, indicators: [...] }`   |
+| rest            | `LyRest { duration, spacer, indicators: [] }`                                |
 
 Ties → `{ kind: "tie" }` indicator. Slur start → `{ kind: "slur_start" }`.
 Ornaments → `{ kind: "ornament", name: "trill" }`. Bar boundaries →
@@ -848,6 +868,7 @@ Per-bar `key` and `time` overrides become indicators on the first leaf of that b
 ### Rhythm staff generation (french-tab only)
 
 `eventsToRhythmLeaves(bars: ResolvedBar[]): LyLeaf[]` mirrors the music events:
+
 - Notes and chords → `LyNote` with a fixed dummy pitch (rhythm only, stem + flag)
 - Rests → `LyRest` with `spacer: true` (invisible on the rhythmic staff)
 - Bar checks carry over
@@ -858,21 +879,21 @@ Per-bar `key` and `time` overrides become indicators on the first leaf of that b
 
 ### v1 scope (tab instruments)
 
-| Template ID | Staff layout | Input streams | Instrument constraint |
-|---|---|---|---|
-| `solo-tab` | TabStaff + hidden MIDI Staff | `bars` | Any tab instrument |
-| `french-tab` | RhythmicStaff + TabStaff + hidden MIDI Staff | `bars` (rhythm auto-generated) | Any tab instrument |
-| `tab-and-staff` | Staff (treble_8) + TabStaff | `bars` | Any tab instrument |
-| `voice-and-tab` | Staff (voice+lyrics) + TabStaff | `melody` + `bars` | Any tab instrument |
+| Template ID     | Staff layout                                 | Input streams                  | Instrument constraint |
+| --------------- | -------------------------------------------- | ------------------------------ | --------------------- |
+| `solo-tab`      | TabStaff + hidden MIDI Staff                 | `bars`                         | Any tab instrument    |
+| `french-tab`    | RhythmicStaff + TabStaff + hidden MIDI Staff | `bars` (rhythm auto-generated) | Any tab instrument    |
+| `tab-and-staff` | Staff (treble_8) + TabStaff                  | `bars`                         | Any tab instrument    |
+| `voice-and-tab` | Staff (voice+lyrics) + TabStaff              | `melody` + `bars`              | Any tab instrument    |
 
 ### v2 scope (deferred — schema extensions needed)
 
-| Template ID | What's missing |
-|---|---|
-| `grand-staff` | Needs `upper`/`lower` bar streams for PianoStaff split |
-| `continuo` | Needs `figures` field for `\figuremode` |
-| `satb` | Needs 4 independent voice streams (soprano, alto, tenor, bass) |
-| `voice-and-piano` | Needs `melody` + `upper`/`lower` piano streams |
+| Template ID       | What's missing                                                 |
+| ----------------- | -------------------------------------------------------------- |
+| `grand-staff`     | Needs `upper`/`lower` bar streams for PianoStaff split         |
+| `continuo`        | Needs `figures` field for `\figuremode`                        |
+| `satb`            | Needs 4 independent voice streams (soprano, alto, tenor, bass) |
+| `voice-and-piano` | Needs `melody` + `upper`/`lower` piano streams                 |
 
 These templates require schema extensions that would complicate v1. The LLM can still
 use them by writing raw LilyPond (the current workflow) until v2 adds support.
@@ -882,20 +903,22 @@ use them by writing raw LilyPond (the current workflow) until v2 adds support.
 ## What the LLM's workflow becomes
 
 **Before (current):**
+
 1. LLM calls `tabulate` to find positions
 2. LLM calls `voicings` for chords
-3. LLM *hand-writes* LilyPond source (error-prone)
+3. LLM _hand-writes_ LilyPond source (error-prone)
 4. LLM calls `compile` — fails
 5. LLM reads error, rewrites LilyPond — fails again
 6. Retry limit reached, reports failure
 
 **After:**
+
 1. LLM calls `tabulate` to find positions for each note
 2. LLM calls `voicings` for chords
 3. LLM calls `diapasons` if the piece needs a specific diapason scheme
 4. LLM calls `engrave` with structured position/pitch data → validated LilyPond source
 5. LLM calls `compile` with that source → success
-6. If compile fails, the error is in the *music* (wrong notes, bad rhythm), not syntax
+6. If compile fails, the error is in the _music_ (wrong notes, bad rhythm), not syntax
 
 The compile retry guard remains as a safety net but should rarely fire.
 
@@ -903,20 +926,20 @@ The compile retry guard remains as a safety net but should rarely fire.
 
 ## Error handling
 
-| Error type | When | Response |
-|---|---|---|
-| Unknown instrument | ID not in `INSTRUMENT_LY_VARS` | Reject with list of valid IDs |
-| Unknown template | Template ID not in v1 scope | Reject with list of valid IDs |
-| Instrument/template mismatch | Non-tab instrument with tab template | Reject with explanation |
-| Course out of range | course < 1 or > courseCount | Reject with valid range |
-| Fret out of range | fret > maxFrets or diapason fretted | Reject with constraint detail |
-| Stretch violation | Bar exceeds max stretch | **Warning** (non-fatal) |
-| Unparseable pitch | Scientific notation doesn't parse | Reject with example format |
-| Pitch out of range | Pitch below/above instrument range | Reject with instrument range |
-| Missing events | Empty `events` array in a bar | Reject |
-| Invalid duration | Not a valid LilyPond duration | Reject with examples |
-| Melody/bars bar count mismatch | `melody.bars.length ≠ bars.length` | Reject |
-| Missing melody for voice-and-tab | Template requires `melody` field | Reject |
+| Error type                       | When                                 | Response                      |
+| -------------------------------- | ------------------------------------ | ----------------------------- |
+| Unknown instrument               | ID not in `INSTRUMENT_LY_VARS`       | Reject with list of valid IDs |
+| Unknown template                 | Template ID not in v1 scope          | Reject with list of valid IDs |
+| Instrument/template mismatch     | Non-tab instrument with tab template | Reject with explanation       |
+| Course out of range              | course < 1 or > courseCount          | Reject with valid range       |
+| Fret out of range                | fret > maxFrets or diapason fretted  | Reject with constraint detail |
+| Stretch violation                | Bar exceeds max stretch              | **Warning** (non-fatal)       |
+| Unparseable pitch                | Scientific notation doesn't parse    | Reject with example format    |
+| Pitch out of range               | Pitch below/above instrument range   | Reject with instrument range  |
+| Missing events                   | Empty `events` array in a bar        | Reject                        |
+| Invalid duration                 | Not a valid LilyPond duration        | Reject with examples          |
+| Melody/bars bar count mismatch   | `melody.bars.length ≠ bars.length`   | Reject                        |
+| Missing melody for voice-and-tab | Template requires `melody` field     | Reject                        |
 
 ---
 
@@ -924,29 +947,29 @@ The compile retry guard remains as a safety net but should rarely fire.
 
 ### New files
 
-| File | Purpose |
-|---|---|
-| `src/server/lib/ly-tree.ts` | LyTree types (`LyLeaf`, `LyContainer`, `LyFile`, `LyIndicator`) + serializer (`serializeFile`) |
-| `src/server/lib/engrave.ts` | Core codegen engine — validation, pitch resolution, tree building |
-| `src/server/lib/engrave-route.ts` | Express route handler for `/api/engrave` |
-| `src/server/lib/ly-registry.ts` | `INSTRUMENT_LY_VARS` registry |
-| `src/server/lib/template-strategies.ts` | `buildSoloTab`, `buildFrenchTab`, `buildTabAndStaff`, `buildVoiceAndTab` |
-| `tests/ly-tree.test.ts` | Serializer unit tests (containers, leaves, indicators, nesting) |
-| `tests/engrave.test.ts` | End-to-end codegen tests (input schema → LilyPond output) |
-| `tests/ly-registry.test.ts` | Registry coverage |
+| File                                    | Purpose                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/server/lib/ly-tree.ts`             | LyTree types (`LyLeaf`, `LyContainer`, `LyFile`, `LyIndicator`) + serializer (`serializeFile`) |
+| `src/server/lib/engrave.ts`             | Core codegen engine — validation, pitch resolution, tree building                              |
+| `src/server/lib/engrave-route.ts`       | Express route handler for `/api/engrave`                                                       |
+| `src/server/lib/ly-registry.ts`         | `INSTRUMENT_LY_VARS` registry                                                                  |
+| `src/server/lib/template-strategies.ts` | `buildSoloTab`, `buildFrenchTab`, `buildTabAndStaff`, `buildVoiceAndTab`                       |
+| `tests/ly-tree.test.ts`                 | Serializer unit tests (containers, leaves, indicators, nesting)                                |
+| `tests/engrave.test.ts`                 | End-to-end codegen tests (input schema → LilyPond output)                                      |
+| `tests/ly-registry.test.ts`             | Registry coverage                                                                              |
 
 ### Modified files
 
-| File | Change |
-|---|---|
-| `src/lib/pitch.ts` | Add `scientificToLilyPond()`, `octaveToLyMark()`, extract shared `PITCH_TO_LILYPOND` |
-| `src/diapasons.ts` | Import `PITCH_TO_LILYPOND` from `src/lib/pitch.ts` instead of local copy |
-| `src/server-tools.ts` | Add `engraveTool` via `createServerTool` hitting `/api/engrave` |
-| `src/server/index.ts` | Mount `/api/engrave` route |
-| `src/main.ts` | Add `engraveTool` to `vellumTools` array |
-| `src/types.ts` | Add `EngraveParams`, `EngraveResult`, event schemas |
-| `src/prompts.ts` | Update workflow to prefer `engrave` for tab instruments |
-| `tests/pitch.test.ts` | Add `scientificToLilyPond()` test cases |
+| File                  | Change                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `src/lib/pitch.ts`    | Add `scientificToLilyPond()`, `octaveToLyMark()`, extract shared `PITCH_TO_LILYPOND` |
+| `src/diapasons.ts`    | Import `PITCH_TO_LILYPOND` from `src/lib/pitch.ts` instead of local copy             |
+| `src/server-tools.ts` | Add `engraveTool` via `createServerTool` hitting `/api/engrave`                      |
+| `src/server/index.ts` | Mount `/api/engrave` route                                                           |
+| `src/main.ts`         | Add `engraveTool` to `vellumTools` array                                             |
+| `src/types.ts`        | Add `EngraveParams`, `EngraveResult`, event schemas                                  |
+| `src/prompts.ts`      | Update workflow to prefer `engrave` for tab instruments                              |
+| `tests/pitch.test.ts` | Add `scientificToLilyPond()` test cases                                              |
 
 ### NOT modified
 
@@ -958,7 +981,7 @@ The compile retry guard remains as a safety net but should rarely fire.
 
 ## What this does NOT do
 
-- **Arrangement intelligence.** The LLM still decides *what* to arrange and *how*.
+- **Arrangement intelligence.** The LLM still decides _what_ to arrange and _how_.
   `engrave` is a codegen tool, not a composition tool.
 - **Replace compile.** You still call `compile` on the output. `engrave` produces
   source; `compile` produces SVG/PDF/MIDI.

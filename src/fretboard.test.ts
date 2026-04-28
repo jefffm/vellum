@@ -13,10 +13,7 @@ function guitarModel(): InstrumentModel {
 
 describe("renderFretboardSvg", () => {
   it("renders SVG with a single fretted position", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 2, quality: "low_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 2, quality: "low_fret" }], luteModel());
 
     expect(result.svg).toContain("<svg");
     expect(result.svg).toContain("</svg>");
@@ -39,38 +36,26 @@ describe("renderFretboardSvg", () => {
   });
 
   it("renders open string as hollow circle", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 0, quality: "open" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 0, quality: "open" }], luteModel());
 
     expect(result.svg).toContain('fill="none"');
     expect(result.svg).toContain('stroke="#333"');
   });
 
   it("renders fretted position as filled circle", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 3, quality: "low_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 3, quality: "low_fret" }], luteModel());
 
     expect(result.svg).toContain('fill="#333"');
   });
 
   it("shows frets 0-4 for all-open positions", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 0, quality: "open" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 0, quality: "open" }], luteModel());
 
     expect(result.fretsShown).toBe(4);
   });
 
   it("shows only relevant fret range for high positions", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 6, quality: "high_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 6, quality: "high_fret" }], luteModel());
 
     // Should show a range around fret 6, not start from 0
     expect(result.fretsShown).toBeGreaterThanOrEqual(3);
@@ -86,10 +71,7 @@ describe("renderFretboardSvg", () => {
   });
 
   it("includes fret labels as text elements", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 2, quality: "low_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 2, quality: "low_fret" }], luteModel());
     // Should have fret number labels
     expect(result.svg).toContain("<text");
   });
@@ -126,10 +108,7 @@ describe("renderFretboardSvg", () => {
 
   it("clamps fret range to instrument maximum", () => {
     // Baroque lute has 8 frets. Position at fret 8 should not show frets > 8.
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 8, quality: "high_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 8, quality: "high_fret" }], luteModel());
 
     // Check that no fret label exceeds 8
     const fretLabels = result.svg.match(/<text[^>]*>(\d+)<\/text>/g) ?? [];
@@ -156,10 +135,7 @@ describe("renderFretboardSvg", () => {
   });
 
   it("produces reasonable SVG dimensions", () => {
-    const result = renderFretboardSvg(
-      [{ course: 1, fret: 2, quality: "low_fret" }],
-      luteModel()
-    );
+    const result = renderFretboardSvg([{ course: 1, fret: 2, quality: "low_fret" }], luteModel());
 
     const viewBoxMatch = result.svg.match(/viewBox="0 0 (\d+) (\d+)"/);
     expect(viewBoxMatch).toBeTruthy();

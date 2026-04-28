@@ -31,7 +31,7 @@ describe("createValidateRoute", () => {
     servers.push(server);
 
     const response = await postValidate(server, {
-      source: '\\version "2.24.0" { c\'4 d\' e\' f\' }',
+      source: "\\version \"2.24.0\" { c'4 d' e' f' }",
     });
     const json = (await response.json()) as ApiEnvelope<ValidateResponse>;
 
@@ -95,9 +95,7 @@ describe("createValidateRoute", () => {
   });
 
   it("returns generic error on non-zero exit with no parseable errors", async () => {
-    const run = vi.fn(async () =>
-      subprocessResult({ exitCode: 1, stderr: "" })
-    );
+    const run = vi.fn(async () => subprocessResult({ exitCode: 1, stderr: "" }));
     const server = await listen(createValidateRoute({ runner: { run } }));
     servers.push(server);
 

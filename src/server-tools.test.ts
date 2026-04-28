@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
+import { analyzeTool, compileTool, engraveTool, lintTool } from "./server-tools.js";
 
 describe("server fetch wrapper tools", () => {
   afterEach(() => {
@@ -77,6 +77,31 @@ describe("server fetch wrapper tools", () => {
       expect(result.content[0].text).toContain("tabulate/voicings/check_playability");
       expect(result.content[0].text).toContain("explicit tab-first course/fret mappings");
     }
+  });
+
+  it("formats engrave responses with warnings", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({
+          ok: true,
+          data: { source: '\\\\version \\"2.24.0\\"', warnings: ["wide stretch"] },
+        })
+      )
+    );
+
+    const result = await engraveTool.execute("call-1", {
+      instrument: "classical-guitar-6",
+      template: "solo-tab",
+      bars: [{ events: [{ type: "note", input: "pitch", pitch: "C4", duration: "4" }] }],
+    });
+
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
+      expect(result.content[0].text).toContain("Engraved LilyPond source successfully");
+      expect(result.content[0].text).toContain("Warnings: wide stretch");
+    }
+    expect(result.details.source).toContain("2.24.0");
   });
 
   it("formats analyze responses with key, voices, and chords", async () => {
@@ -163,6 +188,9 @@ describe("server fetch wrapper tools", () => {
       if (endpoint === "/api/compile") {
         return jsonResponse({ ok: true, data: { errors: [] } });
       }
+      if (endpoint === "/api/engrave") {
+        return jsonResponse({ ok: true, data: { source: "", warnings: [] } });
+      }
       if (endpoint === "/api/analyze") {
         return jsonResponse({
           ok: true,
@@ -174,10 +202,19 @@ describe("server fetch wrapper tools", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await compileTool.execute("compile-call", { source: "{ c'4 }" }, controller.signal);
+    await engraveTool.execute(
+      "engrave-call",
+      {
+        instrument: "classical-guitar-6",
+        template: "solo-tab",
+        bars: [{ events: [{ type: "note", input: "pitch", pitch: "C4", duration: "4" }] }],
+      },
+      controller.signal
+    );
     await analyzeTool.execute("analyze-call", { source: "<score-partwise/>" }, controller.signal);
     await lintTool.execute("lint-call", { source: "<score-partwise/>" }, controller.signal);
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
     for (const call of fetchMock.mock.calls) {
       expect(call[1]).toEqual(expect.objectContaining({ signal: controller.signal }));
     }

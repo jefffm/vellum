@@ -5,17 +5,18 @@ function installBrowserUiStubs(): void {
 }
 
 describe("agent conversation (mocked)", () => {
-  it("agent has 10 tools with correct names", async () => {
+  it("agent has 11 tools with correct names", async () => {
     installBrowserUiStubs();
     const { vellumTools } = await import("../../src/main.js");
 
-    expect(vellumTools).toHaveLength(10);
+    expect(vellumTools).toHaveLength(11);
     expect(vellumTools.map((t) => t.name)).toEqual([
       "tabulate",
       "voicings",
       "check_playability",
       "theory",
       "compile",
+      "engrave",
       "analyze",
       "lint",
       "transpose",
@@ -90,14 +91,15 @@ describe("agent conversation (mocked)", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            ok: true,
-            data: { svg: "<svg/>", errors: [], barCount: 8, voiceCount: 3 },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              ok: true,
+              data: { svg: "<svg/>", errors: [], barCount: 8, voiceCount: 3 },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
       )
     );
 
@@ -120,16 +122,17 @@ describe("agent conversation (mocked)", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            ok: true,
-            data: {
-              errors: [{ bar: 1, beat: 0, line: 5, type: "lilypond", message: "syntax error" }],
-            },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              ok: true,
+              data: {
+                errors: [{ bar: 1, beat: 0, line: 5, type: "lilypond", message: "syntax error" }],
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
       )
     );
 

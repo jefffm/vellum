@@ -11,7 +11,13 @@ describe("diapasons tool", () => {
     expect(result.details.schemeName).toBe("d_minor");
     expect(result.details.courses).toHaveLength(7);
     expect(result.details.courses.map((c) => c.pitch)).toEqual([
-      "G", "F", "Eb", "D", "C", "Bb", "A",
+      "G",
+      "F",
+      "Eb",
+      "D",
+      "C",
+      "Bb",
+      "A",
     ]);
   });
 
@@ -22,9 +28,7 @@ describe("diapasons tool", () => {
     });
 
     expect(result.details.schemeName).toBe("a_minor");
-    expect(result.details.courses.map((c) => c.pitch)).toEqual([
-      "G", "F", "E", "D", "C", "B", "A",
-    ]);
+    expect(result.details.courses.map((c) => c.pitch)).toEqual(["G", "F", "E", "D", "C", "B", "A"]);
   });
 
   it("returns d_major scheme with F# and C#", async () => {
@@ -45,9 +49,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe(
-      "\\stringTuning <g, f, ees, d, c, bes,, a,,>"
-    );
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, f, ees, d, c, bes,, a,,>");
   });
 
   it("generates correct LilyPond syntax for a_minor", async () => {
@@ -56,9 +58,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe(
-      "\\stringTuning <g, f, e, d, c, b,, a,,>"
-    );
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, f, e, d, c, b,, a,,>");
   });
 
   it("generates correct LilyPond syntax for d_major", async () => {
@@ -67,9 +67,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe(
-      "\\stringTuning <g, fis, e, d, cis, b,, a,,>"
-    );
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, fis, e, d, cis, b,, a,,>");
   });
 
   it("returns closest match with warning for unknown key", async () => {

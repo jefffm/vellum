@@ -99,9 +99,7 @@ export function renderFretboardSvg(
   for (let f = 0; f <= fretsShown; f++) {
     const fretNumber = minFret + f;
     const x = nutX + f * FRET_SPACING;
-    elements.push(
-      `<text x="${x}" y="12" font-size="10" text-anchor="middle">${fretNumber}</text>`
-    );
+    elements.push(`<text x="${x}" y="12" font-size="10" text-anchor="middle">${fretNumber}</text>`);
   }
 
   // Position markers
@@ -118,9 +116,7 @@ export function renderFretboardSvg(
       // Fretted: filled circle between fret lines
       const fretOffset = pos.fret - minFret;
       const cx = nutX + (fretOffset - 0.5) * FRET_SPACING;
-      elements.push(
-        `<circle cx="${cx}" cy="${y}" r="${MARKER_RADIUS}" fill="#333" />`
-      );
+      elements.push(`<circle cx="${cx}" cy="${y}" r="${MARKER_RADIUS}" fill="#333" />`);
     }
   }
 
@@ -136,8 +132,7 @@ export function renderFretboardSvg(
 export const fretboardTool: AgentTool<typeof FretboardParamsSchema, FretboardResult> = {
   name: "fretboard",
   label: "Fretboard",
-  description:
-    "Render an SVG fretboard diagram showing finger positions on the instrument.",
+  description: "Render an SVG fretboard diagram showing finger positions on the instrument.",
   parameters: FretboardParamsSchema,
   execute: async (_toolCallId, params) =>
     instrumentTool(params.instrument, (model) => {

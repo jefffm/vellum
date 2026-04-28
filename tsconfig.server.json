@@ -7,9 +7,5 @@
     "declaration": false,
     "sourceMap": true
   },
-  "include": [
-    "src/server/**/*.ts",
-    "src/lib/**/*.ts",
-    "src/types.ts"
-  ]
+  "include": ["src/server/**/*.ts", "src/lib/**/*.ts", "src/types.ts"]
 }

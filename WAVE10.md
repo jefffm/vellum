@@ -4,11 +4,11 @@
 
 2 beads that make Vellum work in a browser. After this wave, you can open the app, chat with the LLM, and see compiled notation inline.
 
-| # | Bead | Title | Pri |
-|---|------|-------|-----|
-| 1 | l88.3 | Agent wiring (main.ts) | P0 |
-| 2 | l88.2 | Tool renderers (renderers.ts) | P1 |
-| — | housekeeping | Close parent epics d0c, gwf | — |
+| #   | Bead         | Title                         | Pri |
+| --- | ------------ | ----------------------------- | --- |
+| 1   | l88.3        | Agent wiring (main.ts)        | P0  |
+| 2   | l88.2        | Tool renderers (renderers.ts) | P1  |
+| —   | housekeeping | Close parent epics d0c, gwf   | —   |
 
 ---
 
@@ -45,9 +45,9 @@ cd ~/workspace/vellum && nix develop --command bash -c 'npm install && npm run t
 
 Update `.beads/issues.jsonl` — set status to `"closed"` for these parent epics where all children are done:
 
-| Bead | Title | Why |
-|------|-------|-----|
-| vellum-d0c | Epic 5: Express Server Core | All sub-beads closed (d0c.4, d0c.5 closed in wave 9) |
+| Bead       | Title                                | Why                                                  |
+| ---------- | ------------------------------------ | ---------------------------------------------------- |
+| vellum-d0c | Epic 5: Express Server Core          | All sub-beads closed (d0c.4, d0c.5 closed in wave 9) |
 | vellum-gwf | Epic 6: LilyPond Compilation Service | All sub-beads closed (gwf.3, gwf.4 closed in wave 9) |
 
 ---
@@ -84,7 +84,7 @@ import type { InstrumentProfile } from "./types.js";
 
 import { buildSystemPrompt } from "./prompts.js";
 import { loadAllBrowserProfiles } from "./lib/browser-profiles.js";
-import { tools } from "./tools.js";  // Pre-assembled array of all 10 tools
+import { tools } from "./tools.js"; // Pre-assembled array of all 10 tools
 import { registerRenderers } from "./renderers.js";
 
 import "./styles.css";
@@ -134,6 +134,7 @@ main().catch(console.error);
 The server's `POST /api/stream` route handles LLM API key resolution from environment variables. The browser sends the model provider/id and message context; the server adds the API key and proxies to the LLM.
 
 Use `streamProxy` from `@mariozechner/pi-agent-core`. It:
+
 - POSTs `{ model, context, options }` to the `proxyUrl`
 - Reads Server-Sent Events back
 - Returns an async iterable of `AssistantMessageEvent`
@@ -163,6 +164,7 @@ Set a sensible default model in `initialState.model`. Use `{ provider: "anthropi
 The `ChatPanel` is a Lit web component (already in `index.html` as `<chat-panel>`). It has a `setAgent(agent, config?)` method. The config is optional — the minimal call is just `chatPanel.setAgent(agent)`.
 
 Optional config properties:
+
 - `onApiKeyRequired?: (provider: string) => Promise<boolean>` — called when the stream proxy returns a 500 (no API key). Could show a prompt. For now, omit.
 - `toolsFactory?` — creates additional tools. Not needed (we pass tools via Agent).
 
@@ -173,6 +175,7 @@ Wrap `main()` in try/catch. If profile loading fails or the ChatPanel element is
 ### HTML (no changes needed)
 
 The existing `index.html` already has:
+
 ```html
 <chat-panel></chat-panel>
 <div id="artifacts-panel" aria-label="Artifacts panel"></div>
@@ -238,8 +241,8 @@ interface ToolRenderer<TParams = any, TDetails = any> {
 
 // ToolRenderResult:
 interface ToolRenderResult {
-  content: TemplateResult;  // Lit html`` tagged template
-  isCustom: boolean;        // true = use this rendering, false = fall back to default JSON
+  content: TemplateResult; // Lit html`` tagged template
+  isCustom: boolean; // true = use this rendering, false = fall back to default JSON
 }
 ```
 
@@ -255,11 +258,12 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 #### 1. compile renderer
 
 The compile tool returns `CompileResult` as `details`:
+
 ```typescript
 interface CompileResult {
-  svg?: string;      // Raw SVG markup (can be very large)
-  pdf?: string;      // Base64 PDF
-  midi?: string;     // Base64 MIDI
+  svg?: string; // Raw SVG markup (can be very large)
+  pdf?: string; // Base64 PDF
+  midi?: string; // Base64 MIDI
   errors: CompileError[];
   barCount?: number;
   voiceCount?: number;
@@ -267,6 +271,7 @@ interface CompileResult {
 ```
 
 **Renderer behavior:**
+
 - If `result.details.svg` exists and errors are empty: render the SVG inline in a scrollable container
 - If errors exist: render error list with line numbers
 - While streaming (`isStreaming === true`): show a "Compiling..." placeholder
@@ -291,7 +296,7 @@ registerToolRenderer("compile", {
           <div class="compile-errors">
             <strong>${details.errors.length} error(s):</strong>
             <ul>
-              ${details.errors.map(e => html`<li>Line ${e.line}: ${e.message}</li>`)}
+              ${details.errors.map((e) => html`<li>Line ${e.line}: ${e.message}</li>`)}
             </ul>
           </div>
         `,
@@ -302,7 +307,10 @@ registerToolRenderer("compile", {
     if (details.svg) {
       return {
         content: html`
-          <div class="compile-result" style="overflow-x:auto; max-width:100%; border:1px solid #e0e0e0; border-radius:8px; padding:12px; background:#fff;">
+          <div
+            class="compile-result"
+            style="overflow-x:auto; max-width:100%; border:1px solid #e0e0e0; border-radius:8px; padding:12px; background:#fff;"
+          >
             ${unsafeHTML(details.svg)}
           </div>
         `,
@@ -330,7 +338,10 @@ registerToolRenderer("fretboard", {
     if (typeof svg === "string" && svg.length > 0) {
       return {
         content: html`
-          <div class="fretboard-result" style="max-width:320px; padding:8px; border:1px solid #e0e0e0; border-radius:8px; background:#fff;">
+          <div
+            class="fretboard-result"
+            style="max-width:320px; padding:8px; border:1px solid #e0e0e0; border-radius:8px; background:#fff;"
+          >
             ${unsafeHTML(svg)}
           </div>
         `,
@@ -346,6 +357,7 @@ registerToolRenderer("fretboard", {
 #### 3. check_playability renderer
 
 The check_playability tool returns `PlayabilityResult` as details:
+
 ```typescript
 interface PlayabilityResult {
   violations: Violation[];
@@ -358,7 +370,10 @@ interface PlayabilityResult {
 registerToolRenderer("check_playability", {
   render(params, result, isStreaming) {
     if (isStreaming) {
-      return { content: html`<div class="tool-status">Checking playability…</div>`, isCustom: true };
+      return {
+        content: html`<div class="tool-status">Checking playability…</div>`,
+        isCustom: true,
+      };
     }
 
     const details = result?.details as PlayabilityResult | undefined;
@@ -376,9 +391,14 @@ registerToolRenderer("check_playability", {
     if (details.violations.length === 0) {
       return {
         content: html`
-          <div class="playability-result" style="padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px;">
+          <div
+            class="playability-result"
+            style="padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px;"
+          >
             <span style="color:#4caf50; font-weight:600;">✓ Playable</span>
-            <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; color:#fff; background:${color}; margin-left:8px;">
+            <span
+              style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; color:#fff; background:${color}; margin-left:8px;"
+            >
               ${details.difficulty}
             </span>
           </div>
@@ -389,15 +409,22 @@ registerToolRenderer("check_playability", {
 
     return {
       content: html`
-        <div class="playability-result" style="padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px;">
+        <div
+          class="playability-result"
+          style="padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px;"
+        >
           <div style="margin-bottom:6px;">
-            <span style="color:#f44336; font-weight:600;">⚠ ${details.violations.length} issue(s)</span>
-            <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; color:#fff; background:${color}; margin-left:8px;">
+            <span style="color:#f44336; font-weight:600;"
+              >⚠ ${details.violations.length} issue(s)</span
+            >
+            <span
+              style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; color:#fff; background:${color}; margin-left:8px;"
+            >
               ${details.difficulty}
             </span>
           </div>
           <ul style="margin:0; padding-left:20px; font-size:0.9em;">
-            ${details.violations.map(v => html`<li>Bar ${v.bar}: ${v.description}</li>`)}
+            ${details.violations.map((v) => html`<li>Bar ${v.bar}: ${v.description}</li>`)}
           </ul>
         </div>
       `,
@@ -489,14 +516,17 @@ Or they can be done together since they reference each other.
 ## Key Gotchas
 
 1. **Tool export names:** The bead description uses `voicingsTool` and `checkPlayabilityTool` but the actual exports in `src/tools.ts` might be named differently. Check with:
+
    ```bash
    grep 'export const' src/tools.ts
    ```
+
    Use the actual exported names.
 
 2. **Lit imports in Node tests:** `lit` and `lit/directives/unsafe-html.js` may need special handling in Vitest. If imports fail, add them to `optimizeDeps.include` in `vite.config.ts` or configure Vitest to handle them. Alternatively, skip Lit-dependent assertions in Node tests and focus on registration/isCustom checks.
 
 3. **`streamProxy` import:** The function is exported from `@mariozechner/pi-agent-core`. Verify:
+
    ```bash
    grep 'streamProxy' node_modules/@mariozechner/pi-agent-core/dist/index.d.ts
    ```

@@ -1,3 +1,4 @@
+import { EngraveParamsSchema, type EngraveResult } from "./lib/engrave-schema.js";
 import { createServerTool } from "./lib/create-server-tool.js";
 import {
   AnalyzeParamsSchema,
@@ -35,6 +36,26 @@ export const compileTool = createServerTool<typeof CompileParamsSchema, CompileR
     if (result.barCount) parts.push(`${result.barCount} bars.`);
     if (result.voiceCount) parts.push(`${result.voiceCount} voices.`);
     parts.push("No errors.");
+    return parts.join(" ");
+  },
+});
+
+export const engraveTool = createServerTool<typeof EngraveParamsSchema, EngraveResult>({
+  name: "engrave",
+  label: "Engrave",
+  description:
+    "Generate valid LilyPond source from structured musical data (positions, pitches, durations). " +
+    "Use after tabulate/voicings to produce notation without hand-writing LilyPond syntax. " +
+    "Validates all input, resolves pitches, and builds output matching the chosen template.",
+  parameters: EngraveParamsSchema,
+  endpoint: "/api/engrave",
+  formatContent: (result) => {
+    const parts = ["Engraved LilyPond source successfully."];
+    if (result.warnings.length > 0) {
+      parts.push(`Warnings: ${result.warnings.join("; ")}`);
+    } else {
+      parts.push("No warnings.");
+    }
     return parts.join(" ");
   },
 });

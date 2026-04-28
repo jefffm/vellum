@@ -17,6 +17,7 @@ Create `src/server/lib/theory-route.ts` with three route factories, then wire th
 ### Pattern to follow
 
 Look at `src/server/lib/compile-route.ts` — it's the reference implementation. Same structure:
+
 - Factory function returns `RequestHandler`
 - Uses `createApiRoute` from `./create-route.js` for validation + envelope
 - Uses `SubprocessRunner` from `./subprocess.js` for process management
@@ -28,17 +29,20 @@ Look at `src/server/lib/compile-route.ts` — it's the reference implementation.
 Three routes that call `python3 src/server/theory.py <subcommand>` with MusicXML on stdin, parse JSON from stdout:
 
 **POST /api/chordify**
+
 - Input: `{ source: string }` — needs a new `ChordifyParamsSchema` in `types.ts` (just `source: Type.String()`)
 - Spawns: `python3 theory.py chordify`, pipes `source` to stdin
 - Returns: `ChordAnalysis[]` (schema already exists in types.ts)
 - theory.py reads stdin, writes JSON to stdout
 
 **POST /api/analyze**
+
 - Input: `AnalyzeParams` (schema exists — `{ source, format? }`)
 - Spawns: `python3 theory.py analyze`, pipes `source` to stdin
 - Returns: `AnalysisResult` (schema exists)
 
 **POST /api/lint**
+
 - Input: `LintParams` (schema exists — `{ source, format?, rules? }`)
 - Spawns: `python3 theory.py lint`, pipes `source` to stdin
 - Returns: `{ violations: LintViolation[] }` (schema exists)
@@ -62,6 +66,7 @@ Option 1 is preferred. If you go with option 2, still use `spawn` (not `exec`/`e
 ### Wiring into index.ts
 
 Add to `createApiRouter()` in `src/server/index.ts`:
+
 ```ts
 router.post("/chordify", createChordifyRoute());
 router.post("/analyze", createAnalyzeRoute());
@@ -71,6 +76,7 @@ router.post("/lint", createLintRoute());
 ### Tests — `src/server/lib/theory-route.test.ts`
 
 Mock SubprocessRunner (or the spawn call) to avoid needing music21 in CI:
+
 - POST /api/chordify with source → mock returns valid ChordAnalysis[] JSON → verify response
 - POST /api/analyze with source → mock returns valid AnalysisResult JSON → verify response
 - POST /api/lint with source → mock returns violations JSON → verify response
@@ -81,6 +87,7 @@ Mock SubprocessRunner (or the spawn call) to avoid needing music21 in CI:
 Also add tests to `src/server/index.test.ts` for the route registration (verify routes exist).
 
 ### Close bead when done
+
 ```bash
 br close vellum-8zf.2 -r "Theory routes implemented in theory-route.ts, wired into index.ts, tests passing"
 ```
@@ -94,6 +101,7 @@ Create `src/server-tools.ts` with three tools built using `createServerTool` fro
 ### Pattern
 
 `createServerTool` already handles:
+
 - fetch with JSON body
 - AbortSignal
 - Error unwrapping from `{ ok, data/error }` envelope
@@ -112,7 +120,7 @@ export const compileTool = createServerTool<typeof CompileParamsSchema, CompileR
   endpoint: "/api/compile",
   formatContent: (result) => {
     if (result.errors.length > 0) {
-      return `Compilation failed with ${result.errors.length} error(s):\n${result.errors.map(e => `  Line ${e.line}: ${e.message}`).join("\n")}`;
+      return `Compilation failed with ${result.errors.length} error(s):\n${result.errors.map((e) => `  Line ${e.line}: ${e.message}`).join("\n")}`;
     }
     const parts = ["Compiled successfully."];
     if (result.barCount) parts.push(`${result.barCount} bars.`);
@@ -129,16 +137,16 @@ export const compileTool = createServerTool<typeof CompileParamsSchema, CompileR
 export const analyzeTool = createServerTool<typeof AnalyzeParamsSchema, AnalysisResult>({
   name: "analyze",
   label: "Analyze",
-  description: "Analyze a MusicXML score — detect key, time signature, voice ranges, and Roman numeral chord progression.",
+  description:
+    "Analyze a MusicXML score — detect key, time signature, voice ranges, and Roman numeral chord progression.",
   parameters: AnalyzeParamsSchema,
   endpoint: "/api/analyze",
   formatContent: (result) => {
-    const lines = [
-      `Key: ${result.key}`,
-      `Time: ${result.timeSignature}`,
-    ];
+    const lines = [`Key: ${result.key}`, `Time: ${result.timeSignature}`];
     if (result.voices.length > 0) {
-      lines.push(`Voices: ${result.voices.map(v => `${v.name} (${v.lowest}–${v.highest})`).join(", ")}`);
+      lines.push(
+        `Voices: ${result.voices.map((v) => `${v.name} (${v.lowest}–${v.highest})`).join(", ")}`
+      );
     }
     if (result.chords.length > 0) {
       lines.push("Chord progression:");
@@ -165,7 +173,8 @@ export const analyzeTool = createServerTool<typeof AnalyzeParamsSchema, Analysis
 export const lintTool = createServerTool<typeof LintParamsSchema, { violations: LintViolation[] }>({
   name: "lint",
   label: "Lint",
-  description: "Check a passage for voice-leading violations: parallel fifths/octaves, voice crossing, spacing, unresolved leading tones.",
+  description:
+    "Check a passage for voice-leading violations: parallel fifths/octaves, voice crossing, spacing, unresolved leading tones.",
   parameters: LintParamsSchema,
   endpoint: "/api/lint",
   formatContent: (result) => {
@@ -173,8 +182,8 @@ export const lintTool = createServerTool<typeof LintParamsSchema, { violations: 
       return "No voice leading violations found. Passage is clean.";
     }
     const header = `${result.violations.length} violation(s) found:`;
-    const items = result.violations.map(v =>
-      `  Bar ${v.bar}, beat ${v.beat}: ${v.description} [${v.voices.join(", ")}]`
+    const items = result.violations.map(
+      (v) => `  Bar ${v.bar}, beat ${v.beat}: ${v.description} [${v.voices.join(", ")}]`
     );
     return [header, ...items].join("\n");
   },
@@ -184,18 +193,25 @@ export const lintTool = createServerTool<typeof LintParamsSchema, { violations: 
 ### Register in tools array
 
 Update `src/tools.ts` to import and add these to the `tools` export:
+
 ```ts
 import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
 
 export const tools = [
-  tabulateTool, voicingsTool, checkPlayabilityTool, theoryTool,
-  compileTool, analyzeTool, lintTool,
+  tabulateTool,
+  voicingsTool,
+  checkPlayabilityTool,
+  theoryTool,
+  compileTool,
+  analyzeTool,
+  lintTool,
 ];
 ```
 
 ### Tests — `src/server-tools.test.ts`
 
 Use `vi.stubGlobal("fetch", ...)` to mock fetch:
+
 - compile: mock success response → verify content says "Compiled successfully"
 - compile: mock error response → verify content says "failed"
 - analyze: mock success → verify content includes key name
@@ -204,6 +220,7 @@ Use `vi.stubGlobal("fetch", ...)` to mock fetch:
 - All three: verify AbortSignal is passed to fetch
 
 ### Close beads when done
+
 ```bash
 br close vellum-4fv.3 -r "Compile fetch wrapper using createServerTool, tests passing"
 br close vellum-4fv.4 -r "Analyze fetch wrapper using createServerTool, tests passing"

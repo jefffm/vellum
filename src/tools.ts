@@ -3,7 +3,7 @@ import { InstrumentModel } from "./lib/instrument-model.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
 import { formatPositions, instrumentTool, toolError, toolResult } from "./lib/tool-helpers.js";
-import { analyzeTool, compileTool, lintTool } from "./server-tools.js";
+import { analyzeTool, compileTool, engraveTool, lintTool } from "./server-tools.js";
 import { transposeTool } from "./transpose.js";
 import { diapasonsTool } from "./diapasons.js";
 import { fretboardTool } from "./fretboard.js";
@@ -104,6 +104,7 @@ export const tools = [
   checkPlayabilityTool,
   theoryTool,
   compileTool,
+  engraveTool,
   analyzeTool,
   lintTool,
   transposeTool,

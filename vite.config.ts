@@ -5,22 +5,22 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     rollupOptions: {
-      input: "index.html"
-    }
+      input: "index.html",
+    },
   },
   server: {
     proxy: {
       "/api": {
         target: "http://localhost:3000",
-        changeOrigin: true
+        changeOrigin: true,
       },
       "/health": {
         target: "http://localhost:3000",
-        changeOrigin: true
-      }
-    }
+        changeOrigin: true,
+      },
+    },
   },
   optimizeDeps: {
-    include: ["tonal"]
-  }
+    include: ["tonal"],
+  },
 });

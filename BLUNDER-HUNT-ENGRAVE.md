@@ -12,6 +12,7 @@
 **Location:** "Position-to-pitch resolution" section
 
 **Spec claims:**
+
 > This is already implemented in `InstrumentModel.pitchAtPosition()` (via the tuning YAML data). The `engrave` tool reuses that — it resolves every `{course, fret}` pair to a **LilyPond pitch string**.
 
 **Reality:** `pitchAtPosition()` calls `soundingPitch()` which calls `transposeNote()` → `midiToNote()` → `Note.fromMidi()` from tonal.js. This returns **scientific pitch notation** like `"G4"`, `"Eb3"`, `"A2"` — NOT LilyPond notation like `"g'"`, `"ees"`, `"a,"`.
@@ -19,6 +20,7 @@
 There is **no function anywhere in the codebase** that converts scientific notation to LilyPond absolute pitch notation. I searched for `toLilyPond`, `noteToLily`, `lilyPondPitch`, `toLy`, `scientificToLily`, `fromLily`, `lyPitch` — zero results.
 
 **Why it matters:** This is the single most important function `engrave` needs, and the spec handwaves it as "already implemented." In reality, a full scientific→LilyPond converter must be written from scratch, handling:
+
 - Octave encoding (LilyPond: `c,,,` through `c''''` vs. scientific `C1` through `C7`)
 - Accidental encoding (LilyPond: `ees`, `fis`, `bes` vs. scientific `Eb`, `F#`, `Bb`)
 - Enharmonic choices (LilyPond `ees` vs `dis` matters for key signature context)
@@ -32,6 +34,7 @@ There is **no function anywhere in the codebase** that converts scientific notat
 **Location:** Input schema, `bars[].notes[]`
 
 **Spec defines:**
+
 ```typescript
 course: Type.Optional(...)
 fret: Type.Optional(...)
@@ -43,12 +46,14 @@ All three are optional. A note like `{ duration: "4" }` is schema-valid but mean
 **Why it matters:** The LLM will inevitably produce malformed input. The schema must enforce that at least one complete input mode is present.
 
 **Fix:** Use a TypeBox union or discriminated union:
+
 ```typescript
 Type.Union([
   Type.Object({ course: Type.Integer(...), fret: Type.Integer(...), duration: ... }),
   Type.Object({ pitch: Type.String(...), duration: ... }),
 ])
 ```
+
 Or at minimum, add a runtime validation step in the processing pipeline (step 2) that rejects notes with neither a complete position nor a pitch. The spec's error table lists "Missing duration" but not "missing pitch AND position."
 
 ---
@@ -59,14 +64,15 @@ Or at minimum, add a runtime validation step in the processing pipeline (step 2)
 
 **Spec assumes** the tool can take any `(instrument, template)` pair and just swap the include path. In reality, each template hardcodes **instrument-specific variable names** in its `\with` blocks:
 
-| Template | Variable names used |
-|---|---|
-| `french-tab.ly` | `\luteTabFormat`, `\luteStringTunings`, `\luteDiapasons` |
-| `solo-tab.ly` | `\classicalGuitarTabFormat`, `\classicalGuitarStringTunings` |
+| Template           | Variable names used                                          |
+| ------------------ | ------------------------------------------------------------ |
+| `french-tab.ly`    | `\luteTabFormat`, `\luteStringTunings`, `\luteDiapasons`     |
+| `solo-tab.ly`      | `\classicalGuitarTabFormat`, `\classicalGuitarStringTunings` |
 | `tab-and-staff.ly` | `\classicalGuitarTabFormat`, `\classicalGuitarStringTunings` |
 | `voice-and-tab.ly` | `\classicalGuitarTabFormat`, `\classicalGuitarStringTunings` |
 
 Each `.ily` file defines its own prefixed variables:
+
 - `baroque-lute-13.ily`: `luteStringTunings`, `luteDiapasons`, `luteTabFormat`
 - `classical-guitar-6.ily`: `classicalGuitarStringTunings`, `classicalGuitarTabFormat`
 - `theorbo-14.ily`: `theorboStringTunings`, `theorboDiapasons`, `theorboTabFormat`
@@ -77,7 +83,7 @@ So `engrave({instrument: "theorbo-14", template: "french-tab"})` would include `
 
 **Why it matters:** The spec's template mapping table implies arbitrary instrument × template combinations work. They don't. Either `engrave` must generate the entire LilyPond source from scratch (not fill templates), or the instrument→variable-name mapping must be explicit and the template `\with` blocks must be rewritten per instrument.
 
-**Fix:** The `engrave` tool should NOT read and fill existing template `.ly` files. It should generate complete LilyPond source programmatically, using the template ID only to determine the *staff layout structure* and the instrument ID to determine the *variable names and include path*. This is more work than "inject include path" implies — it means building the entire `\score { << ... >> }` block in code.
+**Fix:** The `engrave` tool should NOT read and fill existing template `.ly` files. It should generate complete LilyPond source programmatically, using the template ID only to determine the _staff layout structure_ and the instrument ID to determine the _variable names and include path_. This is more work than "inject include path" implies — it means building the entire `\score { << ... >> }` block in code.
 
 ---
 
@@ -86,6 +92,7 @@ So `engrave({instrument: "theorbo-14", template: "french-tab"})` would include `
 **Location:** Input schema
 
 The schema has:
+
 ```typescript
 bars: Type.Array(Type.Object({
   notes: Type.Array(...),      // sequential notes
@@ -100,13 +107,17 @@ The existing `Bar` type in `types.ts` is better designed: it has `notes: Passage
 **Why it matters:** This is the core data structure. Getting it wrong means the generated LilyPond will have wrong note ordering in every bar that mixes single notes with chords.
 
 **Fix:** Use a single sequential `events` array where each event is either a single note or a chord (group of simultaneous notes). Something like:
+
 ```typescript
-events: Type.Array(Type.Union([
-  NoteEvent,   // { type: "note", course?, fret?, pitch?, duration, ... }
-  ChordEvent,  // { type: "chord", positions: [...], duration }
-  RestEvent,   // { type: "rest", duration }
-]))
+events: Type.Array(
+  Type.Union([
+    NoteEvent, // { type: "note", course?, fret?, pitch?, duration, ... }
+    ChordEvent, // { type: "chord", positions: [...], duration }
+    RestEvent, // { type: "rest", duration }
+  ])
+);
 ```
+
 This preserves temporal ordering naturally.
 
 ---
@@ -130,6 +141,7 @@ The schema has no concept of rests. Every real piece of music has rests. Without
 **Location:** "Problem" section and throughout
 
 The spec repeatedly says the LLM has "`tabulate`, `voicings`, `check_playability`" as its position-finding tools. In reality, the codebase has **10 tools** in `vellumTools`:
+
 1. `tabulate`
 2. `voicings`
 3. `check_playability`

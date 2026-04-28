@@ -4,13 +4,13 @@
 
 5 beads, all fully testable without a browser. No DOM, no web components, no running server for integration testing (except mock-based Vitest).
 
-| # | Bead | Title | Type |
-|---|------|-------|------|
-| 1 | kyq.4 | Template compilation test suite | Integration test (real LilyPond) |
-| 2 | i3r.4 | Transpose tool | Browser-side AgentTool |
-| 3 | i3r.5 | Diapasons tool | Browser-side AgentTool |
-| 4 | i3r.6 | Fretboard SVG tool | Browser-side AgentTool |
-| 5 | gwf.3 | POST /api/validate | Server route |
+| #   | Bead  | Title                           | Type                             |
+| --- | ----- | ------------------------------- | -------------------------------- |
+| 1   | kyq.4 | Template compilation test suite | Integration test (real LilyPond) |
+| 2   | i3r.4 | Transpose tool                  | Browser-side AgentTool           |
+| 3   | i3r.5 | Diapasons tool                  | Browser-side AgentTool           |
+| 4   | i3r.6 | Fretboard SVG tool              | Browser-side AgentTool           |
+| 5   | gwf.3 | POST /api/validate              | Server route                     |
 
 After this wave the tool count goes from 7 → 10 (transpose, diapasons, fretboard added to the `tools` array in `src/tools.ts`). The system prompt in `src/prompts.ts` is updated to mention all 10 tools. The validate endpoint is wired into the Express router.
 
@@ -73,6 +73,7 @@ const INSTRUMENTS_DIR = path.resolve(process.cwd(), "instruments");
 ```
 
 For each template file:
+
 1. Read the `.ly` source
 2. Write it to a temp dir
 3. Run `lilypond --svg -I <instruments_dir> -I <templates_dir> -o output source.ly` via `execSync`
@@ -81,6 +82,7 @@ For each template file:
 6. Assert SVG contains `<svg` tag
 
 For `french-tab.ly` specifically (it uses `\include "../instruments/baroque-lute-13.ily"` with a relative path):
+
 - The include path is relative, so the temp dir approach needs to handle this. Best approach: copy the template to the temp dir AND resolve includes. OR: run LilyPond with the working directory set to `templates/` and use `-I` flags for `instruments/`.
 - Actually, the simplest approach: run LilyPond directly against the file in-place using `-o /tmp/vellum-test-output/templatename` and pass `-I instruments/ -I templates/`. This avoids the relative-path issue entirely.
 
@@ -91,6 +93,7 @@ lilypond --svg -I instruments -I templates -o /tmp/vellum-test/<template-stem> t
 ```
 
 **french-tab.ly specific assertions:**
+
 - The `.ily` file defines `luteTabFormat = #fret-letter-tablature-format`, so LilyPond should produce French letter tab output.
 - Check that the SVG output contains text elements. The exact letters depend on LilyPond's rendering, but the SVG should contain `<text` elements.
 - Check that a MIDI file was also produced (the template has a `\midi` block).
@@ -134,6 +137,7 @@ describe("template compilation", () => {
 ## Bead 2: i3r.4 — Transpose Tool
 
 **Files:**
+
 - `src/transpose.ts` — pure logic
 - `src/transpose.test.ts` — unit tests
 - Update `src/tools.ts` — add `transposeTool` to exports and `tools` array
@@ -149,8 +153,8 @@ The schema already exists in `src/types.ts`:
 
 ```typescript
 export const TransposeParamsSchema = Type.Object({
-  source: Type.String({ minLength: 1 }),     // Space-separated LilyPond pitches, e.g. "c' e' g'"
-  interval: Type.String({ minLength: 1 }),    // Named interval, e.g. "P5", "m3", "-M2"
+  source: Type.String({ minLength: 1 }), // Space-separated LilyPond pitches, e.g. "c' e' g'"
+  interval: Type.String({ minLength: 1 }), // Named interval, e.g. "P5", "m3", "-M2"
   instrument: InstrumentId,
 });
 ```
@@ -161,8 +165,8 @@ export const TransposeParamsSchema = Type.Object({
 type TransposeResult = {
   original: string[];
   transposed: string[];
-  outOfRange: string[];         // pitches that fell outside instrument range
-  suggestedKeys: string[];      // idiomatic keys for this instrument
+  outOfRange: string[]; // pitches that fell outside instrument range
+  suggestedKeys: string[]; // idiomatic keys for this instrument
 };
 ```
 
@@ -205,6 +209,7 @@ export const transposeTool: AgentTool<typeof TransposeParamsSchema, TransposeRes
 ```
 
 Use the existing `instrumentTool()` helper pattern from `src/tools.ts` (it wraps the loadBrowserProfile + error handling). Since `instrumentTool` is currently a private function, you'll need to either:
+
 - Make it a shared export (move to `src/lib/tool-helpers.ts`), OR
 - Duplicate the pattern in the new tool file.
 
@@ -225,6 +230,7 @@ Use the existing `instrumentTool()` helper pattern from `src/tools.ts` (it wraps
 ### prompts.ts update
 
 Add to the `buildTools()` function:
+
 ```
 "- Call `transpose` to transpose pitches by interval — validates range and suggests idiomatic keys",
 ```
@@ -234,6 +240,7 @@ Add to the `buildTools()` function:
 ## Bead 3: i3r.5 — Diapasons Tool
 
 **Files:**
+
 - `src/diapasons.ts` — pure logic
 - `src/diapasons.test.ts` — unit tests
 - Update `src/tools.ts` — add `diapasonsTool`
@@ -259,15 +266,15 @@ export const DiapasonsParamsSchema = Type.Object({
 ```typescript
 type DiapasonCourse = {
   course: number;
-  pitch: string;      // Note name, e.g. "Eb"
+  pitch: string; // Note name, e.g. "Eb"
 };
 
 type DiapasonsResult = {
   key: string;
-  schemeName: string;                      // e.g. "d_minor"
+  schemeName: string; // e.g. "d_minor"
   courses: DiapasonCourse[];
-  lilypondSyntax: string;                  // e.g. "\\stringTuning <g, f, ees, d, c, bes,, a,,>"
-  warning?: string;                         // if key didn't match exactly
+  lilypondSyntax: string; // e.g. "\\stringTuning <g, f, ees, d, c, bes,, a,,>"
+  warning?: string; // if key didn't match exactly
 };
 ```
 
@@ -336,6 +343,7 @@ export const diapasonsTool: AgentTool<typeof DiapasonsParamsSchema, DiapasonsRes
 ### prompts.ts update
 
 Add to `buildTools()`:
+
 ```
 "- Call `diapasons` to look up bass string tuning for a key — returns pitches and LilyPond syntax",
 ```
@@ -345,6 +353,7 @@ Add to `buildTools()`:
 ## Bead 4: i3r.6 — Fretboard SVG Tool
 
 **Files:**
+
 - `src/fretboard.ts` — SVG renderer + tool definition
 - `src/fretboard.test.ts` — unit tests
 - Update `src/tools.ts` — add `fretboardTool`
@@ -380,6 +389,7 @@ type FretboardResult = {
 No SVG library. Build the SVG as a string using template literals.
 
 **Layout:**
+
 - Horizontal lines = courses (1 at top, N at bottom)
 - Vertical lines = frets (nut on left, higher frets to right)
 - Only show the relevant fret range: from `min(frets) - 1` to `max(frets) + 1`, clamped to `[0, instrument.frets]`. If all positions are open (fret 0), show frets 0-4.
@@ -388,6 +398,7 @@ No SVG library. Build the SVG as a string using template literals.
 - Labels: course numbers on the left, fret numbers on top
 
 **Dimensions:**
+
 ```
 COURSE_SPACING = 20    // px between course lines
 FRET_SPACING = 40      // px between fret lines
@@ -400,6 +411,7 @@ Width = MARGIN_LEFT + (fretsShown × FRET_SPACING) + 20
 Height = MARGIN_TOP + ((coursesShown - 1) × COURSE_SPACING) + 20
 
 **SVG structure:**
+
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
   <!-- Course lines (horizontal) -->
@@ -433,8 +445,7 @@ Height = MARGIN_TOP + ((coursesShown - 1) × COURSE_SPACING) + 20
 export const fretboardTool: AgentTool<typeof FretboardParamsSchema, FretboardResult> = {
   name: "fretboard",
   label: "Fretboard",
-  description:
-    "Render an SVG fretboard diagram showing finger positions on the instrument.",
+  description: "Render an SVG fretboard diagram showing finger positions on the instrument.",
   parameters: FretboardParamsSchema,
   execute: async (_toolCallId, params) =>
     instrumentTool(params.instrument, (model) => {
@@ -469,6 +480,7 @@ The SVG itself goes in `details.svg` for the UI to render (when tool renderers a
 ### prompts.ts update
 
 Add to `buildTools()`:
+
 ```
 "- Call `fretboard` to render an SVG fretboard diagram showing finger positions",
 ```
@@ -478,6 +490,7 @@ Add to `buildTools()`:
 ## Bead 5: gwf.3 — POST /api/validate
 
 **Files:**
+
 - `src/server/lib/validate-route.ts` — route handler
 - `src/server/lib/validate-route.test.ts` — unit tests
 - Update `src/server/index.ts` — wire route into router
@@ -533,6 +546,7 @@ export function createValidateRoute(options: ValidateRouteOptions = {}): Request
 ```
 
 **Key difference from compile:** Use LilyPond flags that skip rendering:
+
 - `-dno-print-pages` — don't produce output pages
 - `--loglevel=ERROR` — only show errors
 - Still need `-I` flags for includes
@@ -549,7 +563,7 @@ async function validateSource(
     args: [...includeArgs, "-dno-print-pages", "--loglevel=ERROR", "-o", "output", "source.ly"],
     inputFile: { name: "source.ly", content: params.source },
     timeout,
-    outputGlobs: [],  // We don't care about output files
+    outputGlobs: [], // We don't care about output files
   });
 
   const errors = parseLilyPondErrors(result.stderr, params.source);
@@ -557,7 +571,9 @@ async function validateSource(
   // Also treat non-zero exit as an error if no structured errors were parsed
   if (errors.length === 0 && result.exitCode !== 0) {
     errors.push({
-      bar: 0, beat: 0, line: 0,
+      bar: 0,
+      beat: 0,
+      line: 0,
       type: "lilypond",
       message: result.stderr.trim() || `LilyPond exited with code ${result.exitCode}`,
     });
@@ -616,6 +632,7 @@ Look at the existing `compile-route.test.ts` for the mock pattern — it uses a 
 After all three new tools are built, update `src/tools.ts`:
 
 1. Import the new tools:
+
 ```typescript
 import { transposeTool } from "./transpose.js";
 import { diapasonsTool } from "./diapasons.js";
@@ -623,6 +640,7 @@ import { fretboardTool } from "./fretboard.js";
 ```
 
 2. Add to the `tools` array:
+
 ```typescript
 export const tools = [
   tabulateTool,
@@ -643,6 +661,7 @@ export const tools = [
 4. **Extract `instrumentTool`** from `src/tools.ts` into `src/lib/tool-helpers.ts` so the new tool files can use it. Update the existing import in `tools.ts`.
 
 Move this function:
+
 ```typescript
 function instrumentTool<TDetails>(
   instrument: string,

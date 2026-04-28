@@ -4,12 +4,12 @@
 
 4 beads. All fully testable without a browser — real LilyPond compilation, schema validation, Express route tests.
 
-| # | Bead | Title |
-|---|------|-------|
-| 1 | jlj.5 | Remaining instrument profiles (8 YAML + browser loading) |
-| 2 | kyq.3 | Additional templates (7 new .ly files) |
-| 3 | d0c.4 | GET /api/templates — serve template source |
-| 4 | d0c.5 | GET/POST /api/arrangements — file-based CRUD |
+| #   | Bead  | Title                                                    |
+| --- | ----- | -------------------------------------------------------- |
+| 1   | jlj.5 | Remaining instrument profiles (8 YAML + browser loading) |
+| 2   | kyq.3 | Additional templates (7 new .ly files)                   |
+| 3   | d0c.4 | GET /api/templates — serve template source               |
+| 4   | d0c.5 | GET/POST /api/arrangements — file-based CRUD             |
 
 After this wave: 10 instrument profiles loaded in the browser (was 2), 8 LilyPond templates (was 1), and template/arrangement REST endpoints.
 
@@ -66,6 +66,7 @@ Read the full bead description: `grep '"id":"vellum-jlj.5"' .beads/issues.jsonl 
 The `InstrumentProfileSchema` in `src/types.ts` already makes `tuning`, `frets`, `courses` optional. Piano and voice profiles won't have tuning arrays or fret counts — they use `range` and `type` instead. The schema should validate them as-is. If it doesn't, adjust the schema to accommodate non-fretted instruments (make `constraints` accept empty arrays, etc.).
 
 Each YAML profile must match the patterns in existing profiles (`baroque-lute-13.yaml`, `baroque-guitar-5.yaml`). Use those as structural templates. Key fields:
+
 - `id`, `name`, `notation`, `constraints` (required)
 - `tuning` entries use `{ course/string, pitch, note }` format — `pitch` is LilyPond notation, `note` is scientific
 - Voice/piano profiles: use `type: voice` or `type: keyboard`, provide `range` but skip `tuning`/`frets`/`courses`
@@ -206,8 +207,8 @@ function templatesDirectory(): string {
 // GET /api/templates
 function listTemplates(): TemplateSummary[] {
   return readdirSync(templatesDirectory())
-    .filter(f => f.endsWith(".ly"))
-    .map(f => ({
+    .filter((f) => f.endsWith(".ly"))
+    .map((f) => ({
       name: path.basename(f, ".ly"),
       // Extract description from first comment line in the .ly file
     }))
@@ -294,9 +295,7 @@ Use `crypto.randomUUID()` for IDs.
 Add to `src/types.ts`:
 
 ```typescript
-export const ArrangementMetadataSchema = Type.Optional(
-  Type.Record(Type.String(), Type.Any())
-);
+export const ArrangementMetadataSchema = Type.Optional(Type.Record(Type.String(), Type.Any()));
 
 export const CreateArrangementSchema = Type.Object({
   title: Type.String({ minLength: 1 }),
@@ -380,6 +379,7 @@ Use a temp directory for the arrangements storage in tests (pass via options or 
 Bead 1 (profiles) should complete before bead 2 (templates), since some templates `\include` the new instrument .ily files. Beads 3 and 4 are independent of 1 and 2.
 
 Suggested order:
+
 1. jlj.5 (profiles) — creates YAML + updates browser-profiles.ts
 2. kyq.3 (templates) — creates .ly files that may reference new .ily includes
 3. d0c.4 (template API) — serves the templates just created

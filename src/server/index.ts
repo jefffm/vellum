@@ -9,6 +9,7 @@ import type { InstrumentProfile } from "../types.js";
 import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
+import { createEngraveRoute } from "./lib/engrave-route.js";
 import { createStreamRoute } from "./lib/stream-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
@@ -81,6 +82,7 @@ export function createApiRouter(): Router {
 
   router.post("/stream", createStreamRoute());
   router.post("/compile", createCompileRoute());
+  router.post("/engrave", createEngraveRoute());
   router.post("/validate", createValidateRoute());
   router.post("/chordify", createChordifyRoute());
   router.post("/analyze", createAnalyzeRoute());

@@ -43,6 +43,7 @@ The following questions have been resolved by architecture decisions, research, 
 ### ✅ OQ-25: Client-server architecture split is undefined
 
 **Resolution (spec revision 2026-04-27):** Agent runs in the browser. Tools make `fetch()` calls to server REST API. LLM calls proxied through server via `streamProxy` (API keys stay server-side). Server endpoints:
+
 - `POST /api/stream` — LLM proxy
 - `POST /api/compile` — LilyPond subprocess
 - `POST /api/validate` — syntax check
@@ -55,6 +56,7 @@ Full architecture diagram in SPEC.md §Architecture.
 ### ✅ OQ-26: Spec uses wrong pi-mono API surface
 
 **Resolution (spec revision 2026-04-27):** Entire spec rewritten to use correct APIs:
+
 - `AgentTool<T>` with TypeBox schemas for tool definitions
 - `Agent({ initialState: { tools: [...] } })` for agent setup
 - `ChatPanel.setAgent(agent)` for UI wiring
@@ -84,6 +86,7 @@ Example 1 assumes the LLM "knows" Greensleeves well enough to produce a pitch-ac
 #### Resolution (spec revision 2026-04-27)
 
 **Source-file-first is now the default v1 workflow.** The system prompt instructs the LLM to:
+
 1. Prefer source files (.ly, lead sheets) over memory recall
 2. When no source provided, warn: "I'm working from memory — please verify the pitches"
 3. Flag specific passages where it's uncertain
@@ -100,13 +103,13 @@ Example 1 assumes the LLM "knows" Greensleeves well enough to produce a pitch-ac
 
 3-5 standard schemes cover ~90% of repertoire:
 
-| Key | Courses 7→13 | Name |
-|---|---|---|
-| D minor / F major | G-F-E♭-D-C-B♭-A | *Accord ordinaire* |
-| A minor / C major | G-F-E♮-D-C-B♮-A | Natural 3rd/7th |
-| G minor / B♭ major | G-F-E♭-D-C-B♭-A | Same as standard |
-| D major (rare) | G-F♯-E-D-C♯-B-A | Sharp keys (Weiss) |
-| E minor | G-F♯-E-D-C-B-A | Natural with F♯ |
+| Key                | Courses 7→13    | Name               |
+| ------------------ | --------------- | ------------------ |
+| D minor / F major  | G-F-E♭-D-C-B♭-A | _Accord ordinaire_ |
+| A minor / C major  | G-F-E♮-D-C-B♮-A | Natural 3rd/7th    |
+| G minor / B♭ major | G-F-E♭-D-C-B♭-A | Same as standard   |
+| D major (rare)     | G-F♯-E-D-C♯-B-A | Sharp keys (Weiss) |
+| E minor            | G-F♯-E-D-C-B-A  | Natural with F♯    |
 
 #### Resolution (spec revision 2026-04-27)
 
@@ -122,11 +125,11 @@ Diapason lookup table added to SPEC.md §diapasons tool and to the baroque lute 
 
 Three historical stringing schemes for baroque guitar:
 
-| Type | Course 5 | Course 4 | Region | Effect |
-|---|---|---|---|---|
-| Fully re-entrant | a/a (no bourdon) | d'/d' (no bourdon) | Italian (Rome) | Maximum campanella, no bass |
-| Semi re-entrant | a/a (no bourdon) | d/d' (octave pair) | French (de Visée) | Some bass on 4 |
-| Bourdons on both | A/a (bourdon+octave) | d/d' (bourdon+octave) | Spanish (Sanz) | Bass foundation |
+| Type             | Course 5             | Course 4              | Region            | Effect                      |
+| ---------------- | -------------------- | --------------------- | ----------------- | --------------------------- |
+| Fully re-entrant | a/a (no bourdon)     | d'/d' (no bourdon)    | Italian (Rome)    | Maximum campanella, no bass |
+| Semi re-entrant  | a/a (no bourdon)     | d/d' (octave pair)    | French (de Visée) | Some bass on 4              |
+| Bourdons on both | A/a (bourdon+octave) | d/d' (bourdon+octave) | Spanish (Sanz)    | Bass foundation             |
 
 #### Resolution (spec revision 2026-04-27)
 
@@ -155,6 +158,7 @@ Idiomatic key table added to SPEC.md §transpose tool. The `transpose()` tool su
 #### Resolution (spec revision 2026-04-27)
 
 Minimum viable difficulty algorithm defined in SPEC.md §check_playability:
+
 - Max fret stretch per chord (>4 lute / >5 guitar = violation)
 - Position shifts per bar (>2 adds difficulty)
 - Simultaneous sustained voices (>3 on lute = advanced)
@@ -171,6 +175,7 @@ Minimum viable difficulty algorithm defined in SPEC.md §check_playability:
 #### Research Findings (2026-04-26)
 
 **LilyPond 2.24 has full support.** Confirmed working syntax:
+
 - `tablatureFormat = #fret-letter-tablature-format` — letters a-p
 - `additionalBassStrings = \stringTuning <...>` — diapasons below staff
 - `\new RhythmicStaff` above `\new TabStaff` — rhythm flags
@@ -271,11 +276,11 @@ NixOS packaging path is clear. LilyPond 2.24.4 in nixpkgs. pi-mono packages are 
 
 ## Summary
 
-| Priority | Count | Key themes |
-|---|---|---|
-| 🔴 Blocker | 0 | — |
-| 🟡 Pre-v1 | 3 | LLM pitch accuracy validation, verification loop, error parsing |
-| 🟢 Deferrable | 10 | MusicXML export, German tab, text underlay, pedaling, stringing variants, copyright, Renaissance profiles, test pieces, deployment, diapasons, re-entrant tuning, transposition, difficulty |
-| ✅ Resolved | 12 | Profile loading, MIDI, ornaments, convert.py, validate.py, artifact panel, tool return types, client-server architecture, API surface, French tab, test piece, diapason model |
+| Priority      | Count | Key themes                                                                                                                                                                                  |
+| ------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 Blocker    | 0     | —                                                                                                                                                                                           |
+| 🟡 Pre-v1     | 3     | LLM pitch accuracy validation, verification loop, error parsing                                                                                                                             |
+| 🟢 Deferrable | 10    | MusicXML export, German tab, text underlay, pedaling, stringing variants, copyright, Renaissance profiles, test pieces, deployment, diapasons, re-entrant tuning, transposition, difficulty |
+| ✅ Resolved   | 12    | Profile loading, MIDI, ornaments, convert.py, validate.py, artifact panel, tool return types, client-server architecture, API surface, French tab, test piece, diapason model               |
 
 **No remaining blockers.** The three 🟡 items are validation tasks during implementation, not design gaps. The spec is ready for implementation.
