@@ -18,10 +18,17 @@ export const compileTool = createServerTool<typeof CompileParamsSchema, CompileR
   endpoint: "/api/compile",
   formatContent: (result) => {
     if (result.errors.length > 0) {
+      const hasEnvironmentError = result.errors.some((error) => error.type === "environment");
       const lines = result.errors.map((error) => `  Line ${error.line}: ${error.message}`);
       const hasStringAssignmentError = result.errors.some(
         (error) => error.type === "string_assignment" || /no string for pitch/i.test(error.message)
       );
+
+      if (hasEnvironmentError) {
+        lines.push(
+          "Hint: This is a local environment problem, not a notation problem. Do not claim success or create final artifacts until LilyPond is available."
+        );
+      }
 
       if (hasStringAssignmentError) {
         lines.push(

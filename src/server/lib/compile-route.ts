@@ -9,7 +9,7 @@ import {
   type CompileResult,
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
-import { SubprocessRunner, type SubprocessResult } from "./subprocess.js";
+import { SubprocessError, SubprocessRunner, type SubprocessResult } from "./subprocess.js";
 
 export function lilypondIncludeDirs(): string[] {
   const base = process.cwd();
@@ -42,14 +42,26 @@ async function compileLilyPond(
   const format = params.format ?? "svg";
   const runs: SubprocessResult[] = [];
 
-  if (format === "svg" || format === "both") {
-    runs.push(
-      await runLilyPond(runner, params.source, ["--svg", "-o", "output", "source.ly"], timeout)
-    );
-  }
+  try {
+    if (format === "svg" || format === "both") {
+      runs.push(
+        await runLilyPond(runner, params.source, ["--svg", "-o", "output", "source.ly"], timeout)
+      );
+    }
 
-  if (format === "pdf" || format === "both") {
-    runs.push(await runLilyPond(runner, params.source, ["-o", "output", "source.ly"], timeout));
+    if (format === "pdf" || format === "both") {
+      runs.push(await runLilyPond(runner, params.source, ["-o", "output", "source.ly"], timeout));
+    }
+  } catch (error) {
+    if (error instanceof SubprocessError) {
+      return {
+        errors: [compileEnvironmentError(error)],
+        barCount: countBars(params.source),
+        voiceCount: countVoices(params.source),
+      };
+    }
+
+    throw error;
   }
 
   const files = new Map<string, Buffer>();
@@ -207,6 +219,20 @@ function lookupBar(map: Map<number, number>, lineNumber: number): number {
 function extractBeat(message: string): number {
   const beatMatch = message.match(/barcheck failed at:\s*(\d+)/);
   return beatMatch ? Number(beatMatch[1]) : 0;
+}
+
+function compileEnvironmentError(error: SubprocessError): CompileError {
+  const missingExecutable = /ENOENT|not found|no such file/i.test(error.message);
+
+  return {
+    bar: 0,
+    beat: 0,
+    line: 0,
+    type: "environment",
+    message: missingExecutable
+      ? "LilyPond executable not found on PATH. Install LilyPond or run Vellum inside `nix develop` before compiling."
+      : error.message,
+  };
 }
 
 function readTextArtifact(files: Map<string, Buffer>, extension: string): string | undefined {
