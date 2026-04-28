@@ -470,6 +470,9 @@ function noteIndicators(event: PositionNote | PitchNote): LyIndicator[] {
  * build LyTree → serialize.
  */
 export function engrave(params: EngraveParams): EngraveResult {
+  // Step 0: Validate structure when called directly (routes validate schema first).
+  validateStructure(params);
+
   // Step 1: Resolve instrument and template
   const { vars, model, templateId } = resolveInstrument(params);
 
@@ -499,6 +502,32 @@ export function engrave(params: EngraveParams): EngraveResult {
 /**
  * Build the complete LyFile for the given template strategy.
  */
+function validateStructure(params: EngraveParams): void {
+  const errors: ValidationDetail[] = [];
+
+  if (!Array.isArray(params.bars) || params.bars.length === 0) {
+    errors.push({ bar: 0, field: "bars", message: "Engrave params must include at least one bar" });
+  } else {
+    for (let barIdx = 0; barIdx < params.bars.length; barIdx++) {
+      const bar = params.bars[barIdx];
+      const barNum = barIdx + 1;
+
+      if (!Array.isArray(bar.events) || bar.events.length === 0) {
+        errors.push({
+          bar: barNum,
+          field: "events",
+          message: `Bar ${barNum} must include at least one event`,
+        });
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    const summary = errors.map((e) => e.message).join("; ");
+    throw new EngraveValidationError(`Validation failed: ${summary}`, errors);
+  }
+}
+
 function buildLyFile(
   params: EngraveParams,
   vars: InstrumentLyVars,

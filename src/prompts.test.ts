@@ -16,6 +16,7 @@ describe("buildSystemPrompt", () => {
       "tabulate",
       "voicings",
       "check_playability",
+      "engrave",
       "compile",
       "analyze",
       "lint",
@@ -40,6 +41,21 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("verify the pitches against a reference score");
   });
 
+  it("includes engrave-first tablature workflow", () => {
+    const prompt = buildSystemPrompt([]);
+
+    expect(prompt).toContain("structured musical data");
+    expect(prompt).toContain("EngraveParams");
+    expect(prompt).toContain("Never write raw LilyPond syntax for tab instruments");
+    expect(prompt).toContain("solo-tab");
+    expect(prompt).toContain("french-tab");
+    expect(prompt).toContain("tab-and-staff");
+    expect(prompt).toContain("voice-and-tab");
+    expect(prompt).toContain("unsupported v2 templates");
+    expect(prompt).toContain("grand-staff");
+    expect(prompt).toContain("For edits to an existing LilyPond file");
+  });
+
   it("includes mandatory compile and bounded retry policy", () => {
     const prompt = buildSystemPrompt([]);
 
@@ -58,6 +74,7 @@ describe("buildSystemPrompt", () => {
 
     expect(prompt).toContain("Vellum");
     expect(prompt).toContain("`compile`");
+    expect(prompt).toContain("`engrave`");
     expect(prompt).toContain("`lint`");
     expect(prompt).not.toContain("## Instruments");
   });

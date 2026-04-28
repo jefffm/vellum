@@ -5,3 +5,4 @@ dist-server
 *.pdf
 *.midi
 package-lock.json
+.beads/.br_history
