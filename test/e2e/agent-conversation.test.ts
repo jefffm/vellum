@@ -5,15 +5,16 @@ function installBrowserUiStubs(): void {
 }
 
 describe("agent conversation (mocked)", () => {
-  it("agent has 11 tools with correct names", async () => {
+  it("agent has 12 tools with correct names", async () => {
     installBrowserUiStubs();
     const { vellumTools } = await import("../../src/main.js");
 
-    expect(vellumTools).toHaveLength(11);
+    expect(vellumTools).toHaveLength(12);
     expect(vellumTools.map((t) => t.name)).toEqual([
       "tabulate",
       "voicings",
       "check_playability",
+      "alfabeto_lookup",
       "theory",
       "compile",
       "engrave",

@@ -16,11 +16,11 @@ describe("browser entry wiring", () => {
     expect(prompt).toContain("baroque-lute-13");
   });
 
-  it("collects exactly 11 uniquely named tools", async () => {
+  it("collects exactly 12 uniquely named tools", async () => {
     installBrowserUiStubs();
     const { vellumTools } = await import("./main.js");
 
-    expect(vellumTools).toHaveLength(11);
+    expect(vellumTools).toHaveLength(12);
 
     const names = vellumTools.map((tool) => tool.name);
     expect(new Set(names).size).toBe(names.length);
@@ -28,6 +28,7 @@ describe("browser entry wiring", () => {
       "tabulate",
       "voicings",
       "check_playability",
+      "alfabeto_lookup",
       "theory",
       "compile",
       "engrave",

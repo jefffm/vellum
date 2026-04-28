@@ -6,6 +6,7 @@
  */
 
 import { type Static, Type } from "@sinclair/typebox";
+import { AlfabetoChartIdSchema } from "../types.js";
 
 // === Event types (discriminated union) ===
 
@@ -73,11 +74,41 @@ export const RestEventSchema = Type.Object({
 
 export type RestEvent = Static<typeof RestEventSchema>;
 
+export const AlfabetoEventSchema = Type.Object({
+  type: Type.Literal("alfabeto"),
+  duration: Type.String({ minLength: 1 }),
+  chordName: Type.Optional(
+    Type.String({
+      minLength: 1,
+      description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
+    })
+  ),
+  pitchClasses: Type.Optional(
+    Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
+      minItems: 1,
+      description: "MIDI pitch classes (0-11) to resolve through alfabetoLookup.",
+    })
+  ),
+  letter: Type.Optional(
+    Type.String({
+      minLength: 1,
+      description: "Optional alfabeto symbol to select a specific chart shape/match.",
+    })
+  ),
+  chartId: Type.Optional(AlfabetoChartIdSchema),
+  maxFret: Type.Optional(Type.Integer({ minimum: 0, maximum: 12 })),
+  includeBarreVariants: Type.Optional(Type.Boolean()),
+  tie: Type.Optional(Type.Boolean()),
+});
+
+export type AlfabetoEvent = Static<typeof AlfabetoEventSchema>;
+
 export const EventSchema = Type.Union([
   PositionNoteSchema,
   PitchNoteSchema,
   ChordEventSchema,
   RestEventSchema,
+  AlfabetoEventSchema,
 ]);
 
 export type EngraveMusicEvent = Static<typeof EventSchema>;

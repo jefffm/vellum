@@ -333,23 +333,30 @@ export function serializeLeavesInlineArray(leaves: LyLeaf[]): string {
 
 function stripTabStringIndicators(leaves: LyLeaf[]): LyLeaf[] {
   return leaves.map((leaf) => {
+    const indicators = stripTabOnlyIndicators(leaf.indicators);
+
     if (leaf.type === "chord") {
       return {
         ...leaf,
         pitches: leaf.pitches.map((pitch) => pitch.replace(/\\\d+$/, "")),
+        indicators,
       };
     }
 
     return {
       ...leaf,
-      indicators: leaf.indicators.filter(
-        (indicator) =>
-          !(
-            indicator.kind === "literal" &&
-            indicator.site === "after" &&
-            /^\\\d+$/.test(indicator.text)
-          )
-      ),
+      indicators,
     };
   });
+}
+
+function stripTabOnlyIndicators(indicators: LyIndicator[]): LyIndicator[] {
+  return indicators.filter(
+    (indicator) =>
+      !(
+        indicator.kind === "literal" &&
+        indicator.site === "after" &&
+        (/^\\\d+$/.test(indicator.text) || indicator.text.startsWith("^\\markup"))
+      )
+  );
 }

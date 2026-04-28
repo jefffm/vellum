@@ -16,6 +16,7 @@ describe("buildSystemPrompt", () => {
       "tabulate",
       "voicings",
       "check_playability",
+      "alfabeto_lookup",
       "engrave",
       "compile",
       "analyze",
@@ -53,6 +54,8 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("voice-and-tab");
     expect(prompt).toContain("unsupported v2 templates");
     expect(prompt).toContain("grand-staff");
+    expect(prompt).toContain("alfabeto");
+    expect(prompt).toContain('type: "alfabeto"');
     expect(prompt).toContain("For edits to an existing LilyPond file");
   });
 

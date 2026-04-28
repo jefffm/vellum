@@ -225,6 +225,45 @@ describe("engrave — step 2: validateEvents", () => {
     expect(() => validateEvents(bars, guitarModel, minimalParams())).not.toThrow();
   });
 
+  it("accepts valid alfabeto events on baroque guitar", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto", chordName: "G major", duration: "4" }],
+      },
+    ];
+    expect(() =>
+      validateEvents(
+        bars,
+        loadModel("baroque-guitar-5"),
+        minimalParams({ instrument: "baroque-guitar-5" })
+      )
+    ).not.toThrow();
+  });
+
+  it("rejects alfabeto events on non-5-course instruments", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto", chordName: "G major", duration: "4" }],
+      },
+    ];
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(/Alfabeto events/);
+  });
+
+  it("rejects unmatched alfabeto events", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto", chordName: "D diminished", duration: "4" }],
+      },
+    ];
+    expect(() =>
+      validateEvents(
+        bars,
+        loadModel("baroque-guitar-5"),
+        minimalParams({ instrument: "baroque-guitar-5" })
+      )
+    ).toThrow(/No alfabeto match/);
+  });
+
   it("validates chord position entries", () => {
     const bars: EngraveBar[] = [
       {
@@ -375,6 +414,48 @@ describe("engrave — step 3: eventsToLeaves", () => {
     }
   });
 
+  it("converts alfabeto events to annotated five-course chords", () => {
+    const params: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [{ type: "alfabeto", chordName: "G major", duration: "4" }],
+        },
+      ],
+    };
+    const leaves = eventsToLeaves(params.bars, params, loadModel("baroque-guitar-5"));
+
+    expect(leaves[0].type).toBe("chord");
+    if (leaves[0].type === "chord") {
+      expect(leaves[0].pitches).toHaveLength(5);
+      expect(leaves[0].pitches.every((pitch) => /\\\d$/.test(pitch))).toBe(true);
+      expect(leaves[0].indicators).toContainEqual({
+        kind: "literal",
+        text: '^\\markup { "A" }',
+        site: "after",
+      });
+    }
+  });
+
+  it("converts direct-letter alfabeto events", () => {
+    const params: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [{ type: "alfabeto", letter: "A", duration: "4" }],
+        },
+      ],
+    };
+    const leaves = eventsToLeaves(params.bars, params, loadModel("baroque-guitar-5"));
+
+    expect(leaves[0].type).toBe("chord");
+    if (leaves[0].type === "chord") {
+      expect(leaves[0].pitches).toHaveLength(5);
+    }
+  });
+
   it("converts chords", () => {
     const params: EngraveParams = {
       instrument: "classical-guitar-6",
@@ -460,21 +541,25 @@ describe("engrave — step 3: eventsToRhythmLeaves", () => {
       {
         events: [
           { type: "note", input: "position", course: 1, fret: 0, duration: "4" },
+          { type: "alfabeto", chordName: "G major", duration: "4" },
           { type: "rest", duration: "4" },
         ],
       },
     ];
     const leaves = eventsToRhythmLeaves(bars, minimalParams());
-    expect(leaves).toHaveLength(2);
+    expect(leaves).toHaveLength(3);
 
     // First leaf: note → dummy note c'
     expect(leaves[0].type).toBe("note");
 
-    // Second leaf: rest → spacer rest
-    expect(leaves[1].type).toBe("rest");
+    // Second leaf: alfabeto → dummy note c'
+    expect(leaves[1].type).toBe("note");
 
-    if (leaves[1].type === "rest") {
-      expect(leaves[1].spacer).toBe(true);
+    // Third leaf: rest → spacer rest
+    expect(leaves[2].type).toBe("rest");
+
+    if (leaves[2].type === "rest") {
+      expect(leaves[2].spacer).toBe(true);
     }
   });
 

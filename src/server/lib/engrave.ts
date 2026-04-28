@@ -12,6 +12,7 @@
  */
 
 import type {
+  AlfabetoEvent,
   ChordEvent,
   EngraveBar,
   EngraveParams,
@@ -39,6 +40,12 @@ import {
   lyScore,
   serializeFile,
 } from "../../lib/ly-tree.js";
+import {
+  alfabetoLookup,
+  getChart,
+  shapeToPositions,
+  type AlfabetoMatch,
+} from "../../lib/alfabeto/index.js";
 import { parseTimeSignature, validateKeySignature } from "../../lib/music-utils.js";
 import { loadProfile } from "../profiles.js";
 import { parsePitch, scientificToLilyPond } from "../../lib/pitch.js";
@@ -244,6 +251,8 @@ export function validateEvents(
             );
           }
         }
+      } else if (event.type === "alfabeto") {
+        validateAlfabetoEvent(event, model, barNum, evNum, errors);
       }
       // Rests: only duration validation (already done above)
     }
@@ -367,6 +376,49 @@ function validatePitchEntry(
   }
 }
 
+function validateAlfabetoEvent(
+  event: AlfabetoEvent,
+  model: InstrumentModel,
+  barNum: number,
+  evNum: number,
+  errors: ValidationDetail[]
+): void {
+  if (model.courseCount() !== 5 || model.frettedCourseCount() !== 5) {
+    errors.push({
+      bar: barNum,
+      event: evNum,
+      field: "alfabeto",
+      message: "Alfabeto events require a 5-course fully fretted instrument (baroque-guitar-5)",
+    });
+    return;
+  }
+
+  try {
+    const match = selectAlfabetoMatch(event);
+
+    if (!match) {
+      errors.push({
+        bar: barNum,
+        event: evNum,
+        field: "alfabeto",
+        message: describeMissingAlfabetoMatch(event),
+      });
+      return;
+    }
+
+    for (const position of match.positions) {
+      validatePositionEntry(position.course, position.fret, model, barNum, evNum, errors);
+    }
+  } catch (error) {
+    errors.push({
+      bar: barNum,
+      event: evNum,
+      field: "alfabeto",
+      message: error instanceof Error ? error.message : "Invalid alfabeto event",
+    });
+  }
+}
+
 // === Step 3: Pitch resolution and leaf construction ===
 
 /**
@@ -447,9 +499,89 @@ function resolveEvent(
     return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
   }
 
+  if (event.type === "alfabeto") {
+    const match = selectAlfabetoMatch(event);
+
+    if (!match) {
+      throw new EngraveValidationError(describeMissingAlfabetoMatch(event), [
+        { bar: 0, field: "alfabeto", message: describeMissingAlfabetoMatch(event) },
+      ]);
+    }
+
+    const pitches = match.positions.map((position) => {
+      const pitch = model.soundingPitch(position.course, position.fret);
+      return `${scientificToLilyPond(pitch)}\\${position.course}`;
+    });
+    const afterIndicators: LyIndicator[] = [
+      {
+        kind: "literal",
+        text: `^\\markup { "${escapeLilyPondString(match.letter)}" }`,
+        site: "after",
+      },
+    ];
+
+    if (event.tie) afterIndicators.push({ kind: "tie" });
+
+    return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
+  }
+
   // Rest
   const rest = event as RestEvent;
   return lyRest(rest.duration, rest.spacer ?? false, [...indicators]);
+}
+
+function selectAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
+  const chartId = event.chartId ?? "tyler-universal";
+
+  if (event.letter && !event.chordName && !event.pitchClasses) {
+    const shape = getChart(chartId).shapes.find((candidate) => candidate.letter === event.letter);
+
+    if (!shape) {
+      return undefined;
+    }
+
+    return {
+      letter: shape.letter,
+      chord: shape.chord,
+      positions: shapeToPositions(shape),
+      source: "standard",
+    };
+  }
+
+  if (!event.chordName && !event.pitchClasses) {
+    return undefined;
+  }
+
+  const result = alfabetoLookup({
+    chordName: event.chordName,
+    pitchClasses: event.pitchClasses,
+    chartId,
+    maxFret: event.maxFret,
+    includeBarreVariants: event.includeBarreVariants,
+  });
+  const matches = event.letter
+    ? result.matches.filter((match) => match.letter === event.letter)
+    : result.matches;
+
+  return matches[0];
+}
+
+function describeMissingAlfabetoMatch(event: AlfabetoEvent): string {
+  if (event.letter && !event.chordName && !event.pitchClasses) {
+    return `No alfabeto chart shape found for letter "${event.letter}" in ${event.chartId ?? "tyler-universal"}`;
+  }
+
+  if (!event.chordName && !event.pitchClasses) {
+    return "Alfabeto event requires chordName, pitchClasses, or letter";
+  }
+
+  const target = event.chordName ?? `pitch classes ${event.pitchClasses?.join(",")}`;
+  const letter = event.letter ? ` and letter "${event.letter}"` : "";
+  return `No alfabeto match found for ${target}${letter} in ${event.chartId ?? "tyler-universal"}`;
+}
+
+function escapeLilyPondString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function noteIndicators(event: PositionNote | PitchNote): LyIndicator[] {

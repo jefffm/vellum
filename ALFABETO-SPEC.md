@@ -1,6 +1,6 @@
 # Alfabeto Chord Shape Lookup — Design Spec (v2)
 
-> Verified against Tyler, *A Guide to Playing the Baroque Guitar* (2011), Example 6.7
+> Verified against Tyler, _A Guide to Playing the Baroque Guitar_ (2011), Example 6.7
 > and cross-referenced with Foscarini chart data. All fret numbers confirmed by
 > direct book transcription; pitch math verified against baroque guitar tuning.
 
@@ -20,7 +20,7 @@ vocabulary.
 
 Alfabeto is a chord notation system where uppercase letters (plus the "cross" symbol
 `+`) each denote a specific fixed chord shape on the 5-course baroque guitar. It was
-codified by **Girolamo Montesardo** in *Nuova inventione d'intavolatura* (1606) and
+codified by **Girolamo Montesardo** in _Nuova inventione d'intavolatura_ (1606) and
 became the standard chord vocabulary for the instrument through the 17th century.
 
 The system has three tiers:
@@ -44,6 +44,7 @@ Fret numbers are listed **c1→c5** (high string to low string, chanterelle firs
 Tuning: c1=E4, c2=B3, c3=G3, c4=D4 (re-entrant), c5=A3 (re-entrant).
 
 Two verified charts exist:
+
 - **Tyler Universal** (`tyler-universal`) — canonical default, 26 shapes
 - **Foscarini** (`foscarini`) — 25 identical + 1 difference (L) + 8 extra shapes
 
@@ -62,9 +63,9 @@ the same chord regardless of stringing (French re-entrant vs Italian bourdons).
 type ChartId = "tyler-universal" | "foscarini";
 
 interface AlfabetoShapeEntry {
-  letter: string;        // "+", "A", "B", ..., "&", "9", "℞"
-  chord: string;         // "G major", "C minor", etc.
-  frets: number[];       // [c1, c2, c3, c4, c5] fret numbers
+  letter: string; // "+", "A", "B", ..., "&", "9", "℞"
+  chord: string; // "G major", "C minor", etc.
+  frets: number[]; // [c1, c2, c3, c4, c5] fret numbers
   category: "cross" | "standard" | "extended" | "special";
 }
 
@@ -76,10 +77,10 @@ interface AlfabetoChart {
 }
 
 interface AlfabetoLookupParams {
-  chordName?: string;    // "G major", "Dm", "Bb"
+  chordName?: string; // "G major", "Dm", "Bb"
   pitchClasses?: number[]; // MIDI pitch classes (0-11)
-  chartId?: ChartId;     // default: "tyler-universal"
-  maxFret?: number;      // limit barré transpositions (default: 8)
+  chartId?: ChartId; // default: "tyler-universal"
+  maxFret?: number; // limit barré transpositions (default: 8)
   includeBarreVariants?: boolean; // default: true
 }
 
@@ -101,6 +102,7 @@ interface AlfabetoLookupResult {
 ### Ranking
 
 When multiple shapes match:
+
 1. **Standard exact** — highest priority
 2. **Standard at low barré** (1–3) — common in period practice
 3. **Standard at high barré** (4–8) — playable but less idiomatic
