@@ -64,9 +64,11 @@ The current `buildTools()` section lists tools but doesn't mention `engrave`. Th
 4. If compile errors, agent fixes and retries (existing auto-compile loop)
 
 Add to `buildTools()`:
+
 - `engrave` — generates LilyPond source from structured musical data (instrument, template, bars with note events). Use for tablature generation instead of writing raw LilyPond. Eliminates syntax errors.
 
 Add to `buildWorkflow()` or a new section:
+
 - When generating tablature: prefer `engrave` over raw LilyPond. Construct the EngraveParams (instrument, template, bars), call engrave, then compile the result.
 - For edits to existing LilyPond: continue using direct edit + compile.
 
@@ -75,12 +77,14 @@ Add to `buildWorkflow()` or a new section:
 ## Phase 3: f31 — Integration Tests
 
 **f31.1 — Golden output tests** (`src/server/lib/engrave.integration.test.ts` or similar):
+
 - Test full pipeline for each template: `solo-tab`, `french-tab`, `tab-and-staff`, `voice-and-tab`
 - Use `classical-guitar-6` and `baroque-lute-11` instruments
 - Assert the output contains expected LilyPond structures (TabStaff, Staff, includes, version header)
 - Snapshot or structural assertion — not exact string match (too brittle)
 
 **f31.2 — Error handling tests:**
+
 - Missing required fields → validation error
 - Unknown instrument → clear error
 - Empty bars array → clear error
@@ -88,12 +92,14 @@ Add to `buildWorkflow()` or a new section:
 - These may partially exist in `engrave.test.ts` already — check before duplicating
 
 **f31.3 — Route handler HTTP tests:**
+
 - Already has 2 tests in `engrave-route.test.ts`. Extend with:
   - POST with each template type → 200
   - POST with malformed JSON → 400
   - POST with valid JSON but missing instrument → 400
 
 **f31.4 — Cross-instrument template matrix:**
+
 - For each instrument in the registry × each applicable template, call engrave and assert no errors
 - This is the most comprehensive test — catches instrument/template incompatibilities
 

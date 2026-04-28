@@ -21,11 +21,11 @@ caliber from structured input.
 
 ### Scope tiers
 
-| Tier | Items | Effort | Dependencies |
-|---|---|---|---|
-| **v1 — ship now** | Historical style options, split diapason staff | ~2-3 days | None — additive to current engine |
-| **v2 — next cycle** | Concert pitch, polyphonic voices | ~1 week | Polyphony needs schema + engine changes |
-| **v3 — future** | Alfabeto chord notation, custom fret labels | ~3-4 days | Alfabeto needs new event type + dictionary |
+| Tier                | Items                                          | Effort    | Dependencies                               |
+| ------------------- | ---------------------------------------------- | --------- | ------------------------------------------ |
+| **v1 — ship now**   | Historical style options, split diapason staff | ~2-3 days | None — additive to current engine          |
+| **v2 — next cycle** | Concert pitch, polyphonic voices               | ~1 week   | Polyphony needs schema + engine changes    |
+| **v3 — future**     | Alfabeto chord notation, custom fret labels    | ~3-4 days | Alfabeto needs new event type + dictionary |
 
 ---
 
@@ -104,8 +104,8 @@ The `LyFile` type currently has `layout: boolean`. Extend it:
 
 ```typescript
 export type LyLayoutContext = {
-  context: string;              // "RhythmicStaff", "TabStaff", "Score", etc.
-  overrides: string[];          // raw LilyPond override lines
+  context: string; // "RhythmicStaff", "TabStaff", "Score", etc.
+  overrides: string[]; // raw LilyPond override lines
 };
 
 export type LyFile = {
@@ -115,7 +115,7 @@ export type LyFile = {
   variables?: LyVariable[];
   score: LyContainer;
   layout: boolean;
-  layoutContexts?: LyLayoutContext[];   // NEW — emitted inside \layout { }
+  layoutContexts?: LyLayoutContext[]; // NEW — emitted inside \layout { }
   midi?: { tempo: number };
 };
 ```
@@ -154,17 +154,13 @@ function historicalLayoutContexts(templateId: EngraveTemplateId): LyLayoutContex
   // Score-level: single-digit time for all contexts
   contexts.push({
     context: "Score",
-    overrides: [
-      "\\override TimeSignature.style = #'single-digit",
-    ],
+    overrides: ["\\override TimeSignature.style = #'single-digit"],
   });
 
   // TabStaff: omit clef
   contexts.push({
     context: "TabStaff",
-    overrides: [
-      "\\omit Clef",
-    ],
+    overrides: ["\\omit Clef"],
   });
 
   // RhythmicStaff: old-style flags (only for templates that use it)
@@ -201,7 +197,7 @@ export type InstrumentLyVars = {
   stringTunings: string;
   tabFormat: string;
   diapasons?: string;
-  historicalClef?: string;   // NEW — e.g. "c" for lute
+  historicalClef?: string; // NEW — e.g. "c" for lute
 };
 ```
 
@@ -210,13 +206,13 @@ When `style === "historical"` and `vars.historicalClef` is defined, add
 
 Instrument values:
 
-| Instrument | `historicalClef` | Notes |
-|---|---|---|
-| `baroque-lute-13` | `"c"` | Standard French lute clef |
-| `theorbo-14` | `"c"` | Same convention |
-| `renaissance-lute-6` | — | Italian tab typically has no pseudo-clef |
-| `baroque-guitar-5` | — | Varied by region |
-| `classical-guitar-6` | — | Modern instrument, not applicable |
+| Instrument           | `historicalClef` | Notes                                    |
+| -------------------- | ---------------- | ---------------------------------------- |
+| `baroque-lute-13`    | `"c"`            | Standard French lute clef                |
+| `theorbo-14`         | `"c"`            | Same convention                          |
+| `renaissance-lute-6` | —                | Italian tab typically has no pseudo-clef |
+| `baroque-guitar-5`   | —                | Varied by region                         |
+| `classical-guitar-6` | —                | Modern instrument, not applicable        |
 
 ### What the LLM does
 
@@ -258,11 +254,12 @@ events into two streams based on course number:
 ```typescript
 function splitEventsByCourse(
   bars: EngraveBar[],
-  frettedCourses: number,   // from instrument profile: 6 for baroque lute
-): { frettedBars: EngraveBar[]; diapasonBars: EngraveBar[] }
+  frettedCourses: number // from instrument profile: 6 for baroque lute
+): { frettedBars: EngraveBar[]; diapasonBars: EngraveBar[] };
 ```
 
 For each bar:
+
 - Events on courses 1–`frettedCourses` go to `frettedBars`
 - Events on courses `frettedCourses+1`–N go to `diapasonBars`
 - Chord events are split: positions on fretted courses stay in the main bar,
@@ -273,6 +270,7 @@ For each bar:
 This requires the instrument profile data (specifically `fretted_courses`) to be
 available during template construction. Currently `dispatchTemplate` receives
 `InstrumentLyVars` which doesn't include this. Options:
+
 1. Pass the full instrument profile (from YAML) to the template strategy
 2. Add `frettedCourses` to `InstrumentLyVars`
 3. Add it to `EngraveParams` (redundant — it's derived from the instrument)
@@ -286,7 +284,7 @@ export type InstrumentLyVars = {
   tabFormat: string;
   diapasons?: string;
   historicalClef?: string;
-  frettedCourses?: number;       // NEW — 6 for baroque lute, 6 for theorbo
+  frettedCourses?: number; // NEW — 6 for baroque lute, 6 for theorbo
   diapasonStringTunings?: string; // NEW — separate tuning for bass staff
 };
 ```
@@ -314,6 +312,7 @@ The diapason staff is a TabStaff with special configuration:
 ```
 
 Key elements:
+
 - `\remove "Staff_symbol_engraver"` — no staff lines, just floating noteheads
 - `\bar ""` — suppress barlines
 - `stringTunings` with a single string — all diapason notes on one "string" since
@@ -327,25 +326,25 @@ Key elements:
 The Schneider snippet maps diapason courses to labels. For an 11-choir lute (courses
 7-11), the labels from lowest pitch to highest are:
 
-| Course | Pitch (d-minor) | Label | Meaning |
-|---|---|---|---|
-| 7 | G2 | `a` | Open 7th course |
-| 8 | F2 | `/a` | One slash = 8th course |
-| 9 | Eb2 | `//a` | Two slashes = 9th course |
-| 10 | D2 | `///a` | Three slashes = 10th course |
-| 11 | C2 | `4` | Numeral = 11th course |
+| Course | Pitch (d-minor) | Label  | Meaning                     |
+| ------ | --------------- | ------ | --------------------------- |
+| 7      | G2              | `a`    | Open 7th course             |
+| 8      | F2              | `/a`   | One slash = 8th course      |
+| 9      | Eb2             | `//a`  | Two slashes = 9th course    |
+| 10     | D2              | `///a` | Three slashes = 10th course |
+| 11     | C2              | `4`    | Numeral = 11th course       |
 
 For a 13-course baroque lute (Vellum's `baroque-lute-13`), extending the pattern:
 
-| Course | Pitch (d-minor) | Label |
-|---|---|---|
-| 7 | G2 | `a` |
-| 8 | F2 | `/a` |
-| 9 | Eb2 | `//a` |
-| 10 | D2 | `///a` |
-| 11 | C2 | `4` |
-| 12 | Bb1 | `/4` |
-| 13 | A1 | `//4` |
+| Course | Pitch (d-minor) | Label  |
+| ------ | --------------- | ------ |
+| 7      | G2              | `a`    |
+| 8      | F2              | `/a`   |
+| 9      | Eb2             | `//a`  |
+| 10     | D2              | `///a` |
+| 11     | C2              | `4`    |
+| 12     | Bb1             | `/4`   |
+| 13     | A1              | `//4`  |
 
 For the 14-course theorbo, add `///4` for course 14 (or `5` depending on regional
 convention). This mapping should live in the instrument profile data, not hard-coded
@@ -466,12 +465,12 @@ concertPitch: Type.Optional(ConcertPitchSchema),  // default: 440
 
 ### Historical pitch presets
 
-| Standard | Hz | Context |
-|---|---|---|
-| Modern | 440 | Default, modern instruments |
-| Baroque (Rome) | 415 | Roman courts, most baroque ensembles today |
+| Standard                 | Hz  | Context                                        |
+| ------------------------ | --- | ---------------------------------------------- |
+| Modern                   | 440 | Default, modern instruments                    |
+| Baroque (Rome)           | 415 | Roman courts, most baroque ensembles today     |
 | Baroque (Venice/Cremona) | 392 | Northern Italian low pitch, French Ton d'opéra |
-| Choir pitch | 465 | German organs, not typical for plucked strings |
+| Choir pitch              | 465 | German organs, not typical for plucked strings |
 
 Source: Jeff's `Baroque guitar.md` notes on regional pitch standards.
 
@@ -562,12 +561,12 @@ Voice streams are ordered by convention: first voice = highest (melody), last vo
 = lowest (bass). LilyPond's `\voiceOne`, `\voiceTwo`, etc. are assigned in order.
 This matters for stem direction and collision resolution.
 
-| Voice index | LilyPond command | Stem direction | Typical role |
-|---|---|---|---|
-| 0 | `\voiceOne` | Up | Melody |
-| 1 | `\voiceTwo` | Down | Bass |
-| 2 | `\voiceThree` | Up | Inner voice (high) |
-| 3 | `\voiceFour` | Down | Inner voice (low) |
+| Voice index | LilyPond command | Stem direction | Typical role       |
+| ----------- | ---------------- | -------------- | ------------------ |
+| 0           | `\voiceOne`      | Up             | Melody             |
+| 1           | `\voiceTwo`      | Down           | Bass               |
+| 2           | `\voiceThree`    | Up             | Inner voice (high) |
+| 3           | `\voiceFour`     | Down           | Inner voice (low)  |
 
 ### LyTree representation
 
@@ -582,12 +581,16 @@ const lower = lyVoice("bass", bassLeaves, {
   indicators: [{ kind: "literal", text: "\\voiceTwo", site: "before" }],
 });
 
-const tabStaff = lyTabStaff([
-  lyContainer("Voice", {    // anonymous wrapper for simultaneous
-    simultaneous: true,
-    children: [upper, lower],
-  }),
-], { withBlock });
+const tabStaff = lyTabStaff(
+  [
+    lyContainer("Voice", {
+      // anonymous wrapper for simultaneous
+      simultaneous: true,
+      children: [upper, lower],
+    }),
+  ],
+  { withBlock }
+);
 ```
 
 This serializes to:
@@ -612,6 +615,7 @@ Which is exactly the LilyPond polyphonic voice pattern.
 ### RhythmicStaff with polyphony
 
 For `french-tab`, the RhythmicStaff can either:
+
 1. **Show only the top voice's rhythm** (simplest, matches most manuscript practice)
 2. **Show all voices' rhythms** with stem direction separating them (more complex
    but more informative)
@@ -671,12 +675,14 @@ field but has no rendering support.
 ```typescript
 const AlfabetoEventSchema = Type.Object({
   type: Type.Literal("alfabeto"),
-  letter: Type.String({ minLength: 1, maxLength: 2 }),  // "A", "B", "+", "Bb"
+  letter: Type.String({ minLength: 1, maxLength: 2 }), // "A", "B", "+", "Bb"
   duration: Type.String({ minLength: 1 }),
-  direction: Type.Optional(Type.Union([
-    Type.Literal("up"),     // rasgueado up-stroke
-    Type.Literal("down"),   // rasgueado down-stroke
-  ])),
+  direction: Type.Optional(
+    Type.Union([
+      Type.Literal("up"), // rasgueado up-stroke
+      Type.Literal("down"), // rasgueado down-stroke
+    ])
+  ),
 });
 ```
 
@@ -684,23 +690,23 @@ const AlfabetoEventSchema = Type.Object({
 
 The standard Italian Alfabeto system (Montesardo, 1606):
 
-| Letter | Chord | Voicing (5→1) |
-|---|---|---|
-| A | G major | 0-2-0-0-0 |
-| B | C minor | 0-1-0-1-3 |
-| C | D major | 2-2-2-0-x |
-| D | A minor | 0-0-2-2-0 |
-| E | D minor | 0-0-0-2-3 |
-| F | F major | 3-2-1-0-x |
-| G | B♭ major | 1-1-3-3-x |
-| H | A major | 0-2-2-2-0 |
-| I | E minor | 0-0-0-0-2 |
-| K | C major | 0-0-2-3-x |
-| L | E major | 0-0-1-0-0 |
-| M | G minor | 0-1-3-3-x |
-| N | F minor | 1-1-1-3-x |
-| O | B♭ minor | 1-1-3-4-x |
-| P | E♭ major | 1-1-1-0-x |
+| Letter | Chord    | Voicing (5→1) |
+| ------ | -------- | ------------- |
+| A      | G major  | 0-2-0-0-0     |
+| B      | C minor  | 0-1-0-1-3     |
+| C      | D major  | 2-2-2-0-x     |
+| D      | A minor  | 0-0-2-2-0     |
+| E      | D minor  | 0-0-0-2-3     |
+| F      | F major  | 3-2-1-0-x     |
+| G      | B♭ major | 1-1-3-3-x     |
+| H      | A major  | 0-2-2-2-0     |
+| I      | E minor  | 0-0-0-0-2     |
+| K      | C major  | 0-0-2-3-x     |
+| L      | E major  | 0-0-1-0-0     |
+| M      | G minor  | 0-1-3-3-x     |
+| N      | F minor  | 1-1-1-3-x     |
+| O      | B♭ minor | 1-1-3-4-x     |
+| P      | E♭ major | 1-1-1-0-x     |
 
 There are regional variants (Spanish, French). The dictionary should be
 configurable per instrument profile or as a lookup table.

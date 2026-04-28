@@ -47,25 +47,30 @@ The four template strategies currently live inline in `buildLyFile()` in `src/se
 Each function receives the resolved data and returns `LyContainer[]` (the score children array). The calling code in `buildLyFile` wraps them with `lyScore()`, header, variables, etc.
 
 **y0g.1 — `buildSoloTab(musicLeaves, vars, params)`**
+
 - Currently: `case "solo-tab"` block
 - Returns: `[tabStaff, midiStaff]`
 
 **y0g.2 — `buildFrenchTab(musicLeaves, vars, params)`**
+
 - Currently: `case "french-tab"` block
 - Calls `eventsToRhythmLeaves` to generate rhythm staff
 - Returns: `[rhythmStaff, tabStaff, midiStaff]`
 
 **y0g.3 — `buildTabAndStaff(musicLeaves, vars, params)`**
+
 - Currently: `case "tab-and-staff"` block
 - Returns: `[notationStaff, tabStaff]`
 
 **y0g.4 — `buildVoiceAndTab(musicLeaves, vars, params)`**
+
 - Currently: `case "voice-and-tab"` block
 - This one also produces `variables: LyVariable[]` (melody, lyricsText, lute)
 - Return type should include both `scoreChildren` and `variables`
 - Uses `buildMelodyLeaves`, `buildLyricsContent`, `serializeLeavesInlineArray` — move these helper functions too
 
 **y0g.5 — Dispatch function**
+
 - A `dispatchTemplate(templateId, musicLeaves, vars, params)` function that does the switch + calls the right strategy
 - Returns `{ scoreChildren, variables, warnings }`
 - Replace the inline switch in `buildLyFile` with a call to `dispatchTemplate`
@@ -80,16 +85,38 @@ type TemplateResult = {
   warnings?: string[];
 };
 
-export function buildSoloTab(musicLeaves: LyLeaf[], vars: InstrumentLyVars, params: EngraveParams): TemplateResult;
-export function buildFrenchTab(musicLeaves: LyLeaf[], vars: InstrumentLyVars, params: EngraveParams): TemplateResult;
-export function buildTabAndStaff(musicLeaves: LyLeaf[], vars: InstrumentLyVars, params: EngraveParams): TemplateResult;
-export function buildVoiceAndTab(musicLeaves: LyLeaf[], vars: InstrumentLyVars, params: EngraveParams): TemplateResult;
-export function dispatchTemplate(templateId: EngraveTemplateId, musicLeaves: LyLeaf[], vars: InstrumentLyVars, params: EngraveParams): TemplateResult;
+export function buildSoloTab(
+  musicLeaves: LyLeaf[],
+  vars: InstrumentLyVars,
+  params: EngraveParams
+): TemplateResult;
+export function buildFrenchTab(
+  musicLeaves: LyLeaf[],
+  vars: InstrumentLyVars,
+  params: EngraveParams
+): TemplateResult;
+export function buildTabAndStaff(
+  musicLeaves: LyLeaf[],
+  vars: InstrumentLyVars,
+  params: EngraveParams
+): TemplateResult;
+export function buildVoiceAndTab(
+  musicLeaves: LyLeaf[],
+  vars: InstrumentLyVars,
+  params: EngraveParams
+): TemplateResult;
+export function dispatchTemplate(
+  templateId: EngraveTemplateId,
+  musicLeaves: LyLeaf[],
+  vars: InstrumentLyVars,
+  params: EngraveParams
+): TemplateResult;
 ```
 
 ### Tests
 
 Create `src/server/lib/template-strategies.test.ts`:
+
 - Each strategy gets at least 2 tests: basic correct structure + edge case
 - `buildSoloTab`: verify TabStaff + hidden MIDI staff, with correct withBlock
 - `buildFrenchTab`: verify RhythmicStaff + TabStaff + MIDI, autoBeamOff present
@@ -116,7 +143,11 @@ Pattern: copy `compile-route.ts` structure.
 ```typescript
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
-import { EngraveParamsSchema, type EngraveParams, type EngraveResult } from "../../lib/engrave-schema.js";
+import {
+  EngraveParamsSchema,
+  type EngraveParams,
+  type EngraveResult,
+} from "../../lib/engrave-schema.js";
 import { createApiRoute } from "./create-route.js";
 import { engrave } from "./engrave.js";
 

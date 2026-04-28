@@ -40,6 +40,27 @@ chat-panel .flex-1 {
   min-height: 0;
 }
 
+/*
+ * pi-web-ui includes an internal artifacts drawer inside the chat panel.
+ * Vellum renders artifacts in the dedicated full-size #artifacts-panel on the
+ * right, so the internal drawer is redundant and becomes unreadably narrow in
+ * a split layout (source text wraps to a few characters per line). Hide it and
+ * let the chat column keep its full width.
+ */
+pi-chat-panel > div > div:has(> artifacts-panel),
+chat-panel > div > div:has(> artifacts-panel) {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  flex: 0 0 0 !important;
+}
+
+pi-chat-panel > div > div:has(agent-interface),
+chat-panel > div > div:has(agent-interface) {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
 #artifacts-panel {
   min-width: 0;
   min-height: 0;
