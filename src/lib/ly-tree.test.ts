@@ -4,10 +4,13 @@ import {
   type LyFile,
   lyChord,
   lyContainer,
+  lyLyrics,
   lyNote,
   lyRest,
+  lyRhythmicStaff,
   lyScore,
   lyStaff,
+  lyTabStaff,
   lyVoice,
   serializeFile,
 } from "./ly-tree.js";
@@ -49,16 +52,35 @@ describe("ly-tree helpers", () => {
 
   it("creates a staff container with withBlock", () => {
     const staff = lyStaff([lyVoice("V", [])], {
-      withBlock: { tablatureFormat: "\\luteTabFormat" },
+      withBlock: ["tablatureFormat = \\luteTabFormat"],
     });
     expect(staff.context).toBe("Staff");
-    expect(staff.withBlock).toEqual({ tablatureFormat: "\\luteTabFormat" });
+    expect(staff.withBlock).toEqual(["tablatureFormat = \\luteTabFormat"]);
   });
 
   it("creates a score container (simultaneous by default)", () => {
     const score = lyScore([]);
     expect(score.context).toBe("Score");
     expect(score.simultaneous).toBe(true);
+  });
+
+  it("creates a TabStaff container", () => {
+    const tab = lyTabStaff([lyVoice("Music", [])], {
+      withBlock: ["tablatureFormat = \\luteTabFormat"],
+    });
+    expect(tab.context).toBe("TabStaff");
+    expect(tab.withBlock).toEqual(["tablatureFormat = \\luteTabFormat"]);
+  });
+
+  it("creates a RhythmicStaff container", () => {
+    const rhythm = lyRhythmicStaff([lyVoice("Rhythm", [])]);
+    expect(rhythm.context).toBe("RhythmicStaff");
+  });
+
+  it("creates a Lyrics container with lyricsto", () => {
+    const lyrics = lyLyrics("melody", []);
+    expect(lyrics.context).toBe("Lyrics");
+    expect(lyrics.lyricsto).toBe("melody");
   });
 });
 
@@ -109,17 +131,34 @@ describe("serializeFile", () => {
     expect(output).toContain('composer = "John Dowland"');
   });
 
-  it("serializes variables", () => {
+  it("serializes variables with braces (default)", () => {
     const file: LyFile = {
       version: "2.24.0",
       includes: [],
-      variables: { myVar: "c'4 d'4 e'4" },
+      variables: [{ name: "myVar", body: "c'4 d'4 e'4" }],
       score: lyScore([]),
       layout: true,
     };
 
     const output = serializeFile(file);
     expect(output).toContain("myVar = { c'4 d'4 e'4 }");
+  });
+
+  it("serializes variables without braces when braces=false", () => {
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      variables: [
+        { name: "lyricsText", body: "\\lyricmode { Sing now a sim -- ple song }", braces: false },
+      ],
+      score: lyScore([]),
+      layout: true,
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain("lyricsText = \\lyricmode { Sing now a sim -- ple song }");
+    // Should NOT have outer braces
+    expect(output).not.toContain("lyricsText = { \\lyricmode");
   });
 
   it("serializes midi block", () => {
@@ -258,6 +297,40 @@ describe("serializer — leaves", () => {
   });
 });
 
+describe("serializer — indentation", () => {
+  it("aligns before-indicators with their note at any nesting depth", () => {
+    // Score (indent 1) → Staff (indent 2) → Voice (indent 3) → leaf (indent 4)
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      score: lyScore([
+        lyStaff([
+          lyVoice("V", [
+            lyNote("c'", "4", [{ kind: "time_signature", numerator: 3, denominator: 4 }]),
+          ]),
+        ]),
+      ]),
+      layout: false,
+    };
+
+    const output = serializeFile(file);
+    const lines = output.split("\n");
+
+    // Find the time signature line and the note line
+    const timeLine = lines.find((l) => l.includes("\\time 3/4"));
+    const noteLine = lines.find((l) => l.includes("c'4"));
+
+    expect(timeLine).toBeDefined();
+    expect(noteLine).toBeDefined();
+
+    // Both should have the same indentation (8 spaces = indent level 4)
+    const timeIndent = timeLine!.match(/^(\s*)/)?.[1].length ?? 0;
+    const noteIndent = noteLine!.match(/^(\s*)/)?.[1].length ?? 0;
+    expect(timeIndent).toBe(noteIndent);
+    expect(timeIndent).toBe(8); // 4 levels × 2 spaces
+  });
+});
+
 describe("serializer — containers", () => {
   it("serializes sequential container with { }", () => {
     const voice = lyVoice("Music", [lyNote("c'", "4"), lyNote("d'", "4")]);
@@ -290,13 +363,13 @@ describe("serializer — containers", () => {
     expect(output).toContain(">>");
   });
 
-  it("serializes withBlock", () => {
+  it("serializes withBlock with string entries", () => {
     const tabStaff = lyContainer("TabStaff", {
-      withBlock: {
-        tablatureFormat: "\\luteTabFormat",
-        stringTunings: "\\luteStringTunings",
-        additionalBassStrings: "\\luteDiapasons",
-      },
+      withBlock: [
+        "tablatureFormat = \\luteTabFormat",
+        "stringTunings = \\luteStringTunings",
+        "additionalBassStrings = \\luteDiapasons",
+      ],
       children: [lyVoice("Music", [lyNote("f'", "4")])],
     });
     const file: LyFile = {
@@ -311,6 +384,62 @@ describe("serializer — containers", () => {
     expect(output).toContain("tablatureFormat = \\luteTabFormat");
     expect(output).toContain("stringTunings = \\luteStringTunings");
     expect(output).toContain("additionalBassStrings = \\luteDiapasons");
+  });
+
+  it("serializes withBlock with \\remove commands", () => {
+    const staff = lyStaff([lyVoice("Music", [lyNote("c'", "4")])], {
+      withBlock: [
+        '\\remove "Staff_symbol_engraver"',
+        '\\remove "Clef_engraver"',
+        "\\override NoteHead.transparent = ##t",
+      ],
+    });
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      score: lyScore([staff]),
+      layout: false,
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain("\\new Staff \\with {");
+    expect(output).toContain('\\remove "Staff_symbol_engraver"');
+    expect(output).toContain('\\remove "Clef_engraver"');
+    expect(output).toContain("\\override NoteHead.transparent = ##t");
+  });
+
+  it("serializes withBlock mixing commands and key=value entries", () => {
+    const tabStaff = lyTabStaff([lyVoice("Music", [])], {
+      withBlock: [
+        "tablatureFormat = \\luteTabFormat",
+        '\\remove "Time_signature_engraver"',
+        "stringTunings = \\luteStringTunings",
+      ],
+    });
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      score: lyScore([tabStaff]),
+      layout: false,
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain("tablatureFormat = \\luteTabFormat");
+    expect(output).toContain('\\remove "Time_signature_engraver"');
+    expect(output).toContain("stringTunings = \\luteStringTunings");
+  });
+
+  it("serializes lyricsto syntax", () => {
+    const lyrics = lyLyrics("melody", []);
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      score: lyScore([lyrics]),
+      layout: false,
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain('\\new Lyrics \\lyricsto "melody" {');
   });
 
   it("serializes container-level indicators", () => {
@@ -356,7 +485,7 @@ describe("serializer — containers", () => {
       header: { title: "Test" },
       score: lyScore([
         lyContainer("TabStaff", {
-          withBlock: { tablatureFormat: "\\luteTabFormat" },
+          withBlock: ["tablatureFormat = \\luteTabFormat"],
           children: [
             lyVoice("Music", [
               lyNote("f'", "4", [{ kind: "time_signature", numerator: 4, denominator: 4 }]),
@@ -404,5 +533,43 @@ describe("serializer — polyphony (v2 readiness)", () => {
     expect(output).toContain('\\new Voice = "Lower" {');
     expect(output).toContain("\\voiceTwo");
     expect(output).toContain(">>");
+  });
+});
+
+describe("serializer — voice-and-tab pattern", () => {
+  it("serializes a complete voice-and-tab layout", () => {
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: ["instruments/classical-guitar-6.ily"],
+      variables: [
+        { name: "melody", body: "c'4 d' e' f'" },
+        { name: "lyricsText", body: "\\lyricmode { Sing now a song }", braces: false },
+        { name: "lute", body: "c'4 e' g' c''" },
+      ],
+      score: lyScore([
+        lyContainer("Staff", {
+          name: "voice",
+          simultaneous: true,
+          children: [lyVoice("melody", [lyNote("c'", "4")])],
+        }),
+        lyLyrics("melody", []),
+        lyTabStaff([lyVoice("tab", [lyNote("c'", "4")])], {
+          withBlock: [
+            "tablatureFormat = \\classicalGuitarTabFormat",
+            "stringTunings = \\classicalGuitarStringTunings",
+          ],
+        }),
+      ]),
+      layout: true,
+      midi: { tempo: 72 },
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain("melody = { c'4 d' e' f' }");
+    expect(output).toContain("lyricsText = \\lyricmode { Sing now a song }");
+    expect(output).toContain("lute = { c'4 e' g' c'' }");
+    expect(output).toContain('\\new Lyrics \\lyricsto "melody" {');
+    expect(output).toContain("\\new TabStaff \\with {");
+    expect(output).toContain("tablatureFormat = \\classicalGuitarTabFormat");
   });
 });

@@ -67,16 +67,23 @@ export type LyContainer = {
   simultaneous: boolean; // true → << >>, false → { }
   children: (LyLeaf | LyContainer)[];
   indicators: LyIndicator[]; // before-opening-brace indicators
-  withBlock?: Record<string, string>; // → \with { key = value ... }
+  withBlock?: string[]; // → \with { line1 \n line2 ... }
+  lyricsto?: string; // → \new Lyrics \lyricsto "voiceName" { ... }
 };
 
 // === Top-level file ===
+
+export type LyVariable = {
+  name: string;
+  body: string;
+  braces?: boolean; // true (default) → name = { body }, false → name = body
+};
 
 export type LyFile = {
   version: string; // "2.24.0"
   includes: string[]; // \include paths
   header?: Record<string, string>; // \header { title = "...", composer = "..." }
-  variables?: Record<string, string>; // top-level variable definitions
+  variables?: LyVariable[]; // top-level variable definitions
   score: LyContainer; // the \score block
   layout: boolean; // emit \layout { }
   midi?: { tempo: number }; // emit \midi { \tempo 4 = N }
@@ -111,7 +118,8 @@ export function lyContainer(
     simultaneous?: boolean;
     children?: (LyLeaf | LyContainer)[];
     indicators?: LyIndicator[];
-    withBlock?: Record<string, string>;
+    withBlock?: string[];
+    lyricsto?: string;
   } = {}
 ): LyContainer {
   return {
@@ -122,6 +130,7 @@ export function lyContainer(
     children: opts.children ?? [],
     indicators: opts.indicators ?? [],
     withBlock: opts.withBlock,
+    lyricsto: opts.lyricsto,
   };
 }
 
@@ -145,12 +154,54 @@ export function lyStaff(
     name?: string;
     simultaneous?: boolean;
     indicators?: LyIndicator[];
-    withBlock?: Record<string, string>;
+    withBlock?: string[];
   } = {}
 ): LyContainer {
   return lyContainer("Staff", {
     children,
     ...opts,
+  });
+}
+
+/** Shorthand: create a TabStaff container. */
+export function lyTabStaff(
+  children: (LyLeaf | LyContainer)[],
+  opts: {
+    name?: string;
+    withBlock?: string[];
+    indicators?: LyIndicator[];
+  } = {}
+): LyContainer {
+  return lyContainer("TabStaff", {
+    children,
+    ...opts,
+  });
+}
+
+/** Shorthand: create a RhythmicStaff container. */
+export function lyRhythmicStaff(
+  children: (LyLeaf | LyContainer)[],
+  opts: {
+    indicators?: LyIndicator[];
+    withBlock?: string[];
+  } = {}
+): LyContainer {
+  return lyContainer("RhythmicStaff", {
+    children,
+    ...opts,
+  });
+}
+
+/** Shorthand: create a Lyrics container with \lyricsto binding. */
+export function lyLyrics(
+  voiceName: string,
+  children: (LyLeaf | LyContainer)[],
+  opts: { indicators?: LyIndicator[] } = {}
+): LyContainer {
+  return lyContainer("Lyrics", {
+    lyricsto: voiceName,
+    children,
+    indicators: opts.indicators,
   });
 }
 
@@ -188,11 +239,15 @@ export function serializeFile(file: LyFile): string {
     lines.push("}");
   }
 
-  if (file.variables && Object.keys(file.variables).length > 0) {
+  if (file.variables && file.variables.length > 0) {
     lines.push("");
 
-    for (const [name, body] of Object.entries(file.variables)) {
-      lines.push(`${name} = { ${body} }`);
+    for (const variable of file.variables) {
+      if (variable.braces === false) {
+        lines.push(`${variable.name} = ${variable.body}`);
+      } else {
+        lines.push(`${variable.name} = { ${variable.body} }`);
+      }
     }
   }
 
@@ -221,15 +276,17 @@ function serializeContainer(node: LyContainer, indent: number): string {
 
   let out = `${pad}\\new ${node.context}`;
 
-  if (node.name) {
+  if (node.lyricsto) {
+    out += ` \\lyricsto "${node.lyricsto}"`;
+  } else if (node.name) {
     out += ` = "${node.name}"`;
   }
 
-  if (node.withBlock && Object.keys(node.withBlock).length > 0) {
+  if (node.withBlock && node.withBlock.length > 0) {
     out += " \\with {\n";
 
-    for (const [k, v] of Object.entries(node.withBlock)) {
-      out += `${pad}  ${k} = ${v}\n`;
+    for (const entry of node.withBlock) {
+      out += `${pad}  ${entry}\n`;
     }
 
     out += `${pad}}`;
@@ -247,7 +304,7 @@ function serializeContainer(node: LyContainer, indent: number): string {
     if (child.type === "container") {
       out += serializeContainer(child, indent + 1) + "\n";
     } else {
-      out += `${pad}  ${serializeLeaf(child)}\n`;
+      out += serializeLeaf(child, indent + 1) + "\n";
     }
   }
 
@@ -257,19 +314,20 @@ function serializeContainer(node: LyContainer, indent: number): string {
 }
 
 /** Serialize a leaf node (note, chord, rest) to LilyPond text. */
-function serializeLeaf(leaf: LyLeaf): string {
-  let prefix = "";
-  let suffix = "";
+function serializeLeaf(leaf: LyLeaf, indent: number): string {
+  const pad = "  ".repeat(indent);
+  let out = "";
 
+  // Before-indicators on their own lines
   for (const ind of leaf.indicators) {
     if (ind.kind === "literal" && ind.site === "before") {
-      prefix += ind.text + "\n  ";
+      out += `${pad}${ind.text}\n`;
     } else if (ind.kind === "time_signature") {
-      prefix += `\\time ${ind.numerator}/${ind.denominator}\n  `;
+      out += `${pad}\\time ${ind.numerator}/${ind.denominator}\n`;
     } else if (ind.kind === "key_signature") {
-      prefix += `\\key ${ind.tonic} \\${ind.mode}\n  `;
+      out += `${pad}\\key ${ind.tonic} \\${ind.mode}\n`;
     } else if (ind.kind === "partial") {
-      prefix += `\\partial ${ind.duration}\n  `;
+      out += `${pad}\\partial ${ind.duration}\n`;
     }
   }
 
@@ -287,6 +345,8 @@ function serializeLeaf(leaf: LyLeaf): string {
       break;
   }
 
+  let suffix = "";
+
   for (const ind of leaf.indicators) {
     if (ind.kind === "tie") suffix += "~";
     else if (ind.kind === "slur_start") suffix += "(";
@@ -296,7 +356,9 @@ function serializeLeaf(leaf: LyLeaf): string {
     else if (ind.kind === "literal" && ind.site === "after") suffix += ` ${ind.text}`;
   }
 
-  return prefix + core + suffix;
+  out += `${pad}${core}${suffix}`;
+
+  return out;
 }
 
 /** Serialize an indicator as a standalone line (for container-level indicators). */

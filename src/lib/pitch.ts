@@ -51,7 +51,7 @@ export type ParsedPitch = {
   octave: number;
 };
 
-const PITCH_PATTERN = /^([A-Ga-g])([#bx♯♭]*|b{0,2})(-?\d+)$/;
+const PITCH_PATTERN = /^([A-Ga-g])([#♯]{1,2}|x|[b♭]{1,2})?(-?\d+)$/;
 
 export function parsePitch(note: string): ParsedPitch {
   const match = note.trim().match(PITCH_PATTERN);
@@ -64,7 +64,7 @@ export function parsePitch(note: string): ParsedPitch {
 
   return {
     letter: letter.toUpperCase(),
-    accidental: accidental.replaceAll("♯", "#").replaceAll("♭", "b"),
+    accidental: accidental.replaceAll("♯", "#").replaceAll("♭", "b").replaceAll("x", "##"),
     octave: Number(octaveText),
   };
 }

@@ -169,4 +169,51 @@ describe("scientificToLilyPond", () => {
     expect(() => scientificToLilyPond("XY9")).toThrow(/invalid pitch/i);
     expect(() => scientificToLilyPond("")).toThrow(/invalid pitch/i);
   });
+
+  it("handles double-sharps (## notation)", () => {
+    expect(scientificToLilyPond("C##4")).toBe("cisis'");
+    expect(scientificToLilyPond("F##5")).toBe("fisis''");
+    expect(scientificToLilyPond("G##3")).toBe("gisis");
+  });
+
+  it("handles double-flats (bb notation)", () => {
+    expect(scientificToLilyPond("Ebb3")).toBe("eeses");
+    expect(scientificToLilyPond("Bbb2")).toBe("beses,");
+    expect(scientificToLilyPond("Abb4")).toBe("aeses'");
+  });
+
+  it("handles x notation for double-sharp", () => {
+    expect(scientificToLilyPond("Fx4")).toBe("fisis'");
+    expect(scientificToLilyPond("Cx5")).toBe("cisis''");
+    expect(scientificToLilyPond("Gx3")).toBe("gisis");
+  });
+});
+
+describe("parsePitch — strict accidental validation", () => {
+  it("accepts valid single accidentals", () => {
+    expect(() => parsePitch("C#4")).not.toThrow();
+    expect(() => parsePitch("Eb3")).not.toThrow();
+    expect(() => parsePitch("D4")).not.toThrow();
+  });
+
+  it("accepts valid double accidentals", () => {
+    expect(() => parsePitch("C##4")).not.toThrow();
+    expect(() => parsePitch("Ebb3")).not.toThrow();
+    expect(() => parsePitch("Cx4")).not.toThrow();
+  });
+
+  it("rejects mixed sharp+flat accidentals", () => {
+    expect(() => parsePitch("C#b4")).toThrow(/invalid pitch/i);
+    expect(() => parsePitch("Cb#4")).toThrow(/invalid pitch/i);
+  });
+
+  it("rejects triple accidentals", () => {
+    expect(() => parsePitch("C###4")).toThrow(/invalid pitch/i);
+    expect(() => parsePitch("Cbbb4")).toThrow(/invalid pitch/i);
+  });
+
+  it("normalizes x to ## in parsed output", () => {
+    const parsed = parsePitch("Fx4");
+    expect(parsed.accidental).toBe("##");
+  });
 });
