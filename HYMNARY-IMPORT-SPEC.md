@@ -82,9 +82,9 @@ The first releasable workflow is deliberately text-first and should be named and
 modeled generically even if hymn/chorale fixtures drive the MVP:
 
 1. `music_import` accepts pasted text sources only: restricted LilyPond, MusicXML,
-   ABC melody sources, MEI XML, or plain lyrics. `hymn_import` may remain as a
-   profile-specific alias or prompt-level workflow name, but the underlying tool
-   and IR should not bake in hymns or SATB.
+   ABC melody sources, MEI XML, or plain lyrics. Hymn/chorale behavior is selected
+   through profile detection or `expected_profile`, not through a hymn-specific
+   tool name.
 2. MusicXML gets the most complete import path and is the preferred interchange
    for scans, MuseScore projects, DAWs/notation apps, and other sources that can
    export notation.
@@ -679,9 +679,8 @@ Minimum validation before `compile`:
 
 Purpose: convert a pasted text source into `MusicDocument`. This tool does **not**
 accept binary PDF/image/`.mscz` uploads in v1; those are handled by the later
-artifact path below. A `hymn_import` alias can exist for compatibility, but it
-should call the same generic importer with `expected_profile: "hymn"` or
-`"chorale"`.
+artifact path below. Callers should use `music_import` with automatic profile
+detection or an explicit `expected_profile`.
 
 Suggested schema:
 
