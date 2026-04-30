@@ -537,9 +537,11 @@ Parser strategy:
   symbols, directions, source locations, and diagnostics. This is separate from
   the existing `analyze` tool, which currently returns only key/time/voice
   ranges/chords.
-- **LilyPond v1**: implement a restricted text importer. It may use a lexer/parser
-  such as `python-ly` or a purpose-built tokenizer, but it must not pretend to be
-  a full LilyPond interpreter.
+- **LilyPond v1**: implement a restricted text importer using `python-ly` for
+  lexing/tokenization/tree assistance where useful. GPL dependencies are acceptable
+  for this project. Do not use `python-ly` as an excuse to claim full LilyPond
+  interpretation; the semantic importer remains limited to the documented subset,
+  and unsupported constructs must produce diagnostics.
 - **ABC/MEI**: fixture-driven import only after the MusicXML/LilyPond paths define
   the IR invariants.
 
@@ -677,10 +679,12 @@ Minimum validation before `compile`:
 
 ### New v1 text tool: `music_import`
 
-Purpose: convert a pasted text source into `MusicDocument`. This tool does **not**
-accept binary PDF/image/`.mscz` uploads in v1; those are handled by the later
-artifact path below. Callers should use `music_import` with automatic profile
-detection or an explicit `expected_profile`.
+Purpose: convert a pasted text source into `MusicDocument`. This is a
+server-backed tool in v1; browser-side detection may improve UX but is not the
+authoritative importer. The tool does **not** accept binary PDF/image/`.mscz`
+uploads in v1; those are handled by the later artifact path below. Callers should
+use `music_import` with automatic profile detection or an explicit
+`expected_profile`.
 
 Suggested schema:
 
@@ -770,8 +774,19 @@ const MusicImportArtifactParamsSchema = Type.Object({
 });
 ```
 
-This later path must select concrete OMR/OCR backends, store confidence by note and
-lyric region, and expose an uncertainty-review UI before arranging.
+This later path should use optional server-side backends rather than blocking v1:
+
+- `.mscz`: MuseScore CLI export to MusicXML when installed/configured.
+- PDF/image OMR: Audiveris as the preferred first backend; AGPL is acceptable for
+  this personal project. Treat it as optional/heavy and capture backend version,
+  command, and confidence/diagnostic metadata.
+- Lyrics OCR: Tesseract as an optional companion for text regions; never treat OCR
+  as authoritative musical structure.
+- MEI/ABC rendering/conversion: Verovio where useful, especially for MEI/ABC
+  previews and conversion validation.
+
+The artifact path must store confidence by note/region and expose an
+uncertainty-review UI before arranging.
 
 ### Planning tools or mode: generic arrangement pipeline
 
@@ -978,13 +993,17 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 
 ### Phase 6 — Non-text artifact imports
 
-- Add artifact/session storage for imported `MusicDocument` values and source
-  references.
-- Add direct `.mscz` unpack/import if warranted, otherwise keep MusicXML export as
-  the supported path.
-- Investigate ABC and MEI completeness beyond simple text import.
-- Select OMR/OCR backends for PDF/image import, document installation/runtime
-  requirements, and implement note/lyric confidence diagnostics.
+- Keep imported `MusicDocument` values session-local by default; do not add durable
+  import persistence unless the user explicitly saves the source/import.
+- Add an explicit saved-import path later if needed, with provenance/license/source
+  diagnostics preserved alongside the `MusicDocument`.
+- Add direct `.mscz` import via MuseScore CLI export if warranted, otherwise keep
+  MusicXML export as the supported path.
+- Investigate ABC and MEI completeness beyond simple text import, with Verovio as
+  a likely validation/rendering backend.
+- Add Audiveris PDF/image OMR and Tesseract lyrics OCR as optional post-v1
+  backends; document installation/runtime requirements and implement note/lyric
+  confidence diagnostics.
 
 ## Test Strategy
 
@@ -1029,18 +1048,30 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 - Generated tab syntax should use valid LilyPond note-duration-string order such as
   `g4\\3`, not `g\\3 4`.
 
-## Open Questions
+## Resolved Design Decisions
 
-- Should `music_import` live server-side only, or should simple LilyPond parsing run
-  in the browser?
-- What persistence API should store imported `MusicDocument` artifacts for later
-  editing and provenance review?
-- Which LilyPond parser/tokenizer should be adopted for the restricted subset?
-- What is the right UI for source uncertainty review?
-- Which OMR/OCR backends are acceptable for the later artifact path, and how are
-  their runtime dependencies installed?
-- How should licensing/source provenance be displayed in generated arrangements
-  and exports?
+- `music_import` is server-side authoritative in v1. The browser may do lightweight
+  source sniffing for UX, but parsing/normalization happens on the server so it can
+  use Python, music21, `python-ly`, LilyPond-adjacent tooling, and future artifact
+  backends consistently.
+- Imported `MusicDocument` values are session-local by default. No durable
+  persistence API is required unless the user explicitly saves an import/source.
+  If saved later, preserve original source/provenance/license/diagnostics and link
+  derived arrangements back to the saved import.
+- Use `python-ly` for the restricted LilyPond importer where it helps with lexing
+  and tree structure. GPL is acceptable. Still implement strict subset semantics
+  and diagnostics rather than claiming full LilyPond support.
+- V1 uncertainty review is structured diagnostics plus targeted agent questions.
+  A richer side-panel review UI is post-v1 and should show source summary,
+  candidate profiles, preservation-target choices, and diagnostic/confidence
+  groups.
+- OMR/OCR are post-v1 optional server backends. Audiveris is acceptable for
+  PDF/image OMR despite AGPL; MuseScore CLI is acceptable for `.mscz` to MusicXML;
+  Tesseract is acceptable for lyrics OCR; Verovio is useful for MEI/ABC rendering
+  and conversion validation.
+- Licensing/provenance should be preserved and displayed, but Vellum should not
+  auto-adjudicate rights. If source rights are unknown, generated arrangements and
+  exports should say so plainly.
 
 ## Definition of Done for v1
 
