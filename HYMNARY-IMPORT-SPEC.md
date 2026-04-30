@@ -738,7 +738,13 @@ const MusicImportParamsSchema = Type.Object({
 });
 ```
 
-The tool response should include:
+The tool response should include the full canonical `MusicDocument` inline for v1
+text imports rather than returning a separate transient import ID. This is simpler
+for the agent loop and acceptable for pasted text sources. Later artifact/large
+source workflows may add session-local import IDs if inline payloads become too
+large.
+
+Response contents:
 
 - Summary of detected content.
 - Ranked source-format and profile-detection candidates with evidence.
@@ -1054,10 +1060,11 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
   source sniffing for UX, but parsing/normalization happens on the server so it can
   use Python, music21, `python-ly`, LilyPond-adjacent tooling, and future artifact
   backends consistently.
-- Imported `MusicDocument` values are session-local by default. No durable
-  persistence API is required unless the user explicitly saves an import/source.
-  If saved later, preserve original source/provenance/license/diagnostics and link
-  derived arrangements back to the saved import.
+- Imported `MusicDocument` values are returned inline by `music_import` for v1
+  text imports and are session-local by default. No durable persistence API is
+  required unless the user explicitly saves an import/source. If saved later,
+  preserve original source/provenance/license/diagnostics and link derived
+  arrangements back to the saved import.
 - Use `python-ly` for the restricted LilyPond importer where it helps with lexing
   and tree structure. GPL is acceptable. Still implement strict subset semantics
   and diagnostics rather than claiming full LilyPond support.
