@@ -8,6 +8,7 @@ import {
   type PitchNote,
   type PositionNote,
   type RestEvent,
+  AlfabetoChordEventSchema,
   AlfabetoEventSchema,
   ChordEventSchema,
   EngraveBarSchema,
@@ -192,6 +193,27 @@ describe("engrave-schema — event types", () => {
     });
   });
 
+  describe("AlfabetoChordEventSchema", () => {
+    it("accepts a snake_case alfabeto chord event", () => {
+      const event = {
+        type: "alfabeto_chord",
+        chord_name: "G major",
+        duration: "4",
+        chart_id: "tyler-universal",
+        prefer: "A",
+      };
+      expect(Value.Check(AlfabetoChordEventSchema, event)).toBe(true);
+    });
+
+    it("rejects alfabeto chord events without chord_name", () => {
+      const event = {
+        type: "alfabeto_chord",
+        duration: "4",
+      };
+      expect(Value.Check(AlfabetoChordEventSchema, event)).toBe(false);
+    });
+  });
+
   describe("RestEventSchema", () => {
     it("accepts a regular rest", () => {
       const rest: RestEvent = { type: "rest", duration: "4" };
@@ -218,12 +240,14 @@ describe("engrave-schema — event types", () => {
       };
       const rest = { type: "rest", duration: "4" };
       const alfabeto = { type: "alfabeto", chordName: "G major", duration: "4" };
+      const alfabetoChord = { type: "alfabeto_chord", chord_name: "G major", duration: "4" };
 
       expect(Value.Check(EventSchema, positionNote)).toBe(true);
       expect(Value.Check(EventSchema, pitchNote)).toBe(true);
       expect(Value.Check(EventSchema, chord)).toBe(true);
       expect(Value.Check(EventSchema, rest)).toBe(true);
       expect(Value.Check(EventSchema, alfabeto)).toBe(true);
+      expect(Value.Check(EventSchema, alfabetoChord)).toBe(true);
     });
   });
 });

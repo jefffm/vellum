@@ -120,18 +120,28 @@ describe("TypeBox schema validation", () => {
   it("validates AlfabetoLookupParams", () => {
     expect(
       Value.Check(AlfabetoLookupParamsSchema, {
+        chord_name: "G major",
+        chart_id: "tyler-universal",
+        max_fret: 8,
+        include_barre: true,
+      })
+    ).toBe(true);
+    expect(
+      Value.Check(AlfabetoLookupParamsSchema, {
+        pitch_classes: [7, 11, 2],
+        chart_id: "foscarini",
+      })
+    ).toBe(true);
+    expect(
+      Value.Check(AlfabetoLookupParamsSchema, {
         chordName: "G major",
         chartId: "tyler-universal",
         maxFret: 8,
         includeBarreVariants: true,
       })
     ).toBe(true);
-    expect(
-      Value.Check(AlfabetoLookupParamsSchema, {
-        pitchClasses: [7, 11, 2],
-        chartId: "foscarini",
-      })
-    ).toBe(true);
+    expect(Value.Check(AlfabetoLookupParamsSchema, { pitch_classes: [99] })).toBe(false);
+    expect(Value.Check(AlfabetoLookupParamsSchema, { chart_id: "unknown" })).toBe(false);
     expect(Value.Check(AlfabetoLookupParamsSchema, { pitchClasses: [99] })).toBe(false);
     expect(Value.Check(AlfabetoLookupParamsSchema, { chartId: "unknown" })).toBe(false);
   });

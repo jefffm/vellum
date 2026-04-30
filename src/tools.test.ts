@@ -131,17 +131,23 @@ describe("instrument browser tools", () => {
     expect(result.details.flagged_bars).toEqual([]);
   });
 
-  it("looks up alfabeto shapes without fetching", async () => {
+  it("looks up alfabeto shapes with canonical snake_case params without fetching", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
 
     const result = await alfabetoLookupTool.execute("call-1", {
-      chordName: "G major",
-      chartId: "tyler-universal",
+      chord_name: "G major",
+      chart_id: "tyler-universal",
     });
 
     expect(result.details.chartId).toBe("tyler-universal");
     expect(result.details.matches[0]).toEqual(
       expect.objectContaining({ letter: "A", chord: "G major", source: "standard" })
+    );
+    expect(result.details.matches[0]?.positions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ course: 1, fret: 3 }),
+        expect.objectContaining({ course: 5, fret: 2 }),
+      ])
     );
     expect(result.content[0]?.type).toBe("text");
     if (result.content[0]?.type === "text") {
@@ -150,6 +156,43 @@ describe("instrument browser tools", () => {
     }
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
+  });
+
+  it("accepts legacy camelCase alfabeto lookup params", async () => {
+    const result = await alfabetoLookupTool.execute("call-1", {
+      chordName: "G major",
+      chartId: "tyler-universal",
+      includeBarreVariants: false,
+    });
+
+    expect(result.details.chartId).toBe("tyler-universal");
+    expect(result.details.matches[0]).toEqual(
+      expect.objectContaining({ letter: "A", chord: "G major", source: "standard" })
+    );
+  });
+
+  it("selects Foscarini-specific alfabeto matches", async () => {
+    const result = await alfabetoLookupTool.execute("call-1", {
+      chord_name: "Eb minor",
+      chart_id: "foscarini",
+    });
+
+    expect(result.details.chartId).toBe("foscarini");
+    expect(result.details.matches[0]).toEqual(
+      expect.objectContaining({ letter: "M†", chord: "Eb minor", source: "standard" })
+    );
+  });
+
+  it("returns an empty alfabeto match list for invalid chords", async () => {
+    const result = await alfabetoLookupTool.execute("call-1", {
+      chord_name: "not a real chord",
+    });
+
+    expect(result.details.matches).toEqual([]);
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
+      expect(result.content[0].text).toContain("No alfabeto matches");
+    }
   });
 
   it("runs theory lookups without fetching", async () => {

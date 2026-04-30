@@ -54,11 +54,22 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("voice-and-tab");
     expect(prompt).toContain("unsupported v2 templates");
     expect(prompt).toContain("grand-staff");
-    expect(prompt).toContain("alfabeto");
-    expect(prompt).toContain('type: "alfabeto"');
+    expect(prompt).toContain("alfabeto_lookup");
+    expect(prompt).toContain("alfabeto_chord");
+    expect(prompt).toContain('chord_name: "G major"');
     expect(prompt).toContain("When converting an existing LilyPond file");
     expect(prompt).toContain("do not hand-write replacement TabStaff LilyPond");
     expect(prompt).toContain("For small edits to an existing LilyPond file");
+  });
+
+  it("includes baroque guitar alfabeto workflow", () => {
+    const prompt = buildSystemPrompt([]);
+
+    expect(prompt).toContain("Baroque Guitar Arrangement — Alfabeto Priority");
+    expect(prompt).toContain("standard non-barré match");
+    expect(prompt).toContain("prefer low barré");
+    expect(prompt).toContain("Only fall back to `voicings`");
+    expect(prompt).toContain('chart_id: "foscarini"');
   });
 
   it("includes mandatory compile and bounded retry policy", () => {

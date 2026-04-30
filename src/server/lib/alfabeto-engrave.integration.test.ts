@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import type { EngraveParams } from "../../lib/engrave-schema.js";
 import { engrave, EngraveValidationError } from "./engrave.js";
 
+function manualChordEvent(frets: [number, number, number, number, number], duration: string) {
+  return {
+    type: "chord" as const,
+    positions: frets.map((fret, index) => ({
+      input: "position" as const,
+      course: index + 1,
+      fret,
+    })),
+    duration,
+  };
+}
+
+function tabChordFragments(source: string): string[] {
+  return (
+    source.match(/<[^<>\n]*\\1[^<>\n]*\\2[^<>\n]*\\3[^<>\n]*\\4[^<>\n]*\\5[^<>\n]*>\d+\.?/g) ?? []
+  );
+}
+
+function expectedTabChord(
+  frets: [number, number, number, number, number],
+  duration: string
+): string {
+  const source = engrave({
+    instrument: "baroque-guitar-5",
+    template: "french-tab",
+    bars: [{ events: [manualChordEvent(frets, duration)] }],
+  }).source;
+
+  const [fragment] = tabChordFragments(source);
+  expect(fragment).toBeDefined();
+  return fragment!;
+}
+
 function alfabetoParams(overrides: Partial<EngraveParams> = {}): EngraveParams {
   return {
     instrument: "baroque-guitar-5",
@@ -110,8 +143,100 @@ describe("alfabeto engrave integration", () => {
     expect(result.warnings).toEqual([]);
     expect(result.source).toContain('^\\markup { "A" }');
     // Both events should produce 5-course chords
-    const chordMatches = result.source.match(/<[^>]*\\1[^>]*\\2[^>]*\\3[^>]*\\4[^>]*\\5[^>]*>/g);
+    const chordMatches = result.source.match(
+      /<[^<>\n]*\\1[^<>\n]*\\2[^<>\n]*\\3[^<>\n]*\\4[^<>\n]*\\5[^<>\n]*>/g
+    );
     expect(chordMatches).not.toBeNull();
     expect(chordMatches!.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("engraves a G-C-D-Am progression via alfabeto_chord events", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              { type: "alfabeto_chord", chord_name: "G major", duration: "2" },
+              { type: "alfabeto_chord", chord_name: "C major", duration: "2" },
+            ],
+          },
+          {
+            events: [
+              { type: "alfabeto_chord", chord_name: "D major", duration: "2" },
+              { type: "alfabeto_chord", chord_name: "A minor", duration: "2" },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain(expectedTabChord([3, 3, 0, 0, 2], "2"));
+    expect(result.source).toContain(expectedTabChord([0, 1, 0, 2, 3], "2"));
+    expect(result.source).toContain(expectedTabChord([2, 3, 2, 0, 0], "2"));
+    expect(result.source).toContain(expectedTabChord([0, 1, 2, 2, 0], "2"));
+  });
+
+  it("engraves alfabeto_chord barré fallback for C# minor", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              { type: "alfabeto_chord", chord_name: "C# minor", prefer: "K", duration: "1" },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain(expectedTabChord([4, 5, 6, 6, 4], "1"));
+  });
+
+  it("handles mixed alfabeto_chord, note, chord, and rest events in the same bar", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              { type: "note", input: "position", course: 1, fret: 0, duration: "4" },
+              { type: "alfabeto_chord", chord_name: "C major", duration: "4" },
+              manualChordEvent([3, 3, 0, 0, 2], "4"),
+              { type: "rest", duration: "4" },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain("\\1");
+    expect(result.source).toContain(expectedTabChord([0, 1, 0, 2, 3], "4"));
+    expect(result.source).toContain(expectedTabChord([3, 3, 0, 0, 2], "4"));
+    expect(result.source).toContain("r4");
+  });
+
+  it("selects Foscarini shapes for alfabeto_chord events", () => {
+    const result = engrave(
+      alfabetoParams({
+        bars: [
+          {
+            events: [
+              {
+                type: "alfabeto_chord",
+                chord_name: "Eb minor",
+                chart_id: "foscarini",
+                prefer: "M†",
+                duration: "2",
+              },
+            ],
+          },
+        ],
+      })
+    );
+
+    expect(result.warnings).toEqual([]);
+    expect(result.source).toContain(expectedTabChord([2, 4, 3, 1, 1], "2"));
   });
 });

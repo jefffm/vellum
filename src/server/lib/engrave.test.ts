@@ -240,6 +240,21 @@ describe("engrave — step 2: validateEvents", () => {
     ).not.toThrow();
   });
 
+  it("accepts snake_case alfabeto_chord events on baroque guitar", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }],
+      },
+    ];
+    expect(() =>
+      validateEvents(
+        bars,
+        loadModel("baroque-guitar-5"),
+        minimalParams({ instrument: "baroque-guitar-5" })
+      )
+    ).not.toThrow();
+  });
+
   it("rejects alfabeto events on non-5-course instruments", () => {
     const bars: EngraveBar[] = [
       {
@@ -249,10 +264,34 @@ describe("engrave — step 2: validateEvents", () => {
     expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(/Alfabeto events/);
   });
 
+  it("rejects alfabeto_chord events on non-baroque-guitar instruments", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }],
+      },
+    ];
+    expect(() => validateEvents(bars, guitarModel, minimalParams())).toThrow(/Alfabeto events/);
+  });
+
   it("rejects unmatched alfabeto events", () => {
     const bars: EngraveBar[] = [
       {
         events: [{ type: "alfabeto", chordName: "D diminished", duration: "4" }],
+      },
+    ];
+    expect(() =>
+      validateEvents(
+        bars,
+        loadModel("baroque-guitar-5"),
+        minimalParams({ instrument: "baroque-guitar-5" })
+      )
+    ).toThrow(/No alfabeto match/);
+  });
+
+  it("rejects unmatched alfabeto_chord events", () => {
+    const bars: EngraveBar[] = [
+      {
+        events: [{ type: "alfabeto_chord", chord_name: "D diminished", duration: "4" }],
       },
     ];
     expect(() =>
@@ -436,6 +475,115 @@ describe("engrave — step 3: eventsToLeaves", () => {
         site: "after",
       });
     }
+  });
+
+  it("converts alfabeto_chord events to the same chord leaf as manual positions", () => {
+    const model = loadModel("baroque-guitar-5");
+    const alfabetoParams: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [{ events: [{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }] }],
+    };
+    const manualParams: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [
+            {
+              type: "chord",
+              positions: [
+                { input: "position", course: 1, fret: 3 },
+                { input: "position", course: 2, fret: 3 },
+                { input: "position", course: 3, fret: 0 },
+                { input: "position", course: 4, fret: 0 },
+                { input: "position", course: 5, fret: 2 },
+              ],
+              duration: "4",
+            },
+          ],
+        },
+      ],
+    };
+
+    const alfabetoLeaves = eventsToLeaves(alfabetoParams.bars, alfabetoParams, model);
+    const manualLeaves = eventsToLeaves(manualParams.bars, manualParams, model);
+
+    expect(alfabetoLeaves[0]).toEqual(manualLeaves[0]);
+  });
+
+  it("honors alfabeto_chord prefer when multiple letters match", () => {
+    const params: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        { events: [{ type: "alfabeto_chord", chord_name: "G major", prefer: "Y", duration: "4" }] },
+      ],
+    };
+    const leaves = eventsToLeaves(params.bars, params, loadModel("baroque-guitar-5"));
+    const yShapeParams: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [
+            {
+              type: "chord",
+              positions: [
+                { input: "position", course: 1, fret: 3 },
+                { input: "position", course: 2, fret: 3 },
+                { input: "position", course: 3, fret: 4 },
+                { input: "position", course: 4, fret: 5 },
+                { input: "position", course: 5, fret: 5 },
+              ],
+              duration: "4",
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(leaves[0]).toEqual(
+      eventsToLeaves(yShapeParams.bars, yShapeParams, loadModel("baroque-guitar-5"))[0]
+    );
+  });
+
+  it("resolves alfabeto_chord barré matches", () => {
+    const params: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [{ type: "alfabeto_chord", chord_name: "C# minor", prefer: "K", duration: "1" }],
+        },
+      ],
+    };
+    const leaves = eventsToLeaves(params.bars, params, loadModel("baroque-guitar-5"));
+    const manualParams: EngraveParams = {
+      instrument: "baroque-guitar-5",
+      template: "solo-tab",
+      bars: [
+        {
+          events: [
+            {
+              type: "chord",
+              positions: [
+                { input: "position", course: 1, fret: 4 },
+                { input: "position", course: 2, fret: 5 },
+                { input: "position", course: 3, fret: 6 },
+                { input: "position", course: 4, fret: 6 },
+                { input: "position", course: 5, fret: 4 },
+              ],
+              duration: "1",
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(leaves[0]).toEqual(
+      eventsToLeaves(manualParams.bars, manualParams, loadModel("baroque-guitar-5"))[0]
+    );
   });
 
   it("converts direct-letter alfabeto events", () => {

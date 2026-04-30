@@ -1,5 +1,9 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-import { alfabetoLookup, type AlfabetoLookupResult } from "./lib/alfabeto/index.js";
+import {
+  alfabetoLookup,
+  type AlfabetoLookupParams as AlfabetoLookupLibraryParams,
+  type AlfabetoLookupResult,
+} from "./lib/alfabeto/index.js";
 import { InstrumentModel } from "./lib/instrument-model.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
@@ -89,8 +93,9 @@ export const alfabetoLookupTool: AgentTool<
   parameters: AlfabetoLookupParamsSchema,
   execute: async (_toolCallId, params) => {
     try {
-      const result = alfabetoLookup(params);
-      return toolResult(formatAlfabetoLookup(result, params.chordName), result);
+      const lookupParams = normalizeAlfabetoLookupParams(params);
+      const result = alfabetoLookup(lookupParams);
+      return toolResult(formatAlfabetoLookup(result, lookupParams.chordName), result);
     } catch (error) {
       return toolError(errorMessage(error));
     }
@@ -133,6 +138,18 @@ export const tools = [
   diapasonsTool,
   fretboardTool,
 ];
+
+function normalizeAlfabetoLookupParams(
+  params: import("./types.js").AlfabetoLookupParams
+): AlfabetoLookupLibraryParams {
+  return {
+    chordName: params.chord_name ?? params.chordName,
+    pitchClasses: params.pitch_classes ?? params.pitchClasses,
+    chartId: params.chart_id ?? params.chartId,
+    maxFret: params.max_fret ?? params.maxFret,
+    includeBarreVariants: params.include_barre ?? params.includeBarreVariants,
+  };
+}
 
 function formatAlfabetoLookup(result: AlfabetoLookupResult, chordName?: string): string {
   const label = chordName ? ` for ${chordName}` : "";

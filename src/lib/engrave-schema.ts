@@ -103,12 +103,32 @@ export const AlfabetoEventSchema = Type.Object({
 
 export type AlfabetoEvent = Static<typeof AlfabetoEventSchema>;
 
+export const AlfabetoChordEventSchema = Type.Object({
+  type: Type.Literal("alfabeto_chord"),
+  chord_name: Type.String({
+    minLength: 1,
+    description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
+  }),
+  duration: Type.String({ minLength: 1 }),
+  chart_id: Type.Optional(AlfabetoChartIdSchema),
+  prefer: Type.Optional(
+    Type.String({
+      minLength: 1,
+      description: 'Optional preferred alfabeto letter when multiple matches exist, e.g. "A".',
+    })
+  ),
+  tie: Type.Optional(Type.Boolean()),
+});
+
+export type AlfabetoChordEvent = Static<typeof AlfabetoChordEventSchema>;
+
 export const EventSchema = Type.Union([
   PositionNoteSchema,
   PitchNoteSchema,
   ChordEventSchema,
   RestEventSchema,
   AlfabetoEventSchema,
+  AlfabetoChordEventSchema,
 ]);
 
 export type EngraveMusicEvent = Static<typeof EventSchema>;

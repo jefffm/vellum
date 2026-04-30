@@ -12,6 +12,7 @@
  */
 
 import type {
+  AlfabetoChordEvent,
   AlfabetoEvent,
   ChordEvent,
   EngraveBar,
@@ -251,8 +252,8 @@ export function validateEvents(
             );
           }
         }
-      } else if (event.type === "alfabeto") {
-        validateAlfabetoEvent(event, model, barNum, evNum, errors);
+      } else if (event.type === "alfabeto" || event.type === "alfabeto_chord") {
+        validateAlfabetoEvent(event, model, params.instrument, barNum, evNum, errors);
       }
       // Rests: only duration validation (already done above)
     }
@@ -377,13 +378,18 @@ function validatePitchEntry(
 }
 
 function validateAlfabetoEvent(
-  event: AlfabetoEvent,
+  event: AnyAlfabetoEvent,
   model: InstrumentModel,
+  instrumentId: string,
   barNum: number,
   evNum: number,
   errors: ValidationDetail[]
 ): void {
-  if (model.courseCount() !== 5 || model.frettedCourseCount() !== 5) {
+  if (
+    instrumentId !== "baroque-guitar-5" ||
+    model.courseCount() !== 5 ||
+    model.frettedCourseCount() !== 5
+  ) {
     errors.push({
       bar: barNum,
       event: evNum,
@@ -499,12 +505,12 @@ function resolveEvent(
     return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
   }
 
-  if (event.type === "alfabeto") {
+  if (event.type === "alfabeto" || event.type === "alfabeto_chord") {
     const match = selectAlfabetoMatch(event);
 
     if (!match) {
       throw new EngraveValidationError(describeMissingAlfabetoMatch(event), [
-        { bar: 0, field: "alfabeto", message: describeMissingAlfabetoMatch(event) },
+        { bar: 0, field: event.type, message: describeMissingAlfabetoMatch(event) },
       ]);
     }
 
@@ -512,13 +518,15 @@ function resolveEvent(
       const pitch = model.soundingPitch(position.course, position.fret);
       return `${scientificToLilyPond(pitch)}\\${position.course}`;
     });
-    const afterIndicators: LyIndicator[] = [
-      {
+    const afterIndicators: LyIndicator[] = [];
+
+    if (event.type === "alfabeto") {
+      afterIndicators.push({
         kind: "literal",
         text: `^\\markup { "${escapeLilyPondString(match.letter)}" }`,
         site: "after",
-      },
-    ];
+      });
+    }
 
     if (event.tie) afterIndicators.push({ kind: "tie" });
 
@@ -530,10 +538,12 @@ function resolveEvent(
   return lyRest(rest.duration, rest.spacer ?? false, [...indicators]);
 }
 
-/** Cache alfabeto lookups so validation + codegen don't repeat work on the same event. */
-const alfabetoMatchCache = new WeakMap<AlfabetoEvent, AlfabetoMatch | undefined>();
+type AnyAlfabetoEvent = AlfabetoEvent | AlfabetoChordEvent;
 
-function selectAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
+/** Cache alfabeto lookups so validation + codegen don't repeat work on the same event. */
+const alfabetoMatchCache = new WeakMap<AnyAlfabetoEvent, AlfabetoMatch | undefined>();
+
+function selectAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefined {
   const cached = alfabetoMatchCache.get(event);
   if (cached !== undefined) return cached;
   // WeakMap returns undefined for missing keys AND for cached undefined values.
@@ -545,11 +555,12 @@ function selectAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
   return match;
 }
 
-function resolveAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
-  const chartId = event.chartId ?? "tyler-universal";
+function resolveAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefined {
+  const request = normalizeAlfabetoEvent(event);
+  const chartId = request.chartId ?? "tyler-universal";
 
-  if (event.letter && !event.chordName && !event.pitchClasses) {
-    const shape = getChart(chartId).shapes.find((candidate) => candidate.letter === event.letter);
+  if (request.letter && !request.chordName && !request.pitchClasses) {
+    const shape = getChart(chartId).shapes.find((candidate) => candidate.letter === request.letter);
 
     if (!shape) {
       return undefined;
@@ -563,36 +574,66 @@ function resolveAlfabetoMatch(event: AlfabetoEvent): AlfabetoMatch | undefined {
     };
   }
 
-  if (!event.chordName && !event.pitchClasses) {
+  if (!request.chordName && !request.pitchClasses) {
     return undefined;
   }
 
   const result = alfabetoLookup({
-    chordName: event.chordName,
-    pitchClasses: event.pitchClasses,
+    chordName: request.chordName,
+    pitchClasses: request.pitchClasses,
     chartId,
-    maxFret: event.maxFret,
-    includeBarreVariants: event.includeBarreVariants,
+    maxFret: request.maxFret,
+    includeBarreVariants: request.includeBarreVariants,
   });
-  const matches = event.letter
-    ? result.matches.filter((match) => match.letter === event.letter)
+  const matches = request.letter
+    ? result.matches.filter((match) => match.letter === request.letter)
     : result.matches;
 
   return matches[0];
 }
 
-function describeMissingAlfabetoMatch(event: AlfabetoEvent): string {
-  if (event.letter && !event.chordName && !event.pitchClasses) {
-    return `No alfabeto chart shape found for letter "${event.letter}" in ${event.chartId ?? "tyler-universal"}`;
+type NormalizedAlfabetoEvent = {
+  chordName?: string;
+  pitchClasses?: readonly number[];
+  chartId?: "tyler-universal" | "foscarini";
+  maxFret?: number;
+  includeBarreVariants?: boolean;
+  letter?: string;
+};
+
+function normalizeAlfabetoEvent(event: AnyAlfabetoEvent): NormalizedAlfabetoEvent {
+  if (event.type === "alfabeto_chord") {
+    return {
+      chordName: event.chord_name,
+      chartId: event.chart_id,
+      letter: event.prefer,
+    };
   }
 
-  if (!event.chordName && !event.pitchClasses) {
+  return {
+    chordName: event.chordName,
+    pitchClasses: event.pitchClasses,
+    chartId: event.chartId,
+    maxFret: event.maxFret,
+    includeBarreVariants: event.includeBarreVariants,
+    letter: event.letter,
+  };
+}
+
+function describeMissingAlfabetoMatch(event: AnyAlfabetoEvent): string {
+  const request = normalizeAlfabetoEvent(event);
+
+  if (request.letter && !request.chordName && !request.pitchClasses) {
+    return `No alfabeto chart shape found for letter "${request.letter}" in ${request.chartId ?? "tyler-universal"}`;
+  }
+
+  if (!request.chordName && !request.pitchClasses) {
     return "Alfabeto event requires chordName, pitchClasses, or letter";
   }
 
-  const target = event.chordName ?? `pitch classes ${event.pitchClasses?.join(",")}`;
-  const letter = event.letter ? ` and letter "${event.letter}"` : "";
-  return `No alfabeto match found for ${target}${letter} in ${event.chartId ?? "tyler-universal"}`;
+  const target = request.chordName ?? `pitch classes ${request.pitchClasses?.join(",")}`;
+  const letter = request.letter ? ` and letter "${request.letter}"` : "";
+  return `No alfabeto match found for ${target}${letter} in ${request.chartId ?? "tyler-universal"}`;
 }
 
 function escapeLilyPondString(value: string): string {
