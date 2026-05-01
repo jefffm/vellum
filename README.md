@@ -6,9 +6,9 @@ Vellum helps an LLM arrange music for baroque lute, baroque guitar, Renaissance 
 
 ## Demo
 
-![Greensleeves arranged by Vellum for voice and 5-course baroque guitar](./docs/assets/greensleeves-demo.svg)
+[![Greensleeves arranged by Vellum for voice and 5-course baroque guitar](./greensleeves_bg.png)](https://youtu.be/D3I8bT7nllc)
 
-_“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellum using historical alfabeto chord shapes. Source: [`demo/greensleeves-baroque-guitar.ly`](./demo/greensleeves-baroque-guitar.ly)._
+_“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellum using historical alfabeto chord shapes. Click the image to watch the demo video. Based on the Mutopia Project source: [`greensleeves_guitar.ly`](https://www.mutopiaproject.org/ftp/Traditional/greensleeves_guitar/greensleeves_guitar.ly)._
 
 ## What Vellum does
 

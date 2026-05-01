@@ -47,6 +47,8 @@ chat-panel .flex-1 {
  * a split layout (source text wraps to a few characters per line). Hide it and
  * let the chat column keep its full width.
  */
+pi-chat-panel > div.relative > div:last-child,
+chat-panel > div.relative > div:last-child,
 pi-chat-panel > div > div:has(> artifacts-panel),
 chat-panel > div > div:has(> artifacts-panel) {
   display: none !important;
@@ -55,9 +57,12 @@ chat-panel > div > div:has(> artifacts-panel) {
   flex: 0 0 0 !important;
 }
 
+pi-chat-panel > div.relative > div:first-child,
+chat-panel > div.relative > div:first-child,
 pi-chat-panel > div > div:has(agent-interface),
 chat-panel > div > div:has(agent-interface) {
   width: 100% !important;
+  min-width: 0 !important;
   flex: 1 1 auto !important;
 }
 
@@ -151,9 +156,14 @@ chat-panel > div > div:has(agent-interface) {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #d7d7d2;
   background: #fbfbf8;
+}
+
+.artifact-preview-header > div:first-child {
+  min-width: 0;
 }
 
 .artifact-preview-eyebrow {
@@ -221,7 +231,7 @@ chat-panel > div > div:has(agent-interface) {
 
 .artifact-preview-content {
   box-sizing: border-box;
-  min-width: min-content;
+  min-width: 0;
   margin: 0 auto;
   padding: 1rem;
   border: 1px solid #d7d7d2;
@@ -233,6 +243,7 @@ chat-panel > div > div:has(agent-interface) {
 .artifact-preview-content > svg {
   display: block;
   width: 100%;
+  max-width: 100%;
   height: auto;
 }
 
