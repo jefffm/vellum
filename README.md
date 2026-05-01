@@ -4,6 +4,14 @@
 
 Vellum helps an LLM arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. The model makes musical choices; Vellum checks the hard mechanical parts: frets, courses, playable voicings, alfabeto chords, LilyPond syntax, and rendered output.
 
+## How is it?
+
+It's ... okay! Models don't seem to spend much training time on baroque guitar repertoire, and hallucinate wildly when you ask it to do things outside the training set (even SOTA models like GPT 5.5).
+
+However, because there's a harness of deterministic tooling, it stays very much on-the-rails and makes somewhat plausible arrangements.
+
+I would call this "research quality" at best! Maybe I'll train a custom model for this someday.
+
 ## Demo
 
 [![Greensleeves arranged by Vellum for voice and 5-course baroque guitar](./greensleeves_bg.png)](https://youtu.be/D3I8bT7nllc)
