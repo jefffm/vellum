@@ -4,21 +4,11 @@
 
 Vellum helps an LLM arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. The model makes musical choices; Vellum checks the hard mechanical parts: frets, courses, playable voicings, alfabeto chords, LilyPond syntax, and rendered output.
 
-## Screenshot demo
+## Demo
 
-Use **“Greensleeves” for voice + baroque guitar**.
+![Greensleeves arranged by Vellum for voice and 5-course baroque guitar](./docs/assets/greensleeves-demo.svg)
 
-Why it works for a GitHub hero image: it is public-domain, instantly recognizable, short enough to fit on screen, and it shows Vellum’s sweet spot: melody, tablature, and historically correct baroque-guitar alfabeto shapes.
-
-Try a prompt like:
-
-> Arrange the opening of “Greensleeves” for soprano and 5-course baroque guitar in G minor. Use simple voice-leading, alfabeto chords for strummed guitar, and compile the result to SVG.
-
-Other good demos:
-
-- **“Flow My Tears”** — best for a serious lute screenshot.
-- **“Canarios”** — best if you want a specifically baroque-guitar feel.
-- **“Packington’s Pound”** — bright, compact, and Renaissance-friendly.
+_“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellum using historical alfabeto chord shapes. Source: [`demo/greensleeves-baroque-guitar.ly`](./demo/greensleeves-baroque-guitar.ly)._
 
 ## What Vellum does
 
