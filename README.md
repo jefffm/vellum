@@ -1,60 +1,68 @@
 # Vellum
 
-**ve*LLM*um** — the writing surface where the LLM writes music.
+**ve*LLM*um** — an AI music desk for historical plucked strings.
 
-Vellum is an LLM-powered music arrangement tool for historical plucked string instruments (baroque lute, baroque guitar, Renaissance lute, theorbo), classical guitar, piano, and voice. It renders properly formatted tablature and standard notation via [LilyPond](https://lilypond.org).
+Vellum helps an LLM arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. The model makes musical choices; Vellum checks the hard mechanical parts: frets, courses, playable voicings, alfabeto chords, LilyPond syntax, and rendered output.
 
-## How It Works
+## Screenshot demo
 
-The LLM makes the musical decisions. Custom tools handle mechanical correctness:
+Use **“Greensleeves” for voice + baroque guitar**.
 
-- **`tabulate`** — pitch → all valid course/fret positions, ranked by quality
-- **`voicings`** — chord → all playable voicings, ranked by stretch and idiom
-- **`check_playability`** — catches impossible stretches and fingering conflicts
-- **`compile`** — runs LilyPond, returns structured errors instead of raw stderr
-- **`transpose`** — transposes with range validation and key suggestions
-- **`diapasons`** — returns historically informed bass string tuning for a key
-- **`fretboard`** — renders SVG fret diagrams
+Why it works for a GitHub hero image: it is public-domain, instantly recognizable, short enough to fit on screen, and it shows Vellum’s sweet spot: melody, tablature, and historically correct baroque-guitar alfabeto shapes.
 
-The browser hosts the Agent (pi-agent-core) and shows a conversational interface (ChatPanel) alongside a tablature workbench (ArtifactsPanel with SVG preview, fretboard diagrams). Tools call server API endpoints for LilyPond compilation and instrument data. LLM API calls are proxied through the server to keep API keys secure.
+Try a prompt like:
 
-## Architecture
+> Arrange the opening of “Greensleeves” for soprano and 5-course baroque guitar in G minor. Use simple voice-leading, alfabeto chords for strummed guitar, and compile the result to SVG.
 
-Built on [pi-mono](https://github.com/badlogic/pi-mono) (`pi-agent-core` + `pi-web-ui` + `pi-ai`). Deployed as a NixOS module on servoid.
+Other good demos:
 
-```
-Browser: Agent + pi-web-ui (ChatPanel + ArtifactsPanel + tool renderers)
-   ↕ HTTPS (mTLS) — tool API calls + LLM streamProxy
-Server: Express + LilyPond subprocess + instrument profiles + arrangement storage
-   ↕ systemd / Traefik
-NixOS: servoid (jefffm/.nix flake)
-```
+- **“Flow My Tears”** — best for a serious lute screenshot.
+- **“Canarios”** — best if you want a specifically baroque-guitar feel.
+- **“Packington’s Pound”** — bright, compact, and Renaissance-friendly.
 
-See [SPEC.md](./SPEC.md) for the full architecture, tool signatures, instrument profiles, and design rationale.
+## What Vellum does
 
-## Deployment
+- Finds valid pitch → course/fret positions with `tabulate`
+- Enumerates playable chord shapes with `voicings`
+- Looks up historical baroque-guitar alfabeto with `alfabeto_lookup`
+- Validates stretches, ranges, and fingering conflicts with `check_playability`
+- Generates LilyPond from structured music data with `engrave`
+- Compiles LilyPond to SVG/PDF with structured error feedback via `compile`
+- Analyzes MusicXML, transposes, checks voice-leading, and renders fretboard diagrams
 
-Consumed via the `jefffm/.nix` flake:
+## Why it exists
 
-```nix
-# inputs
-inputs.vellum.url = "github:jefffm/vellum";
+LLMs can be useful musical collaborators, but they are bad at guessing instrument mechanics and notation syntax. Vellum gives the agent tools that turn those guesses into checked, playable, engraved music.
 
-# hosts/servoid/default.nix
-services.vellum = {
-  enable = true;
-  domain = "vellum.aoeu.pw";
-  apiKeyFile = "/run/secrets/anthropic-key";
-};
+## Quick start
+
+```bash
+nix develop
+npm install
+npm run server:build
+npm run server
 ```
 
-## Status
+In another shell:
 
-Pre-v1. Spec and architecture defined. No remaining design blockers. Implementation not yet started.
+```bash
+nix develop
+npm run dev
+```
+
+Then open the Vite URL. Configure an LLM key with `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `VELLUM_LLM_API_KEY`, or pi OAuth credentials.
+
+## Stack
+
+- TypeScript + Vite browser UI
+- `pi-agent-core` / `pi-web-ui` for the chat agent interface
+- Express API server
+- LilyPond for engraving
+- music21 for analysis helpers
+- Nix dev shell with Node, Python, and LilyPond
 
 ## Docs
 
-- [SPEC.md](./SPEC.md) — full specification
-- [OPEN-QUESTIONS.md](./OPEN-QUESTIONS.md) — tracked gaps and research items
-- [BLUNDER-HUNT.md](./BLUNDER-HUNT.md) — adversarial review findings (R1)
-- [BLUNDER-HUNT-R2.md](./BLUNDER-HUNT-R2.md) — adversarial review findings (R2)
+- [SPEC.md](./SPEC.md) — full architecture and tool design
+- [ALFABETO-SPEC.md](./ALFABETO-SPEC.md) — historical baroque-guitar chord lookup
+- [HISTORICAL-RENDERING-SPEC.md](./HISTORICAL-RENDERING-SPEC.md) — engraving goals
