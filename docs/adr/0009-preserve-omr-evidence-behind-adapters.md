@@ -33,6 +33,8 @@ OMR Run and Score Transcription version rather than mutating prior results.
 
 - Users can start from a generic PDF upload while retaining traceable evidence for
   every recognized note.
+- Page and region mappings support Score-Anchored Review in which the source
+  facsimile and editable recognized notation are presented together.
 - Audiveris can be replaced or supplemented without migrating Vellum's canonical
   score representation.
 - Recognition runs consume more local storage than keeping MusicXML alone.

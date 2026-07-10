@@ -14,7 +14,129 @@ The Historical Knowledge Base combines reviewed, versioned Knowledge Packs with 
 
 State is divided into durable Arrangement Workspaces, cross-project Personal Defaults, and a reviewed Historical Knowledge Base. Workspace corrections save automatically; reusable claims require explicit source-backed promotion before they become global knowledge.
 
+Vellum may notice equivalent choices recurring across distinct Arrangement
+Workspaces and propose a **Personal Default Candidate**. The proposal shows the
+choices that motivated it and an explicit scope—such as target instrument, tuning,
+Notation Layout, task, or repertoire context—but has no behavioral effect until
+the Owner approves it. Approved defaults are visible, editable, releasable, and
+removable. Rejected candidates do not repeatedly nag unless materially different
+evidence suggests a new scope. Applied defaults are disclosed in the Arrangement
+Brief and remain soft personal preferences, never source evidence, historical
+authority, Editorial Commitments, or hidden hard constraints.
+
+Personal Defaults have the lowest precedence in musical decision-making. They
+yield automatically to source evidence, applicable Historical Practice Claims,
+Preservation Targets, Editorial or Family Commitments, and hard instrument or
+validation constraints. An unapplied default remains available for other contexts
+and appears with the exact score-anchored or profile-backed reason it did not
+apply. The conflict is non-blocking unless the Owner explicitly promotes the
+choice into the current arrangement; overriding historical or preservation
+constraints requires changing the relevant profile, policy, or commitment rather
+than strengthening a Personal Default.
+
 Musical state has explicit versioned lineage: immutable Source Artifacts produce correctable Score Transcriptions, derived Normalized Scores, Analysis Records, Arrangement Scores, and reproducible Deliverables. No transformation silently rewrites an upstream layer.
+
+The lineage is dependency-aware. A new Score Transcription version automatically
+recomputes deterministic normalization and analysis. Applicable user corrections
+are carried forward explicitly, while corrections whose score anchors no longer
+resolve are returned for review. Creative downstream work is never silently
+replaced: existing Arrangement Scores, Performance Interpretations, and
+Deliverables remain available as **Stale Derivations**, with the changed upstream
+dependency identified. Regeneration is an explicit action that creates a new
+version and supports comparison with the preserved result.
+
+The default regeneration path is **Conservative Regeneration**. It descends from
+the stale Arrangement Score, carries forward user-authored or explicitly approved
+**Editorial Commitments**, and limits generation changes to the dependency region
+affected by the corrected source. A commitment that conflicts with corrected
+source material or a hard constraint becomes a targeted conflict; it is never
+silently discarded. The new arrangement still receives a complete Preservation
+Audit and all applicable validation. A fresh Arrangement Search remains available
+when the user wants the entire solution reconsidered.
+
+Each Arrangement Score realizes one exact **Target Configuration**: its solo or
+ensemble instruments, roles, tunings, stringing, and playability-relevant
+capabilities. French tablature, a Learning Layout, PDF, and browser notation can be
+different projections of that same score. Changing the target instrument, role,
+tuning, or stringing produces a sibling Arrangement Score in an **Arrangement
+Family**, not another layout. Family members share their Arrangement Brief and
+source-analysis lineage but run independent Arrangement Search, candidate ranking,
+playability validation, Preservation Audit, and version history.
+
+Editorial Commitments are target-local by default. A user may explicitly promote a
+musically portable choice—such as a countermelody, cadence, or protected texture—to
+a **Family Commitment** applying to selected or future Target Configurations.
+Instrument-specific course, fret, fingering, diapason, tuning, or stringing choices
+remain local. Source corrections are made once in the Score Transcription or
+Analysis Record rather than copied into family constraints. Changing a Family
+Commitment marks affected sibling scores stale and offers Conservative Regeneration
+for each; infeasibility creates a target-local Commitment Conflict without
+invalidating feasible siblings.
+
+Every direct user edit to an Arrangement Score becomes an Editorial Commitment by
+default. Model-generated material becomes committed only when the user edits or
+explicitly approves it. The UI provides **Let Vellum reconsider**, which releases
+the selected commitment for future regeneration but does not revert the current
+score or erase the version in which the choice was made. Corrections to the Score
+Transcription remain evidence-layer corrections and are not mislabeled as
+arrangement commitments.
+
+Editorial Commitments are semantic rather than coarse score locks. Each commitment
+records stable score or relationship anchors, an optional temporal region, and a
+**Commitment Scope** identifying the protected dimension: Principal Voice pitch,
+rhythm, harmony, bass, Texture, contrapuntal relationship, ornament, notation, or
+course/fingering assignment. A direct edit creates the narrowest implied scope—for
+example, changing a course assignment preserves the fingering without freezing
+unrelated rhythm or harmony. The user may explicitly broaden the scope to a note
+group, voice, phrase, measure range, section, or whole arrangement. An anchor that
+no longer resolves becomes a targeted review item; Vellum does not silently widen
+or discard the commitment.
+
+If a commitment cannot coexist with corrected source evidence, a Preservation
+Target, or another hard constraint, Vellum creates a score-anchored **Commitment
+Conflict** and blocks completion. It presents the applicable explicit resolutions:
+
+1. release the Editorial Commitment for future generation;
+2. revise the Score Transcription if the recognized evidence is wrong, producing a
+   new evidence-layer version and dependency recomputation; or
+3. approve a versioned Policy Exception identifying the affected commitment,
+   Preservation Target or constraint, musical consequence, rationale, and Owner
+   approval.
+
+The chosen resolution creates new versioned state. Vellum never silently favors
+either source fidelity or a user edit, and Commitment Conflicts and Policy
+Exceptions remain visible in the Preservation Audit rather than disappearing into
+a bulk approval action.
+
+A localized, Owner-approved Policy Exception can remain compatible with Faithful
+Reduction; the audit reports **pass with exceptions** and discloses the deviation.
+The audit also evaluates all exceptions together by musical consequence rather
+than applying an arbitrary count. One critical exception—or several local
+exceptions whose combined effect materially compromises a Preservation Target or
+the work's recognizable identity—produces **Policy Drift** and fails Faithful
+Reduction. Completion then requires revising the arrangement or explicitly
+changing the Preservation Policy, which creates a new Arrangement Score version
+and a new audit. Vellum cannot preserve the Faithful Reduction label by splitting
+a broad rewrite into many small exceptions.
+
+Every Arrangement Score also carries a policy-independent **Transformation
+Report**. It maps source events and relationships to their arrangement descendants
+and classifies retained, transposed, octave-relocated, revoiced, reharmonized,
+omitted, and newly generated material with its rationale. Under Faithful Reduction
+the Preservation Audit evaluates this map as a hard completion gate. Under
+Idiomatic Adaptation and Free Paraphrase it remains a complete, inspectable report
+rather than enforcing note-level fidelity. Instrument mechanics, explicit
+commitments, and applicable hard Validation Findings continue to gate every policy.
+
+The workbench can render the Transformation Report as a toggleable **Provenance
+Overlay** on linked source and arrangement notation. It distinguishes retained,
+transformed, omitted, and generated material using labels, icons, or patterns as
+well as color. Many-to-many transformations remain navigable; omitted events are
+marked at their source or timeline position even when the arrangement has no glyph
+to select. Activating a marker opens the linked objects, transformation class,
+rationale, evidence, applicable policy, and audit outcome. The overlay is
+diagnostic UI state: it neither clutters the normal view by default nor changes the
+Arrangement Score or ordinary Deliverables.
 
 **The product is a local-first pi-mono web app** — a custom application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit and run primarily on its Owner's machine. The browser hosts the conversational agent and live score workbench. Local services provide the Musicological Engine, LilyPond, source storage, durable workspaces, and model-provider proxying. Nix remains a reproducible packaging option and may support private remote access, but servoid is not the primary runtime.
 
@@ -153,6 +275,39 @@ Owner machine          │
 **LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
 
 **Vellum-owned Provider Connection.** The local server initiates ChatGPT OAuth through Pi's public provider API, receives the localhost callback, stores and refreshes credentials in Vellum-controlled secure local storage, and reports connection state to the browser. Vellum does not read Pi or Codex credential files. API keys remain a fallback, and the provider-specific flow stays behind a replaceable adapter.
+
+**Disconnected operation.** Provider availability gates only durable **Model
+Actions**. PDF/MusicXML import, Score-Anchored Review, direct editing,
+deterministic analysis, validation, engraving, workspace access, and Audio Preview
+continue locally when ChatGPT authorization expires or the network is unavailable.
+Before provider work begins, a Model Action records exact input versions and the
+last confirmed canonical boundary. Incomplete responses never partially update a
+Score Transcription, Analysis Record, Arrangement Candidate, Arrangement Score, or
+Historical Knowledge Base. Interrupted actions remain inspectable, cancellable,
+and safely retryable after reconnection without replaying already committed state.
+Provider errors never delete or lock local musical work.
+
+Reconnection does not automatically resume creative Model Actions. The workspace
+shows each interrupted action with explicit **Retry** and **Cancel** controls, its
+exact original inputs, completed local tool results, partial progress summary,
+interruption reason, and last confirmed version boundary. Partial model text can
+remain in diagnostic history but cannot become canonical musical state. Retrying
+uses the action's durable identity and idempotency boundary so it cannot duplicate
+already committed results or issue an undisclosed provider request.
+
+Before Retry, Vellum compares the action's recorded inputs with current workspace
+versions. If they differ, the UI offers two explicit paths:
+
+- **Retry on current version** (default): create a revalidated attempt against
+  current state while retaining the original intent and an input-difference
+  summary.
+- **Retry original snapshot as a branch**: create an internal **Arrangement
+  Branch** rooted at the exact prior versions and continue the earlier intention
+  without overwriting or reverting current work.
+
+Both attempts remain linked to the interrupted Model Action and its durable
+idempotency boundary. An Arrangement Branch is musical version lineage inside the
+workspace, not a copied workspace or Git branch.
 
 **Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check*playability) \_could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
 
@@ -1033,6 +1188,23 @@ Vellum accepts multiple source formats and normalizes them into versioned musica
 5. **Figured bass** — bass and figures become a Continuo Foundation; upper voices are generated under a Realization Profile
 6. **Natural language or model memory** — disclosed best effort with explicit source uncertainty
 
+### Continuo Output
+
+A result is a complete Continuo Realization only if its Arrangement Score actually
+sounds the authoritative Continuo Foundation. If the plucked target cannot do so,
+Vellum offers either of two honest outputs:
+
+- retain the Continuo Foundation on a separate bass staff or instrument and treat
+  the plucked part as the upper realization; or
+- create a clearly labeled **Continuo Reduction** for the solo target.
+
+A Continuo Reduction retains the entire foundation in source lineage and maps
+every unsounded bass event in its Preservation Audit. Systematic bass omission
+under Faithful Reduction requires a Policy Exception and may amount to Policy
+Drift; harmonic implication or a matching chord root does not count as sounding
+the authoritative bass. Engraving and Audio Preview must not add an absent bass
+while representing the target part as a complete realization.
+
 ### PDF and Image Recognition
 
 PDF/image recognition uses a backend-neutral OMR adapter. Audiveris is the first
@@ -1051,6 +1223,21 @@ MusicXML is an input to normalization, not the complete recognition record. A
 different backend, upgraded backend, or changed configuration creates a new OMR
 Run and Score Transcription version, leaving earlier evidence reproducible.
 
+### Score-Anchored Review
+
+When recognition produces a Critical Uncertainty, Vellum opens the exact source
+page and region beside the corresponding editable notation. The review shows the
+recognized value, ranked alternatives, confidence or other backend evidence, and
+the musical consequence of the uncertainty—for example, whether it changes a
+Principal Voice event, figure, rhythm, key signature, or repeat structure.
+
+Accepting a suggestion or direct notation edit creates a new Score Transcription
+version and preserves the earlier transcription and immutable Source Artifact.
+The source-region mapping remains attached to the corrected musical object for
+later audit. Chat can explain the issue and can accept textual corrections, but a
+user should not have to describe a visible notation error in prose when it can be
+corrected directly against the facsimile.
+
 ### Arrangement Process
 
 The Musicological Engine follows this process:
@@ -1067,7 +1254,7 @@ The Musicological Engine follows this process:
 
 3. PLAN
    - Resolve Preservation Policy, target instrument, Notation Layouts, Bass Tuning,
-     transposition, sectional texture, and allowed transformations
+     Transposition Plan, sectional texture, and allowed transformations
 
 4. GENERATE CANDIDATES
    - Explore musically consequential alternatives in key, register, texture,
@@ -1091,12 +1278,79 @@ The Musicological Engine follows this process:
    - Compile, inspect, and regenerate until notation and rendering checks pass
 ```
 
+### Transposition
+
+Faithful Reduction permits a uniform whole-work Transposition Plan. Vellum may
+choose the best playable key automatically when it preserves every protected
+interval, rhythm, contour, harmonic function, formal relationship, and cadence.
+Before generation it announces the source key, target key, interval, affected
+parts, and playability rationale. The Preservation Audit verifies the exact
+source-to-target mapping.
+
+Vellum asks before transposing when absolute pitch or key depends on a fixed voice
+or instrument, vocal range, source-specific scordatura, a requested edition or
+recording, or another detected ensemble constraint. In those cases the
+Transposition Plan remains unresolved until the user chooses or changes the
+constraint.
+
+Faithful Reduction does not permit independently transposing an isolated passage
+merely to make it fit. Arrangement Search must first exhaust viable octave
+placement, revoicing, Texture reduction, and accompaniment simplification within
+the whole-work Transposition Plan. A passage-level transposition is allowed only
+when it is present in the source or the Owner approves a score-anchored Policy
+Exception; otherwise the Preservation Audit fails it as a change to the work's
+tonal relationships.
+
+A uniform octave relocation of the complete Principal Voice is compatible with
+Faithful Reduction when announced and recorded in the Transposition Plan. Local
+octave displacement is more dangerous: the Preservation Audit must prove that it
+retains pitch-class order, phrase contour, registral emphasis and climax, cadence
+approach, rhythmic identity, and the voice's perceptual prominence in the target
+Texture. Octave folding that fragments, obscures, or changes the recognizable
+melodic shape requires a score-anchored Policy Exception.
+
 ### Audio Preview
 
 Every selected Arrangement Score automatically receives a basic synthesized Audio
 Preview. Vellum already obtains MIDI from the LilyPond compilation path; the
 browser decodes that MIDI and schedules it through a lightweight Web Audio
 synthesizer. The initial controls are play/pause, stop, seek/progress, and volume.
+
+Playback is divided into named semantic **Playback Parts** for the Principal Voice,
+Continuo Foundation, accompaniment, and any other musically distinct voice or
+instrument. Each part has independent mute, solo, and level controls. Parts derive
+from canonical sounding events and arrangement roles rather than engraving staves,
+so presenting one voice in both standard notation and tablature cannot double its
+MIDI notes. Preservation Targets and audit findings link to their Playback Parts,
+making it possible to hear protected melody, bass, or accompaniment in isolation.
+
+Playback and score selection support bidirectional **Lineage Navigation**. Clicking
+an Arrangement Score event, recognized notation object, source facsimile region,
+Analysis Claim, or Preservation Audit finding seeks to the corresponding sounding
+time. During playback Vellum highlights all simultaneous Arrangement Score events
+and their linked transcription objects, source regions, claims, and audit mappings.
+
+The timeline uses **Playback Occurrences** rather than assuming one timestamp per
+written event. Each traversal of a repeat or ending receives its own occurrence
+identity while retaining the canonical event lineage. This lets the same written
+note highlight correctly on successive passes and prevents seeking or diagnostics
+from depending on page coordinates or matching raw MIDI pitches.
+
+By default the timeline follows the complete **Performed Form** derived from
+repeats, volta endings, da capo or dal segno instructions, segnos, codas, and
+related navigation signs. A **Skip repeats** practice toggle produces a temporary
+condensed traversal for faster checking; it does not edit score structure or create
+a Performance Interpretation. The chosen traversal and every Playback Occurrence
+are recorded reproducibly. A Critical Uncertainty in any form-defining sign blocks
+authoritative playback and opens Score-Anchored Review rather than silently
+guessing the work's form.
+
+Temporary **Practice State** adds passage looping and playback-speed control. Loop
+boundaries are selected on Playback Occurrences so they remain unambiguous within
+repeated form. Speed scaling preserves pitch and relative rhythmic proportions.
+Practice State is reset independently and never changes tempo markings,
+Arrangement Scores, Performance Interpretations, Preservation Audits, exported
+MIDI, or any other Deliverable.
 
 The preview is a reproducible projection of the Arrangement Score, not separate
 musical state. It must use the score's sounding pitches, durations, tempo, repeats,
@@ -1343,9 +1597,10 @@ Agent:
    → Identifies Alleluia refrains (repeated descending I–V–vi–IV pattern)
 
 2. LLM reads analysis + baroque-guitar-5 profile:
-   "D major isn't ideal for baroque guitar — I'll transpose to A minor.
-    theory('scale_chords', {tonic: 'A', scale: 'minor'}) confirms
-    Am, Bdim, C, Dm, Em, F, G — all idiomatic open-position chords.
+   "G major gives the melody and alfabeto shapes a better playable register, so
+    I'll transpose the complete D-major setting down a fifth to G major.
+    theory('scale_chords', {tonic: 'G', scale: 'major'}) confirms
+    G, Am, Bm, C, D, Em, F#dim — all available to the voicing search.
     Which stringing? French (full re-entrant), Italian, or mixed?"
 
 3. User picks French

@@ -125,8 +125,22 @@ Default hymn/chorale behavior should be:
 3. Preserve source harmony where useful, including SATB/four-part harmony, but
    reduce it idiomatically for the target instrument.
 4. Add idiomatic accompaniment underneath or around the tune.
-5. If transposition is needed for the target instrument, preserve contour and
-   phrase identity.
+5. If transposition improves playability, Vellum may select and announce a uniform
+   whole-work Transposition Plan while preserving intervals, rhythm, contour,
+   harmony, phrase identity, and cadences. Ask first only when absolute pitch,
+   vocal range, ensemble context, scordatura, or edition matching constrains it.
+6. Do not transpose isolated passages independently under Faithful Reduction.
+   Exhaust octave placement, revoicing, texture reduction, and accompaniment
+   simplification first; any remaining local transposition requires a source
+   precedent or explicit Policy Exception.
+7. A uniform octave relocation of the complete lead voice may be announced and
+   audited as part of the Transposition Plan. Local octave displacement must
+   preserve phrase contour, registral emphasis, cadence, rhythm, pitch-class
+   order, and perceptual prominence or require a Policy Exception.
+8. If a target cannot sound a Continuo Foundation, retain the bass on a separate
+   staff/instrument or label the target part a Continuo Reduction. Map every
+   unsounded bass event in the Preservation Audit; never call implied harmony a
+   complete Continuo Realization.
 
 ## User Stories
 
@@ -507,6 +521,53 @@ Important invariants:
 - Analysis Records and Arrangement Scores identify their exact upstream versions;
   upstream correction marks dependent results stale rather than silently changing
   them.
+- Deterministic normalization and analysis recompute automatically for a new Score
+  Transcription version. Existing Arrangement Scores and their Deliverables remain
+  inspectable as Stale Derivations until the user explicitly regenerates a new
+  arrangement version.
+- User-authored analysis corrections carry forward only when their score anchors
+  still resolve; otherwise they become targeted review items rather than being
+  discarded.
+- Regenerating a stale arrangement defaults to Conservative Regeneration: branch
+  from the preserved prior arrangement, carry forward its Editorial Commitments,
+  and regenerate only the dependency region affected by the corrected source.
+  Conflicting commitments require targeted review, and the complete Preservation
+  Audit reruns before the new arrangement can pass.
+- Audio Preview exposes semantic Playback Parts for lead voice, Continuo
+  Foundation, and accompaniment with mute, solo, and level controls. Parts derive
+  from canonical events, not engraving staves, so voice-plus-tab layouts cannot
+  double the same notes in MIDI.
+- Playback supports Lineage Navigation: score/source selection seeks to linked
+  sound, and playback highlights linked source, transcription, arrangement,
+  analysis, and audit objects. Repeat traversals use distinct Playback Occurrences
+  tied to one canonical written event.
+- Audio Preview follows the complete Performed Form by default, including repeats,
+  endings, and navigation jumps. A Skip repeats practice toggle creates only a
+  temporary condensed timeline. Uncertain form-defining signs require
+  Score-Anchored Review.
+- Temporary Practice State supports looping selected Playback Occurrences and
+  pitch-preserving speed changes without modifying tempo, arrangement,
+  interpretation, audits, or exports.
+- Each Arrangement Score belongs to one exact Target Configuration. Multiple
+  layouts for that configuration share the score; different instruments, tunings,
+  stringings, or ensemble roles create sibling scores in an Arrangement Family
+  with independent search, playability validation, and Preservation Audits.
+- A Commitment Conflict with source evidence, a Preservation Target, or another
+  hard constraint blocks completion until the user releases the commitment,
+  corrects the Score Transcription, or approves a score-anchored, versioned Policy
+  Exception. No resolution silently overwrites the source or prior arrangement.
+- Localized Policy Exceptions may produce a disclosed Faithful Reduction
+  pass-with-exceptions result. The Preservation Audit evaluates their cumulative
+  musical effect; any critical or accumulated compromise of a Preservation Target
+  becomes Policy Drift and requires revision or an explicit policy change.
+- Every policy retains a complete Transformation Report mapping source material to
+  retained, changed, omitted, and generated arrangement material. Faithful
+  Reduction evaluates it as a hard source-fidelity gate; Idiomatic Adaptation and
+  Free Paraphrase expose it as an informative report while retaining all other
+  hard constraints.
+- A toggleable, accessible Provenance Overlay renders that report on linked source
+  and arrangement notation. Omitted material remains visible at its source or
+  timeline location, and selecting any marker opens its lineage and rationale.
 
 ## Import Pipeline
 
@@ -668,9 +729,9 @@ If no harmony exists:
 
 For 5-course baroque guitar:
 
-- Prefer G, C, D, A minor, E minor, and related alfabeto-friendly keys only when
-  the user requested instrument-friendly transposition or explicitly accepts a
-  proposed transposition.
+- Prefer G, C, D, A minor, E minor, and related alfabeto-friendly keys when a
+  uniform Transposition Plan improves playability and no fixed-pitch dependency
+  blocks it. Announce the plan before generation.
 - Use `alfabeto_lookup` for downbeat/structural strums.
 - Use explicit course/fret positions for melodic fills.
 - Preserve the lead line in a vocal/notation staff when the guitar cannot carry it
@@ -818,8 +879,11 @@ Audiveris-specific concepts as the canonical music model:
   previews and conversion validation.
 
 The artifact path must store confidence or uncertainty evidence by note/region
-where the backend supplies it and expose an uncertainty-review UI before arranging.
-The common adapter must represent unavailable confidence honestly rather than
+where the backend supplies it and expose Score-Anchored Review before arranging
+when a Critical Uncertainty exists. The review presents the relevant source
+facsimile region beside editable recognized notation and ranked correction
+suggestions. Accepting a correction creates a new Score Transcription version. The
+common adapter must represent unavailable confidence honestly rather than
 inventing numeric certainty. A rerun with a different backend or configuration
 creates a new OMR Run and Score Transcription version.
 
@@ -874,8 +938,10 @@ const ArrangeMusicParamsSchema = Type.Object({
 });
 ```
 
-Default `transpose_policy` is `"ask"` unless the user already requested an
-instrument-friendly arrangement or supplied a target key.
+Default `transpose_policy` is `"instrument_friendly"`: Vellum selects and announces
+a uniform whole-work Transposition Plan. Use `"ask"` when analysis detects a
+fixed-pitch voice or instrument, vocal-range constraint, source-specific
+scordatura, edition-matching requirement, or another absolute-pitch dependency.
 
 ### Extend `engrave`
 
@@ -952,9 +1018,9 @@ Suggested short prompt section:
      four-part harmony, 5 lyric stanzas, volta 5.”
    - Or: “Detected lead-sheet profile: melody, chord symbols, 32 measures, no
      lyrics.”
-4. Vellum asks or confirms preservation/transposition policy when needed:
-   - “The original key is Eb. For baroque guitar, G major is more idiomatic. Shall
-     I transpose to G while preserving the melody contour, or preserve Eb?”
+4. Vellum announces preservation/transposition policy and asks only when needed:
+   - “The original key is Eb. I’ll transpose uniformly to G major for the baroque
+     guitar while preserving the tune, harmony, rhythm, and cadences.”
    - “I found two plausible lead voices. Use Soprano or Violin I as the lead?”
    - If the user already requested an instrument-friendly key/style, Vellum may
      proceed but must state the chosen transposition explicitly.
@@ -968,8 +1034,8 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 - “I found two upper voices. Should the soprano be the lead melody?”
 - “The imported MusicXML appears to contain three stanzas but only one aligned
   stanza. Engrave all stanzas as text below, or proceed with stanza 1 only?”
-- “The original key is Eb. For baroque guitar, G major is more idiomatic. Preserve
-  Eb or transpose to G?”
+- “The soprano must remain in this singer’s range. Preserve Eb, or transpose to G
+  and lower the vocal line by an octave?”
 
 ## Implementation Plan
 

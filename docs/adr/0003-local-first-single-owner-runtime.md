@@ -10,4 +10,4 @@ Vellum will run primarily on its Owner's machine, serving its browser UI and loc
 
 ## Consequences
 
-Vellum owns its Provider Authorization lifecycle and must not read Pi or Codex credential files as an integration contract. Local callback-based sign-in, automatic refresh, reconnect, logout, and secure local credential storage become first-class requirements. Nix packaging remains useful for reproducible dependencies and optional remote deployment, but servoid is no longer the primary product runtime.
+Vellum owns its Provider Authorization lifecycle and must not read Pi or Codex credential files as an integration contract. Local callback-based sign-in, automatic refresh, reconnect, logout, and secure local credential storage become first-class requirements. Provider availability gates only model-dependent actions: local import, review, editing, deterministic analysis, validation, engraving, playback, and workspace access remain usable while disconnected. Nix packaging remains useful for reproducible dependencies and optional remote deployment, but servoid is no longer the primary product runtime.

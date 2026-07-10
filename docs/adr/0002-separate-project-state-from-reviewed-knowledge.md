@@ -10,4 +10,4 @@ Vellum will persist three distinct kinds of state: complete Arrangement Workspac
 
 ## Consequences
 
-Source artifacts, transcriptions, analysis, corrections, plans, outputs, and provenance need durable identities and relationships. Potentially reusable findings are Knowledge Candidates until reviewed; OMR output and unreviewed model inference never become global historical truth automatically.
+Source artifacts, transcriptions, analysis, corrections, plans, outputs, and provenance need durable identities and relationships. Potentially reusable findings are Knowledge Candidates until reviewed; OMR output and unreviewed model inference never become global historical truth automatically. Repeated Owner choices may produce scoped Personal Default Candidates, but they have no effect until explicitly approved and remain soft, reversible preferences rather than historical claims or arrangement commitments. Defaults yield to musical evidence, selected historical profiles, preservation, commitments, and hard constraints; an inapplicable default is explained rather than silently applied or deleted.
