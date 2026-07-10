@@ -1,14 +1,22 @@
 # Vellum — ve*LLM*um
 
-> The writing surface where the LLM writes music.
+> The writing surface where musical sources become informed arrangements.
 
 ## Overview
 
-Vellum is an LLM-powered music arrangement tool for historical plucked string instruments, classical guitar, piano, and voice. It renders properly formatted tablature and standard notation via LilyPond.
+Vellum is an AI-assisted music arrangement tool for historical plucked string instruments, classical guitar, piano, and voice. It renders properly formatted tablature and standard notation via LilyPond.
 
-**The key insight:** The LLM handles musical intelligence — arrangement decisions, voice leading, idiomatic writing. The code provides **native domain-specific tools** that handle mechanical correctness, shrinking the LLM's error surface to just musical judgment. This is the agent harness thesis in practice: the harness shapes what the model can do, making it more effective within a domain than a general-purpose agent with bash access.
+**The key insight:** Musical intelligence is shared by a hybrid **Musicological Engine**. Deterministic symbolic analysis establishes musical facts; curated historical knowledge supplies period, regional, contrapuntal, continuo, instrument, and notation practices; the LLM interprets ambiguity and proposes creative alternatives; and constraint checks verify preservation, playability, and engraving. The system preserves its evidence and decisions as structured analysis rather than leaving musical truth inside one model response.
 
-**The product is a pi-mono web app** — a custom web application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit, deployed as a NixOS module on servoid. The browser hosts the conversational agent and a live tablature workbench. The server provides tool backends (LilyPond compilation, instrument data) and proxies LLM API calls.
+Curated historical knowledge is source-backed and explicitly scoped by period, region, genre, instrument, and ensemble role. The engine distinguishes documented practice, modern editorial convention, and Vellum heuristics, and preserves conflicting authorities as inspectable alternatives.
+
+The Historical Knowledge Base combines reviewed, versioned Knowledge Packs with an Owner Reference Library. Locally added references yield cited Knowledge Candidates that require review before promotion; uncited model memory or live web results are not historical authority.
+
+State is divided into durable Arrangement Workspaces, cross-project Personal Defaults, and a reviewed Historical Knowledge Base. Workspace corrections save automatically; reusable claims require explicit source-backed promotion before they become global knowledge.
+
+Musical state has explicit versioned lineage: immutable Source Artifacts produce correctable Score Transcriptions, derived Normalized Scores, Analysis Records, Arrangement Scores, and reproducible Deliverables. No transformation silently rewrites an upstream layer.
+
+**The product is a local-first pi-mono web app** — a custom application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit and run primarily on its Owner's machine. The browser hosts the conversational agent and live score workbench. Local services provide the Musicological Engine, LilyPond, source storage, durable workspaces, and model-provider proxying. Nix remains a reproducible packaging option and may support private remote access, but servoid is not the primary runtime.
 
 ---
 
@@ -67,9 +75,9 @@ Browser
 │  └─────────────────────────┘  └────────────────────────────┘ │
 │                                                               │
 └──────────────────────┬────────────────────────────────────────┘
-                       │  HTTPS (mTLS via step-ca)
+                       │  localhost HTTP
                        │
-servoid (NixOS)        │
+Owner machine          │
 ┌──────────────────────┴────────────────────────────────────────┐
 │  Vellum Server (Express)                                       │
 │                                                                 │
@@ -134,7 +142,7 @@ servoid (NixOS)        │
 │  instruments/*.yaml + *.ily   (served via /api/instruments)      │
 │  templates/*.ly               (served via /api/templates)        │
 │                                                                 │
-│  Traefik → vellum.aoeu.pw                                       │
+│  Local data + optional private remote-access boundary            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -144,6 +152,8 @@ servoid (NixOS)        │
 
 **LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
 
+**Vellum-owned Provider Connection.** The local server initiates ChatGPT OAuth through Pi's public provider API, receives the localhost callback, stores and refreshes credentials in Vellum-controlled secure local storage, and reports connection state to the browser. Vellum does not read Pi or Codex credential files. API keys remain a fallback, and the provider-specific flow stays behind a replaceable adapter.
+
 **Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check*playability) \_could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
 
 **Instrument profiles: dual location.** YAML profiles are served to the browser (for system prompts and tool context). `.ily` include files stay on the server (only LilyPond needs them). Both live in `instruments/` on disk; the server API handles the split.
@@ -152,18 +162,18 @@ servoid (NixOS)        │
 
 A general-purpose agent with bash access can technically run LilyPond. But:
 
-| Generic agent                                          | Vellum                                                                  |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- |
-| LLM writes raw .ly hoping it compiles                  | LLM calls `voicings()` to get playable options, picks the best one      |
-| `bash lilypond foo.ly` → 200 lines of stderr           | `compile()` → structured errors: "Bar 8: stretch violation on course 3" |
-| LLM invents fret positions from training data          | `tabulate()` returns all valid positions with idiomatic ranking         |
-| No verification until compile fails                    | `check_playability()` catches impossible fingerings before compilation  |
-| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js                 |
-| LLM guesses at chord progressions from SATB score      | `analyze()` returns Roman numeral analysis via music21                  |
-| No voice leading verification                          | `lint()` catches parallel fifths, voice crossing, spacing errors        |
-| Human reads PDF to check quality                       | Browser shows live preview, fretboard diagrams, MIDI playback           |
+| Generic agent                                          | Vellum                                                                                                     |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| LLM writes raw .ly hoping it compiles                  | LLM calls `voicings()` to get playable options, picks the best one                                         |
+| `bash lilypond foo.ly` → 200 lines of stderr           | `compile()` → structured errors: "Bar 8: stretch violation on course 3"                                    |
+| LLM invents fret positions from training data          | `tabulate()` returns all valid positions with idiomatic ranking                                            |
+| No verification until compile fails                    | `check_playability()` catches impossible fingerings before compilation                                     |
+| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js                                                    |
+| LLM guesses at chord progressions from SATB score      | `analyze()` returns Roman numeral analysis via music21                                                     |
+| No voice leading verification                          | Contextual validation classifies score-anchored findings under an explicit historical and textural profile |
+| Human reads PDF to check quality                       | Browser shows live preview, fretboard diagrams, MIDI playback                                              |
 
-The LLM makes **musical decisions**. The tools handle **mechanical correctness**. That's the split that matters.
+The LLM participates in musical judgment, but it does not own musical truth. Structured analysis, historical profiles, and constraint checks make the result inspectable and resilient to model changes.
 
 ---
 
@@ -194,9 +204,9 @@ Pi-mono provides the agent infrastructure. Vellum provides the domain-specific t
 - **Node.js** ≥ 20 + **Express** — API server, static asset serving, LLM proxy
 - **LilyPond** ≥ 2.24 — music engraving subprocess, pinned as a Nix dependency
 - **Python 3** + **music21** — music theory engine subprocess. Handles MusicXML parsing, harmonic analysis (chordify, key detection, Roman numerals), voice leading lint (parallel fifths/octaves, voice crossing, spacing), and figured bass realization (v2). Pinned as a Nix dependency (`python3Packages.music21`)
-- **NixOS** — deployment target (servoid)
-- **Traefik** — reverse proxy with mTLS via step-ca
-- **systemd** — process management
+- **Local process supervisor or desktop shell** — starts the browser UI and services
+- **Nix** — reproducible LilyPond, Python, OMR, and optional NixOS packaging
+- **Private remote access** — optional and outside the primary local trust boundary
 
 ---
 
@@ -522,8 +532,8 @@ Layer 3: Musical Judgment (LLM)         — "Does this sound good?"
          Voice leading, arrangement decisions, idiom, style choices.
          This is what the LLM is uniquely good at.
 
-Layer 2: Music Theory (analyze, lint, theory)  — "Is this correct music theory?"
-         Harmonic analysis, key detection, Roman numerals, voice leading
+Layer 2: Musicological Analysis and Validation — "Which musical expectations apply here?"
+         Harmonic, formal, textural, contrapuntal, continuo, and profile-scoped findings
          rules (parallel 5ths/8ves, voice crossing), interval math,
          chord identification. Deterministic — no LLM needed.
 
@@ -533,7 +543,7 @@ Layer 1: Instrument Mechanics (tabulate, voicings, check_playability, etc.)
          re-entrant tuning, diapason availability. Instrument-specific.
 ```
 
-Without Layer 2, the LLM must do interval arithmetic, chord identification, voice leading rule checks, and harmonic analysis in its head — all operations where it makes errors. The theory layer catches a class of errors the instrument tools (Layer 1) can't see: `check_playability` tells you whether something is physically possible; `lint` tells you whether it has parallel fifths.
+Without Layer 2, the model must do interval arithmetic, chord identification, profile selection, voice-leading evaluation, and harmonic analysis in its head. The Musicological Engine separates low-level observations from their contextual consequence: `check_playability` establishes physical feasibility, while a Validation Profile determines whether a parallel fifth, crossing, suspension, or doubling is prohibited, discouraged, or normal in that passage.
 
 ### analyze
 
@@ -572,13 +582,14 @@ Chord progression (Roman numerals):
 
 ### lint
 
-Checks a passage for voice leading rule violations. Server-side — calls music21's `voiceLeading.VoiceLeadingQuartet` analysis.
+Produces low-level voice-leading observations and contextual Validation Findings. Server-side analyzers such as music21 establish intervallic facts; the selected Validation Profile classifies their consequence.
 
 **Parameters:**
 
 ```typescript
 const LintParams = Type.Object({
   source: Type.String({ description: "LilyPond or MusicXML passage to check" }),
+  validation_profile_id: Type.String(),
   format: Type.Optional(
     Type.Union([Type.Literal("lilypond"), Type.Literal("musicxml")], { default: "lilypond" })
   ),
@@ -601,15 +612,15 @@ const LintParams = Type.Object({
 
 **Server endpoint:** `POST /api/lint`
 
-**music21 operations:** Parse score → extract voice pairs → `VoiceLeadingQuartet` analysis for parallel motion, voice crossing, spacing; leading tone resolution check
+**music21 operations:** Parse score → extract voice pairs → `VoiceLeadingQuartet` observations for parallel motion, voice crossing, spacing, and directed resolution. The Musicological Engine then classifies observations under the requested Validation Profile.
 
 **Returns to LLM:**
 
 ```
-3 violations found:
-  Bar 4, beat 1: Parallel fifths between soprano (A4→B4) and bass (D3→E3)
-  Bar 7, beat 3: Voice crossing — alto (G4) above soprano (F4)
-  Bar 12, beat 1: Unresolved leading tone — C# in tenor moves to A instead of D
+3 findings under renaissance-imitative-vocal:
+  HARD — Bar 4, beat 1: parallel fifths between structural outer voices
+  SOFT — Bar 7, beat 3: brief voice crossing during imitation
+  OBSERVATION — Bar 12, beat 1: scale degree 7 descends in an inner voice
 ```
 
 **Returns to UI:** `{ violations[] }` with measure/beat locations, voice names, and violation types. Rendered inline as a diagnostic report.
@@ -1009,70 +1020,99 @@ Additional profiles can be added: archlute, mandora, vihuela, 7-course Dowland-e
 
 ---
 
-## Arrangement Engine — How the LLM Thinks
+## Arrangement Engine — How the Musicological Engine Arranges
 
 ### Input Types
 
-The LLM accepts multiple input formats. **Source files are the preferred v1 workflow** — the LLM should not be trusted to recall specific pitches from memory (see research in OPEN-QUESTIONS.md OQ-02).
+Vellum accepts multiple source formats and normalizes them into versioned musical state before arrangement. Model memory is a disclosed best-effort source, never an equivalent substitute for an uploaded score.
 
-1. **LilyPond source** — read directly, modify. **Primary v1 input.**
-2. **Lead sheet** — melody + chord symbols → LLM creates full arrangement. **Primary v1 input.**
-3. **Guitar tablature** — parsed, notes extracted, remapped via `tabulate()` tool
-4. **Natural language** — "Arrange Greensleeves for baroque lute" → LLM uses its training data. **Best-effort only — LLM must disclose it is working from memory and recommend pitch verification.**
-5. **Figured bass** — bass line + figures → LLM realizes the harmony (historically authentic workflow)
-6. **MusicXML file** — parsed via music21's `converter.parse()` into key, chord progression, voice ranges. **Primary v1 input for conversion workflows** (hymnal → guitar, piano → lute). The `analyze` tool handles this.
+1. **PDF or image** — uploaded Source Artifact → confidence-bearing Score Transcription → review only for Critical Uncertainty
+2. **MusicXML, restricted LilyPond, MEI, or ABC** — parsed into a versioned Normalized Score with source diagnostics
+3. **Lead sheet** — melody and chord symbols become simultaneous Preservation Targets
+4. **Existing tablature** — pitches, course choices, rhythm, and notation semantics are preserved where represented
+5. **Figured bass** — bass and figures become a Continuo Foundation; upper voices are generated under a Realization Profile
+6. **Natural language or model memory** — disclosed best effort with explicit source uncertainty
+
+### PDF and Image Recognition
+
+PDF/image recognition uses a backend-neutral OMR adapter. Audiveris is the first
+supported implementation, but neither Audiveris nor MusicXML defines Vellum's
+canonical score model. Every recognition attempt creates a versioned **OMR Run**
+that retains:
+
+- the immutable PDF or image Source Artifact;
+- backend identity, version, configuration, and invocation;
+- logs, diagnostics, and confidence/uncertainty evidence where available;
+- mappings from recognized pages and regions back to the Source Artifact;
+- backend-native project and intermediate data, including Audiveris `.omr`; and
+- interchange exports such as MusicXML.
+
+MusicXML is an input to normalization, not the complete recognition record. A
+different backend, upgraded backend, or changed configuration creates a new OMR
+Run and Score Transcription version, leaving earlier evidence reproducible.
 
 ### Arrangement Process
 
-The LLM follows this process, using native tools for mechanical steps:
+The Musicological Engine follows this process:
 
 ```
-1. SOURCE VERIFICATION
-   - If source file provided: read and parse
-   - If MusicXML: call analyze(source) for key, chord progression, voice ranges
-   - If from memory: warn user, recommend verification against reference score
-   - Call diapasons(key) for lute/theorbo to set bass string tuning
+1. INGEST AND VERSION
+   - Preserve the Source Artifact and create or import a Score Transcription
+   - Normalize musical time, voices, notation, figures, lyrics, and provenance
 
-2. HARMONIC ANALYSIS (via analyze + theory tools)
-   - If multi-voice input (SATB, piano): analyze() returns Roman numeral
-     progression, voice ranges, key — this is the harmonic blueprint
-   - Use theory() for quick lookups: chord spelling, scale degrees, intervals
-   - LLM reads the analysis and plans the arrangement strategy
+2. ANALYZE AND SCOPE
+   - Produce score-anchored Analysis Claims for form, harmony, Texture,
+     Contrapuntal Techniques, phrases, cadences, and Preservation Targets
+   - Select applicable Knowledge Packs, Realization Profiles, and Validation Profiles
 
-3. PITCH MAPPING (via tabulate tool)
-   - For each note, call tabulate(pitch, instrument) to get valid positions
-   - Score each option: open string preferred > low fret > high fret
-   - Diapasons: exact pitch must match current tuning scheme
+3. PLAN
+   - Resolve Preservation Policy, target instrument, Notation Layouts, Bass Tuning,
+     transposition, sectional texture, and allowed transformations
 
-4. VOICE LEADING (LLM musical judgment)
-   - Minimize left-hand movement between chords
-   - Prefer common tones held across beats
-   - Respect voice independence (bass, tenor, soprano lines)
-   - Drop notes that create impossible stretches — prefer musical coherence
+4. GENERATE CANDIDATES
+   - Explore musically consequential alternatives in key, register, texture,
+     voicing, course assignment, articulation, and ornamentation
 
-5. PLAYABILITY CHECK (via check_playability tool)
-   - Call check_playability(bars, instrument) to validate
-   - Fix any violations before proceeding
-   - Use voicings(chord, instrument) to find alternatives
+5. REJECT HARD FAILURES
+   - Run Preservation Audits, figured-bass checks, instrument constraints,
+     playability, and hard contextual Validation Findings
 
-6. THEORY CHECK (via lint tool)
-   - Call lint(passage) to check for voice leading errors
-   - Fix parallel fifths/octaves, voice crossing, spacing issues
-   - Re-run lint after fixes to confirm clean
+6. RANK AND COMPARE
+   - Score surviving candidates by historical profile, idiom, voice leading,
+     playability, notation clarity, and soft preferences
+   - Use model judgment to compare close alternatives with inspectable rationale
 
-7. IDIOM LAYER (LLM musical judgment)
-   - Brisé: break chords into arpeggiated figures where appropriate
-   - Campanella: route scalar passages across courses for ringing effect
-   - Ornamentation: add period-appropriate ornaments (see Ornaments section)
-   - Style brisé specifically for French baroque lute
+7. SELECT AND VERSION
+   - Promote the selected candidate to a versioned Arrangement Score
+   - Retain alternatives for audition and branching
 
-8. OUTPUT GENERATION
-   - Generate LilyPond tablature notation using appropriate template
-   - Call compile() to render — system prompt instructs this explicitly
-   - If compilation errors, parse structured feedback, fix, recompile
-   - On success, call artifacts tool to update tablature.svg in side panel
-   - Iterate until clean
+8. ENGRAVE AND VERIFY
+   - Generate requested Notation Layouts and Deliverables
+   - Compile, inspect, and regenerate until notation and rendering checks pass
 ```
+
+### Audio Preview
+
+Every selected Arrangement Score automatically receives a basic synthesized Audio
+Preview. Vellum already obtains MIDI from the LilyPond compilation path; the
+browser decodes that MIDI and schedules it through a lightweight Web Audio
+synthesizer. The initial controls are play/pause, stop, seek/progress, and volume.
+
+The preview is a reproducible projection of the Arrangement Score, not separate
+musical state. It must use the score's sounding pitches, durations, tempo, repeats,
+transpositions, re-entrant courses, and diapasons, and it must not double notes
+merely because the same music appears in both standard notation and tablature.
+Alternative Arrangement Candidates are previewed on demand so they can be compared
+without eagerly rendering every candidate. The initial neutral synthetic timbre is
+for checking notes and musical identity; realistic lute, baroque-guitar, or
+classical-guitar sampling is outside the basic preview contract.
+
+Literal score playback is the default. If Vellum later realizes ornaments,
+arpeggiation, inequality, articulation, tempo shaping, or rubato, those choices are
+stored in a versioned **Performance Interpretation** linked to an exact Arrangement
+Score version. Interpretive playback is explicitly labeled and can be toggled
+against literal playback. It does not mutate the Arrangement Score, invalidate the
+score's notational identity, or silently alter its Preservation Audit.
 
 ### Instrument Conversion
 
@@ -1343,14 +1383,15 @@ Agent:
 
 An arrangement is "good" if:
 
-1. **Playable** — no impossible stretches, fingerings are natural (`check_playability` passes)
-2. **Theoretically sound** — no parallel fifths/octaves, voice crossing, or spacing violations (`lint` passes)
-3. **Musical** — voice leading is smooth, bass line makes harmonic sense
-4. **Idiomatic** — sounds like it belongs on the instrument, not like a mechanical transposition
-5. **Complete** — no missing notes that the instrument could have handled
-6. **Readable** — tablature is clear, rhythmic notation is correct, page layout is clean
+1. **Faithful to its policy** — every Preservation Target passes a machine-readable Preservation Audit; necessary deviations have explicit Policy Exceptions
+2. **Playable** — no impossible stretches, fingerings are natural (`check_playability` passes)
+3. **Theoretically sound** — counterpoint, voice leading, figures, and harmonic claims satisfy the applicable analysis and Realization Profiles
+4. **Musical** — voice leading is coherent, the Continuo Foundation and bass make structural sense, and the intended Texture remains perceptible
+5. **Idiomatic** — sounds like it belongs on the instrument and within the selected historical scope, not like a mechanical transposition
+6. **Complete** — no required material is silently missing
+7. **Readable** — tablature or standard notation is clear, rhythmic notation is correct, and page layout is clean
 
-The LLM should flag when it makes compromises (dropped notes, simplified voicing) and explain why.
+The engine cannot complete a Faithful Reduction with unexplained compromises. A necessary dropped note, altered rhythm, or changed relationship must become a visible, Owner-approved Policy Exception.
 
 ---
 
@@ -1449,9 +1490,9 @@ vellum/
 
 ---
 
-## NixOS Deployment
+## Local-First Runtime and Optional NixOS Deployment
 
-Vellum's `flake.nix` exports a package and a NixOS module. The `.nix` repo (`jefffm/.nix`) consumes it:
+Vellum runs primarily on the Owner's machine, where localhost can host the UI, musical services, durable state, and provider callback. Its `flake.nix` also exports a package and NixOS module for reproducible installation or optional private remote access. A servoid configuration remains possible:
 
 ```nix
 # In flake.nix inputs:
@@ -1481,7 +1522,7 @@ The Nix build:
 2. LilyPond and Python+music21 are runtime dependencies, not build dependencies
 3. The `xlsx` CDN tarball URL in pi-web-ui's dependency tree may need lockfile patching for `fetchNpmDeps` — test early
 
-This follows the same deployment pattern as the existing A2A adapter and Hermes agent on servoid.
+This remote configuration is optional and must not become the credential or ownership boundary for the local-first product.
 
 ---
 
@@ -1496,7 +1537,8 @@ This follows the same deployment pattern as the existing A2A adapter and Hermes 
 - [ ] Install LilyPond via Nix (2.24.x)
 - [ ] Install Python 3 + music21 via Nix (`python3Packages.music21`)
 - [ ] Create `flake.nix` with package + NixOS module
-- [ ] Deploy on servoid behind Traefik
+- [ ] Package and verify the local-first owner runtime
+- [ ] Keep servoid deployment as an optional private-access configuration
 
 ### Tools
 
@@ -1611,7 +1653,7 @@ Step 6: compile() → French letter tab or number tab PDF + optional voice line
 - [ ] Bar-click interaction (click a bar → agent knows which bar to revoice)
 - [ ] MusicXML export (via MuseScore CLI on server, or custom writer)
 - [ ] Fretboard visualization with position overlay (interactive, beyond static SVG)
-- [ ] Arrangement library with server-side session persistence (beyond IndexedDB)
+- [ ] Durable Arrangement Workspaces with sources, analysis, corrections, plans, outputs, and provenance
 - [ ] Session branching for "try it this way" workflows
 - [ ] Figured bass realization workflow (`POST /api/realize` via music21's `figuredBass.realizer` — endpoint defined in v1, implementation deferred)
 - [ ] Batch conversion (whole suites at once)
@@ -1628,14 +1670,17 @@ Step 6: compile() → French letter tab or number tab PDF + optional voice line
 
 ### Chosen: pi-mono Web App + NixOS Deployment
 
-The core realization: **v1 needs almost no code for the musical intelligence.** The LLM does the arrangement. LilyPond does the engraving. What v1 needs is:
+The core realization is that the agent shell must not become the sole repository of musical intelligence. Vellum needs:
 
 1. A conversational interface with visual feedback
-2. Native tools that handle mechanical correctness
-3. A way to run LilyPond server-side
-4. A clean client-server split that keeps API keys secure
+2. Canonical source, analysis, preservation, and arrangement representations
+3. Deterministic analyzers and curated historical profiles
+4. Model-assisted interpretation and creative planning with inspectable evidence
+5. Constraint checks for preservation, figured bass, counterpoint, playability, and notation
+6. A way to run LilyPond server-side
+7. A clean client-server split that keeps credentials secure
 
-Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-agent-core` Agent loop + tool framework). Vellum provides #2 (custom `AgentTool<T>` objects with server API backends). NixOS provides #3 and deployment (#4 via Traefik + mTLS + streamProxy).
+Pi-mono provides the agent loop, chat components, and tool framework. Vellum provides the canonical musical representations, Musicological Engine, provider connection, and score workbench. Nix supplies reproducible musical dependencies for the local runtime and optional NixOS packaging.
 
 **Why pi-mono over building from scratch:**
 
@@ -1667,7 +1712,7 @@ Pi-mono provides #1 out of the box (`pi-web-ui` ChatPanel + ArtifactsPanel, `pi-
 
 **Deployment:** Same pattern as LilyPond — subprocess call, not a separate service. `python3 theory.py analyze < input.xml` → JSON to stdout. No migration debt; the API surface (JSON in, JSON out) is implementation-agnostic. If music21 were ever replaced, only `server/theory.py` changes.
 
-**Previous verdict (revised):** The original assessment that "music21 solves the wrong problem" was incorrect. Music21's analytical capabilities _complement_ the LLM rather than competing with it. The LLM makes musical _judgment_ calls; music21 provides deterministic _analysis_ the LLM can reason about. The LLM should never do interval arithmetic or chord identification when a library can do it perfectly.
+**Role in the hybrid engine:** Music21 contributes deterministic analysis but is not the whole Musicological Engine. Its results feed structured Analysis Claims alongside curated historical profiles, model-assisted interpretation, user corrections, and downstream constraint verification. The model should not redo interval arithmetic or chord identification when a library can establish those facts reliably.
 
 ### Alternative Considered: Custom TypeScript + Rust/WASM
 

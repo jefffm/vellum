@@ -2,7 +2,7 @@
 
 **ve*LLM*um** — an AI music desk for historical plucked strings.
 
-Vellum helps an LLM arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. The model makes musical choices; Vellum checks the hard mechanical parts: frets, courses, playable voicings, alfabeto chords, LilyPond syntax, and rendered output.
+Vellum helps arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. Its Musicological Engine combines symbolic analysis, historical knowledge, model-assisted judgment, and constraint checks for source fidelity, frets, courses, playable voicings, alfabeto chords, notation, and rendered output.
 
 ## How is it?
 
@@ -30,7 +30,7 @@ _“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellu
 
 ## Why it exists
 
-LLMs can be useful musical collaborators, but they are bad at guessing instrument mechanics and notation syntax. Vellum gives the agent tools that turn those guesses into checked, playable, engraved music.
+Language models can be useful musical collaborators, but neither model memory nor mechanical validation alone is enough for informed arrangement. Vellum keeps musical evidence, historical practice, creative judgment, and instrument constraints in one inspectable workflow that produces checked, playable, engraved music.
 
 ## Quick start
 
@@ -48,7 +48,7 @@ nix develop
 npm run dev
 ```
 
-Then open the Vite URL. Configure an LLM key with `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `VELLUM_LLM_API_KEY`, or pi OAuth credentials.
+Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `VELLUM_LLM_API_KEY`) remain fallback configuration for providers that need them. Vellum owns its credentials and does not import Pi or Codex login files.
 
 ## Stack
 

@@ -100,6 +100,12 @@ modeled generically even if hymn/chorale fixtures drive the MVP:
 
 Import is profile-agnostic; arrangement is profile-aware.
 
+The original Source Artifact, each correctable Score Transcription, the derived
+Normalized Score, its Analysis Record, and every Arrangement Score are separate
+versioned layers. The `MusicDocument` described below is the implementation shape
+of a Normalized Score; it is not the original source and is never mutated into an
+arrangement. Deliverables are regenerated from Arrangement Scores.
+
 The import layer should answer: “What musical material is present, how reliable is
 it, and how does it relate over time?” The arrangement layer should answer: “Given
 this target instrument/style, which source material must be preserved, reduced,
@@ -487,6 +493,8 @@ type SourceDiagnostic = {
 
 Important invariants:
 
+- Every `MusicDocument` identifies the exact source and Score Transcription version
+  from which it was normalized.
 - `measures` are global; parts/voices point into those measures with `measureId`.
 - Events carry `onset` and `duration`, so simultaneous material is not collapsed
   unless a later profile-specific reduction step chooses to do so.
@@ -496,6 +504,9 @@ Important invariants:
   `ImportedEvent.lyricAnchors`.
 - Every importer and normalizer must emit diagnostics when it drops, rewrites, or
   cannot classify source constructs.
+- Analysis Records and Arrangement Scores identify their exact upstream versions;
+  upstream correction marks dependent results stale rather than silently changing
+  them.
 
 ## Import Pipeline
 
@@ -586,12 +597,15 @@ Supported LilyPond v1 subset:
 - `\addlyrics` and named `\lyricmode` blocks.
 - `\layout`, `\paper`, and engraving overrides are ignored with diagnostics.
 
-Explicitly unsupported in LilyPond v1:
+Explicitly unsupported in the initial restricted LilyPond importer:
 
 - Arbitrary Scheme, `\include` expansion, transposition macros, custom music
-  functions, polymetric staves, tuplets, grace notes, figured bass, and any macro
+  functions, polymetric staves, tuplets, grace notes, and any macro
   that changes musical content without an explicit literal body in the pasted
   source.
+
+Literal `\figuremode` and its attachment to a bass voice must be imported as a
+Continuo Foundation rather than discarded as unsupported notation.
 
 When unsupported constructs are encountered, `music_import` must return a warning
 or error diagnostic rather than silently guessing.
@@ -612,7 +626,10 @@ Heuristics:
 4. For lead sheets, melody and chord symbols are both preservation targets.
 5. For multi-part instrumental/part-song sources, all named parts are preservation
    targets unless the requested arrangement asks for reduction.
-6. If ambiguous, ask one targeted question with candidate part names and evidence.
+6. For continuo sources, the bass line and literal figures form a Continuo
+   Foundation and are preservation targets; an independent upper voice remains a
+   simultaneous Principal Voice when present.
+7. If ambiguous, ask one targeted question with candidate part names and evidence.
 
 ### 5. Validate source structure
 
@@ -625,6 +642,9 @@ Before arrangement:
   unaligned stanza text and warn.
 - Transposition plan is explicit if target instrument cannot support source key or
   range.
+- After arrangement, a Preservation Audit maps every Preservation Target to the
+  Arrangement Score and rejects unexplained deviations. Necessary exceptions are
+  explicit, Owner-approved, and versioned.
 
 ### 6. Harmonize or reduce harmony
 
@@ -780,19 +800,28 @@ const MusicImportArtifactParamsSchema = Type.Object({
 });
 ```
 
-This later path should use optional server-side backends rather than blocking v1:
+This later path should use optional server-side backends behind a common OMR
+adapter contract rather than blocking v1. The contract must not expose
+Audiveris-specific concepts as the canonical music model:
 
 - `.mscz`: MuseScore CLI export to MusicXML when installed/configured.
 - PDF/image OMR: Audiveris as the preferred first backend; AGPL is acceptable for
-  this personal project. Treat it as optional/heavy and capture backend version,
-  command, and confidence/diagnostic metadata.
+  this personal project. Treat it as optional/heavy. For every OMR Run retain the
+  immutable source PDF/image, backend identity and version, complete configuration
+  and command, logs and diagnostics, page/region mappings, exported MusicXML, and
+  backend-native project/intermediate artifacts such as Audiveris `.omr`. MusicXML
+  alone is not a sufficient recognition record because its export may lose layout,
+  recognition, and provenance information.
 - Lyrics OCR: Tesseract as an optional companion for text regions; never treat OCR
   as authoritative musical structure.
 - MEI/ABC rendering/conversion: Verovio where useful, especially for MEI/ABC
   previews and conversion validation.
 
-The artifact path must store confidence by note/region and expose an
-uncertainty-review UI before arranging.
+The artifact path must store confidence or uncertainty evidence by note/region
+where the backend supplies it and expose an uncertainty-review UI before arranging.
+The common adapter must represent unavailable confidence honestly rather than
+inventing numeric certainty. A rerun with a different backend or configuration
+creates a new OMR Run and Score Transcription version.
 
 ### Planning tools or mode: generic arrangement pipeline
 
@@ -999,17 +1028,20 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 
 ### Phase 6 — Non-text artifact imports
 
-- Keep imported `MusicDocument` values session-local by default; do not add durable
-  import persistence unless the user explicitly saves the source/import.
-- Add an explicit saved-import path later if needed, with provenance/license/source
-  diagnostics preserved alongside the `MusicDocument`.
+- Persist imported `MusicDocument` values in the current Arrangement Workspace with
+  their source artifacts, provenance, license, diagnostics, Analysis Record, and
+  user corrections. The workspace, not the browser session or chat transcript, is
+  the durable project boundary.
+- Treat reusable findings as Knowledge Candidates. Promote them to the Historical
+  Knowledge Base only through explicit source-backed review.
 - Add direct `.mscz` import via MuseScore CLI export if warranted, otherwise keep
   MusicXML export as the supported path.
 - Investigate ABC and MEI completeness beyond simple text import, with Verovio as
   a likely validation/rendering backend.
-- Add Audiveris PDF/image OMR and Tesseract lyrics OCR as optional post-v1
-  backends; document installation/runtime requirements and implement note/lyric
-  confidence diagnostics.
+- Add a backend-neutral PDF/image OMR adapter with Audiveris as its first optional
+  post-v1 backend, plus Tesseract lyrics OCR where useful. Preserve each backend's
+  native artifacts and full run provenance; document installation/runtime
+  requirements and implement note/lyric uncertainty diagnostics.
 
 ## Test Strategy
 
@@ -1060,11 +1092,11 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
   source sniffing for UX, but parsing/normalization happens on the server so it can
   use Python, music21, `python-ly`, LilyPond-adjacent tooling, and future artifact
   backends consistently.
-- Imported `MusicDocument` values are returned inline by `music_import` for v1
-  text imports and are session-local by default. No durable persistence API is
-  required unless the user explicitly saves an import/source. If saved later,
-  preserve original source/provenance/license/diagnostics and link derived
-  arrangements back to the saved import.
+- Imported `MusicDocument` values are returned inline by `music_import` and also
+  persisted in the current Arrangement Workspace. Preserve original source,
+  provenance, license, diagnostics, analysis, corrections, and links to derived
+  arrangements. Conversation sessions may reference the workspace but are not its
+  storage boundary.
 - Use `python-ly` for the restricted LilyPond importer where it helps with lexing
   and tree structure. GPL is acceptable. Still implement strict subset semantics
   and diagnostics rather than claiming full LilyPond support.
@@ -1072,10 +1104,12 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
   A richer side-panel review UI is post-v1 and should show source summary,
   candidate profiles, preservation-target choices, and diagnostic/confidence
   groups.
-- OMR/OCR are post-v1 optional server backends. Audiveris is acceptable for
-  PDF/image OMR despite AGPL; MuseScore CLI is acceptable for `.mscz` to MusicXML;
-  Tesseract is acceptable for lyrics OCR; Verovio is useful for MEI/ABC rendering
-  and conversion validation.
+- OMR/OCR are post-v1 optional server backends behind backend-neutral contracts.
+  Audiveris is the first PDF/image OMR implementation and is acceptable despite
+  AGPL, but its `.omr`, MusicXML export, configuration, version, logs, and page
+  mappings are retained together as a versioned OMR Run. MuseScore CLI is
+  acceptable for `.mscz` to MusicXML; Tesseract is acceptable for lyrics OCR;
+  Verovio is useful for MEI/ABC rendering and conversion validation.
 - Licensing/provenance should be preserved and displayed, but Vellum should not
   auto-adjudicate rights. If source rights are unknown, generated arrangements and
   exports should say so plainly.
@@ -1086,7 +1120,7 @@ Vellum can accept pasted MusicXML and documented restricted LilyPond sources,
 import them through `music_import` into the canonical `MusicDocument`, run a
 normalization/analysis pass, infer at least hymn/chorale, SATB-like, lead-sheet,
 and melody-only profiles, and generate a historical plucked-instrument arrangement
-that preserves the profile-required source material. The hymnary/SATB happy path
+that passes a Preservation Audit for the profile-required source material. The hymnary/SATB happy path
 must include lead melody, lyrics, repeats, and four-part harmony; non-SATB fixtures
 must prove the importer is not hard-coded to that shape. If multi-staff/repeat
 `engrave` support has not yet landed, the shipped MVP must explicitly scope itself
