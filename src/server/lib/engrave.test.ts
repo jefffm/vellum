@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { EngraveBar, EngraveParams } from "../../lib/engrave-schema.js";
 import {
   type ResolvedInstrument,
-  buildHiddenMidiStaff,
   buildTabStaffWithBlock,
   engrave,
   eventsToLeaves,
@@ -753,22 +752,6 @@ describe("engrave — step 4: buildTabStaffWithBlock", () => {
   });
 });
 
-describe("engrave — step 5: buildHiddenMidiStaff", () => {
-  it("builds a hidden staff with transparent overrides", () => {
-    const leaves = [
-      { type: "note" as const, pitch: "c'", duration: "4", indicators: [] },
-      { type: "note" as const, pitch: "d'", duration: "4", indicators: [] },
-    ];
-    const staff = buildHiddenMidiStaff(leaves);
-    expect(staff.context).toBe("Staff");
-    expect(staff.withBlock).toBeDefined();
-    expect(staff.withBlock!.length).toBeGreaterThanOrEqual(5);
-    // Check for key entries
-    expect(staff.withBlock!.some((e: string) => e.includes("\\remove"))).toBe(true);
-    expect(staff.withBlock!.some((e: string) => e.includes("transparent"))).toBe(true);
-  });
-});
-
 describe("engrave — full pipeline", () => {
   it("produces valid LilyPond for solo-tab", () => {
     const params = minimalParams({ time: "4/4", tempo: 72 });
@@ -856,14 +839,12 @@ describe("engrave — full pipeline", () => {
     expect(result.source).toContain('composer = "John Dowland"');
   });
 
-  it("includes hidden MIDI staff for solo-tab", () => {
+  it("uses one TabVoice for both engraving and MIDI without duplicate playback", () => {
     const params = minimalParams();
     const result = engrave(params);
-    // Should have two Staff contexts — TabStaff and hidden Staff
-    const staffMatches = result.source.match(/\\new Staff/g);
-    expect(staffMatches).toBeDefined();
-    expect(staffMatches!.length).toBeGreaterThanOrEqual(1);
-    expect(result.source).toContain('\\remove "Staff_symbol_engraver"');
+    expect(result.source).toContain('\\new TabVoice = "music"');
+    expect(result.source).not.toContain("\\new Staff");
+    expect(result.source).not.toContain('\\remove "Staff_symbol_engraver"');
   });
 
   it("is deterministic", () => {

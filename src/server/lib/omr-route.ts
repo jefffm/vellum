@@ -1,0 +1,46 @@
+import { Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
+import type { RequestHandler } from "express";
+import type { OmrBackend } from "./omr.js";
+import { AudiverisBackend, OmrService } from "./omr.js";
+import { createApiRoute } from "./create-route.js";
+import { WorkspaceStore } from "./workspace-store.js";
+
+const OmrRequestSchema = Type.Object(
+  {
+    sourceArtifactId: Type.String({ pattern: "^source\\.[a-f0-9]{16,}$" }),
+    backend: Type.Optional(Type.Literal("audiveris", { default: "audiveris" })),
+  },
+  { additionalProperties: false }
+);
+
+const WorkspaceParamsSchema = Type.Object({
+  workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
+});
+
+type OmrRouteInput = {
+  workspaceId: string;
+  sourceArtifactId: string;
+  backend?: "audiveris";
+};
+
+type OmrRouteOptions = {
+  store?: WorkspaceStore;
+  backendFactory?: (id: "audiveris") => OmrBackend;
+  service?: OmrService;
+};
+
+export function createOmrRunRoute(options: OmrRouteOptions = {}): RequestHandler {
+  const store = options.store ?? new WorkspaceStore();
+  const service = options.service ?? new OmrService({ store });
+  const backendFactory = options.backendFactory ?? (() => new AudiverisBackend());
+
+  return createApiRoute<OmrRouteInput, Awaited<ReturnType<OmrService["recognize"]>>>({
+    validate: (body, request) => ({
+      ...Value.Decode(WorkspaceParamsSchema, request.params),
+      ...Value.Decode(OmrRequestSchema, body),
+    }),
+    handler: async ({ workspaceId, sourceArtifactId, backend = "audiveris" }) =>
+      service.recognize(workspaceId, sourceArtifactId, backendFactory(backend)),
+  });
+}

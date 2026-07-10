@@ -9,7 +9,7 @@ export interface SubprocessConfig {
   stdin?: string;
   inputFile?: {
     name: string;
-    content: string;
+    content: string | Buffer;
   };
   timeout?: number;
   outputGlobs?: string[];
@@ -44,11 +44,7 @@ export class SubprocessRunner {
 
     try {
       if (config.inputFile) {
-        await writeFile(
-          path.join(workingDir, config.inputFile.name),
-          config.inputFile.content,
-          "utf8"
-        );
+        await writeFile(path.join(workingDir, config.inputFile.name), config.inputFile.content);
       }
 
       const result = await this.spawnAndCapture(config, workingDir, startedAt);

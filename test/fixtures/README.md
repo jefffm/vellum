@@ -1,5 +1,12 @@
 # Test Fixtures
 
+## `greensleeves/`
+
+Public-domain four-part _Greensleeves_ golden fixture. The PDF is the uploaded
+Source Artifact; the original Mutopia LilyPond file is reviewed test ground truth.
+See [`greensleeves/PROVENANCE.md`](greensleeves/PROVENANCE.md) for rights, source
+URLs, checksums, and usage constraints.
+
 ## LilyPond Fixtures
 
 | File                      | Source              | License       |

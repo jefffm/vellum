@@ -34,7 +34,7 @@ export function createCompileRoute(options: CompileRouteOptions = {}): RequestHa
   });
 }
 
-async function compileLilyPond(
+export async function compileLilyPond(
   params: CompileParams,
   runner: Pick<SubprocessRunner, "run">,
   timeout: number

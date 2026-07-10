@@ -51,11 +51,7 @@ import { parseTimeSignature, validateKeySignature } from "../../lib/music-utils.
 import { loadProfile } from "../profiles.js";
 import { parsePitch, scientificToLilyPond } from "../../lib/pitch.js";
 import { buildLeadingIndicators, dispatchTemplate } from "./template-strategies.js";
-export {
-  buildHiddenMidiStaff,
-  buildTabStaffWithBlock,
-  eventsToRhythmLeaves,
-} from "./template-strategies.js";
+export { buildTabStaffWithBlock, eventsToRhythmLeaves } from "./template-strategies.js";
 
 // === Error types ===
 

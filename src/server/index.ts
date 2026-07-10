@@ -10,7 +10,13 @@ import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
-import { createStreamRoute } from "./lib/stream-route.js";
+import { createStreamRoute, providerConnection } from "./lib/stream-route.js";
+import {
+  createProviderDisconnectRoute,
+  createProviderLoginRoute,
+  createProviderPromptRoute,
+  createProviderStatusRoute,
+} from "./lib/provider-connection-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
 import { createTemplateGetRoute, createTemplateListRoute } from "./lib/template-route.js";
@@ -20,6 +26,20 @@ import {
   createArrangementGetRoute,
   createArrangementListRoute,
 } from "./lib/arrangement-route.js";
+import {
+  createSourceContentRoute,
+  createSourceUploadRoute,
+  createWorkspaceCreateRoute,
+  createWorkspaceGetRoute,
+  createWorkspaceListRoute,
+} from "./lib/workspace-route.js";
+import { createOmrRunRoute } from "./lib/omr-route.js";
+import { createTranscriptionCorrectionRoute } from "./lib/transcription-route.js";
+import { createFaithfulArrangementRoute } from "./lib/arrangement-workspace-route.js";
+import {
+  createArrangementCompileRoute,
+  createArrangementPreviewRoute,
+} from "./lib/arrangement-deliverable-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -41,7 +61,10 @@ const packageVersion = process.env.npm_package_version ?? "0.1.0";
 const devCors: RequestHandler = (request, response, next) => {
   if (process.env.NODE_ENV !== "production") {
     response.header("Access-Control-Allow-Origin", request.header("Origin") ?? "*");
-    response.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    response.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Source-Filename, X-Source-License"
+    );
     response.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   }
 
@@ -81,6 +104,10 @@ export function createApiRouter(): Router {
   });
 
   router.post("/stream", createStreamRoute());
+  router.get("/provider-connection", createProviderStatusRoute(providerConnection));
+  router.post("/provider-connection/login", createProviderLoginRoute(providerConnection));
+  router.post("/provider-connection/prompt", createProviderPromptRoute(providerConnection));
+  router.delete("/provider-connection", createProviderDisconnectRoute(providerConnection));
   router.post("/compile", createCompileRoute());
   router.post("/engrave", createEngraveRoute());
   router.post("/validate", createValidateRoute());
@@ -95,6 +122,33 @@ export function createApiRouter(): Router {
   router.get("/arrangements/:id", createArrangementGetRoute());
   router.post("/arrangements", createArrangementCreateRoute());
   router.delete("/arrangements/:id", createArrangementDeleteRoute());
+
+  router.get("/workspaces", createWorkspaceListRoute());
+  router.post("/workspaces", createWorkspaceCreateRoute());
+  router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
+  router.post(
+    "/workspaces/:workspaceId/sources",
+    express.raw({ type: "application/pdf", limit: "128mb" }),
+    createSourceUploadRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/sources/:sourceArtifactId/content",
+    createSourceContentRoute()
+  );
+  router.post("/workspaces/:workspaceId/omr-runs", createOmrRunRoute());
+  router.post(
+    "/workspaces/:workspaceId/transcriptions/:transcriptionId/corrections",
+    createTranscriptionCorrectionRoute()
+  );
+  router.post("/workspaces/:workspaceId/arrangements", createFaithfulArrangementRoute());
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/audio-preview",
+    createArrangementPreviewRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/compile",
+    createArrangementCompileRoute()
+  );
 
   router.get(
     "/instruments",

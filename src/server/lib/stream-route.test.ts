@@ -53,7 +53,7 @@ describe("createStreamRoute", () => {
 
     expect(response.status).toBe(500);
     expect(json.error).toBe(
-      "No API key or pi OAuth credentials configured for openai-codex. Run pi, /login, and choose ChatGPT Plus/Pro (Codex)."
+      "ChatGPT is not connected. Use Vellum's Connect ChatGPT control, or configure an API key fallback."
     );
   });
 
@@ -105,9 +105,8 @@ describe("createStreamRoute", () => {
     expect(resolveApiKeyFromEnvironment("anthropic")).toBe("anthropic-secret");
   });
 
-  it("resolves existing environment keys for openai-codex before pi auth", async () => {
+  it("resolves existing environment keys before the owned Provider Connection", async () => {
     vi.stubEnv("OPENAI_CODEX_API_KEY", "codex-env-secret");
-    vi.stubEnv("VELLUM_PI_AUTH_FILE", "/path/that/does/not/exist.json");
 
     await expect(resolveApiKeyForProvider("openai-codex")).resolves.toBe("codex-env-secret");
   });

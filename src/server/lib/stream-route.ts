@@ -7,7 +7,9 @@ import type {
   SimpleStreamOptions,
 } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
-import { resolveOpenAICodexApiKeyFromPiAuth } from "./pi-auth.js";
+import { ProviderConnection } from "./provider-connection.js";
+
+export const providerConnection = new ProviderConnection();
 
 export type StreamSimple = (
   model: Model<string>,
@@ -99,7 +101,7 @@ export async function resolveApiKeyForProvider(provider: string): Promise<string
   }
 
   if (provider === "openai-codex") {
-    return resolveOpenAICodexApiKeyFromPiAuth();
+    return providerConnection.resolveApiKey();
   }
 
   return undefined;
@@ -224,7 +226,7 @@ function toProxyEvent(event: AssistantMessageEvent): Record<string, unknown> {
 
 function missingCredentialsMessage(provider: string): string {
   if (provider === "openai-codex") {
-    return "No API key or pi OAuth credentials configured for openai-codex. Run pi, /login, and choose ChatGPT Plus/Pro (Codex).";
+    return "ChatGPT is not connected. Use Vellum's Connect ChatGPT control, or configure an API key fallback.";
   }
 
   return `No API key configured for ${provider}`;

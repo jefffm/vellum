@@ -85,6 +85,17 @@ describe("SubprocessRunner", () => {
     expect(result.files.get("out.svg")?.toString("utf8")).toBe("<svg>ok</svg>");
   });
 
+  it("writes binary input files without UTF-8 coercion", async () => {
+    const bytes = Buffer.from([0x00, 0xff, 0x89, 0x50, 0x4e, 0x47]);
+    const result = await runSubprocess({
+      command: process.execPath,
+      args: ["-e", "process.stdout.write(require('fs').readFileSync('input.bin').toString('hex'))"],
+      inputFile: { name: "input.bin", content: bytes },
+    });
+
+    expect(result.stdout).toBe(bytes.toString("hex"));
+  });
+
   it("cleans up temporary directories after successful runs", async () => {
     const result = await runSubprocess({ command: "pwd", args: [] });
     const tempDir = result.stdout.trim();

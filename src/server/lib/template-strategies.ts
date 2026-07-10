@@ -12,6 +12,7 @@ import {
   lyRhythmicStaff,
   lyStaff,
   lyTabStaff,
+  lyTabVoice,
   lyVoice,
   serializeLeafInline,
 } from "../../lib/ly-tree.js";
@@ -32,10 +33,7 @@ export function buildSoloTab(
   const withBlock = buildTabStaffWithBlock(vars);
 
   return {
-    scoreChildren: [
-      lyTabStaff([lyVoice("music", musicLeaves)], { withBlock }),
-      buildHiddenMidiStaff(stripTabStringIndicators(musicLeaves)),
-    ],
+    scoreChildren: [lyTabStaff([lyTabVoice("music", musicLeaves)], { withBlock })],
   };
 }
 
@@ -57,8 +55,7 @@ export function buildFrenchTab(
         ],
         indicators: [{ kind: "literal", text: "\\autoBeamOff", site: "before" }],
       }),
-      lyTabStaff([lyVoice("music", musicLeaves)], { withBlock }),
-      buildHiddenMidiStaff(stripTabStringIndicators(musicLeaves)),
+      lyTabStaff([lyTabVoice("music", musicLeaves)], { withBlock }),
     ],
   };
 }
@@ -75,7 +72,7 @@ export function buildTabAndStaff(
       lyStaff([lyVoice("notation", stripTabStringIndicators(musicLeaves))], {
         indicators: [{ kind: "literal", text: '\\clef "treble_8"', site: "before" }],
       }),
-      lyTabStaff([lyVoice("tab", musicLeaves)], { withBlock }),
+      lyTabStaff([lyTabVoice("tab", musicLeaves)], { withBlock }),
     ],
   };
 }
@@ -132,7 +129,7 @@ export function buildVoiceAndTab(
   scoreChildren.push(
     lyTabStaff(
       [
-        lyVoice("tab", [], {
+        lyTabVoice("tab", [], {
           indicators: [{ kind: "literal", text: "\\lute", site: "before" }],
         }),
       ],
@@ -253,25 +250,6 @@ export function buildTabStaffWithBlock(vars: InstrumentLyVars): string[] {
   }
 
   return entries;
-}
-
-/**
- * Build a hidden Staff for MIDI output. The staff is visually invisible
- * (all engravers removed, all elements transparent) but produces MIDI.
- */
-export function buildHiddenMidiStaff(musicLeaves: LyLeaf[]): LyContainer {
-  return lyStaff([lyVoice("midi", [...musicLeaves])], {
-    withBlock: [
-      '\\remove "Staff_symbol_engraver"',
-      '\\remove "Clef_engraver"',
-      '\\remove "Time_signature_engraver"',
-      "\\override NoteHead.transparent = ##t",
-      "\\override Rest.transparent = ##t",
-      "\\override Stem.transparent = ##t",
-      "\\override Dots.transparent = ##t",
-      "\\override Beam.transparent = ##t",
-    ],
-  });
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   lyScore,
   lyStaff,
   lyTabStaff,
+  lyTabVoice,
   lyVoice,
   serializeFile,
 } from "./ly-tree.js";
@@ -48,6 +49,12 @@ describe("ly-tree helpers", () => {
     expect(voice.name).toBe("Music");
     expect(voice.simultaneous).toBe(false);
     expect(voice.children).toHaveLength(1);
+  });
+
+  it("creates a tablature voice container", () => {
+    const voice = lyTabVoice("Tab", [lyNote("d'", "4")]);
+    expect(voice.context).toBe("TabVoice");
+    expect(voice.name).toBe("Tab");
   });
 
   it("creates a staff container with withBlock", () => {

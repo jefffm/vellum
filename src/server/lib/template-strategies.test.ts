@@ -63,10 +63,10 @@ function firstVoice(container: LyContainer): LyContainer {
 
 describe("template strategies", () => {
   describe("buildSoloTab", () => {
-    it("builds a TabStaff plus hidden MIDI staff", () => {
+    it("builds a single TabStaff that also supplies MIDI", () => {
       const result = buildSoloTab([note()], guitarVars, params());
 
-      expect(contextNames(result.scoreChildren)).toEqual(["TabStaff", "Staff"]);
+      expect(contextNames(result.scoreChildren)).toEqual(["TabStaff"]);
       expect(result.variables).toBeUndefined();
       expect(result.warnings).toBeUndefined();
 
@@ -75,10 +75,6 @@ describe("template strategies", () => {
         "tablatureFormat = \\classicalGuitarTabFormat",
         "stringTunings = \\classicalGuitarStringTunings",
       ]);
-
-      const midiStaff = result.scoreChildren[1] as LyContainer;
-      expect(midiStaff.withBlock).toContain('\\remove "Staff_symbol_engraver"');
-      expect(midiStaff.withBlock).toContain("\\override NoteHead.transparent = ##t");
     });
 
     it("includes diapason settings in the tab staff withBlock", () => {
@@ -90,10 +86,10 @@ describe("template strategies", () => {
   });
 
   describe("buildFrenchTab", () => {
-    it("builds RhythmicStaff, TabStaff, and hidden MIDI staff", () => {
+    it("builds RhythmicStaff and a TabStaff that also supplies MIDI", () => {
       const result = buildFrenchTab([note()], luteVars, params({ template: "french-tab" }));
 
-      expect(contextNames(result.scoreChildren)).toEqual(["RhythmicStaff", "TabStaff", "Staff"]);
+      expect(contextNames(result.scoreChildren)).toEqual(["RhythmicStaff", "TabStaff"]);
 
       const rhythmStaff = result.scoreChildren[0] as LyContainer;
       expect(rhythmStaff.withBlock).toContain("\\override StaffSymbol.line-count = 0");
@@ -234,8 +230,8 @@ describe("template strategies", () => {
   describe("dispatchTemplate", () => {
     it("dispatches every known template ID", () => {
       const cases: Array<[EngraveTemplateId, string[]]> = [
-        ["solo-tab", ["TabStaff", "Staff"]],
-        ["french-tab", ["RhythmicStaff", "TabStaff", "Staff"]],
+        ["solo-tab", ["TabStaff"]],
+        ["french-tab", ["RhythmicStaff", "TabStaff"]],
         ["tab-and-staff", ["Staff", "TabStaff"]],
         ["voice-and-tab", ["Staff", "Lyrics", "TabStaff"]],
       ];

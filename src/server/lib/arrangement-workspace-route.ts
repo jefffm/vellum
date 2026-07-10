@@ -1,0 +1,47 @@
+import { Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
+import type { RequestHandler } from "express";
+import { ArrangementService } from "./arrangement-service.js";
+import type {
+  CreateFaithfulArrangementInput,
+  CreateFaithfulArrangementResult,
+} from "./arrangement-service.js";
+import { createApiRoute } from "./create-route.js";
+import { WorkspaceStore } from "./workspace-store.js";
+
+const ParamsSchema = Type.Object({
+  workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
+});
+
+const RequestSchema = Type.Object(
+  {
+    normalizedScoreId: Type.String({ pattern: "^score\\.[a-f0-9-]{16,}$" }),
+    targetConfigurationId: Type.String({ minLength: 1 }),
+    preservationPolicy: Type.Literal("faithful_reduction"),
+  },
+  { additionalProperties: false }
+);
+
+type RouteInput = CreateFaithfulArrangementInput & { workspaceId: string };
+
+type RouteOptions = {
+  store?: WorkspaceStore;
+  service?: ArrangementService;
+};
+
+export function createFaithfulArrangementRoute(options: RouteOptions = {}): RequestHandler {
+  const store = options.store ?? new WorkspaceStore();
+  const service = options.service ?? new ArrangementService({ store });
+  return createApiRoute<RouteInput, CreateFaithfulArrangementResult>({
+    validate: (body, request) => {
+      const requestBody = Value.Decode(RequestSchema, body);
+      return {
+        ...Value.Decode(ParamsSchema, request.params),
+        normalizedScoreId: requestBody.normalizedScoreId,
+        targetConfigurationId: requestBody.targetConfigurationId,
+      };
+    },
+    handler: async ({ workspaceId, ...input }) =>
+      service.createFaithfulReduction(workspaceId, input),
+  });
+}

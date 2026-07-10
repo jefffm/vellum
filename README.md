@@ -50,6 +50,21 @@ npm run dev
 
 Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `VELLUM_LLM_API_KEY`) remain fallback configuration for providers that need them. Vellum owns its credentials and does not import Pi or Codex login files.
 
+### PDF arrangement tracer bullet
+
+The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF, choose the currently integrated five-course baroque-guitar target, and optionally add a plain-language instruction. Vellum then:
+
+1. saves the PDF unchanged in a local, versioned arrangement workspace;
+2. runs OMR through the backend-neutral recognition boundary;
+3. saves the recognized and normalized score with source regions and uncertainty records;
+4. identifies and protects the Principal Voice;
+5. searches multiple playable reductions and rejects candidates that fail the Preservation Audit;
+6. engraves French letter tablature and creates a literal synthesized Audio Preview with isolatable Principal Voice and accompaniment parts.
+
+[Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be available as `audiveris` on `PATH` for arbitrary PDF recognition. If it is unavailable, the source and Arrangement Brief remain saved and Vellum reports the missing backend without pretending that recognition succeeded. The checked-in public-domain Greensleeves fixture provides deterministic reviewed truth so arrangement and engraving tests do not drift with OMR versions.
+
+The sibling automatic reductions for 13-course baroque lute and classical guitar standard notation are intentionally subsequent tracer bullets; their underlying engraving profiles already exist, but Guided Start does not advertise them as completed arrangement paths yet.
+
 ## Stack
 
 - TypeScript + Vite browser UI

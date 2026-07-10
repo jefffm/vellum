@@ -98,8 +98,9 @@ function expectTemplateStructure(source: string, template: EngraveTemplateId): v
   switch (template) {
     case "solo-tab":
       expect(source).toContain("\\new TabStaff");
-      expect(source).toContain("\\new Staff");
-      expect(source).toContain('\\remove "Staff_symbol_engraver"');
+      expect(source).toContain('\\new TabVoice = "music"');
+      expect(source).not.toContain("\\new Staff");
+      expect(source).not.toContain('\\remove "Staff_symbol_engraver"');
       break;
     case "french-tab":
       expect(source).toContain("\\new RhythmicStaff");

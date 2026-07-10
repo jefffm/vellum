@@ -30,6 +30,7 @@ import {
 } from "./tools.js";
 import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
+import { installAudioPreviewControls, installGuidedStart } from "./guided-start.js";
 
 import "./styles.css";
 
@@ -378,6 +379,14 @@ export async function main(): Promise<void> {
   installCompileArtifactPreview(agent);
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();
+  installGuidedStart({
+    onComplete: (compiled, preview) => {
+      const panel = document.querySelector<HTMLElement>("#artifacts-panel");
+      if (panel && renderCompilePreview(panel, compiled)) {
+        installAudioPreviewControls(panel, preview);
+      }
+    },
+  });
 }
 
 if (typeof document !== "undefined") {

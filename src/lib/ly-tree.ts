@@ -58,6 +58,7 @@ export type LyContextType =
   | "PianoStaff"
   | "ChoirStaff"
   | "Voice"
+  | "TabVoice"
   | "Lyrics";
 
 export type LyContainer = {
@@ -141,6 +142,19 @@ export function lyVoice(
   opts: { indicators?: LyIndicator[] } = {}
 ): LyContainer {
   return lyContainer("Voice", {
+    name,
+    children,
+    indicators: opts.indicators,
+  });
+}
+
+/** Shorthand: create a tablature voice inside a TabStaff. */
+export function lyTabVoice(
+  name: string,
+  children: (LyLeaf | LyContainer)[],
+  opts: { indicators?: LyIndicator[] } = {}
+): LyContainer {
+  return lyContainer("TabVoice", {
     name,
     children,
     indicators: opts.indicators,
