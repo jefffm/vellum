@@ -28,9 +28,10 @@ export type TemplateResult = {
 export function buildSoloTab(
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
-  _params: EngraveParams
+  _params: EngraveParams,
+  diapasonTuning?: string
 ): TemplateResult {
-  const withBlock = buildTabStaffWithBlock(vars);
+  const withBlock = buildTabStaffWithBlock(vars, diapasonTuning);
 
   return {
     scoreChildren: [lyTabStaff([lyTabVoice("music", musicLeaves)], { withBlock })],
@@ -40,21 +41,29 @@ export function buildSoloTab(
 export function buildFrenchTab(
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
-  params: EngraveParams
+  params: EngraveParams,
+  diapasonTuning?: string
 ): TemplateResult {
-  const withBlock = buildTabStaffWithBlock(vars);
+  const withBlock = buildTabStaffWithBlock(vars, diapasonTuning);
   const rhythmLeaves = eventsToRhythmLeaves(params.bars, params);
 
   return {
     scoreChildren: [
-      lyRhythmicStaff([lyVoice("rhythm", rhythmLeaves)], {
-        withBlock: [
-          "\\override StaffSymbol.line-count = 0",
-          '\\remove "Time_signature_engraver"',
-          '\\remove "Clef_engraver"',
+      lyRhythmicStaff(
+        [
+          lyVoice("rhythm", rhythmLeaves, {
+            withBlock: ['\\remove "Note_performer"'],
+          }),
         ],
-        indicators: [{ kind: "literal", text: "\\autoBeamOff", site: "before" }],
-      }),
+        {
+          withBlock: [
+            "\\override StaffSymbol.line-count = 0",
+            '\\remove "Time_signature_engraver"',
+            '\\remove "Clef_engraver"',
+          ],
+          indicators: [{ kind: "literal", text: "\\autoBeamOff", site: "before" }],
+        }
+      ),
       lyTabStaff([lyTabVoice("music", musicLeaves)], { withBlock }),
     ],
   };
@@ -63,9 +72,10 @@ export function buildFrenchTab(
 export function buildTabAndStaff(
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
-  _params: EngraveParams
+  _params: EngraveParams,
+  diapasonTuning?: string
 ): TemplateResult {
-  const withBlock = buildTabStaffWithBlock(vars);
+  const withBlock = buildTabStaffWithBlock(vars, diapasonTuning);
 
   return {
     scoreChildren: [
@@ -80,9 +90,10 @@ export function buildTabAndStaff(
 export function buildVoiceAndTab(
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
-  params: EngraveParams
+  params: EngraveParams,
+  diapasonTuning?: string
 ): TemplateResult {
-  const withBlock = buildTabStaffWithBlock(vars);
+  const withBlock = buildTabStaffWithBlock(vars, diapasonTuning);
   const melodyLeaves = buildMelodyLeaves(params);
   const lyricsContent = buildLyricsContent(params);
 
@@ -144,17 +155,18 @@ export function dispatchTemplate(
   templateId: EngraveTemplateId,
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
-  params: EngraveParams
+  params: EngraveParams,
+  diapasonTuning?: string
 ): TemplateResult {
   switch (templateId) {
     case "solo-tab":
-      return buildSoloTab(musicLeaves, vars, params);
+      return buildSoloTab(musicLeaves, vars, params, diapasonTuning);
     case "french-tab":
-      return buildFrenchTab(musicLeaves, vars, params);
+      return buildFrenchTab(musicLeaves, vars, params, diapasonTuning);
     case "tab-and-staff":
-      return buildTabAndStaff(musicLeaves, vars, params);
+      return buildTabAndStaff(musicLeaves, vars, params, diapasonTuning);
     case "voice-and-tab":
-      return buildVoiceAndTab(musicLeaves, vars, params);
+      return buildVoiceAndTab(musicLeaves, vars, params, diapasonTuning);
     default:
       throw new Error(`Unknown template strategy: ${String(templateId)}`);
   }
@@ -238,15 +250,14 @@ export function eventsToRhythmLeaves(bars: EngraveBar[], params: EngraveParams):
 /**
  * Build the \with block entries for a TabStaff based on instrument vars.
  */
-export function buildTabStaffWithBlock(vars: InstrumentLyVars): string[] {
+export function buildTabStaffWithBlock(vars: InstrumentLyVars, diapasonTuning?: string): string[] {
   const entries: string[] = [];
   entries.push(`tablatureFormat = \\${vars.tabFormat}`);
   entries.push(`stringTunings = \\${vars.stringTunings}`);
 
   if (vars.diapasons) {
-    // TODO: future diapason scheme override support — generate inline
-    // additionalBassStrings from a scheme parameter. For now, reference the .ily default.
-    entries.push(`additionalBassStrings = \\${vars.diapasons}`);
+    // A selected bass tuning is emitted inline; otherwise use the instrument default.
+    entries.push(`additionalBassStrings = ${diapasonTuning ?? `\\${vars.diapasons}`}`);
   }
 
   return entries;

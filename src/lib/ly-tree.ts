@@ -139,12 +139,13 @@ export function lyContainer(
 export function lyVoice(
   name: string,
   children: (LyLeaf | LyContainer)[],
-  opts: { indicators?: LyIndicator[] } = {}
+  opts: { indicators?: LyIndicator[]; withBlock?: string[] } = {}
 ): LyContainer {
   return lyContainer("Voice", {
     name,
     children,
     indicators: opts.indicators,
+    withBlock: opts.withBlock,
   });
 }
 

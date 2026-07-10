@@ -1,8 +1,16 @@
 import type { AudioPreview, PlaybackPart } from "./lib/audio-preview.js";
+import type { TargetConfiguration } from "./lib/music-domain.js";
 import type { CompileResult } from "./types.js";
 
 type GuidedStartOptions = {
-  onComplete: (compiled: CompileResult, preview: AudioPreview) => void;
+  onComplete: (deliverables: GuidedDeliverable[]) => void;
+};
+
+export type GuidedDeliverable = {
+  targetConfigurationId: string;
+  label: string;
+  compiled: CompileResult;
+  preview: AudioPreview;
 };
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -40,21 +48,17 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       const instruction = form
         .querySelector<HTMLTextAreaElement>('[name="instruction"]')
         ?.value.trim();
+      const selectedTargets = Array.from(
+        form.querySelectorAll<HTMLInputElement>('[name="targets"]:checked')
+      ).map((input) => input.value);
+      if (selectedTargets.length === 0) throw new Error("Choose at least one output format");
+      const targetConfigurations = selectedTargets.map(targetConfiguration);
       const workspace = await api<{ id: string }>("/api/workspaces", {
         method: "POST",
         body: JSON.stringify({
           title,
           brief: {
-            targetConfigurations: [
-              {
-                id: "target.baroque-guitar",
-                instrumentId: "baroque-guitar-5",
-                role: "solo",
-                stringing: "french",
-                notationLayouts: ["french-letter-tablature"],
-                deliverables: ["pdf", "audio-preview"],
-              },
-            ],
+            targetConfigurations,
             ...(instruction ? { instruction } : {}),
           },
         }),
@@ -77,29 +81,38 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           body: JSON.stringify({ sourceArtifactId: source.id, backend: "audiveris" }),
         }
       );
-      status.textContent = "Identifying the Principal Voice and searching playable reductions…";
-      const arranged = await api<{ arrangementScore: { id: string } }>(
-        `/api/workspaces/${workspace.id}/arrangements`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            normalizedScoreId: recognized.normalizedScore.id,
-            targetConfigurationId: "target.baroque-guitar",
-            preservationPolicy: "faithful_reduction",
-          }),
-        }
-      );
-      status.textContent = "Engraving and preparing literal playback…";
-      const [compiled, preview] = await Promise.all([
-        api<CompileResult>(
-          `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/compile`,
-          { method: "POST" }
-        ),
-        api<AudioPreview>(
-          `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/audio-preview`
-        ),
-      ]);
-      options.onComplete(compiled, preview);
+      const deliverables: GuidedDeliverable[] = [];
+      for (const target of targetConfigurations) {
+        status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
+        const arranged = await api<{ arrangementScore: { id: string } }>(
+          `/api/workspaces/${workspace.id}/arrangements`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              normalizedScoreId: recognized.normalizedScore.id,
+              targetConfigurationId: target.id,
+              preservationPolicy: "faithful_reduction",
+            }),
+          }
+        );
+        status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
+        const [compiled, preview] = await Promise.all([
+          api<CompileResult>(
+            `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/compile`,
+            { method: "POST" }
+          ),
+          api<AudioPreview>(
+            `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/audio-preview`
+          ),
+        ]);
+        deliverables.push({
+          targetConfigurationId: target.id,
+          label: targetLabel(target.id),
+          compiled,
+          preview,
+        });
+      }
+      options.onComplete(deliverables);
       status.textContent =
         "Arrangement ready. The source, analysis, candidates, audit, and deliverables are saved locally.";
       window.setTimeout(() => dialog.close(), 900);
@@ -275,9 +288,39 @@ function guidedStartMarkup(): string {
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
-      <fieldset><legend>2. Output format</legend><label class="output-choice"><input type="radio" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><p>13-course lute and classical-guitar siblings use this same saved workspace in the next tracer bullets.</p></fieldset>
+      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><p>Select both to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <p class="guided-status" data-guided-status>Vellum will preserve the Principal Voice automatically and show any source uncertainty before arranging.</p>
       <footer><button type="button" data-guided-skip>Skip to chat</button><button type="submit">Start arrangement</button></footer>
     </form>`;
+}
+
+function targetConfiguration(id: string): TargetConfiguration {
+  if (id === "target.baroque-guitar") {
+    return {
+      id,
+      instrumentId: "baroque-guitar-5",
+      role: "solo",
+      stringing: "french",
+      notationLayouts: ["french-letter-tablature"],
+      deliverables: ["pdf", "audio-preview"],
+    };
+  }
+  if (id === "target.baroque-lute") {
+    return {
+      id,
+      instrumentId: "baroque-lute-13",
+      role: "solo",
+      tuningId: "d_minor",
+      notationLayouts: ["french-letter-tablature"],
+      deliverables: ["pdf", "audio-preview"],
+    };
+  }
+  throw new Error(`Unknown target configuration: ${id}`);
+}
+
+function targetLabel(id: string): string {
+  if (id === "target.baroque-lute") return "13-course baroque lute";
+  if (id === "target.baroque-guitar") return "5-course baroque guitar";
+  throw new Error(`Unknown target configuration: ${id}`);
 }

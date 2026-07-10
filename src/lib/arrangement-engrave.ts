@@ -45,6 +45,10 @@ export function arrangementToEngraveParams(
     time: sourceScore.timeSignature,
     tempo: 70,
     pickup,
+    diapason_scheme:
+      arrangement.targetConfiguration.instrumentId === "baroque-lute-13"
+        ? arrangement.targetConfiguration.tuningId
+        : undefined,
     bars,
   };
 }

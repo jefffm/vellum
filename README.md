@@ -52,18 +52,18 @@ Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API 
 
 ### PDF arrangement tracer bullet
 
-The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF, choose the currently integrated five-course baroque-guitar target, and optionally add a plain-language instruction. Vellum then:
+The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF, choose five-course baroque guitar, 13-course baroque lute, or both, and optionally add a plain-language instruction. Vellum then:
 
 1. saves the PDF unchanged in a local, versioned arrangement workspace;
 2. runs OMR through the backend-neutral recognition boundary;
 3. saves the recognized and normalized score with source regions and uncertainty records;
 4. identifies and protects the Principal Voice;
-5. searches multiple playable reductions and rejects candidates that fail the Preservation Audit;
+5. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
 6. engraves French letter tablature and creates a literal synthesized Audio Preview with isolatable Principal Voice and accompaniment parts.
 
 [Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be available as `audiveris` on `PATH` for arbitrary PDF recognition. If it is unavailable, the source and Arrangement Brief remain saved and Vellum reports the missing backend without pretending that recognition succeeded. The checked-in public-domain Greensleeves fixture provides deterministic reviewed truth so arrangement and engraving tests do not drift with OMR versions.
 
-The sibling automatic reductions for 13-course baroque lute and classical guitar standard notation are intentionally subsequent tracer bullets; their underlying engraving profiles already exist, but Guided Start does not advertise them as completed arrangement paths yet.
+The lute path uses the historical default 13-course D-minor tuning, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. Classical-guitar standard notation is the next sibling tracer bullet; its underlying engraving profile exists, but Guided Start does not advertise it as a completed arrangement path yet.
 
 ## Stack
 

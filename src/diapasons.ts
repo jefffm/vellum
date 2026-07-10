@@ -61,11 +61,10 @@ function findScheme(
   return undefined;
 }
 
-function buildLilypondSyntax(pitches: string[], startCourse: number): string {
+function buildLilypondSyntax(pitches: string[]): string {
   const lilyParts: string[] = [];
 
-  for (let i = 0; i < pitches.length; i++) {
-    const course = startCourse + i;
+  for (let i = pitches.length - 1; i >= 0; i--) {
     const lyName = PITCH_TO_LILYPOND[pitches[i]] ?? pitches[i].toLowerCase();
     // Courses in the upper range get one comma (octave 2),
     // last two courses get two commas (octave 1)
@@ -106,7 +105,7 @@ export const diapasonsTool: AgentTool<typeof DiapasonsParamsSchema, DiapasonsRes
         pitch,
       }));
 
-      const lilypondSyntax = buildLilypondSyntax(match.pitches, startCourse);
+      const lilypondSyntax = buildLilypondSyntax(match.pitches);
 
       const summary = `${params.key} diapasons for ${instrumentId}: ${match.pitches.join(" ")} (courses ${startCourse}-${startCourse + match.pitches.length - 1}). LilyPond: ${lilypondSyntax}`;
 

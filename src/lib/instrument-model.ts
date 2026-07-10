@@ -92,6 +92,19 @@ export class InstrumentModel {
     return this.profile.courses ?? this.tuningEntries().length;
   }
 
+  soundingRange(): { lowest: string; highest: string } {
+    const pitches = this.tuningEntries().flatMap((entry) => {
+      const course = this.courseFromTuning(entry);
+      const open = this.openPitchForCourse(course);
+      return this.isFretted(course) ? [open, transposeNote(open, this.maxFrets())] : [open];
+    });
+    if (pitches.length === 0) throw new Error("Instrument has no tuning entries");
+    return {
+      lowest: pitches.slice().sort((left, right) => noteToMidi(left) - noteToMidi(right))[0]!,
+      highest: pitches.slice().sort((left, right) => noteToMidi(right) - noteToMidi(left))[0]!,
+    };
+  }
+
   frettedCourseCount(): number {
     if (this.profile.fretted_courses !== undefined) {
       return this.profile.fretted_courses;

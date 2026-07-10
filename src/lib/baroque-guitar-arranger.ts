@@ -38,20 +38,25 @@ type VoicingChoice = {
   openStringCount: number;
 };
 
-export function arrangeFaithfulBaroqueGuitar(
+export function arrangeFaithfulPluckedString(
   score: NormalizedScore,
   analysis: AnalysisRecord,
   model: InstrumentModel,
   options: ArrangementOptions
 ): ArrangementSearchResult {
-  if (options.targetConfiguration.instrumentId !== "baroque-guitar-5") {
-    throw new Error("Baroque-guitar arranger requires target instrument baroque-guitar-5");
+  if (
+    options.targetConfiguration.instrumentId !== "baroque-guitar-5" &&
+    options.targetConfiguration.instrumentId !== "baroque-lute-13"
+  ) {
+    throw new Error(
+      `Faithful plucked-string arranger does not support ${options.targetConfiguration.instrumentId}`
+    );
   }
   const target = analysis.preservationTargets.find(
     (candidate) => candidate.kind === "principal_voice"
   );
   if (!target?.partId)
-    throw new Error("Faithful baroque-guitar arrangement requires a Principal Voice target");
+    throw new Error("Faithful plucked-string arrangement requires a Principal Voice target");
   const principalEvents = score.events.filter((event) => event.partId === target.partId);
   const plan = chooseTranspositionPlan(score, principalEvents, model);
   const strategies = ["source-coverage", "economical-fingering"] as const;
@@ -70,7 +75,9 @@ export function arrangeFaithfulBaroqueGuitar(
   });
   const survivors = candidates.filter((candidate) => candidate.status === "survived");
   if (survivors.length === 0)
-    throw new Error("No baroque-guitar candidate passed Preservation Audit");
+    throw new Error(
+      `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit`
+    );
   survivors.sort(
     (left, right) =>
       right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage ||
@@ -101,6 +108,18 @@ export function arrangeFaithfulBaroqueGuitar(
       createdAt: options.createdAt,
     },
   };
+}
+
+export function arrangeFaithfulBaroqueGuitar(
+  score: NormalizedScore,
+  analysis: AnalysisRecord,
+  model: InstrumentModel,
+  options: ArrangementOptions
+): ArrangementSearchResult {
+  if (options.targetConfiguration.instrumentId !== "baroque-guitar-5") {
+    throw new Error("Baroque-guitar arrangement requires target instrument baroque-guitar-5");
+  }
+  return arrangeFaithfulPluckedString(score, analysis, model, options);
 }
 
 export function auditFaithfulPrincipalVoice(
@@ -198,7 +217,7 @@ function chooseTranspositionPlan(
   );
   if (semitones === undefined) {
     throw new Error(
-      "Principal Voice cannot fit the five-course baroque-guitar range under a uniform transposition"
+      "Principal Voice cannot fit the target instrument range under a uniform transposition"
     );
   }
   return {
@@ -349,7 +368,7 @@ function playablePitchClassPositions(
   model: InstrumentModel
 ): VoicingChoice["positions"] {
   const positions: VoicingChoice["positions"] = [];
-  for (let midi = noteToMidi("G3"); midi <= melodyMidi; midi += 1) {
+  for (let midi = noteToMidi(model.soundingRange().lowest); midi <= melodyMidi; midi += 1) {
     if (midi % 12 !== pitchClass) continue;
     const pitch = midiToNote(midi);
     for (const position of model.positionsForPitch(pitch)) positions.push({ ...position, pitch });

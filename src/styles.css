@@ -549,6 +549,25 @@ chat-panel > div > div:has(agent-interface) {
   font-weight: 700;
 }
 
+.artifact-output-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  color: #5f5f58;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.artifact-output-selector select {
+  border: 1px solid #c9c9c2;
+  border-radius: 999px;
+  background: #fff;
+  color: #30302b;
+  font: inherit;
+  padding: 0.55rem 0.75rem;
+}
+
 .audio-preview-controls button:disabled {
   cursor: default;
   opacity: 0.45;

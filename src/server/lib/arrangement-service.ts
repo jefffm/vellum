@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { arrangeFaithfulBaroqueGuitar } from "../../lib/baroque-guitar-arranger.js";
+import { arrangeFaithfulPluckedString } from "../../lib/baroque-guitar-arranger.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import type { ArrangementCandidate, ArrangementScore } from "../../lib/music-domain.js";
@@ -68,21 +68,26 @@ export class ArrangementService {
       );
     }
     const timestamp = this.now().toISOString();
-    const analysis = analyzeMusicologicalScore(score, {
-      id: `analysis.${this.createId()}`,
-      createdAt: timestamp,
-    });
-    this.store.saveAnalysisRecord(workspaceId, analysis);
-    const search = arrangeFaithfulBaroqueGuitar(
-      score,
-      analysis,
-      this.loadInstrument(targetConfiguration.instrumentId),
-      {
-        arrangementId: `arrangement.${this.createId()}`,
+    const analysis =
+      workspace.analysisRecordIds
+        .map((id) => this.store.getAnalysisRecord(workspaceId, id))
+        .find((record) => record.normalizedScoreId === score.id) ??
+      analyzeMusicologicalScore(score, {
+        id: `analysis.${this.createId()}`,
         createdAt: timestamp,
-        targetConfiguration,
-      }
-    );
+      });
+    if (!workspace.analysisRecordIds.includes(analysis.id)) {
+      this.store.saveAnalysisRecord(workspaceId, analysis);
+    }
+    const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+    if (targetConfiguration.tuningId && targetConfiguration.instrumentId === "baroque-lute-13") {
+      instrument.setDiapasonScheme(targetConfiguration.tuningId);
+    }
+    const search = arrangeFaithfulPluckedString(score, analysis, instrument, {
+      arrangementId: `arrangement.${this.createId()}`,
+      createdAt: timestamp,
+      targetConfiguration,
+    });
     this.store.saveArrangementScore(workspaceId, search.selected);
     return {
       analysisRecordId: analysis.id,

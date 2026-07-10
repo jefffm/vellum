@@ -30,7 +30,11 @@ import {
 } from "./tools.js";
 import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
-import { installAudioPreviewControls, installGuidedStart } from "./guided-start.js";
+import {
+  installAudioPreviewControls,
+  installGuidedStart,
+  type GuidedDeliverable,
+} from "./guided-start.js";
 
 import "./styles.css";
 
@@ -380,13 +384,36 @@ export async function main(): Promise<void> {
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();
   installGuidedStart({
-    onComplete: (compiled, preview) => {
+    onComplete: (deliverables) => {
       const panel = document.querySelector<HTMLElement>("#artifacts-panel");
-      if (panel && renderCompilePreview(panel, compiled)) {
-        installAudioPreviewControls(panel, preview);
-      }
+      if (panel) renderGuidedDeliverables(panel, deliverables);
     },
   });
+}
+
+function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDeliverable[]): void {
+  const render = (deliverable: GuidedDeliverable) => {
+    if (!renderCompilePreview(panel, deliverable.compiled)) return;
+    const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+    if (header && deliverables.length > 1) {
+      const label = document.createElement("label");
+      label.className = "artifact-output-selector";
+      label.textContent = "Output";
+      const select = document.createElement("select");
+      for (const [index, option] of deliverables.entries()) {
+        const element = document.createElement("option");
+        element.value = String(index);
+        element.textContent = option.label;
+        element.selected = option === deliverable;
+        select.append(element);
+      }
+      select.addEventListener("change", () => render(deliverables[Number(select.value)]!));
+      label.append(select);
+      header.append(label);
+    }
+    installAudioPreviewControls(panel, deliverable.preview);
+  };
+  if (deliverables[0]) render(deliverables[0]);
 }
 
 if (typeof document !== "undefined") {

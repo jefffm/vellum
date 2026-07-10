@@ -93,6 +93,7 @@ describe("template strategies", () => {
 
       const rhythmStaff = result.scoreChildren[0] as LyContainer;
       expect(rhythmStaff.withBlock).toContain("\\override StaffSymbol.line-count = 0");
+      expect(firstVoice(rhythmStaff).withBlock).toContain('\\remove "Note_performer"');
       expect(rhythmStaff.indicators).toContainEqual({
         kind: "literal",
         text: "\\autoBeamOff",

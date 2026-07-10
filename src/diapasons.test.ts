@@ -49,7 +49,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, f, ees, d, c, bes,, a,,>");
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <a,, bes,, c, d, ees, f, g,>");
   });
 
   it("generates correct LilyPond syntax for a_minor", async () => {
@@ -58,7 +58,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, f, e, d, c, b,, a,,>");
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <a,, b,, c, d, e, f, g,>");
   });
 
   it("generates correct LilyPond syntax for d_major", async () => {
@@ -67,7 +67,7 @@ describe("diapasons tool", () => {
       instrument: "baroque-lute-13",
     });
 
-    expect(result.details.lilypondSyntax).toBe("\\stringTuning <g, fis, e, d, cis, b,, a,,>");
+    expect(result.details.lilypondSyntax).toBe("\\stringTuning <a,, b,, cis, d, e, fis, g,>");
   });
 
   it("returns closest match with warning for unknown key", async () => {

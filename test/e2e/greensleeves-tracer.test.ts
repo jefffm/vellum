@@ -48,6 +48,14 @@ describe("Greensleeves PDF tracer bullet", () => {
             notationLayouts: ["french-letter-tablature"],
             deliverables: ["pdf", "audio-preview"],
           },
+          {
+            id: "target.baroque-lute",
+            instrumentId: "baroque-lute-13",
+            role: "solo",
+            tuningId: "d_minor",
+            notationLayouts: ["french-letter-tablature"],
+            deliverables: ["pdf", "audio-preview"],
+          },
         ],
       },
     });
@@ -86,6 +94,16 @@ describe("Greensleeves PDF tracer bullet", () => {
       targetConfigurationId: "target.baroque-guitar",
     });
     expect(arranged.arrangementScore.preservationAudit.status).toBe("pass");
+    const luteArranged = new ArrangementService({ store }).createFaithfulReduction(workspace.id, {
+      normalizedScoreId: omr.normalizedScore.id,
+      targetConfigurationId: "target.baroque-lute",
+    });
+    expect(luteArranged.analysisRecordId).toBe(arranged.analysisRecordId);
+    expect(luteArranged.arrangementScore).toMatchObject({
+      targetConfiguration: { instrumentId: "baroque-lute-13", tuningId: "d_minor" },
+      transpositionPlan: { sourceKey: "G major", targetKey: "D major", semitones: -5 },
+      preservationAudit: { status: "pass", findings: [] },
+    });
 
     const engraving = engrave(
       arrangementToEngraveParams(arranged.arrangementScore, omr.normalizedScore)
@@ -95,11 +113,27 @@ describe("Greensleeves PDF tracer bullet", () => {
       new SubprocessRunner(60_000),
       60_000
     );
+    const luteEngraving = engrave(
+      arrangementToEngraveParams(luteArranged.arrangementScore, omr.normalizedScore)
+    );
+    const luteCompiled = await compileLilyPond(
+      { source: luteEngraving.source, format: "both" },
+      new SubprocessRunner(60_000),
+      60_000
+    );
 
     expect(compiled.errors).toEqual([]);
     expect(compiled.svg?.length ?? 0).toBeGreaterThan(1_000);
     expect(compiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(compiled.midi?.length ?? 0).toBeGreaterThan(100);
+    expect(luteCompiled.errors).toEqual([]);
+    expect(luteCompiled.svg?.length ?? 0).toBeGreaterThan(1_000);
+    expect(luteCompiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
+    expect(luteCompiled.midi?.length ?? 0).toBeGreaterThan(100);
+    expect(luteEngraving.source).toContain('\include "instruments/baroque-lute-13.ily"');
+    expect(luteEngraving.source).toContain(
+      "additionalBassStrings = \\stringTuning <a,, bes,, c, d, ees, f, g,>"
+    );
     const audioPreview = buildAudioPreview(arranged.arrangementScore, omr.normalizedScore);
     const protectedPrincipalEvents = arranged.arrangementScore.events.filter(
       (event) => event.principalVoiceSourceEventId
@@ -115,6 +149,10 @@ describe("Greensleeves PDF tracer bullet", () => {
         )
       ).size
     ).toBe(audioPreview.events.length);
+    const luteAudioPreview = buildAudioPreview(luteArranged.arrangementScore, omr.normalizedScore);
+    expect(
+      luteAudioPreview.events.filter((event) => event.part === "principal-voice")
+    ).toHaveLength(protectedPrincipalEvents.length);
     if (process.env.VELLUM_CAPTURE_FIXTURE_ARTIFACTS === "1") {
       const outputDirectory = path.resolve(process.cwd(), "tmp/pdfs");
       mkdirSync(outputDirectory, { recursive: true });
@@ -136,6 +174,24 @@ describe("Greensleeves PDF tracer bullet", () => {
         engraving.source,
         "utf8"
       );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-baroque-lute.pdf"),
+        Buffer.from(luteCompiled.pdf!, "base64")
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-baroque-lute.svg"),
+        luteCompiled.svg!,
+        "utf8"
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-baroque-lute.midi"),
+        Buffer.from(luteCompiled.midi!, "base64")
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-baroque-lute.ly"),
+        luteEngraving.source,
+        "utf8"
+      );
     }
     expect(store.get(workspace.id)).toMatchObject({
       sourceArtifactIds: [source.id],
@@ -143,7 +199,7 @@ describe("Greensleeves PDF tracer bullet", () => {
       scoreTranscriptionIds: [omr.scoreTranscription.id],
       normalizedScoreIds: [omr.normalizedScore.id],
       analysisRecordIds: [arranged.analysisRecordId],
-      arrangementScoreIds: [arranged.arrangementScore.id],
+      arrangementScoreIds: [arranged.arrangementScore.id, luteArranged.arrangementScore.id],
     });
   }, 90_000);
 });

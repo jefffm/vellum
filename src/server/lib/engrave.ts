@@ -95,6 +95,15 @@ export function resolveInstrument(params: EngraveParams): ResolvedInstrument {
   const templateId = params.template as EngraveTemplateId;
 
   const model = loadInstrumentModel(params.instrument);
+  if (params.diapason_scheme) {
+    try {
+      model.setDiapasonScheme(params.diapason_scheme);
+    } catch (error) {
+      throw new EngraveValidationError(error instanceof Error ? error.message : String(error), [
+        { bar: 0, field: "diapason_scheme", message: String(error) },
+      ]);
+    }
+  }
 
   // Template-specific validation
   if (templateId === "voice-and-tab") {
@@ -672,7 +681,7 @@ export function engrave(params: EngraveParams): EngraveResult {
   const musicLeaves = eventsToLeaves(params.bars, params, model);
 
   // Step 4: Build LyTree based on template strategy
-  const { file, templateWarnings } = buildLyFile(params, vars, templateId, musicLeaves);
+  const { file, templateWarnings } = buildLyFile(params, vars, model, templateId, musicLeaves);
 
   // Step 5: Serialize
   const source = serializeFile(file);
@@ -720,6 +729,7 @@ function validateStructure(params: EngraveParams): void {
 function buildLyFile(
   params: EngraveParams,
   vars: InstrumentLyVars,
+  model: InstrumentModel,
   templateId: EngraveTemplateId,
   musicLeaves: LyLeaf[]
 ): { file: LyFile; templateWarnings: string[] } {
@@ -728,7 +738,10 @@ function buildLyFile(
   if (params.title) header.title = params.title;
   if (params.composer) header.composer = params.composer;
 
-  const templateResult = dispatchTemplate(templateId, musicLeaves, vars, params);
+  const diapasonTuning = params.diapason_scheme
+    ? lilyPondDiapasonTuning(model.diapasonPitches())
+    : undefined;
+  const templateResult = dispatchTemplate(templateId, musicLeaves, vars, params, diapasonTuning);
   const scoreChildren = templateResult.scoreChildren;
   const variables = templateResult.variables ?? [];
   const templateWarnings = templateResult.warnings ?? [];
@@ -744,4 +757,12 @@ function buildLyFile(
   };
 
   return { file, templateWarnings };
+}
+
+function lilyPondDiapasonTuning(pitches: Map<number, string>): string | undefined {
+  if (pitches.size === 0) return undefined;
+  const lowestToHighest = [...pitches.entries()]
+    .sort(([left], [right]) => right - left)
+    .map(([, pitch]) => scientificToLilyPond(pitch));
+  return `\\stringTuning <${lowestToHighest.join(" ")}>`;
 }

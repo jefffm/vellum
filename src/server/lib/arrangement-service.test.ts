@@ -36,6 +36,14 @@ describe("Greensleeves faithful arrangement service", () => {
             notationLayouts: ["french-letter-tablature"],
             deliverables: ["pdf", "audio-preview"],
           },
+          {
+            id: "target.baroque-lute",
+            instrumentId: "baroque-lute-13",
+            role: "solo",
+            tuningId: "d_minor",
+            notationLayouts: ["french-letter-tablature"],
+            deliverables: ["pdf", "audio-preview"],
+          },
         ],
       },
     });
@@ -78,12 +86,14 @@ describe("Greensleeves faithful arrangement service", () => {
     const arrangementIds = [
       "44444444-4444-4444-8444-444444444444",
       "55555555-5555-4555-8555-555555555555",
+      "88888888-8888-4888-8888-888888888888",
     ];
-    const result = new ArrangementService({
+    const service = new ArrangementService({
       store,
       now: () => new Date("2026-07-10T14:00:00.000Z"),
       createId: () => arrangementIds.shift()!,
-    }).createFaithfulReduction(workspace.id, {
+    });
+    const result = service.createFaithfulReduction(workspace.id, {
       normalizedScoreId: omr.normalizedScore.id,
       targetConfigurationId: "target.baroque-guitar",
     });
@@ -115,6 +125,21 @@ describe("Greensleeves faithful arrangement service", () => {
       result.arrangementScore
     );
     expect(store.get(workspace.id).arrangementScoreIds).toEqual([result.arrangementScore.id]);
+
+    const luteResult = service.createFaithfulReduction(workspace.id, {
+      normalizedScoreId: omr.normalizedScore.id,
+      targetConfigurationId: "target.baroque-lute",
+    });
+    expect(luteResult.analysisRecordId).toBe(result.analysisRecordId);
+    expect(luteResult.arrangementScore).toMatchObject({
+      id: "arrangement.88888888-8888-4888-8888-888888888888",
+      targetConfiguration: { instrumentId: "baroque-lute-13", tuningId: "d_minor" },
+      preservationAudit: { status: "pass" },
+    });
+    expect(store.get(workspace.id)).toMatchObject({
+      analysisRecordIds: [result.analysisRecordId],
+      arrangementScoreIds: [result.arrangementScore.id, luteResult.arrangementScore.id],
+    });
 
     const uncertainTranscription = {
       ...omr.scoreTranscription,

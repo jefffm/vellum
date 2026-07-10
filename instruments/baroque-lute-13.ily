@@ -3,10 +3,21 @@
 % 13-Course Baroque Lute (d-minor) — accord ordinaire
 % Courses 1-6: fretted; Courses 7-13: diapasons (unfretted bass)
 
-luteStringTunings = \stringTuning <f' d' a f d a,>
+luteStringTunings = \stringTuning <a, d f a d' f'>
 
 % Diapasons — default d-minor accord
-% LilyPond additionalBassStrings: listed highest to lowest (7→13)
-luteDiapasons = \stringTuning <g, f, ees, d, c, bes,, a,,>
+% LilyPond stringTuning input is written lowest to highest.  The resulting
+% additional string numbers still run course 7 (G2) through course 13 (A1).
+luteDiapasons = \stringTuning <a,, bes,, c, d, ees, f, g,>
 
-luteTabFormat = #fret-letter-tablature-format
+#(define lute-diapason-labels
+   #("a" "/a" "//a" "///a" "4" "/4" "//4"))
+
+#(define (historical-lute-tablature-format context string-number fret-number)
+   (if (and (> string-number 6) (<= string-number 13))
+       (make-bold-markup
+        (make-simple-markup
+         (vector-ref lute-diapason-labels (- string-number 7))))
+       (fret-letter-tablature-format context string-number fret-number)))
+
+luteTabFormat = #historical-lute-tablature-format
