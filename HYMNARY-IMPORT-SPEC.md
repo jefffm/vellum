@@ -1039,75 +1039,47 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 
 ## Implementation Plan
 
-### Phase 1 — Prompt, schema, and validation quick wins
+### Slice 1 — Greensleeves PDF to baroque guitar
 
-- Add generic import workflow language to `src/prompts.ts`, with hymn/chorale as a
-  named high-priority profile.
-- Define `MusicDocumentSchema`, `NormalizedAnalysisSchema`, profile detection, and
-  all support schemas/types in TypeScript.
-- Add rational duration utilities and engrave/source bar-duration validation before
-  LilyPond codegen.
-- Improve compile retry hints for tab string syntax and barcheck failures.
-- Add tests from the Be Thou My Vision trace to ensure the prompt says to preserve
-  hymn lead lines while still routing generic sources through `music_import`.
+- Implement the minimum production Provider Connection, Guided Start, Arrangement
+  Workspace lineage, and generic PDF upload needed by the primary fixture.
+- Add the backend-neutral OMR adapter with Audiveris first, preserving the full OMR
+  Run and enabling Score-Anchored Review.
+- Normalize the reviewed four-part score into stable events and relationships;
+  detect the Principal Voice and produce an Analysis Record.
+- Run Faithful Reduction and Arrangement Search for five-course baroque guitar,
+  preserving the complete tune while reducing inner parts for French Stringing.
+- Produce French-Letter Tablature, a complete Transformation Report, passing
+  Preservation Audit, and non-duplicated semantic Audio Preview.
+- Do not hard-code Greensleeves pitches, title, voice count, or target decisions in
+  production logic.
 
-### Phase 2 — MusicXML generic import MVP
+### Slice 2 — Sibling target configurations
 
-- Implement `music_import` for pasted MusicXML text.
-- Extract metadata, parts, measures, voices, lyrics, repeats, alternatives, chord
-  symbols, directions, and source locations into `MusicDocument`.
-- Add a music21-backed or equivalent normalization pass that emits profiles,
-  texture, voice-role candidates, lead candidates, key/range data, and initial
-  harmony analysis.
-- Keep the existing `analyze` tool as harmonic-analysis support, not as the import
-  data model.
-- Add fixtures from public-domain/simple hymn snippets, lead sheets, melody-only
-  tunes, and existing MusicXML hymn-like fixtures.
+- Reuse the same source-analysis lineage for 13-course baroque-lute and
+  classical-guitar sibling Arrangement Scores.
+- Implement independent search, playability, commitments, audits, and layouts for
+  each Target Configuration.
+- Pass the exact `///a` diapason engraving and sounding-pitch fixture.
 
-### Phase 3 — Restricted LilyPond text import
+### Slice 3 — Continuo semantics
 
-- Implement the documented LilyPond subset parser/tokenizer.
-- Extract metadata, key/time, simple variables, voices, repeats, alternatives, and
-  lyrics.
-- Reject or warn on unsupported LilyPond constructs instead of guessing.
-- Add regression fixture based on the trace shape: old LilyPond, SATB, five verses,
-  fivefold repeat.
+- Pass the soprano-plus-figured-bass golden fixture.
+- Add Realization Profiles, Continuo Foundation preservation, generated-voice
+  provenance, complete realization, and honest Continuo Reduction.
 
-### Phase 4 — Multi-staff engrave support
+### Slice 4 — Imitative counterpoint
 
-- Extend `engrave` schema for named staves, voices, lyrics, repeats, alternatives,
-  and rational bar-duration validation.
-- Support voice + tab output without raw LilyPond hand-writing.
-- Add structured alfabeto events in multi-staff scores.
-- Add compile integration tests.
+- Pass the three-voice imitative fixture through Renaissance-lute intabulation.
+- Generalize Texture, Contrapuntal Techniques, relationship-level Preservation
+  Targets, contextual Validation Profiles, and voice-isolated playback.
 
-### Phase 5 — Harmony reduction and alfabeto planning
+### Slice 5 — Broader source and knowledge coverage
 
-- Derive chord spans from imported normalized event graphs using music21 or an
-  equivalent deterministic reducer: chord symbols first when present, then
-  SATB/four-part verticalities, then arbitrary multi-part verticalities, then
-  generated harmonization as fallback.
-- Map chord spans to alfabeto lookup candidates.
-- Choose between exact source harmony and instrument-friendly reduction.
-- Add tests for G/C/D/Am/Em hymn reductions on 5-course baroque guitar plus at
-  least one non-SATB lead-sheet or melody-only reduction.
-
-### Phase 6 — Non-text artifact imports
-
-- Persist imported `MusicDocument` values in the current Arrangement Workspace with
-  their source artifacts, provenance, license, diagnostics, Analysis Record, and
-  user corrections. The workspace, not the browser session or chat transcript, is
-  the durable project boundary.
-- Treat reusable findings as Knowledge Candidates. Promote them to the Historical
-  Knowledge Base only through explicit source-backed review.
-- Add direct `.mscz` import via MuseScore CLI export if warranted, otherwise keep
-  MusicXML export as the supported path.
-- Investigate ABC and MEI completeness beyond simple text import, with Verovio as
-  a likely validation/rendering backend.
-- Add a backend-neutral PDF/image OMR adapter with Audiveris as its first optional
-  post-v1 backend, plus Tesseract lyrics OCR where useful. Preserve each backend's
-  native artifacts and full run provenance; document installation/runtime
-  requirements and implement note/lyric uncertainty diagnostics.
+- Generalize MusicXML, restricted LilyPond, ABC, MEI, `.mscz`, and additional OMR
+  cases using the same versioned import contracts.
+- Add reviewed Knowledge Packs, Owner Reference Library promotion, Personal Default
+  Candidates, and broader public-domain repertoire regressions.
 
 ## Test Strategy
 
@@ -1224,29 +1196,34 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 - Use `python-ly` for the restricted LilyPond importer where it helps with lexing
   and tree structure. GPL is acceptable. Still implement strict subset semantics
   and diagnostics rather than claiming full LilyPond support.
-- V1 uncertainty review is structured diagnostics plus targeted agent questions.
-  A richer side-panel review UI is post-v1 and should show source summary,
-  candidate profiles, preservation-target choices, and diagnostic/confidence
-  groups.
-- OMR/OCR are post-v1 optional server backends behind backend-neutral contracts.
-  Audiveris is the first PDF/image OMR implementation and is acceptable despite
-  AGPL, but its `.omr`, MusicXML export, configuration, version, logs, and page
-  mappings are retained together as a versioned OMR Run. MuseScore CLI is
-  acceptable for `.mscz` to MusicXML; Tesseract is acceptable for lyrics OCR;
-  Verovio is useful for MEI/ABC rendering and conversion validation.
+- The first tracer bullet includes Score-Anchored Review for Critical Uncertainty:
+  source facsimile beside editable notation, ranked alternatives, evidence, and
+  versioned correction. Chat remains an explanation and fallback surface rather
+  than the only review UI.
+- PDF OMR is part of the first tracer bullet behind a backend-neutral contract.
+  Audiveris is the first implementation and is acceptable despite AGPL; its `.omr`,
+  MusicXML export, configuration, version, logs, and page mappings are retained
+  together as a versioned OMR Run. Tesseract lyrics OCR remains an optional
+  companion. MuseScore CLI and Verovio broaden later source-format slices.
 - Licensing/provenance should be preserved and displayed, but Vellum should not
   auto-adjudicate rights. If source rights are unknown, generated arrangements and
   exports should say so plainly.
 
-## Definition of Done for v1
+## Definition of Done for the First Tracer Bullet
 
-Vellum can accept pasted MusicXML and documented restricted LilyPond sources,
-import them through `music_import` into the canonical `MusicDocument`, run a
-normalization/analysis pass, infer at least hymn/chorale, SATB-like, lead-sheet,
-and melody-only profiles, and generate a historical plucked-instrument arrangement
-that passes a Preservation Audit for the profile-required source material. The hymnary/SATB happy path
-must include lead melody, lyrics, repeats, and four-part harmony; non-SATB fixtures
-must prove the importer is not hard-coded to that shape. If multi-staff/repeat
-`engrave` support has not yet landed, the shipped MVP must explicitly scope itself
-to melody + simple tab and must not claim full generic import or hymnary v1
-completion.
+The first tracer bullet is complete only when Vellum can connect through the fake
+Provider Contract Fixture, accept the public-domain four-part _Greensleeves_ PDF
+through Guided Start, preserve a complete OMR Run, resolve Critical Uncertainty in
+Score-Anchored Review, persist versioned source/transcription/analysis state,
+identify the Principal Voice, and produce a five-course baroque-guitar Faithful
+Reduction in French tablature.
+
+The selected Arrangement Score must pass event-and-relationship Preservation
+Audit, instrument constraints, engraving checks, and semantic Audio Preview without
+duplicated notation/tab playback. The implementation cannot hard-code the fixture's
+title, pitches, voice count, or expected decisions. Passing isolated import,
+analysis, compile, or MIDI-existence tests is insufficient.
+
+Vellum does not claim broader generic arrangement coverage until the same contracts
+also pass the sibling lute/classical-guitar, figured-bass, and
+imitative-counterpoint slices.

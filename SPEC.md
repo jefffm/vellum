@@ -1897,6 +1897,34 @@ This remote configuration is optional and must not become the credential or owne
 
 ## v1 Scope
 
+### Delivery Strategy
+
+V1 is delivered as production-path tracer-bullet slices, not as horizontal
+completion of storage, OMR, analysis, arrangement, engraving, and playback in
+isolation.
+
+1. **Greensleeves PDF → baroque guitar.** Implement the minimum real Provider
+   Connection, Guided Start, durable versioned workspace, backend-neutral
+   Audiveris OMR Run, Score-Anchored Review, multi-voice normalization,
+   Musicological Analysis, Faithful Reduction, Arrangement Search, Preservation
+   Audit, French tablature engraving, and semantic Audio Preview needed to pass the
+   primary Golden Arrangement Fixture.
+2. **Sibling targets.** Generalize Target Configuration and Arrangement Family
+   behavior through 13-course baroque-lute and classical-guitar siblings from the
+   same source.
+3. **Continuo.** Generalize source roles, Realization Profiles, generated-voice
+   provenance, and Continuo Reduction through the figured-bass fixture.
+4. **Imitative counterpoint.** Generalize relationship-level Preservation Targets
+   and Validation Profiles through the Renaissance-lute intabulation fixture.
+5. **Engraving and provider hardening.** Pass the exact diapason and two-layer
+   Provider Contract fixtures, then expand repertoire coverage.
+
+Each slice uses canonical persisted contracts rather than throwaway fixture code.
+It may initially support only the fixture-required capability, but production code
+cannot hard-code the piece title, pitches, voice count, or expected decisions. An
+isolated endpoint does not make a subsystem integrated until a golden path uses it
+end to end.
+
 ### Infrastructure
 
 - [ ] Set up pi-mono packages (`pi-agent-core`, `pi-web-ui`, `pi-ai`)
@@ -1948,16 +1976,22 @@ This remote configuration is optional and must not become the credential or owne
 
 ### Validation
 
-- [ ] **Test piece: Dowland "Flow My Tears" (Lachrimae)** — see below
+- [ ] **Primary golden fixture: four-part "Greensleeves" PDF → five-course baroque guitar**
+- [ ] **Sibling fixtures: the same reviewed source → 13-course baroque lute and classical guitar**
+- [ ] **Specialist fixtures: figured bass, imitative counterpoint, and exact diapason engraving**
+- [ ] **Provider Contract Fixture: fake lifecycle suite plus opt-in real ChatGPT smoke test**
+- [ ] **Repertoire regression: Dowland "Flow My Tears" (Lachrimae)** — see below
 - [ ] **Test piece: "All Creatures of Our God and King" (LASST UNS ERFREUEN)** — hymnal SATB → baroque guitar conversion
 - [ ] End-to-end: upload .ly source → arrange for baroque lute → French tab output → SVG preview → MIDI playback
 - [ ] End-to-end: convert guitar tab → baroque lute French tab
 - [ ] End-to-end: SATB hymnal → baroque guitar (punteado + rasgueado)
 - [ ] Verify LilyPond French tab template with polyphonic voices + diapasons + ornaments
 
-### Test Piece: Dowland "Flow My Tears" (Lachrimae)
+### Repertoire Regression: Dowland "Flow My Tears" (Lachrimae)
 
-**Recommendation:** John Dowland's "Flow My Tears" (from _The Second Booke of Songs or Ayres_, 1600) as the primary v1 test piece.
+John Dowland's "Flow My Tears" (from _The Second Booke of Songs or Ayres_, 1600)
+remains a valuable post-golden-path repertoire regression, but it is not the
+primary integration fixture.
 
 **Why this piece:**
 

@@ -520,6 +520,11 @@ _Avoid_: French tab
 - Creating, editing, or releasing a Family Commitment marks affected family members stale and offers Conservative Regeneration independently for each Target Configuration
 - A Family Commitment that is infeasible for one Target Configuration produces a target-local Commitment Conflict without invalidating feasible sibling arrangements
 - The primary **Golden Arrangement Fixture** is a repository-stored, public-domain four-part Greensleeves PDF with explicit source and license provenance
+- Implementation proceeds through production-path tracer-bullet slices led by Golden Arrangement Fixtures rather than completing storage, OMR, analysis, arrangement, engraving, or playback as isolated horizontal subsystems
+- The first slice carries the Greensleeves PDF through Provider Connection, Guided Start, durable versioned workspace state, OMR and review, analysis, Faithful Reduction, baroque-guitar Arrangement Search, audit, French tablature, and Audio Preview
+- A subsystem is not considered integrated merely because its isolated API works; the Greensleeves acceptance path must exercise its real persisted contracts end to end
+- The first slice may implement only the capability needed by the fixture but cannot hard-code the work's title, pitches, voice count, or expected target decisions into production behavior
+- Later slices generalize the same contracts through the sibling lute and classical-guitar outputs, figured-bass fixture, imitative-counterpoint fixture, and diapason engraving fixture
 - Its primary acceptance path is generic PDF upload, OMR Run, Score-Anchored Review where needed, Principal Voice identification, Faithful Reduction, five-course baroque-guitar Arrangement Search, French-Letter Tablature with French Stringing, engraving, Preservation Audit, and Audio Preview
 - Acceptance compares every protected Greensleeves Principal Voice pitch, rhythm, order, and phrase relationship against the reviewed Score Transcription; recognizability is not inferred from successful compilation or a subjective claim alone
 - The selected guitar arrangement must keep the Principal Voice perceptually prominent as the top line, pass instrument constraints, avoid duplicated playback events, and produce valid notation and audio
