@@ -192,6 +192,18 @@ _Avoid_: Personal Default, source correction, instrument-specific fingering
 A complete or sectional proposed realization of an arrangement plan with recorded derivation choices and evaluation results.
 _Avoid_: Draft, option
 
+**Golden Arrangement Fixture**:
+A legally redistributable, provenance-bearing source artifact plus reviewed transcription and expected musical invariants used to test the complete Vellum workflow across selected Target Configurations.
+_Avoid_: Demo, compile fixture
+
+**Golden Engraving Fixture**:
+A minimal notation case with exact semantic, rendered-glyph, placement, and sounding-pitch expectations for a historically significant engraving feature.
+_Avoid_: Compile smoke test
+
+**Provider Contract Fixture**:
+A deterministic fake provider and opt-in real-provider smoke protocol used to verify the complete Provider Connection lifecycle without making personal credentials a CI dependency.
+_Avoid_: Unit test of token parsing alone
+
 **Arrangement Search**:
 The generate, reject, rank, compare, and select process that produces an Arrangement Score from competing Arrangement Candidates.
 _Avoid_: Model response, retry loop
@@ -353,6 +365,11 @@ _Avoid_: French tab
 - **Retry original snapshot as a branch** creates an **Arrangement Branch** rooted at the action's exact prior inputs and continues there without overwriting or reverting the current lineage
 - A retry choice and every resulting attempt remain linked to the interrupted Model Action for provenance
 - Provider errors never delete, lock, or invalidate locally stored musical work
+- The **Provider Contract Fixture** has an automated fake-provider layer covering connect initiation, callback validation, state mismatch, refresh, expiry, single-flight concurrency, interrupted Model Actions, retry, reconnect, logout, atomic credential writes, and secret redaction
+- Automated Provider Connection tests run without a real ChatGPT account, never read Pi or Codex credential files, and assert that tokens cannot appear in logs, errors, snapshots, or exported workspace state
+- An opt-in real ChatGPT subscription smoke test verifies the current OAuth flow, connected status, one minimal model request, local disconnect, and reconnect behavior
+- The real-provider smoke test is never required in CI, never records credentials or callback parameters, and reports only redacted lifecycle results
+- Failure of the real smoke test identifies provider-contract drift separately from failures in Vellum's deterministic connection state machine
 - User corrections persist automatically within their **Arrangement Workspace**
 - **Personal Defaults** remain separate from source analysis and historical claims
 - Vellum may create a **Personal Default Candidate** when an equivalent user choice recurs across distinct Arrangement Workspaces
@@ -502,6 +519,26 @@ _Avoid_: French tab
 - If a proposed Family Commitment is actually a correction to the source evidence, Vellum routes it to the Score Transcription or Analysis Record rather than duplicating it across arrangements
 - Creating, editing, or releasing a Family Commitment marks affected family members stale and offers Conservative Regeneration independently for each Target Configuration
 - A Family Commitment that is infeasible for one Target Configuration produces a target-local Commitment Conflict without invalidating feasible sibling arrangements
+- The primary **Golden Arrangement Fixture** is a repository-stored, public-domain four-part Greensleeves PDF with explicit source and license provenance
+- Its primary acceptance path is generic PDF upload, OMR Run, Score-Anchored Review where needed, Principal Voice identification, Faithful Reduction, five-course baroque-guitar Arrangement Search, French-Letter Tablature with French Stringing, engraving, Preservation Audit, and Audio Preview
+- Acceptance compares every protected Greensleeves Principal Voice pitch, rhythm, order, and phrase relationship against the reviewed Score Transcription; recognizability is not inferred from successful compilation or a subjective claim alone
+- The selected guitar arrangement must keep the Principal Voice perceptually prominent as the top line, pass instrument constraints, avoid duplicated playback events, and produce valid notation and audio
+- The same source then produces sibling 13-course baroque-lute and classical-guitar Arrangement Scores with independent search, validation, and Preservation Audits
+- The second Golden Arrangement Fixture is a short, legally redistributable public-domain soprano-plus-figured-bass PDF containing an independent Principal Voice, a complete Continuo Foundation, and at least one prepared suspension
+- Its reviewed transcription identifies every bass event, figure, accidental, soprano event, cadence, and suspension relationship so figure recognition and realization can be tested independently
+- A target capable of sounding the bass must produce a complete Continuo Realization under an explicit Realization Profile; a target that cannot must produce a separate bass part or labeled Continuo Reduction with every unsounded foundation event reported
+- The fixture verifies that contextual validation accepts the source-supported suspension treatment rather than applying a blanket dissonance or parallel-motion prohibition
+- Audio Preview exposes separate Principal Voice, Continuo Foundation, and generated realization Playback Parts for isolated verification
+- The third Golden Arrangement Fixture is a short, legally redistributable public-domain three-voice imitative passage whose musical identity depends on ordered entries rather than a single permanent Principal Voice
+- Its Analysis Record must classify the Texture as imitative polyphony, identify the applicable Contrapuntal Techniques and Validation Profile, and promote voice entries, subject interval-rhythm shapes, cadential goals, and required voice continuities to Preservation Targets
+- The initial intabulation target is the six-course Renaissance lute in French tablature; candidate search may redistribute playable notes across courses and registers but cannot erase or reorder protected imitation
+- The Preservation Audit verifies every protected entry and relationship, not merely pitch coverage or the highest source voice
+- Audio Preview and Lineage Navigation allow each source voice and its arrangement descendants to be isolated even when the intabulation interleaves them on one tablature staff
+- A dedicated **Golden Engraving Fixture** verifies that open course 10 on the default 13-course D-minor baroque lute renders as `///a` below the French tablature staff and sounds D2
+- The fixture checks the structured course assignment, generated LilyPond semantics, rendered glyph and placement, MIDI pitch, and absence of duplicate playback; non-empty SVG output is insufficient
+- The diapason sign remains `///a` when a Bass Tuning changes course 10's pitch, proving that course identity and sounding pitch are independent
+- A companion sequence verifies the historical default signs `a`, `/a`, `//a`, `///a`, `4`, `/4`, and `//4` for courses 7 through 13
+- Golden fixtures include reviewed canonical musical data so OMR backend drift can be distinguished from arrangement-engine regressions
 - An **Arrangement Brief** selects one or more **Notation Layouts** independently from one or more **Deliverables**
 - A **Notation Layout** may produce multiple **Deliverables**
 - **Guided Start** may seed the conversation with an initial **Arrangement Brief**

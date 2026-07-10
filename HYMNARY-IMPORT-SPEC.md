@@ -1152,6 +1152,64 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 - Generated tab syntax should use valid LilyPond note-duration-string order such as
   `g4\\3`, not `g\\3 4`.
 
+### Primary golden arrangement fixture
+
+- Store a legally redistributable, public-domain four-part _Greensleeves_ PDF with
+  explicit provenance, reviewed Score Transcription data, and expected musical
+  invariants.
+- Exercise generic PDF ingestion, OMR provenance, targeted uncertainty review,
+  four-voice normalization, Principal Voice detection, five-course baroque-guitar
+  Faithful Reduction, French tablature, engraving, and Audio Preview.
+- Compare every protected melody pitch, rhythm, order, phrase, and cadence
+  relationship against the reviewed transcription. Compilation and MIDI existence
+  are necessary but insufficient.
+- Assert that accompaniment reduction never obscures or overtops the Principal
+  Voice, all guitar events are playable, and notation-plus-tab does not duplicate
+  playback.
+- Reuse the same source for sibling 13-course baroque-lute and classical-guitar
+  Arrangement Scores with independent candidate search and Preservation Audits.
+
+### Figured-bass golden fixture
+
+- Store a legally redistributable public-domain PDF containing an independent
+  soprano, complete figured bass, cadence, and prepared suspension, together with
+  reviewed event, figure, accidental, and relationship data.
+- Verify that import and analysis keep the Principal Voice and Continuo Foundation
+  distinct and select an explicit Realization Profile.
+- For a capable target, require a complete Continuo Realization with authoritative
+  bass preservation and figure satisfaction. For an incapable target, require a
+  separate bass part or labeled Continuo Reduction with all unsounded bass events
+  mapped.
+- Prove generated realization voices remain provenance-distinct, contextual
+  validation accepts the supported suspension treatment, and Audio Preview exposes
+  separate soprano, bass, and generated realization Playback Parts.
+
+### Imitative-counterpoint golden fixture
+
+- Store a legally redistributable public-domain three-voice imitative passage with
+  reviewed voice events, entry order, subject interval-rhythm shapes, cadential
+  goals, and required voice continuities.
+- Verify that analysis distinguishes imitative Texture from its Contrapuntal
+  Techniques, selects a contextual Validation Profile, and creates multiple
+  relationship-level Preservation Targets instead of choosing only the top voice.
+- Intabulate for six-course Renaissance lute in French tablature. Permit playable
+  course/register redistribution but reject lost or reordered entries and broken
+  protected continuities.
+- Prove the Preservation Audit checks relationships, while Audio Preview and
+  Lineage Navigation can isolate each source voice through the interleaved tab.
+
+### Baroque-lute diapason engraving fixture
+
+- Verify open course 10 on the default 13-course D-minor lute renders as `///a`
+  below the French tablature staff and sounds D2 exactly once.
+- Assert structured course identity, generated LilyPond bass-string semantics,
+  rendered glyph and placement, MIDI pitch, and non-duplication; a non-empty SVG
+  assertion is insufficient.
+- Retune course 10 and prove the sound changes while its `///a` sign remains tied
+  to course identity.
+- Verify the full default course 7–13 sign sequence: `a`, `/a`, `//a`, `///a`, `4`,
+  `/4`, `//4`.
+
 ## Resolved Design Decisions
 
 - `music_import` is server-side authoritative in v1. The browser may do lightweight

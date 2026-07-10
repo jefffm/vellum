@@ -1636,6 +1636,120 @@ Agent:
 
 ## Quality Criteria
 
+### Primary Golden Arrangement Fixture
+
+The primary end-to-end acceptance fixture is a repository-stored, legally
+redistributable public-domain PDF of a four-part setting of _Greensleeves_. The
+fixture includes source and license provenance, reviewed Score Transcription data,
+and expected musical invariants so recognition drift can be distinguished from an
+arrangement regression.
+
+Its primary path must prove:
+
+1. generic PDF upload and immutable Source Artifact storage;
+2. a reproducible OMR Run and Score-Anchored Review of any Critical Uncertainty;
+3. four-voice normalization, Musicological Analysis, and correct Principal Voice
+   identification;
+4. Faithful Reduction through structured Arrangement Search to five-course
+   baroque guitar with French Stringing and French-Letter Tablature;
+5. event-by-event Preservation Audit of the complete Principal Voice, including
+   pitch, rhythm, ordering, contour, phrase, and cadence relationships;
+6. perceptual prominence of that voice as the recognizable top line while inner
+   voices yield to instrument range and playability;
+7. successful engraving plus semantic, non-duplicated Audio Preview; and
+8. sibling 13-course baroque-lute and classical-guitar Arrangement Scores from the
+   same source, each with independent search, constraints, and audit.
+
+The fixture cannot pass merely because LilyPond compiles, a MIDI file exists, or a
+model says the tune is recognizable. Tests compare the reviewed Principal Voice
+and its protected relationships against the exact selected Arrangement Score.
+
+### Figured-Bass Golden Fixture
+
+The second end-to-end fixture is a short, legally redistributable public-domain
+PDF containing an independent soprano and figured bass, including at least one
+prepared suspension. Its reviewed transcription identifies every soprano and bass
+event, figure, alteration, cadence, and suspension relationship.
+
+The fixture must prove:
+
+1. PDF/OMR recognition keeps the Continuo Foundation distinct from the Principal
+   Voice and flags Critical Uncertainty in either layer;
+2. analysis selects and discloses an applicable Realization Profile;
+3. a capable Target Configuration produces a complete Continuo Realization that
+   preserves every authoritative bass event and satisfies the figures;
+4. an incapable solo target produces either a separate bass part or a labeled
+   Continuo Reduction with every unsounded foundation event mapped;
+5. generated upper voices remain distinct from source evidence in lineage and the
+   Transformation Report;
+6. contextual validation recognizes the documented suspension treatment instead
+   of applying blanket dissonance or parallel-motion rules; and
+7. Audio Preview exposes separate Principal Voice, Continuo Foundation, and
+   generated-realization Playback Parts.
+
+### Imitative-Counterpoint Golden Fixture
+
+The third fixture is a short, legally redistributable public-domain three-voice
+imitative passage whose identity depends on ordered entries rather than one
+permanent Principal Voice. Its reviewed data identifies voice events, entry order,
+subject interval-rhythm shapes, cadential goals, and required voice continuities.
+
+The fixture must prove:
+
+1. Musicological Analysis classifies imitative-polyphonic Texture separately from
+   its Contrapuntal Techniques and selects an appropriate Validation Profile;
+2. entry order, subject shapes, cadential goals, and voice continuities become
+   explicit Preservation Targets;
+3. Arrangement Search intabulates the passage for six-course Renaissance lute in
+   French tablature, redistributing notes across playable courses and registers
+   without erasing or reordering the imitation;
+4. validation does not substitute generic Species Counterpoint or blanket
+   parallel-motion rules for the selected profile;
+5. the Preservation Audit checks every protected entry and relationship rather
+   than only pitch coverage or the highest source voice; and
+6. Audio Preview and Lineage Navigation can isolate each source voice and its
+   interleaved arrangement descendants on the single tablature staff.
+
+### Baroque-Lute Diapason Engraving Fixture
+
+A dedicated Golden Engraving Fixture must prove that open course 10 on the default
+13-course D-minor baroque lute renders as `///a` below the French tablature staff
+and sounds D2. The accepted sign is prefix-slash `///a`, not `a///`.
+
+The test checks all of the following independently:
+
+1. the structured event selects open course 10;
+2. generated LilyPond retains the correct course and `additionalBassStrings`
+   semantics;
+3. rendered output contains the approved `///a` glyph in the correct below-staff
+   position, using a semantic assertion or focused visual regression rather than a
+   non-empty-SVG check;
+4. MIDI and Audio Preview contain D2 exactly once; and
+5. changing course 10 through a Bass Tuning changes its sounding pitch while its
+   course-identity sign remains `///a`.
+
+A companion fixture verifies the complete default sign sequence `a`, `/a`, `//a`,
+`///a`, `4`, `/4`, and `//4` for courses 7–13.
+
+### Provider Connection Acceptance
+
+Provider Connection has two independent acceptance layers.
+
+The automated **Provider Contract Fixture** uses a deterministic fake provider to
+exercise connect initiation, callback validation, CSRF/state mismatch, successful
+authorization, expiry, refresh, atomic credential writes, single-flight refresh
+concurrency, interruption and retry of Model Actions, reconnect, logout, and all
+visible connection states. It requires no real account, never reads Pi or Codex
+credential files, and asserts that tokens cannot appear in logs, errors, test
+snapshots, workspace exports, or browser-visible state.
+
+An opt-in real ChatGPT subscription smoke test verifies the current provider OAuth
+flow, connected status, one minimal model request, local disconnect, and reconnect.
+It is never a CI requirement and never records credentials, authorization codes,
+callback parameters, or model content beyond a redacted success result. Reporting
+distinguishes provider-contract drift from deterministic Vellum state-machine
+failures.
+
 An arrangement is "good" if:
 
 1. **Faithful to its policy** — every Preservation Target passes a machine-readable Preservation Audit; necessary deviations have explicit Policy Exceptions
