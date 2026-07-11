@@ -19,7 +19,7 @@ export const PersonalDefaultCandidateSchema = Type.Object({
   dimension: Type.String({ minLength: 1 }),
   value: Type.Unknown(),
   scope: Scope,
-  evidenceChoiceIds: Type.Array(Id, { minItems: 2 }),
+  evidenceChoiceIds: Type.Array(Id, { minItems: 1 }),
   status: Type.Union([
     Type.Literal("proposed"),
     Type.Literal("approved"),
@@ -89,7 +89,11 @@ export const HistoricalPracticeClaimSchema = Type.Object({
   referenceId: Id,
   citationLocator: Type.String({ minLength: 1 }),
   sourceCandidateId: Id,
+  confidence: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
+  status: Type.Optional(Type.Union([Type.Literal("active"), Type.Literal("released")])),
+  correctedClaimId: Type.Optional(Id),
   reviewedAt: DateTime,
+  releasedAt: Type.Optional(DateTime),
 });
 export type HistoricalPracticeClaim = Static<typeof HistoricalPracticeClaimSchema>;
 

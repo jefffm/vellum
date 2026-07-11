@@ -11,7 +11,7 @@ describe("local Owner trust boundary", () => {
 
   beforeEach(() => {
     rootDirectory = mkdtempSync(path.join(tmpdir(), "vellum-owner-"));
-    ids = ["1", "2", "3", "4", "5", "6", "7", "8"];
+    ids = Array.from({ length: 24 }, (_, index) => String(index + 1));
     store = new OwnerStore({
       rootDirectory,
       createId: () => ids.shift()!,
@@ -70,12 +70,59 @@ describe("local Owner trust boundary", () => {
     expect(promoted.claim).toMatchObject({
       referenceId: reference.id,
       sourceCandidateId: candidate.id,
+      confidence: 1,
+      status: "active",
     });
     expect(promoted.pack).toMatchObject({
       reviewed: true,
       version: 1,
       claimIds: [promoted.claim.id],
     });
+    expect(store.releaseClaim(promoted.claim.id)).toMatchObject({ status: "released" });
+  });
+
+  it("keeps explicit candidate correction and rejection separate from learning", () => {
+    const proposed = store.proposeDefaultCandidate({
+      dimension: "stringing",
+      value: "italian",
+      scope: { instrument: "baroque-guitar-5" },
+      evidenceChoiceIds: ["choice.selection-context"],
+    });
+    expect(store.listDefaults()).toEqual([]);
+    const corrected = store.reviseDefaultCandidate(proposed.id, {
+      dimension: "stringing",
+      value: "french",
+      scope: { instrument: "baroque-guitar-5" },
+    });
+    expect(store.listDefaultCandidates()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: proposed.id, status: "rejected" }),
+        expect.objectContaining({ id: corrected.id, status: "proposed", value: "french" }),
+      ])
+    );
+    const approved = store.approveDefaultCandidate(corrected.id);
+    expect(
+      store.applyDefaults({
+        id: "target.guitar",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf"],
+      })
+    ).toMatchObject({ target: { stringing: "french" } });
+    store.releaseDefault(approved.id);
+    expect(
+      store.applyDefaults({
+        id: "target.guitar.next",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf"],
+      }).target.stringing
+    ).toBeUndefined();
+    expect(store.listDefaults()).toContainEqual(
+      expect.objectContaining({ id: approved.id, status: "released" })
+    );
   });
 
   it("applies approved defaults softly and discloses when explicit target state wins", () => {

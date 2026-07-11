@@ -39,6 +39,7 @@ import {
   installDeliverableSummary,
   installLineageSummary,
   installNotationSelection,
+  installPersonalDefaultSummary,
   installSourceLineageWorkspace,
   installVersionNavigator,
   installTransformationReport,
@@ -473,11 +474,14 @@ async function loadGuidedDeliverable(
       )
     )
   );
-  const [projections, analysis] = await Promise.all([
+  const [projections, analysis, workspace] = await Promise.all([
     loadSavedProjections(workspaceId, arrangementId),
     browserApi<GuidedDeliverable["analysis"]>(
       `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
     ),
+    browserApi<{
+      brief: { personalDefaultApplications?: GuidedDeliverable["personalDefaultApplications"] };
+    }>(`/api/workspaces/${workspaceId}`),
   ]);
   const { compiled, preview } = projections;
   return {
@@ -502,6 +506,7 @@ async function loadGuidedDeliverable(
     preview,
     deliverables: [...compiled.deliverables, preview.deliverable],
     candidates,
+    personalDefaultApplications: workspace.brief.personalDefaultApplications,
   };
 }
 
@@ -623,6 +628,7 @@ function renderGuidedDeliverables(
     installVersionNavigator(panel, deliverable, versionParent);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
+    installPersonalDefaultSummary(panel, deliverable);
     installDeliverableSummary(panel, deliverable);
     void installLineageSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);

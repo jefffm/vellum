@@ -7,6 +7,8 @@ import {
   installNotationSelection,
   installSourceLineageWorkspace,
   installWorkspaceNavigator,
+  installOwnerKnowledgeWorkbench,
+  installPersonalDefaultSummary,
   installAudioPreviewControls,
   highlightLineage,
   openEditBatchDialog,
@@ -19,6 +21,7 @@ import {
   selectionPrompt,
   targetConfiguration,
   sourceMimeType,
+  proposeSelectionDefault,
 } from "./guided-start.js";
 import type { GuidedDeliverable } from "./guided-start.js";
 
@@ -231,6 +234,36 @@ describe("Arrangement Workspace navigation", () => {
     expect(implementation).toContain('method: "PATCH"');
     expect(implementation).toContain('method: "DELETE"');
     expect(implementation).toContain("vellum-open-arrangement-version");
+  });
+});
+
+describe("Owner Knowledge workbench", () => {
+  it("exposes provenance and every reviewed candidate lifecycle operation", () => {
+    const implementation = installOwnerKnowledgeWorkbench.toString();
+    expect(implementation).toContain("Reviewed Historical Practice Claims");
+    expect(implementation).toContain("confidence");
+    expect(implementation).toContain("citationLocator");
+    expect(implementation).toContain("Approve");
+    expect(implementation).toContain("Correct");
+    expect(implementation).toContain("Reject");
+    expect(implementation).toContain("Release default");
+    expect(implementation).toContain("Release claim");
+  });
+
+  it("proposes a scoped default from Selection Context without approving it", () => {
+    const implementation = proposeSelectionDefault.toString();
+    expect(implementation).toContain("arrangementFamilyId");
+    expect(implementation).toContain("measureIds");
+    expect(implementation).toContain("personal-default-candidates");
+    expect(implementation).not.toContain("/approve");
+    expect(implementation).toContain("Nothing was learned or applied automatically");
+  });
+
+  it("explains applied and yielded defaults with precedence", () => {
+    const implementation = installPersonalDefaultSummary.toString();
+    expect(implementation).toContain("application.reason");
+    expect(implementation).toContain("application.status");
+    expect(implementation).toContain("defaultId");
   });
 });
 

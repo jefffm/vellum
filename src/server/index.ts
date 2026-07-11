@@ -91,9 +91,14 @@ import {
 } from "./lib/lineage-route.js";
 import {
   createDefaultCandidateDecisionRoute,
+  createDefaultCandidateCorrectionRoute,
+  createDefaultCandidateProposalRoute,
   createDefaultReleaseRoute,
+  createHistoricalClaimReleaseRoute,
   createKnowledgeCandidateRoute,
+  createKnowledgeCorrectionRoute,
   createKnowledgePromotionRoute,
+  createKnowledgeRejectionRoute,
   createOwnerChoiceRoute,
   createOwnerReferenceRoute,
   createOwnerStateRoute,
@@ -189,6 +194,8 @@ export function createApiRouter(): Router {
     "/owner/personal-default-candidates/:id/approve",
     createDefaultCandidateDecisionRoute("approve")
   );
+  router.post("/owner/personal-default-candidates", createDefaultCandidateProposalRoute());
+  router.patch("/owner/personal-default-candidates/:id", createDefaultCandidateCorrectionRoute());
   router.post(
     "/owner/personal-default-candidates/:id/reject",
     createDefaultCandidateDecisionRoute("reject")
@@ -197,6 +204,9 @@ export function createApiRouter(): Router {
   router.post("/owner/references", createOwnerReferenceRoute());
   router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute());
   router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
+  router.post("/owner/knowledge-candidates/:id/reject", createKnowledgeRejectionRoute());
+  router.patch("/owner/knowledge-candidates/:id", createKnowledgeCorrectionRoute());
+  router.post("/owner/historical-practice-claims/:id/release", createHistoricalClaimReleaseRoute());
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
   router.get("/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute());

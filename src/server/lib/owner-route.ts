@@ -47,6 +47,34 @@ export function createDefaultCandidateDecisionRoute(
   });
 }
 
+export function createDefaultCandidateProposalRoute(store = new OwnerStore()): RequestHandler {
+  const Body = Type.Object({
+    dimension: Type.String({ minLength: 1 }),
+    value: Type.Unknown(),
+    scope: Type.Record(Type.String(), Type.String()),
+    evidenceChoiceIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (body) => Value.Decode(Body, body),
+    handler: async (input) => store.proposeDefaultCandidate(input),
+  });
+}
+
+export function createDefaultCandidateCorrectionRoute(store = new OwnerStore()): RequestHandler {
+  const Body = Type.Object({
+    dimension: Type.String({ minLength: 1 }),
+    value: Type.Unknown(),
+    scope: Type.Record(Type.String(), Type.String()),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(IdParams, request.params),
+      correction: Value.Decode(Body, body),
+    }),
+    handler: async ({ id, correction }) => store.reviseDefaultCandidate(id, correction),
+  });
+}
+
 export function createDefaultReleaseRoute(store = new OwnerStore()): RequestHandler {
   return createApiRoute<any, unknown>({
     validate: (_body, request) => Value.Decode(IdParams, request.params),
@@ -94,5 +122,34 @@ export function createKnowledgePromotionRoute(store = new OwnerStore()): Request
   return createApiRoute<any, unknown>({
     validate: (body) => Value.Decode(Body, body),
     handler: async (input) => store.promoteKnowledge(input),
+  });
+}
+
+export function createKnowledgeRejectionRoute(store = new OwnerStore()): RequestHandler {
+  return createApiRoute<any, unknown>({
+    validate: (_body, request) => Value.Decode(IdParams, request.params),
+    handler: async ({ id }) => store.rejectKnowledge(id),
+  });
+}
+
+export function createKnowledgeCorrectionRoute(store = new OwnerStore()): RequestHandler {
+  const Body = Type.Object({
+    statement: Type.String({ minLength: 1 }),
+    scope: KnowledgeScopeSchema,
+    citationLocator: Type.String({ minLength: 1 }),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(IdParams, request.params),
+      correction: Value.Decode(Body, body),
+    }),
+    handler: async ({ id, correction }) => store.reviseKnowledge(id, correction),
+  });
+}
+
+export function createHistoricalClaimReleaseRoute(store = new OwnerStore()): RequestHandler {
+  return createApiRoute<any, unknown>({
+    validate: (_body, request) => Value.Decode(IdParams, request.params),
+    handler: async ({ id }) => store.releaseClaim(id),
   });
 }

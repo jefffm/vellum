@@ -116,6 +116,43 @@ export class OwnerStore {
     });
   }
 
+  proposeDefaultCandidate(input: {
+    dimension: string;
+    value: unknown;
+    scope: Record<string, string>;
+    evidenceChoiceIds: string[];
+  }): PersonalDefaultCandidate {
+    return this.save<PersonalDefaultCandidate>(
+      "default-candidates",
+      "defaultCandidateIds",
+      PersonalDefaultCandidateSchema,
+      {
+        id: `default-candidate.${this.createId()}`,
+        ...input,
+        status: "proposed",
+        createdAt: this.now().toISOString(),
+      }
+    );
+  }
+
+  reviseDefaultCandidate(
+    id: string,
+    correction: { dimension: string; value: unknown; scope: Record<string, string> }
+  ): PersonalDefaultCandidate {
+    const original = this.read<PersonalDefaultCandidate>(
+      "default-candidates",
+      id,
+      PersonalDefaultCandidateSchema
+    );
+    if (original.status !== "proposed")
+      throw new ApiRouteError(`Default Candidate is already ${original.status}`, 409);
+    this.rejectDefaultCandidate(id);
+    return this.proposeDefaultCandidate({
+      ...correction,
+      evidenceChoiceIds: original.evidenceChoiceIds,
+    });
+  }
+
   rejectDefaultCandidate(id: string): PersonalDefaultCandidate {
     const candidate = this.read<PersonalDefaultCandidate>(
       "default-candidates",
@@ -213,6 +250,8 @@ export class OwnerStore {
         referenceId: candidate.referenceId,
         citationLocator: candidate.citationLocator,
         sourceCandidateId: candidate.id,
+        confidence: input.authority === "documented_practice" ? 1 : 0.75,
+        status: "active",
         reviewedAt: timestamp,
       }
     );
@@ -240,6 +279,49 @@ export class OwnerStore {
       updatedAt: timestamp,
     });
     return { claim, pack };
+  }
+
+  rejectKnowledge(id: string): KnowledgeCandidate {
+    const candidate = this.read<KnowledgeCandidate>(
+      "knowledge-candidates",
+      id,
+      KnowledgeCandidateSchema
+    );
+    if (candidate.status !== "proposed")
+      throw new ApiRouteError(`Knowledge Candidate is already ${candidate.status}`, 409);
+    return this.save<KnowledgeCandidate>(
+      "knowledge-candidates",
+      "knowledgeCandidateIds",
+      KnowledgeCandidateSchema,
+      { ...candidate, status: "rejected", reviewedAt: this.now().toISOString() }
+    );
+  }
+
+  reviseKnowledge(
+    id: string,
+    correction: Pick<KnowledgeCandidate, "statement" | "scope" | "citationLocator">
+  ): KnowledgeCandidate {
+    const original = this.read<KnowledgeCandidate>(
+      "knowledge-candidates",
+      id,
+      KnowledgeCandidateSchema
+    );
+    this.rejectKnowledge(id);
+    return this.proposeKnowledge({
+      ...correction,
+      referenceId: original.referenceId,
+    });
+  }
+
+  releaseClaim(id: string): HistoricalPracticeClaim {
+    const claim = this.read<HistoricalPracticeClaim>("claims", id, HistoricalPracticeClaimSchema);
+    if ((claim.status ?? "active") === "released")
+      throw new ApiRouteError("Historical Practice Claim is already released", 409);
+    return this.save<HistoricalPracticeClaim>("claims", "claimIds", HistoricalPracticeClaimSchema, {
+      ...claim,
+      status: "released",
+      releasedAt: this.now().toISOString(),
+    });
   }
 
   listChoices(): OwnerChoice[] {

@@ -105,7 +105,38 @@ export type GuidedDeliverable = {
     arrangementScoreVersion: number;
     sha256: string;
   }>;
+  personalDefaultApplications?: Array<{
+    defaultId: string;
+    targetConfigurationId: string;
+    status: "applied" | "yielded";
+    reason: string;
+  }>;
 };
+
+export function installPersonalDefaultSummary(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".personal-default-summary")?.remove();
+  const applications = (deliverable.personalDefaultApplications ?? []).filter(
+    (item) => item.targetConfigurationId === deliverable.targetConfigurationId
+  );
+  if (!applications.length) return;
+  const details = document.createElement("details");
+  details.className = "personal-default-summary";
+  const summary = document.createElement("summary");
+  summary.textContent = `${applications.filter((item) => item.status === "applied").length} Personal Default${applications.length === 1 ? "" : "s"} applied or considered`;
+  const list = document.createElement("ul");
+  for (const application of applications) {
+    const item = document.createElement("li");
+    item.textContent = `${application.defaultId} · ${application.status} · ${application.reason}`;
+    list.append(item);
+  }
+  details.append(summary, list);
+  header.append(details);
+}
 
 export type ArrangementVersionChange = {
   eventId: string;
@@ -729,6 +760,13 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
       "click",
       () => void openPassageCandidatesDialog(panel, deliverable, selectedEvents)
     );
+    const proposeDefault = document.createElement("button");
+    proposeDefault.type = "button";
+    proposeDefault.textContent = "Propose default";
+    proposeDefault.addEventListener(
+      "click",
+      () => void proposeSelectionDefault(deliverable, selectedEvents)
+    );
     const loop = document.createElement("button");
     loop.type = "button";
     loop.textContent = "Loop selection";
@@ -741,7 +779,7 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     );
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
-    actions.append(request, ask, edit, alternatives, loop, clear);
+    actions.append(request, ask, edit, alternatives, proposeDefault, loop, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
     panel.dispatchEvent(
@@ -1010,6 +1048,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   launcher.textContent = "New arrangement";
   document.body.append(launcher);
   installWorkspaceNavigator();
+  installOwnerKnowledgeWorkbench();
 
   const dialog = document.createElement("dialog");
   dialog.id = "guided-start";
@@ -1166,6 +1205,13 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           deliverables: [...compiled.deliverables, preview.deliverable],
           candidates: arranged.candidates,
         });
+      }
+      const completedWorkspace = await api<{
+        brief: { personalDefaultApplications?: GuidedDeliverable["personalDefaultApplications"] };
+      }>(`/api/workspaces/${workspace.id}`);
+      for (const deliverable of deliverables) {
+        deliverable.personalDefaultApplications =
+          completedWorkspace.brief.personalDefaultApplications;
       }
       options.onComplete(deliverables);
       status.textContent =
@@ -1340,6 +1386,252 @@ export function installWorkspaceNavigator(): HTMLDialogElement {
     });
   });
   return dialog;
+}
+
+export async function proposeSelectionDefault(
+  deliverable: GuidedDeliverable,
+  selectedEvents: ArrangementEvent[]
+): Promise<void> {
+  const dimension = window
+    .prompt("Default dimension (for example tuning, stringing, or fingering_style)")
+    ?.trim();
+  if (!dimension) return;
+  const rawValue = window.prompt("Proposed default value")?.trim();
+  if (!rawValue) return;
+  const value = parseOwnerValue(rawValue);
+  const scope = {
+    instrument: deliverable.targetConfiguration.instrumentId,
+    arrangementFamilyId: deliverable.arrangementFamilyId,
+    measureIds: Array.from(new Set(selectedEvents.map((event) => event.measureId))).join(","),
+  };
+  const choice = await api<{ choice: { id: string } }>("/api/owner/choices", {
+    method: "POST",
+    body: JSON.stringify({
+      workspaceId: deliverable.workspaceId,
+      dimension,
+      value,
+      scope,
+    }),
+  });
+  await api("/api/owner/personal-default-candidates", {
+    method: "POST",
+    body: JSON.stringify({
+      dimension,
+      value,
+      scope,
+      evidenceChoiceIds: [choice.choice.id],
+    }),
+  });
+  window.alert("Proposed for review. Nothing was learned or applied automatically.");
+}
+
+type OwnerState = {
+  personalDefaultCandidates: Array<{
+    id: string;
+    dimension: string;
+    value: unknown;
+    scope: Record<string, string>;
+    evidenceChoiceIds: string[];
+    status: string;
+  }>;
+  personalDefaults: Array<{
+    id: string;
+    dimension: string;
+    value: unknown;
+    scope: Record<string, string>;
+    status: string;
+  }>;
+  ownerReferences: Array<{ id: string; title: string; citation: string; sha256: string }>;
+  knowledgeCandidates: Array<{
+    id: string;
+    statement: string;
+    scope: Record<string, string>;
+    referenceId: string;
+    citationLocator: string;
+    status: string;
+  }>;
+  historicalPracticeClaims: Array<{
+    id: string;
+    statement: string;
+    scope: Record<string, string>;
+    authority: string;
+    referenceId: string;
+    citationLocator: string;
+    confidence?: number;
+    status?: string;
+  }>;
+};
+
+export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
+  document.querySelector("#vellum-owner-workbench")?.remove();
+  document.querySelector("#owner-workbench-launcher")?.remove();
+  const launcher = document.createElement("button");
+  launcher.id = "owner-workbench-launcher";
+  launcher.type = "button";
+  launcher.textContent = "Knowledge & defaults";
+  const dialog = document.createElement("dialog");
+  dialog.id = "vellum-owner-workbench";
+  dialog.className = "owner-workbench";
+  const heading = document.createElement("h2");
+  heading.textContent = "Owner Knowledge and Personal Defaults";
+  const intro = document.createElement("p");
+  intro.textContent =
+    "Candidates remain inert until approved. Every claim retains its source and scope; released records remain reproducible history but stop affecting future work.";
+  const status = document.createElement("p");
+  const content = document.createElement("div");
+  content.className = "owner-workbench-content";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close";
+  close.addEventListener("click", () => dialog.close());
+  dialog.append(heading, intro, status, content, close);
+  document.body.append(launcher, dialog);
+
+  const mutate = async (url: string, method = "POST", body?: unknown) => {
+    await api(url, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    await refresh();
+  };
+  const refresh = async () => {
+    const state = await api<OwnerState>("/api/owner");
+    content.replaceChildren();
+    status.textContent = `${state.historicalPracticeClaims.length} reviewed claims · ${state.personalDefaults.filter((item) => item.status === "active").length} active defaults`;
+    const section = (title: string) => {
+      const details = document.createElement("details");
+      details.open = true;
+      const summary = document.createElement("summary");
+      summary.textContent = title;
+      details.append(summary);
+      content.append(details);
+      return details;
+    };
+    const claims = section("Reviewed Historical Practice Claims");
+    for (const claim of state.historicalPracticeClaims) {
+      const reference = state.ownerReferences.find((item) => item.id === claim.referenceId);
+      const row = ownerRecord(
+        claim.statement,
+        `${claim.authority} · confidence ${((claim.confidence ?? 0.75) * 100).toFixed(0)}% · ${claim.status ?? "active"} · scope ${JSON.stringify(claim.scope)} · ${reference?.title ?? claim.referenceId}, ${claim.citationLocator} · ${reference?.citation ?? "citation unavailable"}`
+      );
+      if ((claim.status ?? "active") === "active")
+        row.append(
+          ownerButton("Release claim", () =>
+            mutate(`/api/owner/historical-practice-claims/${claim.id}/release`)
+          )
+        );
+      claims.append(row);
+    }
+    const knowledge = section("Knowledge Candidates");
+    for (const candidate of state.knowledgeCandidates) {
+      const reference = state.ownerReferences.find((item) => item.id === candidate.referenceId);
+      const row = ownerRecord(
+        candidate.statement,
+        `${candidate.status} · scope ${JSON.stringify(candidate.scope)} · ${reference?.title ?? candidate.referenceId}, ${candidate.citationLocator}`
+      );
+      if (candidate.status === "proposed") {
+        row.append(
+          ownerButton("Approve", async () => {
+            const authority =
+              window.prompt(
+                "Authority: documented_practice, modern_editorial_convention, or vellum_heuristic",
+                "documented_practice"
+              ) ?? "documented_practice";
+            await mutate("/api/owner/knowledge-promotions", "POST", {
+              candidateId: candidate.id,
+              packId: "knowledge-pack.owner-reviewed",
+              packName: "Owner-reviewed practice",
+              authority,
+            });
+          }),
+          ownerButton("Correct", async () => {
+            const statement = window.prompt("Corrected claim", candidate.statement)?.trim();
+            if (!statement) return;
+            await mutate(`/api/owner/knowledge-candidates/${candidate.id}`, "PATCH", {
+              statement,
+              scope: candidate.scope,
+              citationLocator: candidate.citationLocator,
+            });
+          }),
+          ownerButton("Reject", () =>
+            mutate(`/api/owner/knowledge-candidates/${candidate.id}/reject`)
+          )
+        );
+      }
+      knowledge.append(row);
+    }
+    const defaults = section("Personal Default Candidates and Applications");
+    for (const candidate of state.personalDefaultCandidates) {
+      const row = ownerRecord(
+        `${candidate.dimension} = ${JSON.stringify(candidate.value)}`,
+        `${candidate.status} · scope ${JSON.stringify(candidate.scope)} · evidence ${candidate.evidenceChoiceIds.join(", ")}`
+      );
+      if (candidate.status === "proposed") {
+        row.append(
+          ownerButton("Approve", () =>
+            mutate(`/api/owner/personal-default-candidates/${candidate.id}/approve`)
+          ),
+          ownerButton("Correct", async () => {
+            const value = window.prompt("Corrected value", JSON.stringify(candidate.value));
+            if (value === null) return;
+            await mutate(`/api/owner/personal-default-candidates/${candidate.id}`, "PATCH", {
+              dimension: candidate.dimension,
+              value: parseOwnerValue(value),
+              scope: candidate.scope,
+            });
+          }),
+          ownerButton("Reject", () =>
+            mutate(`/api/owner/personal-default-candidates/${candidate.id}/reject`)
+          )
+        );
+      }
+      defaults.append(row);
+    }
+    for (const record of state.personalDefaults) {
+      const row = ownerRecord(
+        `${record.dimension} = ${JSON.stringify(record.value)}`,
+        `${record.status} · scope ${JSON.stringify(record.scope)}`
+      );
+      if (record.status === "active")
+        row.append(
+          ownerButton("Release default", () =>
+            mutate(`/api/owner/personal-defaults/${record.id}/release`)
+          )
+        );
+      defaults.append(row);
+    }
+  };
+  launcher.addEventListener("click", () => {
+    dialog.showModal();
+    void refresh().catch((error: unknown) => {
+      status.textContent = error instanceof Error ? error.message : "Could not load owner records.";
+    });
+  });
+  return dialog;
+}
+
+function ownerRecord(title: string, evidence: string): HTMLElement {
+  const row = document.createElement("article");
+  row.className = "owner-record";
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  const detail = document.createElement("p");
+  detail.textContent = evidence;
+  row.append(heading, detail);
+  return row;
+}
+
+function parseOwnerValue(value: string): unknown {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+function ownerButton(label: string, action: () => void | Promise<void>): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", () => void action());
+  return button;
 }
 
 type RecoverableModelAction = {
