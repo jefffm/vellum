@@ -152,6 +152,88 @@ export class LineageService {
     return this.store.saveStaleDerivation(workspaceId, { ...record, acknowledged: true });
   }
 
+  sourceLineage(workspaceId: string, arrangementScoreId: string, arrangementEventIds: string[]) {
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const normalized = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const transcription = this.store.getScoreTranscription(
+      workspaceId,
+      normalized.scoreTranscriptionId
+    );
+    const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
+    const workspace = this.store.get(workspaceId);
+    const stale = workspace.staleDerivationIds
+      .map((id) => this.store.getStaleDerivation(workspaceId, id))
+      .find(
+        (record) =>
+          record.recordType === "arrangement_score" &&
+          record.recordId === arrangement.id &&
+          !record.acknowledged
+      );
+    const selected = arrangement.events.filter((event) => arrangementEventIds.includes(event.id));
+    const omrRun = transcription.omrRunId
+      ? this.store.getOmrRun(workspaceId, transcription.omrRunId)
+      : undefined;
+    const items = selected.flatMap((arrangementEvent) =>
+      arrangementEvent.sourceEventIds.map((sourceEventId) => {
+        const transcriptionEvent = transcription.events.find((event) => event.id === sourceEventId);
+        const uncertaintyIds = transcription.uncertainties
+          .filter((uncertainty) => uncertainty.eventIds.includes(sourceEventId))
+          .map((uncertainty) => uncertainty.id);
+        const region = transcriptionEvent?.sourceRegion;
+        const sourceImageUrl =
+          region?.coordinateSpace === "omr_raster" && omrRun
+            ? omrRun.nativeArtifactPaths.some((path) =>
+                path.endsWith(`/audiveris-page-${region.page}.png`)
+              )
+              ? `/api/workspaces/${workspaceId}/omr-runs/${omrRun.id}/artifacts/${encodeURIComponent(`audiveris-page-${region.page}.png`)}`
+              : undefined
+            : undefined;
+        return {
+          arrangementEventId: arrangementEvent.id,
+          sourceEventId,
+          anchorStatus: stale
+            ? ("stale" as const)
+            : transcriptionEvent
+              ? ("resolved" as const)
+              : ("missing" as const),
+          transcriptionEvent,
+          region,
+          sourceImageUrl,
+          uncertaintyIds,
+          transformationEntries: arrangement.transformationReport.filter(
+            (entry) =>
+              entry.sourceEventId === sourceEventId ||
+              entry.arrangementEventIds.includes(arrangementEvent.id)
+          ),
+          auditFindings: arrangement.preservationAudit.findings.filter(
+            (finding) =>
+              finding.sourceEventId === sourceEventId ||
+              finding.arrangementEventId === arrangementEvent.id
+          ),
+        };
+      })
+    );
+    return {
+      arrangementScore: { id: arrangement.id, version: arrangement.version ?? 1 },
+      normalizedScore: { id: normalized.id, version: normalized.version },
+      scoreTranscription: {
+        id: transcription.id,
+        version: transcription.version,
+        status: transcription.status,
+      },
+      sourceArtifact: {
+        id: source.id,
+        filename: source.filename,
+        kind: source.kind,
+        mimeType: source.mimeType,
+        contentUrl: `/api/workspaces/${workspaceId}/sources/${source.id}/content`,
+      },
+      staleReason: stale?.reason,
+      items,
+    };
+  }
+
   promoteFamilyCommitment(
     workspaceId: string,
     commitmentId: string,

@@ -5,6 +5,7 @@ import {
   compareArrangementVersions,
   describeArrangementEvent,
   installNotationSelection,
+  installSourceLineageWorkspace,
   installAudioPreviewControls,
   highlightLineage,
   openEditBatchDialog,
@@ -60,6 +61,12 @@ describe("interactive notation", () => {
     expect(implementation).toContain("data-arrangement-event-id");
     expect(implementation).toContain("score-selected");
     expect(implementation).toContain("vellum-seek-playback");
+  });
+
+  it("keeps Source Artifact, transcription, arrangement, and playback lineage bidirectional", () => {
+    const implementation = installSourceLineageWorkspace.toString();
+    expect(implementation).toContain("vellum-score-selection-changed");
+    expect(implementation).toContain("source-lineage");
   });
 
   it("sends an exact ordered Greensleeves phrase and Principal Voice identity to chat", () => {

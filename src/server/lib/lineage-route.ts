@@ -97,6 +97,24 @@ export function createArrangementLineageRoute(options: Options = {}): RequestHan
   });
 }
 
+export function createArrangementSourceLineageRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  const Body = Type.Object(
+    {
+      arrangementEventIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+    },
+    { additionalProperties: false }
+  );
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(ArrangementParams, request.params),
+      ...Value.Decode(Body, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, arrangementEventIds }) =>
+      service.sourceLineage(workspaceId, arrangementId, arrangementEventIds),
+  });
+}
+
 export function createEditorialCommitmentRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
   const Body = Type.Object({

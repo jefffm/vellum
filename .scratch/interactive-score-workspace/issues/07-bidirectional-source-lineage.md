@@ -1,6 +1,6 @@
 # Bidirectional Source Lineage workspace
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Keep Source Artifact evidence available after OMR review. Selecting arrangement 
 
 ## Acceptance criteria
 
-- [ ] Selected Arrangement Events reveal linked source page/region and transcription facts.
-- [ ] Selecting linked source evidence highlights arrangement notation and seeks playback.
-- [ ] The view distinguishes Source Artifact truth, Score Transcription interpretation, and Arrangement Score transformation.
-- [ ] Repeated Playback Occurrences do not duplicate canonical source relationships.
-- [ ] Missing or stale anchors produce targeted review guidance.
+- [x] Selected Arrangement Events reveal linked source page/region and transcription facts.
+- [x] Selecting linked source evidence highlights arrangement notation and seeks playback.
+- [x] The view distinguishes Source Artifact truth, Score Transcription interpretation, and Arrangement Score transformation.
+- [x] Repeated Playback Occurrences do not duplicate canonical source relationships.
+- [x] Missing or stale anchors produce targeted review guidance.
 
 ## Blocked by
 

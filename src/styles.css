@@ -867,6 +867,71 @@ chat-panel > div > div:has(agent-interface) {
   font-variant-numeric: tabular-nums;
 }
 
+.source-lineage-workspace {
+  flex-basis: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #c9c2a9;
+  border-radius: 0.5rem;
+  background: #fff;
+  font-size: 0.8rem;
+}
+
+.source-lineage-body {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.9fr) minmax(20rem, 1.1fr);
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.source-lineage-layers,
+.source-lineage-warning {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.source-lineage-warning {
+  padding: 0.5rem;
+  border-left: 0.3rem solid #a83b2b;
+  background: #fff0ec;
+}
+
+.source-lineage-facsimile {
+  position: relative;
+  margin: 0;
+}
+
+.source-lineage-facsimile img,
+.source-lineage-facsimile iframe {
+  display: block;
+  width: 100%;
+  min-height: 18rem;
+  border: 1px solid #d8d1b8;
+  background: #fff;
+  object-fit: contain;
+}
+
+.source-lineage-body ol {
+  max-height: 22rem;
+  overflow: auto;
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.source-lineage-body li {
+  margin-bottom: 0.45rem;
+}
+
+.artifact-preview-content .source-lineage-selected {
+  color: #6a2f91;
+  filter: drop-shadow(0 0 1px #6a2f91) drop-shadow(0 0 5px rgba(106, 47, 145, 0.65));
+}
+
+@media (max-width: 850px) {
+  .source-lineage-body {
+    grid-template-columns: 1fr;
+  }
+}
+
 .candidate-comparison-controls {
   display: grid;
   grid-template-columns: minmax(12rem, auto) auto;

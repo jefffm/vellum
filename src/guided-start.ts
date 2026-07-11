@@ -552,6 +552,11 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     if (selectedEvents.length === 0) {
       summary.hidden = true;
       summary.replaceChildren();
+      panel.dispatchEvent(
+        new CustomEvent("vellum-score-selection-changed", {
+          detail: { arrangementEventIds: [] },
+        })
+      );
       return;
     }
     const title = document.createElement("strong");
@@ -603,6 +608,11 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     actions.append(request, ask, edit, loop, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
+    panel.dispatchEvent(
+      new CustomEvent("vellum-score-selection-changed", {
+        detail: { arrangementEventIds: selectedEvents.map((event) => event.id) },
+      })
+    );
     if (seekEventId) {
       panel.dispatchEvent(
         new CustomEvent("vellum-seek-playback", {
@@ -681,6 +691,151 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     dragging = false;
   });
   header.append(summary);
+}
+
+type SourceLineageResult = {
+  arrangementScore: { id: string; version: number };
+  normalizedScore: { id: string; version: number };
+  scoreTranscription: { id: string; version: number; status: string };
+  sourceArtifact: {
+    id: string;
+    filename: string;
+    kind: string;
+    mimeType: string;
+    contentUrl: string;
+  };
+  staleReason?: string;
+  items: Array<{
+    arrangementEventId: string;
+    sourceEventId: string;
+    anchorStatus: "resolved" | "missing" | "stale";
+    transcriptionEvent?: ScoreEvent;
+    region?: TranscriptionUncertainty["region"];
+    sourceImageUrl?: string;
+    uncertaintyIds: string[];
+    transformationEntries: GuidedDeliverable["transformationReport"];
+    auditFindings: GuidedDeliverable["preservationAudit"]["findings"];
+  }>;
+};
+
+export function installSourceLineageWorkspace(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".source-lineage-workspace")?.remove();
+  const details = document.createElement("details");
+  details.className = "source-lineage-workspace";
+  details.hidden = true;
+  const summary = document.createElement("summary");
+  summary.textContent = "Source Lineage";
+  const body = document.createElement("div");
+  body.className = "source-lineage-body";
+  details.append(summary, body);
+  header.append(details);
+  panel.addEventListener("vellum-score-selection-changed", (event) => {
+    const arrangementEventIds = (event as CustomEvent<{ arrangementEventIds?: string[] }>).detail
+      ?.arrangementEventIds;
+    if (!arrangementEventIds?.length) {
+      details.hidden = true;
+      body.replaceChildren();
+      return;
+    }
+    void api<SourceLineageResult>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/source-lineage`,
+      { method: "POST", body: JSON.stringify({ arrangementEventIds }) }
+    )
+      .then((lineage) => renderSourceLineage(panel, details, body, lineage))
+      .catch((error: unknown) => {
+        details.hidden = false;
+        details.open = true;
+        body.textContent =
+          error instanceof Error ? error.message : "Source Lineage is unavailable.";
+      });
+  });
+}
+
+function renderSourceLineage(
+  panel: HTMLElement,
+  details: HTMLDetailsElement,
+  body: HTMLElement,
+  lineage: SourceLineageResult
+): void {
+  details.hidden = false;
+  details.open = true;
+  const layers = document.createElement("p");
+  layers.className = "source-lineage-layers";
+  layers.textContent = `Source Artifact: ${lineage.sourceArtifact.filename} → Score Transcription v${lineage.scoreTranscription.version} (${lineage.scoreTranscription.status}) → Normalized Score v${lineage.normalizedScore.version} → Arrangement Score v${lineage.arrangementScore.version}`;
+  body.replaceChildren(layers);
+  if (lineage.staleReason) {
+    const stale = document.createElement("p");
+    stale.className = "source-lineage-warning";
+    stale.textContent = `Stale anchor: ${lineage.staleReason} Open Score-Anchored Review or regenerate before treating this mapping as current.`;
+    body.append(stale);
+  }
+  const firstAnchored = lineage.items.find((item) => item.region);
+  if (firstAnchored) body.append(sourceFacsimile(lineage.sourceArtifact, firstAnchored));
+  const list = document.createElement("ol");
+  const seen = new Set<string>();
+  for (const item of lineage.items) {
+    const key = `${item.arrangementEventId}:${item.sourceEventId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const row = document.createElement("li");
+    row.dataset.arrangementEventIds = item.arrangementEventId;
+    row.dataset.sourceEventIds = item.sourceEventId;
+    const eventFact = item.transcriptionEvent
+      ? item.transcriptionEvent.type === "note"
+        ? `${item.transcriptionEvent.pitch}, confidence ${Math.round((item.transcriptionEvent.confidence ?? 1) * 100)}%`
+        : "rest"
+      : "transcription object missing";
+    row.textContent = `${item.sourceEventId}: ${eventFact} · ${item.anchorStatus}${item.uncertaintyIds.length ? ` · uncertainties ${item.uncertaintyIds.join(", ")}` : ""}`;
+    if (item.anchorStatus === "missing") {
+      row.append(" — Review the Score Transcription; Vellum will not guess this anchor.");
+    }
+    const reveal = document.createElement("button");
+    reveal.type = "button";
+    reveal.textContent = "Reveal in arrangement and playback";
+    reveal.addEventListener("click", () => {
+      panel
+        .querySelectorAll(".source-lineage-selected")
+        .forEach((element) => element.classList.remove("source-lineage-selected"));
+      panel
+        .querySelectorAll(`[data-arrangement-event-id="${CSS.escape(item.arrangementEventId)}"]`)
+        .forEach((element) => element.classList.add("source-lineage-selected"));
+      panel.dispatchEvent(
+        new CustomEvent("vellum-seek-playback", {
+          detail: { sourceEventId: item.sourceEventId },
+        })
+      );
+    });
+    row.append(" ", reveal);
+    list.append(row);
+  }
+  body.append(list);
+}
+
+function sourceFacsimile(
+  source: SourceLineageResult["sourceArtifact"],
+  item: SourceLineageResult["items"][number]
+): HTMLElement {
+  const figure = document.createElement("figure");
+  figure.className = "source-lineage-facsimile";
+  const caption = document.createElement("figcaption");
+  caption.textContent = `Immutable Source Artifact · page ${item.region!.page}`;
+  if (item.sourceImageUrl || source.kind === "image") {
+    const image = document.createElement("img");
+    image.src = item.sourceImageUrl ?? source.contentUrl;
+    image.alt = `${source.filename}, page ${item.region!.page}`;
+    figure.append(caption, image);
+  } else {
+    const frame = document.createElement("iframe");
+    frame.title = `${source.filename}, source page ${item.region!.page}`;
+    frame.src = sourceFocusUrl(source.contentUrl, item.region!);
+    figure.append(caption, frame);
+  }
+  return figure;
 }
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };

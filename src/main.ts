@@ -39,6 +39,7 @@ import {
   installDeliverableSummary,
   installLineageSummary,
   installNotationSelection,
+  installSourceLineageWorkspace,
   installVersionNavigator,
   installTransformationReport,
   installGuidedStart,
@@ -597,6 +598,7 @@ function renderGuidedDeliverables(
     }
     installAudioPreviewControls(panel, deliverable.preview);
     installNotationSelection(panel, deliverable);
+    installSourceLineageWorkspace(panel, deliverable);
     installVersionNavigator(panel, deliverable, versionParent);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);

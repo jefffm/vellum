@@ -71,6 +71,7 @@ import {
 } from "./lib/family-deliverable-route.js";
 import {
   createArrangementLineageRoute,
+  createArrangementSourceLineageRoute,
   createArrangementEventEditRoute,
   createArrangementEditBatchRoute,
   createArrangementEditBatchValidationRoute,
@@ -307,6 +308,10 @@ export function createApiRouter(): Router {
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/lineage",
     createArrangementLineageRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/source-lineage",
+    createArrangementSourceLineageRoute()
   );
   router.post(
     "/workspaces/:workspaceId/arrangements/:arrangementId/commitments",

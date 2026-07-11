@@ -87,7 +87,21 @@ describe("Greensleeves faithful arrangement service", () => {
         artifacts: [],
         pageMappings: [{ sourcePage: 1, recognizedPage: 1 }],
         diagnostics: [],
-        recognizedScore: { ...parsed, uncertainties: [] },
+        recognizedScore: {
+          ...parsed,
+          events: parsed.events.map((event, index) => ({
+            ...event,
+            sourceRegion: {
+              coordinateSpace: "source_document" as const,
+              page: 1,
+              x: 40 + index * 3,
+              y: 80,
+              width: 12,
+              height: 16,
+            },
+          })),
+          uncertainties: [],
+        },
       }),
     };
     const omrIds = [
@@ -248,6 +262,31 @@ describe("Greensleeves faithful arrangement service", () => {
     const protectedEvent = result.arrangementScore.events.find(
       (event) => event.principalVoiceSourceEventId
     )!;
+    const sourceLineage = lineage.sourceLineage(workspace.id, result.arrangementScore.id, [
+      protectedEvent.id,
+    ]);
+    expect(sourceLineage).toMatchObject({
+      arrangementScore: { id: result.arrangementScore.id, version: 1 },
+      normalizedScore: { id: omr.normalizedScore.id, version: 1 },
+      scoreTranscription: { id: omr.scoreTranscription.id, version: 1 },
+      sourceArtifact: {
+        id: source.id,
+        kind: "pdf",
+        contentUrl: `/api/workspaces/${workspace.id}/sources/${source.id}/content`,
+      },
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          arrangementEventId: protectedEvent.id,
+          sourceEventId: protectedEvent.sourceEventIds[0],
+          anchorStatus: "resolved",
+          region: expect.objectContaining({ page: 1, coordinateSpace: "source_document" }),
+        }),
+      ]),
+    });
+    expect(
+      new Set(sourceLineage.items.map((item) => `${item.arrangementEventId}:${item.sourceEventId}`))
+        .size
+    ).toBe(sourceLineage.items.length);
     const commitment = lineage.createEditorialCommitment(workspace.id, {
       arrangementScoreId: result.arrangementScore.id,
       arrangementFamilyId: result.arrangementScore.arrangementFamilyId!,
@@ -285,6 +324,12 @@ describe("Greensleeves faithful arrangement service", () => {
         }),
       ])
     );
+    expect(
+      lineage.sourceLineage(workspace.id, result.arrangementScore.id, [protectedEvent.id])
+    ).toMatchObject({
+      staleReason: "Corrected source pitch",
+      items: expect.arrayContaining([expect.objectContaining({ anchorStatus: "stale" })]),
+    });
     expect(
       JSON.stringify(store.getArrangementScore(workspace.id, result.arrangementScore.id))
     ).toBe(immutableArrangement);
