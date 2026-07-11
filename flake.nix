@@ -14,13 +14,35 @@
         "aarch64-darwin"
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
+      mkMusic21 = pkgs: pkgs.python3Packages.buildPythonPackage rec {
+        pname = "music21";
+        version = "9.7.1";
+        pyproject = true;
+        src = pkgs.python3Packages.fetchPypi {
+          inherit pname version;
+          hash = "sha256-sFbMQfuYn0kuKRiCwTwC68E+j1c0xqq5rrn+bP0sJVA=";
+        };
+        build-system = [ pkgs.python3Packages.setuptools ];
+        dependencies = with pkgs.python3Packages; [
+          chardet
+          joblib
+          jsonpickle
+          matplotlib
+          more-itertools
+          numpy
+          requests
+          webcolors
+        ];
+        doCheck = false;
+      };
     in
     {
       # ── Development shell (unchanged) ────────────────────────────────
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-          python = pkgs.python3.withPackages (ps: [ ps.music21 ]);
+          music21 = mkMusic21 pkgs;
+          python = pkgs.python3.withPackages (_ps: [ music21 ]);
         in
         {
           default = pkgs.mkShell {
@@ -42,7 +64,8 @@
         let
           pkgs = import nixpkgs { inherit system; };
 
-          vellumPython = pkgs.python3.withPackages (ps: [ ps.music21 ]);
+          music21 = mkMusic21 pkgs;
+          vellumPython = pkgs.python3.withPackages (_ps: [ music21 ]);
 
           # -- Node.js server build --
           vellum-server = pkgs.stdenv.mkDerivation rec {
