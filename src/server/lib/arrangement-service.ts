@@ -245,9 +245,6 @@ export class ArrangementService {
       });
       throw error;
     }
-    const selectedStrategy = generated.candidates.find(
-      (candidate) => candidate.id === generated.selected.selectedCandidateId
-    )?.strategy;
     const candidates = persistableCandidates(
       generated.candidates,
       searchId,
@@ -255,11 +252,9 @@ export class ArrangementService {
       rankingWeights
     ).map((candidate) => this.store.saveArrangementCandidate(workspaceId, candidate));
     const selectedCandidate = candidates.find((candidate) => candidate.status === "selected")!;
-    if (selectedCandidate.rank !== 1) {
-      throw new Error(
-        `Arrangement ranking disagrees with the arranger selection for ${selectedStrategy ?? "unknown strategy"}: ${candidates.map((candidate) => `${candidate.strategy}=${candidate.evaluation?.weightedTotal}`).join(", ")}`
-      );
-    }
+    const selectedGeneratedCandidate = generated.candidates.find(
+      (candidate) => candidate.strategy === selectedCandidate.strategy
+    )!;
     const arrangementScore: ArrangementScore = {
       ...generated.selected,
       version: input.version ?? 1,
@@ -271,6 +266,14 @@ export class ArrangementService {
       familyCommitmentIds: input.familyCommitmentIds ?? [],
       policyExceptionIds: input.policyExceptionIds ?? [],
       selectedCandidateId: selectedCandidate.id,
+      events: selectedGeneratedCandidate.events,
+      transformationReport: candidateTransformationReport(
+        score,
+        analysis,
+        selectedGeneratedCandidate,
+        generated.selected.transpositionPlan.semitones
+      ),
+      preservationAudit: selectedGeneratedCandidate.audit,
     };
     if (arrangementScore.policyExceptionIds?.length) {
       const exceptions = arrangementScore.policyExceptionIds.map((id) =>
@@ -736,6 +739,11 @@ function persistableCandidates(
     .filter((candidate) => candidate.status !== "rejected")
     .sort((left, right) => right.evaluation!.weightedTotal - left.evaluation!.weightedTotal);
   survivors.forEach((candidate, index) => (candidate.rank = index + 1));
+  const winnerId = survivors[0]?.id;
+  for (const candidate of evaluated) {
+    if (candidate.status === "rejected") continue;
+    candidate.status = candidate.id === winnerId ? "selected" : "survived";
+  }
   return evaluated;
 }
 

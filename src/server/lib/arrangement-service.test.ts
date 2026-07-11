@@ -178,6 +178,9 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(rankedCandidates[0]?.evaluation?.weightedTotal).toBeGreaterThanOrEqual(
       rankedCandidates[1]?.evaluation?.weightedTotal ?? 0
     );
+    expect(rankedCandidates[0]?.status).toBe("selected");
+    expect(result.arrangementScore.selectedCandidateId).toBe(rankedCandidates[0]?.id);
+    expect(result.arrangementScore.events).toEqual(rankedCandidates[0]?.events);
     const reloadedStore = new WorkspaceStore({ rootDirectory });
     expect(reloadedStore.getArrangementSearch(workspace.id, result.arrangementSearch.id)).toEqual(
       result.arrangementSearch

@@ -1398,7 +1398,8 @@ function presentAnalysisReview(
   const ambiguity = analysis.ambiguities?.find((item) => item.critical && !item.resolution);
   const claim = analysis.claims.find((item) => item.id === ambiguity?.claimId);
   const alternatives = claim?.alternatives?.filter((item) => item.subjectIds?.length) ?? [];
-  if (!ambiguity || !claim || alternatives.length === 0) {
+  const recommendedSubjectIds = claim?.subjectIds ?? [];
+  if (!ambiguity || !claim || recommendedSubjectIds.length === 0 || alternatives.length === 0) {
     throw new Error("Musicological review has no selectable analysis alternatives.");
   }
   panel.hidden = false;
@@ -1417,7 +1418,15 @@ function presentAnalysisReview(
       finish();
       reject(new Error("Arrangement stopped before musicological review was completed."));
     };
-    for (const alternative of alternatives) {
+    const choicesToRender = [
+      {
+        statement: `Use recommended Principal Voice: ${claim.statement}`,
+        subjectIds: recommendedSubjectIds,
+        arrangementConsequence: "Accept Vellum's highest-ranked musicological inference.",
+      },
+      ...alternatives,
+    ];
+    for (const alternative of choicesToRender) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = alternative.statement;
@@ -1434,7 +1443,7 @@ function presentAnalysisReview(
               body: JSON.stringify({
                 statement: alternative.statement,
                 subjectIds: alternative.subjectIds,
-                selectedAlternativeId: alternative.id,
+                ...("id" in alternative ? { selectedAlternativeId: alternative.id } : {}),
                 rationale: "Selected during Guided Start musicological review.",
               }),
             }

@@ -345,6 +345,9 @@ describe("Guided Start output choices", () => {
     expect(implementation).toContain("presentAnalysisReview");
     expect(implementation).toContain("analysisRecordIds");
     expect(implementation).not.toContain("omr-runs");
+    expect(readFileSync(path.resolve(process.cwd(), "src/guided-start.ts"), "utf8")).toContain(
+      "Use recommended Principal Voice"
+    );
   });
 
   it("exposes stale-lineage recovery and commitment release actions", () => {
