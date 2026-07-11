@@ -25,6 +25,7 @@ import {
   selectionPrompt,
   targetConfiguration,
   sourceMimeType,
+  isOpticalSource,
   proposeSelectionDefault,
 } from "./guided-start.js";
 import type { GuidedDeliverable } from "./guided-start.js";
@@ -332,11 +333,15 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain(".mscz");
     expect(markup).toContain("PDF and images use Audiveris review");
     expect(markup).toContain('name="ocrAutoAcceptConfidence"');
+    expect(markup).toContain("data-ocr-threshold-field hidden");
     expect(markup).toContain("Automatically accept OCR notes at or above");
     expect(markup).toContain("data-analysis-review");
     expect(markup).toContain("Choose the Principal Voice");
     expect(sourceMimeType({ name: "piece.ly", type: "" })).toBe("text/x-lilypond");
     expect(sourceMimeType({ name: "piece.mei", type: "" })).toBe("application/mei+xml");
+    expect(isOpticalSource({ name: "score.pdf", type: "application/pdf" })).toBe(true);
+    expect(isOpticalSource({ name: "scan.png", type: "image/png" })).toBe(true);
+    expect(isOpticalSource({ name: "score.musicxml", type: "" })).toBe(false);
   });
 
   it("resumes from the reviewed score after resolving a critical analysis ambiguity", () => {

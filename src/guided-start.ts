@@ -1167,8 +1167,16 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   dialog.id = "guided-start";
   dialog.innerHTML = guidedStartMarkup();
   document.body.append(dialog);
+  const sourceInput = dialog.querySelector<HTMLInputElement>('input[type="file"]');
+  const ocrThresholdField = dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]");
   const ocrThreshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
   const ocrThresholdValue = dialog.querySelector<HTMLElement>("[data-ocr-threshold-value]");
+  const updateOcrThresholdVisibility = () => {
+    const file = sourceInput?.files?.[0];
+    if (!ocrThresholdField) return;
+    ocrThresholdField.hidden = !file || !isOpticalSource(file);
+  };
+  sourceInput?.addEventListener("change", updateOcrThresholdVisibility);
   ocrThreshold?.addEventListener("input", () => {
     if (ocrThresholdValue) ocrThresholdValue.textContent = `${ocrThreshold.value}%`;
   });
@@ -1238,7 +1246,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         },
         body: file,
       });
-      const optical = mimeType === "application/pdf" || mimeType.startsWith("image/");
+      const optical = isOpticalSource(file);
       status.textContent = optical
         ? "Reading the score with optical music recognition…"
         : "Parsing and normalizing the musical source…";
@@ -3100,6 +3108,11 @@ export function sourceMimeType(file: Pick<File, "name" | "type">): string {
   throw new Error(`Unsupported musical source extension: ${extension ?? "unknown"}`);
 }
 
+export function isOpticalSource(file: Pick<File, "name" | "type">): boolean {
+  const mimeType = sourceMimeType(file);
+  return mimeType === "application/pdf" || mimeType.startsWith("image/");
+}
+
 export function guidedStartMarkup(): string {
   return `
     <form>
@@ -3108,7 +3121,7 @@ export function guidedStartMarkup(): string {
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
-      <label>OCR auto-accept confidence <span data-ocr-threshold-value>80%</span><input type="range" name="ocrAutoAcceptConfidence" min="50" max="100" step="1" value="80"><small>Automatically accept OCR notes at or above this confidence. Lower this to 70% to accept a 72% note; voice identity and structurally abnormal readings still require review.</small></label>
+      <label data-ocr-threshold-field hidden>OCR auto-accept confidence <span data-ocr-threshold-value>80%</span><input type="range" name="ocrAutoAcceptConfidence" min="50" max="100" step="1" value="80"><small>Automatically accept OCR notes at or above this confidence. Lower this to 70% to accept a 72% note; voice identity and structurally abnormal readings still require review.</small></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
