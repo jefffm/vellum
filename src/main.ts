@@ -32,6 +32,7 @@ import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
+  installCandidateComparisonControls,
   installGuidedStart,
   type GuidedDeliverable,
 } from "./guided-start.js";
@@ -383,12 +384,81 @@ export async function main(): Promise<void> {
   installCompileArtifactPreview(agent);
   refreshChatPanelWhenAgentSettles(agent, chatPanel);
   markArtifactsPanelReady();
+  const artifactsPanel = document.querySelector<HTMLElement>("#artifacts-panel");
+  if (artifactsPanel) {
+    void restoreLinkedArrangement(artifactsPanel).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      const failure = document.createElement("p");
+      failure.className = "guided-start-error";
+      failure.textContent = `Could not restore this arrangement: ${message}`;
+      artifactsPanel.replaceChildren(failure);
+    });
+  }
   installGuidedStart({
     onComplete: (deliverables) => {
       const panel = document.querySelector<HTMLElement>("#artifacts-panel");
       if (panel) renderGuidedDeliverables(panel, deliverables);
     },
   });
+}
+
+async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
+  const query = new URL(window.location.href).searchParams;
+  const workspaceId = query.get("workspace");
+  const arrangementId = query.get("arrangement");
+  if (
+    !workspaceId?.match(/^workspace\.[a-f0-9-]{16,}$/) ||
+    !arrangementId?.match(/^arrangement\.[a-f0-9-]{16,}$/)
+  ) {
+    return;
+  }
+  type StoredArrangement = {
+    arrangementSearchId?: string;
+    targetConfiguration: { id: string; instrumentId: string };
+  };
+  const arrangement = await browserApi<StoredArrangement>(
+    `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
+  );
+  if (!arrangement.arrangementSearchId) return;
+  const search = await browserApi<{ id: string; candidateIds: string[] }>(
+    `/api/workspaces/${workspaceId}/arrangement-searches/${arrangement.arrangementSearchId}`
+  );
+  const candidates = await Promise.all(
+    search.candidateIds.map((candidateId) =>
+      browserApi<GuidedDeliverable["candidates"][number]>(
+        `/api/workspaces/${workspaceId}/arrangement-searches/${search.id}/candidates/${candidateId}`
+      )
+    )
+  );
+  const [compiled, preview] = await Promise.all([
+    browserApi<CompileResult>(
+      `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/compile`,
+      { method: "POST" }
+    ),
+    browserApi<import("./lib/audio-preview.js").AudioPreview>(
+      `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`
+    ),
+  ]);
+  renderGuidedDeliverables(panel, [
+    {
+      workspaceId,
+      arrangementSearchId: search.id,
+      targetConfigurationId: arrangement.targetConfiguration.id,
+      label: arrangement.targetConfiguration.instrumentId,
+      compiled,
+      preview,
+      candidates,
+    },
+  ]);
+}
+
+async function browserApi<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  const envelope = (await response.json()) as { ok: true; data: T } | { ok: false; error: string };
+  if (!response.ok || !envelope.ok) {
+    throw new Error(envelope.ok ? `Request failed (${response.status})` : envelope.error);
+  }
+  return envelope.data;
 }
 
 function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDeliverable[]): void {
@@ -412,6 +482,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
       header.append(label);
     }
     installAudioPreviewControls(panel, deliverable.preview);
+    installCandidateComparisonControls(panel, deliverable);
   };
   if (deliverables[0]) render(deliverables[0]);
 }

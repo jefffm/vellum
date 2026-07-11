@@ -1,10 +1,15 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { arrangeFaithfulPluckedString } from "../../lib/baroque-guitar-arranger.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import { arrangeContinuo } from "../../lib/continuo-arranger.js";
 import { arrangeImitativeIntabulation } from "../../lib/imitative-arranger.js";
-import type { ArrangementCandidate, ArrangementScore } from "../../lib/music-domain.js";
+import type {
+  ArrangementCandidate,
+  ArrangementScore,
+  ArrangementSearch,
+  NormalizedScore,
+} from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -23,6 +28,7 @@ export type CreateFaithfulArrangementInput = {
 
 export type CreateFaithfulArrangementResult = {
   analysisRecordId: string;
+  arrangementSearch: ArrangementSearch;
   candidates: ArrangementCandidate[];
   arrangementScore: ArrangementScore;
 };
@@ -82,36 +88,297 @@ export class ArrangementService {
       this.store.saveAnalysisRecord(workspaceId, analysis);
     }
     const arrangementId = `arrangement.${this.createId()}`;
-    let search;
-    if (targetConfiguration.realizationProfileId) {
-      search = arrangeContinuo(score, analysis, {
-        arrangementId,
-        createdAt: timestamp,
-        targetConfiguration,
-      });
-    } else if (analysis.texture === "imitative-polyphony") {
-      const instrument = this.loadInstrument(targetConfiguration.instrumentId);
-      search = arrangeImitativeIntabulation(score, analysis, instrument, {
-        arrangementId,
-        createdAt: timestamp,
-        targetConfiguration,
-      });
-    } else {
-      const instrument = this.loadInstrument(targetConfiguration.instrumentId);
-      if (targetConfiguration.tuningId && targetConfiguration.instrumentId === "baroque-lute-13") {
-        instrument.setDiapasonScheme(targetConfiguration.tuningId);
+    const searchId = `search.${arrangementId.slice("arrangement.".length)}`;
+    const rankingWeights = {
+      historicalProfile: 0.15,
+      idiom: 0.2,
+      playability: 0.25,
+      voiceLeading: 0.2,
+      notationClarity: 0.1,
+      softPreferences: 0.1,
+    };
+    let arrangementSearch = this.store.saveArrangementSearch(workspaceId, {
+      id: searchId,
+      normalizedScoreId: score.id,
+      analysisRecordId: analysis.id,
+      targetConfiguration,
+      preservationPolicy: "faithful_reduction",
+      status: "running",
+      candidateIds: [],
+      rankingWeights,
+      createdAt: timestamp,
+    });
+    let generated;
+    try {
+      if (targetConfiguration.realizationProfileId) {
+        generated = arrangeContinuo(score, analysis, {
+          arrangementId,
+          createdAt: timestamp,
+          targetConfiguration,
+        });
+      } else if (analysis.texture === "imitative-polyphony") {
+        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        generated = arrangeImitativeIntabulation(score, analysis, instrument, {
+          arrangementId,
+          createdAt: timestamp,
+          targetConfiguration,
+        });
+      } else {
+        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        if (
+          targetConfiguration.tuningId &&
+          targetConfiguration.instrumentId === "baroque-lute-13"
+        ) {
+          instrument.setDiapasonScheme(targetConfiguration.tuningId);
+        }
+        generated = arrangeFaithfulPluckedString(score, analysis, instrument, {
+          arrangementId,
+          createdAt: timestamp,
+          targetConfiguration,
+        });
       }
-      search = arrangeFaithfulPluckedString(score, analysis, instrument, {
-        arrangementId,
-        createdAt: timestamp,
-        targetConfiguration,
+    } catch (error) {
+      this.store.saveArrangementSearch(workspaceId, {
+        ...arrangementSearch,
+        status: "failed",
+        completedAt: timestamp,
       });
+      throw error;
     }
-    this.store.saveArrangementScore(workspaceId, search.selected);
+    const selectedStrategy = generated.candidates.find(
+      (candidate) => candidate.id === generated.selected.selectedCandidateId
+    )?.strategy;
+    const candidates = persistableCandidates(
+      generated.candidates,
+      searchId,
+      timestamp,
+      rankingWeights
+    ).map((candidate) => this.store.saveArrangementCandidate(workspaceId, candidate));
+    const selectedCandidate = candidates.find((candidate) => candidate.status === "selected")!;
+    if (selectedCandidate.rank !== 1) {
+      throw new Error(
+        `Arrangement ranking disagrees with the arranger selection for ${selectedStrategy ?? "unknown strategy"}: ${candidates.map((candidate) => `${candidate.strategy}=${candidate.evaluation?.weightedTotal}`).join(", ")}`
+      );
+    }
+    const arrangementScore: ArrangementScore = {
+      ...generated.selected,
+      version: 1,
+      arrangementSearchId: searchId,
+      selectedCandidateId: selectedCandidate.id,
+    };
+    this.store.saveArrangementScore(workspaceId, arrangementScore);
+    arrangementSearch = this.store.saveArrangementSearch(workspaceId, {
+      ...arrangementSearch,
+      status: "completed",
+      candidateIds: candidates.map((candidate) => candidate.id),
+      selectedCandidateId: selectedCandidate.id,
+      selectedArrangementScoreId: arrangementScore.id,
+      completedAt: timestamp,
+    });
     return {
       analysisRecordId: analysis.id,
-      candidates: search.candidates,
-      arrangementScore: search.selected,
+      arrangementSearch,
+      candidates,
+      arrangementScore,
     };
   }
+
+  branchFromCandidate(
+    workspaceId: string,
+    candidateId: string
+  ): {
+    branchId: string;
+    arrangementScore: ArrangementScore;
+  } {
+    const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
+    const search = this.store.getArrangementSearch(workspaceId, candidate.arrangementSearchId!);
+    if (search.status !== "completed" || !search.selectedArrangementScoreId) {
+      throw new ApiRouteError("Arrangement Candidate cannot branch from an incomplete search", 409);
+    }
+    if (candidate.status === "rejected") {
+      throw new ApiRouteError("A rejected Arrangement Candidate cannot start a branch", 409);
+    }
+    const selected = this.store.getArrangementScore(workspaceId, search.selectedArrangementScoreId);
+    const score = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, search.analysisRecordId);
+    const branchId = `branch.${this.createId()}`;
+    const arrangementId = `arrangement.${this.createId()}`;
+    const timestamp = this.now().toISOString();
+    this.store.saveArrangementBranch(workspaceId, {
+      id: branchId,
+      label: `Branch from ${candidate.strategy}`,
+      rootInputVersions: [
+        {
+          recordType: "normalized_score",
+          recordId: search.normalizedScoreId,
+          version: score.version,
+        },
+        {
+          recordType: "analysis_record",
+          recordId: search.analysisRecordId,
+          version: analysis.version,
+        },
+      ],
+      createdFromCandidateId: candidate.id,
+      createdAt: timestamp,
+    });
+    const arrangementScore: ArrangementScore = {
+      ...selected,
+      id: arrangementId,
+      version: 1,
+      branchId,
+      selectedCandidateId: candidate.id,
+      events: candidate.events,
+      preservationAudit: candidate.audit,
+      transformationReport: candidateTransformationReport(
+        score,
+        candidate,
+        selected.transpositionPlan.semitones
+      ),
+      createdAt: timestamp,
+    };
+    this.store.saveArrangementScore(workspaceId, arrangementScore);
+    return { branchId, arrangementScore };
+  }
+}
+
+type RankingWeights = ArrangementSearch["rankingWeights"];
+
+function persistableCandidates(
+  generated: ArrangementCandidate[],
+  searchId: string,
+  createdAt: string,
+  weights: RankingWeights
+): ArrangementCandidate[] {
+  const evaluated = generated.map((candidate) => {
+    const positionCount = candidate.events.reduce((sum, event) => sum + event.positions.length, 0);
+    const openRatio = positionCount === 0 ? 0 : candidate.metrics.openStringCount / positionCount;
+    const scores = {
+      historicalProfile:
+        candidate.strategy === "complete-realization"
+          ? 1
+          : candidate.strategy === "lean-realization"
+            ? 0.8
+            : 0.9,
+      idiom: clamp(
+        0.55 +
+          openRatio * 0.3 +
+          candidate.metrics.sourcePitchClassCoverage * 0.15 +
+          (candidate.strategy === "economical-fingering" ? 0.02 : 0)
+      ),
+      playability: clamp(1 - candidate.metrics.averageFret / 12),
+      voiceLeading: candidate.metrics.sourcePitchClassCoverage,
+      notationClarity: clamp(1 - candidate.metrics.averageFret / 16),
+      softPreferences: clamp(
+        0.55 +
+          openRatio * 0.25 +
+          (candidate.strategy === "economical-fingering" ? 0.2 : 0) +
+          (candidate.strategy === "voice-continuity" ? 0.1 : 0)
+      ),
+    };
+    const weightedTotal = scoreTotal(scores, weights);
+    const hardFailure = candidate.audit.status === "fail";
+    return {
+      ...candidate,
+      id: stableCandidateId(searchId, candidate.strategy),
+      arrangementSearchId: searchId,
+      derivationChoices: [
+        {
+          dimension: "arrangement_strategy",
+          value: candidate.strategy,
+          rationale: `The search explored ${candidate.strategy} as a musically consequential alternative.`,
+        },
+      ],
+      evaluation: {
+        hardConstraintResults: [
+          {
+            category: "preservation" as const,
+            status: hardFailure ? ("fail" as const) : ("pass" as const),
+            evidenceIds: candidate.audit.targetIds,
+            rationale: hardFailure
+              ? "One or more Preservation Targets failed."
+              : "All applicable Preservation Targets passed.",
+          },
+          {
+            category: "instrument" as const,
+            status: "pass" as const,
+            evidenceIds: candidate.events.map((event) => event.id),
+            rationale:
+              "Every emitted event has positions generated and validated against the target instrument model.",
+          },
+        ],
+        scores,
+        weightedTotal,
+        rationale: `Weighted ranking combines historical profile, idiom, playability, voice leading, notation clarity, and soft preferences for ${candidate.strategy}.`,
+      },
+      rejectionReason: hardFailure
+        ? (candidate.audit.findings.find((finding) => finding.severity === "hard")?.message ??
+          "A hard search constraint failed.")
+        : undefined,
+      createdAt,
+    } satisfies ArrangementCandidate;
+  });
+  const survivors = evaluated
+    .filter((candidate) => candidate.status !== "rejected")
+    .sort((left, right) => right.evaluation!.weightedTotal - left.evaluation!.weightedTotal);
+  survivors.forEach((candidate, index) => (candidate.rank = index + 1));
+  return evaluated;
+}
+
+function scoreTotal(
+  scores: NonNullable<ArrangementCandidate["evaluation"]>["scores"],
+  weights: RankingWeights
+): number {
+  return clamp(
+    scores.historicalProfile * weights.historicalProfile +
+      scores.idiom * weights.idiom +
+      scores.playability * weights.playability +
+      scores.voiceLeading * weights.voiceLeading +
+      scores.notationClarity * weights.notationClarity +
+      scores.softPreferences * weights.softPreferences
+  );
+}
+
+function stableCandidateId(searchId: string, strategy: string): string {
+  return `candidate.${createHash("sha256").update(`${searchId}:${strategy}`).digest("hex").slice(0, 24)}`;
+}
+
+function clamp(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function candidateTransformationReport(
+  score: NormalizedScore,
+  candidate: ArrangementCandidate,
+  semitones: number
+): ArrangementScore["transformationReport"] {
+  const sourceEntries = score.events.map((sourceEvent) => {
+    const mapped = candidate.events.filter((event) =>
+      event.sourceEventIds.includes(sourceEvent.id)
+    );
+    return {
+      sourceEventId: sourceEvent.id,
+      arrangementEventIds: mapped.map((event) => event.id),
+      classification:
+        mapped.length === 0
+          ? ("omitted" as const)
+          : semitones !== 0
+            ? ("transposed" as const)
+            : ("retained" as const),
+      rationale:
+        mapped.length === 0
+          ? "This candidate does not realize the source event."
+          : semitones !== 0
+            ? `This candidate realizes the source event under the uniform ${semitones}-semitone Transposition Plan.`
+            : "This candidate retains the source event at source pitch and time.",
+    };
+  });
+  const generated = candidate.events
+    .filter((event) => event.sourceEventIds.length === 0)
+    .map((event) => ({
+      arrangementEventIds: [event.id],
+      classification: "generated" as const,
+      rationale: "This candidate adds idiomatic material without claiming a source-event identity.",
+    }));
+  return [...sourceEntries, ...generated];
 }

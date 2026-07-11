@@ -640,6 +640,28 @@ chat-panel > div > div:has(agent-interface) {
   gap: 0.5rem;
 }
 
+.candidate-comparison-controls {
+  display: grid;
+  grid-template-columns: minmax(12rem, auto) auto;
+  gap: 0.35rem 0.6rem;
+  align-items: end;
+}
+
+.candidate-comparison-controls label {
+  display: grid;
+  gap: 0.2rem;
+  color: #625744;
+  font-size: 0.76rem;
+}
+
+.candidate-ranking-evidence {
+  grid-column: 1 / -1;
+  max-width: 48rem;
+  color: #625744;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 #guided-start footer {
   position: sticky;
   bottom: -1.4rem;

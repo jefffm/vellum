@@ -12,10 +12,23 @@ type GuidedStartOptions = {
 };
 
 export type GuidedDeliverable = {
+  workspaceId: string;
+  arrangementSearchId: string;
   targetConfigurationId: string;
   label: string;
   compiled: CompileResult;
   preview: AudioPreview;
+  candidates: Array<{
+    id: string;
+    strategy: string;
+    status: "rejected" | "survived" | "selected";
+    rank?: number;
+    rejectionReason?: string;
+    evaluation?: {
+      weightedTotal: number;
+      rationale: string;
+    };
+  }>;
 };
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -134,17 +147,18 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       const deliverables: GuidedDeliverable[] = [];
       for (const target of targetConfigurations) {
         status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
-        const arranged = await api<{ arrangementScore: { id: string } }>(
-          `/api/workspaces/${workspace.id}/arrangements`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              normalizedScoreId: reviewed.normalizedScoreId,
-              targetConfigurationId: target.id,
-              preservationPolicy: "faithful_reduction",
-            }),
-          }
-        );
+        const arranged = await api<{
+          arrangementSearch: { id: string };
+          candidates: GuidedDeliverable["candidates"];
+          arrangementScore: { id: string };
+        }>(`/api/workspaces/${workspace.id}/arrangements`, {
+          method: "POST",
+          body: JSON.stringify({
+            normalizedScoreId: reviewed.normalizedScoreId,
+            targetConfigurationId: target.id,
+            preservationPolicy: "faithful_reduction",
+          }),
+        });
         status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
         const [compiled, preview] = await Promise.all([
           api<CompileResult>(
@@ -156,10 +170,13 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           ),
         ]);
         deliverables.push({
+          workspaceId: workspace.id,
+          arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
           label: targetLabel(target.id),
           compiled,
           preview,
+          candidates: arranged.candidates,
         });
       }
       options.onComplete(deliverables);
@@ -268,6 +285,7 @@ function recoveryButton(label: string, action: () => Promise<void>): HTMLButtonE
 export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPreview): void {
   const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
   if (!header) return;
+  header.querySelector(".audio-preview-controls")?.remove();
   const controls = document.createElement("div");
   controls.className = "audio-preview-controls";
   controls.innerHTML = `
@@ -292,6 +310,69 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
     stop.disabled = false;
   });
   stop.addEventListener("click", () => stopPlayback?.());
+}
+
+export function installCandidateComparisonControls(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header || deliverable.candidates.length < 2) return;
+  header.querySelector(".candidate-comparison-controls")?.remove();
+  const controls = document.createElement("div");
+  controls.className = "candidate-comparison-controls";
+  const label = document.createElement("label");
+  label.textContent = "Arrangement candidate";
+  const select = document.createElement("select");
+  for (const candidate of [...deliverable.candidates].sort(
+    (left, right) =>
+      (left.rank ?? Number.MAX_SAFE_INTEGER) - (right.rank ?? Number.MAX_SAFE_INTEGER)
+  )) {
+    const option = document.createElement("option");
+    option.value = candidate.id;
+    option.textContent = `${candidate.rank ? `#${candidate.rank} ` : ""}${candidate.strategy}${candidate.status === "selected" ? " · selected" : ""}`;
+    option.disabled = candidate.status === "rejected";
+    option.selected = candidate.status === "selected";
+    select.append(option);
+  }
+  const evidence = document.createElement("span");
+  evidence.className = "candidate-ranking-evidence";
+  const branch = document.createElement("button");
+  branch.type = "button";
+  branch.textContent = "Branch from candidate";
+  const update = async () => {
+    const candidate = deliverable.candidates.find((item) => item.id === select.value)!;
+    evidence.textContent = candidate.evaluation
+      ? `Rank ${candidate.rank ?? "—"} · ${(candidate.evaluation.weightedTotal * 100).toFixed(1)}% · ${candidate.evaluation.rationale}`
+      : (candidate.rejectionReason ?? "Ranking evidence unavailable");
+    branch.disabled = candidate.status === "selected" || candidate.status === "rejected";
+    if (candidate.status === "selected") {
+      installAudioPreviewControls(panel, deliverable.preview);
+      return;
+    }
+    select.disabled = true;
+    try {
+      const preview = await api<AudioPreview>(
+        `/api/workspaces/${deliverable.workspaceId}/arrangement-searches/${deliverable.arrangementSearchId}/candidates/${candidate.id}/audio-preview`
+      );
+      installAudioPreviewControls(panel, preview);
+    } finally {
+      select.disabled = false;
+    }
+  };
+  select.addEventListener("change", () => void update());
+  branch.addEventListener("click", async () => {
+    branch.disabled = true;
+    const result = await api<{ branchId: string }>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangement-searches/${deliverable.arrangementSearchId}/candidates/${select.value}/branch`,
+      { method: "POST", body: "{}" }
+    );
+    branch.textContent = `Created ${result.branchId}`;
+  });
+  label.append(select);
+  controls.append(label, branch, evidence);
+  header.append(controls);
+  void update();
 }
 
 export function midiFrequency(midi: number): number {

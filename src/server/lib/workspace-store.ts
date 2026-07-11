@@ -13,6 +13,8 @@ import path from "node:path";
 import {
   AnalysisRecordSchema,
   ArrangementBranchSchema,
+  ArrangementCandidateSchema,
+  ArrangementSearchSchema,
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
   ModelActionSchema,
@@ -24,6 +26,8 @@ import {
 import type {
   AnalysisRecord,
   ArrangementBranch,
+  ArrangementCandidate,
+  ArrangementSearch,
   ArrangementScore,
   ArrangementWorkspace,
   CreateWorkspace,
@@ -59,7 +63,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -71,6 +75,8 @@ export class WorkspaceStore {
       arrangementScoreIds: [],
       modelActionIds: [],
       arrangementBranchIds: [],
+      arrangementSearchIds: [],
+      arrangementCandidateIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -104,7 +110,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 2) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 3) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -112,17 +118,25 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 2,
+      schemaVersion: 3,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
         : [],
+      arrangementSearchIds: Array.isArray(parsed.arrangementSearchIds)
+        ? parsed.arrangementSearchIds
+        : [],
+      arrangementCandidateIds: Array.isArray(parsed.arrangementCandidateIds)
+        ? parsed.arrangementCandidateIds
+        : [],
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 2 ||
+      parsed.schemaVersion !== 3 ||
       !Array.isArray(parsed.modelActionIds) ||
-      !Array.isArray(parsed.arrangementBranchIds)
+      !Array.isArray(parsed.arrangementBranchIds) ||
+      !Array.isArray(parsed.arrangementSearchIds) ||
+      !Array.isArray(parsed.arrangementCandidateIds)
     ) {
       writeJsonAtomic(manifestPath, workspace);
     }
@@ -348,6 +362,30 @@ export class WorkspaceStore {
         400
       );
     }
+    if (!arrangement.arrangementSearchId || !arrangement.version) {
+      throw new ApiRouteError(
+        "A persisted Arrangement Score requires an Arrangement Search and version",
+        400
+      );
+    }
+    const search = this.getArrangementSearch(workspaceId, arrangement.arrangementSearchId);
+    const candidate = this.getArrangementCandidate(workspaceId, arrangement.selectedCandidateId);
+    if (
+      candidate.arrangementSearchId !== search.id ||
+      search.analysisRecordId !== arrangement.analysisRecordId ||
+      search.targetConfiguration.id !== arrangement.targetConfiguration.id
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Score search, candidate, analysis, or target lineage is inconsistent",
+        400
+      );
+    }
+    if (arrangement.branchId && !workspace.arrangementBranchIds.includes(arrangement.branchId)) {
+      throw new ApiRouteError(
+        `Arrangement Score branch is not part of workspace: ${arrangement.branchId}`,
+        400
+      );
+    }
     const decoded = Value.Decode(ArrangementScoreSchema, arrangement);
     this.writeImmutableRecord(workspaceId, "arrangement-scores", decoded.id, decoded);
     this.linkRecord(workspace, "arrangementScoreIds", decoded.id);
@@ -361,6 +399,92 @@ export class WorkspaceStore {
       arrangementScoreId,
       "arrangement",
       ArrangementScoreSchema
+    );
+  }
+
+  saveArrangementSearch(workspaceId: string, search: ArrangementSearch): ArrangementSearch {
+    const workspace = this.get(workspaceId);
+    if (!workspace.normalizedScoreIds.includes(search.normalizedScoreId)) {
+      throw new ApiRouteError(
+        `Arrangement Search score is not part of workspace: ${search.normalizedScoreId}`,
+        400
+      );
+    }
+    if (!workspace.analysisRecordIds.includes(search.analysisRecordId)) {
+      throw new ApiRouteError(
+        `Arrangement Search analysis is not part of workspace: ${search.analysisRecordId}`,
+        400
+      );
+    }
+    if (
+      search.status === "completed" &&
+      (search.candidateIds.length === 0 ||
+        !search.selectedCandidateId ||
+        !search.candidateIds.includes(search.selectedCandidateId) ||
+        !search.selectedArrangementScoreId ||
+        !search.candidateIds.every((id) => workspace.arrangementCandidateIds.includes(id)) ||
+        !workspace.arrangementScoreIds.includes(search.selectedArrangementScoreId))
+    ) {
+      throw new ApiRouteError(
+        "A completed Arrangement Search requires candidates, a selected candidate, and its Arrangement Score",
+        400
+      );
+    }
+    const decoded = Value.Decode(ArrangementSearchSchema, search);
+    this.writeRecord(workspaceId, "arrangement-searches", decoded.id, decoded);
+    this.linkRecord(workspace, "arrangementSearchIds", decoded.id);
+    return decoded;
+  }
+
+  getArrangementSearch(workspaceId: string, searchId: string): ArrangementSearch {
+    return this.readRecord(
+      workspaceId,
+      "arrangement-searches",
+      searchId,
+      "search",
+      ArrangementSearchSchema
+    );
+  }
+
+  saveArrangementCandidate(
+    workspaceId: string,
+    candidate: ArrangementCandidate
+  ): ArrangementCandidate {
+    const workspace = this.get(workspaceId);
+    if (
+      !candidate.arrangementSearchId ||
+      !workspace.arrangementSearchIds.includes(candidate.arrangementSearchId)
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Candidate must belong to a persisted Arrangement Search",
+        400
+      );
+    }
+    if (
+      !candidate.derivationChoices?.length ||
+      !candidate.evaluation ||
+      !candidate.createdAt ||
+      (candidate.status !== "rejected" && !candidate.rank) ||
+      (candidate.status === "rejected" && !candidate.rejectionReason)
+    ) {
+      throw new ApiRouteError(
+        "A persisted Arrangement Candidate requires derivation, evaluation, ranking or rejection evidence, and creation time",
+        400
+      );
+    }
+    const decoded = Value.Decode(ArrangementCandidateSchema, candidate);
+    this.writeImmutableRecord(workspaceId, "arrangement-candidates", decoded.id, decoded);
+    this.linkRecord(workspace, "arrangementCandidateIds", decoded.id);
+    return decoded;
+  }
+
+  getArrangementCandidate(workspaceId: string, candidateId: string): ArrangementCandidate {
+    return this.readRecord(
+      workspaceId,
+      "arrangement-candidates",
+      candidateId,
+      "candidate",
+      ArrangementCandidateSchema
     );
   }
 

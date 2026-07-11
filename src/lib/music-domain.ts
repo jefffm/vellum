@@ -94,7 +94,7 @@ export const ArrangementBriefSchema = Type.Object(
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 2 }),
+    schemaVersion: Type.Integer({ minimum: 3 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,
@@ -106,6 +106,8 @@ export const ArrangementWorkspaceSchema = Type.Object(
     arrangementScoreIds: Type.Array(IdSchema),
     modelActionIds: Type.Array(IdSchema),
     arrangementBranchIds: Type.Array(IdSchema),
+    arrangementSearchIds: Type.Array(IdSchema),
+    arrangementCandidateIds: Type.Array(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -201,8 +203,9 @@ export const ArrangementBranchSchema = Type.Object(
     id: IdSchema,
     label: Type.String({ minLength: 1 }),
     rootInputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
-    createdByModelActionId: IdSchema,
-    createdByAttemptId: IdSchema,
+    createdByModelActionId: Type.Optional(IdSchema),
+    createdByAttemptId: Type.Optional(IdSchema),
+    createdFromCandidateId: Type.Optional(IdSchema),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }
@@ -635,15 +638,109 @@ export const ArrangementCandidateSchema = Type.Object(
       },
       { additionalProperties: false }
     ),
+    arrangementSearchId: Type.Optional(IdSchema),
+    derivationChoices: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            dimension: Type.String({ minLength: 1 }),
+            value: Type.String({ minLength: 1 }),
+            rationale: Type.String({ minLength: 1 }),
+          },
+          { additionalProperties: false }
+        )
+      )
+    ),
+    evaluation: Type.Optional(
+      Type.Object(
+        {
+          hardConstraintResults: Type.Array(
+            Type.Object(
+              {
+                category: Type.Union([
+                  Type.Literal("preservation"),
+                  Type.Literal("instrument"),
+                  Type.Literal("figured_bass"),
+                  Type.Literal("validation"),
+                ]),
+                status: Type.Union([Type.Literal("pass"), Type.Literal("fail")]),
+                evidenceIds: Type.Array(IdSchema),
+                rationale: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
+          scores: Type.Object(
+            {
+              historicalProfile: Type.Number({ minimum: 0, maximum: 1 }),
+              idiom: Type.Number({ minimum: 0, maximum: 1 }),
+              playability: Type.Number({ minimum: 0, maximum: 1 }),
+              voiceLeading: Type.Number({ minimum: 0, maximum: 1 }),
+              notationClarity: Type.Number({ minimum: 0, maximum: 1 }),
+              softPreferences: Type.Number({ minimum: 0, maximum: 1 }),
+            },
+            { additionalProperties: false }
+          ),
+          weightedTotal: Type.Number({ minimum: 0, maximum: 1 }),
+          rationale: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    rank: Type.Optional(Type.Integer({ minimum: 1 })),
+    rejectionReason: Type.Optional(Type.String({ minLength: 1 })),
+    createdAt: Type.Optional(IsoDateSchema),
   },
   { additionalProperties: false }
 );
 
 export type ArrangementCandidate = Static<typeof ArrangementCandidateSchema>;
 
+export const ArrangementSearchSchema = Type.Object(
+  {
+    id: IdSchema,
+    normalizedScoreId: IdSchema,
+    analysisRecordId: IdSchema,
+    targetConfiguration: TargetConfigurationSchema,
+    preservationPolicy: Type.Union([
+      Type.Literal("faithful_reduction"),
+      Type.Literal("idiomatic_adaptation"),
+      Type.Literal("free_paraphrase"),
+    ]),
+    branchId: Type.Optional(IdSchema),
+    status: Type.Union([
+      Type.Literal("running"),
+      Type.Literal("completed"),
+      Type.Literal("failed"),
+    ]),
+    candidateIds: Type.Array(IdSchema),
+    selectedCandidateId: Type.Optional(IdSchema),
+    selectedArrangementScoreId: Type.Optional(IdSchema),
+    rankingWeights: Type.Object(
+      {
+        historicalProfile: Type.Number({ minimum: 0, maximum: 1 }),
+        idiom: Type.Number({ minimum: 0, maximum: 1 }),
+        playability: Type.Number({ minimum: 0, maximum: 1 }),
+        voiceLeading: Type.Number({ minimum: 0, maximum: 1 }),
+        notationClarity: Type.Number({ minimum: 0, maximum: 1 }),
+        softPreferences: Type.Number({ minimum: 0, maximum: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    createdAt: IsoDateSchema,
+    completedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+
+export type ArrangementSearch = Static<typeof ArrangementSearchSchema>;
+
 export const ArrangementScoreSchema = Type.Object(
   {
     id: IdSchema,
+    version: Type.Optional(Type.Integer({ minimum: 1 })),
+    arrangementSearchId: Type.Optional(IdSchema),
+    branchId: Type.Optional(IdSchema),
     analysisRecordId: IdSchema,
     selectedCandidateId: IdSchema,
     targetConfiguration: TargetConfigurationSchema,

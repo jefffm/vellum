@@ -29,6 +29,17 @@ export function createArrangementPreviewRoute(store = new WorkspaceStore()): Req
   };
 }
 
+export function createArrangementScoreGetRoute(store = new WorkspaceStore()): RequestHandler {
+  return (request, response, next) => {
+    try {
+      const { workspaceId, arrangementId } = Value.Decode(ParamsSchema, request.params);
+      response.json({ ok: true, data: store.getArrangementScore(workspaceId, arrangementId) });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
 export function createArrangementCompileRoute(store = new WorkspaceStore()): RequestHandler {
   return async (request, response, next) => {
     try {

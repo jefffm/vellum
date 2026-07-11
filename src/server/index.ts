@@ -29,6 +29,12 @@ import {
   createModelActionRetryRoute,
 } from "./lib/model-action-route.js";
 import { redactSecretText } from "./lib/secret-redaction.js";
+import {
+  createArrangementCandidateBranchRoute,
+  createArrangementCandidateGetRoute,
+  createArrangementCandidatePreviewRoute,
+  createArrangementSearchGetRoute,
+} from "./lib/arrangement-search-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
 import { createTemplateGetRoute, createTemplateListRoute } from "./lib/template-route.js";
@@ -54,6 +60,7 @@ import { createFaithfulArrangementRoute } from "./lib/arrangement-workspace-rout
 import {
   createArrangementCompileRoute,
   createArrangementPreviewRoute,
+  createArrangementScoreGetRoute,
 } from "./lib/arrangement-deliverable-route.js";
 
 type HealthResponse = {
@@ -188,6 +195,26 @@ export function createApiRouter(): Router {
     createTranscriptionReviewRoute()
   );
   router.post("/workspaces/:workspaceId/arrangements", createFaithfulArrangementRoute());
+  router.get(
+    "/workspaces/:workspaceId/arrangement-searches/:searchId",
+    createArrangementSearchGetRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId",
+    createArrangementCandidateGetRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview",
+    createArrangementCandidatePreviewRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/branch",
+    createArrangementCandidateBranchRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId",
+    createArrangementScoreGetRoute()
+  );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/audio-preview",
     createArrangementPreviewRoute()

@@ -1,6 +1,8 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import express from "express";
+import { createServer } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import { noteToMidi, transposeNote } from "../../lib/pitch.js";
@@ -9,6 +11,10 @@ import { OmrService } from "./omr.js";
 import type { OmrBackend } from "./omr.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { ApiRouteError } from "./create-route.js";
+import {
+  createArrangementCandidatePreviewRoute,
+  createArrangementSearchGetRoute,
+} from "./arrangement-search-route.js";
 
 describe("Greensleeves faithful arrangement service", () => {
   let rootDirectory: string;
@@ -96,6 +102,8 @@ describe("Greensleeves faithful arrangement service", () => {
       "55555555-5555-4555-8555-555555555555",
       "88888888-8888-4888-8888-888888888888",
       "99999999-9999-4999-8999-999999999999",
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     ];
     const service = new ArrangementService({
       store,
@@ -108,6 +116,50 @@ describe("Greensleeves faithful arrangement service", () => {
     });
 
     expect(result.candidates).toHaveLength(2);
+    expect(result.arrangementSearch).toMatchObject({
+      id: "search.55555555-5555-4555-8555-555555555555",
+      status: "completed",
+      candidateIds: result.candidates.map((candidate) => candidate.id),
+      selectedCandidateId: result.arrangementScore.selectedCandidateId,
+    });
+    expect(
+      result.candidates.every(
+        (candidate) => candidate.arrangementSearchId === result.arrangementSearch.id
+      )
+    ).toBe(true);
+    expect(
+      result.candidates
+        .filter((candidate) => candidate.status !== "rejected")
+        .map((candidate) => candidate.rank)
+        .sort()
+    ).toEqual([1, 2]);
+    expect(result.candidates[0]?.evaluation).toMatchObject({
+      hardConstraintResults: expect.arrayContaining([
+        expect.objectContaining({ category: "preservation", status: "pass" }),
+      ]),
+      scores: {
+        historicalProfile: expect.any(Number),
+        idiom: expect.any(Number),
+        playability: expect.any(Number),
+        voiceLeading: expect.any(Number),
+        notationClarity: expect.any(Number),
+        softPreferences: expect.any(Number),
+      },
+      weightedTotal: expect.any(Number),
+    });
+    const rankedCandidates = result.candidates
+      .filter((candidate) => candidate.rank)
+      .sort((left, right) => left.rank! - right.rank!);
+    expect(rankedCandidates[0]?.evaluation?.weightedTotal).toBeGreaterThanOrEqual(
+      rankedCandidates[1]?.evaluation?.weightedTotal ?? 0
+    );
+    const reloadedStore = new WorkspaceStore({ rootDirectory });
+    expect(reloadedStore.getArrangementSearch(workspace.id, result.arrangementSearch.id)).toEqual(
+      result.arrangementSearch
+    );
+    expect(reloadedStore.getArrangementCandidate(workspace.id, result.candidates[0]!.id)).toEqual(
+      result.candidates[0]
+    );
     expect(result.arrangementScore).toMatchObject({
       id: "arrangement.55555555-5555-4555-8555-555555555555",
       preservationPolicy: "faithful_reduction",
@@ -168,6 +220,48 @@ describe("Greensleeves faithful arrangement service", () => {
         luteResult.arrangementScore.id,
         classicalResult.arrangementScore.id,
       ],
+    });
+
+    const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;
+    const app = express();
+    app.get(
+      "/api/workspaces/:workspaceId/arrangement-searches/:searchId",
+      createArrangementSearchGetRoute({ store, service })
+    );
+    app.get(
+      "/api/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview",
+      createArrangementCandidatePreviewRoute({ store, service })
+    );
+    const server = createServer(app);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server address");
+    const base = `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangement-searches/${result.arrangementSearch.id}`;
+    const searchResponse = await fetch(base);
+    expect((await searchResponse.json()) as unknown).toMatchObject({
+      ok: true,
+      data: { id: result.arrangementSearch.id },
+    });
+    const previewResponse = await fetch(`${base}/candidates/${alternative.id}/audio-preview`);
+    const preview = (await previewResponse.json()) as {
+      ok: boolean;
+      data: { events: unknown[] };
+    };
+    expect(preview.ok).toBe(true);
+    expect(preview.data.events.length).toBeGreaterThan(0);
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+
+    const branched = service.branchFromCandidate(workspace.id, alternative.id);
+    expect(branched.arrangementScore).toMatchObject({
+      id: "arrangement.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      branchId: "branch.aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      selectedCandidateId: alternative.id,
+      events: alternative.events,
+    });
+    expect(store.getArrangementBranch(workspace.id, branched.branchId)).toMatchObject({
+      createdFromCandidateId: alternative.id,
     });
 
     const uncertainTranscription = {
