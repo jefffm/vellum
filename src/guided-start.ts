@@ -24,9 +24,12 @@ const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
 export type GuidedDeliverable = {
   workspaceId: string;
   arrangementScoreId: string;
+  arrangementScoreVersion: number;
   arrangementFamilyId: string;
   arrangementSearchId: string;
   targetConfigurationId: string;
+  targetConfiguration: TargetConfiguration;
+  preservationPolicy: ArrangementScore["preservationPolicy"];
   label: string;
   arrangementEvents: ArrangementEvent[];
   analysis: {
@@ -99,6 +102,57 @@ export type GuidedDeliverable = {
   }>;
 };
 
+export type ScoreSelectionContext = {
+  kind: "vellum_score_selection";
+  workspaceId: string;
+  arrangementScoreId: string;
+  arrangementScoreVersion: number;
+  targetConfiguration: TargetConfiguration;
+  preservationPolicy: ArrangementScore["preservationPolicy"];
+  eventIds: string[];
+  measureIds: string[];
+  sourceEventIds: string[];
+  events: ArrangementEvent[];
+  lineage: GuidedDeliverable["transformationReport"];
+  findings: GuidedDeliverable["preservationAudit"]["findings"];
+};
+
+export function buildScoreSelectionContext(
+  deliverable: GuidedDeliverable,
+  selectedEventIds: readonly string[]
+): ScoreSelectionContext {
+  const chosen = new Set(selectedEventIds);
+  const events = deliverable.arrangementEvents.filter((event) => chosen.has(event.id));
+  const lineage = deliverable.transformationReport.filter((entry) =>
+    entry.arrangementEventIds.some((id) => chosen.has(id))
+  );
+  const targetIds = new Set(
+    lineage.flatMap((entry) => [entry.sourceRelationshipId, entry.sourceEventId]).filter(Boolean)
+  );
+  return {
+    kind: "vellum_score_selection",
+    workspaceId: deliverable.workspaceId,
+    arrangementScoreId: deliverable.arrangementScoreId,
+    arrangementScoreVersion: deliverable.arrangementScoreVersion,
+    targetConfiguration: deliverable.targetConfiguration,
+    preservationPolicy: deliverable.preservationPolicy,
+    eventIds: events.map((event) => event.id),
+    measureIds: Array.from(new Set(events.map((event) => event.measureId))),
+    sourceEventIds: Array.from(new Set(events.flatMap((event) => event.sourceEventIds))),
+    events,
+    lineage,
+    findings: deliverable.preservationAudit.findings.filter((finding) =>
+      targetIds.has(finding.targetId)
+    ),
+  };
+}
+
+export function selectionPrompt(context: ScoreSelectionContext, request: string): string {
+  const conciseRequest =
+    request.trim() || "Give me interactive musical feedback on this selection.";
+  return `${conciseRequest}\n\nUse this exact Vellum Selection Context; do not infer a different passage or score version:\n\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
+}
+
 export function describeArrangementEvent(event: ArrangementEvent): string {
   const duration = `${event.duration.numerator}/${event.duration.denominator}`;
   const role = (event.role ?? "accompaniment").replaceAll("_", " ");
@@ -118,6 +172,11 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
   summary.className = "score-selection-summary";
   summary.hidden = true;
   const eventById = new Map(deliverable.arrangementEvents.map((event) => [event.id, event]));
+  const eventOrder = deliverable.arrangementEvents.map((event) => event.id);
+  const selected = new Set<string>();
+  let anchorId: string | undefined;
+  let dragging = false;
+  let suppressClick = false;
   const groups = notation.querySelectorAll<SVGGElement>("[data-arrangement-event-id]");
   for (const group of groups) {
     const eventId = group.dataset.arrangementEventId;
@@ -125,28 +184,96 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     group.classList.add("vellum-selectable-event");
     group.setAttribute("role", "button");
     group.setAttribute("tabindex", "0");
+    group.setAttribute("aria-pressed", "false");
     group.setAttribute("aria-label", describeArrangementEvent(eventById.get(eventId)!));
   }
-  const select = (eventId: string) => {
+  const renderSelection = (seekEventId?: string) => {
+    const selectedEvents = deliverable.arrangementEvents.filter((event) => selected.has(event.id));
+    notation.querySelectorAll<SVGGElement>("[data-arrangement-event-id]").forEach((group) => {
+      const active = selected.has(group.dataset.arrangementEventId ?? "");
+      group.classList.toggle("score-selected", active);
+      group.setAttribute("aria-pressed", String(active));
+    });
+    if (selectedEvents.length === 0) {
+      summary.hidden = true;
+      summary.replaceChildren();
+      return;
+    }
+    const title = document.createElement("strong");
+    title.textContent = `${selectedEvents.length} musical object${selectedEvents.length === 1 ? "" : "s"} selected`;
+    const facts = document.createElement("span");
+    facts.textContent = selectedEvents.map(describeArrangementEvent).join(" | ");
+    const request = document.createElement("input");
+    request.type = "text";
+    request.placeholder = "Ask about this passage…";
+    request.setAttribute("aria-label", "Question about selected score events");
+    const ask = document.createElement("button");
+    ask.type = "button";
+    ask.textContent = "Ask Vellum";
+    ask.addEventListener("click", () => {
+      const context = buildScoreSelectionContext(
+        deliverable,
+        selectedEvents.map((event) => event.id)
+      );
+      document.dispatchEvent(
+        new CustomEvent("vellum-ask-selection", {
+          detail: { message: selectionPrompt(context, request.value), context },
+        })
+      );
+    });
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Clear";
+    clear.addEventListener("click", () => {
+      selected.clear();
+      anchorId = undefined;
+      renderSelection();
+    });
+    const actions = document.createElement("span");
+    actions.className = "score-selection-actions";
+    actions.append(request, ask, clear);
+    summary.replaceChildren(title, facts, actions);
+    summary.hidden = false;
+    if (seekEventId) {
+      panel.dispatchEvent(
+        new CustomEvent("vellum-seek-playback", {
+          detail: { arrangementEventId: seekEventId },
+        })
+      );
+    }
+  };
+  const selectRange = (fromId: string, toId: string, replace: boolean) => {
+    const left = eventOrder.indexOf(fromId);
+    const right = eventOrder.indexOf(toId);
+    if (left < 0 || right < 0) return;
+    if (replace) selected.clear();
+    for (let index = Math.min(left, right); index <= Math.max(left, right); index += 1) {
+      selected.add(eventOrder[index]!);
+    }
+    renderSelection(toId);
+  };
+  const select = (eventId: string, extend: boolean) => {
     const arrangementEvent = eventById.get(eventId);
     if (!arrangementEvent) return;
-    notation
-      .querySelectorAll<SVGGElement>("[data-arrangement-event-id]")
-      .forEach((group) =>
-        group.classList.toggle("score-selected", group.dataset.arrangementEventId === eventId)
-      );
-    summary.hidden = false;
-    summary.innerHTML = `<strong>Selected musical object</strong><span></span>`;
-    summary.querySelector("span")!.textContent = describeArrangementEvent(arrangementEvent);
-    panel.dispatchEvent(
-      new CustomEvent("vellum-seek-playback", { detail: { arrangementEventId: eventId } })
-    );
+    if (extend && anchorId) {
+      selectRange(anchorId, eventId, false);
+      return;
+    }
+    selected.clear();
+    selected.add(eventId);
+    anchorId = eventId;
+    renderSelection(eventId);
   };
   notation.addEventListener("click", (browserEvent) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     const target = (browserEvent.target as Element | null)?.closest<SVGGElement>(
       "[data-arrangement-event-id]"
     );
-    if (target?.dataset.arrangementEventId) select(target.dataset.arrangementEventId);
+    if (target?.dataset.arrangementEventId)
+      select(target.dataset.arrangementEventId, browserEvent.shiftKey);
   });
   notation.addEventListener("keydown", (browserEvent) => {
     if (browserEvent.key !== "Enter" && browserEvent.key !== " ") return;
@@ -155,8 +282,34 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     );
     if (target?.dataset.arrangementEventId) {
       browserEvent.preventDefault();
-      select(target.dataset.arrangementEventId);
+      select(target.dataset.arrangementEventId, browserEvent.shiftKey);
     }
+  });
+  notation.addEventListener("pointerdown", (browserEvent) => {
+    const target = (browserEvent.target as Element | null)?.closest<SVGGElement>(
+      "[data-arrangement-event-id]"
+    );
+    const eventId = target?.dataset.arrangementEventId;
+    if (!eventId) return;
+    dragging = true;
+    suppressClick = false;
+    if (!browserEvent.shiftKey || !anchorId) anchorId = eventId;
+  });
+  notation.addEventListener("pointerover", (browserEvent) => {
+    if (!dragging || !anchorId) return;
+    const target = (browserEvent.target as Element | null)?.closest<SVGGElement>(
+      "[data-arrangement-event-id]"
+    );
+    if (target?.dataset.arrangementEventId) {
+      if (target.dataset.arrangementEventId !== anchorId) suppressClick = true;
+      selectRange(anchorId, target.dataset.arrangementEventId, true);
+    }
+  });
+  notation.addEventListener("pointerup", () => {
+    dragging = false;
+  });
+  notation.addEventListener("pointerleave", () => {
+    dragging = false;
   });
   header.append(summary);
 }
@@ -299,7 +452,10 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           candidates: GuidedDeliverable["candidates"];
           arrangementScore: {
             id: string;
+            version: number;
             arrangementFamilyId: string;
+            targetConfiguration: TargetConfiguration;
+            preservationPolicy: ArrangementScore["preservationPolicy"];
             events: ArrangementEvent[];
             transformationReport: GuidedDeliverable["transformationReport"];
             preservationAudit: GuidedDeliverable["preservationAudit"];
@@ -326,9 +482,12 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         deliverables.push({
           workspaceId: workspace.id,
           arrangementScoreId: arranged.arrangementScore.id,
+          arrangementScoreVersion: arranged.arrangementScore.version,
           arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
+          targetConfiguration: arranged.arrangementScore.targetConfiguration,
+          preservationPolicy: arranged.arrangementScore.preservationPolicy,
           label: targetLabel(target.id),
           arrangementEvents: arranged.arrangementScore.events,
           analysis: arranged.analysis,

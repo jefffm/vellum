@@ -29,6 +29,7 @@ import {
   theoryTool,
 } from "./tools.js";
 import type { CompileResult } from "./types.js";
+import type { ArrangementScore, TargetConfiguration } from "./lib/music-domain.js";
 import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
@@ -219,6 +220,14 @@ function refreshChatPanelWhenAgentSettles(agent: Agent, chatPanel: ChatPanel): v
   });
 }
 
+export function installSelectionPromptBridge(chatPanel: ChatPanel): void {
+  document.addEventListener("vellum-ask-selection", (event) => {
+    const message = (event as CustomEvent<{ message?: unknown }>).detail?.message;
+    if (typeof message !== "string" || message.trim().length === 0) return;
+    void chatPanel.agentInterface?.sendMessage(message);
+  });
+}
+
 function markArtifactsPanelReady(): void {
   const artifactsPanel = document.querySelector<HTMLDivElement>("#artifacts-panel");
   if (artifactsPanel) {
@@ -384,6 +393,7 @@ export async function main(): Promise<void> {
     onApiKeyRequired: async () => true,
     toolsFactory: () => vellumTools,
   });
+  installSelectionPromptBridge(chatPanel);
   installActivityIndicator(agent);
   installCompileRetryGuard(agent);
   installDebugExport(agent);
@@ -419,10 +429,12 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     return;
   }
   type StoredArrangement = {
+    version: number;
     analysisRecordId: string;
     arrangementSearchId?: string;
     arrangementFamilyId: string;
-    targetConfiguration: { id: string; instrumentId: string };
+    targetConfiguration: TargetConfiguration;
+    preservationPolicy: ArrangementScore["preservationPolicy"];
     transformationReport: GuidedDeliverable["transformationReport"];
     preservationAudit: GuidedDeliverable["preservationAudit"];
     continuoDisposition?: GuidedDeliverable["continuoDisposition"];
@@ -460,9 +472,12 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     {
       workspaceId,
       arrangementScoreId: arrangementId,
+      arrangementScoreVersion: arrangement.version,
       arrangementFamilyId: arrangement.arrangementFamilyId,
       arrangementSearchId: search.id,
       targetConfigurationId: arrangement.targetConfiguration.id,
+      targetConfiguration: arrangement.targetConfiguration,
+      preservationPolicy: arrangement.preservationPolicy,
       label: arrangement.targetConfiguration.instrumentId,
       arrangementEvents: arrangement.events,
       analysis,

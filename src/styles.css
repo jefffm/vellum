@@ -278,6 +278,30 @@ chat-panel > div > div:has(agent-interface) {
   display: none;
 }
 
+.score-selection-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.score-selection-actions input {
+  min-width: min(24rem, 52vw);
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #cfc8ae;
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
+.score-selection-actions button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #b9aa73;
+  border-radius: 0.35rem;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+
 .artifact-preview-content[data-zoom-mode="zoom"] {
   max-width: none;
 }

@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   guidedStartMarkup,
+  buildScoreSelectionContext,
   describeArrangementEvent,
   installNotationSelection,
   installLineageSummary,
   installProviderConnection,
   midiFrequency,
   sourceFocusUrl,
+  selectionPrompt,
   targetConfiguration,
   sourceMimeType,
 } from "./guided-start.js";
+import type { GuidedDeliverable } from "./guided-start.js";
 
 describe("audio preview synthesis", () => {
   it("maps MIDI pitches to equal-tempered oscillator frequencies", () => {
@@ -40,6 +43,78 @@ describe("interactive notation", () => {
     expect(implementation).toContain("data-arrangement-event-id");
     expect(implementation).toContain("score-selected");
     expect(implementation).toContain("vellum-seek-playback");
+  });
+
+  it("sends an exact ordered Greensleeves phrase and Principal Voice identity to chat", () => {
+    const events = [
+      {
+        id: "arrangement.greensleeves.event.1",
+        type: "note" as const,
+        measureId: "measure.greensleeves.1",
+        onset: { numerator: 0, denominator: 1 },
+        duration: { numerator: 1, denominator: 2 },
+        pitches: ["F4"],
+        positions: [{ course: 1, fret: 1, pitch: "F4", quality: "low_fret" as const }],
+        sourceEventIds: ["source.soprano.1"],
+        role: "principal_voice" as const,
+      },
+      {
+        id: "arrangement.greensleeves.event.2",
+        type: "note" as const,
+        measureId: "measure.greensleeves.1",
+        onset: { numerator: 1, denominator: 2 },
+        duration: { numerator: 1, denominator: 2 },
+        pitches: ["G4"],
+        positions: [{ course: 1, fret: 3, pitch: "G4", quality: "low_fret" as const }],
+        sourceEventIds: ["source.soprano.2"],
+        role: "principal_voice" as const,
+      },
+    ];
+    const deliverable = {
+      workspaceId: "workspace.greensleeves",
+      arrangementScoreId: "arrangement.greensleeves",
+      arrangementScoreVersion: 3,
+      arrangementFamilyId: "family.greensleeves",
+      arrangementSearchId: "search.greensleeves",
+      targetConfigurationId: "target.baroque-guitar",
+      targetConfiguration: {
+        id: "target.baroque-guitar",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf", "audio-preview"],
+      },
+      preservationPolicy: "faithful_reduction",
+      arrangementEvents: events,
+      transformationReport: [
+        {
+          id: "transformation.1",
+          sourceEventId: "source.soprano.1",
+          arrangementEventIds: [events[0].id],
+          classification: "transposed",
+          rationale: "Principal Voice retained in the target key.",
+        },
+      ],
+      preservationAudit: { status: "pass", targetIds: [], findings: [] },
+    } as unknown as GuidedDeliverable;
+    const context = buildScoreSelectionContext(
+      deliverable,
+      events.map((event) => event.id)
+    );
+    const prompt = selectionPrompt(context, "Why is this phrase awkward?");
+
+    expect(context).toMatchObject({
+      arrangementScoreId: "arrangement.greensleeves",
+      arrangementScoreVersion: 3,
+      preservationPolicy: "faithful_reduction",
+      eventIds: events.map((event) => event.id),
+      sourceEventIds: ["source.soprano.1", "source.soprano.2"],
+    });
+    expect(context.events.every((event) => event.role === "principal_voice")).toBe(true);
+    expect(prompt).toContain("Why is this phrase awkward?");
+    expect(prompt).toContain(events[0].id);
+    expect(prompt).toContain(events[1].id);
+    expect(prompt).toContain('"role": "principal_voice"');
   });
 });
 

@@ -1,6 +1,6 @@
 # Multi-object Selection Context for chat
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,12 +10,12 @@ Extend notation selection from one Arrangement Event to an ordered Selection Con
 
 ## Acceptance criteria
 
-- [ ] Shift-click and drag/range interaction can form and revise an ordered multi-event selection.
-- [ ] Selected notation is visibly distinct from playback highlighting.
-- [ ] Selection Context includes exact Arrangement Score version and stable object IDs plus concise musical summaries.
-- [ ] Ask Vellum injects structured context into the next model interaction without requiring the user to transcribe note names.
-- [ ] Clearing selection removes it from subsequent prompts.
-- [ ] A test selects the Greensleeves opening phrase and verifies that Principal Voice identity and all chosen events reach the prompt context.
+- [x] Shift-click and drag/range interaction can form and revise an ordered multi-event selection.
+- [x] Selected notation is visibly distinct from playback highlighting.
+- [x] Selection Context includes exact Arrangement Score version and stable object IDs plus concise musical summaries.
+- [x] Ask Vellum injects structured context into the next model interaction without requiring the user to transcribe note names.
+- [x] Clearing selection removes it from subsequent prompts.
+- [x] A test selects the Greensleeves opening phrase and verifies that Principal Voice identity and all chosen events reach the prompt context.
 
 ## Blocked by
 
