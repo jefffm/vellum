@@ -46,6 +46,18 @@ describe("WorkspaceStore", () => {
     expect(store.list()).toEqual([workspace]);
   });
 
+  it("renames locally and requires exact confirmation before recursive removal", () => {
+    const workspace = store.create({ title: "Draft title" });
+    expect(store.rename(workspace.id, "Greensleeves family")).toMatchObject({
+      id: workspace.id,
+      title: "Greensleeves family",
+    });
+    expect(() => store.remove(workspace.id, "Greensleeves family")).toThrow(/exact workspace id/i);
+    expect(store.get(workspace.id).title).toBe("Greensleeves family");
+    store.remove(workspace.id, workspace.id);
+    expect(store.list()).toEqual([]);
+  });
+
   it("migrates pre-Model-Action workspace manifests without losing existing links", () => {
     const id = "workspace.1111111111111111";
     const directory = path.join(rootDirectory, id);

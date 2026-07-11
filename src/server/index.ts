@@ -53,6 +53,9 @@ import {
   createWorkspaceCreateRoute,
   createWorkspaceGetRoute,
   createWorkspaceListRoute,
+  createWorkspaceNavigationRoute,
+  createWorkspaceRemoveRoute,
+  createWorkspaceRenameRoute,
 } from "./lib/workspace-route.js";
 import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
 import { createSourceImportRoute } from "./lib/source-import-route.js";
@@ -64,6 +67,7 @@ import { createFaithfulArrangementRoute } from "./lib/arrangement-workspace-rout
 import {
   createArrangementCompileRoute,
   createArrangementPreviewRoute,
+  createArrangementRestoreRoute,
   createArrangementScoreGetRoute,
 } from "./lib/arrangement-deliverable-route.js";
 import { createAnalysisCorrectionRoute, createAnalysisGetRoute } from "./lib/analysis-route.js";
@@ -195,6 +199,9 @@ export function createApiRouter(): Router {
   router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
+  router.get("/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute());
+  router.patch("/workspaces/:workspaceId", createWorkspaceRenameRoute());
+  router.delete("/workspaces/:workspaceId", createWorkspaceRemoveRoute());
   router.get(
     "/workspaces/:workspaceId/arrangement-families/:familyId",
     createArrangementFamilyGetRoute()
@@ -319,6 +326,10 @@ export function createApiRouter(): Router {
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId",
     createArrangementScoreGetRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/restore",
+    createArrangementRestoreRoute()
   );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/lineage",

@@ -1009,6 +1009,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   launcher.type = "button";
   launcher.textContent = "New arrangement";
   document.body.append(launcher);
+  installWorkspaceNavigator();
 
   const dialog = document.createElement("dialog");
   dialog.id = "guided-start";
@@ -1184,6 +1185,161 @@ export function installGuidedStart(options: GuidedStartOptions): void {
     localStorage.setItem("vellum.guided-start.seen", "true");
     dialog.showModal();
   }
+}
+
+type WorkspaceNavigation = {
+  workspace: { id: string; title: string; createdAt: string; updatedAt: string };
+  families: Array<{
+    id: string;
+    updatedAt: string;
+    arrangements: Array<{
+      id: string;
+      version: number;
+      parentArrangementScoreId?: string;
+      instrumentId: string;
+      targetConfigurationId: string;
+      branch?: { id: string; label: string };
+      auditStatus: string;
+      staleReason?: string;
+      deliverables: Array<{ id: string; kind: string; notationLayout: string; sha256: string }>;
+      createdAt: string;
+    }>;
+  }>;
+};
+
+export function installWorkspaceNavigator(): HTMLDialogElement {
+  document.querySelector("#vellum-workspace-navigator")?.remove();
+  document.querySelector("#workspace-navigator-launcher")?.remove();
+  const launcher = document.createElement("button");
+  launcher.id = "workspace-navigator-launcher";
+  launcher.type = "button";
+  launcher.textContent = "Projects";
+  const dialog = document.createElement("dialog");
+  dialog.id = "vellum-workspace-navigator";
+  dialog.className = "workspace-navigator";
+  const heading = document.createElement("h2");
+  heading.textContent = "Arrangement Workspaces";
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Open an exact immutable score version with its saved deliverables, literal preview, audit, and lineage.";
+  const status = document.createElement("p");
+  const content = document.createElement("div");
+  content.className = "workspace-navigation-list";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close";
+  close.addEventListener("click", () => dialog.close());
+  dialog.append(heading, explanation, status, content, close);
+  document.body.append(launcher, dialog);
+
+  const refresh = async () => {
+    status.textContent = "Loading local projects…";
+    content.replaceChildren();
+    const workspaces =
+      await api<Array<{ id: string; title: string; updatedAt: string }>>("/api/workspaces");
+    const navigation = await Promise.all(
+      [...workspaces]
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        .map((workspace) => api<WorkspaceNavigation>(`/api/workspaces/${workspace.id}/navigation`))
+    );
+    status.textContent = navigation.length
+      ? `${navigation.length} local workspace${navigation.length === 1 ? "" : "s"}`
+      : "No saved workspaces yet.";
+    for (const item of navigation) {
+      const workspace = document.createElement("section");
+      workspace.className = "workspace-navigation-item";
+      const title = document.createElement("h3");
+      title.textContent = item.workspace.title;
+      const meta = document.createElement("p");
+      meta.textContent = `${item.workspace.id} · updated ${new Date(item.workspace.updatedAt).toLocaleString()}`;
+      const rename = document.createElement("button");
+      rename.type = "button";
+      rename.textContent = "Rename";
+      rename.addEventListener("click", async () => {
+        const next = window.prompt("Workspace title", item.workspace.title)?.trim();
+        if (!next || next === item.workspace.title) return;
+        await api(`/api/workspaces/${item.workspace.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ title: next }),
+        });
+        await refresh();
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Remove local workspace";
+      remove.addEventListener("click", async () => {
+        if (
+          !window.confirm(
+            `Permanently remove “${item.workspace.title}” and every local version and deliverable?`
+          )
+        )
+          return;
+        await api(`/api/workspaces/${item.workspace.id}`, {
+          method: "DELETE",
+          body: JSON.stringify({ confirmation: item.workspace.id }),
+        });
+        if (localStorage.getItem("vellum.active-workspace") === item.workspace.id)
+          localStorage.removeItem("vellum.active-workspace");
+        await refresh();
+      });
+      workspace.append(title, meta, rename, remove);
+      for (const family of item.families) {
+        const familyDetails = document.createElement("details");
+        familyDetails.open = true;
+        const familySummary = document.createElement("summary");
+        const targets = new Set(family.arrangements.map((arrangement) => arrangement.instrumentId));
+        familySummary.textContent = `Arrangement Family · ${targets.size} target${targets.size === 1 ? "" : "s"} · ${family.arrangements.length} version${family.arrangements.length === 1 ? "" : "s"}`;
+        familyDetails.append(familySummary);
+        const arrangements = [...family.arrangements].sort(
+          (left, right) =>
+            left.instrumentId.localeCompare(right.instrumentId) || right.version - left.version
+        );
+        for (const arrangement of arrangements) {
+          const row = document.createElement("article");
+          row.className = "workspace-arrangement-version";
+          if (!arrangement.parentArrangementScoreId) row.classList.add("root-version");
+          const label = document.createElement("strong");
+          label.textContent = `${arrangement.instrumentId} · v${arrangement.version}${arrangement.branch ? ` · ${arrangement.branch.label}` : " · main line"}`;
+          const evidence = document.createElement("span");
+          evidence.textContent = [
+            `audit ${arrangement.auditStatus}`,
+            arrangement.staleReason ? `STALE: ${arrangement.staleReason}` : "current evidence",
+            `${arrangement.deliverables.length} saved deliverables`,
+            ...arrangement.deliverables.map(
+              (deliverable) => `${deliverable.kind} ${deliverable.sha256.slice(0, 10)}`
+            ),
+          ].join(" · ");
+          const open = document.createElement("button");
+          open.type = "button";
+          open.textContent = `Open exact v${arrangement.version}`;
+          open.addEventListener("click", () => {
+            localStorage.setItem("vellum.active-workspace", item.workspace.id);
+            document.dispatchEvent(
+              new CustomEvent("vellum-open-arrangement-version", {
+                detail: {
+                  workspaceId: item.workspace.id,
+                  arrangementScoreId: arrangement.id,
+                  comparisonArrangementScoreId: arrangement.parentArrangementScoreId,
+                },
+              })
+            );
+            dialog.close();
+          });
+          row.append(label, evidence, open);
+          familyDetails.append(row);
+        }
+        workspace.append(familyDetails);
+      }
+      content.append(workspace);
+    }
+  };
+  launcher.addEventListener("click", () => {
+    dialog.showModal();
+    void refresh().catch((error: unknown) => {
+      status.textContent = error instanceof Error ? error.message : "Could not load projects.";
+    });
+  });
+  return dialog;
 }
 
 type RecoverableModelAction = {

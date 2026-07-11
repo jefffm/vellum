@@ -18,6 +18,7 @@ import {
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
 } from "./arrangement-search-route.js";
+import { createWorkspaceNavigationRoute } from "./workspace-route.js";
 
 describe("Greensleeves faithful arrangement service", () => {
   let rootDirectory: string;
@@ -221,6 +222,13 @@ describe("Greensleeves faithful arrangement service", () => {
       normalizedScoreId: omr.normalizedScore.id,
       targetConfigurationId: "target.classical-guitar",
     });
+    expect(
+      new Set([
+        result.arrangementScore.arrangementFamilyId,
+        luteResult.arrangementScore.arrangementFamilyId,
+        classicalResult.arrangementScore.arrangementFamilyId,
+      ]).size
+    ).toBe(1);
     expect(classicalResult.analysisRecordId).toBe(result.analysisRecordId);
     expect(classicalResult.arrangementScore).toMatchObject({
       id: "arrangement.99999999-9999-4999-8999-999999999999",
@@ -254,6 +262,7 @@ describe("Greensleeves faithful arrangement service", () => {
       "19191919-1919-4919-8919-191919191919",
       "20202020-2020-4020-8020-202020202020",
       "21212121-2121-4121-8121-212121212121",
+      "22222222-2222-4222-8222-222222222223",
     ];
     const lineage = new LineageService({
       store,
@@ -493,6 +502,7 @@ describe("Greensleeves faithful arrangement service", () => {
       "/api/workspaces/:workspaceId/arrangement-searches/:searchId",
       createArrangementSearchGetRoute({ store, service })
     );
+    app.get("/api/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute(store));
     app.get(
       "/api/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview",
       createArrangementCandidatePreviewRoute({ store, service })
@@ -518,6 +528,20 @@ describe("Greensleeves faithful arrangement service", () => {
     };
     expect(preview.ok).toBe(true);
     expect(preview.data.events.length).toBeGreaterThan(0);
+    const navigationResponse = await fetch(
+      `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/navigation`
+    );
+    const navigation = (await navigationResponse.json()) as {
+      ok: boolean;
+      error?: string;
+      data: { families: Array<{ arrangements: Array<{ instrumentId: string }> }> };
+    };
+    if (!navigation.ok) throw new Error(navigation.error);
+    expect(navigation.ok).toBe(true);
+    expect(navigation.data.families).toHaveLength(1);
+    expect(navigation.data.families[0]?.arrangements.map((item) => item.instrumentId)).toEqual(
+      expect.arrayContaining(["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"])
+    );
     const correctionResponse = await fetch(
       `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/analyses/${result.analysis.id}/claims/${principalClaim.id}/corrections`,
       {

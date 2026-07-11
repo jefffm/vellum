@@ -542,6 +542,64 @@ chat-panel > div > div:has(agent-interface) {
   padding: 0.55rem 0.8rem;
 }
 
+#workspace-navigator-launcher {
+  position: fixed;
+  right: 8.4rem;
+  bottom: 1.25rem;
+  z-index: 20;
+}
+
+.workspace-navigator {
+  width: min(64rem, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid #cfc8ae;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: #fffef8;
+}
+
+.workspace-navigation-list,
+.workspace-navigation-item {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.workspace-navigation-item {
+  padding: 0.9rem;
+  border: 1px solid #ddd4b7;
+  border-radius: 0.55rem;
+  background: #fff;
+}
+
+.workspace-navigation-item h3,
+.workspace-navigation-item p {
+  margin: 0;
+}
+
+.workspace-arrangement-version {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.8fr) minmax(18rem, 2fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  margin: 0.45rem 0 0 1rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 0.2rem solid #9b8b57;
+  background: #faf8ef;
+}
+
+.workspace-arrangement-version span {
+  color: #625744;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .workspace-arrangement-version {
+    grid-template-columns: 1fr;
+  }
+}
+
 #guided-start {
   width: min(42rem, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);

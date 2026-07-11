@@ -6,6 +6,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  rmSync,
   renameSync,
   writeFileSync,
 } from "node:fs";
@@ -130,6 +131,27 @@ export class WorkspaceStore {
     });
     this.writeWorkspace(updated);
     return updated;
+  }
+
+  rename(workspaceId: string, title: string): ArrangementWorkspace {
+    const workspace = this.get(workspaceId);
+    const trimmed = title.trim();
+    if (!trimmed) throw new ApiRouteError("Workspace title cannot be empty", 400);
+    const updated = Value.Decode(ArrangementWorkspaceSchema, {
+      ...workspace,
+      title: trimmed,
+      updatedAt: this.now().toISOString(),
+    });
+    this.writeWorkspace(updated);
+    return updated;
+  }
+
+  remove(workspaceId: string, confirmation: string): void {
+    const workspace = this.get(workspaceId);
+    if (confirmation !== workspace.id) {
+      throw new ApiRouteError("Workspace removal requires its exact workspace id", 400);
+    }
+    rmSync(this.workspaceDirectory(workspaceId), { recursive: true, force: false });
   }
 
   get(workspaceId: string): ArrangementWorkspace {

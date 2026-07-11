@@ -10,6 +10,7 @@ import { engrave } from "./engrave.js";
 import { SubprocessRunner } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { persistDeliverable } from "./deliverable-service.js";
+import type { Deliverable } from "../../lib/music-domain.js";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -42,6 +43,52 @@ export function createArrangementScoreGetRoute(store = new WorkspaceStore()): Re
     try {
       const { workspaceId, arrangementId } = Value.Decode(ParamsSchema, request.params);
       response.json({ ok: true, data: store.getArrangementScore(workspaceId, arrangementId) });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+export function createArrangementRestoreRoute(store = new WorkspaceStore()): RequestHandler {
+  return (request, response, next) => {
+    try {
+      const { workspaceId, arrangementId } = Value.Decode(ParamsSchema, request.params);
+      const workspace = store.get(workspaceId);
+      const deliverables = workspace.deliverableIds
+        .map((id) => store.getDeliverable(workspaceId, id))
+        .filter((item) => item.arrangementScoreId === arrangementId);
+      const byKind = new Map(deliverables.map((item) => [item.kind, item]));
+      const required = ["lilypond", "browser_preview", "audio_preview"] as const;
+      if (required.some((kind) => !byKind.has(kind))) {
+        response.status(409).json({
+          ok: false,
+          error: "This Arrangement Score version does not yet have a complete saved projection set",
+        });
+        return;
+      }
+      const text = (kind: Deliverable["kind"]) =>
+        store.readDeliverableContent(workspaceId, byKind.get(kind)!.id).toString("utf8");
+      const base64 = (kind: Deliverable["kind"]) =>
+        byKind.has(kind)
+          ? store.readDeliverableContent(workspaceId, byKind.get(kind)!.id).toString("base64")
+          : undefined;
+      response.json({
+        ok: true,
+        data: {
+          compiled: {
+            source: text("lilypond"),
+            svg: text("browser_preview"),
+            pdf: base64("pdf"),
+            midi: base64("midi"),
+            errors: [],
+            deliverables: deliverables.filter((item) => item.kind !== "audio_preview"),
+          },
+          preview: {
+            ...(JSON.parse(text("audio_preview")) as object),
+            deliverable: byKind.get("audio_preview")!,
+          },
+        },
+      });
     } catch (error) {
       next(error);
     }

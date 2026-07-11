@@ -10,6 +10,9 @@ import {
   createWorkspaceCreateRoute,
   createWorkspaceGetRoute,
   createWorkspaceListRoute,
+  createWorkspaceNavigationRoute,
+  createWorkspaceRemoveRoute,
+  createWorkspaceRenameRoute,
 } from "./workspace-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
@@ -27,6 +30,9 @@ describe("workspace API routes", () => {
     app.get("/api/workspaces", createWorkspaceListRoute(store));
     app.post("/api/workspaces", createWorkspaceCreateRoute(store));
     app.get("/api/workspaces/:workspaceId", createWorkspaceGetRoute(store));
+    app.get("/api/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute(store));
+    app.patch("/api/workspaces/:workspaceId", createWorkspaceRenameRoute(store));
+    app.delete("/api/workspaces/:workspaceId", createWorkspaceRemoveRoute(store));
     app.post(
       "/api/workspaces/:workspaceId/sources",
       express.raw({ type: "application/pdf", limit: "128mb" }),
@@ -112,6 +118,38 @@ describe("workspace API routes", () => {
     const json = (await response.json()) as ApiEnvelope<unknown>;
     expect(response.status).toBe(400);
     expect(json.ok).toBe(false);
+  });
+
+  it("navigates, renames, and safely removes a local workspace", async () => {
+    const created = await post("/api/workspaces", { title: "Untitled" });
+    const workspace = (await created.json()) as ApiEnvelope<{ id: string }>;
+    if (!workspace.ok) throw new Error(workspace.error);
+    const navigation = await fetch(`${serverUrl()}/api/workspaces/${workspace.data.id}/navigation`);
+    expect(await navigation.json()).toMatchObject({
+      ok: true,
+      data: { workspace: { id: workspace.data.id, title: "Untitled" }, families: [] },
+    });
+    const renamed = await fetch(`${serverUrl()}/api/workspaces/${workspace.data.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Greensleeves" }),
+    });
+    expect(await renamed.json()).toMatchObject({
+      ok: true,
+      data: { id: workspace.data.id, title: "Greensleeves" },
+    });
+    const refused = await fetch(`${serverUrl()}/api/workspaces/${workspace.data.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation: "Greensleeves" }),
+    });
+    expect(refused.status).toBe(400);
+    const removed = await fetch(`${serverUrl()}/api/workspaces/${workspace.data.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation: workspace.data.id }),
+    });
+    expect(await removed.json()).toMatchObject({ ok: true, data: { removed: true } });
   });
 
   async function post(route: string, body: unknown): Promise<Response> {

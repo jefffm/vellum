@@ -473,20 +473,13 @@ async function loadGuidedDeliverable(
       )
     )
   );
-  const [compiled, preview, analysis] = await Promise.all([
-    browserApi<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
-      `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/compile`,
-      { method: "POST" }
-    ),
-    browserApi<
-      import("./lib/audio-preview.js").AudioPreview & {
-        deliverable: GuidedDeliverable["deliverables"][number];
-      }
-    >(`/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`),
+  const [projections, analysis] = await Promise.all([
+    loadSavedProjections(workspaceId, arrangementId),
     browserApi<GuidedDeliverable["analysis"]>(
       `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
     ),
   ]);
+  const { compiled, preview } = projections;
   return {
     workspaceId,
     arrangementScoreId: arrangementId,
@@ -510,6 +503,30 @@ async function loadGuidedDeliverable(
     deliverables: [...compiled.deliverables, preview.deliverable],
     candidates,
   };
+}
+
+async function loadSavedProjections(workspaceId: string, arrangementId: string) {
+  try {
+    return await browserApi<{
+      compiled: CompileResult & { deliverables: GuidedDeliverable["deliverables"] };
+      preview: import("./lib/audio-preview.js").AudioPreview & {
+        deliverable: GuidedDeliverable["deliverables"][number];
+      };
+    }>(`/api/workspaces/${workspaceId}/arrangements/${arrangementId}/restore`);
+  } catch {
+    const [compiled, preview] = await Promise.all([
+      browserApi<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
+        `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/compile`,
+        { method: "POST" }
+      ),
+      browserApi<
+        import("./lib/audio-preview.js").AudioPreview & {
+          deliverable: GuidedDeliverable["deliverables"][number];
+        }
+      >(`/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`),
+    ]);
+    return { compiled, preview };
+  }
 }
 
 function installArrangementVersionBridge(panel: HTMLElement): void {
@@ -546,11 +563,15 @@ function installArrangementVersionBridge(panel: HTMLElement): void {
       event as CustomEvent<{
         arrangementScoreId?: unknown;
         comparisonArrangementScoreId?: unknown;
+        workspaceId?: unknown;
       }>
     ).detail;
     const arrangementId = detail?.arrangementScoreId;
     const comparisonId = detail?.comparisonArrangementScoreId;
-    const workspaceId = new URL(window.location.href).searchParams.get("workspace");
+    const workspaceId =
+      typeof detail?.workspaceId === "string"
+        ? detail.workspaceId
+        : new URL(window.location.href).searchParams.get("workspace");
     if (typeof arrangementId === "string" && workspaceId)
       void open(
         workspaceId,

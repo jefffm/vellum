@@ -6,6 +6,7 @@ import {
   describeArrangementEvent,
   installNotationSelection,
   installSourceLineageWorkspace,
+  installWorkspaceNavigator,
   installAudioPreviewControls,
   highlightLineage,
   openEditBatchDialog,
@@ -217,6 +218,19 @@ describe("polyphonic Score-Anchored Review", () => {
       "event.tenor": "tenor",
       "event.bass": "bass",
     });
+  });
+});
+
+describe("Arrangement Workspace navigation", () => {
+  it("shows exact family versions, saved projections, stale evidence, rename, and safe removal", () => {
+    const implementation = installWorkspaceNavigator.toString();
+    expect(implementation).toContain("/navigation");
+    expect(implementation).toContain("Open exact v");
+    expect(implementation).toContain("saved deliverables");
+    expect(implementation).toContain("STALE:");
+    expect(implementation).toContain('method: "PATCH"');
+    expect(implementation).toContain('method: "DELETE"');
+    expect(implementation).toContain("vellum-open-arrangement-version");
   });
 });
 

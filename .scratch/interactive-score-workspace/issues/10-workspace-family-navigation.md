@@ -1,6 +1,6 @@
 # Arrangement Workspace and Family navigation
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Add a local-first project navigator for recent Arrangement Workspaces, Arrangeme
 
 ## Acceptance criteria
 
-- [ ] Recent local workspaces can be listed, opened, renamed, and safely removed with confirmation.
-- [ ] Family siblings, versions, branches, audit status, and stale status are visible.
-- [ ] Opening a version restores its exact content-addressed Deliverables and literal Audio Preview.
-- [ ] Current and preserved prior versions cannot be confused or silently overwritten.
-- [ ] Greensleeves baroque-guitar, lute, and classical-guitar siblings are navigable under one family where applicable.
+- [x] Recent local workspaces can be listed, opened, renamed, and safely removed with confirmation.
+- [x] Family siblings, versions, branches, audit status, and stale status are visible.
+- [x] Opening a version restores its exact content-addressed Deliverables and literal Audio Preview.
+- [x] Current and preserved prior versions cannot be confused or silently overwritten.
+- [x] Greensleeves baroque-guitar, lute, and classical-guitar siblings are navigable under one family where applicable.
 
 ## Blocked by
 
