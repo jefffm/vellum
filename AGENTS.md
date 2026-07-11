@@ -1,5 +1,19 @@
 # Vellum Coding Agent Prompt
 
+## Agent skills
+
+### Issue tracker
+
+Current implementation waves use local Markdown tracer bullets under `.scratch/`; do not create beads unless the Owner explicitly requests them. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Local tracer bullets use the canonical `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix` states. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Vellum is a single-context repository governed by `CONTEXT.md` and the accepted decisions in `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Current Wave: Alfabeto Pipeline Integration (epic vellum-chj)
 
 ### Goal
