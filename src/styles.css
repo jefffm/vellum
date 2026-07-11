@@ -640,6 +640,45 @@ chat-panel > div > div:has(agent-interface) {
   gap: 0.5rem;
 }
 
+.audio-preview-controls {
+  flex-basis: 100%;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.audio-transport,
+.audio-practice-controls,
+.playback-part-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.audio-preview-controls > [data-audio-progress] {
+  width: 100%;
+}
+
+.audio-practice-controls input[type="number"] {
+  width: 4.5rem;
+}
+
+.playback-part-mixer {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.playback-part-row > span {
+  min-width: 10rem;
+  color: #202124;
+}
+
+.playback-active {
+  color: #202124 !important;
+  background: #fff1cf;
+  outline: 2px solid #9a6a16;
+}
+
 .candidate-comparison-controls {
   display: grid;
   grid-template-columns: minmax(12rem, auto) auto;
@@ -649,13 +688,13 @@ chat-panel > div > div:has(agent-interface) {
 
 .analysis-summary {
   flex-basis: 100%;
-  color: var(--ink-muted);
+  color: #5f5f58;
   font-size: 0.78rem;
 }
 
 .analysis-summary summary {
   cursor: pointer;
-  color: var(--ink);
+  color: #202124;
 }
 
 .analysis-summary ul {
@@ -666,7 +705,7 @@ chat-panel > div > div:has(agent-interface) {
 .analysis-ambiguity {
   margin-top: 0.5rem;
   padding: 0.5rem;
-  border-left: 2px solid var(--border);
+  border-left: 2px solid #d7d7d2;
 }
 
 .analysis-ambiguity.critical {
@@ -681,7 +720,7 @@ chat-panel > div > div:has(agent-interface) {
   flex-basis: 100%;
   max-height: 18rem;
   overflow: auto;
-  color: var(--ink-muted);
+  color: #5f5f58;
   font-size: 0.72rem;
 }
 
@@ -689,8 +728,8 @@ chat-panel > div > div:has(agent-interface) {
   position: sticky;
   top: 0;
   cursor: pointer;
-  color: var(--ink);
-  background: var(--paper);
+  color: #202124;
+  background: #ffffff;
 }
 
 .transformation-report ol {

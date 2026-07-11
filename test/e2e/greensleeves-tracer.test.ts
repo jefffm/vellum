@@ -190,6 +190,13 @@ describe("Greensleeves PDF tracer bullet", () => {
       (event) => event.principalVoiceSourceEventId
     );
     expect(audioPreview.synthesis).toBe("basic-oscillator");
+    expect(audioPreview.mode).toBe("literal");
+    expect(audioPreview.performedForm.traversalDecisions).toEqual([
+      "Play written measures once in score order.",
+    ]);
+    expect(new Set(audioPreview.events.map((event) => event.occurrenceId)).size).toBe(
+      audioPreview.events.length
+    );
     expect(audioPreview.events.filter((event) => event.part === "principal-voice")).toHaveLength(
       protectedPrincipalEvents.length
     );
@@ -200,6 +207,16 @@ describe("Greensleeves PDF tracer bullet", () => {
         )
       ).size
     ).toBe(audioPreview.events.length);
+    expect(
+      audioPreview.events
+        .filter((event) => event.part === "principal-voice")
+        .every(
+          (event) =>
+            event.sourceEventIds.length > 0 &&
+            event.transformationEntryIds.length > 0 &&
+            event.auditTargetIds.length > 0
+        )
+    ).toBe(true);
     const luteAudioPreview = buildAudioPreview(luteArranged.arrangementScore, omr.normalizedScore);
     expect(
       luteAudioPreview.events.filter((event) => event.part === "principal-voice")

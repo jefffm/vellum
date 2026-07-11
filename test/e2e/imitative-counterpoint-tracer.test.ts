@@ -90,6 +90,10 @@ describe("three-voice imitative counterpoint tracer", () => {
     for (const part of omr.normalizedScore.parts) {
       expect(preview.events.some((event) => event.part === `voice:${part.id}`)).toBe(true);
     }
+    expect(preview.events.every((event) => event.auditTargetIds.length > 0)).toBe(true);
+    expect(new Set(preview.events.map((event) => event.occurrenceId)).size).toBe(
+      preview.events.length
+    );
 
     const lilypond = imitativeArrangementToLilyPond(arranged.arrangementScore, omr.normalizedScore);
     expect(lilypond).toContain('\\include "instruments/renaissance-lute-6.ily"');

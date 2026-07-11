@@ -98,6 +98,13 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     expect(preview.events.filter((event) => event.part === "principal-voice")).toHaveLength(5);
     expect(preview.events.filter((event) => event.part === "continuo-foundation")).toHaveLength(4);
     expect(preview.events.filter((event) => event.part === "realization")).toHaveLength(11);
+    expect(
+      preview.events
+        .filter((event) => event.part === "realization")
+        .every(
+          (event) => event.transformationEntryIds.length > 0 && event.auditTargetIds.length > 0
+        )
+    ).toBe(true);
 
     const lilypond = continuoArrangementToLilyPond(arranged.arrangementScore, omr.normalizedScore);
     expect(lilypond).toContain('\\new Voice = "principalVoice"');

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ArrangementScore, NormalizedScore } from "./music-domain.js";
-import { buildAudioPreview } from "./audio-preview.js";
+import { buildAudioPreview, skipRepeatedOccurrences } from "./audio-preview.js";
 
 describe("buildAudioPreview", () => {
   it("uses arrangement pitches once and separates the protected top voice", () => {
@@ -80,5 +80,74 @@ describe("buildAudioPreview", () => {
     ]);
     expect(preview.events.filter((event) => event.part === "continuo-foundation")).toHaveLength(1);
     expect(preview.events.filter((event) => event.part === "realization")).toHaveLength(2);
+  });
+
+  it("creates distinct Playback Occurrences for repeats and a condensed practice projection", () => {
+    const score = {
+      measures: [
+        { id: "measure.1", duration: { numerator: 1, denominator: 1 } },
+        { id: "measure.2", duration: { numerator: 1, denominator: 1 } },
+      ],
+      parts: [{ id: "part.one", name: "Voice" }],
+      performedForm: {
+        id: "performed-form.test",
+        measureOccurrences: [
+          {
+            id: "occurrence.measure-1.1",
+            measureId: "measure.1",
+            iteration: 1,
+            repeatIteration: 1,
+          },
+          {
+            id: "occurrence.measure-2.1",
+            measureId: "measure.2",
+            iteration: 1,
+            repeatIteration: 1,
+          },
+          {
+            id: "occurrence.measure-1.2",
+            measureId: "measure.1",
+            iteration: 2,
+            repeatIteration: 2,
+          },
+          {
+            id: "occurrence.measure-2.2",
+            measureId: "measure.2",
+            iteration: 2,
+            repeatIteration: 2,
+          },
+        ],
+        traversalDecisions: ["Repeat measures 1-2 twice."],
+      },
+    } as unknown as NormalizedScore;
+    const arrangement = {
+      transformationReport: [],
+      events: [
+        {
+          id: "arrangement-event.1",
+          type: "note",
+          role: "source_voice",
+          voiceId: "part.one",
+          measureId: "measure.1",
+          onset: { numerator: 0, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitches: ["C4"],
+          positions: [],
+          sourceEventIds: ["event.1"],
+        },
+      ],
+    } as unknown as ArrangementScore;
+    const preview = buildAudioPreview(arrangement, score, 60);
+    expect(preview.durationSeconds).toBe(4);
+    expect(preview.events.map((event) => event.occurrenceId)).toEqual([
+      "playback-occurrence.occurrence.measure-1.1.arrangement-event.1.1",
+      "playback-occurrence.occurrence.measure-1.2.arrangement-event.1.1",
+    ]);
+    expect(preview.events.map((event) => event.startSeconds)).toEqual([0, 2]);
+    const condensed = skipRepeatedOccurrences(preview);
+    expect(condensed.durationSeconds).toBe(2);
+    expect(condensed.events).toHaveLength(1);
+    expect(condensed.performedForm.skipRepeats).toBe(true);
+    expect(score.performedForm?.measureOccurrences).toHaveLength(4);
   });
 });

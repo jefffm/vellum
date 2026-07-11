@@ -18,7 +18,16 @@ export function buildCompleteTransformationReport(
     analysis.preservationTargets.find((target) => target.kind === "principal_voice")?.eventIds ?? []
   );
   const eventEntries = score.events.map((sourceEvent, index) =>
-    sourceTransformation(sourceEvent, arrangedEvents, semitones, index, principalEventIds)
+    sourceTransformation(
+      sourceEvent,
+      arrangedEvents,
+      semitones,
+      index,
+      principalEventIds,
+      analysis.preservationTargets
+        .filter((target) => target.eventIds.includes(sourceEvent.id))
+        .map((target) => target.id)
+    )
   );
   const generatedEntries = arrangedEvents
     .filter((event) => event.role === "realization" || event.sourceEventIds.length === 0)
@@ -47,6 +56,7 @@ export function buildCompleteTransformationReport(
         entryType: "relationship" as const,
         sourceEventIds: target.eventIds,
         sourceRelationshipId: target.id,
+        preservationTargetIds: [target.id],
         relationshipType: target.relationshipType,
         sourceEventGroups: target.eventGroups,
         arrangementEventIds: descendants.map((event) => event.id),
@@ -77,7 +87,8 @@ function sourceTransformation(
   arrangedEvents: ArrangementEvent[],
   semitones: number,
   index: number,
-  principalEventIds: Set<string>
+  principalEventIds: Set<string>,
+  preservationTargetIds: string[]
 ): TransformationEntry {
   const descendants = arrangedEvents.filter((event) => event.sourceEventIds.includes(source.id));
   const base = {
@@ -85,6 +96,7 @@ function sourceTransformation(
     entryType: "event" as const,
     sourceEventId: source.id,
     sourceEventIds: [source.id],
+    preservationTargetIds,
     arrangementEventIds: descendants.map((event) => event.id),
   };
   if (descendants.length === 0) {

@@ -33,6 +33,7 @@ import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
   installAnalysisSummary,
+  installAuditSummary,
   installCandidateComparisonControls,
   installTransformationReport,
   installGuidedStart,
@@ -419,6 +420,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     arrangementSearchId?: string;
     targetConfiguration: { id: string; instrumentId: string };
     transformationReport: GuidedDeliverable["transformationReport"];
+    preservationAudit: GuidedDeliverable["preservationAudit"];
   };
   const arrangement = await browserApi<StoredArrangement>(
     `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
@@ -454,6 +456,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       label: arrangement.targetConfiguration.instrumentId,
       analysis,
       transformationReport: arrangement.transformationReport,
+      preservationAudit: arrangement.preservationAudit,
       compiled,
       preview,
       candidates,
@@ -492,6 +495,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
     }
     installAudioPreviewControls(panel, deliverable.preview);
     installAnalysisSummary(panel, deliverable);
+    installAuditSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);
   };

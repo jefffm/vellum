@@ -451,6 +451,34 @@ export const TranscriptionCorrectionSchema = Type.Object(
 
 export type TranscriptionCorrection = Static<typeof TranscriptionCorrectionSchema>;
 
+export const PerformedMeasureOccurrenceSchema = Type.Object(
+  {
+    id: IdSchema,
+    measureId: IdSchema,
+    iteration: Type.Integer({ minimum: 1 }),
+    repeatIteration: Type.Optional(Type.Integer({ minimum: 1 })),
+    ending: Type.Optional(Type.Integer({ minimum: 1 })),
+    jump: Type.Optional(
+      Type.Union([
+        Type.Literal("da_capo"),
+        Type.Literal("dal_segno"),
+        Type.Literal("to_coda"),
+        Type.Literal("fine"),
+      ])
+    ),
+  },
+  { additionalProperties: false }
+);
+
+export const PerformedFormSchema = Type.Object(
+  {
+    id: IdSchema,
+    measureOccurrences: Type.Array(PerformedMeasureOccurrenceSchema, { minItems: 1 }),
+    traversalDecisions: Type.Array(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false }
+);
+
 export const NormalizedScoreSchema = Type.Object(
   {
     id: IdSchema,
@@ -462,6 +490,7 @@ export const NormalizedScoreSchema = Type.Object(
     parts: Type.Array(ScorePartSchema, { minItems: 1 }),
     measures: Type.Array(ScoreMeasureSchema, { minItems: 1 }),
     events: Type.Array(ScoreEventSchema, { minItems: 1 }),
+    performedForm: Type.Optional(PerformedFormSchema),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }
@@ -676,6 +705,7 @@ export const TransformationEntrySchema = Type.Object(
     sourceEventId: Type.Optional(IdSchema),
     sourceEventIds: Type.Optional(Type.Array(IdSchema)),
     sourceRelationshipId: Type.Optional(IdSchema),
+    preservationTargetIds: Type.Optional(Type.Array(IdSchema)),
     relationshipType: Type.Optional(Type.String({ minLength: 1 })),
     sourceEventGroups: Type.Optional(Type.Array(Type.Array(IdSchema))),
     arrangementEventIds: Type.Array(IdSchema),

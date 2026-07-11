@@ -1,4 +1,9 @@
-import type { AudioPreview, PlaybackPart } from "./lib/audio-preview.js";
+import {
+  skipRepeatedOccurrences,
+  type AudioPreview,
+  type PlaybackEvent,
+  type PlaybackPart,
+} from "./lib/audio-preview.js";
 import type {
   ScoreEvent,
   TargetConfiguration,
@@ -10,6 +15,9 @@ import type { CompileResult } from "./types.js";
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
 };
+
+const audioSeekHandlers = new WeakMap<HTMLElement, EventListener>();
+const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
 
 export type GuidedDeliverable = {
   workspaceId: string;
@@ -23,6 +31,7 @@ export type GuidedDeliverable = {
     claims: Array<{
       id: string;
       statement: string;
+      subjectIds?: string[];
       basis: string;
       confidence: number;
       alternatives?: Array<{
@@ -51,6 +60,11 @@ export type GuidedDeliverable = {
     classification: string;
     rationale: string;
   }>;
+  preservationAudit: {
+    status: "pass" | "pass_with_exceptions" | "fail";
+    targetIds: string[];
+    findings: Array<{ targetId: string; code: string; message: string; severity: string }>;
+  };
   compiled: CompileResult;
   preview: AudioPreview;
   candidates: Array<{
@@ -189,6 +203,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           arrangementScore: {
             id: string;
             transformationReport: GuidedDeliverable["transformationReport"];
+            preservationAudit: GuidedDeliverable["preservationAudit"];
           };
         }>(`/api/workspaces/${workspace.id}/arrangements`, {
           method: "POST",
@@ -215,6 +230,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           label: targetLabel(target.id),
           analysis: arranged.analysis,
           transformationReport: arranged.arrangementScore.transformationReport,
+          preservationAudit: arranged.arrangementScore.preservationAudit,
           compiled,
           preview,
           candidates: arranged.candidates,
@@ -326,31 +342,182 @@ function recoveryButton(label: string, action: () => Promise<void>): HTMLButtonE
 export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPreview): void {
   const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
   if (!header) return;
+  audioPlaybackCleanups.get(panel)?.();
+  audioPlaybackCleanups.delete(panel);
   header.querySelector(".audio-preview-controls")?.remove();
   const controls = document.createElement("div");
   controls.className = "audio-preview-controls";
   controls.innerHTML = `
-    <label>Audio Preview
-      <select>${preview.parts.map((part) => `<option value="${part.id}">${part.label}</option>`).join("")}</select>
-    </label>
-    <button type="button" data-audio-play>▶ Play</button>
-    <button type="button" data-audio-stop disabled>■ Stop</button>
+    <div class="audio-transport">
+      <strong>Audio Preview</strong>
+      <button type="button" data-audio-play>▶ Play</button>
+      <button type="button" data-audio-pause disabled>Ⅱ Pause</button>
+      <button type="button" data-audio-stop disabled>■ Stop</button>
+      <output data-audio-time>0:00 / ${formatTime(preview.durationSeconds)}</output>
+    </div>
+    <input data-audio-progress aria-label="Playback position" type="range" min="0" max="${preview.durationSeconds}" value="0" step="0.01">
+    <div class="audio-practice-controls">
+      <label>Speed <select data-audio-speed><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></label>
+      <label>Volume <input data-audio-volume type="range" min="0" max="1" value="0.35" step="0.01"></label>
+      <label><input data-audio-skip-repeats type="checkbox"> Skip repeats</label>
+      <label>Loop <input data-loop-start aria-label="Loop start" type="number" min="0" max="${preview.durationSeconds}" value="0" step="0.1">–<input data-loop-end aria-label="Loop end" type="number" min="0" max="${preview.durationSeconds}" value="${preview.durationSeconds.toFixed(1)}" step="0.1"> s</label>
+      <button type="button" data-practice-reset>Reset practice controls</button>
+    </div>
+    <div class="playback-part-mixer" aria-label="Playback parts"></div>
   `;
   header.append(controls);
-  let stopPlayback: (() => void) | undefined;
+  let activePreview = preview;
+  let playback: PreviewPlayback | undefined;
+  let position = 0;
   const play = controls.querySelector<HTMLButtonElement>("[data-audio-play]")!;
+  const pause = controls.querySelector<HTMLButtonElement>("[data-audio-pause]")!;
   const stop = controls.querySelector<HTMLButtonElement>("[data-audio-stop]")!;
-  play.addEventListener("click", () => {
-    stopPlayback?.();
-    const part = controls.querySelector<HTMLSelectElement>("select")!.value as PlaybackPart;
-    stopPlayback = playPreview(preview, part, () => {
-      play.disabled = false;
-      stop.disabled = true;
+  const progress = controls.querySelector<HTMLInputElement>("[data-audio-progress]")!;
+  const time = controls.querySelector<HTMLOutputElement>("[data-audio-time]")!;
+  const speed = controls.querySelector<HTMLSelectElement>("[data-audio-speed]")!;
+  const volume = controls.querySelector<HTMLInputElement>("[data-audio-volume]")!;
+  const skipRepeats = controls.querySelector<HTMLInputElement>("[data-audio-skip-repeats]")!;
+  const loopStart = controls.querySelector<HTMLInputElement>("[data-loop-start]")!;
+  const loopEnd = controls.querySelector<HTMLInputElement>("[data-loop-end]")!;
+  const mixer = controls.querySelector<HTMLElement>(".playback-part-mixer")!;
+  const partState = new Map<
+    Exclude<PlaybackPart, "full">,
+    { mute: boolean; solo: boolean; level: number }
+  >();
+  for (const part of preview.parts.filter((item) => item.id !== "full")) {
+    const id = part.id as Exclude<PlaybackPart, "full">;
+    partState.set(id, { mute: false, solo: false, level: 1 });
+    const row = document.createElement("div");
+    row.className = "playback-part-row";
+    row.innerHTML = `<span>${part.label}</span><label><input type="checkbox" data-part-mute> Mute</label><label><input type="checkbox" data-part-solo> Solo</label><label>Level <input type="range" min="0" max="1" value="1" step="0.01" data-part-level></label>`;
+    row.querySelector<HTMLInputElement>("[data-part-mute]")!.addEventListener("change", (event) => {
+      partState.get(id)!.mute = (event.currentTarget as HTMLInputElement).checked;
     });
+    row.querySelector<HTMLInputElement>("[data-part-solo]")!.addEventListener("change", (event) => {
+      partState.get(id)!.solo = (event.currentTarget as HTMLInputElement).checked;
+    });
+    row.querySelector<HTMLInputElement>("[data-part-level]")!.addEventListener("input", (event) => {
+      partState.get(id)!.level = Number((event.currentTarget as HTMLInputElement).value);
+    });
+    mixer.append(row);
+  }
+  const updatePosition = (next: number, activeEvents: PlaybackEvent[] = []) => {
+    position = next;
+    progress.value = String(next);
+    time.value = `${formatTime(next)} / ${formatTime(activePreview.durationSeconds)}`;
+    highlightLineage(panel, activeEvents);
+  };
+  play.addEventListener("click", () => {
+    playback?.stop(false);
+    playback = playPreview(activePreview, {
+      fromSeconds: position,
+      speed: Number(speed.value),
+      volume: Number(volume.value),
+      loopStart: Number(loopStart.value),
+      loopEnd: Number(loopEnd.value),
+      partState,
+      onProgress: updatePosition,
+      onEnded: () => {
+        audioPlaybackCleanups.delete(panel);
+        if (Number(loopEnd.value) < activePreview.durationSeconds) {
+          updatePosition(Number(loopStart.value));
+          playback = undefined;
+          play.disabled = false;
+          pause.disabled = true;
+          stop.disabled = false;
+          play.click();
+          return;
+        }
+        updatePosition(0);
+        playback = undefined;
+        play.disabled = false;
+        pause.disabled = true;
+        stop.disabled = true;
+      },
+    });
+    audioPlaybackCleanups.set(panel, () => playback?.stop(false));
     play.disabled = true;
+    pause.disabled = false;
     stop.disabled = false;
   });
-  stop.addEventListener("click", () => stopPlayback?.());
+  pause.addEventListener("click", () => {
+    playback?.stop(true);
+    playback = undefined;
+    audioPlaybackCleanups.delete(panel);
+    play.disabled = false;
+    pause.disabled = true;
+  });
+  stop.addEventListener("click", () => {
+    playback?.stop(false);
+    playback = undefined;
+    audioPlaybackCleanups.delete(panel);
+    updatePosition(0);
+    play.disabled = false;
+    pause.disabled = true;
+    stop.disabled = true;
+  });
+  progress.addEventListener("input", () => {
+    playback?.stop(true);
+    playback = undefined;
+    audioPlaybackCleanups.delete(panel);
+    updatePosition(Number(progress.value));
+    play.disabled = false;
+    pause.disabled = true;
+  });
+  skipRepeats.addEventListener("change", () => {
+    playback?.stop(false);
+    playback = undefined;
+    audioPlaybackCleanups.delete(panel);
+    activePreview = skipRepeats.checked ? skipRepeatedOccurrences(preview) : preview;
+    progress.max = String(activePreview.durationSeconds);
+    loopEnd.max = String(activePreview.durationSeconds);
+    loopEnd.value = activePreview.durationSeconds.toFixed(1);
+    updatePosition(0);
+  });
+  controls
+    .querySelector<HTMLButtonElement>("[data-practice-reset]")!
+    .addEventListener("click", () => {
+      speed.value = "1";
+      skipRepeats.checked = false;
+      activePreview = preview;
+      loopStart.value = "0";
+      loopEnd.value = preview.durationSeconds.toFixed(1);
+      progress.max = String(preview.durationSeconds);
+      updatePosition(0);
+    });
+  controls
+    .querySelectorAll<HTMLInputElement>("[data-loop-start], [data-loop-end]")
+    .forEach((input) =>
+      input.addEventListener("change", () => {
+        if (Number(loopEnd.value) <= Number(loopStart.value))
+          loopEnd.value = String(activePreview.durationSeconds);
+      })
+    );
+  const previousSeekHandler = audioSeekHandlers.get(panel);
+  if (previousSeekHandler) panel.removeEventListener("vellum-seek-playback", previousSeekHandler);
+  const seekHandler: EventListener = (event) => {
+    const detail = (
+      event as CustomEvent<{
+        arrangementEventId?: string;
+        sourceEventId?: string;
+        auditTargetId?: string;
+      }>
+    ).detail;
+    const occurrence = activePreview.events.find(
+      (candidate) =>
+        candidate.arrangementEventId === detail.arrangementEventId ||
+        (detail.sourceEventId ? candidate.sourceEventIds.includes(detail.sourceEventId) : false) ||
+        (detail.auditTargetId ? candidate.auditTargetIds.includes(detail.auditTargetId) : false)
+    );
+    if (!occurrence) return;
+    playback?.stop(true);
+    playback = undefined;
+    updatePosition(occurrence.startSeconds, [occurrence]);
+    play.disabled = false;
+    pause.disabled = true;
+  };
+  panel.addEventListener("vellum-seek-playback", seekHandler);
+  audioSeekHandlers.set(panel, seekHandler);
 }
 
 export function installCandidateComparisonControls(
@@ -435,8 +602,15 @@ export function installAnalysisSummary(panel: HTMLElement, deliverable: GuidedDe
   const claims = document.createElement("ul");
   for (const claim of deliverable.analysis.claims) {
     const item = document.createElement("li");
+    item.dataset.sourceEventIds = (claim.subjectIds ?? []).join(" ");
     item.textContent = `${claim.statement} [${claim.basis}, ${(claim.confidence * 100).toFixed(0)}%]`;
     claims.append(item);
+    item.addEventListener("click", () => {
+      const sourceEventId = claim.subjectIds?.[0];
+      if (sourceEventId) {
+        panel.dispatchEvent(new CustomEvent("vellum-seek-playback", { detail: { sourceEventId } }));
+      }
+    });
   }
   const profiles = document.createElement("p");
   profiles.textContent = (deliverable.analysis.profiles ?? [])
@@ -509,8 +683,52 @@ export function installTransformationReport(
   for (const entry of deliverable.transformationReport) {
     const item = document.createElement("li");
     item.dataset.transformationId = entry.id ?? "";
+    item.dataset.arrangementEventIds = entry.arrangementEventIds.join(" ");
+    item.dataset.sourceEventIds = entry.sourceEventId ?? "";
+    item.dataset.auditTargetIds = entry.sourceRelationshipId ?? "";
     const source = entry.sourceRelationshipId ?? entry.sourceEventId ?? "new material";
     item.textContent = `${source} → ${entry.arrangementEventIds.join(", ") || "omitted"}: ${entry.classification.replaceAll("_", " ")}. ${entry.rationale}`;
+    if (entry.arrangementEventIds[0]) {
+      item.tabIndex = 0;
+      item.title = "Seek Audio Preview to this lineage mapping";
+      item.addEventListener("click", () =>
+        panel.dispatchEvent(
+          new CustomEvent("vellum-seek-playback", {
+            detail: { arrangementEventId: entry.arrangementEventIds[0] },
+          })
+        )
+      );
+    }
+    list.append(item);
+  }
+  details.append(summary, list);
+  header.append(details);
+}
+
+export function installAuditSummary(panel: HTMLElement, deliverable: GuidedDeliverable): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".preservation-audit-summary")?.remove();
+  const details = document.createElement("details");
+  details.className = "preservation-audit-summary";
+  const summary = document.createElement("summary");
+  summary.textContent = `Preservation Audit · ${deliverable.preservationAudit.status.replaceAll("_", " ")} · ${deliverable.preservationAudit.targetIds.length} targets`;
+  const list = document.createElement("ul");
+  for (const targetId of deliverable.preservationAudit.targetIds) {
+    const item = document.createElement("li");
+    item.dataset.auditTargetIds = targetId;
+    const findings = deliverable.preservationAudit.findings.filter(
+      (finding) => finding.targetId === targetId
+    );
+    item.textContent = findings.length
+      ? `${targetId}: ${findings.map((finding) => `${finding.code} — ${finding.message}`).join("; ")}`
+      : `${targetId}: passed`;
+    item.tabIndex = 0;
+    item.addEventListener("click", () =>
+      panel.dispatchEvent(
+        new CustomEvent("vellum-seek-playback", { detail: { auditTargetId: targetId } })
+      )
+    );
     list.append(item);
   }
   details.append(summary, list);
@@ -701,40 +919,82 @@ function setGuidedNavigationDisabled(dialog: HTMLDialogElement, disabled: boolea
   }
 }
 
-function playPreview(preview: AudioPreview, part: PlaybackPart, onEnded: () => void): () => void {
+type PreviewPlayback = { stop: (preservePosition: boolean) => void };
+
+function playPreview(
+  preview: AudioPreview,
+  options: {
+    fromSeconds: number;
+    speed: number;
+    volume: number;
+    loopStart: number;
+    loopEnd: number;
+    partState: Map<Exclude<PlaybackPart, "full">, { mute: boolean; solo: boolean; level: number }>;
+    onProgress: (seconds: number, activeEvents?: PlaybackEvent[]) => void;
+    onEnded: () => void;
+  }
+): PreviewPlayback {
   const context = new AudioContext();
   const master = context.createGain();
-  master.gain.value = 0.12;
+  master.gain.value = options.volume * 0.35;
   master.connect(context.destination);
   const start = context.currentTime + 0.05;
   const oscillators: OscillatorNode[] = [];
+  const soloed = [...options.partState.values()].some((state) => state.solo);
+  const playbackEnd = Math.min(preview.durationSeconds, options.loopEnd);
   for (const event of preview.events) {
-    if (part !== "full" && event.part !== part) continue;
+    const state = options.partState.get(event.part);
+    if (!state || state.mute || (soloed && !state.solo) || state.level === 0) continue;
+    const eventEnd = event.startSeconds + event.durationSeconds;
+    if (eventEnd <= options.fromSeconds || event.startSeconds >= playbackEnd) continue;
+    const audibleStart = Math.max(event.startSeconds, options.fromSeconds);
+    const audibleEnd = Math.min(eventEnd, playbackEnd);
     const oscillator = context.createOscillator();
     const envelope = context.createGain();
     oscillator.type = "triangle";
     oscillator.frequency.value = midiFrequency(event.midi);
-    envelope.gain.setValueAtTime(0, start + event.startSeconds);
-    envelope.gain.linearRampToValueAtTime(0.8, start + event.startSeconds + 0.01);
+    const scheduledStart = start + (audibleStart - options.fromSeconds) / options.speed;
+    const scheduledEnd = start + (audibleEnd - options.fromSeconds) / options.speed;
+    envelope.gain.setValueAtTime(0, scheduledStart);
+    envelope.gain.linearRampToValueAtTime(state.level * 0.8, scheduledStart + 0.01);
     envelope.gain.setValueAtTime(
-      0.8,
-      start + event.startSeconds + Math.max(0.02, event.durationSeconds - 0.03)
+      state.level * 0.8,
+      Math.max(scheduledStart + 0.01, scheduledEnd - 0.03)
     );
-    envelope.gain.linearRampToValueAtTime(0, start + event.startSeconds + event.durationSeconds);
+    envelope.gain.linearRampToValueAtTime(0, scheduledEnd);
     oscillator.connect(envelope).connect(master);
-    oscillator.start(start + event.startSeconds);
-    oscillator.stop(start + event.startSeconds + event.durationSeconds + 0.01);
+    oscillator.start(scheduledStart);
+    oscillator.stop(scheduledEnd + 0.01);
     oscillators.push(oscillator);
   }
-  const timer = window.setTimeout(
-    () => {
-      void context.close();
-      onEnded();
-    },
-    (preview.durationSeconds + 0.2) * 1_000
-  );
-  return () => {
-    window.clearTimeout(timer);
+  let stopped = false;
+  let frame = 0;
+  const tick = () => {
+    if (stopped) return;
+    const current = Math.min(
+      playbackEnd,
+      options.fromSeconds + Math.max(0, context.currentTime - start) * options.speed
+    );
+    const activeEvents = preview.events.filter(
+      (event) =>
+        event.startSeconds <= current && current < event.startSeconds + event.durationSeconds
+    );
+    options.onProgress(current, activeEvents);
+    if (current >= playbackEnd) {
+      stopNodes();
+      if (options.loopEnd < preview.durationSeconds) {
+        options.onProgress(options.loopStart);
+      }
+      options.onEnded();
+      return;
+    }
+    frame = window.requestAnimationFrame(tick);
+  };
+  frame = window.requestAnimationFrame(tick);
+  const stopNodes = () => {
+    if (stopped) return;
+    stopped = true;
+    window.cancelAnimationFrame(frame);
     for (const oscillator of oscillators) {
       try {
         oscillator.stop();
@@ -743,8 +1003,50 @@ function playPreview(preview: AudioPreview, part: PlaybackPart, onEnded: () => v
       }
     }
     void context.close();
-    onEnded();
   };
+  return {
+    stop: (preservePosition) => {
+      const current = Math.min(
+        playbackEnd,
+        options.fromSeconds + Math.max(0, context.currentTime - start) * options.speed
+      );
+      stopNodes();
+      if (preservePosition) options.onProgress(current);
+    },
+  };
+}
+
+function highlightLineage(panel: HTMLElement, events: PlaybackEvent[]): void {
+  const dimensions = {
+    arrangementEventIds: new Set(events.map((event) => event.arrangementEventId)),
+    sourceEventIds: new Set(events.flatMap((event) => event.sourceEventIds)),
+    transformationIds: new Set(events.flatMap((event) => event.transformationEntryIds)),
+    auditTargetIds: new Set(events.flatMap((event) => event.auditTargetIds)),
+  };
+  panel
+    .querySelectorAll<HTMLElement>(
+      "[data-arrangement-event-ids], [data-source-event-ids], [data-transformation-id], [data-audit-target-ids]"
+    )
+    .forEach((element) => {
+      const active =
+        datasetMatches(element.dataset.arrangementEventIds, dimensions.arrangementEventIds) ||
+        datasetMatches(element.dataset.sourceEventIds, dimensions.sourceEventIds) ||
+        datasetMatches(element.dataset.transformationId, dimensions.transformationIds) ||
+        datasetMatches(element.dataset.auditTargetIds, dimensions.auditTargetIds);
+      element.classList.toggle("playback-active", active);
+    });
+}
+
+function datasetMatches(value: string | undefined, active: Set<string>): boolean {
+  return (value ?? "")
+    .split(" ")
+    .filter(Boolean)
+    .some((id) => active.has(id));
+}
+
+function formatTime(seconds: number): string {
+  const safe = Math.max(0, Math.round(seconds));
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
 async function installProviderConnection(root: HTMLElement): Promise<void> {

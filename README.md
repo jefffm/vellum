@@ -36,6 +36,8 @@ The default result now includes a short Musicological Analysis summary. Expandin
 
 Each result also exposes complete provenance: every source event, protected relationship, omission, transposition, octave move, revoicing, reharmonization, rhythm change, and generated event is classified and linked to its arrangement descendants. Continuo figures and the material generated from them remain visibly distinct.
 
+Audio Preview is a literal synthetic check of that same Arrangement Score. It follows a reproducible Performed Form, gives repeats distinct Playback Occurrences, and provides pause, seek, progress, volume, speed, looping, skip-repeats practice playback, and mute/solo/level controls for semantic musical parts. Analysis, audit, and provenance entries seek into the linked playback timeline.
+
 ## Quick start
 
 ```bash
