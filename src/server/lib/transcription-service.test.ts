@@ -164,4 +164,39 @@ describe("TranscriptionService", () => {
       })
     ).toThrow("outside transcription uncertainty");
   });
+
+  it("versions reviewed voice identity assignments into deterministic score parts", () => {
+    const ids = [
+      "44444444-4444-4444-8444-444444444444",
+      "55555555-5555-4555-8555-555555555555",
+      "66666666-6666-4666-8666-666666666666",
+    ];
+    const result = new TranscriptionService({ store, createId: () => ids.shift()! }).correct(
+      workspaceId,
+      transcriptionId,
+      {
+        uncertaintyId: "uncertainty.opening",
+        eventEdits: [
+          {
+            eventId: "event.soprano.1",
+            partId: "part.reviewed-soprano",
+            partName: "Soprano",
+            partRole: "soprano",
+          },
+        ],
+        rationale: "The upper staff and registral line identify the soprano voice.",
+      }
+    );
+
+    expect(result.scoreTranscription.parts).toContainEqual({
+      id: "part.reviewed-soprano",
+      name: "Soprano",
+      role: "soprano",
+    });
+    expect(
+      result.scoreTranscription.events.find((event) => event.id === "event.soprano.1")
+    ).toMatchObject({ partId: "part.reviewed-soprano", confidence: 1 });
+    expect(result.normalizedScore.parts).toEqual(result.scoreTranscription.parts);
+    expect(result.analysisRecord.normalizedScoreId).toBe(result.normalizedScore.id);
+  });
 });

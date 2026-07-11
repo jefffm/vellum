@@ -131,4 +131,61 @@ describe("MusicXML normalizer", () => {
       expect.objectContaining({ code: "audiveris.evidence-mismatch" })
     );
   });
+
+  it("blocks suspicious SATB-to-chord flattening with ranked voice corrections", async () => {
+    const notes = [
+      ["G", 4],
+      ["E", 4],
+      ["C", 4],
+      ["C", 3],
+      ["A", 4],
+      ["F", 4],
+      ["D", 4],
+      ["B", 2],
+    ] as const;
+    const musicXml = Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Choir</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>2</beats><beat-type>4</beat-type></time></attributes>
+${notes
+  .map(
+    ([step, octave], index) =>
+      `<note>${index % 4 ? "<chord/>" : ""}<pitch><step>${step}</step><octave>${octave}</octave></pitch><duration>1</duration><voice>1</voice></note>`
+  )
+  .join("\n")}
+</measure></part></score-partwise>`);
+    const heads = notes
+      .map(
+        (_note, index) =>
+          `<head pitch="${index}" grade="0.95" id="${10 + index}"><bounds x="${100 + index * 5}" y="${100 + index * 5}" w="12" h="12"/></head>`
+      )
+      .join("");
+    const relations = notes
+      .map(
+        (_note, index) =>
+          `<relation source="${index < 4 ? 100 : 101}" target="${10 + index}"><containment/></relation>`
+      )
+      .join("");
+    const nativeXml = `<sheet><systems><system id="1"><part id="1"><measure id="1"><voice id="1"><slots>
+<entry><value chord="100" status="BEGIN"/></entry><entry><value chord="101" status="BEGIN"/></entry>
+</slots></voice></measure></part><sig><inters>${heads}<head-chord grade="0.95" id="100"/><head-chord grade="0.95" id="101"/></inters><relations>${relations}</relations></sig></system></systems></sheet>`;
+    const zip = new JSZip();
+    zip.file("book.xml", '<book><stub number="1"/></book>');
+    zip.file("sheet#1/sheet#1.xml", nativeXml);
+    const nativeOmr = await zip.generateAsync({ type: "nodebuffer" });
+
+    const result = await normalizeAudiverisMusicXml(musicXml, "flattened.musicxml", nativeOmr);
+    expect(result.recognizedScore.parts).toHaveLength(1);
+    expect(result.recognizedScore.uncertainties).toContainEqual(
+      expect.objectContaining({
+        id: "uncertainty.polyphonic-voice-identity",
+        category: "voice_identity",
+        critical: true,
+        eventIds: expect.arrayContaining(["event.p1-voice-1.1", "event.p1-voice-1.8"]),
+        alternatives: [
+          expect.stringMatching(/soprano, alto, tenor, and bass/i),
+          expect.stringMatching(/block chords/i),
+        ],
+      })
+    );
+  });
 });

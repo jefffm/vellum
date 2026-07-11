@@ -13,6 +13,7 @@ import type {
   TranscriptionUncertainty,
 } from "./lib/music-domain.js";
 import type { CompileResult } from "./types.js";
+import { noteToMidi } from "./lib/pitch.js";
 
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
@@ -1935,9 +1936,10 @@ function presentScoreAnchoredReview(
   const editableNotes = item.events.filter(
     (event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note"
   );
+  const recommendedVoices = recommendedVoiceAssignments(editableNotes);
   for (const event of editableNotes) {
     const label = document.createElement("label");
-    label.textContent = `Recognized pitch · ${event.id}`;
+    label.textContent = `Recognized pitch · ${event.id}${event.confidence !== undefined ? ` · confidence ${(event.confidence * 100).toFixed(1)}%` : " · confidence unavailable"}`;
     const input = document.createElement("input");
     input.type = "text";
     input.value = event.pitch;
@@ -1945,6 +1947,26 @@ function presentScoreAnchoredReview(
     input.dataset.reviewEventId = event.id;
     label.append(input);
     editors.append(label);
+    if (item.uncertainty.category === "voice_identity") {
+      const voiceLabel = document.createElement("label");
+      voiceLabel.textContent = `Voice assignment · ${event.id}`;
+      const voice = document.createElement("select");
+      voice.dataset.reviewVoiceEventId = event.id;
+      voice.dataset.recognizedPartId = event.partId;
+      const recognized = document.createElement("option");
+      recognized.value = event.partId;
+      recognized.textContent = "Keep recognized chordal voice";
+      voice.append(recognized);
+      for (const role of ["soprano", "alto", "tenor", "bass"] as const) {
+        const option = document.createElement("option");
+        option.value = role;
+        option.textContent = role[0]!.toUpperCase() + role.slice(1);
+        voice.append(option);
+      }
+      voice.value = recommendedVoices.get(event.id) ?? "soprano";
+      voiceLabel.append(voice);
+      editors.append(voiceLabel);
+    }
   }
 
   item.uncertainty.alternatives.forEach((alternative, index) => {
@@ -1952,8 +1974,22 @@ function presentScoreAnchoredReview(
     button.type = "button";
     button.textContent = `${index + 1}. ${alternative}`;
     button.addEventListener("click", () => {
-      const first = editors.querySelector<HTMLInputElement>("input");
-      if (first) first.value = alternative;
+      if (item.uncertainty.category === "voice_identity" && index === 0) {
+        editors
+          .querySelectorAll<HTMLSelectElement>("[data-review-voice-event-id]")
+          .forEach((select) => {
+            select.value = recommendedVoices.get(select.dataset.reviewVoiceEventId!) ?? "soprano";
+          });
+      } else if (item.uncertainty.category === "voice_identity" && index === 1) {
+        editors
+          .querySelectorAll<HTMLSelectElement>("[data-review-voice-event-id]")
+          .forEach((select) => {
+            select.value = select.dataset.recognizedPartId!;
+          });
+      } else if (item.uncertainty.category !== "voice_identity") {
+        const first = editors.querySelector<HTMLInputElement>("input");
+        if (first) first.value = alternative;
+      }
     });
     suggestions.append(button);
   });
@@ -1986,14 +2022,49 @@ function presentScoreAnchoredReview(
       cancel.onclick = null;
       resolve({
         uncertaintyId: item.uncertainty.id,
-        eventEdits: inputs.map((input) => ({
-          eventId: input.dataset.reviewEventId!,
-          pitch: input.value.trim(),
-        })),
+        eventEdits: inputs.map((input) => {
+          const voice = editors.querySelector<HTMLSelectElement>(
+            `[data-review-voice-event-id="${input.dataset.reviewEventId}"]`
+          );
+          const role = ["soprano", "alto", "tenor", "bass"].includes(voice?.value ?? "")
+            ? (voice!.value as "soprano" | "alto" | "tenor" | "bass")
+            : undefined;
+          return {
+            eventId: input.dataset.reviewEventId!,
+            pitch: input.value.trim(),
+            ...(role
+              ? {
+                  partId: `part.reviewed-${role}`,
+                  partName: role[0]!.toUpperCase() + role.slice(1),
+                  partRole: role,
+                }
+              : voice
+                ? { partId: voice.value }
+                : {}),
+          };
+        }),
         rationale: explanation,
       });
     };
   });
+}
+
+export function recommendedVoiceAssignments(
+  events: Array<Extract<ScoreEvent, { type: "note" }>>
+): Map<string, "soprano" | "alto" | "tenor" | "bass"> {
+  const groups = new Map<string, Array<Extract<ScoreEvent, { type: "note" }>>>();
+  for (const event of events) {
+    const key = `${event.measureId}:${event.onset.numerator}/${event.onset.denominator}`;
+    groups.set(key, [...(groups.get(key) ?? []), event]);
+  }
+  const assignments = new Map<string, "soprano" | "alto" | "tenor" | "bass">();
+  const roles = ["soprano", "alto", "tenor", "bass"] as const;
+  for (const group of groups.values()) {
+    group
+      .sort((left, right) => noteToMidi(right.pitch) - noteToMidi(left.pitch))
+      .forEach((event, index) => assignments.set(event.id, roles[Math.min(index, 3)]!));
+  }
+  return assignments;
 }
 
 function hideScoreAnchoredReview(dialog: HTMLDialogElement): void {

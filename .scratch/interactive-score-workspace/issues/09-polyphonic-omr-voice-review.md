@@ -1,6 +1,6 @@
 # Polyphonic OMR Voice Identity review
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Detect when optical recognition may have flattened independent voices into chord
 
 ## Acceptance criteria
 
-- [ ] OMR ingestion records explicit uncertainty about voice count and voice assignment.
-- [ ] Suspicious SATB-to-chord flattening blocks authoritative Principal Voice analysis.
-- [ ] Review presents source region, recognized notation, voice alternatives, and musical consequence.
-- [ ] Corrections are versioned and deterministic normalization/analysis resumes from the corrected transcription.
-- [ ] A polyphonic fixture guards against the failure observed in the live Greensleeves workflow.
+- [x] OMR ingestion records explicit uncertainty about voice count and voice assignment.
+- [x] Suspicious SATB-to-chord flattening blocks authoritative Principal Voice analysis.
+- [x] Review presents source region, recognized notation, voice alternatives, and musical consequence.
+- [x] Corrections are versioned and deterministic normalization/analysis resumes from the corrected transcription.
+- [x] A polyphonic fixture guards against the failure observed in the live Greensleeves workflow.
 
 ## Blocked by
 

@@ -139,7 +139,21 @@ export class TranscriptionService {
       }
     }
 
+    for (const edit of edits.values()) {
+      if ((edit.partName || edit.partRole) && !edit.partId) {
+        throw new ApiRouteError("A voice name or role requires partId", 400);
+      }
+      if (edit.partId && !current.parts.some((part) => part.id === edit.partId) && !edit.partName) {
+        throw new ApiRouteError(`A new voice requires partName: ${edit.partId}`, 400);
+      }
+    }
+
     const events = current.events.map((event) => applyEventEdit(event, edits.get(event.id)));
+    const parts = [...current.parts];
+    for (const edit of edits.values()) {
+      if (!edit.partId || parts.some((part) => part.id === edit.partId)) continue;
+      parts.push({ id: edit.partId, name: edit.partName!, role: edit.partRole ?? "other" });
+    }
     const uncertainties = current.uncertainties.map((candidate) =>
       candidate.id === uncertainty.id ? { ...candidate, resolved: true } : candidate
     );
@@ -152,6 +166,7 @@ export class TranscriptionService {
       status: uncertainties.some((candidate) => candidate.critical && !candidate.resolved)
         ? "needs_review"
         : "reviewed",
+      parts,
       events,
       uncertainties,
       corrections: [
@@ -245,11 +260,12 @@ function applyEventEdit(
   edit: TranscriptionCorrection["eventEdits"][number] | undefined
 ): ScoreEvent {
   if (!edit) return event;
+  const reassigned = edit.partId ? { ...event, partId: edit.partId, confidence: 1 } : event;
   if (edit.pitch !== undefined) {
-    if (event.type !== "note") {
+    if (reassigned.type !== "note") {
       throw new ApiRouteError(`Cannot assign pitch to rest event: ${event.id}`, 400);
     }
-    return { ...event, pitch: edit.pitch, confidence: 1 };
+    return { ...reassigned, pitch: edit.pitch, confidence: 1 };
   }
-  return event;
+  return reassigned;
 }

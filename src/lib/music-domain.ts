@@ -675,6 +675,20 @@ export const TranscriptionEventEditSchema = Type.Object(
   {
     eventId: IdSchema,
     pitch: Type.Optional(Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" })),
+    partId: Type.Optional(IdSchema),
+    partName: Type.Optional(Type.String({ minLength: 1 })),
+    partRole: Type.Optional(
+      Type.Union([
+        Type.Literal("soprano"),
+        Type.Literal("alto"),
+        Type.Literal("tenor"),
+        Type.Literal("bass"),
+        Type.Literal("principal_voice"),
+        Type.Literal("continuo_foundation"),
+        Type.Literal("harmony"),
+        Type.Literal("other"),
+      ])
+    ),
   },
   { additionalProperties: false }
 );

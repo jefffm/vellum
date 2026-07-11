@@ -10,6 +10,7 @@ import {
   highlightLineage,
   openEditBatchDialog,
   openPassageCandidatesDialog,
+  recommendedVoiceAssignments,
   installLineageSummary,
   installProviderConnection,
   midiFrequency,
@@ -192,6 +193,30 @@ describe("interactive notation", () => {
     expect(implementation).toContain("arrangement_event_ids");
     expect(implementation).toContain("vellum-arrangement-version-created");
     expect(implementation).toContain("rejectionReason");
+  });
+});
+
+describe("polyphonic Score-Anchored Review", () => {
+  it("ranks simultaneous voices by register instead of trusting flattened chord order", () => {
+    const base = {
+      type: "note" as const,
+      partId: "part.flattened",
+      measureId: "measure.1",
+      onset: { numerator: 0, denominator: 1 },
+      duration: { numerator: 1, denominator: 1 },
+    };
+    const assignments = recommendedVoiceAssignments([
+      { ...base, id: "event.tenor", pitch: "G3" },
+      { ...base, id: "event.soprano", pitch: "E5" },
+      { ...base, id: "event.bass", pitch: "C3" },
+      { ...base, id: "event.alto", pitch: "C4" },
+    ]);
+    expect(Object.fromEntries(assignments)).toEqual({
+      "event.soprano": "soprano",
+      "event.alto": "alto",
+      "event.tenor": "tenor",
+      "event.bass": "bass",
+    });
   });
 });
 

@@ -450,6 +450,42 @@ def normalize(
                 "resolved": False,
             }
         )
+    if native_queues is not None and len(voice_names) == 1:
+        simultaneous_notes: dict[tuple[str, int, int], list[dict[str, object]]] = defaultdict(list)
+        for event in raw_events:
+            if event["type"] != "note":
+                continue
+            onset = event["onset"]
+            simultaneous_notes[
+                (
+                    str(event["measureId"]),
+                    int(onset["numerator"]),
+                    int(onset["denominator"]),
+                )
+            ].append(event)
+        chordal_onsets = [events for events in simultaneous_notes.values() if len(events) >= 3]
+        if len(chordal_onsets) >= 2:
+            flattened_events = [event for onset_events in chordal_onsets for event in onset_events]
+            regions = [event.get("sourceRegion") for event in flattened_events if event.get("sourceRegion")]
+            voice_uncertainty: dict[str, object] = {
+                "id": "uncertainty.polyphonic-voice-identity",
+                "eventIds": [event["id"] for event in flattened_events],
+                "critical": True,
+                "category": "voice_identity",
+                "message": (
+                    f"Audiveris returned {len(chordal_onsets)} three-or-more-note onsets in one "
+                    "recognized voice. Independent polyphonic voices may have been flattened into chords; "
+                    "Principal Voice analysis is blocked until voice assignments are reviewed."
+                ),
+                "alternatives": [
+                    "1. Restore independent soprano, alto, tenor, and bass voices by registral order.",
+                    "2. Keep one chordal voice only if the source explicitly uses block chords.",
+                ],
+                "resolved": False,
+            }
+            if regions:
+                voice_uncertainty["region"] = regions[0]
+            uncertainties.append(voice_uncertainty)
     result["uncertainties"] = uncertainties
     if native_queues is not None:
         evidence_stats["unused"] = sum(
