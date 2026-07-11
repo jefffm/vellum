@@ -103,7 +103,7 @@ export const ArrangementBriefSchema = Type.Object(
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 4 }),
+    schemaVersion: Type.Integer({ minimum: 5 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,
@@ -119,6 +119,11 @@ export const ArrangementWorkspaceSchema = Type.Object(
     arrangementCandidateIds: Type.Array(IdSchema),
     arrangementFamilyIds: Type.Array(IdSchema),
     deliverableIds: Type.Array(IdSchema),
+    staleDerivationIds: Type.Array(IdSchema),
+    editorialCommitmentIds: Type.Array(IdSchema),
+    familyCommitmentIds: Type.Array(IdSchema),
+    commitmentConflictIds: Type.Array(IdSchema),
+    policyExceptionIds: Type.Array(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -176,6 +181,120 @@ export const DeliverableSchema = Type.Object(
 );
 
 export type Deliverable = Static<typeof DeliverableSchema>;
+
+export const CommitmentScopeSchema = Type.Object(
+  {
+    objectIds: Type.Array(IdSchema, { minItems: 1 }),
+    measureIds: Type.Optional(Type.Array(IdSchema)),
+    dimension: Type.Union([
+      Type.Literal("principal_voice_pitch"),
+      Type.Literal("rhythm"),
+      Type.Literal("harmony"),
+      Type.Literal("bass"),
+      Type.Literal("texture"),
+      Type.Literal("counterpoint"),
+      Type.Literal("ornament"),
+      Type.Literal("notation"),
+      Type.Literal("course_fingering"),
+    ]),
+  },
+  { additionalProperties: false }
+);
+
+export const EditorialCommitmentSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    arrangementFamilyId: IdSchema,
+    scope: CommitmentScopeSchema,
+    value: Type.Unknown(),
+    origin: Type.Union([Type.Literal("user_edit"), Type.Literal("approved_model_choice")]),
+    status: Type.Union([Type.Literal("active"), Type.Literal("released")]),
+    createdAt: IsoDateSchema,
+    releasedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+export type EditorialCommitment = Static<typeof EditorialCommitmentSchema>;
+
+export const FamilyCommitmentSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementFamilyId: IdSchema,
+    sourceCommitmentId: Type.Optional(IdSchema),
+    scope: CommitmentScopeSchema,
+    value: Type.Unknown(),
+    targetConfigurationIds: Type.Array(IdSchema),
+    status: Type.Union([Type.Literal("active"), Type.Literal("released")]),
+    createdAt: IsoDateSchema,
+    releasedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+export type FamilyCommitment = Static<typeof FamilyCommitmentSchema>;
+
+const LineageInputVersionSchema = Type.Object(
+  {
+    recordType: Type.String({ minLength: 1 }),
+    recordId: IdSchema,
+    version: Type.Integer({ minimum: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const StaleDerivationSchema = Type.Object(
+  {
+    id: IdSchema,
+    recordType: Type.Union([Type.Literal("arrangement_score"), Type.Literal("deliverable")]),
+    recordId: IdSchema,
+    reason: Type.String({ minLength: 1 }),
+    priorInputVersions: Type.Array(LineageInputVersionSchema, { minItems: 1 }),
+    currentInputVersions: Type.Array(LineageInputVersionSchema, { minItems: 1 }),
+    acknowledged: Type.Boolean(),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type StaleDerivation = Static<typeof StaleDerivationSchema>;
+
+export const CommitmentConflictSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    commitmentId: IdSchema,
+    scope: CommitmentScopeSchema,
+    conflictingObjectIds: Type.Array(IdSchema, { minItems: 1 }),
+    affectedPreservationTargetIds: Type.Array(IdSchema),
+    consequence: Type.String({ minLength: 1 }),
+    status: Type.Union([
+      Type.Literal("unresolved"),
+      Type.Literal("commitment_released"),
+      Type.Literal("source_revised"),
+      Type.Literal("exception_approved"),
+    ]),
+    createdAt: IsoDateSchema,
+    resolvedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+export type CommitmentConflict = Static<typeof CommitmentConflictSchema>;
+
+export const PolicyExceptionSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    conflictId: IdSchema,
+    scope: CommitmentScopeSchema,
+    affectedPreservationTargetIds: Type.Array(IdSchema, { minItems: 1 }),
+    musicalConsequence: Type.String({ minLength: 1 }),
+    rationale: Type.String({ minLength: 1 }),
+    severity: Type.Union([Type.Literal("localized"), Type.Literal("critical")]),
+    ownerApproved: Type.Literal(true),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type PolicyException = Static<typeof PolicyExceptionSchema>;
 
 export const ModelActionInputVersionSchema = Type.Object(
   {
@@ -930,6 +1049,22 @@ export const ArrangementScoreSchema = Type.Object(
     arrangementSearchId: Type.Optional(IdSchema),
     branchId: Type.Optional(IdSchema),
     arrangementFamilyId: Type.Optional(IdSchema),
+    parentArrangementScoreId: Type.Optional(IdSchema),
+    editorialCommitmentIds: Type.Optional(Type.Array(IdSchema)),
+    familyCommitmentIds: Type.Optional(Type.Array(IdSchema)),
+    policyExceptionIds: Type.Optional(Type.Array(IdSchema)),
+    regeneration: Type.Optional(
+      Type.Object(
+        {
+          kind: Type.Literal("conservative"),
+          staleArrangementScoreId: IdSchema,
+          changedSourceEventIds: Type.Array(IdSchema),
+          regeneratedArrangementEventIds: Type.Array(IdSchema),
+          retainedArrangementEventIds: Type.Array(IdSchema),
+        },
+        { additionalProperties: false }
+      )
+    ),
     analysisRecordId: IdSchema,
     selectedCandidateId: IdSchema,
     targetConfiguration: TargetConfigurationSchema,

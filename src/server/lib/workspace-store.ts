@@ -19,6 +19,11 @@ import {
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
   DeliverableSchema,
+  EditorialCommitmentSchema,
+  FamilyCommitmentSchema,
+  StaleDerivationSchema,
+  CommitmentConflictSchema,
+  PolicyExceptionSchema,
   ModelActionSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
@@ -35,6 +40,11 @@ import type {
   ArrangementWorkspace,
   CreateWorkspace,
   Deliverable,
+  EditorialCommitment,
+  FamilyCommitment,
+  StaleDerivation,
+  CommitmentConflict,
+  PolicyException,
   ModelAction,
   ModelActionInputVersion,
   NormalizedScore,
@@ -67,7 +77,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -83,6 +93,11 @@ export class WorkspaceStore {
       arrangementCandidateIds: [],
       arrangementFamilyIds: [],
       deliverableIds: [],
+      staleDerivationIds: [],
+      editorialCommitmentIds: [],
+      familyCommitmentIds: [],
+      commitmentConflictIds: [],
+      policyExceptionIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -116,7 +131,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 4) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 5) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -124,7 +139,7 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 4,
+      schemaVersion: 5,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
@@ -139,16 +154,32 @@ export class WorkspaceStore {
         ? parsed.arrangementFamilyIds
         : [],
       deliverableIds: Array.isArray(parsed.deliverableIds) ? parsed.deliverableIds : [],
+      staleDerivationIds: Array.isArray(parsed.staleDerivationIds) ? parsed.staleDerivationIds : [],
+      editorialCommitmentIds: Array.isArray(parsed.editorialCommitmentIds)
+        ? parsed.editorialCommitmentIds
+        : [],
+      familyCommitmentIds: Array.isArray(parsed.familyCommitmentIds)
+        ? parsed.familyCommitmentIds
+        : [],
+      commitmentConflictIds: Array.isArray(parsed.commitmentConflictIds)
+        ? parsed.commitmentConflictIds
+        : [],
+      policyExceptionIds: Array.isArray(parsed.policyExceptionIds) ? parsed.policyExceptionIds : [],
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 4 ||
+      parsed.schemaVersion !== 5 ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
       !Array.isArray(parsed.arrangementFamilyIds) ||
-      !Array.isArray(parsed.deliverableIds)
+      !Array.isArray(parsed.deliverableIds) ||
+      !Array.isArray(parsed.staleDerivationIds) ||
+      !Array.isArray(parsed.editorialCommitmentIds) ||
+      !Array.isArray(parsed.familyCommitmentIds) ||
+      !Array.isArray(parsed.commitmentConflictIds) ||
+      !Array.isArray(parsed.policyExceptionIds)
     ) {
       writeJsonAtomic(manifestPath, workspace);
     }
@@ -387,6 +418,91 @@ export class WorkspaceStore {
       familyId,
       "family",
       ArrangementFamilySchema
+    );
+  }
+
+  saveStaleDerivation(workspaceId: string, record: StaleDerivation): StaleDerivation {
+    return this.saveLineageRecord(
+      workspaceId,
+      "stale-derivations",
+      "staleDerivationIds",
+      StaleDerivationSchema,
+      record
+    );
+  }
+  getStaleDerivation(workspaceId: string, id: string): StaleDerivation {
+    return this.readRecord(workspaceId, "stale-derivations", id, "stale", StaleDerivationSchema);
+  }
+  saveEditorialCommitment(workspaceId: string, record: EditorialCommitment): EditorialCommitment {
+    return this.saveLineageRecord(
+      workspaceId,
+      "editorial-commitments",
+      "editorialCommitmentIds",
+      EditorialCommitmentSchema,
+      record
+    );
+  }
+  getEditorialCommitment(workspaceId: string, id: string): EditorialCommitment {
+    return this.readRecord(
+      workspaceId,
+      "editorial-commitments",
+      id,
+      "commitment",
+      EditorialCommitmentSchema
+    );
+  }
+  saveFamilyCommitment(workspaceId: string, record: FamilyCommitment): FamilyCommitment {
+    return this.saveLineageRecord(
+      workspaceId,
+      "family-commitments",
+      "familyCommitmentIds",
+      FamilyCommitmentSchema,
+      record
+    );
+  }
+  getFamilyCommitment(workspaceId: string, id: string): FamilyCommitment {
+    return this.readRecord(
+      workspaceId,
+      "family-commitments",
+      id,
+      "family-commitment",
+      FamilyCommitmentSchema
+    );
+  }
+  saveCommitmentConflict(workspaceId: string, record: CommitmentConflict): CommitmentConflict {
+    return this.saveLineageRecord(
+      workspaceId,
+      "commitment-conflicts",
+      "commitmentConflictIds",
+      CommitmentConflictSchema,
+      record
+    );
+  }
+  getCommitmentConflict(workspaceId: string, id: string): CommitmentConflict {
+    return this.readRecord(
+      workspaceId,
+      "commitment-conflicts",
+      id,
+      "conflict",
+      CommitmentConflictSchema
+    );
+  }
+  savePolicyException(workspaceId: string, record: PolicyException): PolicyException {
+    return this.saveLineageRecord(
+      workspaceId,
+      "policy-exceptions",
+      "policyExceptionIds",
+      PolicyExceptionSchema,
+      record
+    );
+  }
+  getPolicyException(workspaceId: string, id: string): PolicyException {
+    return this.readRecord(
+      workspaceId,
+      "policy-exceptions",
+      id,
+      "exception",
+      PolicyExceptionSchema
     );
   }
 
@@ -727,6 +843,26 @@ export class WorkspaceStore {
       workspace.updatedAt = this.now().toISOString();
       this.writeWorkspace(workspace);
     }
+  }
+
+  private saveLineageRecord<T>(
+    workspaceId: string,
+    category: string,
+    key:
+      | "staleDerivationIds"
+      | "editorialCommitmentIds"
+      | "familyCommitmentIds"
+      | "commitmentConflictIds"
+      | "policyExceptionIds",
+    schema: TSchema,
+    record: T
+  ): T {
+    const workspace = this.get(workspaceId);
+    const decoded = Value.Decode(schema, record) as T;
+    const id = (decoded as { id: string }).id;
+    this.writeRecord(workspaceId, category, id, decoded);
+    this.linkRecord(workspace, key, id);
+    return decoded;
   }
 
   private linkRecord<K extends keyof ArrangementWorkspace>(

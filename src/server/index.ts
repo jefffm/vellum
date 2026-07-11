@@ -68,6 +68,13 @@ import {
   createDeliverableContentRoute,
   createDeliverableGetRoute,
 } from "./lib/family-deliverable-route.js";
+import {
+  createArrangementLineageRoute,
+  createCommitmentReleaseRoute,
+  createConservativeRegenerationRoute,
+  createEditorialCommitmentRoute,
+  createPolicyExceptionRoute,
+} from "./lib/lineage-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -234,6 +241,26 @@ export function createApiRouter(): Router {
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId",
     createArrangementScoreGetRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/lineage",
+    createArrangementLineageRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/commitments",
+    createEditorialCommitmentRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/commitments/:commitmentId/release",
+    createCommitmentReleaseRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/conservative-regeneration",
+    createConservativeRegenerationRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/commitment-conflicts/:conflictId/exceptions",
+    createPolicyExceptionRoute()
   );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/audio-preview",

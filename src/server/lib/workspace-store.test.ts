@@ -68,7 +68,7 @@ describe("WorkspaceStore", () => {
     );
 
     expect(store.get(id)).toMatchObject({
-      schemaVersion: 4,
+      schemaVersion: 5,
       sourceArtifactIds: ["source.1111111111111111"],
       modelActionIds: [],
       arrangementBranchIds: [],
@@ -76,15 +76,25 @@ describe("WorkspaceStore", () => {
       arrangementCandidateIds: [],
       arrangementFamilyIds: [],
       deliverableIds: [],
+      staleDerivationIds: [],
+      editorialCommitmentIds: [],
+      familyCommitmentIds: [],
+      commitmentConflictIds: [],
+      policyExceptionIds: [],
     });
     expect(JSON.parse(readFileSync(path.join(directory, "workspace.json"), "utf8"))).toMatchObject({
-      schemaVersion: 4,
+      schemaVersion: 5,
       modelActionIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
       arrangementFamilyIds: [],
       deliverableIds: [],
+      staleDerivationIds: [],
+      editorialCommitmentIds: [],
+      familyCommitmentIds: [],
+      commitmentConflictIds: [],
+      policyExceptionIds: [],
     });
   });
 

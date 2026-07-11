@@ -26,6 +26,14 @@ type ArrangementServiceOptions = {
 export type CreateFaithfulArrangementInput = {
   normalizedScoreId: string;
   targetConfigurationId: string;
+  arrangementFamilyId?: string;
+  branchId?: string;
+  parentArrangementScoreId?: string;
+  version?: number;
+  editorialCommitmentIds?: string[];
+  familyCommitmentIds?: string[];
+  policyExceptionIds?: string[];
+  regenerationFrom?: { arrangementScoreId: string; changedSourceEventIds: string[] };
 };
 
 export type CreateFaithfulArrangementResult = {
@@ -102,7 +110,8 @@ export class ArrangementService {
         409
       );
     }
-    const familyId = stableFamilyId(score.id, analysis.id, workspace.brief);
+    const familyId =
+      input.arrangementFamilyId ?? stableFamilyId(score.id, analysis.id, workspace.brief);
     const currentWorkspace = this.store.get(workspaceId);
     if (!currentWorkspace.arrangementFamilyIds.includes(familyId)) {
       this.store.saveArrangementFamily(workspaceId, {
@@ -112,6 +121,14 @@ export class ArrangementService {
         brief: workspace.brief,
         arrangementScoreIds: [],
         createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    } else if (input.arrangementFamilyId) {
+      const family = this.store.getArrangementFamily(workspaceId, familyId);
+      this.store.saveArrangementFamily(workspaceId, {
+        ...family,
+        normalizedScoreId: score.id,
+        analysisRecordId: analysis.id,
         updatedAt: timestamp,
       });
     }
@@ -130,6 +147,7 @@ export class ArrangementService {
       normalizedScoreId: score.id,
       analysisRecordId: analysis.id,
       arrangementFamilyId: familyId,
+      branchId: input.branchId,
       targetConfiguration,
       preservationPolicy: "faithful_reduction",
       status: "running",
@@ -196,11 +214,38 @@ export class ArrangementService {
     }
     const arrangementScore: ArrangementScore = {
       ...generated.selected,
-      version: 1,
+      version: input.version ?? 1,
       arrangementSearchId: searchId,
       arrangementFamilyId: familyId,
+      branchId: input.branchId,
+      parentArrangementScoreId: input.parentArrangementScoreId,
+      editorialCommitmentIds: input.editorialCommitmentIds ?? [],
+      familyCommitmentIds: input.familyCommitmentIds ?? [],
+      policyExceptionIds: input.policyExceptionIds ?? [],
       selectedCandidateId: selectedCandidate.id,
     };
+    if (input.regenerationFrom) {
+      arrangementScore.regeneration = {
+        kind: "conservative",
+        staleArrangementScoreId: input.regenerationFrom.arrangementScoreId,
+        changedSourceEventIds: input.regenerationFrom.changedSourceEventIds,
+        regeneratedArrangementEventIds: arrangementScore.events
+          .filter((event) =>
+            event.sourceEventIds.some((id) =>
+              input.regenerationFrom!.changedSourceEventIds.includes(id)
+            )
+          )
+          .map((event) => event.id),
+        retainedArrangementEventIds: arrangementScore.events
+          .filter(
+            (event) =>
+              !event.sourceEventIds.some((id) =>
+                input.regenerationFrom!.changedSourceEventIds.includes(id)
+              )
+          )
+          .map((event) => event.id),
+      };
+    }
     this.store.saveArrangementScore(workspaceId, arrangementScore);
     arrangementSearch = this.store.saveArrangementSearch(workspaceId, {
       ...arrangementSearch,

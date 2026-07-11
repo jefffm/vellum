@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import express from "express";
 import { createServer } from "node:http";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import { noteToMidi, transposeNote } from "../../lib/pitch.js";
 import { ArrangementService } from "./arrangement-service.js";
@@ -13,6 +13,7 @@ import { OmrService } from "./omr.js";
 import type { OmrBackend } from "./omr.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { ApiRouteError } from "./create-route.js";
+import { LineageService } from "./lineage-service.js";
 import {
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
@@ -223,6 +224,96 @@ describe("Greensleeves faithful arrangement service", () => {
         classicalResult.arrangementScore.id,
       ],
     });
+
+    const lineageIds = [
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      "12121212-1212-4212-8212-121212121212",
+      "14141414-1414-4414-8414-141414141414",
+      "15151515-1515-4515-8515-151515151515",
+      "16161616-1616-4616-8616-161616161616",
+      "17171717-1717-4717-8717-171717171717",
+    ];
+    const lineage = new LineageService({
+      store,
+      arrangementService: service,
+      now: () => new Date("2026-07-10T14:30:00.000Z"),
+      createId: () => lineageIds.shift()!,
+    });
+    const protectedEvent = result.arrangementScore.events.find(
+      (event) => event.principalVoiceSourceEventId
+    )!;
+    const commitment = lineage.createEditorialCommitment(workspace.id, {
+      arrangementScoreId: result.arrangementScore.id,
+      arrangementFamilyId: result.arrangementScore.arrangementFamilyId!,
+      scope: {
+        objectIds: [protectedEvent.id],
+        dimension: "principal_voice_pitch",
+      },
+      value: protectedEvent.pitches,
+      origin: "user_edit",
+    });
+    const correctedScore = {
+      ...omr.normalizedScore,
+      id: "score.13131313-1313-4313-8313-131313131313",
+      version: 2,
+      createdAt: "2026-07-10T14:30:00.000Z",
+    };
+    store.saveNormalizedScore(workspace.id, correctedScore);
+    const immutableArrangement = JSON.stringify(
+      store.getArrangementScore(workspace.id, result.arrangementScore.id)
+    );
+    const staleRecords = lineage.markArrangementsStale(
+      workspace.id,
+      omr.normalizedScore.id,
+      correctedScore.id,
+      "Corrected source pitch"
+    );
+    expect(staleRecords).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          recordType: "arrangement_score",
+          recordId: result.arrangementScore.id,
+          acknowledged: false,
+          priorInputVersions: [expect.objectContaining({ recordId: omr.normalizedScore.id })],
+          currentInputVersions: [expect.objectContaining({ recordId: correctedScore.id })],
+        }),
+      ])
+    );
+    expect(
+      JSON.stringify(store.getArrangementScore(workspace.id, result.arrangementScore.id))
+    ).toBe(immutableArrangement);
+    const changedSourceEventId = protectedEvent.principalVoiceSourceEventId!;
+    expect(() =>
+      lineage.conservativeRegenerate(workspace.id, {
+        arrangementScoreId: result.arrangementScore.id,
+        normalizedScoreId: correctedScore.id,
+        changedSourceEventIds: [changedSourceEventId],
+      })
+    ).toThrow(/releasing the commitment, revising the source correction, or approving/);
+    expect(store.get(workspace.id).commitmentConflictIds).toHaveLength(1);
+
+    lineage.releaseEditorialCommitment(workspace.id, commitment.id);
+    const createSpy = vi.spyOn(service, "createFaithfulReduction").mockReturnValue(result);
+    lineage.conservativeRegenerate(workspace.id, {
+      arrangementScoreId: result.arrangementScore.id,
+      normalizedScoreId: correctedScore.id,
+      changedSourceEventIds: [changedSourceEventId],
+    });
+    expect(createSpy).toHaveBeenCalledWith(
+      workspace.id,
+      expect.objectContaining({
+        arrangementFamilyId: result.arrangementScore.arrangementFamilyId,
+        parentArrangementScoreId: result.arrangementScore.id,
+        version: 2,
+        regenerationFrom: {
+          arrangementScoreId: result.arrangementScore.id,
+          changedSourceEventIds: [changedSourceEventId],
+        },
+      })
+    );
+    expect(store.get(workspace.id).arrangementBranchIds).toHaveLength(1);
 
     const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;
     const principalClaim = result.analysis.claims.find(

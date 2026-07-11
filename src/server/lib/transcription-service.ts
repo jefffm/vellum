@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import type {
+  AnalysisRecord,
   NormalizedScore,
   ScoreEvent,
   ScoreTranscription,
@@ -7,6 +9,7 @@ import type {
   TranscriptionCorrection,
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
+import { LineageService } from "./lineage-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 type TranscriptionServiceOptions = {
@@ -18,6 +21,8 @@ type TranscriptionServiceOptions = {
 export type TranscriptionCorrectionResult = {
   scoreTranscription: ScoreTranscription;
   normalizedScore: NormalizedScore;
+  analysisRecord: AnalysisRecord;
+  staleDerivationIds: string[];
 };
 
 export type ScoreAnchoredReviewItem = {
@@ -169,7 +174,62 @@ export class TranscriptionService {
       createdAt: timestamp,
     };
     this.store.saveNormalizedScore(workspaceId, normalized);
-    return { scoreTranscription: next, normalizedScore: normalized };
+    const priorScore = this.store
+      .get(workspaceId)
+      .normalizedScoreIds.map((id) => this.store.getNormalizedScore(workspaceId, id))
+      .find((score) => score.scoreTranscriptionId === current.id);
+    let analysisRecord = analyzeMusicologicalScore(normalized, {
+      id: `analysis.${this.createId()}`,
+      createdAt: timestamp,
+    });
+    const validIds = new Set([
+      ...normalized.parts.map((part) => part.id),
+      ...normalized.measures.map((measure) => measure.id),
+      ...normalized.events.map((event) => event.id),
+    ]);
+    const priorAnalysis = priorScore
+      ? this.store
+          .get(workspaceId)
+          .analysisRecordIds.map((id) => this.store.getAnalysisRecord(workspaceId, id))
+          .filter((record) => record.normalizedScoreId === priorScore.id)
+          .sort((left, right) => right.version - left.version)[0]
+      : undefined;
+    const carriedCorrections = (priorAnalysis?.claims ?? []).filter(
+      (claim) =>
+        claim.basis === "user_correction" &&
+        claim.subjectIds.every((id) => validIds.has(id)) &&
+        (claim.scope?.measureIds ?? []).every((id) => validIds.has(id)) &&
+        (claim.scope?.eventIds ?? []).every((id) => validIds.has(id))
+    );
+    if (carriedCorrections.length) {
+      const correctedKinds = new Set(carriedCorrections.map((claim) => claim.kind));
+      analysisRecord = {
+        ...analysisRecord,
+        claims: [
+          ...analysisRecord.claims.filter((claim) => !correctedKinds.has(claim.kind)),
+          ...carriedCorrections,
+        ],
+      };
+    }
+    this.store.saveAnalysisRecord(workspaceId, analysisRecord);
+    const staleDerivations = priorScore
+      ? new LineageService({
+          store: this.store,
+          now: this.now,
+          createId: this.createId,
+        }).markArrangementsStale(
+          workspaceId,
+          priorScore.id,
+          normalized.id,
+          `Transcription correction ${correction.uncertaintyId} produced a new normalized score`
+        )
+      : [];
+    return {
+      scoreTranscription: next,
+      normalizedScore: normalized,
+      analysisRecord,
+      staleDerivationIds: staleDerivations.map((record) => record.id),
+    };
   }
 }
 
