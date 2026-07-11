@@ -179,7 +179,7 @@ function projectEvents(
     });
 }
 
-function auditImitative(
+export function auditImitative(
   score: NormalizedScore,
   analysis: AnalysisRecord,
   events: ArrangementEvent[],
@@ -224,20 +224,102 @@ function auditImitative(
           message: `Source voice rhythm changed: ${sourceId}`,
         });
       }
+      if (
+        source.measureId !== arranged.measureId ||
+        compareRational(source.onset, arranged.onset) !== 0
+      ) {
+        findings.push({
+          targetId: target.id,
+          sourceEventId: sourceId,
+          arrangementEventId: arranged.id,
+          severity: "hard",
+          code: "imitation.onset_changed",
+          message: `Source voice onset changed: ${sourceId}`,
+        });
+      }
+      if (arranged.voiceId !== source.partId) {
+        findings.push({
+          targetId: target.id,
+          sourceEventId: sourceId,
+          arrangementEventId: arranged.id,
+          severity: "hard",
+          code: "imitation.voice_identity_changed",
+          message: `Source voice identity changed: ${sourceId}`,
+        });
+      }
     }
   }
   const relationshipTargets = targets.filter((target) => target.kind === "relationship");
-  if (findings.length === 0) {
-    const entryTarget = relationshipTargets.find((target) => target.id.endsWith("ordered-entries"));
-    if (entryTarget) {
+  const entryTarget = relationshipTargets.find(
+    (target) => target.relationshipType === "ordered_entries"
+  );
+  if (entryTarget) {
+    const groups = entryTarget.eventGroups ?? [];
+    const sourceGroups = groups.map((group) => noteGroup(score.events, group));
+    const arrangedGroups = groups.map((group) => arrangedNoteGroup(events, group));
+    const sourceStarts = sourceGroups.map((group) =>
+      group[0] ? absoluteOnset(score, group[0]) : Number.NaN
+    );
+    const arrangedStarts = arrangedGroups.map((group) =>
+      group[0] ? absoluteOnset(score, group[0]) : Number.NaN
+    );
+    const valid =
+      sourceGroups.every((group) => group.length > 0) &&
+      arrangedGroups.every((group, index) => group.length === sourceGroups[index]!.length) &&
+      sameStrictOrder(sourceStarts, arrangedStarts) &&
+      arrangedGroups.every((group, index) => sameSubjectShape(sourceGroups[index]!, group));
+    if (!valid) {
       findings.push({
         targetId: entryTarget.id,
-        severity: "observation",
-        code: "imitation.ordered_entries_preserved",
+        severity: "hard",
+        code: "imitation.ordered_entries_changed",
         message:
-          "All ordered subject entries retain voice identity, interval-rhythm shape, and source timing under the imitative validation profile.",
+          "Ordered subject entries no longer retain source order, interval-rhythm shape, or voice lineage.",
       });
     }
+  }
+  const cadenceTarget = relationshipTargets.find(
+    (target) => target.relationshipType === "cadential_goal"
+  );
+  if (cadenceTarget) {
+    for (const sourceId of cadenceTarget.eventIds) {
+      const source = score.events.find(
+        (event): event is Extract<ScoreEvent, { type: "note" }> =>
+          event.id === sourceId && event.type === "note"
+      );
+      const arranged = events.find((event) => event.sourceEventIds.includes(sourceId));
+      const voiceEvents = source
+        ? events.filter((event) => event.voiceId === source.partId && event.type !== "rest")
+        : [];
+      const last = voiceEvents
+        .slice()
+        .sort((a, b) => absoluteOnset(score, a) - absoluteOnset(score, b))
+        .at(-1);
+      if (
+        !source ||
+        !arranged ||
+        last?.id !== arranged.id ||
+        arranged.pitches[0] !== source.pitch
+      ) {
+        findings.push({
+          targetId: cadenceTarget.id,
+          sourceEventId: sourceId,
+          arrangementEventId: arranged?.id,
+          severity: "hard",
+          code: "imitation.cadential_goal_changed",
+          message: `Source voice no longer reaches its reviewed cadential goal: ${sourceId}`,
+        });
+      }
+    }
+  }
+  if (findings.every((finding) => finding.severity !== "hard") && entryTarget) {
+    findings.push({
+      targetId: entryTarget.id,
+      severity: "observation",
+      code: "imitation.ordered_entries_preserved",
+      message:
+        "All ordered subject entries were recomputed and retain voice identity, interval-rhythm shape, and source timing under the imitative validation profile.",
+    });
   }
   return {
     status: findings.some((finding) => finding.severity === "hard") ? "fail" : "pass",
@@ -246,7 +328,64 @@ function auditImitative(
   };
 }
 
-function absoluteOnset(score: NormalizedScore, event: ScoreEvent): number {
+function noteGroup(
+  events: ScoreEvent[],
+  ids: string[]
+): Array<Extract<ScoreEvent, { type: "note" }>> {
+  return ids.flatMap((id) => {
+    const event = events.find(
+      (candidate): candidate is Extract<ScoreEvent, { type: "note" }> =>
+        candidate.id === id && candidate.type === "note"
+    );
+    return event ? [event] : [];
+  });
+}
+
+function arrangedNoteGroup(events: ArrangementEvent[], ids: string[]): ArrangementEvent[] {
+  return ids.flatMap((id) => {
+    const event = events.find((candidate) => candidate.sourceEventIds.includes(id));
+    return event && event.type !== "rest" ? [event] : [];
+  });
+}
+
+function sameSubjectShape(
+  source: Array<Extract<ScoreEvent, { type: "note" }>>,
+  arranged: ArrangementEvent[]
+): boolean {
+  const sourceIntervals = source
+    .slice(1)
+    .map((event, index) => noteToMidi(event.pitch) - noteToMidi(source[index]!.pitch));
+  const arrangedIntervals = arranged
+    .slice(1)
+    .map(
+      (event, index) => noteToMidi(event.pitches[0]!) - noteToMidi(arranged[index]!.pitches[0]!)
+    );
+  return (
+    sourceIntervals.join(",") === arrangedIntervals.join(",") &&
+    source.every((event, index) => compareRational(event.duration, arranged[index]!.duration) === 0)
+  );
+}
+
+function sameStrictOrder(sourceStarts: number[], arrangedStarts: number[]): boolean {
+  if (sourceStarts.length !== arrangedStarts.length) return false;
+  const sourceOrder = sourceStarts
+    .map((start, index) => ({ start, index }))
+    .sort((a, b) => a.start - b.start)
+    .map(({ index }) => index);
+  const arrangedOrder = arrangedStarts
+    .map((start, index) => ({ start, index }))
+    .sort((a, b) => a.start - b.start)
+    .map(({ index }) => index);
+  return (
+    sourceOrder.join(",") === arrangedOrder.join(",") &&
+    arrangedStarts.every((start, index) => index === 0 || start > arrangedStarts[index - 1]!)
+  );
+}
+
+function absoluteOnset(
+  score: NormalizedScore,
+  event: Pick<ScoreEvent | ArrangementEvent, "measureId" | "onset">
+): number {
   let result = 0;
   for (const measure of score.measures) {
     if (measure.id === event.measureId) break;

@@ -385,6 +385,16 @@ export const PreservationTargetSchema = Type.Object(
     ]),
     partId: Type.Optional(IdSchema),
     eventIds: Type.Array(IdSchema),
+    relationshipType: Type.Optional(
+      Type.Union([
+        Type.Literal("principal_sequence"),
+        Type.Literal("phrase_contour"),
+        Type.Literal("ordered_entries"),
+        Type.Literal("cadential_goal"),
+        Type.Literal("prepared_suspension"),
+      ])
+    ),
+    eventGroups: Type.Optional(Type.Array(Type.Array(IdSchema, { minItems: 1 }), { minItems: 1 })),
     rationale: Type.String({ minLength: 1 }),
   },
   { additionalProperties: false }

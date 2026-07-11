@@ -226,7 +226,7 @@ function keyScale(key: string | undefined): string[] {
     : [...Key.minorKey(match[1]!).natural.scale];
 }
 
-function auditContinuo(
+export function auditContinuo(
   score: NormalizedScore,
   analysis: AnalysisRecord,
   events: ArrangementEvent[]
@@ -289,8 +289,8 @@ function auditContinuo(
       }
     }
   }
-  const relationship = targets.find((target) => target.kind === "relationship");
-  if (relationship) {
+  const relationship = targets.find((target) => target.relationshipType === "prepared_suspension");
+  if (relationship && preparedSuspensionPreserved(score, events, relationship.eventIds)) {
     findings.push({
       targetId: relationship.id,
       sourceEventId: relationship.eventIds.find((id) => id.includes("figure")),
@@ -299,12 +299,106 @@ function auditContinuo(
       message:
         "The continuo validation profile accepts the source-supported prepared fourth and downward 4-3 resolution.",
     });
+  } else if (relationship) {
+    findings.push({
+      targetId: relationship.id,
+      severity: "hard",
+      code: "continuo.prepared_suspension_changed",
+      message:
+        "The arranged preparation, dissonant fourth, downward resolution, figure realization, or source timing no longer preserves the reviewed 4-3 suspension.",
+    });
   }
   return {
     status: findings.some((finding) => finding.severity === "hard") ? "fail" : "pass",
     targetIds: targets.map((target) => target.id),
     findings,
   };
+}
+
+function preparedSuspensionPreserved(
+  score: NormalizedScore,
+  events: ArrangementEvent[],
+  sourceIds: string[]
+): boolean {
+  const sourceNotes = sourceIds.flatMap((id) => {
+    const event = score.events.find(
+      (candidate): candidate is Extract<ScoreEvent, { type: "note" }> =>
+        candidate.id === id && candidate.type === "note"
+    );
+    return event ? [event] : [];
+  });
+  const figures = sourceIds.flatMap((id) => {
+    const event = score.events.find(
+      (candidate): candidate is Extract<ScoreEvent, { type: "figured_bass" }> =>
+        candidate.id === id && candidate.type === "figured_bass"
+    );
+    return event ? [event] : [];
+  });
+  if (sourceNotes.length < 5 || figures.length < 2) return false;
+  const [preparation, suspension, resolution] = sourceNotes;
+  const [fourth, third] = figures;
+  if (!preparation || !suspension || !resolution || !fourth || !third) return false;
+  const arrangedPreparation = descendant(events, preparation.id, "principal_voice");
+  const arrangedSuspension = descendant(events, suspension.id, "principal_voice");
+  const arrangedResolution = descendant(events, resolution.id, "principal_voice");
+  const realizedFourth = descendant(events, fourth.id, "realization");
+  const realizedThird = descendant(events, third.id, "realization");
+  const bass = score.events.find(
+    (event): event is Extract<ScoreEvent, { type: "note" }> =>
+      event.id === fourth.bassEventId && event.type === "note"
+  );
+  if (
+    !arrangedPreparation ||
+    !arrangedSuspension ||
+    !arrangedResolution ||
+    !realizedFourth ||
+    !realizedThird ||
+    !bass
+  ) {
+    return false;
+  }
+  const timedDescendants = [
+    [preparation, arrangedPreparation],
+    [suspension, arrangedSuspension],
+    [resolution, arrangedResolution],
+    [fourth, realizedFourth],
+    [third, realizedThird],
+  ] as const;
+  const timingPreserved = timedDescendants.every(
+    ([source, arranged]) =>
+      source.measureId === arranged.measureId && compareRational(source.onset, arranged.onset) === 0
+  );
+  return (
+    timingPreserved &&
+    arrangedPreparation.pitches[0] === arrangedSuspension.pitches[0] &&
+    pitchSemitones(arrangedResolution.pitches[0]!) ===
+      pitchSemitones(arrangedSuspension.pitches[0]!) - 1 &&
+    realizedFourth.pitches.some((pitch) => diatonicDistance(bass.pitch, pitch) === 4) &&
+    realizedThird.pitches.some((pitch) => diatonicDistance(bass.pitch, pitch) === 3)
+  );
+}
+
+function descendant(
+  events: ArrangementEvent[],
+  sourceId: string,
+  role: ArrangementEvent["role"]
+): ArrangementEvent | undefined {
+  return events.find((event) => event.role === role && event.sourceEventIds.includes(sourceId));
+}
+
+function pitchSemitones(pitch: string): number {
+  const parsed = parsePitch(pitch);
+  const pitchClasses: Record<string, number> = {
+    C: 0,
+    D: 2,
+    E: 4,
+    F: 5,
+    G: 7,
+    A: 9,
+    B: 11,
+  };
+  const accidental = parsed.accidental === "#" ? 1 : parsed.accidental === "b" ? -1 : 0;
+  return (parsed.octave + 1) * 12 + pitchClasses[parsed.letter]! + accidental;
 }
 
 function diatonicDistance(bassPitch: string, upperPitch: string): number {

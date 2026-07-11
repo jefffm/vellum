@@ -2,7 +2,7 @@ import { Value } from "@sinclair/typebox/value";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { arrangeContinuo } from "./continuo-arranger.js";
+import { arrangeContinuo, auditContinuo } from "./continuo-arranger.js";
 import { RecognizedScoreSchema } from "./music-domain.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 
@@ -73,6 +73,20 @@ describe("profile-scoped Continuo Realization", () => {
     expect(
       result.selected.transformationReport.filter((entry) => entry.classification === "generated")
     ).toHaveLength(5);
+
+    const mutated = result.selected.events.map((event) =>
+      event.sourceEventIds.includes("event.figure.2") && event.role === "realization"
+        ? { ...event, onset: { numerator: 3, denominator: 4 } }
+        : event
+    );
+    const audit = auditContinuo(score, analysis, mutated);
+    expect(audit.status).toBe("fail");
+    expect(audit.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "hard",
+        code: "continuo.prepared_suspension_changed",
+      })
+    );
   });
 
   it("refuses to invent an unscoped realization", () => {

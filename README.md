@@ -70,6 +70,8 @@ For a source containing an explicit Continuo Foundation, the soprano-plus-piano 
 
 For imitative polyphony, Vellum does not invent a permanent Principal Voice. It detects ordered entries with a shared interval-rhythm shape, protects every source voice and cadential goal, searches collision-free six-course assignments, and audits the resulting French-letter intabulation under `counterpoint.renaissance-imitative`. Three rhythm lanes keep each lineage readable above the shared tablature staff without duplicating MIDI playback, and Audio Preview can isolate every source voice.
 
+Preservation Audits recompute protected musical relationships from the selected Arrangement Score. Adversarial regression tests prove that altered melody timing, order, phrase contour, cadential placement, imitative entry shape or order, voice lineage, and prepared `4-3` suspension treatment produce hard failures rather than descriptive success messages.
+
 ## Stack
 
 - TypeScript + Vite browser UI

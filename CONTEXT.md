@@ -421,6 +421,8 @@ _Avoid_: French tab
 - Under **Idiomatic Adaptation** and **Free Paraphrase**, the Transformation Report is informative and inspectable rather than a note-level fidelity gate; hard instrument, commitment, and contextual validation constraints still apply independently
 - Every **Arrangement Score** produced under **Faithful Reduction** requires a passing **Preservation Audit**
 - An unexplained omission, substitution, rhythmic change, or lost protected relationship fails the **Preservation Audit**
+- Relationship Preservation Targets use machine-readable relationship types and ordered event groups; a passing audit recomputes timing, order, interval-rhythm shape, phrase contour, voice identity, suspension treatment, and cadential placement as applicable rather than accepting a generated success statement
+- Golden-fixture mutation tests deliberately break each protected relationship and must produce hard findings, so fixture success cannot be inferred solely from event coverage or compilation
 - A necessary deviation becomes a recorded **Policy Exception** and produces a new **Arrangement Score** version
 - The complete **Preservation Audit** remains inspectable while its pass/fail summary appears by default
 - A supplied source defaults to **Faithful Reduction** unless the request establishes another policy

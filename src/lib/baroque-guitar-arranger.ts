@@ -201,13 +201,161 @@ export function auditFaithfulPrincipalVoice(
         message: "Principal Voice duration changed.",
       });
     }
+    if (
+      compareRational(source.onset, arranged.onset) !== 0 ||
+      source.measureId !== arranged.measureId
+    ) {
+      findings.push({
+        targetId: target.id,
+        sourceEventId,
+        arrangementEventId: arranged.id,
+        severity: "hard",
+        code: "principal.onset_changed",
+        message: "Principal Voice onset or measure position changed.",
+      });
+    }
+  }
+
+  const sequenceTarget = analysis.preservationTargets.find(
+    (candidate) => candidate.relationshipType === "principal_sequence"
+  );
+  if (sequenceTarget) {
+    const sourceSequence = sequenceTarget.eventIds.flatMap((id) => {
+      const event = score.events.find(
+        (candidate): candidate is Extract<ScoreEvent, { type: "note" }> =>
+          candidate.id === id && candidate.type === "note"
+      );
+      return event ? [event] : [];
+    });
+    const arrangedSequence = sequenceTarget.eventIds.flatMap((id) => {
+      const event = arrangedEvents.find(
+        (candidate) => candidate.principalVoiceSourceEventId === id
+      );
+      return event ? [event] : [];
+    });
+    const chronological = arrangedSequence.every(
+      (event, index) =>
+        index === 0 ||
+        absoluteEventOnset(score, arrangedSequence[index - 1]!) <= absoluteEventOnset(score, event)
+    );
+    const sourceContour = intervalContour(sourceSequence.map((event) => event.pitch));
+    const arrangedContour = intervalContour(
+      arrangedSequence.map(
+        (event) => event.pitches.slice().sort((a, b) => noteToMidi(b) - noteToMidi(a))[0]!
+      )
+    );
+    if (
+      arrangedSequence.length !== sourceSequence.length ||
+      !chronological ||
+      sourceContour.join(",") !== arrangedContour.join(",")
+    ) {
+      findings.push({
+        targetId: sequenceTarget.id,
+        severity: "hard",
+        code: "principal.sequence_changed",
+        message:
+          "Principal Voice chronological order or interval contour no longer matches the reviewed source sequence.",
+      });
+    }
+  }
+
+  const cadenceTarget = analysis.preservationTargets.find(
+    (candidate) => candidate.relationshipType === "cadential_goal"
+  );
+  if (cadenceTarget) {
+    const cadenceId = cadenceTarget.eventIds.at(-1);
+    const sourceCadence = score.events.find(
+      (event): event is Extract<ScoreEvent, { type: "note" }> =>
+        event.id === cadenceId && event.type === "note"
+    );
+    const arrangedCadence = arrangedEvents.find(
+      (event) => event.principalVoiceSourceEventId === cadenceId
+    );
+    const lastPrincipalEvent = arrangedEvents
+      .filter((event) => event.principalVoiceSourceEventId)
+      .slice()
+      .sort((left, right) => absoluteEventOnset(score, left) - absoluteEventOnset(score, right))
+      .at(-1);
+    if (
+      !sourceCadence ||
+      !arrangedCadence ||
+      lastPrincipalEvent?.id !== arrangedCadence.id ||
+      !arrangedCadence.pitches.includes(transposeNote(sourceCadence.pitch, transpositionSemitones))
+    ) {
+      findings.push({
+        targetId: cadenceTarget.id,
+        sourceEventId: cadenceId,
+        arrangementEventId: arrangedCadence?.id,
+        severity: "hard",
+        code: "principal.cadential_goal_changed",
+        message: "Principal Voice no longer reaches the reviewed cadential goal.",
+      });
+    }
+  }
+
+  for (const phraseTarget of analysis.preservationTargets.filter(
+    (candidate) => candidate.relationshipType === "phrase_contour"
+  )) {
+    const sourcePhrase = phraseTarget.eventIds.flatMap((id) => {
+      const event = score.events.find(
+        (candidate): candidate is Extract<ScoreEvent, { type: "note" }> =>
+          candidate.id === id && candidate.type === "note"
+      );
+      return event ? [event] : [];
+    });
+    const arrangedPhrase = phraseTarget.eventIds.flatMap((id) => {
+      const event = arrangedEvents.find(
+        (candidate) => candidate.principalVoiceSourceEventId === id
+      );
+      return event ? [event] : [];
+    });
+    const sourceContour = intervalContour(sourcePhrase.map((event) => event.pitch));
+    const arrangedContour = intervalContour(
+      arrangedPhrase.map(
+        (event) => event.pitches.slice().sort((a, b) => noteToMidi(b) - noteToMidi(a))[0]!
+      )
+    );
+    if (
+      arrangedPhrase.length !== sourcePhrase.length ||
+      sourceContour.join(",") !== arrangedContour.join(",") ||
+      arrangedPhrase.some(
+        (event, index) =>
+          event.measureId !== sourcePhrase[index]!.measureId ||
+          compareRational(event.onset, sourcePhrase[index]!.onset) !== 0 ||
+          compareRational(event.duration, sourcePhrase[index]!.duration) !== 0
+      )
+    ) {
+      findings.push({
+        targetId: phraseTarget.id,
+        severity: "hard",
+        code: "principal.phrase_contour_changed",
+        message:
+          "A protected Principal Voice phrase no longer retains its source contour, rhythm, or placement.",
+      });
+    }
   }
 
   return {
     status: findings.some((finding) => finding.severity === "hard") ? "fail" : "pass",
-    targetIds: [target.id],
+    targetIds: analysis.preservationTargets.map((candidate) => candidate.id),
     findings,
   };
+}
+
+function absoluteEventOnset(
+  score: NormalizedScore,
+  event: Pick<ScoreEvent | ArrangementEvent, "measureId" | "onset">
+): number {
+  let result = 0;
+  for (const measure of score.measures) {
+    if (measure.id === event.measureId) break;
+    result += measure.duration.numerator / measure.duration.denominator;
+  }
+  return result + event.onset.numerator / event.onset.denominator;
+}
+
+function intervalContour(pitches: string[]): number[] {
+  return pitches.slice(1).map((pitch, index) => noteToMidi(pitch) - noteToMidi(pitches[index]!));
 }
 
 function chooseTranspositionPlan(

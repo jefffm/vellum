@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadBrowserProfile } from "./browser-profiles.js";
-import { arrangeImitativeIntabulation } from "./imitative-arranger.js";
+import { arrangeImitativeIntabulation, auditImitative } from "./imitative-arranger.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
@@ -64,5 +64,26 @@ describe("three-voice imitative intabulation search", () => {
         expect(arranged.positions).toHaveLength(1);
       }
     }
+
+    const orderedEntries = analysis.preservationTargets.find(
+      (target) => target.relationshipType === "ordered_entries"
+    )!;
+    const secondEntryId = orderedEntries.eventGroups![1]![0]!;
+    const firstEntry = result.selected.events.find((event) =>
+      event.sourceEventIds.includes(orderedEntries.eventGroups![0]![0]!)
+    )!;
+    const mutated = result.selected.events.map((event) =>
+      event.sourceEventIds.includes(secondEntryId)
+        ? { ...event, measureId: firstEntry.measureId, onset: firstEntry.onset }
+        : event
+    );
+    const audit = auditImitative(score, analysis, mutated, model);
+    expect(audit.status).toBe("fail");
+    expect(audit.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "imitation.onset_changed" }),
+        expect.objectContaining({ code: "imitation.ordered_entries_changed" }),
+      ])
+    );
   });
 });

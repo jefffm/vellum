@@ -16,6 +16,7 @@ export function analyzeMusicologicalScore(
   const principalEvents = score.events.filter(
     (event) => event.partId === principal.part.id && event.type === "note"
   );
+  const principalPhraseGroups = phraseGroups(score, principal.part.id);
   if (principalEvents.length === 0) {
     throw new Error(`Principal Voice candidate has no notes: ${principal.part.id}`);
   }
@@ -74,6 +75,32 @@ export function analyzeMusicologicalScore(
       rationale:
         "Faithful Reduction preserves every Principal Voice pitch, duration, order, phrase position, and perceptual prominence.",
     },
+    {
+      id: `target.${options.id.slice("analysis.".length)}.principal-sequence`,
+      kind: "relationship",
+      relationshipType: "principal_sequence",
+      eventIds: principalEvents.map((event) => event.id),
+      eventGroups: [principalEvents.map((event) => event.id)],
+      rationale:
+        "The Principal Voice retains its source onset sequence, interval contour, rhythmic identity, and chronological order.",
+    },
+    {
+      id: `target.${options.id.slice("analysis.".length)}.cadential-goal`,
+      kind: "relationship",
+      relationshipType: "cadential_goal",
+      eventIds: [principalEvents.at(-1)!.id],
+      eventGroups: [[principalEvents.at(-1)!.id]],
+      rationale: "The Principal Voice reaches its reviewed final cadential goal.",
+    },
+    ...principalPhraseGroups.map((eventIds, index) => ({
+      id: `target.${options.id.slice("analysis.".length)}.phrase-${index + 1}`,
+      kind: "relationship" as const,
+      relationshipType: "phrase_contour" as const,
+      eventIds,
+      eventGroups: [eventIds],
+      rationale:
+        "This rest-delimited Principal Voice phrase retains its interval contour, rhythmic identity, and source placement.",
+    })),
   ];
   if (continuoPart) {
     preservationTargets.push({
@@ -89,7 +116,9 @@ export function analyzeMusicologicalScore(
     preservationTargets.push({
       id: `target.${options.id.slice("analysis.".length)}.prepared-suspension`,
       kind: "relationship",
+      relationshipType: "prepared_suspension",
       eventIds: suspension.eventIds,
+      eventGroups: [suspension.eventIds],
       rationale:
         "The prepared dissonance and its downward resolution are source-supported contrapuntal structure, not a generic voice-leading violation.",
     });
@@ -107,6 +136,25 @@ export function analyzeMusicologicalScore(
     preservationTargets,
     createdAt: options.createdAt,
   };
+}
+
+function phraseGroups(score: NormalizedScore, partId: string): string[][] {
+  const events = score.events
+    .filter((event) => event.partId === partId && event.type !== "figured_bass")
+    .slice()
+    .sort((left, right) => absoluteOnset(score, left) - absoluteOnset(score, right));
+  const groups: string[][] = [];
+  let current: string[] = [];
+  for (const event of events) {
+    if (event.type === "rest") {
+      if (current.length > 1) groups.push(current);
+      current = [];
+    } else {
+      current.push(event.id);
+    }
+  }
+  if (current.length > 1) groups.push(current);
+  return groups;
 }
 
 type ImitationEvidence = {
@@ -135,8 +183,18 @@ function analyzeImitativeScore(
     rationale:
       "Imitative intabulation preserves this source voice's event order, rhythm, pitch contour, and continuity even when voices interleave on one tablature staff.",
   }));
-  const subjectIds = evidence.entries.flatMap((entry) => entry.notes.map((note) => note.id));
-  const cadenceIds = evidence.entries.map((entry) => entry.notes.at(-1)!.id);
+  const subjectGroups = evidence.entries.map((entry) => entry.notes.map((note) => note.id));
+  const subjectIds = subjectGroups.flat();
+  const cadenceIds = evidence.entries.map((entry) => {
+    const finalNote = score.events
+      .filter(
+        (event): event is Extract<ScoreEvent, { type: "note" }> =>
+          event.partId === entry.part.id && event.type === "note"
+      )
+      .at(-1);
+    if (!finalNote) throw new Error(`Imitative voice has no cadential goal: ${entry.part.id}`);
+    return finalNote.id;
+  });
 
   return {
     id: options.id,
@@ -177,14 +235,18 @@ function analyzeImitativeScore(
       {
         id: `target.${suffix}.ordered-entries`,
         kind: "relationship",
+        relationshipType: "ordered_entries",
         eventIds: subjectIds,
+        eventGroups: subjectGroups,
         rationale:
           "Subject entries retain their source order, transposed interval-rhythm shape, and voice identity.",
       },
       {
         id: `target.${suffix}.cadential-goal`,
         kind: "relationship",
+        relationshipType: "cadential_goal",
         eventIds: cadenceIds,
+        eventGroups: cadenceIds.map((id) => [id]),
         rationale: "Every source voice must reach its reviewed cadential goal.",
       },
     ],

@@ -29,11 +29,11 @@ describe("faithful baroque-guitar arrangement search", () => {
     });
 
     expect(result.candidates).toHaveLength(2);
-    expect(result.selected.preservationAudit).toEqual({
-      status: "pass",
-      targetIds: [expect.stringMatching(/^target\./)],
-      findings: [],
-    });
+    expect(result.selected.preservationAudit.status).toBe("pass");
+    expect(result.selected.preservationAudit.targetIds).toEqual(
+      fixture.analysis.preservationTargets.map((target) => target.id)
+    );
+    expect(result.selected.preservationAudit.findings).toEqual([]);
     expect(result.selected.transpositionPlan).toMatchObject({
       sourceKey: "G major",
       targetKey: "F major",
@@ -100,6 +100,54 @@ describe("faithful baroque-guitar arrangement search", () => {
         code: "principal.omitted",
         severity: "hard",
       })
+    );
+  });
+
+  it("fails relationship invariants when melody timing, order, contour, or cadence is mutated", () => {
+    const result = arrangeFaithfulBaroqueGuitar(fixture.score, fixture.analysis, fixture.model, {
+      arrangementId: "arrangement.greensleeves-mutation",
+      createdAt: "2026-07-10T14:00:00.000Z",
+      targetConfiguration: {
+        id: "target.baroque-guitar",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        stringing: "french",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf", "audio-preview"],
+      },
+    });
+    const sequence = fixture.analysis.preservationTargets.find(
+      (target) => target.relationshipType === "principal_sequence"
+    )!;
+    const cadence = fixture.analysis.preservationTargets.find(
+      (target) => target.relationshipType === "cadential_goal"
+    )!;
+    const mutationId = sequence.eventIds[1]!;
+    const firstEvent = result.selected.events.find(
+      (event) => event.principalVoiceSourceEventId === sequence.eventIds[0]
+    )!;
+    const mutated = result.selected.events
+      .filter((event) => event.principalVoiceSourceEventId !== cadence.eventIds[0])
+      .map((event) =>
+        event.principalVoiceSourceEventId === mutationId
+          ? { ...event, measureId: firstEvent.measureId, onset: { numerator: 0, denominator: 1 } }
+          : event
+      );
+
+    const audit = auditFaithfulPrincipalVoice(
+      fixture.score,
+      fixture.analysis,
+      mutated,
+      result.selected.transpositionPlan.semitones
+    );
+    expect(audit.status).toBe("fail");
+    expect(audit.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "principal.onset_changed" }),
+        expect.objectContaining({ code: "principal.sequence_changed" }),
+        expect.objectContaining({ code: "principal.cadential_goal_changed" }),
+        expect.objectContaining({ code: "principal.phrase_contour_changed" }),
+      ])
     );
   });
 });
