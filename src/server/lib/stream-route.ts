@@ -8,6 +8,7 @@ import type {
 } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
 import { ProviderConnection } from "./provider-connection.js";
+import { redactSecretText } from "./secret-redaction.js";
 
 export const providerConnection = new ProviderConnection();
 
@@ -75,7 +76,7 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
       });
 
       for await (const event of stream) {
-        writeSse(response, toProxyEvent(event));
+        writeSse(response, toProxyEvent(event, [apiKey]));
       }
 
       response.end();
@@ -84,7 +85,7 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
         writeSse(response, {
           type: "error",
           reason: abortController.signal.aborted ? "aborted" : "error",
-          errorMessage: errorMessage(error),
+          errorMessage: errorMessage(error, [apiKey]),
           usage: emptyUsage(),
         });
         response.end();
@@ -113,7 +114,7 @@ export function resolveApiKeyFromEnvironment(provider: string): string | undefin
     process.env.VELLUM_LLM_API_KEY ??
     process.env[`${normalized}_API_KEY`] ??
     process.env[provider === "anthropic" ? "ANTHROPIC_API_KEY" : ""] ??
-    process.env[provider === "openai" ? "OPENAI_API_KEY" : ""];
+    process.env[provider === "openai" || provider === "openai-codex" ? "OPENAI_API_KEY" : ""];
 
   if (direct && direct.length > 0) {
     return direct;
@@ -171,7 +172,10 @@ function parseStreamRequest(
   };
 }
 
-function toProxyEvent(event: AssistantMessageEvent): Record<string, unknown> {
+function toProxyEvent(
+  event: AssistantMessageEvent,
+  knownSecrets: string[] = []
+): Record<string, unknown> {
   switch (event.type) {
     case "start":
       return { type: "start" };
@@ -218,7 +222,9 @@ function toProxyEvent(event: AssistantMessageEvent): Record<string, unknown> {
       return {
         type: "error",
         reason: event.reason,
-        errorMessage: event.error.errorMessage,
+        errorMessage: event.error.errorMessage
+          ? redactSecretText(event.error.errorMessage, knownSecrets)
+          : undefined,
         usage: event.error.usage,
       };
   }
@@ -250,13 +256,13 @@ function emptyUsage() {
   };
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown, knownSecrets: string[] = []): string {
   if (error instanceof Error && error.message.length > 0) {
-    return error.message;
+    return redactSecretText(error.message, knownSecrets);
   }
 
   if (typeof error === "string" && error.length > 0) {
-    return error;
+    return redactSecretText(error, knownSecrets);
   }
 
   return "LLM stream failed";

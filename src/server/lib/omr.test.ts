@@ -5,12 +5,17 @@ import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import type { RecognizedScore } from "../../lib/music-domain.js";
-import { AudiverisBackend, OmrService } from "./omr.js";
+import { AudiverisBackend, OmrService, audiverisCommand } from "./omr.js";
 import type { OmrBackend, OmrBackendResult } from "./omr.js";
 import { SubprocessError } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 describe("OMR pipeline", () => {
+  it("discovers an installed macOS Audiveris application", () => {
+    if (process.platform === "darwin") {
+      expect(audiverisCommand()).toMatch(/Audiveris\.app\/Contents\/MacOS\/Audiveris$|audiveris$/);
+    }
+  });
   let rootDirectory: string;
   let store: WorkspaceStore;
   let workspaceId: string;

@@ -105,10 +105,33 @@ describe("createStreamRoute", () => {
     expect(resolveApiKeyFromEnvironment("anthropic")).toBe("anthropic-secret");
   });
 
+  it("redacts the resolved key and structured credentials from streaming failures", async () => {
+    const streamSimpleImpl: StreamSimple = async function* () {
+      throw new Error("Bearer secret-key refresh=refresh-secret");
+    };
+    const server = await listen(
+      createStreamRoute({ streamSimpleImpl, resolveApiKey: () => "secret-key" })
+    );
+    servers.push(server);
+    const response = await fetch(`${serverUrl(server)}/api/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(validRequest()),
+    });
+    const body = await response.text();
+    expect(body).not.toMatch(/secret-key|refresh-secret/);
+    expect(body).toContain("[redacted]");
+  });
+
   it("resolves existing environment keys before the owned Provider Connection", async () => {
     vi.stubEnv("OPENAI_CODEX_API_KEY", "codex-env-secret");
 
     await expect(resolveApiKeyForProvider("openai-codex")).resolves.toBe("codex-env-secret");
+  });
+
+  it("accepts the standard OpenAI API key as a ChatGPT-provider fallback", () => {
+    vi.stubEnv("OPENAI_API_KEY", "openai-fallback-secret");
+    expect(resolveApiKeyFromEnvironment("openai-codex")).toBe("openai-fallback-secret");
   });
 });
 

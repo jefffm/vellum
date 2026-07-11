@@ -102,6 +102,27 @@ describe("createApiRoute", () => {
       );
     }
   );
+
+  it("redacts secrets from API errors", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const app = express();
+    app.use(express.json());
+    app.post(
+      "/api/test",
+      createApiRoute({
+        validate: () => ({}),
+        handler: async () => {
+          throw new Error("Bearer bearer-secret api_key=sk-1234567890");
+        },
+      })
+    );
+    const server = await listen(app);
+    servers.push(server);
+    const response = await fetch(`${serverUrl(server)}/api/test`, { method: "POST" });
+    const body = await response.text();
+    expect(body).not.toMatch(/bearer-secret|sk-1234567890/);
+    expect(body).toContain("[redacted]");
+  });
 });
 
 async function listen(app: express.Express): Promise<Server> {

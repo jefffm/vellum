@@ -1,7 +1,7 @@
 import type { Agent, AgentEvent, AgentMessage } from "@mariozechner/pi-agent-core";
 
 const REDACTED_KEYS =
-  /^(api[-_]?key|authorization|token|access|refresh|secret|password|svg|pdf|midi)$/i;
+  /^(api[-_]?key|authorization|token|access(?:_token)?|refresh(?:_token)?|client_secret|secret|password|code|state|svg|pdf|midi)$/i;
 const LARGE_STRING_LIMIT = 100_000;
 const MAX_EVENTS = 1_000;
 
@@ -95,10 +95,11 @@ function traceReplacer(key: string, value: unknown): unknown {
   }
 
   if (typeof value === "string" && value.length > LARGE_STRING_LIMIT) {
-    return `[truncated string: ${value.length} characters]${value.slice(0, LARGE_STRING_LIMIT)}`;
+    return inlineRedaction(
+      `[truncated string: ${value.length} characters]${value.slice(0, LARGE_STRING_LIMIT)}`
+    );
   }
-
-  return value;
+  return typeof value === "string" ? inlineRedaction(value) : value;
 }
 
 function redactValue(value: unknown): string {
@@ -145,7 +146,7 @@ function formatMessageAsMarkdown(message: AgentMessage): string {
 
 function formatContent(content: unknown): string {
   if (typeof content === "string") {
-    return content;
+    return inlineRedaction(content);
   }
 
   if (!Array.isArray(content)) {
@@ -160,10 +161,10 @@ function formatContent(content: unknown): string {
 
       switch (part.type) {
         case "text":
-          return typeof part.text === "string" ? part.text : "";
+          return typeof part.text === "string" ? inlineRedaction(part.text) : "";
         case "thinking":
           return typeof part.thinking === "string"
-            ? `<thinking>\n${part.thinking}\n</thinking>`
+            ? `<thinking>\n${inlineRedaction(part.thinking)}\n</thinking>`
             : "";
         case "toolCall":
           return [
@@ -179,6 +180,18 @@ function formatContent(content: unknown): string {
     })
     .filter((part) => part.trim().length > 0)
     .join("\n\n");
+}
+
+function inlineRedaction(value: string): string {
+  return value
+    .replace(/Bearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "[redacted api key]")
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[redacted token]")
+    .replace(/([?&](?:code|state|token|access_token|refresh_token)=)[^&#\s]+/gi, "$1[redacted]")
+    .replace(
+      /((?:api[-_ ]?key|authorization|access|refresh|token|secret|password|code|state)\s*[:=]\s*)[^\s,;]+/gi,
+      "$1[redacted]"
+    );
 }
 
 function installDebugExportToolbar(api: VellumDebugApi): void {

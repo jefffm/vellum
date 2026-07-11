@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -44,6 +44,40 @@ describe("WorkspaceStore", () => {
 
     expect(store.get(workspace.id)).toEqual(workspace);
     expect(store.list()).toEqual([workspace]);
+  });
+
+  it("migrates pre-Model-Action workspace manifests without losing existing links", () => {
+    const id = "workspace.1111111111111111";
+    const directory = path.join(rootDirectory, id);
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(
+      path.join(directory, "workspace.json"),
+      JSON.stringify({
+        id,
+        title: "Legacy workspace",
+        brief: { targetConfigurations: [] },
+        sourceArtifactIds: ["source.1111111111111111"],
+        omrRunIds: [],
+        scoreTranscriptionIds: [],
+        normalizedScoreIds: [],
+        analysisRecordIds: [],
+        arrangementScoreIds: [],
+        createdAt: "2026-07-10T12:00:00.000Z",
+        updatedAt: "2026-07-10T12:00:00.000Z",
+      })
+    );
+
+    expect(store.get(id)).toMatchObject({
+      schemaVersion: 2,
+      sourceArtifactIds: ["source.1111111111111111"],
+      modelActionIds: [],
+      arrangementBranchIds: [],
+    });
+    expect(JSON.parse(readFileSync(path.join(directory, "workspace.json"), "utf8"))).toMatchObject({
+      schemaVersion: 2,
+      modelActionIds: [],
+      arrangementBranchIds: [],
+    });
   });
 
   it("stores the golden PDF immutably and links it by checksum", () => {
@@ -180,15 +214,29 @@ describe("WorkspaceStore", () => {
       ],
       createdAt: timestamp,
     });
+    const normalizedV2 = store.saveNormalizedScore(workspace.id, {
+      ...normalized,
+      id: "score.2222222222222222",
+      version: 2,
+    });
 
     expect(store.getOmrRun(workspace.id, omrRun.id)).toEqual(omrRun);
     expect(store.getScoreTranscription(workspace.id, transcription.id)).toEqual(transcription);
     expect(store.getNormalizedScore(workspace.id, normalized.id)).toEqual(normalized);
     expect(store.getAnalysisRecord(workspace.id, analysis.id)).toEqual(analysis);
+    expect(() => store.assertCanonicalResultReference(workspace.id, analysis.id)).not.toThrow();
+    expect(() =>
+      store.assertCanonicalResultReference(workspace.id, "analysis.9999999999999999")
+    ).toThrow(/not found/);
+    expect(
+      store.resolveCurrentInputVersions(workspace.id, [
+        { recordType: "normalized_score", recordId: normalized.id, version: 1 },
+      ])
+    ).toEqual([{ recordType: "normalized_score", recordId: normalizedV2.id, version: 2 }]);
     expect(store.get(workspace.id)).toMatchObject({
       omrRunIds: [omrRun.id],
       scoreTranscriptionIds: [transcription.id],
-      normalizedScoreIds: [normalized.id],
+      normalizedScoreIds: [normalized.id, normalizedV2.id],
       analysisRecordIds: [analysis.id],
     });
 

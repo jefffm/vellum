@@ -15,8 +15,20 @@ import {
   createProviderDisconnectRoute,
   createProviderLoginRoute,
   createProviderPromptRoute,
+  createProviderReconnectRoute,
   createProviderStatusRoute,
 } from "./lib/provider-connection-route.js";
+import {
+  createModelActionCancelRoute,
+  createModelActionCompleteRoute,
+  createModelActionCreateRoute,
+  createModelActionGetRoute,
+  createModelActionInterruptRoute,
+  createModelActionListRoute,
+  createModelActionProgressRoute,
+  createModelActionRetryRoute,
+} from "./lib/model-action-route.js";
+import { redactSecretText } from "./lib/secret-redaction.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
 import { createTemplateGetRoute, createTemplateListRoute } from "./lib/template-route.js";
@@ -93,7 +105,7 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
 
   response.status(status).json({
     error: {
-      message: error instanceof Error ? error.message : "Internal server error",
+      message: error instanceof Error ? redactSecretText(error.message) : "Internal server error",
       status,
     },
   });
@@ -110,6 +122,7 @@ export function createApiRouter(): Router {
   router.get("/provider-connection", createProviderStatusRoute(providerConnection));
   router.post("/provider-connection/login", createProviderLoginRoute(providerConnection));
   router.post("/provider-connection/prompt", createProviderPromptRoute(providerConnection));
+  router.post("/provider-connection/reconnect", createProviderReconnectRoute(providerConnection));
   router.delete("/provider-connection", createProviderDisconnectRoute(providerConnection));
   router.post("/compile", createCompileRoute());
   router.post("/engrave", createEngraveRoute());
@@ -129,6 +142,29 @@ export function createApiRouter(): Router {
   router.get("/workspaces", createWorkspaceListRoute());
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
+  router.get("/workspaces/:workspaceId/model-actions", createModelActionListRoute());
+  router.post("/workspaces/:workspaceId/model-actions", createModelActionCreateRoute());
+  router.get("/workspaces/:workspaceId/model-actions/:modelActionId", createModelActionGetRoute());
+  router.patch(
+    "/workspaces/:workspaceId/model-actions/:modelActionId",
+    createModelActionProgressRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/interrupt",
+    createModelActionInterruptRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/complete",
+    createModelActionCompleteRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/retry",
+    createModelActionRetryRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/cancel",
+    createModelActionCancelRoute()
+  );
   router.post(
     "/workspaces/:workspaceId/sources",
     express.raw({ type: "application/pdf", limit: "128mb" }),

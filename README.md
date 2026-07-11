@@ -50,6 +50,14 @@ npm run dev
 
 Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `VELLUM_LLM_API_KEY`) remain fallback configuration for providers that need them. Vellum owns its credentials and does not import Pi or Codex login files.
 
+On macOS, Vellum stores ChatGPT authorization in Keychain. Set `VELLUM_PROVIDER_CREDENTIAL_STORE=file` only when you explicitly need the atomic, permission-restricted local fallback.
+
+The deterministic fake-provider contract suite runs in ordinary tests. To opt into the real ChatGPT subscription lifecycle smoke test (it opens the authorization page twice and never prints tokens, callback parameters, or model content), run:
+
+```bash
+VELLUM_REAL_CHATGPT_SMOKE=1 npm test -- --run src/server/lib/provider-connection.real-smoke.test.ts
+```
+
 ### PDF arrangement tracer bullet
 
 The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF; choose any compatible combination of five-course baroque guitar, 13-course baroque lute, six-course Renaissance lute, six-string classical guitar, and soprano-plus-piano continuo; and optionally add a plain-language instruction. Vellum then:
@@ -62,7 +70,7 @@ The **New arrangement** control opens Guided Start. Upload an arbitrary score PD
 6. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
 7. engraves the requested output - French letter tablature, classical-guitar standard notation, or a figured-bass continuo score - and creates a literal synthesized Audio Preview with isolatable semantic parts.
 
-[Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be available as `audiveris` on `PATH` for arbitrary PDF recognition. Vellum requires both the native `.omr` project and exported MusicXML: the former supplies symbol bounds and recognition grades, while the latter supplies the interchange score. If Audiveris is unavailable or omits its native project, the source and Arrangement Brief remain saved and Vellum reports the incomplete run without pretending that recognition succeeded. Checked-in public-domain fixtures include reviewed canonical truth plus a production-derived Audiveris 5.10.2 evidence pair, so arrangement regressions and evidence extraction can be tested independently of local OMR drift.
+[Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be installed for arbitrary PDF recognition. Vellum discovers the standard macOS application automatically, otherwise uses `audiveris` on `PATH`; `VELLUM_AUDIVERIS_COMMAND` overrides either location. Vellum requires both the native `.omr` project and exported MusicXML: the former supplies symbol bounds and recognition grades, while the latter supplies the interchange score. If Audiveris is unavailable or omits its native project, the source and Arrangement Brief remain saved and Vellum reports the incomplete run without pretending that recognition succeeded. Checked-in public-domain fixtures include reviewed canonical truth plus a production-derived Audiveris 5.10.2 evidence pair, so arrangement regressions and evidence extraction can be tested independently of local OMR drift.
 
 The lute path uses the historical default 13-course D-minor tuning, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. The classical-guitar path uses standard EADGBE tuning and a single `treble_8` staff, so its PDF contains standard notation without tablature and its MIDI has one playback source. Each selected instrument gets an independent arrangement search and Preservation Audit while sharing the same reviewed source analysis.
 

@@ -40,6 +40,14 @@ type CorrectionResult = {
 };
 
 export function installGuidedStart(options: GuidedStartOptions): void {
+  const linkedWorkspace = new URL(window.location.href).searchParams.get("workspace");
+  let activeWorkspaceId =
+    linkedWorkspace?.match(/^workspace\.[a-f0-9-]{16,}$/)?.[0] ??
+    localStorage.getItem("vellum.active-workspace") ??
+    undefined;
+  if (linkedWorkspace && activeWorkspaceId === linkedWorkspace) {
+    localStorage.setItem("vellum.active-workspace", linkedWorkspace);
+  }
   const launcher = document.createElement("button");
   launcher.id = "guided-start-launcher";
   launcher.type = "button";
@@ -50,7 +58,10 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   dialog.id = "guided-start";
   dialog.innerHTML = guidedStartMarkup();
   document.body.append(dialog);
-  launcher.addEventListener("click", () => dialog.showModal());
+  launcher.addEventListener("click", () => {
+    dialog.showModal();
+    if (activeWorkspaceId) void refreshModelActionRecovery(dialog, activeWorkspaceId);
+  });
   for (const skip of dialog.querySelectorAll<HTMLElement>("[data-guided-skip]")) {
     skip.addEventListener("click", () => dialog.close());
   }
@@ -93,6 +104,9 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           },
         }),
       });
+      activeWorkspaceId = workspace.id;
+      localStorage.setItem("vellum.active-workspace", workspace.id);
+      await refreshModelActionRecovery(dialog, workspace.id);
       status.textContent = "Uploading the source PDF…";
       const source = await api<{ id: string }>(`/api/workspaces/${workspace.id}/sources`, {
         method: "POST",
@@ -156,6 +170,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       status.textContent =
         error instanceof Error ? error.message : "The arrangement could not be started.";
       status.dataset.error = "true";
+      if (activeWorkspaceId) await refreshModelActionRecovery(dialog, activeWorkspaceId);
     } finally {
       submit.disabled = false;
     }
@@ -165,6 +180,89 @@ export function installGuidedStart(options: GuidedStartOptions): void {
     localStorage.setItem("vellum.guided-start.seen", "true");
     dialog.showModal();
   }
+}
+
+type RecoverableModelAction = {
+  id: string;
+  kind: string;
+  intent: string;
+  status: "interrupted";
+  originalInputVersions: Array<{ recordId: string; version: number }>;
+  attempts: Array<{
+    completedLocalToolResults: Array<{ toolName: string; resultReference: string }>;
+    partialProgressSummary?: string;
+    interruptionReason?: string;
+    lastConfirmedBoundary: string;
+    inputDifferenceSummary?: string;
+  }>;
+};
+
+async function refreshModelActionRecovery(root: HTMLElement, workspaceId: string): Promise<void> {
+  const panel = root.querySelector<HTMLElement>("[data-model-action-recovery]");
+  const items = panel?.querySelector<HTMLElement>("[data-model-action-items]");
+  if (!panel || !items) return;
+  const actions = await api<RecoverableModelAction[]>(
+    `/api/workspaces/${workspaceId}/model-actions`
+  );
+  const interrupted = actions.filter((action) => action.status === "interrupted");
+  panel.hidden = interrupted.length === 0;
+  items.replaceChildren();
+  for (const action of interrupted) {
+    const attempt = action.attempts.at(-1)!;
+    const item = document.createElement("article");
+    item.className = "model-action-recovery-item";
+    const heading = document.createElement("strong");
+    heading.textContent = `${action.kind.replaceAll("_", " ")}: ${action.intent}`;
+    const detail = document.createElement("p");
+    detail.textContent = [
+      attempt.interruptionReason ?? "Provider work was interrupted.",
+      `Last confirmed boundary: ${attempt.lastConfirmedBoundary}`,
+      attempt.partialProgressSummary,
+      `${action.originalInputVersions.length} exact input version(s) retained; ${attempt.completedLocalToolResults.length} local tool result(s) retained.`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const controls = document.createElement("div");
+    controls.className = "model-action-recovery-controls";
+    const retryCurrent = recoveryButton("Retry on current version", async () => {
+      await mutate("retry", { mode: "current_version" });
+    });
+    const retryBranch = recoveryButton("Retry original snapshot as a branch", async () => {
+      await mutate("retry", { mode: "original_snapshot_branch" });
+    });
+    const cancel = recoveryButton("Cancel", async () => {
+      await mutate("cancel", {});
+    });
+    controls.append(retryCurrent, retryBranch, cancel);
+    item.append(heading, detail, controls);
+    items.append(item);
+
+    async function mutate(operation: "retry" | "cancel", body: object): Promise<void> {
+      for (const button of controls.querySelectorAll<HTMLButtonElement>("button")) {
+        button.disabled = true;
+      }
+      try {
+        await api(`/api/workspaces/${workspaceId}/model-actions/${action.id}/${operation}`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        await refreshModelActionRecovery(root, workspaceId);
+      } catch (error) {
+        detail.textContent = `${detail.textContent} ${error instanceof Error ? error.message : "The recovery action failed."}`;
+        for (const button of controls.querySelectorAll<HTMLButtonElement>("button")) {
+          button.disabled = false;
+        }
+      }
+    }
+  }
+}
+
+function recoveryButton(label: string, action: () => Promise<void>): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", () => void action());
+  return button;
 }
 
 export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPreview): void {
@@ -432,23 +530,33 @@ async function installProviderConnection(root: HTMLElement): Promise<void> {
   const disconnect = root.querySelector<HTMLButtonElement>("[data-provider-disconnect]");
   if (!status || !connect || !disconnect) return;
   let handledPrompt: string | undefined;
+  let lastState = "disconnected";
   const refresh = async () => {
     const current = await api<{
       state: string;
       error?: string;
       prompt?: { message: string; placeholder?: string; allowEmpty?: boolean };
     }>("/api/provider-connection");
+    lastState = current.state;
     status.textContent = current.error ? `${current.state}: ${current.error}` : current.state;
-    connect.hidden = current.state === "connected";
-    disconnect.hidden = current.state !== "connected";
+    connect.hidden = current.state === "connected" || current.state === "refreshing";
+    connect.disabled = current.state === "connecting";
+    connect.textContent =
+      current.state === "expired" || current.error ? "Reconnect" : "Connect ChatGPT";
+    disconnect.hidden = !["connected", "expired", "refreshing"].includes(current.state);
     if (current.prompt && current.prompt.message !== handledPrompt) {
       handledPrompt = current.prompt.message;
       const value = window.prompt(current.prompt.message, current.prompt.placeholder ?? "");
       if (value !== null && (current.prompt.allowEmpty || value.length > 0)) {
-        await api("/api/provider-connection/prompt", {
-          method: "POST",
-          body: JSON.stringify({ value }),
-        });
+        try {
+          await api("/api/provider-connection/prompt", {
+            method: "POST",
+            body: JSON.stringify({ value }),
+          });
+        } catch (error) {
+          handledPrompt = undefined;
+          status.textContent = error instanceof Error ? error.message : "Invalid provider callback";
+        }
       }
     }
     return current;
@@ -457,7 +565,11 @@ async function installProviderConnection(root: HTMLElement): Promise<void> {
     connect.disabled = true;
     const popup = window.open("about:blank", "vellum-chatgpt-login", "popup,width=680,height=760");
     try {
-      const login = await api<{ authUrl?: string }>("/api/provider-connection/login", {
+      const endpoint =
+        lastState === "expired"
+          ? "/api/provider-connection/reconnect"
+          : "/api/provider-connection/login";
+      const login = await api<{ authUrl?: string }>(endpoint, {
         method: "POST",
       });
       if (login.authUrl && popup) popup.location.href = login.authUrl;
@@ -502,6 +614,7 @@ export function guidedStartMarkup(): string {
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
+      <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · Italian Baroque profile · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>

@@ -1,4 +1,5 @@
 import type { Request, RequestHandler } from "express";
+import { redactSecretText } from "./secret-redaction.js";
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
@@ -74,11 +75,11 @@ function httpStatus(error: unknown): number {
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message.length > 0) {
-    return error.message;
+    return redactSecretText(error.message);
   }
 
   if (typeof error === "string" && error.length > 0) {
-    return error;
+    return redactSecretText(error);
   }
 
   return "Internal server error";

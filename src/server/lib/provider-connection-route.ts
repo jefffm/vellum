@@ -46,3 +46,13 @@ export function createProviderDisconnectRoute(connection: ProviderConnection): R
     }
   };
 }
+
+export function createProviderReconnectRoute(connection: ProviderConnection): RequestHandler {
+  return async (_request, response, next) => {
+    try {
+      response.json({ ok: true, data: await connection.reconnect() });
+    } catch (error) {
+      next(error);
+    }
+  };
+}

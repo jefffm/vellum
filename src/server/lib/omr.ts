@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import JSZip from "jszip";
 import type {
@@ -74,7 +75,7 @@ export class AudiverisBackend implements OmrBackend {
   ) => Promise<AudiverisNormalizationResult>;
 
   constructor(options: AudiverisBackendOptions = {}) {
-    this.command = options.command ?? process.env.VELLUM_AUDIVERIS_COMMAND ?? "audiveris";
+    this.command = options.command ?? audiverisCommand();
     this.timeout = options.timeout ?? 5 * 60_000;
     this.runner = options.runner ?? new SubprocessRunner(this.timeout);
     this.normalizer = options.normalizer ?? normalizeAudiverisMusicXml;
@@ -193,6 +194,12 @@ export class AudiverisBackend implements OmrBackend {
       throw error;
     }
   }
+}
+
+export function audiverisCommand(): string {
+  if (process.env.VELLUM_AUDIVERIS_COMMAND) return process.env.VELLUM_AUDIVERIS_COMMAND;
+  const macApp = "/Applications/Audiveris.app/Contents/MacOS/Audiveris";
+  return process.platform === "darwin" && existsSync(macApp) ? macApp : "audiveris";
 }
 
 async function extractAudiverisPageImages(nativeOmr: Buffer): Promise<OmrBackendArtifact[]> {

@@ -56,6 +56,17 @@ describe("debug export", () => {
     });
   });
 
+  it("redacts inline credentials and callback parameters from traces and chat exports", () => {
+    const message =
+      "Bearer bearer-value api_key=sk-1234567890 https://local.test?code=oauth-code&state=csrf-state";
+    expect(JSON.stringify(sanitizeForTrace({ message }))).not.toMatch(
+      /bearer-value|sk-1234567890|oauth-code|csrf-state/
+    );
+    expect(exportChatText([{ role: "user", content: message, timestamp: 1 }])).not.toMatch(
+      /bearer-value|sk-1234567890|oauth-code|csrf-state/
+    );
+  });
+
   it("builds a trace with sanitized events and messages", () => {
     const trace = buildDebugTrace(
       [

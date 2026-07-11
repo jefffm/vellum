@@ -12,8 +12,10 @@ import {
 import path from "node:path";
 import {
   AnalysisRecordSchema,
+  ArrangementBranchSchema,
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
+  ModelActionSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
   ScoreTranscriptionSchema,
@@ -21,9 +23,12 @@ import {
 } from "../../lib/music-domain.js";
 import type {
   AnalysisRecord,
+  ArrangementBranch,
   ArrangementScore,
   ArrangementWorkspace,
   CreateWorkspace,
+  ModelAction,
+  ModelActionInputVersion,
   NormalizedScore,
   OmrRun,
   ScoreTranscription,
@@ -54,6 +59,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
+      schemaVersion: 2,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -63,6 +69,8 @@ export class WorkspaceStore {
       normalizedScoreIds: [],
       analysisRecordIds: [],
       arrangementScoreIds: [],
+      modelActionIds: [],
+      arrangementBranchIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -92,7 +100,33 @@ export class WorkspaceStore {
       throw new ApiRouteError(`Arrangement workspace not found: ${workspaceId}`, 404);
     }
 
-    return Value.Decode(ArrangementWorkspaceSchema, JSON.parse(readFileSync(manifestPath, "utf8")));
+    const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
+    if (!isRecord(parsed)) {
+      throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
+    }
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 2) {
+      throw new ApiRouteError(
+        `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
+        409
+      );
+    }
+    const migrated = {
+      ...parsed,
+      schemaVersion: 2,
+      modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
+      arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
+        ? parsed.arrangementBranchIds
+        : [],
+    };
+    const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
+    if (
+      parsed.schemaVersion !== 2 ||
+      !Array.isArray(parsed.modelActionIds) ||
+      !Array.isArray(parsed.arrangementBranchIds)
+    ) {
+      writeJsonAtomic(manifestPath, workspace);
+    }
+    return workspace;
   }
 
   addSourceArtifact(workspaceId: string, input: UploadSourceArtifact): SourceArtifact {
@@ -330,6 +364,130 @@ export class WorkspaceStore {
     );
   }
 
+  saveModelAction(workspaceId: string, action: ModelAction): ModelAction {
+    const workspace = this.get(workspaceId);
+    const decoded = Value.Decode(ModelActionSchema, action);
+    this.writeRecord(workspaceId, "model-actions", decoded.id, decoded);
+    this.linkRecord(workspace, "modelActionIds", decoded.id);
+    return decoded;
+  }
+
+  getModelAction(workspaceId: string, modelActionId: string): ModelAction {
+    return this.readRecord(
+      workspaceId,
+      "model-actions",
+      modelActionId,
+      "model-action",
+      ModelActionSchema
+    );
+  }
+
+  listModelActions(workspaceId: string): ModelAction[] {
+    const workspace = this.get(workspaceId);
+    return workspace.modelActionIds.map((id) => this.getModelAction(workspaceId, id));
+  }
+
+  resolveCurrentInputVersions(
+    workspaceId: string,
+    originals: ModelActionInputVersion[]
+  ): ModelActionInputVersion[] {
+    const workspace = this.get(workspaceId);
+    return originals.map((original) => {
+      if (original.recordId.startsWith("transcription.")) {
+        const sourceId = this.getScoreTranscription(
+          workspaceId,
+          original.recordId
+        ).sourceArtifactId;
+        return latestVersion(
+          workspace.scoreTranscriptionIds
+            .map((id) => this.getScoreTranscription(workspaceId, id))
+            .filter((record) => record.sourceArtifactId === sourceId),
+          original
+        );
+      }
+      if (original.recordId.startsWith("score.")) {
+        const sourceId = this.getScoreTranscription(
+          workspaceId,
+          this.getNormalizedScore(workspaceId, original.recordId).scoreTranscriptionId
+        ).sourceArtifactId;
+        return latestVersion(
+          workspace.normalizedScoreIds
+            .map((id) => this.getNormalizedScore(workspaceId, id))
+            .filter(
+              (record) =>
+                this.getScoreTranscription(workspaceId, record.scoreTranscriptionId)
+                  .sourceArtifactId === sourceId
+            ),
+          original
+        );
+      }
+      if (original.recordId.startsWith("analysis.")) {
+        const sourceId = this.getScoreTranscription(
+          workspaceId,
+          this.getNormalizedScore(
+            workspaceId,
+            this.getAnalysisRecord(workspaceId, original.recordId).normalizedScoreId
+          ).scoreTranscriptionId
+        ).sourceArtifactId;
+        return latestVersion(
+          workspace.analysisRecordIds
+            .map((id) => this.getAnalysisRecord(workspaceId, id))
+            .filter(
+              (record) =>
+                this.getScoreTranscription(
+                  workspaceId,
+                  this.getNormalizedScore(workspaceId, record.normalizedScoreId)
+                    .scoreTranscriptionId
+                ).sourceArtifactId === sourceId
+            ),
+          original
+        );
+      }
+      throw new ApiRouteError(
+        `Unsupported or missing versioned Model Action input: ${original.recordId}`,
+        400
+      );
+    });
+  }
+
+  assertCanonicalResultReference(workspaceId: string, reference: string): void {
+    if (reference.startsWith("transcription.")) {
+      this.getScoreTranscription(workspaceId, reference);
+      return;
+    }
+    if (reference.startsWith("score.")) {
+      this.getNormalizedScore(workspaceId, reference);
+      return;
+    }
+    if (reference.startsWith("analysis.")) {
+      this.getAnalysisRecord(workspaceId, reference);
+      return;
+    }
+    if (reference.startsWith("arrangement.")) {
+      this.getArrangementScore(workspaceId, reference);
+      return;
+    }
+    throw new ApiRouteError(`Unsupported canonical Model Action result: ${reference}`, 400);
+  }
+
+  saveArrangementBranch(workspaceId: string, branch: ArrangementBranch): ArrangementBranch {
+    const workspace = this.get(workspaceId);
+    const decoded = Value.Decode(ArrangementBranchSchema, branch);
+    this.writeImmutableRecord(workspaceId, "arrangement-branches", decoded.id, decoded);
+    this.linkRecord(workspace, "arrangementBranchIds", decoded.id);
+    return decoded;
+  }
+
+  getArrangementBranch(workspaceId: string, branchId: string): ArrangementBranch {
+    return this.readRecord(
+      workspaceId,
+      "arrangement-branches",
+      branchId,
+      "branch",
+      ArrangementBranchSchema
+    );
+  }
+
   private linkSourceArtifact(workspace: ArrangementWorkspace, sourceArtifactId: string): void {
     if (!workspace.sourceArtifactIds.includes(sourceArtifactId)) {
       workspace.sourceArtifactIds.push(sourceArtifactId);
@@ -479,6 +637,16 @@ function sourceKind(mimeType: string): SourceArtifact["kind"] {
   return "musicxml";
 }
 
+function latestVersion(
+  records: Array<{ id: string; version: number }>,
+  original: ModelActionInputVersion
+): ModelActionInputVersion {
+  const latest = records.sort((left, right) => right.version - left.version)[0];
+  if (!latest) return original;
+  const { sha256: _obsoleteHash, ...identity } = original;
+  return { ...identity, recordId: latest.id, version: latest.version };
+}
+
 function writeJsonAtomic(filePath: string, value: unknown): void {
   writeFileAtomic(filePath, Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8"));
 }
@@ -488,4 +656,8 @@ function writeFileAtomic(filePath: string, content: Buffer): void {
   const temporaryPath = `${filePath}.${process.pid}.${randomUUID()}.tmp`;
   writeFileSync(temporaryPath, content, { mode: 0o600 });
   renameSync(temporaryPath, filePath);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

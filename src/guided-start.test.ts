@@ -25,6 +25,8 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain("data-review-source-highlight");
     expect(markup).toContain("Recognized notation");
     expect(markup).toContain("Cancel this run");
+    expect(markup).toContain("data-model-action-recovery");
+    expect(markup).toContain("Interrupted model work");
     expect(targetConfiguration("target.classical-guitar")).toEqual({
       id: "target.classical-guitar",
       instrumentId: "classical-guitar-6",

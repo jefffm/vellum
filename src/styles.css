@@ -473,6 +473,31 @@ chat-panel > div > div:has(agent-interface) {
   background: #f4f4f0;
 }
 
+.model-action-recovery {
+  padding: 0.9rem;
+  border: 1px solid #d7a45c;
+  border-radius: 0.65rem;
+  background: #fff9ed;
+}
+
+.model-action-recovery > p,
+.model-action-recovery-item p {
+  margin: 0.35rem 0 0.65rem;
+  color: #625744;
+  font-size: 0.82rem;
+}
+
+.model-action-recovery-item + .model-action-recovery-item {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e7d7ba;
+}
+
+.model-action-recovery-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
 .provider-connection div {
   display: grid;
   gap: 0.1rem;

@@ -94,6 +94,7 @@ export const ArrangementBriefSchema = Type.Object(
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
+    schemaVersion: Type.Integer({ minimum: 2 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,
@@ -103,6 +104,8 @@ export const ArrangementWorkspaceSchema = Type.Object(
     normalizedScoreIds: Type.Array(IdSchema),
     analysisRecordIds: Type.Array(IdSchema),
     arrangementScoreIds: Type.Array(IdSchema),
+    modelActionIds: Type.Array(IdSchema),
+    arrangementBranchIds: Type.Array(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -120,6 +123,92 @@ export const CreateWorkspaceSchema = Type.Object(
 );
 
 export type CreateWorkspace = Static<typeof CreateWorkspaceSchema>;
+
+export const ModelActionInputVersionSchema = Type.Object(
+  {
+    recordType: Type.String({ minLength: 1 }),
+    recordId: IdSchema,
+    version: Type.Integer({ minimum: 1 }),
+    sha256: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })),
+  },
+  { additionalProperties: false }
+);
+
+export const ModelActionAttemptSchema = Type.Object(
+  {
+    id: IdSchema,
+    number: Type.Integer({ minimum: 1 }),
+    mode: Type.Union([
+      Type.Literal("initial"),
+      Type.Literal("current_version"),
+      Type.Literal("original_snapshot_branch"),
+    ]),
+    status: Type.Union([
+      Type.Literal("running"),
+      Type.Literal("interrupted"),
+      Type.Literal("completed"),
+      Type.Literal("cancelled"),
+    ]),
+    inputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
+    inputDifferenceSummary: Type.Optional(Type.String({ minLength: 1 })),
+    arrangementBranchId: Type.Optional(IdSchema),
+    completedLocalToolResults: Type.Array(
+      Type.Object(
+        {
+          toolName: Type.String({ minLength: 1 }),
+          resultReference: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    partialProgressSummary: Type.Optional(Type.String({ minLength: 1 })),
+    diagnosticPartialOutput: Type.Optional(Type.String({ minLength: 1 })),
+    interruptionReason: Type.Optional(Type.String({ minLength: 1 })),
+    lastConfirmedBoundary: Type.String({ minLength: 1 }),
+    canonicalResultReference: Type.Optional(Type.String({ minLength: 1 })),
+    startedAt: IsoDateSchema,
+    finishedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+
+export const ModelActionSchema = Type.Object(
+  {
+    id: IdSchema,
+    kind: Type.String({ minLength: 1 }),
+    intent: Type.String({ minLength: 1 }),
+    idempotencyKey: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    status: Type.Union([
+      Type.Literal("running"),
+      Type.Literal("interrupted"),
+      Type.Literal("completed"),
+      Type.Literal("cancelled"),
+    ]),
+    originalInputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
+    attempts: Type.Array(ModelActionAttemptSchema, { minItems: 1 }),
+    createdAt: IsoDateSchema,
+    updatedAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type ModelActionInputVersion = Static<typeof ModelActionInputVersionSchema>;
+export type ModelActionAttempt = Static<typeof ModelActionAttemptSchema>;
+export type ModelAction = Static<typeof ModelActionSchema>;
+
+export const ArrangementBranchSchema = Type.Object(
+  {
+    id: IdSchema,
+    label: Type.String({ minLength: 1 }),
+    rootInputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
+    createdByModelActionId: IdSchema,
+    createdByAttemptId: IdSchema,
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type ArrangementBranch = Static<typeof ArrangementBranchSchema>;
 
 export const UploadSourceArtifactSchema = Type.Object(
   {
