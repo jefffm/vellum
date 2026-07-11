@@ -29,6 +29,7 @@ stringing:
       origin: "Modern compromise"
       description: "Partial bass color with re-entrant upper-course behavior."
 constraints:
+  - "stretch: 3"
   - "Re-entrant tuning: courses 4-5 sound higher than expected (depends on stringing)"
   - "Strummed (rasgueado) and plucked (punteado) styles"
   - "Alfabeto chord notation for strummed passages"

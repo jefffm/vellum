@@ -13,6 +13,14 @@ import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
 import { engrave } from "../server/lib/engrave.js";
 
 describe("Arrangement Score engraving projection", () => {
+  it("keeps LilyPond course order aligned with the baroque-guitar model", () => {
+    const instrument = readFileSync(
+      path.resolve(process.cwd(), "instruments/baroque-guitar-5.ily"),
+      "utf8"
+    );
+    expect(instrument).toContain("guitarStringTunings = \\stringTuning <a d' g b e'>");
+  });
+
   it("projects the audited Greensleeves result into French tablature and MIDI source", () => {
     const parsed = parseExplicitVoiceLilypond(
       readFileSync(

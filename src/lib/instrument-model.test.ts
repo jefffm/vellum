@@ -78,7 +78,7 @@ describe("InstrumentModel", () => {
     expect(lute.maxStretch()).toBe(4);
     expect(lute.isFretted(6)).toBe(true);
     expect(lute.isDiapason(7)).toBe(true);
-    expect(guitar.maxStretch()).toBe(5);
+    expect(guitar.maxStretch()).toBe(3);
     expect(guitar.isDiapason(5)).toBe(false);
   });
 
@@ -139,6 +139,20 @@ describe("InstrumentModel", () => {
         ])
         .violations.map((violation) => violation.type)
     ).toContain("same_course");
+  });
+
+  it("rejects a six-fret baroque-guitar chord span", () => {
+    const guitar = modelFor("baroque-guitar-5");
+
+    expect(
+      guitar.isPlayable([
+        { course: 1, fret: 1, quality: "low_fret" },
+        { course: 5, fret: 6, quality: "high_fret" },
+      ])
+    ).toMatchObject({
+      ok: false,
+      violations: [expect.objectContaining({ type: "stretch" })],
+    });
   });
 
   it("loads profiles via the static factory", async () => {

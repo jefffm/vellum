@@ -6,6 +6,6 @@
 % LilyPond's \stringTuning input runs from the lowest-numbered bass-side
 % course to the highest course; it reverses that sequence for string numbers.
 % Keep the fourth and fifth courses re-entrant at D4 and A3.
-guitarStringTunings = \stringTuning <a g b d' e'>
+guitarStringTunings = \stringTuning <a d' g b e'>
 
 guitarTabFormat = #fret-letter-tablature-format
