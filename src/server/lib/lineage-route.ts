@@ -42,6 +42,21 @@ const ArrangementEventPatchSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+const EditBatchBodySchema = Type.Object(
+  {
+    edits: Type.Array(
+      Type.Object(
+        {
+          eventId: Type.String({ minLength: 1 }),
+          patch: ArrangementEventPatchSchema,
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+  },
+  { additionalProperties: false }
+);
 
 type Options = { store?: WorkspaceStore; service?: LineageService };
 
@@ -122,28 +137,25 @@ export function createArrangementEventEditRoute(options: Options = {}): RequestH
 
 export function createArrangementEditBatchRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
-  const Body = Type.Object(
-    {
-      edits: Type.Array(
-        Type.Object(
-          {
-            eventId: Type.String({ minLength: 1 }),
-            patch: ArrangementEventPatchSchema,
-          },
-          { additionalProperties: false }
-        ),
-        { minItems: 1 }
-      ),
-    },
-    { additionalProperties: false }
-  );
   return createApiRoute<any, unknown>({
     validate: (body, request) => ({
       ...Value.Decode(ArrangementParams, request.params),
-      ...Value.Decode(Body, body),
+      ...Value.Decode(EditBatchBodySchema, body),
     }),
     handler: async ({ workspaceId, arrangementId, edits }) =>
       service.editArrangementEvents(workspaceId, arrangementId, edits),
+  });
+}
+
+export function createArrangementEditBatchValidationRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(ArrangementParams, request.params),
+      ...Value.Decode(EditBatchBodySchema, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, edits }) =>
+      service.validateArrangementEvents(workspaceId, arrangementId, edits),
   });
 }
 

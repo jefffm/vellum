@@ -139,6 +139,8 @@ describe("interactive notation", () => {
     expect(implementation).toContain("Save as new version");
     expect(implementation).toContain("Discard staged edits");
     expect(implementation).toContain("edit-batches");
+    expect(implementation).toContain("edit-batches/validate");
+    expect(implementation).toContain("Hard findings must be repaired");
     expect(implementation).toContain("vellum-arrangement-version-created");
   });
 

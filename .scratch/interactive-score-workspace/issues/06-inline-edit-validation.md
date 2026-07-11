@@ -1,6 +1,6 @@
 # Inline Edit Batch validation and repair
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Validate the complete staged Edit Batch before commit and place playability, voi
 
 ## Acceptance criteria
 
-- [ ] Staged edits receive live hard/soft Validation Findings scoped to musical objects.
-- [ ] Stretch, collision, range, lost Principal Voice, and audit failures highlight the affected notation.
-- [ ] Applicable repairs can be previewed without mutating canonical state.
-- [ ] Hard failures block commit; owner-approved localized exceptions follow the existing versioned Policy Exception workflow.
-- [ ] The original six-to-one baroque-guitar reach is rejected and explained inline.
+- [x] Staged edits receive live hard/soft Validation Findings scoped to musical objects.
+- [x] Stretch, collision, range, lost Principal Voice, and audit failures highlight the affected notation.
+- [x] Applicable repairs can be previewed without mutating canonical state.
+- [x] Hard failures block commit; owner-approved localized exceptions follow the existing versioned Policy Exception workflow.
+- [x] The original six-to-one baroque-guitar reach is rejected and explained inline.
 
 ## Blocked by
 

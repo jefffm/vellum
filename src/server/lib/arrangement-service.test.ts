@@ -378,6 +378,40 @@ describe("Greensleeves faithful arrangement service", () => {
       result.arrangementScore
     );
 
+    const beforeStretchPreview = store.get(workspace.id);
+    const stretchPreview = lineage.validateArrangementEvents(
+      workspace.id,
+      result.arrangementScore.id,
+      [
+        {
+          eventId: editableChords[0]!.id,
+          patch: {
+            positions: [
+              { course: 1, fret: 1, pitch: "F4", quality: "low_fret" },
+              { course: 5, fret: 6, pitch: "D#4", quality: "high_fret" },
+            ],
+          },
+        },
+      ]
+    );
+    expect(stretchPreview).toMatchObject({
+      valid: false,
+      findings: expect.arrayContaining([
+        expect.objectContaining({
+          eventIds: [editableChords[0]!.id],
+          severity: "hard",
+          category: "instrument",
+          code: "instrument.stretch",
+          message: "Fret span 5 exceeds maximum stretch 3",
+        }),
+      ]),
+    });
+    expect(store.get(workspace.id)).toMatchObject({
+      arrangementBranchIds: beforeStretchPreview.arrangementBranchIds,
+      arrangementScoreIds: beforeStretchPreview.arrangementScoreIds,
+      editorialCommitmentIds: beforeStretchPreview.editorialCommitmentIds,
+    });
+
     const beforeRejectedBatch = store.get(workspace.id);
     expect(() =>
       lineage.editArrangementEvents(workspace.id, result.arrangementScore.id, [

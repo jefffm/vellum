@@ -247,6 +247,25 @@ type EditBatchResult = {
   branch: { id: string };
 };
 
+type EditBatchValidation = {
+  valid: boolean;
+  arrangementScoreId: string;
+  arrangementScoreVersion: number;
+  findings: Array<{
+    id: string;
+    eventIds: string[];
+    severity: "hard" | "soft" | "observation";
+    category: string;
+    code: string;
+    message: string;
+    repairs: Array<{
+      label: string;
+      rationale: string;
+      edits: Array<{ eventId: string; patch: Record<string, unknown> }>;
+    }>;
+  }>;
+};
+
 export function openEditBatchDialog(
   deliverable: GuidedDeliverable,
   selectedEvents: ArrangementEvent[]
@@ -298,6 +317,8 @@ export function openEditBatchDialog(
   }
   const status = document.createElement("p");
   status.className = "edit-batch-status";
+  const findings = document.createElement("section");
+  findings.className = "edit-validation-findings";
   const cancel = document.createElement("button");
   cancel.type = "button";
   cancel.textContent = "Discard staged edits";
@@ -305,13 +326,48 @@ export function openEditBatchDialog(
   const save = document.createElement("button");
   save.type = "submit";
   save.textContent = "Save as new version";
-  form.append(status, cancel, save);
+  save.disabled = true;
+  form.append(findings, status, cancel, save);
+  let validationTimer: number | undefined;
+  const validate = async () => {
+    const edits = stagedEventEdits(form, selectedEvents);
+    clearEditValidationHighlights();
+    findings.replaceChildren();
+    if (edits.length === 0) {
+      status.textContent = "No staged changes.";
+      save.disabled = true;
+      return undefined;
+    }
+    status.textContent = "Checking playability and Preservation Policy…";
+    const result = await api<EditBatchValidation>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/edit-batches/validate`,
+      { method: "POST", body: JSON.stringify({ edits }) }
+    );
+    renderEditValidationFindings(findings, form, result, requestValidation);
+    save.disabled = !result.valid;
+    status.textContent = result.valid
+      ? "Validation passed. Saving will create one new audited version."
+      : "Hard findings must be repaired before commit; Policy Drift cannot be bulk-approved.";
+    return result;
+  };
+  const requestValidation = () => {
+    void validate().catch((error: unknown) => {
+      save.disabled = true;
+      status.textContent = error instanceof Error ? error.message : "Validation failed.";
+    });
+  };
+  form.addEventListener("input", () => {
+    if (validationTimer !== undefined) window.clearTimeout(validationTimer);
+    validationTimer = window.setTimeout(requestValidation, 250);
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     save.disabled = true;
     try {
       const edits = stagedEventEdits(form, selectedEvents);
       if (edits.length === 0) throw new Error("No staged changes to save.");
+      const validation = await validate();
+      if (!validation?.valid) throw new Error("Repair hard Validation Findings before saving.");
       status.textContent = "Validating the complete Edit Batch…";
       const result = await api<EditBatchResult>(
         `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/edit-batches`,
@@ -330,7 +386,89 @@ export function openEditBatchDialog(
   dialog.append(heading, explanation, form);
   document.body.append(dialog);
   dialog.showModal();
+  dialog.addEventListener("close", clearEditValidationHighlights, { once: true });
   return dialog;
+}
+
+function clearEditValidationHighlights(): void {
+  document
+    .querySelectorAll(".edit-validation-hard, .edit-validation-soft, .edit-validation-observation")
+    .forEach((element) =>
+      element.classList.remove(
+        "edit-validation-hard",
+        "edit-validation-soft",
+        "edit-validation-observation"
+      )
+    );
+}
+
+function renderEditValidationFindings(
+  container: HTMLElement,
+  form: HTMLFormElement,
+  validation: EditBatchValidation,
+  revalidate: () => void
+): void {
+  for (const finding of validation.findings) {
+    const item = document.createElement("article");
+    item.className = `edit-validation-finding ${finding.severity}`;
+    const message = document.createElement("p");
+    message.textContent = `${finding.category.replaceAll("_", " ")} · ${finding.code}: ${finding.message}`;
+    item.append(message);
+    for (const eventId of finding.eventIds) {
+      document
+        .querySelectorAll(`[data-arrangement-event-id="${CSS.escape(eventId)}"]`)
+        .forEach((element) => element.classList.add(`edit-validation-${finding.severity}`));
+    }
+    for (const repair of finding.repairs) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = repair.label;
+      button.title = repair.rationale;
+      button.addEventListener("click", () => {
+        applyRepairEdits(form, repair.edits);
+        revalidate();
+      });
+      item.append(button);
+    }
+    container.append(item);
+  }
+  if (validation.findings.length === 0) {
+    const clean = document.createElement("p");
+    clean.textContent = "No Validation Findings.";
+    container.append(clean);
+  }
+}
+
+function applyRepairEdits(
+  form: HTMLFormElement,
+  edits: Array<{ eventId: string; patch: Record<string, unknown> }>
+): void {
+  for (const edit of edits) {
+    const fieldset = form.querySelector<HTMLFieldSetElement>(
+      `[data-edit-event-id="${CSS.escape(edit.eventId)}"]`
+    );
+    if (!fieldset) continue;
+    if (Array.isArray(edit.patch.pitches)) {
+      fieldset.querySelector<HTMLInputElement>('[name="pitches"]')!.value =
+        edit.patch.pitches.join(", ");
+    }
+    if (edit.patch.duration && typeof edit.patch.duration === "object") {
+      const duration = edit.patch.duration as { numerator: number; denominator: number };
+      fieldset.querySelector<HTMLInputElement>('[name="durationNumerator"]')!.value = String(
+        duration.numerator
+      );
+      fieldset.querySelector<HTMLInputElement>('[name="durationDenominator"]')!.value = String(
+        duration.denominator
+      );
+    }
+    if (Array.isArray(edit.patch.positions)) {
+      fieldset.querySelector<HTMLTextAreaElement>('[name="positions"]')!.value = JSON.stringify(
+        edit.patch.positions,
+        null,
+        2
+      );
+    }
+  }
 }
 
 function labeledControl(label: string, control: HTMLElement): HTMLLabelElement {

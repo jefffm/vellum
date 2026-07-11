@@ -349,6 +349,42 @@ chat-panel > div > div:has(agent-interface) {
   margin: 0;
 }
 
+.edit-validation-findings {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.edit-validation-finding {
+  padding: 0.55rem 0.7rem;
+  border-left: 0.3rem solid #7a7565;
+  border-radius: 0.3rem;
+  background: #f5f4ef;
+}
+
+.edit-validation-finding.hard {
+  border-color: #a83b2b;
+  background: #fff0ec;
+}
+
+.edit-validation-finding.soft {
+  border-color: #9a6a16;
+  background: #fff8df;
+}
+
+.edit-validation-finding p {
+  margin: 0 0 0.4rem;
+}
+
+.artifact-preview-content .edit-validation-hard {
+  color: #a83b2b;
+  filter: drop-shadow(0 0 1px #a83b2b) drop-shadow(0 0 5px rgba(168, 59, 43, 0.7));
+}
+
+.artifact-preview-content .edit-validation-soft {
+  color: #9a6a16;
+  filter: drop-shadow(0 0 4px rgba(154, 106, 22, 0.6));
+}
+
 .arrangement-version-navigator {
   max-width: 38rem;
   padding: 0.5rem 0.7rem;

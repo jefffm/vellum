@@ -37,6 +37,20 @@ export type ArrangementEventPatch = {
 
 export type ArrangementEventEdit = { eventId: string; patch: ArrangementEventPatch };
 
+export type EditBatchValidationFinding = {
+  id: string;
+  eventIds: string[];
+  severity: "hard" | "soft" | "observation";
+  category: "instrument" | "preservation" | "counterpoint" | "voice_leading";
+  code: string;
+  message: string;
+  repairs: Array<{
+    label: string;
+    rationale: string;
+    edits: ArrangementEventEdit[];
+  }>;
+};
+
 export class LineageService {
   private readonly store: WorkspaceStore;
   private readonly arrangementService: ArrangementService;
@@ -237,6 +251,16 @@ export class LineageService {
     arrangementScoreId: string,
     edits: ArrangementEventEdit[]
   ) {
+    const validation = this.validateArrangementEvents(workspaceId, arrangementScoreId, edits);
+    if (!validation.valid) {
+      throw new ApiRouteError(
+        `Edit Batch validation failed: ${validation.findings
+          .filter((finding) => finding.severity === "hard")
+          .map((finding) => finding.message)
+          .join("; ")}`,
+        409
+      );
+    }
     if (edits.length === 0)
       throw new ApiRouteError("An Edit Batch requires at least one edit", 400);
     const original = this.store.getArrangementScore(workspaceId, arrangementScoreId);
@@ -344,6 +368,59 @@ export class LineageService {
     this.store.saveArrangementBranch(workspaceId, branch);
     const edited = this.store.saveArrangementScore(workspaceId, editedInput);
     return { arrangementScore: edited, editorialCommitments: commitments, branch };
+  }
+
+  validateArrangementEvents(
+    workspaceId: string,
+    arrangementScoreId: string,
+    edits: ArrangementEventEdit[]
+  ) {
+    if (edits.length === 0)
+      throw new ApiRouteError("An Edit Batch requires at least one edit", 400);
+    const original = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const changes = validateEditShape(original.events, edits);
+    const editedEvents = applyEventEdits(original.events, changes);
+    const search = this.store.getArrangementSearch(workspaceId, original.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, original.analysisRecordId);
+    const model = InstrumentModel.fromProfile(
+      loadProfile(original.targetConfiguration.instrumentId)
+    );
+    const findings = collectInstrumentFindings(model, editedEvents);
+    if (!findings.some((finding) => finding.severity === "hard")) {
+      const faithfulAudit =
+        analysis.texture === "continuo"
+          ? auditContinuo(source, analysis, editedEvents)
+          : analysis.texture === "imitative-polyphony"
+            ? auditImitative(source, analysis, editedEvents, model)
+            : auditFaithfulPrincipalVoice(
+                source,
+                analysis,
+                editedEvents,
+                original.transpositionPlan.semitones
+              );
+      const audit = applyPreservationPolicy(faithfulAudit, original.preservationPolicy);
+      findings.push(
+        ...audit.findings.map((finding, index) => ({
+          id: `validation.audit.${index + 1}`,
+          eventIds: finding.arrangementEventId ? [finding.arrangementEventId] : [],
+          severity: finding.severity,
+          category: (analysis.texture === "imitative-polyphony"
+            ? "counterpoint"
+            : "preservation") as EditBatchValidationFinding["category"],
+          code: finding.code,
+          message: finding.message,
+          repairs: [],
+        }))
+      );
+    }
+    return {
+      valid: !findings.some((finding) => finding.severity === "hard"),
+      arrangementScoreId: original.id,
+      arrangementScoreVersion: original.version ?? 1,
+      findings,
+      previewEvents: editedEvents,
+    };
   }
 
   conservativeRegenerate(
@@ -488,6 +565,180 @@ function editDimension(
   if (event.role === "principal_voice") return "principal_voice_pitch";
   if (event.role === "continuo_foundation") return "bass";
   return "harmony";
+}
+
+type ValidatedEditChange = {
+  event: ArrangementEvent;
+  patch: ArrangementEventPatch;
+  dimension: EditorialCommitment["scope"]["dimension"];
+};
+
+function validateEditShape(
+  events: ArrangementEvent[],
+  edits: ArrangementEventEdit[]
+): ValidatedEditChange[] {
+  const changes = edits.map((edit) => {
+    const event = events.find((candidate) => candidate.id === edit.eventId);
+    if (!event) throw new ApiRouteError(`Arrangement event not found: ${edit.eventId}`, 404);
+    const changed = [edit.patch.pitches, edit.patch.duration, edit.patch.positions].filter(
+      (value) => value !== undefined
+    );
+    if (changed.length !== 1) {
+      throw new ApiRouteError(
+        "Each Edit Batch item must change exactly one semantic dimension",
+        400
+      );
+    }
+    return { event, patch: edit.patch, dimension: editDimension(event, edit.patch) };
+  });
+  const keys = changes.map(({ event, dimension }) => `${event.id}:${dimension}`);
+  if (new Set(keys).size !== keys.length) {
+    throw new ApiRouteError(
+      "An Edit Batch cannot change the same event dimension more than once",
+      400
+    );
+  }
+  return changes;
+}
+
+function applyEventEdits(
+  events: ArrangementEvent[],
+  changes: ValidatedEditChange[]
+): ArrangementEvent[] {
+  return events.map((event) =>
+    changes
+      .filter((change) => change.event.id === event.id)
+      .reduce((current, change) => ({ ...current, ...change.patch }), event)
+  );
+}
+
+function collectInstrumentFindings(
+  model: InstrumentModel,
+  events: ArrangementEvent[]
+): EditBatchValidationFinding[] {
+  const findings: EditBatchValidationFinding[] = [];
+  for (const event of events) {
+    if (event.type === "rest") continue;
+    if (event.pitches.length === 0 || event.positions.length === 0) {
+      findings.push({
+        id: `validation.instrument.${event.id}.empty`,
+        eventIds: [event.id],
+        severity: "hard",
+        category: "instrument",
+        code: "instrument.empty_sounding_event",
+        message: `Sounding event ${event.id} requires both pitches and course positions.`,
+        repairs: [],
+      });
+      continue;
+    }
+    try {
+      const playable = model.isPlayable(event.positions);
+      for (const violation of playable.violations) {
+        const voicing = model.voicingsForChord(event.pitches)[0];
+        findings.push({
+          id: `validation.instrument.${event.id}.${violation.type}`,
+          eventIds: [event.id],
+          severity: "hard",
+          category: "instrument",
+          code: `instrument.${violation.type}`,
+          message: violation.description,
+          repairs: voicing
+            ? [
+                {
+                  label: "Use the nearest playable fingering",
+                  rationale: `Preserve the sounding pitches within the instrument's ${model.maxStretch()}-fret stretch limit.`,
+                  edits: [
+                    {
+                      eventId: event.id,
+                      patch: {
+                        positions: voicing.positions.map((position, index) => ({
+                          ...position,
+                          pitch: event.pitches[index]!,
+                        })),
+                      },
+                    },
+                  ],
+                },
+              ]
+            : [],
+        });
+      }
+      const soundingPitches = event.positions.map((position) =>
+        model.soundingPitch(position.course, position.fret)
+      );
+      const declaredPositions = event.positions.map((position) => position.pitch);
+      if (JSON.stringify(soundingPitches) !== JSON.stringify(declaredPositions)) {
+        findings.push({
+          id: `validation.instrument.${event.id}.position_pitch`,
+          eventIds: [event.id],
+          severity: "hard",
+          category: "instrument",
+          code: "instrument.position_pitch_mismatch",
+          message: `Course/fret positions sound ${soundingPitches.join(" + ")}, not ${declaredPositions.join(" + ")}.`,
+          repairs: [
+            {
+              label: "Use the pitches sounded by these positions",
+              rationale: "Make the semantic pitch and engraved fingering agree.",
+              edits: [
+                {
+                  eventId: event.id,
+                  patch: {
+                    positions: event.positions.map((position, index) => ({
+                      ...position,
+                      pitch: soundingPitches[index]!,
+                    })),
+                  },
+                },
+                { eventId: event.id, patch: { pitches: soundingPitches } },
+              ],
+            },
+          ],
+        });
+      } else if (
+        event.pitches.slice().sort().join("|") !== soundingPitches.slice().sort().join("|")
+      ) {
+        const voicing = model.voicingsForChord(event.pitches)[0];
+        findings.push({
+          id: `validation.instrument.${event.id}.pitch_fingering`,
+          eventIds: [event.id],
+          severity: "hard",
+          category: "instrument",
+          code: "instrument.pitch_fingering_disagreement",
+          message: `Event pitches ${event.pitches.join(" + ")} disagree with fingering pitches ${soundingPitches.join(" + ")}.`,
+          repairs: voicing
+            ? [
+                {
+                  label: "Preserve the event pitches with a playable fingering",
+                  rationale: "Keep musical identity and replace only course assignment.",
+                  edits: [
+                    {
+                      eventId: event.id,
+                      patch: {
+                        positions: voicing.positions.map((position, index) => ({
+                          ...position,
+                          pitch: event.pitches[index]!,
+                        })),
+                      },
+                    },
+                  ],
+                },
+              ]
+            : [],
+        });
+      }
+    } catch (error) {
+      findings.push({
+        id: `validation.instrument.${event.id}.range`,
+        eventIds: [event.id],
+        severity: "hard",
+        category: "instrument",
+        code: "instrument.out_of_range",
+        message: error instanceof Error ? error.message : "Invalid instrument position.",
+        repairs: [],
+      });
+    }
+  }
+  return findings;
 }
 
 function validateEditedEvents(model: InstrumentModel, events: ArrangementEvent[]): void {
