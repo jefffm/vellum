@@ -1,6 +1,6 @@
 # Version-aware score refresh and comparison
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ After an Edit Batch commits, render the new Arrangement Score and its Audio Prev
 
 ## Acceptance criteria
 
-- [ ] Successful edit commit replaces the active score with the new version without a manual URL change.
-- [ ] Parent and current versions remain independently openable and reproducible.
-- [ ] The UI identifies changed events and semantic dimensions.
-- [ ] Version navigation never relabels or overwrites an existing Deliverable.
-- [ ] Greensleeves v1 and v2 can be switched and audibly/visually compared.
+- [x] Successful edit commit replaces the active score with the new version without a manual URL change.
+- [x] Parent and current versions remain independently openable and reproducible.
+- [x] The UI identifies changed events and semantic dimensions.
+- [x] Version navigation never relabels or overwrites an existing Deliverable.
+- [x] Greensleeves v1 and v2 can be switched and audibly/visually compared.
 
 ## Blocked by
 

@@ -25,6 +25,9 @@ export type GuidedDeliverable = {
   workspaceId: string;
   arrangementScoreId: string;
   arrangementScoreVersion: number;
+  parentArrangementScoreId?: string;
+  branchId?: string;
+  editorialCommitmentIds: string[];
   arrangementFamilyId: string;
   arrangementSearchId: string;
   targetConfigurationId: string;
@@ -101,6 +104,90 @@ export type GuidedDeliverable = {
     sha256: string;
   }>;
 };
+
+export type ArrangementVersionChange = {
+  eventId: string;
+  dimensions: Array<"pitch" | "rhythm" | "course_fingering">;
+};
+
+export function compareArrangementVersions(
+  parent: GuidedDeliverable,
+  current: GuidedDeliverable
+): ArrangementVersionChange[] {
+  const parentById = new Map(parent.arrangementEvents.map((event) => [event.id, event]));
+  return current.arrangementEvents.flatMap((event) => {
+    const before = parentById.get(event.id);
+    if (!before) return [{ eventId: event.id, dimensions: ["pitch"] }];
+    const dimensions: ArrangementVersionChange["dimensions"] = [];
+    if (JSON.stringify(before.pitches) !== JSON.stringify(event.pitches)) dimensions.push("pitch");
+    if (JSON.stringify(before.duration) !== JSON.stringify(event.duration))
+      dimensions.push("rhythm");
+    if (JSON.stringify(before.positions) !== JSON.stringify(event.positions))
+      dimensions.push("course_fingering");
+    return dimensions.length ? [{ eventId: event.id, dimensions }] : [];
+  });
+}
+
+export function installVersionNavigator(
+  panel: HTMLElement,
+  current: GuidedDeliverable,
+  comparison?: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".arrangement-version-navigator")?.remove();
+  const details = document.createElement("details");
+  details.className = "arrangement-version-navigator";
+  const summary = document.createElement("summary");
+  summary.textContent = `Arrangement Score v${current.arrangementScoreVersion} · ${current.preservationAudit.status.replaceAll("_", " ")}`;
+  const lineage = document.createElement("p");
+  lineage.textContent = [
+    current.parentArrangementScoreId
+      ? `Parent ${current.parentArrangementScoreId}`
+      : "Root version",
+    current.branchId ? `Branch ${current.branchId}` : undefined,
+    `${current.editorialCommitmentIds.length} Editorial Commitment${current.editorialCommitmentIds.length === 1 ? "" : "s"}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  details.append(summary, lineage);
+  if (comparison) {
+    const parent =
+      current.parentArrangementScoreId === comparison.arrangementScoreId ? comparison : current;
+    const child = parent === current ? comparison : current;
+    const changes = compareArrangementVersions(parent, child);
+    const changed = document.createElement("ul");
+    for (const change of changes) {
+      const item = document.createElement("li");
+      item.textContent = `${change.eventId}: ${change.dimensions.map((dimension) => dimension.replaceAll("_", " ")).join(", ")}`;
+      changed.append(item);
+    }
+    if (changes.length === 0) {
+      const item = document.createElement("li");
+      item.textContent = "No event-level changes.";
+      changed.append(item);
+    }
+    const comparisonButton = document.createElement("button");
+    comparisonButton.type = "button";
+    comparisonButton.textContent = `Open ${comparison === parent ? "parent" : "child"} v${comparison.arrangementScoreVersion}`;
+    comparisonButton.addEventListener("click", () =>
+      document.dispatchEvent(
+        new CustomEvent("vellum-open-arrangement-version", {
+          detail: {
+            arrangementScoreId: comparison.arrangementScoreId,
+            comparisonArrangementScoreId: current.arrangementScoreId,
+          },
+        })
+      )
+    );
+    const currentButton = document.createElement("button");
+    currentButton.type = "button";
+    currentButton.textContent = `Open current v${current.arrangementScoreVersion}`;
+    currentButton.disabled = true;
+    details.append(changed, comparisonButton, currentButton);
+  }
+  header.append(details);
+}
 
 export type ScoreSelectionContext = {
   kind: "vellum_score_selection";
@@ -586,6 +673,9 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           arrangementScore: {
             id: string;
             version: number;
+            parentArrangementScoreId?: string;
+            branchId?: string;
+            editorialCommitmentIds?: string[];
             arrangementFamilyId: string;
             targetConfiguration: TargetConfiguration;
             preservationPolicy: ArrangementScore["preservationPolicy"];
@@ -616,6 +706,9 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           workspaceId: workspace.id,
           arrangementScoreId: arranged.arrangementScore.id,
           arrangementScoreVersion: arranged.arrangementScore.version,
+          parentArrangementScoreId: arranged.arrangementScore.parentArrangementScoreId,
+          branchId: arranged.arrangementScore.branchId,
+          editorialCommitmentIds: arranged.arrangementScore.editorialCommitmentIds ?? [],
           arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,

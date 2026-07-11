@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   guidedStartMarkup,
   buildScoreSelectionContext,
+  compareArrangementVersions,
   describeArrangementEvent,
   installNotationSelection,
   openEditBatchDialog,
@@ -124,6 +125,39 @@ describe("interactive notation", () => {
     expect(implementation).toContain("Discard staged edits");
     expect(implementation).toContain("edit-batches");
     expect(implementation).toContain("vellum-arrangement-version-created");
+  });
+
+  it("reports exact event dimensions changed between immutable versions", () => {
+    const base = {
+      arrangementEvents: [
+        {
+          id: "arrangement-event.1",
+          type: "note",
+          measureId: "measure.1",
+          onset: { numerator: 0, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitches: ["F4"],
+          positions: [{ course: 1, fret: 1, pitch: "F4", quality: "low_fret" }],
+          sourceEventIds: ["source-event.1"],
+        },
+      ],
+    } as unknown as GuidedDeliverable;
+    const edited = {
+      arrangementEvents: [
+        {
+          ...base.arrangementEvents[0]!,
+          duration: { numerator: 1, denominator: 2 },
+          positions: [{ course: 2, fret: 6, pitch: "F4", quality: "high_fret" }],
+        },
+      ],
+    } as unknown as GuidedDeliverable;
+
+    expect(compareArrangementVersions(base, edited)).toEqual([
+      {
+        eventId: "arrangement-event.1",
+        dimensions: ["rhythm", "course_fingering"],
+      },
+    ]);
   });
 });
 

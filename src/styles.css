@@ -349,6 +349,30 @@ chat-panel > div > div:has(agent-interface) {
   margin: 0;
 }
 
+.arrangement-version-navigator {
+  max-width: 38rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #c9c2a9;
+  border-radius: 0.5rem;
+  background: #fff;
+  font-size: 0.8rem;
+}
+
+.arrangement-version-navigator summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.arrangement-version-navigator ul {
+  max-height: 10rem;
+  overflow: auto;
+  padding-left: 1.25rem;
+}
+
+.arrangement-version-navigator button {
+  margin-right: 0.4rem;
+}
+
 .artifact-preview-content[data-zoom-mode="zoom"] {
   max-width: none;
 }

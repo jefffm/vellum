@@ -370,6 +370,13 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(afterBatch.arrangementBranchIds).toHaveLength(branchCount + 1);
     expect(afterBatch.arrangementScoreIds).toHaveLength(arrangementCount + 1);
     expect(afterBatch.editorialCommitmentIds).toHaveLength(commitmentCount + 2);
+    expect(
+      store.getArrangementFamily(workspace.id, result.arrangementScore.arrangementFamilyId!)
+        .arrangementScoreIds
+    ).toEqual(expect.arrayContaining([result.arrangementScore.id, batch.arrangementScore.id]));
+    expect(store.getArrangementScore(workspace.id, result.arrangementScore.id)).toEqual(
+      result.arrangementScore
+    );
 
     const beforeRejectedBatch = store.get(workspace.id);
     expect(() =>

@@ -39,6 +39,7 @@ import {
   installDeliverableSummary,
   installLineageSummary,
   installNotationSelection,
+  installVersionNavigator,
   installTransformationReport,
   installGuidedStart,
   type GuidedDeliverable,
@@ -402,6 +403,7 @@ export async function main(): Promise<void> {
   markArtifactsPanelReady();
   const artifactsPanel = document.querySelector<HTMLElement>("#artifacts-panel");
   if (artifactsPanel) {
+    installArrangementVersionBridge(artifactsPanel);
     void restoreLinkedArrangement(artifactsPanel).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       const failure = document.createElement("p");
@@ -428,22 +430,38 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
   ) {
     return;
   }
-  type StoredArrangement = {
-    version: number;
-    analysisRecordId: string;
-    arrangementSearchId?: string;
-    arrangementFamilyId: string;
-    targetConfiguration: TargetConfiguration;
-    preservationPolicy: ArrangementScore["preservationPolicy"];
-    transformationReport: GuidedDeliverable["transformationReport"];
-    preservationAudit: GuidedDeliverable["preservationAudit"];
-    continuoDisposition?: GuidedDeliverable["continuoDisposition"];
-    events: GuidedDeliverable["arrangementEvents"];
-  };
+  const deliverable = await loadGuidedDeliverable(workspaceId, arrangementId);
+  const parent = deliverable.parentArrangementScoreId
+    ? await loadGuidedDeliverable(workspaceId, deliverable.parentArrangementScoreId)
+    : undefined;
+  renderGuidedDeliverables(panel, [deliverable], parent);
+}
+
+type StoredArrangement = {
+  version: number;
+  parentArrangementScoreId?: string;
+  branchId?: string;
+  editorialCommitmentIds?: string[];
+  analysisRecordId: string;
+  arrangementSearchId?: string;
+  arrangementFamilyId: string;
+  targetConfiguration: TargetConfiguration;
+  preservationPolicy: ArrangementScore["preservationPolicy"];
+  transformationReport: GuidedDeliverable["transformationReport"];
+  preservationAudit: GuidedDeliverable["preservationAudit"];
+  continuoDisposition?: GuidedDeliverable["continuoDisposition"];
+  events: GuidedDeliverable["arrangementEvents"];
+};
+
+async function loadGuidedDeliverable(
+  workspaceId: string,
+  arrangementId: string
+): Promise<GuidedDeliverable> {
   const arrangement = await browserApi<StoredArrangement>(
     `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
   );
-  if (!arrangement.arrangementSearchId) return;
+  if (!arrangement.arrangementSearchId)
+    throw new Error(`Arrangement Score has no persisted search: ${arrangementId}`);
   const search = await browserApi<{ id: string; candidateIds: string[] }>(
     `/api/workspaces/${workspaceId}/arrangement-searches/${arrangement.arrangementSearchId}`
   );
@@ -468,28 +486,80 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
     ),
   ]);
-  renderGuidedDeliverables(panel, [
-    {
-      workspaceId,
-      arrangementScoreId: arrangementId,
-      arrangementScoreVersion: arrangement.version,
-      arrangementFamilyId: arrangement.arrangementFamilyId,
-      arrangementSearchId: search.id,
-      targetConfigurationId: arrangement.targetConfiguration.id,
-      targetConfiguration: arrangement.targetConfiguration,
-      preservationPolicy: arrangement.preservationPolicy,
-      label: arrangement.targetConfiguration.instrumentId,
-      arrangementEvents: arrangement.events,
-      analysis,
-      transformationReport: arrangement.transformationReport,
-      preservationAudit: arrangement.preservationAudit,
-      continuoDisposition: arrangement.continuoDisposition,
-      compiled,
-      preview,
-      deliverables: [...compiled.deliverables, preview.deliverable],
-      candidates,
-    },
-  ]);
+  return {
+    workspaceId,
+    arrangementScoreId: arrangementId,
+    arrangementScoreVersion: arrangement.version,
+    parentArrangementScoreId: arrangement.parentArrangementScoreId,
+    branchId: arrangement.branchId,
+    editorialCommitmentIds: arrangement.editorialCommitmentIds ?? [],
+    arrangementFamilyId: arrangement.arrangementFamilyId,
+    arrangementSearchId: search.id,
+    targetConfigurationId: arrangement.targetConfiguration.id,
+    targetConfiguration: arrangement.targetConfiguration,
+    preservationPolicy: arrangement.preservationPolicy,
+    label: arrangement.targetConfiguration.instrumentId,
+    arrangementEvents: arrangement.events,
+    analysis,
+    transformationReport: arrangement.transformationReport,
+    preservationAudit: arrangement.preservationAudit,
+    continuoDisposition: arrangement.continuoDisposition,
+    compiled,
+    preview,
+    deliverables: [...compiled.deliverables, preview.deliverable],
+    candidates,
+  };
+}
+
+function installArrangementVersionBridge(panel: HTMLElement): void {
+  const open = async (
+    workspaceId: string,
+    arrangementId: string,
+    comparisonArrangementScoreId?: string
+  ) => {
+    const current = await loadGuidedDeliverable(workspaceId, arrangementId);
+    const comparisonId = comparisonArrangementScoreId ?? current.parentArrangementScoreId;
+    const comparison = comparisonId
+      ? await loadGuidedDeliverable(workspaceId, comparisonId)
+      : undefined;
+    renderGuidedDeliverables(panel, [current], comparison);
+    const url = new URL(window.location.href);
+    url.searchParams.set("workspace", workspaceId);
+    url.searchParams.set("arrangement", arrangementId);
+    window.history.pushState({}, "", url);
+  };
+  document.addEventListener("vellum-arrangement-version-created", (event) => {
+    const detail = (
+      event as CustomEvent<{
+        result?: { arrangementScore?: { id?: unknown } };
+        deliverable?: { workspaceId?: unknown };
+      }>
+    ).detail;
+    const arrangementId = detail?.result?.arrangementScore?.id;
+    const workspaceId = detail?.deliverable?.workspaceId;
+    if (typeof arrangementId === "string" && typeof workspaceId === "string")
+      void open(workspaceId, arrangementId);
+  });
+  document.addEventListener("vellum-open-arrangement-version", (event) => {
+    const detail = (
+      event as CustomEvent<{
+        arrangementScoreId?: unknown;
+        comparisonArrangementScoreId?: unknown;
+      }>
+    ).detail;
+    const arrangementId = detail?.arrangementScoreId;
+    const comparisonId = detail?.comparisonArrangementScoreId;
+    const workspaceId = new URL(window.location.href).searchParams.get("workspace");
+    if (typeof arrangementId === "string" && workspaceId)
+      void open(
+        workspaceId,
+        arrangementId,
+        typeof comparisonId === "string" ? comparisonId : undefined
+      );
+  });
+  window.addEventListener("popstate", () => {
+    void restoreLinkedArrangement(panel);
+  });
 }
 
 async function browserApi<T>(url: string, init?: RequestInit): Promise<T> {
@@ -501,7 +571,11 @@ async function browserApi<T>(url: string, init?: RequestInit): Promise<T> {
   return envelope.data;
 }
 
-function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDeliverable[]): void {
+function renderGuidedDeliverables(
+  panel: HTMLElement,
+  deliverables: GuidedDeliverable[],
+  versionParent?: GuidedDeliverable
+): void {
   const render = (deliverable: GuidedDeliverable) => {
     if (!renderCompilePreview(panel, deliverable.compiled)) return;
     const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
@@ -523,6 +597,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
     }
     installAudioPreviewControls(panel, deliverable.preview);
     installNotationSelection(panel, deliverable);
+    installVersionNavigator(panel, deliverable, versionParent);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
     installDeliverableSummary(panel, deliverable);
