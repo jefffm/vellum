@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadBrowserProfile } from "./browser-profiles.js";
+import { buildAudioPreview } from "./audio-preview.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
@@ -62,12 +63,79 @@ describe("faithful baroque-guitar arrangement search", () => {
       expect(fixture.model.isPlayable(arranged!.positions).ok).toBe(true);
     }
 
+    const preview = buildAudioPreview(result.selected, fixture.score);
+    for (const source of protectedEvents) {
+      if (source.type !== "note") continue;
+      const expectedMidi = noteToMidi(
+        transposeNote(source.pitch, result.selected.transpositionPlan.semitones)
+      );
+      expect(
+        preview.events.some(
+          (event) =>
+            event.part === "principal-voice" &&
+            event.sourceEventIds.includes(source.id) &&
+            event.midi === expectedMidi
+        ),
+        `Audio Preview omitted Principal Voice event ${source.id}`
+      ).toBe(true);
+    }
+
     expect(result.selected.events.some((event) => event.type === "chord")).toBe(true);
     expect(
       result.selected.transformationReport.filter(
         (entry) => entry.entryType === "event" && entry.classification === "transposed"
       ).length
     ).toBe(protectedEvents.length);
+  });
+
+  it("keeps the Greensleeves Principal Voice in a continuous playable hand position", () => {
+    const result = arrangeFaithfulBaroqueGuitar(fixture.score, fixture.analysis, fixture.model, {
+      arrangementId: "arrangement.greensleeves-continuity",
+      createdAt: "2026-07-10T14:00:00.000Z",
+      targetConfiguration: {
+        id: "target.baroque-guitar",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        stringing: "french",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf", "audio-preview"],
+      },
+    });
+    const shifts = result.selected.events.flatMap((event, index, events) => {
+      if (!event.principalVoiceSourceEventId || event.positions.length === 0) return [];
+      const previous = events[index - 1];
+      if (!previous?.principalVoiceSourceEventId || previous.positions.length === 0) return [];
+      const previousPosition = previous.positions[0]!;
+      const position = event.positions[0]!;
+      const previousFretted = previous.positions.filter((candidate) => candidate.fret > 0);
+      const fretted = event.positions.filter((candidate) => candidate.fret > 0);
+      const previousHandPosition =
+        previousFretted.length === 0
+          ? 0
+          : previousFretted.reduce((sum, candidate) => sum + candidate.fret, 0) /
+            previousFretted.length;
+      const handPosition =
+        fretted.length === 0
+          ? 0
+          : fretted.reduce((sum, candidate) => sum + candidate.fret, 0) / fretted.length;
+      return [
+        {
+          from: `${previousPosition.course}:${previousPosition.fret}`,
+          to: `${position.course}:${position.fret}`,
+          fretShift: Math.abs(position.fret - previousPosition.fret),
+          handShift: Math.abs(handPosition - previousHandPosition),
+        },
+      ];
+    });
+
+    expect(
+      Math.max(...shifts.map((shift) => shift.fretShift)),
+      JSON.stringify(shifts)
+    ).toBeLessThan(5);
+    expect(
+      Math.max(...shifts.map((shift) => shift.handShift)),
+      JSON.stringify(shifts)
+    ).toBeLessThan(5);
   });
 
   it("fails the audit if one protected melody event is dropped", () => {
