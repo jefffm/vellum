@@ -160,6 +160,12 @@ describe("Greensleeves PDF tracer bullet", () => {
 
     expect(compiled.errors).toEqual([]);
     expect(compiled.svg?.length ?? 0).toBeGreaterThan(1_000);
+    expect(compiled.svg).toContain(
+      `data-arrangement-event-id="${arranged.arrangementScore.events[0]!.id}"`
+    );
+    expect(compiled.svg).toContain(
+      `data-measure-id="${arranged.arrangementScore.events[0]!.measureId}"`
+    );
     expect(compiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(compiled.midi?.length ?? 0).toBeGreaterThan(100);
     expect(luteCompiled.errors).toEqual([]);

@@ -17,7 +17,13 @@ const OrnamentSchema = Type.Union([
   Type.Literal("prall"),
 ]);
 
+const EventIdentityProperties = {
+  event_id: Type.Optional(Type.String({ minLength: 1 })),
+  measure_id: Type.Optional(Type.String({ minLength: 1 })),
+};
+
 export const PositionNoteSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("note"),
   input: Type.Literal("position"),
   course: Type.Integer({ minimum: 1 }),
@@ -32,6 +38,7 @@ export const PositionNoteSchema = Type.Object({
 export type PositionNote = Static<typeof PositionNoteSchema>;
 
 export const PitchNoteSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("note"),
   input: Type.Literal("pitch"),
   pitch: Type.String({ minLength: 1 }),
@@ -58,6 +65,7 @@ const ChordPositionSchema = Type.Union([
 ]);
 
 export const ChordEventSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("chord"),
   positions: Type.Array(ChordPositionSchema, { minItems: 2 }),
   duration: Type.String({ minLength: 1 }),
@@ -67,6 +75,7 @@ export const ChordEventSchema = Type.Object({
 export type ChordEvent = Static<typeof ChordEventSchema>;
 
 export const RestEventSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("rest"),
   duration: Type.String({ minLength: 1 }),
   spacer: Type.Optional(Type.Boolean()),
@@ -75,6 +84,7 @@ export const RestEventSchema = Type.Object({
 export type RestEvent = Static<typeof RestEventSchema>;
 
 export const AlfabetoEventSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("alfabeto"),
   duration: Type.String({ minLength: 1 }),
   chordName: Type.Optional(
@@ -104,6 +114,7 @@ export const AlfabetoEventSchema = Type.Object({
 export type AlfabetoEvent = Static<typeof AlfabetoEventSchema>;
 
 export const AlfabetoChordEventSchema = Type.Object({
+  ...EventIdentityProperties,
   type: Type.Literal("alfabeto_chord"),
   chord_name: Type.String({
     minLength: 1,

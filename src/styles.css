@@ -247,6 +247,37 @@ chat-panel > div > div:has(agent-interface) {
   height: auto;
 }
 
+.artifact-preview-content .vellum-selectable-event {
+  cursor: pointer;
+  transition: filter 100ms ease;
+}
+
+.artifact-preview-content .vellum-selectable-event:hover,
+.artifact-preview-content .vellum-selectable-event:focus {
+  filter: drop-shadow(0 0 0.9px #8a6d1d) drop-shadow(0 0 3px rgba(181, 142, 38, 0.45));
+  outline: none;
+}
+
+.artifact-preview-content .vellum-selectable-event.score-selected {
+  color: #8b2f22;
+  filter: drop-shadow(0 0 1px #8b2f22) drop-shadow(0 0 4px rgba(139, 47, 34, 0.48));
+}
+
+.score-selection-summary {
+  display: grid;
+  gap: 0.15rem;
+  max-width: 34rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d4c58f;
+  border-radius: 0.5rem;
+  background: #fffbed;
+  font-size: 0.8rem;
+}
+
+.score-selection-summary[hidden] {
+  display: none;
+}
+
 .artifact-preview-content[data-zoom-mode="zoom"] {
   max-width: none;
 }

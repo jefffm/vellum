@@ -37,6 +37,7 @@ import {
   installCandidateComparisonControls,
   installDeliverableSummary,
   installLineageSummary,
+  installNotationSelection,
   installTransformationReport,
   installGuidedStart,
   type GuidedDeliverable,
@@ -425,6 +426,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     transformationReport: GuidedDeliverable["transformationReport"];
     preservationAudit: GuidedDeliverable["preservationAudit"];
     continuoDisposition?: GuidedDeliverable["continuoDisposition"];
+    events: GuidedDeliverable["arrangementEvents"];
   };
   const arrangement = await browserApi<StoredArrangement>(
     `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
@@ -462,6 +464,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       arrangementSearchId: search.id,
       targetConfigurationId: arrangement.targetConfiguration.id,
       label: arrangement.targetConfiguration.instrumentId,
+      arrangementEvents: arrangement.events,
       analysis,
       transformationReport: arrangement.transformationReport,
       preservationAudit: arrangement.preservationAudit,
@@ -504,6 +507,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
       header.append(label);
     }
     installAudioPreviewControls(panel, deliverable.preview);
+    installNotationSelection(panel, deliverable);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
     installDeliverableSummary(panel, deliverable);

@@ -79,7 +79,8 @@ export function rationalToLilyDuration(duration: Rational): string {
 
 function toEngraveEvent(event: ArrangementEvent, standardNotation: boolean): EngraveMusicEvent {
   const duration = rationalToLilyDuration(event.duration);
-  if (event.type === "rest") return { type: "rest", duration };
+  const identity = { event_id: event.id, measure_id: event.measureId };
+  if (event.type === "rest") return { type: "rest", duration, ...identity };
   if (standardNotation) {
     if (event.type === "note" || event.pitches.length === 1) {
       return {
@@ -87,12 +88,14 @@ function toEngraveEvent(event: ArrangementEvent, standardNotation: boolean): Eng
         input: "pitch",
         pitch: event.pitches[0]!,
         duration,
+        ...identity,
       };
     }
     return {
       type: "chord",
       duration,
       positions: event.pitches.map((pitch) => ({ input: "pitch" as const, pitch })),
+      ...identity,
     };
   }
   if (event.positions.length === 0) {
@@ -106,6 +109,7 @@ function toEngraveEvent(event: ArrangementEvent, standardNotation: boolean): Eng
       course: position.course,
       fret: position.fret,
       duration,
+      ...identity,
     };
   }
   return {
@@ -116,6 +120,7 @@ function toEngraveEvent(event: ArrangementEvent, standardNotation: boolean): Eng
       course: position.course,
       fret: position.fret,
     })),
+    ...identity,
   };
 }
 

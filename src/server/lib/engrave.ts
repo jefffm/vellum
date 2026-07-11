@@ -453,6 +453,7 @@ export function eventsToLeaves(
       const isFirstInBar = evIdx === 0;
 
       const indicators = buildLeadingIndicators(params, bar, isFirstLeaf, isFirstBar, isFirstInBar);
+      indicators.push(...eventIdentityIndicators(event));
       const leaf = resolveEvent(event, model, indicators);
 
       if (isLastInBar) {
@@ -465,6 +466,23 @@ export function eventsToLeaves(
   }
 
   return leaves;
+}
+
+function eventIdentityIndicators(event: EngraveMusicEvent): LyIndicator[] {
+  if (!event.event_id) return [];
+  const attributes = [
+    `(class . "vellum-score-event")`,
+    `(data-arrangement-event-id . "${escapeLilyPondString(event.event_id)}")`,
+    ...(event.measure_id
+      ? [`(data-measure-id . "${escapeLilyPondString(event.measure_id)}")`]
+      : []),
+  ].join(" ");
+  const override = (grob: "NoteHead" | "TabNoteHead" | "Rest") => ({
+    kind: "literal" as const,
+    text: `\\once \\override ${grob}.output-attributes = #'(${attributes})`,
+    site: "before" as const,
+  });
+  return [override("NoteHead"), override("TabNoteHead"), override("Rest")];
 }
 
 /**

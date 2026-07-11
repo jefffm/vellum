@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   guidedStartMarkup,
+  describeArrangementEvent,
+  installNotationSelection,
   installLineageSummary,
   installProviderConnection,
   midiFrequency,
@@ -13,6 +15,31 @@ describe("audio preview synthesis", () => {
   it("maps MIDI pitches to equal-tempered oscillator frequencies", () => {
     expect(midiFrequency(69)).toBe(440);
     expect(midiFrequency(60)).toBeCloseTo(261.626, 3);
+  });
+});
+
+describe("interactive notation", () => {
+  it("describes an Arrangement Event using stable musical facts", () => {
+    expect(
+      describeArrangementEvent({
+        id: "arrangement-event.1",
+        type: "note",
+        measureId: "measure.2",
+        onset: { numerator: 0, denominator: 1 },
+        duration: { numerator: 1, denominator: 2 },
+        pitches: ["F4"],
+        positions: [{ course: 1, fret: 1, pitch: "F4", quality: "low_fret" }],
+        sourceEventIds: ["source-event.1"],
+        role: "principal_voice",
+      })
+    ).toBe("F4 · duration 1/2 · principal voice · measure.2 · course 1, fret 1");
+  });
+
+  it("binds notation identity to selection and playback seeking", () => {
+    const implementation = installNotationSelection.toString();
+    expect(implementation).toContain("data-arrangement-event-id");
+    expect(implementation).toContain("score-selected");
+    expect(implementation).toContain("vellum-seek-playback");
   });
 });
 

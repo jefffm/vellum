@@ -5,6 +5,7 @@ import {
   type PlaybackPart,
 } from "./lib/audio-preview.js";
 import type {
+  ArrangementEvent,
   ArrangementScore,
   ScoreEvent,
   TargetConfiguration,
@@ -27,6 +28,7 @@ export type GuidedDeliverable = {
   arrangementSearchId: string;
   targetConfigurationId: string;
   label: string;
+  arrangementEvents: ArrangementEvent[];
   analysis: {
     id: string;
     summary?: string;
@@ -96,6 +98,68 @@ export type GuidedDeliverable = {
     sha256: string;
   }>;
 };
+
+export function describeArrangementEvent(event: ArrangementEvent): string {
+  const duration = `${event.duration.numerator}/${event.duration.denominator}`;
+  const role = (event.role ?? "accompaniment").replaceAll("_", " ");
+  const position = event.positions.length
+    ? ` · ${event.positions.map((item) => `course ${item.course}, fret ${item.fret}`).join("; ")}`
+    : "";
+  const pitches = event.type === "rest" ? "Rest" : event.pitches.join(" + ");
+  return `${pitches} · duration ${duration} · ${role} · ${event.measureId}${position}`;
+}
+
+export function installNotationSelection(panel: HTMLElement, deliverable: GuidedDeliverable): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  const notation = panel.querySelector<HTMLElement>(".artifact-preview-content > svg");
+  if (!header || !notation) return;
+  header.querySelector(".score-selection-summary")?.remove();
+  const summary = document.createElement("aside");
+  summary.className = "score-selection-summary";
+  summary.hidden = true;
+  const eventById = new Map(deliverable.arrangementEvents.map((event) => [event.id, event]));
+  const groups = notation.querySelectorAll<SVGGElement>("[data-arrangement-event-id]");
+  for (const group of groups) {
+    const eventId = group.dataset.arrangementEventId;
+    if (!eventId || !eventById.has(eventId)) continue;
+    group.classList.add("vellum-selectable-event");
+    group.setAttribute("role", "button");
+    group.setAttribute("tabindex", "0");
+    group.setAttribute("aria-label", describeArrangementEvent(eventById.get(eventId)!));
+  }
+  const select = (eventId: string) => {
+    const arrangementEvent = eventById.get(eventId);
+    if (!arrangementEvent) return;
+    notation
+      .querySelectorAll<SVGGElement>("[data-arrangement-event-id]")
+      .forEach((group) =>
+        group.classList.toggle("score-selected", group.dataset.arrangementEventId === eventId)
+      );
+    summary.hidden = false;
+    summary.innerHTML = `<strong>Selected musical object</strong><span></span>`;
+    summary.querySelector("span")!.textContent = describeArrangementEvent(arrangementEvent);
+    panel.dispatchEvent(
+      new CustomEvent("vellum-seek-playback", { detail: { arrangementEventId: eventId } })
+    );
+  };
+  notation.addEventListener("click", (browserEvent) => {
+    const target = (browserEvent.target as Element | null)?.closest<SVGGElement>(
+      "[data-arrangement-event-id]"
+    );
+    if (target?.dataset.arrangementEventId) select(target.dataset.arrangementEventId);
+  });
+  notation.addEventListener("keydown", (browserEvent) => {
+    if (browserEvent.key !== "Enter" && browserEvent.key !== " ") return;
+    const target = (browserEvent.target as Element | null)?.closest<SVGGElement>(
+      "[data-arrangement-event-id]"
+    );
+    if (target?.dataset.arrangementEventId) {
+      browserEvent.preventDefault();
+      select(target.dataset.arrangementEventId);
+    }
+  });
+  header.append(summary);
+}
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -236,6 +300,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           arrangementScore: {
             id: string;
             arrangementFamilyId: string;
+            events: ArrangementEvent[];
             transformationReport: GuidedDeliverable["transformationReport"];
             preservationAudit: GuidedDeliverable["preservationAudit"];
             continuoDisposition?: GuidedDeliverable["continuoDisposition"];
@@ -265,6 +330,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
           label: targetLabel(target.id),
+          arrangementEvents: arranged.arrangementScore.events,
           analysis: arranged.analysis,
           transformationReport: arranged.arrangementScore.transformationReport,
           preservationAudit: arranged.arrangementScore.preservationAudit,

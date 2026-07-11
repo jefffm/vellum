@@ -1,6 +1,6 @@
 # Multi-object Selection Context for chat
 
-Status: ready-for-agent
+Status: in-progress
 
 Type: AFK
 

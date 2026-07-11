@@ -1,6 +1,6 @@
 # Event-anchored interactive notation
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,12 +10,12 @@ Create the narrowest complete Lineage Navigation path through engraving and the 
 
 ## Acceptance criteria
 
-- [ ] Compiled browser notation exposes stable Arrangement Event and measure identities for selectable sounding objects.
-- [ ] Clicking a selectable object produces a visible selection and a summary containing pitch, duration, musical role, measure, and course/fret where applicable.
-- [ ] Clicking the object seeks Audio Preview through its Arrangement Event identity.
-- [ ] Selection remains a UI projection and does not mutate the Arrangement Score.
-- [ ] The Greensleeves production-path fixture proves the opening Principal Voice event maps to the correct glyph and Playback Occurrence.
-- [ ] PDF remains a downloadable Deliverable; interactive behavior uses the browser notation projection.
+- [x] Compiled browser notation exposes stable Arrangement Event and measure identities for selectable sounding objects.
+- [x] Clicking a selectable object produces a visible selection and a summary containing pitch, duration, musical role, measure, and course/fret where applicable.
+- [x] Clicking the object seeks Audio Preview through its Arrangement Event identity.
+- [x] Selection remains a UI projection and does not mutate the Arrangement Score.
+- [x] The Greensleeves production-path fixture proves the opening Principal Voice event maps to the correct glyph and Playback Occurrence.
+- [x] PDF remains a downloadable Deliverable; interactive behavior uses the browser notation projection.
 
 ## Blocked by
 

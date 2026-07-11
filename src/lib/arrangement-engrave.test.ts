@@ -74,6 +74,9 @@ describe("Arrangement Score engraving projection", () => {
     expect(result.source).toContain("tablatureFormat = \\guitarTabFormat");
     expect(result.source).toContain("\\midi { \\tempo 4 = 70 }");
     expect(result.source).toContain("\\partial 8");
+    expect(result.source).toContain("data-arrangement-event-id");
+    expect(result.source).toContain(arrangement.events[0]!.id);
+    expect(result.source).toContain(arrangement.events[0]!.measureId);
   });
 
   it("converts exact rational time to LilyPond durations", () => {
