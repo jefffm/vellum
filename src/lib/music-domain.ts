@@ -50,6 +50,12 @@ export const SourceArtifactSchema = Type.Object(
       Type.Literal("image"),
       Type.Literal("musicxml"),
       Type.Literal("lilypond"),
+      Type.Literal("abc"),
+      Type.Literal("mei"),
+      Type.Literal("mscz"),
+      Type.Literal("lead_sheet"),
+      Type.Literal("tablature"),
+      Type.Literal("natural_language"),
     ]),
     filename: Type.String({ minLength: 1 }),
     mimeType: Type.String({ minLength: 1 }),
@@ -97,6 +103,19 @@ export const ArrangementBriefSchema = Type.Object(
   {
     targetConfigurations: Type.Array(TargetConfigurationSchema),
     instruction: Type.Optional(Type.String()),
+    personalDefaultApplications: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            defaultId: IdSchema,
+            targetConfigurationId: IdSchema,
+            status: Type.Union([Type.Literal("applied"), Type.Literal("yielded")]),
+            reason: Type.String({ minLength: 1 }),
+          },
+          { additionalProperties: false }
+        )
+      )
+    ),
   },
   { additionalProperties: false }
 );
@@ -457,6 +476,7 @@ export const ScorePartSchema = Type.Object(
         Type.Literal("bass"),
         Type.Literal("principal_voice"),
         Type.Literal("continuo_foundation"),
+        Type.Literal("harmony"),
         Type.Literal("other"),
       ])
     ),
@@ -494,6 +514,16 @@ export const NoteEventSchema = Type.Object(
     type: Type.Literal("note"),
     pitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
     tie: Type.Optional(Type.Union([Type.Literal("start"), Type.Literal("stop")])),
+    tablature: Type.Optional(
+      Type.Object(
+        {
+          course: Type.Integer({ minimum: 1 }),
+          fret: Type.Integer({ minimum: 0 }),
+          notation: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
   },
   { additionalProperties: false }
 );
@@ -526,10 +556,20 @@ export const FiguredBassEventSchema = Type.Object(
   { additionalProperties: false }
 );
 
+export const ChordSymbolEventSchema = Type.Object(
+  {
+    ...ScoreEventBaseProperties,
+    type: Type.Literal("chord_symbol"),
+    symbol: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+
 export const ScoreEventSchema = Type.Union([
   NoteEventSchema,
   RestEventSchema,
   FiguredBassEventSchema,
+  ChordSymbolEventSchema,
 ]);
 
 export type ScoreEvent = Static<typeof ScoreEventSchema>;
@@ -564,7 +604,35 @@ export const ScoreTranscriptionSchema = Type.Object(
   {
     id: IdSchema,
     sourceArtifactId: IdSchema,
-    omrRunId: IdSchema,
+    omrRunId: Type.Optional(IdSchema),
+    ingestion: Type.Optional(
+      Type.Object(
+        {
+          method: Type.Union([
+            Type.Literal("optical_recognition"),
+            Type.Literal("deterministic_parse"),
+            Type.Literal("interchange_conversion"),
+            Type.Literal("best_effort"),
+          ]),
+          sourceFormat: Type.String({ minLength: 1 }),
+          diagnostics: Type.Array(
+            Type.Object(
+              {
+                severity: Type.Union([
+                  Type.Literal("info"),
+                  Type.Literal("warning"),
+                  Type.Literal("error"),
+                ]),
+                code: Type.String({ minLength: 1 }),
+                message: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
+        },
+        { additionalProperties: false }
+      )
+    ),
     version: Type.Integer({ minimum: 1 }),
     parentId: Type.Optional(IdSchema),
     status: Type.Union([

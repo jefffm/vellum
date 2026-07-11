@@ -159,7 +159,10 @@ function projectEvents(
   assignments: Map<string, ArrangementPosition>
 ): ArrangementEvent[] {
   return score.events
-    .filter((event) => event.type !== "figured_bass")
+    .filter(
+      (event): event is Exclude<ScoreEvent, { type: "figured_bass" | "chord_symbol" }> =>
+        event.type !== "figured_bass" && event.type !== "chord_symbol"
+    )
     .map((source) => {
       const position = source.type === "note" ? assignments.get(source.id) : undefined;
       if (source.type === "note" && !position) throw new Error(`No lute position for ${source.id}`);

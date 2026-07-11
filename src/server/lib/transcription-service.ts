@@ -55,6 +55,12 @@ export class TranscriptionService {
   review(workspaceId: string, transcriptionId: string): ScoreAnchoredReview {
     const transcription = this.store.getScoreTranscription(workspaceId, transcriptionId);
     const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
+    if (!transcription.omrRunId) {
+      throw new ApiRouteError(
+        `Score-Anchored optical review is unavailable for ${transcription.ingestion?.sourceFormat ?? "this parsed source"}`,
+        409
+      );
+    }
     const omrRun = this.store.getOmrRun(workspaceId, transcription.omrRunId);
     const items = transcription.uncertainties
       .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)

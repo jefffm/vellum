@@ -163,7 +163,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       status.textContent = "Saving a local workspace…";
       const title =
         form.querySelector<HTMLInputElement>('[name="title"]')?.value.trim() ||
-        file.name.replace(/\.pdf$/i, "");
+        file.name.replace(/\.[^.]+$/i, "");
       const instruction = form
         .querySelector<HTMLTextAreaElement>('[name="instruction"]')
         ?.value.trim();
@@ -188,30 +188,43 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       activeWorkspaceId = workspace.id;
       localStorage.setItem("vellum.active-workspace", workspace.id);
       await refreshModelActionRecovery(dialog, workspace.id);
-      status.textContent = "Uploading the source PDF…";
+      status.textContent = "Uploading the source…";
+      const mimeType = sourceMimeType(file);
       const source = await api<{ id: string }>(`/api/workspaces/${workspace.id}/sources`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/pdf",
+          "Content-Type": mimeType,
           "X-Source-Filename": encodeURIComponent(file.name),
           "X-Source-License": "User supplied; rights not asserted by Vellum",
         },
         body: file,
       });
-      status.textContent = "Reading the score with optical music recognition…";
+      const optical = mimeType === "application/pdf" || mimeType.startsWith("image/");
+      status.textContent = optical
+        ? "Reading the score with optical music recognition…"
+        : "Parsing and normalizing the musical source…";
       const recognized = await api<{
         scoreTranscription: { id: string; status: ScoreAnchoredReview["status"] };
         normalizedScore: { id: string };
-      }>(`/api/workspaces/${workspace.id}/omr-runs`, {
-        method: "POST",
-        body: JSON.stringify({ sourceArtifactId: source.id, backend: "audiveris" }),
-      });
-      const reviewed = await resolveCriticalUncertainties(
-        dialog,
-        workspace.id,
-        recognized.scoreTranscription.id,
-        recognized.normalizedScore.id
+      }>(
+        optical
+          ? `/api/workspaces/${workspace.id}/omr-runs`
+          : `/api/workspaces/${workspace.id}/sources/${source.id}/import`,
+        {
+          method: "POST",
+          body: JSON.stringify(
+            optical ? { sourceArtifactId: source.id, backend: "audiveris" } : {}
+          ),
+        }
       );
+      const reviewed = optical
+        ? await resolveCriticalUncertainties(
+            dialog,
+            workspace.id,
+            recognized.scoreTranscription.id,
+            recognized.normalizedScore.id
+          )
+        : { normalizedScoreId: recognized.normalizedScore.id };
       const deliverables: GuidedDeliverable[] = [];
       for (const target of targetConfigurations) {
         status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
@@ -1191,13 +1204,28 @@ async function api<T>(url: string, init: RequestInit = {}): Promise<T> {
   return envelope.data;
 }
 
+export function sourceMimeType(file: Pick<File, "name" | "type">): string {
+  if (file.type && file.type !== "application/octet-stream") return file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (extension === "pdf") return "application/pdf";
+  if (extension === "png") return "image/png";
+  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+  if (["musicxml", "xml", "mxl"].includes(extension ?? ""))
+    return "application/vnd.recordare.musicxml+xml";
+  if (extension === "ly") return "text/x-lilypond";
+  if (extension === "abc") return "text/vnd.abc";
+  if (extension === "mei") return "application/mei+xml";
+  if (extension === "mscz") return "application/vnd.musescore.mscz";
+  throw new Error(`Unsupported musical source extension: ${extension ?? "unknown"}`);
+}
+
 export function guidedStartMarkup(): string {
   return `
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
-      <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
+      <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>

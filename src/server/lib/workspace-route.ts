@@ -51,7 +51,7 @@ export function createSourceUploadRoute(store = new WorkspaceStore()): RequestHa
       const upload = Buffer.isBuffer(body)
         ? {
             filename: decodeFilename(request.header("X-Source-Filename")),
-            mimeType: "application/pdf",
+            mimeType: request.header("Content-Type")?.split(";", 1)[0] ?? "application/pdf",
             contentBase64: body.toString("base64"),
             provenance: {
               license:
@@ -70,7 +70,7 @@ export function createSourceUploadRoute(store = new WorkspaceStore()): RequestHa
 }
 
 function decodeFilename(value: string | undefined): string {
-  if (!value) throw new Error("X-Source-Filename is required for PDF uploads");
+  if (!value) throw new Error("X-Source-Filename is required for source uploads");
   try {
     return decodeURIComponent(value);
   } catch {

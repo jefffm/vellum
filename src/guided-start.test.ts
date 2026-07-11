@@ -4,6 +4,7 @@ import {
   midiFrequency,
   sourceFocusUrl,
   targetConfiguration,
+  sourceMimeType,
 } from "./guided-start.js";
 
 describe("audio preview synthesis", () => {
@@ -39,6 +40,17 @@ describe("Guided Start output choices", () => {
       notationLayouts: ["standard-notation"],
       deliverables: ["pdf", "audio-preview"],
     });
+  });
+
+  it("advertises optical and symbolic source formats and resolves missing browser MIME types", () => {
+    const markup = guidedStartMarkup();
+    expect(markup).toContain(".musicxml");
+    expect(markup).toContain(".abc");
+    expect(markup).toContain(".mei");
+    expect(markup).toContain(".mscz");
+    expect(markup).toContain("PDF and images use Audiveris review");
+    expect(sourceMimeType({ name: "piece.ly", type: "" })).toBe("text/x-lilypond");
+    expect(sourceMimeType({ name: "piece.mei", type: "" })).toBe("application/mei+xml");
   });
 
   it("focuses the native PDF viewer on the exact uncertainty region", () => {

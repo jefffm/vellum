@@ -1,0 +1,29 @@
+{
+  "pack": {
+    "id": "pack.builtin-baroque-guitar",
+    "name": "Built-in reviewed baroque guitar practice",
+    "version": 1,
+    "reviewed": true,
+    "claimIds": ["historical-claim.sanz-alfabeto"],
+    "createdAt": "2026-07-11T00:00:00.000Z",
+    "updatedAt": "2026-07-11T00:00:00.000Z"
+  },
+  "claims": [
+    {
+      "id": "historical-claim.sanz-alfabeto",
+      "statement": "Alfabeto chord forms are documented source material for seventeenth-century Spanish five-course guitar accompaniment.",
+      "scope": {
+        "period": "seventeenth century",
+        "region": "Spain",
+        "genre": "accompaniment",
+        "instrument": "five-course guitar",
+        "ensembleRole": "accompaniment"
+      },
+      "authority": "documented_practice",
+      "referenceId": "reference.builtin-sanz-1674",
+      "citationLocator": "Gaspar Sanz, Instruccion de musica sobre la guitarra espanola (1674), alfabeto tables",
+      "sourceCandidateId": "knowledge-candidate.builtin-reviewed-sanz",
+      "reviewedAt": "2026-07-11T00:00:00.000Z"
+    }
+  ]
+}

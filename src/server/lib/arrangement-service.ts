@@ -16,12 +16,14 @@ import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { OwnerStore } from "./owner-store.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
   now?: () => Date;
   createId?: () => string;
   loadInstrument?: (instrumentId: string) => InstrumentModel;
+  ownerStore?: OwnerStore;
 };
 
 export type CreateFaithfulArrangementInput = {
@@ -51,11 +53,13 @@ export class ArrangementService {
   private readonly now: () => Date;
   private readonly createId: () => string;
   private readonly loadInstrument: (instrumentId: string) => InstrumentModel;
+  private readonly ownerStore?: OwnerStore;
 
   constructor(options: ArrangementServiceOptions) {
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
+    this.ownerStore = options.ownerStore;
     this.loadInstrument =
       options.loadInstrument ??
       ((instrumentId) => InstrumentModel.fromProfile(loadProfile(instrumentId)));
@@ -65,8 +69,8 @@ export class ArrangementService {
     workspaceId: string,
     input: CreateFaithfulArrangementInput
   ): CreateFaithfulArrangementResult {
-    const workspace = this.store.get(workspaceId);
-    const targetConfiguration = workspace.brief.targetConfigurations.find(
+    let workspace = this.store.get(workspaceId);
+    let targetConfiguration = workspace.brief.targetConfigurations.find(
       (target) => target.id === input.targetConfigurationId
     );
     if (!targetConfiguration) {
@@ -74,6 +78,24 @@ export class ArrangementService {
         `Target Configuration not found in workspace: ${input.targetConfigurationId}`,
         404
       );
+    }
+    if (this.ownerStore) {
+      const resolved = this.ownerStore.applyDefaults(targetConfiguration);
+      targetConfiguration = resolved.target;
+      if (resolved.applications.length) {
+        workspace = this.store.updateBrief(workspaceId, {
+          ...workspace.brief,
+          targetConfigurations: workspace.brief.targetConfigurations.map((target) =>
+            target.id === targetConfiguration!.id ? targetConfiguration! : target
+          ),
+          personalDefaultApplications: [
+            ...(workspace.brief.personalDefaultApplications ?? []).filter(
+              (item) => item.targetConfigurationId !== targetConfiguration!.id
+            ),
+            ...resolved.applications,
+          ],
+        });
+      }
     }
     const score = this.store.getNormalizedScore(workspaceId, input.normalizedScoreId);
     const transcription = this.store.getScoreTranscription(workspaceId, score.scoreTranscriptionId);

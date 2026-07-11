@@ -121,6 +121,17 @@ export class WorkspaceStore {
       );
   }
 
+  updateBrief(workspaceId: string, brief: ArrangementWorkspace["brief"]): ArrangementWorkspace {
+    const workspace = this.get(workspaceId);
+    const updated = Value.Decode(ArrangementWorkspaceSchema, {
+      ...workspace,
+      brief,
+      updatedAt: this.now().toISOString(),
+    });
+    this.writeWorkspace(updated);
+    return updated;
+  }
+
   get(workspaceId: string): ArrangementWorkspace {
     const manifestPath = this.workspaceManifestPath(workspaceId);
     if (!existsSync(manifestPath)) {
@@ -327,7 +338,7 @@ export class WorkspaceStore {
         400
       );
     }
-    if (!workspace.omrRunIds.includes(transcription.omrRunId)) {
+    if (transcription.omrRunId && !workspace.omrRunIds.includes(transcription.omrRunId)) {
       throw new ApiRouteError(
         `Transcription OMR run is not part of workspace: ${transcription.omrRunId}`,
         400
@@ -995,6 +1006,12 @@ const supportedMimeTypes = new Set([
   "application/xml",
   "text/xml",
   "text/x-lilypond",
+  "text/vnd.abc",
+  "application/mei+xml",
+  "application/vnd.musescore.mscz",
+  "application/vnd.vellum.lead-sheet+json",
+  "application/vnd.vellum.tablature+json",
+  "text/plain",
   "image/png",
   "image/jpeg",
 ]);
@@ -1003,6 +1020,12 @@ function sourceKind(mimeType: string): SourceArtifact["kind"] {
   if (mimeType === "application/pdf") return "pdf";
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType === "text/x-lilypond") return "lilypond";
+  if (mimeType === "text/vnd.abc") return "abc";
+  if (mimeType === "application/mei+xml") return "mei";
+  if (mimeType === "application/vnd.musescore.mscz") return "mscz";
+  if (mimeType === "application/vnd.vellum.lead-sheet+json") return "lead_sheet";
+  if (mimeType === "application/vnd.vellum.tablature+json") return "tablature";
+  if (mimeType === "text/plain") return "natural_language";
   return "musicxml";
 }
 

@@ -142,6 +142,16 @@ function sourceTransformation(
         "The Figured Bass sign remains the authoritative harmonic constraint; separately disclosed generated entries realize it in upper voices.",
     };
   }
+  if (source.type === "chord_symbol") {
+    const retained = descendants.some((event) => event.type === "chord");
+    return {
+      ...base,
+      classification: retained ? "retained" : "omitted",
+      rationale: retained
+        ? "The lead-sheet chord symbol retains an explicit arrangement descendant."
+        : "The lead-sheet chord symbol remains mapped but has no explicit arrangement descendant.",
+    };
+  }
   const expected = transposeNote(source.pitch, semitones);
   const pitches = descendants.flatMap((event) => event.pitches);
   const timingChanged = descendants.some(

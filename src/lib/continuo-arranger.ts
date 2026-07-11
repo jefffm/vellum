@@ -188,7 +188,11 @@ function buildContinuoEvents(
 ): ArrangementEvent[] {
   const events: ArrangementEvent[] = [];
   for (const source of score.events) {
-    if (source.partId === principalPartId && source.type !== "figured_bass") {
+    if (
+      source.partId === principalPartId &&
+      source.type !== "figured_bass" &&
+      source.type !== "chord_symbol"
+    ) {
       events.push(copyVoiceEvent(source, "principal_voice"));
     } else if (
       source.partId === foundationPartId &&

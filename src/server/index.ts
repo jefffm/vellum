@@ -52,6 +52,7 @@ import {
   createWorkspaceListRoute,
 } from "./lib/workspace-route.js";
 import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
+import { createSourceImportRoute } from "./lib/source-import-route.js";
 import {
   createTranscriptionCorrectionRoute,
   createTranscriptionReviewRoute,
@@ -75,6 +76,15 @@ import {
   createEditorialCommitmentRoute,
   createPolicyExceptionRoute,
 } from "./lib/lineage-route.js";
+import {
+  createDefaultCandidateDecisionRoute,
+  createDefaultReleaseRoute,
+  createKnowledgeCandidateRoute,
+  createKnowledgePromotionRoute,
+  createOwnerChoiceRoute,
+  createOwnerReferenceRoute,
+  createOwnerStateRoute,
+} from "./lib/owner-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -160,6 +170,20 @@ export function createApiRouter(): Router {
   router.delete("/arrangements/:id", createArrangementDeleteRoute());
 
   router.get("/workspaces", createWorkspaceListRoute());
+  router.get("/owner", createOwnerStateRoute());
+  router.post("/owner/choices", createOwnerChoiceRoute());
+  router.post(
+    "/owner/personal-default-candidates/:id/approve",
+    createDefaultCandidateDecisionRoute("approve")
+  );
+  router.post(
+    "/owner/personal-default-candidates/:id/reject",
+    createDefaultCandidateDecisionRoute("reject")
+  );
+  router.post("/owner/personal-defaults/:id/release", createDefaultReleaseRoute());
+  router.post("/owner/references", createOwnerReferenceRoute());
+  router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute());
+  router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
   router.get(
@@ -201,12 +225,33 @@ export function createApiRouter(): Router {
   );
   router.post(
     "/workspaces/:workspaceId/sources",
-    express.raw({ type: "application/pdf", limit: "128mb" }),
+    express.raw({
+      type: [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "application/vnd.recordare.musicxml+xml",
+        "application/xml",
+        "text/xml",
+        "text/x-lilypond",
+        "text/vnd.abc",
+        "application/mei+xml",
+        "application/vnd.musescore.mscz",
+        "application/vnd.vellum.lead-sheet+json",
+        "application/vnd.vellum.tablature+json",
+        "text/plain",
+      ],
+      limit: "128mb",
+    }),
     createSourceUploadRoute()
   );
   router.get(
     "/workspaces/:workspaceId/sources/:sourceArtifactId/content",
     createSourceContentRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/sources/:sourceArtifactId/import",
+    createSourceImportRoute()
   );
   router.post("/workspaces/:workspaceId/omr-runs", createOmrRunRoute());
   router.get(
