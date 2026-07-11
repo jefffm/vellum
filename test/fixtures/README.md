@@ -7,6 +7,13 @@ Source Artifact; the original Mutopia LilyPond file is reviewed test ground trut
 See [`greensleeves/PROVENANCE.md`](greensleeves/PROVENANCE.md) for rights, source
 URLs, checksums, and usage constraints.
 
+## `continuo/`
+
+CC0 soprano-plus-figured-bass golden fixture with a prepared `4-3`
+suspension, reviewed semantic truth, a deterministic MusicXML adapter sample,
+and a compiled PDF Source Artifact. See
+[`continuo/PROVENANCE.md`](continuo/PROVENANCE.md).
+
 ## LilyPond Fixtures
 
 | File                      | Source              | License       |

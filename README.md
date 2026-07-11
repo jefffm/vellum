@@ -52,7 +52,7 @@ Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API 
 
 ### PDF arrangement tracer bullet
 
-The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF; choose any combination of five-course baroque guitar, 13-course baroque lute, and six-string classical guitar; and optionally add a plain-language instruction. Vellum then:
+The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF; choose any compatible combination of five-course baroque guitar, 13-course baroque lute, six-string classical guitar, and soprano-plus-piano continuo; and optionally add a plain-language instruction. Vellum then:
 
 1. saves the PDF unchanged in a local, versioned arrangement workspace;
 2. runs OMR through the backend-neutral recognition boundary;
@@ -60,11 +60,13 @@ The **New arrangement** control opens Guided Start. Upload an arbitrary score PD
 4. pauses on Critical Uncertainty in Score-Anchored Review, focusing the immutable PDF region beside editable recognized notation and ranked alternatives, then saves accepted corrections as a new transcription version;
 5. identifies and protects the Principal Voice;
 6. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
-7. engraves the requested output - French letter tablature for the historical instruments or standard notation for classical guitar - and creates a literal synthesized Audio Preview with isolatable Principal Voice and accompaniment parts.
+7. engraves the requested output - French letter tablature, classical-guitar standard notation, or a figured-bass continuo score - and creates a literal synthesized Audio Preview with isolatable semantic parts.
 
 [Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be available as `audiveris` on `PATH` for arbitrary PDF recognition. If it is unavailable, the source and Arrangement Brief remain saved and Vellum reports the missing backend without pretending that recognition succeeded. The checked-in public-domain Greensleeves fixture provides deterministic reviewed truth so arrangement and engraving tests do not drift with OMR versions.
 
 The lute path uses the historical default 13-course D-minor tuning, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. The classical-guitar path uses standard EADGBE tuning and a single `treble_8` staff, so its PDF contains standard notation without tablature and its MIDI has one playback source. Each selected instrument gets an independent arrangement search and Preservation Audit while sharing the same reviewed source analysis.
+
+For a source containing an explicit Continuo Foundation, the soprano-plus-piano path preserves every bass event, figure, and accidental under the `continuo.italian-baroque` Realization Profile. Its contextual validator recognizes prepared dissonance such as a source-supported `4-3` suspension instead of applying blanket counterpoint prohibitions. Principal Voice, Continuo Foundation, and generated realization remain separately audible, and the compiled MIDI is derived from the same semantic events as the engraved score.
 
 ## Stack
 

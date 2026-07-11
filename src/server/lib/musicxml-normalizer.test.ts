@@ -25,4 +25,26 @@ describe("MusicXML normalizer", () => {
       /normalization failed/i
     );
   });
+
+  it("preserves Figured Bass tokens and identifies the Continuo Foundation", async () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "test/fixtures/continuo/continuo-fragment.musicxml")
+    );
+    const score = await normalizeMusicXml(source, "continuo-fragment.musicxml");
+
+    expect(score.parts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Soprano", role: "soprano" }),
+        expect.objectContaining({ name: "Basso Continuo", role: "continuo_foundation" }),
+      ])
+    );
+    expect(score.events).toContainEqual(
+      expect.objectContaining({
+        type: "figured_bass",
+        bassEventId: "event.p2-voice-1.1",
+        figures: [{ interval: 6 }],
+        duration: { numerator: 4, denominator: 1 },
+      })
+    );
+  });
 });

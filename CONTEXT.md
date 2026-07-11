@@ -531,6 +531,7 @@ _Avoid_: French tab
 - The same source then produces sibling 13-course baroque-lute and classical-guitar Arrangement Scores with independent search, validation, and Preservation Audits
 - The second Golden Arrangement Fixture is a short, legally redistributable public-domain soprano-plus-figured-bass PDF containing an independent Principal Voice, a complete Continuo Foundation, and at least one prepared suspension
 - Its reviewed transcription identifies every bass event, figure, accidental, soprano event, cadence, and suspension relationship so figure recognition and realization can be tested independently
+- Its first complete target is soprano plus piano under the explicit `continuo.italian-baroque` Realization Profile, engraved as a soprano staff above a keyboard grand staff with the source figures retained
 - A target capable of sounding the bass must produce a complete Continuo Realization under an explicit Realization Profile; a target that cannot must produce a separate bass part or labeled Continuo Reduction with every unsounded foundation event reported
 - The fixture verifies that contextual validation accepts the source-supported suspension treatment rather than applying a blanket dissonance or parallel-motion prohibition
 - Audio Preview exposes separate Principal Voice, Continuo Foundation, and generated realization Playback Parts for isolated verification

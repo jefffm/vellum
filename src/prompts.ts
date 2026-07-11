@@ -6,6 +6,7 @@ export function buildSystemPrompt(instruments: InstrumentProfile[]): string {
     buildTools(),
     buildWorkflow(),
     buildBaroqueGuitarWorkflow(),
+    buildContinuoWorkflow(),
     buildInstruments(instruments),
   ];
 
@@ -99,6 +100,21 @@ function buildBaroqueGuitarWorkflow(): string {
     '5. In `engrave`, prefer `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` over manually constructing baroque-guitar chord positions.',
     "",
     'The Tyler Universal chart is the default. With barré transpositions, every major and minor triad is reachable; use `chart_id: "foscarini"` only when that historical chart is specifically desired.',
+  ].join("\n");
+}
+
+function buildContinuoWorkflow(): string {
+  return [
+    "## Figured Bass and Continuo",
+    "",
+    "When a source contains a Continuo Foundation:",
+    "1. Treat the complete bass line, every figure, and every accidental as preservation targets; never infer that the figures are optional annotations.",
+    "2. Classify prepared suspensions and other source-supported dissonances before applying voice-leading validation; a supported 4-3 suspension is not a generic dissonance error.",
+    "3. Require an explicit Realization Profile scoped by period, region, genre, ensemble role, and target instrument before generating inner voices.",
+    "4. A target capable of sounding the bass must retain every foundation event. If a target cannot sound it, label the result a Continuo Reduction and report every unsounded event rather than calling it a complete realization.",
+    "5. Keep Principal Voice, Continuo Foundation, and generated realization as separate semantic playback parts even when engraving combines them.",
+    "",
+    "The Guided Start `target.piano-continuo` path uses the `continuo.italian-baroque` profile and the production `continuo-score` layout.",
   ].join("\n");
 }
 

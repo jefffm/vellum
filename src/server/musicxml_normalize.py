@@ -120,6 +120,38 @@ def pitch_text(note: ET.Element) -> str:
     return f"{step}{accidental}{octave}"
 
 
+def inferred_role(part_name: str) -> str:
+    lowered = part_name.lower()
+    if "soprano" in lowered:
+        return "soprano"
+    if "continuo" in lowered or "figured bass" in lowered or "basso continuo" in lowered:
+        return "continuo_foundation"
+    if "bass" in lowered:
+        return "bass"
+    return "other"
+
+
+def figured_bass_tokens(element: ET.Element) -> list[dict[str, object]]:
+    accidental_names = {
+        "sharp": "#",
+        "flat": "b",
+        "natural": "natural",
+    }
+    result: list[dict[str, object]] = []
+    for figure in children(element, "figure"):
+        number_text = child_text(figure, "figure-number")
+        if not number_text or not number_text.isdigit():
+            continue
+        token: dict[str, object] = {"interval": int(number_text)}
+        prefix = child_text(figure, "prefix")
+        suffix = child_text(figure, "suffix")
+        accidental = accidental_names.get(prefix or "") or accidental_names.get(suffix or "")
+        if accidental:
+            token["accidental"] = accidental
+        result.append(token)
+    return result
+
+
 def normalize(root: ET.Element) -> dict[str, object]:
     if local_name(root.tag) not in {"score-partwise", "score-timewise"}:
         raise ValueError(f"Unsupported MusicXML root: {local_name(root.tag)}")
@@ -152,11 +184,13 @@ def normalize(root: ET.Element) -> dict[str, object]:
         part_name = part_names.get(xml_part_id, xml_part_id)
         divisions = 1
         event_counts: dict[str, int] = {}
+        figure_count = 0
 
         for measure_index, measure in enumerate(children(part, "measure")):
             cursor = Fraction(0)
             measure_max = Fraction(0)
             last_onset_by_voice: dict[str, Fraction] = {}
+            last_note_event: dict[str, object] | None = None
             attributes = child(measure, "attributes")
             if attributes is not None:
                 divisions_text = child_text(attributes, "divisions")
@@ -184,6 +218,33 @@ def normalize(root: ET.Element) -> dict[str, object]:
                     duration = int(child_text(item, "duration", "0") or "0")
                     cursor += Fraction(duration, divisions)
                     measure_max = max(measure_max, cursor)
+                    continue
+                if name == "figured-bass":
+                    tokens = figured_bass_tokens(item)
+                    if not tokens or last_note_event is None:
+                        continue
+                    figure_count += 1
+                    duration_text = child_text(item, "duration")
+                    duration = (
+                        Fraction(int(duration_text), divisions)
+                        if duration_text is not None
+                        else Fraction(
+                            int(last_note_event["duration"]["numerator"]),
+                            int(last_note_event["duration"]["denominator"]),
+                        )
+                    )
+                    raw_events.append(
+                        {
+                            "id": f"event.{slug(xml_part_id)}-figure.{figure_count}",
+                            "type": "figured_bass",
+                            "partId": last_note_event["partId"],
+                            "measureId": last_note_event["measureId"],
+                            "onset": last_note_event["onset"],
+                            "duration": fraction_json(duration),
+                            "bassEventId": last_note_event["id"],
+                            "figures": tokens,
+                        }
+                    )
                     continue
                 if name != "note" or child(item, "grace") is not None:
                     continue
@@ -226,6 +287,8 @@ def normalize(root: ET.Element) -> dict[str, object]:
                 elif "stop" in tie_types:
                     event["tie"] = "stop"
                 raw_events.append(event)
+                if event["type"] == "note" and not is_chord:
+                    last_note_event = event
 
             measure_durations[measure_index] = max(
                 measure_durations.get(measure_index, Fraction(0)), measure_max
@@ -235,7 +298,7 @@ def normalize(root: ET.Element) -> dict[str, object]:
         {
             "id": f"part.{slug(xml_part_id)}-voice-{slug(voice)}",
             "name": name,
-            "role": "other",
+            "role": inferred_role(name),
         }
         for (xml_part_id, voice), name in sorted(voice_names.items())
     ]

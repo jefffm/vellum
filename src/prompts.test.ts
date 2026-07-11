@@ -72,6 +72,17 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain('chart_id: "foscarini"');
   });
 
+  it("includes profile-scoped continuo reasoning", () => {
+    const prompt = buildSystemPrompt([]);
+
+    expect(prompt).toContain("Figured Bass and Continuo");
+    expect(prompt).toContain("every figure");
+    expect(prompt).toContain("supported 4-3 suspension");
+    expect(prompt).toContain("explicit Realization Profile");
+    expect(prompt).toContain("Continuo Reduction");
+    expect(prompt).toContain("separate semantic playback parts");
+  });
+
   it("includes mandatory compile and bounded retry policy", () => {
     const prompt = buildSystemPrompt([]);
 

@@ -72,6 +72,7 @@ export const TargetConfigurationSchema = Type.Object(
     ]),
     tuningId: Type.Optional(Type.String({ minLength: 1 })),
     stringing: Type.Optional(Type.String({ minLength: 1 })),
+    realizationProfileId: Type.Optional(Type.String({ minLength: 1 })),
     notationLayouts: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
     deliverables: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
   },
@@ -240,7 +241,31 @@ export const RestEventSchema = Type.Object(
   { additionalProperties: false }
 );
 
-export const ScoreEventSchema = Type.Union([NoteEventSchema, RestEventSchema]);
+export const FiguredBassTokenSchema = Type.Object(
+  {
+    interval: Type.Integer({ minimum: 2, maximum: 13 }),
+    accidental: Type.Optional(
+      Type.Union([Type.Literal("#"), Type.Literal("b"), Type.Literal("natural")])
+    ),
+  },
+  { additionalProperties: false }
+);
+
+export const FiguredBassEventSchema = Type.Object(
+  {
+    ...ScoreEventBaseProperties,
+    type: Type.Literal("figured_bass"),
+    bassEventId: IdSchema,
+    figures: Type.Array(FiguredBassTokenSchema, { minItems: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const ScoreEventSchema = Type.Union([
+  NoteEventSchema,
+  RestEventSchema,
+  FiguredBassEventSchema,
+]);
 
 export type ScoreEvent = Static<typeof ScoreEventSchema>;
 
@@ -390,6 +415,8 @@ export const AnalysisRecordSchema = Type.Object(
     version: Type.Integer({ minimum: 1 }),
     texture: Type.String({ minLength: 1 }),
     principalVoicePartId: Type.Optional(IdSchema),
+    validationProfileId: Type.Optional(Type.String({ minLength: 1 })),
+    contrapuntalTechniques: Type.Optional(Type.Array(Type.String({ minLength: 1 }))),
     claims: Type.Array(AnalysisClaimSchema),
     preservationTargets: Type.Array(PreservationTargetSchema, { minItems: 1 }),
     createdAt: IsoDateSchema,
@@ -425,6 +452,14 @@ export const ArrangementEventSchema = Type.Object(
     positions: Type.Array(ArrangementPositionSchema),
     sourceEventIds: Type.Array(IdSchema),
     principalVoiceSourceEventId: Type.Optional(IdSchema),
+    role: Type.Optional(
+      Type.Union([
+        Type.Literal("principal_voice"),
+        Type.Literal("continuo_foundation"),
+        Type.Literal("realization"),
+        Type.Literal("accompaniment"),
+      ])
+    ),
   },
   { additionalProperties: false }
 );

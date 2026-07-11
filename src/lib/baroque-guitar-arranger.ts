@@ -58,7 +58,12 @@ export function arrangeFaithfulPluckedString(
   );
   if (!target?.partId)
     throw new Error("Faithful plucked-string arrangement requires a Principal Voice target");
-  const principalEvents = score.events.filter((event) => event.partId === target.partId);
+  const principalEvents = score.events.filter(
+    (
+      event
+    ): event is Extract<ScoreEvent, { type: "note" }> | Extract<ScoreEvent, { type: "rest" }> =>
+      event.partId === target.partId && event.type !== "figured_bass"
+  );
   const plan = chooseTranspositionPlan(score, principalEvents, model);
   const strategies = ["source-coverage", "economical-fingering"] as const;
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
@@ -234,7 +239,9 @@ function chooseTranspositionPlan(
 
 function buildCandidateEvents(
   score: NormalizedScore,
-  principalEvents: ScoreEvent[],
+  principalEvents: Array<
+    Extract<ScoreEvent, { type: "note" }> | Extract<ScoreEvent, { type: "rest" }>
+  >,
   model: InstrumentModel,
   semitones: number,
   strategy: "source-coverage" | "economical-fingering"

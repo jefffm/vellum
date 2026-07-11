@@ -44,4 +44,18 @@ describe("Guided Start output choices", () => {
       })
     ).toBe("/api/source.pdf#page=1&zoom=180,122,151");
   });
+
+  it("offers an explicitly profiled continuo realization for figured-bass sources", () => {
+    const markup = guidedStartMarkup();
+    expect(markup).toContain('value="target.piano-continuo"');
+    expect(markup).toContain("For figured-bass sources");
+    expect(targetConfiguration("target.piano-continuo")).toEqual({
+      id: "target.piano-continuo",
+      instrumentId: "piano",
+      role: "ensemble",
+      realizationProfileId: "continuo.italian-baroque",
+      notationLayouts: ["continuo-score"],
+      deliverables: ["pdf", "audio-preview"],
+    });
+  });
 });

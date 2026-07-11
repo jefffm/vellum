@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { arrangeFaithfulPluckedString } from "../../lib/baroque-guitar-arranger.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
+import { arrangeContinuo } from "../../lib/continuo-arranger.js";
 import type { ArrangementCandidate, ArrangementScore } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
@@ -79,15 +80,25 @@ export class ArrangementService {
     if (!workspace.analysisRecordIds.includes(analysis.id)) {
       this.store.saveAnalysisRecord(workspaceId, analysis);
     }
-    const instrument = this.loadInstrument(targetConfiguration.instrumentId);
-    if (targetConfiguration.tuningId && targetConfiguration.instrumentId === "baroque-lute-13") {
-      instrument.setDiapasonScheme(targetConfiguration.tuningId);
+    const arrangementId = `arrangement.${this.createId()}`;
+    let search;
+    if (targetConfiguration.realizationProfileId) {
+      search = arrangeContinuo(score, analysis, {
+        arrangementId,
+        createdAt: timestamp,
+        targetConfiguration,
+      });
+    } else {
+      const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+      if (targetConfiguration.tuningId && targetConfiguration.instrumentId === "baroque-lute-13") {
+        instrument.setDiapasonScheme(targetConfiguration.tuningId);
+      }
+      search = arrangeFaithfulPluckedString(score, analysis, instrument, {
+        arrangementId,
+        createdAt: timestamp,
+        targetConfiguration,
+      });
     }
-    const search = arrangeFaithfulPluckedString(score, analysis, instrument, {
-      arrangementId: `arrangement.${this.createId()}`,
-      createdAt: timestamp,
-      targetConfiguration,
-    });
     this.store.saveArrangementScore(workspaceId, search.selected);
     return {
       analysisRecordId: analysis.id,

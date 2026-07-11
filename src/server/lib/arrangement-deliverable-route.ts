@@ -3,6 +3,7 @@ import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
 import { arrangementToEngraveParams } from "../../lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
+import { continuoArrangementToLilyPond } from "../../lib/continuo-engrave.js";
 import { compileLilyPond } from "./compile-route.js";
 import { engrave } from "./engrave.js";
 import { SubprocessRunner } from "./subprocess.js";
@@ -34,13 +35,15 @@ export function createArrangementCompileRoute(store = new WorkspaceStore()): Req
       const arrangement = store.getArrangementScore(workspaceId, arrangementId);
       const analysis = store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
       const score = store.getNormalizedScore(workspaceId, analysis.normalizedScoreId);
-      const engraved = engrave(arrangementToEngraveParams(arrangement, score));
+      const source = arrangement.targetConfiguration.notationLayouts.includes("continuo-score")
+        ? continuoArrangementToLilyPond(arrangement, score)
+        : engrave(arrangementToEngraveParams(arrangement, score)).source;
       const compiled = await compileLilyPond(
-        { source: engraved.source, format: "both" },
+        { source, format: "both" },
         new SubprocessRunner(60_000),
         60_000
       );
-      response.json({ ok: true, data: { ...compiled, source: engraved.source } });
+      response.json({ ok: true, data: { ...compiled, source } });
     } catch (error) {
       next(error);
     }

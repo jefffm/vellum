@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { Value } from "@sinclair/typebox/value";
 import { describe, expect, it } from "vitest";
+import { RecognizedScoreSchema } from "./music-domain.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 
@@ -85,5 +87,62 @@ describe("musicological analysis", () => {
     });
     expect(analysis.principalVoicePartId).toBe("part.high");
     expect(analysis.claims[0]?.basis).toBe("inference");
+  });
+});
+
+describe("continuo analysis", () => {
+  it("protects the complete foundation and recognizes the prepared 4-3 suspension", () => {
+    const recognized = Value.Decode(
+      RecognizedScoreSchema,
+      JSON.parse(
+        readFileSync(
+          path.resolve(process.cwd(), "test/fixtures/continuo/reviewed-score.json"),
+          "utf8"
+        )
+      )
+    );
+    const score = {
+      id: "score.continuo",
+      scoreTranscriptionId: "transcription.continuo",
+      version: 1,
+      ...recognized,
+      createdAt: "2026-07-10T12:00:00.000Z",
+    };
+    const analysis = analyzeMusicologicalScore(score, {
+      id: "analysis.continuo",
+      createdAt: "2026-07-10T13:00:00.000Z",
+    });
+
+    expect(analysis).toMatchObject({
+      texture: "continuo",
+      principalVoicePartId: "part.soprano",
+      validationProfileId: "continuo.italian-baroque",
+      contrapuntalTechniques: ["prepared_suspension"],
+    });
+    expect(analysis.claims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "continuo_foundation", confidence: 1 }),
+        expect.objectContaining({ kind: "prepared_suspension", confidence: 1 }),
+      ])
+    );
+    expect(analysis.preservationTargets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "continuo_foundation",
+          eventIds: [
+            "event.bass.1",
+            "event.bass.2",
+            "event.bass.3",
+            "event.bass.4",
+            "event.figure.1",
+            "event.figure.2",
+            "event.figure.3",
+            "event.figure.4",
+            "event.figure.5",
+          ],
+        }),
+        expect.objectContaining({ kind: "relationship" }),
+      ])
+    );
   });
 });

@@ -1,7 +1,12 @@
 import type { ArrangementScore, NormalizedScore, Rational } from "./music-domain.js";
 import { noteToMidi } from "./pitch.js";
 
-export type PlaybackPart = "full" | "principal-voice" | "accompaniment";
+export type PlaybackPart =
+  | "full"
+  | "principal-voice"
+  | "continuo-foundation"
+  | "realization"
+  | "accompaniment";
 
 export type PlaybackEvent = {
   arrangementEventId: string;
@@ -43,10 +48,11 @@ export function buildAudioPreview(
       ? Math.max(...pitches.map(({ midi }) => midi))
       : undefined;
     for (const { midi } of pitches) {
+      const part = playbackPart(event, midi, principalMidi);
       events.push({
         arrangementEventId: event.id,
         sourceEventIds: event.sourceEventIds,
-        part: midi === principalMidi ? "principal-voice" : "accompaniment",
+        part,
         midi,
         startSeconds: (measureStart + rationalValue(event.onset)) * secondsPerQuarter,
         durationSeconds: rationalValue(event.duration) * secondsPerQuarter,
@@ -57,13 +63,40 @@ export function buildAudioPreview(
     tempo,
     durationSeconds: elapsedQuarters * secondsPerQuarter,
     synthesis: "basic-oscillator",
-    parts: [
-      { id: "full", label: "Full arrangement" },
-      { id: "principal-voice", label: "Principal Voice" },
-      { id: "accompaniment", label: "Accompaniment" },
-    ],
+    parts: playbackParts(events),
     events,
   };
+}
+
+function playbackPart(
+  event: ArrangementScore["events"][number],
+  midi: number,
+  principalMidi: number | undefined
+): Exclude<PlaybackPart, "full"> {
+  if (event.role === "principal_voice") return "principal-voice";
+  if (event.role === "continuo_foundation") return "continuo-foundation";
+  if (event.role === "realization") return "realization";
+  return midi === principalMidi ? "principal-voice" : "accompaniment";
+}
+
+function playbackParts(events: PlaybackEvent[]): AudioPreview["parts"] {
+  const labels: Record<Exclude<PlaybackPart, "full">, string> = {
+    "principal-voice": "Principal Voice",
+    "continuo-foundation": "Continuo Foundation",
+    realization: "Generated realization",
+    accompaniment: "Accompaniment",
+  };
+  const order: Array<Exclude<PlaybackPart, "full">> = [
+    "principal-voice",
+    "continuo-foundation",
+    "realization",
+    "accompaniment",
+  ];
+  const used = new Set(events.map((event) => event.part));
+  return [
+    { id: "full", label: "Full arrangement" },
+    ...order.filter((part) => used.has(part)).map((part) => ({ id: part, label: labels[part] })),
+  ];
 }
 
 function rationalValue(value: Rational): number {

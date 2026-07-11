@@ -1,0 +1,201 @@
+{
+  "title": "Continuo Suspension Exercise",
+  "key": "C major",
+  "timeSignature": "4/4",
+  "parts": [
+    { "id": "part.soprano", "name": "Soprano", "role": "principal_voice" },
+    {
+      "id": "part.continuo",
+      "name": "Continuo",
+      "role": "continuo_foundation"
+    }
+  ],
+  "measures": [
+    {
+      "id": "measure.1",
+      "index": 0,
+      "displayNumber": "1",
+      "duration": { "numerator": 4, "denominator": 1 }
+    },
+    {
+      "id": "measure.2",
+      "index": 1,
+      "displayNumber": "2",
+      "duration": { "numerator": 4, "denominator": 1 }
+    },
+    {
+      "id": "measure.3",
+      "index": 2,
+      "displayNumber": "3",
+      "duration": { "numerator": 4, "denominator": 1 }
+    },
+    {
+      "id": "measure.4",
+      "index": 3,
+      "displayNumber": "4",
+      "duration": { "numerator": 4, "denominator": 1 }
+    }
+  ],
+  "events": [
+    {
+      "id": "event.soprano.1",
+      "type": "note",
+      "partId": "part.soprano",
+      "measureId": "measure.1",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "F4",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 125, "y": 112, "width": 35, "height": 28 }
+    },
+    {
+      "id": "event.soprano.2",
+      "type": "note",
+      "partId": "part.soprano",
+      "measureId": "measure.2",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 2, "denominator": 1 },
+      "pitch": "F4",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 160, "y": 112, "width": 22, "height": 28 }
+    },
+    {
+      "id": "event.soprano.3",
+      "type": "note",
+      "partId": "part.soprano",
+      "measureId": "measure.2",
+      "onset": { "numerator": 2, "denominator": 1 },
+      "duration": { "numerator": 2, "denominator": 1 },
+      "pitch": "E4",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 182, "y": 112, "width": 22, "height": 28 }
+    },
+    {
+      "id": "event.soprano.4",
+      "type": "note",
+      "partId": "part.soprano",
+      "measureId": "measure.3",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "D4",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 205, "y": 112, "width": 35, "height": 28 }
+    },
+    {
+      "id": "event.soprano.5",
+      "type": "note",
+      "partId": "part.soprano",
+      "measureId": "measure.4",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "C4",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 240, "y": 112, "width": 35, "height": 28 }
+    },
+    {
+      "id": "event.bass.1",
+      "type": "note",
+      "partId": "part.continuo",
+      "measureId": "measure.1",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "D3",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 125, "y": 155, "width": 35, "height": 34 }
+    },
+    {
+      "id": "event.bass.2",
+      "type": "note",
+      "partId": "part.continuo",
+      "measureId": "measure.2",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "C3",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 160, "y": 155, "width": 44, "height": 34 }
+    },
+    {
+      "id": "event.bass.3",
+      "type": "note",
+      "partId": "part.continuo",
+      "measureId": "measure.3",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "G2",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 205, "y": 155, "width": 35, "height": 34 }
+    },
+    {
+      "id": "event.bass.4",
+      "type": "note",
+      "partId": "part.continuo",
+      "measureId": "measure.4",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "pitch": "C3",
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 240, "y": 155, "width": 35, "height": 34 }
+    },
+    {
+      "id": "event.figure.1",
+      "type": "figured_bass",
+      "partId": "part.continuo",
+      "measureId": "measure.1",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "bassEventId": "event.bass.1",
+      "figures": [{ "interval": 6 }],
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 125, "y": 186, "width": 35, "height": 18 }
+    },
+    {
+      "id": "event.figure.2",
+      "type": "figured_bass",
+      "partId": "part.continuo",
+      "measureId": "measure.2",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 2, "denominator": 1 },
+      "bassEventId": "event.bass.2",
+      "figures": [{ "interval": 4 }],
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 160, "y": 186, "width": 22, "height": 18 }
+    },
+    {
+      "id": "event.figure.3",
+      "type": "figured_bass",
+      "partId": "part.continuo",
+      "measureId": "measure.2",
+      "onset": { "numerator": 2, "denominator": 1 },
+      "duration": { "numerator": 2, "denominator": 1 },
+      "bassEventId": "event.bass.2",
+      "figures": [{ "interval": 3 }],
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 182, "y": 186, "width": 22, "height": 18 }
+    },
+    {
+      "id": "event.figure.4",
+      "type": "figured_bass",
+      "partId": "part.continuo",
+      "measureId": "measure.3",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "bassEventId": "event.bass.3",
+      "figures": [{ "interval": 7 }],
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 205, "y": 186, "width": 35, "height": 18 }
+    },
+    {
+      "id": "event.figure.5",
+      "type": "figured_bass",
+      "partId": "part.continuo",
+      "measureId": "measure.4",
+      "onset": { "numerator": 0, "denominator": 1 },
+      "duration": { "numerator": 4, "denominator": 1 },
+      "bassEventId": "event.bass.4",
+      "figures": [{ "interval": 5 }, { "interval": 3 }],
+      "confidence": 1,
+      "sourceRegion": { "page": 1, "x": 240, "y": 186, "width": 35, "height": 18 }
+    }
+  ],
+  "uncertainties": []
+}
