@@ -27,15 +27,38 @@ export function continuoArrangementToLilyPond(
     (event): event is Extract<ScoreEvent, { type: "figured_bass" }> => event.type === "figured_bass"
   );
   const profile = arrangement.targetConfiguration.realizationProfileId!;
+  const separateBass = arrangement.continuoDisposition?.kind === "separate_bass_realization";
+  const include = separateBass
+    ? '\\include "instruments/baroque-guitar-5.ily"'
+    : '\\include "instruments/piano.ily"';
+  const realizationLabel = separateBass ? "5-course baroque guitar" : "Piano";
+  const foundationLabel = separateBass
+    ? `Separate bass (${arrangement.continuoDisposition?.bassInstrumentId ?? "bass"})`
+    : "Continuo Foundation";
+  const accompanimentBlock = separateBass
+    ? `\\new Staff = "realization" \\with { instrumentName = "${realizationLabel}" } {
+      \\new Voice = "generatedRealization" { \\realizationMusic }
+    }
+    \\new Staff = "foundation" \\with { instrumentName = "${foundationLabel}" } {
+      \\new Voice = "continuoFoundation" { \\foundationMusic }
+    }`
+    : `\\new PianoStaff \\with { instrumentName = "Piano" } <<
+      \\new Staff = "realization" {
+        \\new Voice = "generatedRealization" { \\realizationMusic }
+      }
+      \\new Staff = "foundation" {
+        \\new Voice = "continuoFoundation" { \\foundationMusic }
+      }
+    >>`;
   const key = lilyKey(score.key);
   const time = score.timeSignature ? `\\time ${score.timeSignature}` : "";
 
   return `\\version "2.24.0"
-\\include "instruments/piano.ily"
+${include}
 
 \\header {
   title = "${escapeLilyString(score.title ?? "Continuo Realization")}"
-  subtitle = "Continuo Realization · ${escapeLilyString(profile)}"
+  subtitle = "${escapeLilyString(arrangement.continuoDisposition?.label ?? `Continuo Realization · ${profile}`)}"
 }
 
 principalMusic = {
@@ -68,14 +91,7 @@ continuoFigures = \\figuremode {
     \\new Staff = "principal" \\with { instrumentName = "Soprano" } {
       \\new Voice = "principalVoice" { \\principalMusic }
     }
-    \\new PianoStaff \\with { instrumentName = "Piano" } <<
-      \\new Staff = "realization" {
-        \\new Voice = "generatedRealization" { \\realizationMusic }
-      }
-      \\new Staff = "foundation" {
-        \\new Voice = "continuoFoundation" { \\foundationMusic }
-      }
-    >>
+    ${accompanimentBlock}
     \\new FiguredBass { \\continuoFigures }
   >>
   \\layout { }

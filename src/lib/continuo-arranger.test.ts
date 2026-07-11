@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { arrangeContinuo, auditContinuo } from "./continuo-arranger.js";
+import { loadBrowserProfile } from "./browser-profiles.js";
+import { InstrumentModel } from "./instrument-model.js";
 import { RecognizedScoreSchema } from "./music-domain.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 
@@ -118,5 +120,76 @@ describe("profile-scoped Continuo Realization", () => {
         },
       })
     ).toThrow("explicit Realization Profile");
+  });
+
+  it("uses a named separate bass when a re-entrant guitar cannot sound the foundation", () => {
+    const model = InstrumentModel.fromProfile(loadBrowserProfile("baroque-guitar-5"));
+    const result = arrangeContinuo(score, analysis, {
+      arrangementId: "arrangement.guitar-continuo",
+      createdAt: "2026-07-10T14:00:00.000Z",
+      targetInstrument: model,
+      targetConfiguration: {
+        id: "target.baroque-guitar-continuo",
+        instrumentId: "baroque-guitar-5",
+        role: "ensemble",
+        stringing: "french",
+        realizationProfileId: "continuo.italian-baroque",
+        continuoTreatment: "separate_bass",
+        continuoBassInstrumentId: "voice-bass",
+        notationLayouts: ["continuo-score"],
+        deliverables: ["pdf", "audio-preview"],
+      },
+    });
+    expect(result.candidates.map((candidate) => candidate.strategy)).toEqual([
+      "separate-bass-realization",
+      "continuo-reduction",
+    ]);
+    expect(result.selected).toMatchObject({
+      selectedCandidateId: "candidate.separate-bass-realization",
+      preservationAudit: { status: "pass" },
+      continuoDisposition: {
+        kind: "separate_bass_realization",
+        bassInstrumentId: "voice-bass",
+        unsoundedFoundationEventIds: [],
+      },
+    });
+    const foundation = result.selected.events.filter(
+      (event) => event.role === "continuo_foundation"
+    );
+    expect(foundation).toHaveLength(4);
+    expect(foundation.every((event) => event.instrumentId === "voice-bass")).toBe(true);
+    expect(
+      result.selected.events
+        .filter((event) => event.role === "realization")
+        .every(
+          (event) =>
+            event.positions.length === event.pitches.length && model.isPlayable(event.positions).ok
+        )
+    ).toBe(true);
+    const reduction = result.candidates.find(
+      (candidate) => candidate.strategy === "continuo-reduction"
+    )!;
+    expect(reduction.status).toBe("rejected");
+    expect(
+      reduction.audit.findings.filter((finding) => finding.code === "continuo.foundation_unsounded")
+    ).toHaveLength(4);
+  });
+
+  it("requires an explicit bass decision for an incapable target", () => {
+    expect(() =>
+      arrangeContinuo(score, analysis, {
+        arrangementId: "arrangement.guitar-continuo",
+        createdAt: "2026-07-10T14:00:00.000Z",
+        targetInstrument: InstrumentModel.fromProfile(loadBrowserProfile("baroque-guitar-5")),
+        targetConfiguration: {
+          id: "target.guitar-continuo",
+          instrumentId: "baroque-guitar-5",
+          role: "ensemble",
+          realizationProfileId: "continuo.italian-baroque",
+          notationLayouts: ["continuo-score"],
+          deliverables: ["pdf"],
+        },
+      })
+    ).toThrow(/Choose a separate bass instrument/);
   });
 });

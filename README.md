@@ -38,6 +38,8 @@ Each result also exposes complete provenance: every source event, protected rela
 
 Audio Preview is a literal synthetic check of that same Arrangement Score. It follows a reproducible Performed Form, gives repeats distinct Playback Occurrences, and provides pause, seek, progress, volume, speed, looping, skip-repeats practice playback, and mute/solo/level controls for semantic musical parts. Analysis, audit, and provenance entries seek into the linked playback timeline.
 
+Continuo output is labeled by what actually sounds. Capable targets produce a complete realization; an incapable re-entrant baroque guitar can be paired with an explicit separate bass. The competing Continuo Reduction discloses every unsounded foundation event and is rejected under Faithful Reduction rather than passing on implied harmony.
+
 ## Quick start
 
 ```bash

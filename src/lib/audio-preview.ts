@@ -17,6 +17,7 @@ export type PlaybackEvent = {
   sourceEventIds: string[];
   transformationEntryIds: string[];
   auditTargetIds: string[];
+  instrumentId?: string;
   part: Exclude<PlaybackPart, "full">;
   midi: number;
   startSeconds: number;
@@ -110,6 +111,7 @@ export function buildAudioPreview(
               entry.preservationTargetIds ??
               (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
           ),
+          instrumentId: event.instrumentId,
           part,
           midi,
           startSeconds: occurrence.startSeconds + rationalValue(event.onset) * secondsPerQuarter,
@@ -182,6 +184,14 @@ function playbackParts(events: PlaybackEvent[], score: NormalizedScore): AudioPr
     realization: "Generated realization",
     accompaniment: "Accompaniment",
   };
+  const foundationInstrument = events.find(
+    (event) => event.part === "continuo-foundation"
+  )?.instrumentId;
+  const realizationInstrument = events.find((event) => event.part === "realization")?.instrumentId;
+  if (foundationInstrument)
+    labels["continuo-foundation"] = `Continuo Foundation · ${foundationInstrument}`;
+  if (realizationInstrument)
+    labels.realization = `Generated realization · ${realizationInstrument}`;
   const order: Array<Exclude<PlaybackPart, "full">> = [
     "principal-voice",
     "continuo-foundation",

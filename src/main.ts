@@ -421,6 +421,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     targetConfiguration: { id: string; instrumentId: string };
     transformationReport: GuidedDeliverable["transformationReport"];
     preservationAudit: GuidedDeliverable["preservationAudit"];
+    continuoDisposition?: GuidedDeliverable["continuoDisposition"];
   };
   const arrangement = await browserApi<StoredArrangement>(
     `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
@@ -457,6 +458,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       analysis,
       transformationReport: arrangement.transformationReport,
       preservationAudit: arrangement.preservationAudit,
+      continuoDisposition: arrangement.continuoDisposition,
       compiled,
       preview,
       candidates,

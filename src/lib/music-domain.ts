@@ -76,6 +76,15 @@ export const TargetConfigurationSchema = Type.Object(
     tuningId: Type.Optional(Type.String({ minLength: 1 })),
     stringing: Type.Optional(Type.String({ minLength: 1 })),
     realizationProfileId: Type.Optional(Type.String({ minLength: 1 })),
+    continuoTreatment: Type.Optional(
+      Type.Union([
+        Type.Literal("auto"),
+        Type.Literal("complete"),
+        Type.Literal("separate_bass"),
+        Type.Literal("reduction"),
+      ])
+    ),
+    continuoBassInstrumentId: Type.Optional(Type.String({ minLength: 1 })),
     notationLayouts: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
     deliverables: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
   },
@@ -692,6 +701,7 @@ export const ArrangementEventSchema = Type.Object(
       ])
     ),
     voiceId: Type.Optional(IdSchema),
+    instrumentId: Type.Optional(Type.String({ minLength: 1 })),
   },
   { additionalProperties: false }
 );
@@ -896,6 +906,22 @@ export const ArrangementScoreSchema = Type.Object(
     events: Type.Array(ArrangementEventSchema, { minItems: 1 }),
     transformationReport: Type.Array(TransformationEntrySchema),
     preservationAudit: PreservationAuditSchema,
+    continuoDisposition: Type.Optional(
+      Type.Object(
+        {
+          kind: Type.Union([
+            Type.Literal("complete_realization"),
+            Type.Literal("separate_bass_realization"),
+            Type.Literal("continuo_reduction"),
+          ]),
+          label: Type.String({ minLength: 1 }),
+          soundedFoundationEventIds: Type.Array(IdSchema),
+          unsoundedFoundationEventIds: Type.Array(IdSchema),
+          bassInstrumentId: Type.Optional(Type.String({ minLength: 1 })),
+        },
+        { additionalProperties: false }
+      )
+    ),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }

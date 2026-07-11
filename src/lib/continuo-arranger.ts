@@ -1,4 +1,5 @@
 import { Key } from "tonal";
+import { InstrumentModel } from "./instrument-model.js";
 import type {
   AnalysisRecord,
   ArrangementCandidate,
@@ -10,14 +11,21 @@ import type {
   TargetConfiguration,
 } from "./music-domain.js";
 import { compareRational } from "./music-domain.js";
-import { parsePitch } from "./pitch.js";
+import { noteToMidi, parsePitch, transposeNote } from "./pitch.js";
 import { buildCompleteTransformationReport } from "./transformation-report.js";
 
 type ContinuoArrangementOptions = {
   arrangementId: string;
   createdAt: string;
   targetConfiguration: TargetConfiguration;
+  targetInstrument?: InstrumentModel;
 };
+
+type ContinuoStrategy =
+  | "complete-realization"
+  | "lean-realization"
+  | "separate-bass-realization"
+  | "continuo-reduction";
 
 export type ContinuoSearchResult = {
   candidates: ArrangementCandidate[];
@@ -31,11 +39,6 @@ export function arrangeContinuo(
 ): ContinuoSearchResult {
   const profileId = options.targetConfiguration.realizationProfileId;
   if (!profileId) throw new Error("Continuo Realization requires an explicit Realization Profile");
-  if (options.targetConfiguration.instrumentId !== "piano") {
-    throw new Error(
-      `Complete Continuo Realization is not implemented for ${options.targetConfiguration.instrumentId}`
-    );
-  }
   if (analysis.texture !== "continuo") {
     throw new Error(`Continuo arranger requires continuo texture, received ${analysis.texture}`);
   }
@@ -50,14 +53,32 @@ export function arrangeContinuo(
       "Continuo arrangement requires Principal Voice and Continuo Foundation targets"
     );
   }
-
-  const strategies = ["complete-realization", "lean-realization"] as const;
+  const foundationNotes = score.events.filter(
+    (event): event is Extract<ScoreEvent, { type: "note" }> =>
+      event.partId === foundationTarget.partId && event.type === "note"
+  );
+  const targetLowest = options.targetInstrument?.soundingRange().lowest;
+  const targetCanSoundFoundation =
+    options.targetConfiguration.instrumentId === "piano" ||
+    (targetLowest !== undefined &&
+      foundationNotes.every((event) => noteToMidi(event.pitch) >= noteToMidi(targetLowest)));
+  if (!targetCanSoundFoundation && !options.targetConfiguration.continuoBassInstrumentId) {
+    throw new Error(
+      `${options.targetConfiguration.instrumentId} cannot sound the complete Continuo Foundation. Choose a separate bass instrument or explicitly request a Continuo Reduction.`
+    );
+  }
+  const strategies: ContinuoStrategy[] = targetCanSoundFoundation
+    ? ["complete-realization", "lean-realization"]
+    : ["separate-bass-realization", "continuo-reduction"];
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const events = buildContinuoEvents(
       score,
       principalTarget.partId!,
       foundationTarget.partId!,
-      strategy
+      strategy,
+      options.targetInstrument,
+      options.targetConfiguration.continuoBassInstrumentId,
+      options.targetInstrument ? options.targetConfiguration.instrumentId : undefined
     );
     const audit = auditContinuo(score, analysis, events);
     return {
@@ -73,10 +94,14 @@ export function arrangeContinuo(
       },
     };
   });
+  const preferredStrategy = targetCanSoundFoundation
+    ? "complete-realization"
+    : "separate-bass-realization";
   const selectedCandidate = candidates.find(
-    (candidate) => candidate.strategy === "complete-realization" && candidate.status === "survived"
+    (candidate) => candidate.strategy === preferredStrategy && candidate.status === "survived"
   );
-  if (!selectedCandidate) throw new Error("No complete Continuo Realization passed audit");
+  if (!selectedCandidate)
+    throw new Error("No complete Continuo Realization or separate-bass alternative passed audit");
   selectedCandidate.status = "selected";
 
   return {
@@ -102,6 +127,17 @@ export function arrangeContinuo(
         0
       ),
       preservationAudit: selectedCandidate.audit,
+      continuoDisposition: {
+        kind: targetCanSoundFoundation ? "complete_realization" : "separate_bass_realization",
+        label: targetCanSoundFoundation
+          ? `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId}`
+          : `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId} with separate ${options.targetConfiguration.continuoBassInstrumentId}`,
+        soundedFoundationEventIds: foundationNotes.map((event) => event.id),
+        unsoundedFoundationEventIds: [],
+        bassInstrumentId: targetCanSoundFoundation
+          ? options.targetConfiguration.instrumentId
+          : options.targetConfiguration.continuoBassInstrumentId,
+      },
       createdAt: options.createdAt,
     },
   };
@@ -111,14 +147,24 @@ function buildContinuoEvents(
   score: NormalizedScore,
   principalPartId: string,
   foundationPartId: string,
-  strategy: "complete-realization" | "lean-realization"
+  strategy: ContinuoStrategy,
+  targetInstrument?: InstrumentModel,
+  bassInstrumentId?: string,
+  targetInstrumentId?: string
 ): ArrangementEvent[] {
   const events: ArrangementEvent[] = [];
   for (const source of score.events) {
     if (source.partId === principalPartId && source.type !== "figured_bass") {
       events.push(copyVoiceEvent(source, "principal_voice"));
-    } else if (source.partId === foundationPartId && source.type === "note") {
-      events.push(copyVoiceEvent(source, "continuo_foundation"));
+    } else if (
+      source.partId === foundationPartId &&
+      source.type === "note" &&
+      strategy !== "continuo-reduction"
+    ) {
+      events.push({
+        ...copyVoiceEvent(source, "continuo_foundation"),
+        instrumentId: strategy === "separate-bass-realization" ? bassInstrumentId : undefined,
+      });
     }
   }
   const figures = score.events.filter(
@@ -130,20 +176,29 @@ function buildContinuoEvents(
         event.id === figure.bassEventId && event.type === "note"
     );
     if (!bass) throw new Error(`Figured Bass event references missing bass ${figure.bassEventId}`);
-    const intervals = realizationIntervals(figure, strategy);
-    const pitches = intervals.map((token) =>
+    const intervals = realizationIntervals(
+      figure,
+      strategy === "continuo-reduction"
+        ? "lean-realization"
+        : strategy === "separate-bass-realization"
+          ? "complete-realization"
+          : strategy
+    );
+    const requestedPitches = intervals.map((token) =>
       diatonicPitchAbove(bass.pitch, token.interval, score.key, token.accidental)
     );
+    const voicing = playableVoicing(requestedPitches, targetInstrument);
     events.push({
       id: `arrangement-event.realization.${index + 1}`,
-      type: pitches.length > 1 ? "chord" : "note",
+      type: voicing.pitches.length > 1 ? "chord" : "note",
       measureId: figure.measureId,
       onset: figure.onset,
       duration: figure.duration,
-      pitches,
-      positions: [],
+      pitches: voicing.pitches,
+      positions: voicing.positions,
       sourceEventIds: [figure.id, bass.id],
       role: "realization",
+      instrumentId: targetInstrumentId,
     });
   }
   return events.sort(
@@ -169,6 +224,42 @@ function copyVoiceEvent(
     sourceEventIds: [source.id],
     principalVoiceSourceEventId: role === "principal_voice" ? source.id : undefined,
     role,
+  };
+}
+
+function playableVoicing(
+  requestedPitches: string[],
+  model: InstrumentModel | undefined
+): { pitches: string[]; positions: ArrangementEvent["positions"] } {
+  if (!model) return { pitches: requestedPitches, positions: [] };
+  const choices = requestedPitches.map((pitch) =>
+    [0, 12, 24].flatMap((semitones) => {
+      const candidate = transposeNote(pitch, semitones);
+      return model.positionsForPitch(candidate).map((position) => ({
+        pitch: candidate,
+        position: { ...position, pitch: candidate },
+      }));
+    })
+  );
+  const selected: Array<{ pitch: string; position: ArrangementEvent["positions"][number] }> = [];
+  const search = (index: number): boolean => {
+    if (index === choices.length) return model.isPlayable(selected.map((item) => item.position)).ok;
+    for (const choice of choices[index] ?? []) {
+      if (selected.some((item) => item.position.course === choice.position.course)) continue;
+      selected.push(choice);
+      if (search(index + 1)) return true;
+      selected.pop();
+    }
+    return false;
+  };
+  if (!search(0)) {
+    throw new Error(
+      `No playable target voicing realizes continuo pitches ${requestedPitches.join(", ")}`
+    );
+  }
+  return {
+    pitches: selected.map((item) => item.pitch),
+    positions: selected.map((item) => item.position),
   };
 }
 
@@ -246,14 +337,24 @@ export function auditContinuo(
         continue;
       }
       if (source.type === "note") {
-        const literal = descendants.find((event) => event.pitches.includes(source.pitch));
+        const literal = descendants.find(
+          (event) =>
+            event.pitches.includes(source.pitch) &&
+            (target.kind !== "continuo_foundation" || event.role === "continuo_foundation")
+        );
         if (!literal) {
           findings.push({
             targetId: target.id,
             sourceEventId: sourceId,
             severity: "hard",
-            code: "continuo.pitch_changed",
-            message: `Protected source pitch is absent: ${source.pitch}`,
+            code:
+              target.kind === "continuo_foundation"
+                ? "continuo.foundation_unsounded"
+                : "continuo.pitch_changed",
+            message:
+              target.kind === "continuo_foundation"
+                ? `Continuo Foundation event is linked but not sounded as bass: ${sourceId}`
+                : `Protected source pitch is absent: ${source.pitch}`,
           });
         }
       } else if (source.type === "figured_bass") {
@@ -268,7 +369,7 @@ export function auditContinuo(
           source.figures.some((figure) =>
             realized.pitches.every(
               (pitch) =>
-                diatonicDistance(bass.pitch, pitch) !== figure.interval ||
+                !equivalentDiatonicInterval(diatonicDistance(bass.pitch, pitch), figure.interval) ||
                 (figure.accidental !== undefined &&
                   parsePitch(pitch).accidental !== accidentalText(figure.accidental))
             )
@@ -369,8 +470,12 @@ function preparedSuspensionPreserved(
     arrangedPreparation.pitches[0] === arrangedSuspension.pitches[0] &&
     pitchSemitones(arrangedResolution.pitches[0]!) ===
       pitchSemitones(arrangedSuspension.pitches[0]!) - 1 &&
-    realizedFourth.pitches.some((pitch) => diatonicDistance(bass.pitch, pitch) === 4) &&
-    realizedThird.pitches.some((pitch) => diatonicDistance(bass.pitch, pitch) === 3)
+    realizedFourth.pitches.some((pitch) =>
+      equivalentDiatonicInterval(diatonicDistance(bass.pitch, pitch), 4)
+    ) &&
+    realizedThird.pitches.some((pitch) =>
+      equivalentDiatonicInterval(diatonicDistance(bass.pitch, pitch), 3)
+    )
   );
 }
 
@@ -407,6 +512,10 @@ function diatonicDistance(bassPitch: string, upperPitch: string): number {
     letters.indexOf(bass.letter) +
     1
   );
+}
+
+function equivalentDiatonicInterval(actual: number, expected: number): boolean {
+  return ((actual - 1) % 7) + 1 === ((expected - 1) % 7) + 1;
 }
 
 function accidentalText(accidental: "#" | "b" | "natural"): string {

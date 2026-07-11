@@ -126,10 +126,15 @@ export class ArrangementService {
     let generated;
     try {
       if (targetConfiguration.realizationProfileId) {
+        const targetInstrument =
+          targetConfiguration.instrumentId === "piano"
+            ? undefined
+            : this.loadInstrument(targetConfiguration.instrumentId);
         generated = arrangeContinuo(score, analysis, {
           arrangementId,
           createdAt: timestamp,
           targetConfiguration,
+          targetInstrument,
         });
       } else if (analysis.texture === "imitative-polyphony") {
         const instrument = this.loadInstrument(targetConfiguration.instrumentId);
@@ -272,9 +277,10 @@ function persistableCandidates(
     const openRatio = positionCount === 0 ? 0 : candidate.metrics.openStringCount / positionCount;
     const scores = {
       historicalProfile:
-        candidate.strategy === "complete-realization"
+        candidate.strategy === "complete-realization" ||
+        candidate.strategy === "separate-bass-realization"
           ? 1
-          : candidate.strategy === "lean-realization"
+          : candidate.strategy === "lean-realization" || candidate.strategy === "continuo-reduction"
             ? 0.8
             : 0.9,
       idiom: clamp(

@@ -61,6 +61,19 @@ describe("Guided Start output choices", () => {
       notationLayouts: ["continuo-score"],
       deliverables: ["pdf", "audio-preview"],
     });
+    expect(markup).toContain('value="target.baroque-guitar-continuo"');
+    expect(markup).toContain("separate bass preserves the foundation");
+    expect(targetConfiguration("target.baroque-guitar-continuo")).toEqual({
+      id: "target.baroque-guitar-continuo",
+      instrumentId: "baroque-guitar-5",
+      role: "ensemble",
+      stringing: "french",
+      realizationProfileId: "continuo.italian-baroque",
+      continuoTreatment: "separate_bass",
+      continuoBassInstrumentId: "voice-bass",
+      notationLayouts: ["continuo-score"],
+      deliverables: ["pdf", "audio-preview"],
+    });
   });
 
   it("offers six-course Renaissance lute with French tablature", () => {

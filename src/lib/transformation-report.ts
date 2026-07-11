@@ -17,6 +17,10 @@ export function buildCompleteTransformationReport(
   const principalEventIds = new Set(
     analysis.preservationTargets.find((target) => target.kind === "principal_voice")?.eventIds ?? []
   );
+  const foundationEventIds = new Set(
+    analysis.preservationTargets.find((target) => target.kind === "continuo_foundation")
+      ?.eventIds ?? []
+  );
   const eventEntries = score.events.map((sourceEvent, index) =>
     sourceTransformation(
       sourceEvent,
@@ -24,6 +28,7 @@ export function buildCompleteTransformationReport(
       semitones,
       index,
       principalEventIds,
+      foundationEventIds,
       analysis.preservationTargets
         .filter((target) => target.eventIds.includes(sourceEvent.id))
         .map((target) => target.id)
@@ -88,6 +93,7 @@ function sourceTransformation(
   semitones: number,
   index: number,
   principalEventIds: Set<string>,
+  foundationEventIds: Set<string>,
   preservationTargetIds: string[]
 ): TransformationEntry {
   const descendants = arrangedEvents.filter((event) => event.sourceEventIds.includes(source.id));
@@ -104,6 +110,18 @@ function sourceTransformation(
       ...base,
       classification: "omitted",
       rationale: "No arrangement event descends from this source event.",
+    };
+  }
+  if (
+    foundationEventIds.has(source.id) &&
+    source.type === "note" &&
+    !descendants.some((event) => event.role === "continuo_foundation")
+  ) {
+    return {
+      ...base,
+      classification: "omitted",
+      rationale:
+        "The bass event informs generated harmony but is not sounded as the authoritative Continuo Foundation.",
     };
   }
   if (source.type === "rest") {

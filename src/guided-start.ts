@@ -65,6 +65,13 @@ export type GuidedDeliverable = {
     targetIds: string[];
     findings: Array<{ targetId: string; code: string; message: string; severity: string }>;
   };
+  continuoDisposition?: {
+    kind: "complete_realization" | "separate_bass_realization" | "continuo_reduction";
+    label: string;
+    soundedFoundationEventIds: string[];
+    unsoundedFoundationEventIds: string[];
+    bassInstrumentId?: string;
+  };
   compiled: CompileResult;
   preview: AudioPreview;
   candidates: Array<{
@@ -204,6 +211,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
             id: string;
             transformationReport: GuidedDeliverable["transformationReport"];
             preservationAudit: GuidedDeliverable["preservationAudit"];
+            continuoDisposition?: GuidedDeliverable["continuoDisposition"];
           };
         }>(`/api/workspaces/${workspace.id}/arrangements`, {
           method: "POST",
@@ -231,6 +239,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           analysis: arranged.analysis,
           transformationReport: arranged.arrangementScore.transformationReport,
           preservationAudit: arranged.arrangementScore.preservationAudit,
+          continuoDisposition: arranged.arrangementScore.continuoDisposition,
           compiled,
           preview,
           candidates: arranged.candidates,
@@ -539,7 +548,6 @@ export function installCandidateComparisonControls(
     const option = document.createElement("option");
     option.value = candidate.id;
     option.textContent = `${candidate.rank ? `#${candidate.rank} ` : ""}${candidate.strategy}${candidate.status === "selected" ? " · selected" : ""}`;
-    option.disabled = candidate.status === "rejected";
     option.selected = candidate.status === "selected";
     select.append(option);
   }
@@ -550,12 +558,18 @@ export function installCandidateComparisonControls(
   branch.textContent = "Branch from candidate";
   const update = async () => {
     const candidate = deliverable.candidates.find((item) => item.id === select.value)!;
-    evidence.textContent = candidate.evaluation
-      ? `Rank ${candidate.rank ?? "—"} · ${(candidate.evaluation.weightedTotal * 100).toFixed(1)}% · ${candidate.evaluation.rationale}`
-      : (candidate.rejectionReason ?? "Ranking evidence unavailable");
+    evidence.textContent =
+      candidate.status === "rejected"
+        ? `Rejected · ${candidate.rejectionReason ?? "A hard constraint failed."}${candidate.evaluation ? ` · weighted score ${(candidate.evaluation.weightedTotal * 100).toFixed(1)}%` : ""}`
+        : candidate.evaluation
+          ? `Rank ${candidate.rank ?? "—"} · ${(candidate.evaluation.weightedTotal * 100).toFixed(1)}% · ${candidate.evaluation.rationale}`
+          : "Ranking evidence unavailable";
     branch.disabled = candidate.status === "selected" || candidate.status === "rejected";
     if (candidate.status === "selected") {
       installAudioPreviewControls(panel, deliverable.preview);
+      return;
+    }
+    if (candidate.status === "rejected") {
       return;
     }
     select.disabled = true;
@@ -714,6 +728,12 @@ export function installAuditSummary(panel: HTMLElement, deliverable: GuidedDeliv
   const summary = document.createElement("summary");
   summary.textContent = `Preservation Audit · ${deliverable.preservationAudit.status.replaceAll("_", " ")} · ${deliverable.preservationAudit.targetIds.length} targets`;
   const list = document.createElement("ul");
+  if (deliverable.continuoDisposition) {
+    const disposition = document.createElement("p");
+    disposition.className = "continuo-disposition";
+    disposition.textContent = `${deliverable.continuoDisposition.label}. ${deliverable.continuoDisposition.soundedFoundationEventIds.length} foundation events sounded; ${deliverable.continuoDisposition.unsoundedFoundationEventIds.length} unsounded.`;
+    details.append(summary, disposition);
+  }
   for (const targetId of deliverable.preservationAudit.targetIds) {
     const item = document.createElement("li");
     item.dataset.auditTargetIds = targetId;
@@ -731,7 +751,8 @@ export function installAuditSummary(panel: HTMLElement, deliverable: GuidedDeliv
     );
     list.append(item);
   }
-  details.append(summary, list);
+  if (!details.contains(summary)) details.append(summary);
+  details.append(list);
   header.append(details);
 }
 
@@ -1142,7 +1163,7 @@ export function guidedStartMarkup(): string {
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
-      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · Italian Baroque profile · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
+      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <section class="score-anchored-review" data-score-review hidden>
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
@@ -1208,6 +1229,19 @@ export function targetConfiguration(id: string): TargetConfiguration {
       deliverables: ["pdf", "audio-preview"],
     };
   }
+  if (id === "target.baroque-guitar-continuo") {
+    return {
+      id,
+      instrumentId: "baroque-guitar-5",
+      role: "ensemble",
+      stringing: "french",
+      realizationProfileId: "continuo.italian-baroque",
+      continuoTreatment: "separate_bass",
+      continuoBassInstrumentId: "voice-bass",
+      notationLayouts: ["continuo-score"],
+      deliverables: ["pdf", "audio-preview"],
+    };
+  }
   throw new Error(`Unknown target configuration: ${id}`);
 }
 
@@ -1217,5 +1251,7 @@ function targetLabel(id: string): string {
   if (id === "target.classical-guitar") return "classical guitar";
   if (id === "target.renaissance-lute") return "6-course Renaissance lute";
   if (id === "target.piano-continuo") return "soprano and piano continuo";
+  if (id === "target.baroque-guitar-continuo")
+    return "soprano, 5-course baroque guitar, and separate bass";
   throw new Error(`Unknown target configuration: ${id}`);
 }

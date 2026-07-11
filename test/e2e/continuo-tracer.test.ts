@@ -36,6 +36,17 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
             notationLayouts: ["continuo-score"],
             deliverables: ["pdf", "audio-preview"],
           },
+          {
+            id: "target.baroque-guitar-continuo",
+            instrumentId: "baroque-guitar-5",
+            role: "ensemble",
+            stringing: "french",
+            realizationProfileId: "continuo.italian-baroque",
+            continuoTreatment: "separate_bass",
+            continuoBassInstrumentId: "voice-bass",
+            notationLayouts: ["continuo-score"],
+            deliverables: ["pdf", "audio-preview"],
+          },
         ],
       },
     });
@@ -87,6 +98,47 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     expect(arranged.arrangementScore.preservationAudit.findings).toContainEqual(
       expect.objectContaining({ code: "continuo.prepared_suspension_accepted" })
     );
+    const guitarArranged = new ArrangementService({ store }).createFaithfulReduction(workspace.id, {
+      normalizedScoreId: omr.normalizedScore.id,
+      targetConfigurationId: "target.baroque-guitar-continuo",
+    });
+    expect(guitarArranged.analysisRecordId).toBe(arranged.analysisRecordId);
+    expect(guitarArranged.candidates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ strategy: "separate-bass-realization", status: "selected" }),
+        expect.objectContaining({
+          strategy: "continuo-reduction",
+          status: "rejected",
+          rejectionReason: expect.stringMatching(/not sounded as bass/i),
+        }),
+      ])
+    );
+    expect(guitarArranged.arrangementScore).toMatchObject({
+      preservationAudit: { status: "pass" },
+      continuoDisposition: {
+        kind: "separate_bass_realization",
+        bassInstrumentId: "voice-bass",
+        unsoundedFoundationEventIds: [],
+      },
+    });
+    const guitarPreview = buildAudioPreview(guitarArranged.arrangementScore, omr.normalizedScore);
+    expect(guitarPreview.parts).toEqual(
+      expect.arrayContaining([
+        {
+          id: "continuo-foundation",
+          label: "Continuo Foundation · voice-bass",
+        },
+        {
+          id: "realization",
+          label: "Generated realization · baroque-guitar-5",
+        },
+      ])
+    );
+    expect(
+      guitarPreview.events
+        .filter((event) => event.part === "continuo-foundation")
+        .map((event) => event.midi)
+    ).toEqual([50, 48, 43, 48]);
 
     const preview = buildAudioPreview(arranged.arrangementScore, omr.normalizedScore);
     expect(preview.parts).toEqual([
@@ -129,6 +181,14 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       ok: boolean;
       data: { errors: unknown[]; pdf?: string; svg?: string; midi?: string; source: string };
     };
+    const guitarResponse = await fetch(
+      `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${guitarArranged.arrangementScore.id}/compile`,
+      { method: "POST" }
+    );
+    const guitarEnvelope = (await guitarResponse.json()) as {
+      ok: boolean;
+      data: { errors: unknown[]; pdf?: string; source: string };
+    };
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
     );
@@ -146,6 +206,14 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
         0
       )
     );
+    expect(guitarResponse.status).toBe(200);
+    expect(guitarEnvelope.ok).toBe(true);
+    expect(guitarEnvelope.data.errors).toEqual([]);
+    expect(guitarEnvelope.data.pdf?.length ?? 0).toBeGreaterThan(1_000);
+    expect(guitarEnvelope.data.source).toContain(
+      "Complete Continuo Realization · continuo.italian-baroque · baroque-guitar-5 with separate voice-bass"
+    );
+    expect(guitarEnvelope.data.source).toContain('instrumentName = "Separate bass (voice-bass)"');
 
     if (process.env.VELLUM_CAPTURE_FIXTURE_ARTIFACTS === "1") {
       const outputDirectory = path.resolve(process.cwd(), "tmp/pdfs");
@@ -168,7 +236,7 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       scoreTranscriptionIds: [omr.scoreTranscription.id],
       normalizedScoreIds: [omr.normalizedScore.id],
       analysisRecordIds: [arranged.analysisRecordId],
-      arrangementScoreIds: [arranged.arrangementScore.id],
+      arrangementScoreIds: [arranged.arrangementScore.id, guitarArranged.arrangementScore.id],
     });
   }, 90_000);
 });
