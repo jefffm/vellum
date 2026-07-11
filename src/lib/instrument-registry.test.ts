@@ -26,8 +26,9 @@ describe("instrument-registry", () => {
     expect(ENGRAVE_INSTRUMENT_IDS).toContain("classical-guitar-6");
   });
 
-  it("has 4 v1 templates", () => {
-    expect(ENGRAVE_TEMPLATE_IDS).toHaveLength(4);
+  it("has 5 v1 templates", () => {
+    expect(ENGRAVE_TEMPLATE_IDS).toHaveLength(5);
+    expect(ENGRAVE_TEMPLATE_IDS).toContain("solo-staff");
     expect(ENGRAVE_TEMPLATE_IDS).toContain("solo-tab");
     expect(ENGRAVE_TEMPLATE_IDS).toContain("french-tab");
     expect(ENGRAVE_TEMPLATE_IDS).toContain("tab-and-staff");

@@ -53,6 +53,7 @@ export const ENGRAVE_INSTRUMENT_IDS = Object.keys(INSTRUMENT_LY_VARS);
 
 /** All supported v1 template IDs. */
 export const ENGRAVE_TEMPLATE_IDS = [
+  "solo-staff",
   "solo-tab",
   "french-tab",
   "tab-and-staff",

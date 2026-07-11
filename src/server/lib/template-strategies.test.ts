@@ -4,6 +4,7 @@ import type { InstrumentLyVars, EngraveTemplateId } from "../../lib/instrument-r
 import type { LyContainer, LyLeaf } from "../../lib/ly-tree.js";
 import {
   buildFrenchTab,
+  buildSoloStaff,
   buildSoloTab,
   buildTabAndStaff,
   buildVoiceAndTab,
@@ -62,6 +63,30 @@ function firstVoice(container: LyContainer): LyContainer {
 }
 
 describe("template strategies", () => {
+  describe("buildSoloStaff", () => {
+    it("builds one standard-notation staff without tablature indicators", () => {
+      const result = buildSoloStaff(
+        [stringNote(2)],
+        guitarVars,
+        params({ template: "solo-staff" })
+      );
+
+      expect(contextNames(result.scoreChildren)).toEqual(["Staff"]);
+      const staff = result.scoreChildren[0] as LyContainer;
+      expect(staff.indicators).toContainEqual({
+        kind: "literal",
+        text: '\\clef "treble_8"',
+        site: "before",
+      });
+      const leaf = firstVoice(staff).children[0] as LyLeaf;
+      expect(leaf.indicators).not.toContainEqual({
+        kind: "literal",
+        text: "\\2",
+        site: "after",
+      });
+    });
+  });
+
   describe("buildSoloTab", () => {
     it("builds a single TabStaff that also supplies MIDI", () => {
       const result = buildSoloTab([note()], guitarVars, params());
@@ -231,6 +256,7 @@ describe("template strategies", () => {
   describe("dispatchTemplate", () => {
     it("dispatches every known template ID", () => {
       const cases: Array<[EngraveTemplateId, string[]]> = [
+        ["solo-staff", ["Staff"]],
         ["solo-tab", ["TabStaff"]],
         ["french-tab", ["RhythmicStaff", "TabStaff"]],
         ["tab-and-staff", ["Staff", "TabStaff"]],

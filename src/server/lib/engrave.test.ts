@@ -73,8 +73,8 @@ describe("engrave — step 1: resolveInstrument", () => {
     );
   });
 
-  it("validates all 4 v1 templates", () => {
-    for (const tmpl of ["solo-tab", "french-tab", "tab-and-staff", "voice-and-tab"]) {
+  it("validates all 5 v1 templates", () => {
+    for (const tmpl of ["solo-staff", "solo-tab", "french-tab", "tab-and-staff", "voice-and-tab"]) {
       if (tmpl === "voice-and-tab") {
         // needs melody
         const params = minimalParams({

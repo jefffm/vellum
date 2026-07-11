@@ -10,6 +10,8 @@ export function arrangementToEngraveParams(
   arrangement: ArrangementScore,
   sourceScore: NormalizedScore
 ): EngraveParams {
+  const standardNotation =
+    arrangement.targetConfiguration.notationLayouts.includes("standard-notation");
   const eventsByMeasure = new Map<string, ArrangementEvent[]>();
   for (const event of arrangement.events) {
     const events = eventsByMeasure.get(event.measureId) ?? [];
@@ -21,7 +23,7 @@ export function arrangementToEngraveParams(
     const events = (eventsByMeasure.get(measure.id) ?? [])
       .slice()
       .sort((left, right) => compareOnset(left.onset, right.onset))
-      .map(toEngraveEvent);
+      .map((event) => toEngraveEvent(event, standardNotation));
     if (events.length === 0) {
       throw new Error(`Arrangement has no events for source measure ${measure.id}`);
     }
@@ -39,7 +41,7 @@ export function arrangementToEngraveParams(
 
   return {
     instrument: arrangement.targetConfiguration.instrumentId,
-    template: "french-tab",
+    template: standardNotation ? "solo-staff" : "french-tab",
     title: sourceScore.title,
     key,
     time: sourceScore.timeSignature,
@@ -75,9 +77,24 @@ export function rationalToLilyDuration(duration: Rational): string {
   return match[1];
 }
 
-function toEngraveEvent(event: ArrangementEvent): EngraveMusicEvent {
+function toEngraveEvent(event: ArrangementEvent, standardNotation: boolean): EngraveMusicEvent {
   const duration = rationalToLilyDuration(event.duration);
   if (event.type === "rest") return { type: "rest", duration };
+  if (standardNotation) {
+    if (event.type === "note" || event.pitches.length === 1) {
+      return {
+        type: "note",
+        input: "pitch",
+        pitch: event.pitches[0]!,
+        duration,
+      };
+    }
+    return {
+      type: "chord",
+      duration,
+      positions: event.pitches.map((pitch) => ({ input: "pitch" as const, pitch })),
+    };
+  }
   if (event.positions.length === 0) {
     throw new Error(`Sounding arrangement event has no course positions: ${event.id}`);
   }

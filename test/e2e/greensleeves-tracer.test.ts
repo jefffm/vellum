@@ -56,6 +56,14 @@ describe("Greensleeves PDF tracer bullet", () => {
             notationLayouts: ["french-letter-tablature"],
             deliverables: ["pdf", "audio-preview"],
           },
+          {
+            id: "target.classical-guitar",
+            instrumentId: "classical-guitar-6",
+            role: "solo",
+            tuningId: "standard",
+            notationLayouts: ["standard-notation"],
+            deliverables: ["pdf", "audio-preview"],
+          },
         ],
       },
     });
@@ -104,6 +112,23 @@ describe("Greensleeves PDF tracer bullet", () => {
       transpositionPlan: { sourceKey: "G major", targetKey: "D major", semitones: -5 },
       preservationAudit: { status: "pass", findings: [] },
     });
+    const classicalArranged = new ArrangementService({ store }).createFaithfulReduction(
+      workspace.id,
+      {
+        normalizedScoreId: omr.normalizedScore.id,
+        targetConfigurationId: "target.classical-guitar",
+      }
+    );
+    expect(classicalArranged.analysisRecordId).toBe(arranged.analysisRecordId);
+    expect(classicalArranged.arrangementScore).toMatchObject({
+      targetConfiguration: {
+        instrumentId: "classical-guitar-6",
+        tuningId: "standard",
+        notationLayouts: ["standard-notation"],
+      },
+      transpositionPlan: { sourceKey: "G major", targetKey: "G major", semitones: 0 },
+      preservationAudit: { status: "pass", findings: [] },
+    });
 
     const engraving = engrave(
       arrangementToEngraveParams(arranged.arrangementScore, omr.normalizedScore)
@@ -121,6 +146,17 @@ describe("Greensleeves PDF tracer bullet", () => {
       new SubprocessRunner(60_000),
       60_000
     );
+    const classicalParams = arrangementToEngraveParams(
+      classicalArranged.arrangementScore,
+      omr.normalizedScore
+    );
+    expect(classicalParams.template).toBe("solo-staff");
+    const classicalEngraving = engrave(classicalParams);
+    const classicalCompiled = await compileLilyPond(
+      { source: classicalEngraving.source, format: "both" },
+      new SubprocessRunner(60_000),
+      60_000
+    );
 
     expect(compiled.errors).toEqual([]);
     expect(compiled.svg?.length ?? 0).toBeGreaterThan(1_000);
@@ -130,6 +166,21 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(luteCompiled.svg?.length ?? 0).toBeGreaterThan(1_000);
     expect(luteCompiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(luteCompiled.midi?.length ?? 0).toBeGreaterThan(100);
+    expect(classicalCompiled.errors).toEqual([]);
+    expect(classicalCompiled.svg?.length ?? 0).toBeGreaterThan(1_000);
+    expect(classicalCompiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
+    expect(classicalCompiled.midi?.length ?? 0).toBeGreaterThan(100);
+    expect(classicalEngraving.source).toContain('\\include "instruments/classical-guitar-6.ily"');
+    expect(classicalEngraving.source).toContain("\\new Staff");
+    expect(classicalEngraving.source).toContain('\\clef "treble_8"');
+    expect(classicalEngraving.source).not.toContain("\\new TabStaff");
+    expect(classicalEngraving.source).not.toContain("tablatureFormat");
+    expect(midiNoteOns(Buffer.from(classicalCompiled.midi!, "base64"))).toHaveLength(
+      classicalArranged.arrangementScore.events.reduce(
+        (total, event) => total + (event.type === "rest" ? 0 : event.pitches.length),
+        0
+      )
+    );
     expect(luteEngraving.source).toContain('\include "instruments/baroque-lute-13.ily"');
     expect(luteEngraving.source).toContain(
       "additionalBassStrings = \\stringTuning <a,, bes,, c, d, ees, f, g,>"
@@ -152,6 +203,13 @@ describe("Greensleeves PDF tracer bullet", () => {
     const luteAudioPreview = buildAudioPreview(luteArranged.arrangementScore, omr.normalizedScore);
     expect(
       luteAudioPreview.events.filter((event) => event.part === "principal-voice")
+    ).toHaveLength(protectedPrincipalEvents.length);
+    const classicalAudioPreview = buildAudioPreview(
+      classicalArranged.arrangementScore,
+      omr.normalizedScore
+    );
+    expect(
+      classicalAudioPreview.events.filter((event) => event.part === "principal-voice")
     ).toHaveLength(protectedPrincipalEvents.length);
     if (process.env.VELLUM_CAPTURE_FIXTURE_ARTIFACTS === "1") {
       const outputDirectory = path.resolve(process.cwd(), "tmp/pdfs");
@@ -192,6 +250,24 @@ describe("Greensleeves PDF tracer bullet", () => {
         luteEngraving.source,
         "utf8"
       );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-classical-guitar.pdf"),
+        Buffer.from(classicalCompiled.pdf!, "base64")
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-classical-guitar.svg"),
+        classicalCompiled.svg!,
+        "utf8"
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-classical-guitar.midi"),
+        Buffer.from(classicalCompiled.midi!, "base64")
+      );
+      writeFileSync(
+        path.join(outputDirectory, "greensleeves-classical-guitar.ly"),
+        classicalEngraving.source,
+        "utf8"
+      );
     }
     expect(store.get(workspace.id)).toMatchObject({
       sourceArtifactIds: [source.id],
@@ -199,7 +275,72 @@ describe("Greensleeves PDF tracer bullet", () => {
       scoreTranscriptionIds: [omr.scoreTranscription.id],
       normalizedScoreIds: [omr.normalizedScore.id],
       analysisRecordIds: [arranged.analysisRecordId],
-      arrangementScoreIds: [arranged.arrangementScore.id, luteArranged.arrangementScore.id],
+      arrangementScoreIds: [
+        arranged.arrangementScore.id,
+        luteArranged.arrangementScore.id,
+        classicalArranged.arrangementScore.id,
+      ],
     });
   }, 90_000);
 });
+
+function midiNoteOns(midi: Buffer): number[] {
+  const notes: number[] = [];
+  let offset = 14;
+  while (offset + 8 <= midi.length) {
+    const chunk = midi.toString("ascii", offset, offset + 4);
+    const length = midi.readUInt32BE(offset + 4);
+    offset += 8;
+    if (chunk !== "MTrk") {
+      offset += length;
+      continue;
+    }
+    const end = offset + length;
+    let runningStatus = 0;
+    while (offset < end) {
+      offset = skipVariableLength(midi, offset);
+      let status = midi[offset]!;
+      if (status < 0x80) status = runningStatus;
+      else {
+        offset += 1;
+        runningStatus = status;
+      }
+      if (status === 0xff) {
+        offset += 1;
+        const metaLengthStart = offset;
+        offset = skipVariableLength(midi, offset);
+        offset += readVariableLength(midi, metaLengthStart);
+      } else if (status === 0xf0 || status === 0xf7) {
+        const sysexLengthStart = offset;
+        offset = skipVariableLength(midi, offset);
+        offset += readVariableLength(midi, sysexLengthStart);
+      } else {
+        const kind = status & 0xf0;
+        const dataLength = kind === 0xc0 || kind === 0xd0 ? 1 : 2;
+        const note = midi[offset]!;
+        const velocity = dataLength === 2 ? midi[offset + 1]! : 0;
+        if (kind === 0x90 && velocity > 0) notes.push(note);
+        offset += dataLength;
+      }
+    }
+  }
+  return notes;
+}
+
+function skipVariableLength(buffer: Buffer, offset: number): number {
+  do {
+    const byte = buffer[offset++]!;
+    if ((byte & 0x80) === 0) return offset;
+  } while (offset < buffer.length);
+  return offset;
+}
+
+function readVariableLength(buffer: Buffer, offset: number): number {
+  let value = 0;
+  let byte = 0;
+  do {
+    byte = buffer[offset++]!;
+    value = (value << 7) | (byte & 0x7f);
+  } while (byte & 0x80);
+  return value;
+}

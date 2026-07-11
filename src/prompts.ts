@@ -65,7 +65,7 @@ function buildWorkflow(): string {
     "## Tablature Generation with Engrave",
     "",
     "**IMPORTANT: Never write raw LilyPond syntax for tab instruments. Always use `engrave`.**",
-    "For supported tablature templates (`solo-tab`, `french-tab`, `tab-and-staff`, `voice-and-tab`), prefer `engrave` over hand-written LilyPond: choose an instrument, build structured bars with position or pitch events, call `engrave`, then compile the result.",
+    "For supported notation templates (`solo-staff`, `solo-tab`, `french-tab`, `tab-and-staff`, `voice-and-tab`), prefer `engrave` over hand-written LilyPond: choose an instrument, build structured bars with position or pitch events, call `engrave`, then compile the result. Use `solo-staff` for classical guitar standard notation without tablature.",
     "For historical or re-entrant plucked instruments, use `tabulate`, `voicings`, `diapasons`, `alfabeto_lookup`, and `check_playability` to choose playable explicit course/fret data before calling `engrave`.",
     'For baroque guitar rasgueado/strummed passages, call `alfabeto_lookup` first, then encode the choice as an engrave event like `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` (optionally add `prefer` or `chart_id`). Alfabeto chord events are for `baroque-guitar-5` and produce a five-course historical chord shape.',
     "When converting an existing LilyPond file to a supported tablature target, treat it as new tab generation: extract the musical events and use `engrave`; do not hand-write replacement TabStaff LilyPond.",

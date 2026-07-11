@@ -76,7 +76,11 @@ function params(
   };
 }
 
-function expectCommonStructure(source: string, instrument: string): void {
+function expectCommonStructure(
+  source: string,
+  instrument: string,
+  template: EngraveTemplateId
+): void {
   const vars = INSTRUMENT_LY_VARS[instrument];
 
   expect(source).toContain('\\version "2.24.0"');
@@ -84,10 +88,12 @@ function expectCommonStructure(source: string, instrument: string): void {
   expect(source).toContain("\\score");
   expect(source).toContain("\\layout");
   expect(source).toContain("\\midi");
-  expect(source).toContain(`tablatureFormat = \\${vars.tabFormat}`);
-  expect(source).toContain(`stringTunings = \\${vars.stringTunings}`);
+  if (template !== "solo-staff") {
+    expect(source).toContain(`tablatureFormat = \\${vars.tabFormat}`);
+    expect(source).toContain(`stringTunings = \\${vars.stringTunings}`);
+  }
 
-  if (vars.diapasons) {
+  if (vars.diapasons && template !== "solo-staff") {
     expect(source).toContain(`additionalBassStrings = \\${vars.diapasons}`);
   } else {
     expect(source).not.toContain("additionalBassStrings");
@@ -96,6 +102,12 @@ function expectCommonStructure(source: string, instrument: string): void {
 
 function expectTemplateStructure(source: string, template: EngraveTemplateId): void {
   switch (template) {
+    case "solo-staff":
+      expect(source).toContain("\\new Staff");
+      expect(source).toContain('\\new Voice = "notation"');
+      expect(source).toContain('\\clef "treble_8"');
+      expect(source).not.toContain("\\new TabStaff");
+      break;
     case "solo-tab":
       expect(source).toContain("\\new TabStaff");
       expect(source).toContain('\\new TabVoice = "music"');
@@ -126,6 +138,7 @@ describe("engrave integration — golden structural output", () => {
   const cases: Array<[EngraveTemplateId, string]> = [
     // The Wave 11 brief named baroque-lute-11, but the current registry has
     // baroque-lute-13 as the implemented baroque lute profile.
+    ["solo-staff", "classical-guitar-6"],
     ["solo-tab", "baroque-lute-13"],
     ["french-tab", "baroque-lute-13"],
     ["tab-and-staff", "classical-guitar-6"],
@@ -140,7 +153,7 @@ describe("engrave integration — golden structural output", () => {
 
       expect(first.source).toBe(second.source);
       expect(first.warnings).toEqual(second.warnings);
-      expectCommonStructure(first.source, instrument);
+      expectCommonStructure(first.source, instrument, template);
       expectTemplateStructure(first.source, template);
       expect(first.source).toContain("\\key d \\minor");
       expect(first.source).toContain("\\time 4/4");
@@ -210,7 +223,7 @@ describe("engrave integration — cross-instrument template matrix", () => {
     const result = engrave(params(template, instrument));
 
     expect(result.source).toContain(`\\include "${INSTRUMENT_LY_VARS[instrument].include}"`);
-    expectCommonStructure(result.source, instrument);
+    expectCommonStructure(result.source, instrument, template);
     expectTemplateStructure(result.source, template);
   });
 });

@@ -46,7 +46,8 @@ export function arrangeFaithfulPluckedString(
 ): ArrangementSearchResult {
   if (
     options.targetConfiguration.instrumentId !== "baroque-guitar-5" &&
-    options.targetConfiguration.instrumentId !== "baroque-lute-13"
+    options.targetConfiguration.instrumentId !== "baroque-lute-13" &&
+    options.targetConfiguration.instrumentId !== "classical-guitar-6"
   ) {
     throw new Error(
       `Faithful plucked-string arranger does not support ${options.targetConfiguration.instrumentId}`

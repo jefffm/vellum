@@ -102,6 +102,12 @@ export function transposeNote(note: string, semitones: number): string {
     throw new Error(`Semitones must be an integer: ${semitones}`);
   }
 
+  // A no-op transposition must not silently respell the source. F# and Gb
+  // sound alike, but they are not interchangeable in readable notation.
+  if (semitones === 0) {
+    const parsed = parsePitch(note);
+    return `${parsed.letter}${parsed.accidental}${parsed.octave}`;
+  }
   return midiToNote(noteToMidi(note) + semitones);
 }
 

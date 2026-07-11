@@ -37,7 +37,7 @@ describe("createEngraveRoute", () => {
     }
   });
 
-  it.each(["solo-tab", "french-tab", "tab-and-staff", "voice-and-tab"] as const)(
+  it.each(["solo-staff", "solo-tab", "french-tab", "tab-and-staff", "voice-and-tab"] as const)(
     "returns 200 for template %s",
     async (template) => {
       const server = await listen(createEngraveRoute());

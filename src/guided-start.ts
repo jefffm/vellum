@@ -281,21 +281,21 @@ async function api<T>(url: string, init: RequestInit = {}): Promise<T> {
   return envelope.data;
 }
 
-function guidedStartMarkup(): string {
+export function guidedStartMarkup(): string {
   return `
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
-      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><p>Select both to create independently searched and audited siblings from one saved analysis.</p></fieldset>
+      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <p class="guided-status" data-guided-status>Vellum will preserve the Principal Voice automatically and show any source uncertainty before arranging.</p>
       <footer><button type="button" data-guided-skip>Skip to chat</button><button type="submit">Start arrangement</button></footer>
     </form>`;
 }
 
-function targetConfiguration(id: string): TargetConfiguration {
+export function targetConfiguration(id: string): TargetConfiguration {
   if (id === "target.baroque-guitar") {
     return {
       id,
@@ -316,11 +316,22 @@ function targetConfiguration(id: string): TargetConfiguration {
       deliverables: ["pdf", "audio-preview"],
     };
   }
+  if (id === "target.classical-guitar") {
+    return {
+      id,
+      instrumentId: "classical-guitar-6",
+      role: "solo",
+      tuningId: "standard",
+      notationLayouts: ["standard-notation"],
+      deliverables: ["pdf", "audio-preview"],
+    };
+  }
   throw new Error(`Unknown target configuration: ${id}`);
 }
 
 function targetLabel(id: string): string {
   if (id === "target.baroque-lute") return "13-course baroque lute";
   if (id === "target.baroque-guitar") return "5-course baroque guitar";
+  if (id === "target.classical-guitar") return "classical guitar";
   throw new Error(`Unknown target configuration: ${id}`);
 }

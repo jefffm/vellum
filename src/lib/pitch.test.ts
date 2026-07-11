@@ -37,6 +37,8 @@ describe("pitch utilities", () => {
   it("transposes notes by semitone offsets", () => {
     expect(transposeNote("C4", 7)).toBe("G4");
     expect(transposeNote("D4", -2)).toBe("C4");
+    expect(transposeNote("F#4", 0)).toBe("F#4");
+    expect(transposeNote("Db4", 0)).toBe("Db4");
   });
 
   it("parses structured pitch components", () => {
