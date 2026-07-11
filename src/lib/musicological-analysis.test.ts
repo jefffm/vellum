@@ -39,6 +39,17 @@ describe("musicological analysis", () => {
     expect(protectedIds).toEqual(sopranoNotes.map((event) => event.id));
     expect(protectedIds.length).toBeGreaterThan(40);
     expect(analysis.claims[0]?.statement).toMatch(/labeled soprano/i);
+    expect(analysis.summary).toMatch(/Soprano is the best-supported Principal Voice/i);
+    expect(analysis.passages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ texture: "homophonic-four-part", measureIds: expect.any(Array) }),
+      ])
+    );
+    expect(
+      analysis.claims.every(
+        (claim) => claim.scope && claim.evidence?.[0]?.kind === "score_observation"
+      )
+    ).toBe(true);
   });
 
   it("falls back to register evidence for unlabeled voices", () => {
@@ -87,6 +98,69 @@ describe("musicological analysis", () => {
     });
     expect(analysis.principalVoicePartId).toBe("part.high");
     expect(analysis.claims[0]?.basis).toBe("inference");
+    expect(analysis.claims[0]?.alternatives).toEqual([
+      expect.objectContaining({ statement: expect.stringMatching(/Part 1/) }),
+    ]);
+    expect(analysis.ambiguities).toEqual([
+      expect.objectContaining({ critical: true, claimId: analysis.claims[0]!.id }),
+    ]);
+  });
+
+  it("classifies texture by passage instead of forcing one label across the work", () => {
+    const score = {
+      id: "score.mixed-texture",
+      scoreTranscriptionId: "transcription.mixed-texture",
+      version: 1,
+      parts: [
+        { id: "part.tune", name: "Tune", role: "principal_voice" as const },
+        { id: "part.inner", name: "Inner", role: "other" as const },
+        { id: "part.bass", name: "Bass", role: "bass" as const },
+      ],
+      measures: [
+        {
+          id: "measure.1",
+          index: 0,
+          displayNumber: "1",
+          duration: { numerator: 1, denominator: 1 },
+        },
+        {
+          id: "measure.2",
+          index: 1,
+          displayNumber: "2",
+          duration: { numerator: 1, denominator: 1 },
+        },
+      ],
+      events: [
+        ...["part.tune"].map((partId, index) => ({
+          id: `event.intro.${index}`,
+          type: "note" as const,
+          partId,
+          measureId: "measure.1",
+          onset: { numerator: 0, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitch: "G4",
+        })),
+        ...["part.tune", "part.inner", "part.bass"].map((partId, index) => ({
+          id: `event.full.${index}`,
+          type: "note" as const,
+          partId,
+          measureId: "measure.2",
+          onset: { numerator: 0, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitch: ["A4", "E4", "A2"][index]!,
+        })),
+      ],
+      key: "A minor",
+      createdAt: "2026-07-10T12:00:00.000Z",
+    };
+    const analysis = analyzeMusicologicalScore(score, {
+      id: "analysis.mixed-texture",
+      createdAt: "2026-07-10T12:01:00.000Z",
+    });
+    expect(analysis.passages?.map((passage) => passage.texture)).toEqual([
+      "monophony",
+      "polyphonic",
+    ]);
   });
 });
 
@@ -144,6 +218,21 @@ describe("continuo analysis", () => {
         expect.objectContaining({ kind: "relationship" }),
       ])
     );
+    expect(analysis.profiles).toEqual([
+      expect.objectContaining({ id: "continuo.italian-baroque", status: "selected" }),
+      expect.objectContaining({ id: "continuo.french-baroque", status: "alternative" }),
+    ]);
+    expect(analysis.ambiguities).toEqual(
+      expect.arrayContaining([expect.objectContaining({ critical: false })])
+    );
+    expect(analysis.passages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          texture: "continuo",
+          contrapuntalTechniques: ["prepared_suspension"],
+        }),
+      ])
+    );
   });
 });
 
@@ -189,5 +278,14 @@ describe("imitative counterpoint analysis", () => {
     expect(
       analysis.preservationTargets.find((target) => target.id.endsWith("cadential-goal"))?.eventIds
     ).toHaveLength(3);
+    expect(analysis.passages).toEqual([
+      expect.objectContaining({
+        texture: "imitative-polyphony",
+        contrapuntalTechniques: ["imitation"],
+      }),
+    ]);
+    expect(analysis.profiles).toEqual([
+      expect.objectContaining({ id: "counterpoint.renaissance-imitative", status: "selected" }),
+    ]);
   });
 });

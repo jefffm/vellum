@@ -8,6 +8,7 @@ import type {
   ArrangementCandidate,
   ArrangementScore,
   ArrangementSearch,
+  AnalysisRecord,
   NormalizedScore,
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
@@ -28,6 +29,7 @@ export type CreateFaithfulArrangementInput = {
 
 export type CreateFaithfulArrangementResult = {
   analysisRecordId: string;
+  analysis: AnalysisRecord;
   arrangementSearch: ArrangementSearch;
   candidates: ArrangementCandidate[];
   arrangementScore: ArrangementScore;
@@ -79,13 +81,25 @@ export class ArrangementService {
     const analysis =
       workspace.analysisRecordIds
         .map((id) => this.store.getAnalysisRecord(workspaceId, id))
-        .find((record) => record.normalizedScoreId === score.id) ??
+        .filter((record) => record.normalizedScoreId === score.id)
+        .sort((left, right) => right.version - left.version)[0] ??
       analyzeMusicologicalScore(score, {
         id: `analysis.${this.createId()}`,
         createdAt: timestamp,
       });
     if (!workspace.analysisRecordIds.includes(analysis.id)) {
       this.store.saveAnalysisRecord(workspaceId, analysis);
+    }
+    const criticalAnalysisAmbiguities = (analysis.ambiguities ?? []).filter(
+      (ambiguity) => ambiguity.critical && !ambiguity.resolution
+    );
+    if (criticalAnalysisAmbiguities.length) {
+      throw new ApiRouteError(
+        `Musicological Analysis review is required before arrangement: ${criticalAnalysisAmbiguities
+          .map((ambiguity) => ambiguity.id)
+          .join(", ")}`,
+        409
+      );
     }
     const arrangementId = `arrangement.${this.createId()}`;
     const searchId = `search.${arrangementId.slice("arrangement.".length)}`;
@@ -177,6 +191,7 @@ export class ArrangementService {
     });
     return {
       analysisRecordId: analysis.id,
+      analysis,
       arrangementSearch,
       candidates,
       arrangementScore,

@@ -124,18 +124,22 @@ export function analyzeMusicologicalScore(
     });
   }
 
-  return {
-    id: options.id,
-    normalizedScoreId: score.id,
-    version: 1,
-    texture,
-    principalVoicePartId: principal.part.id,
-    validationProfileId: continuoPart ? "continuo.italian-baroque" : undefined,
-    contrapuntalTechniques: suspension ? ["prepared_suspension"] : [],
-    claims,
-    preservationTargets,
-    createdAt: options.createdAt,
-  };
+  return completeAnalysis(
+    score,
+    {
+      id: options.id,
+      normalizedScoreId: score.id,
+      version: 1,
+      texture,
+      principalVoicePartId: principal.part.id,
+      validationProfileId: continuoPart ? "continuo.italian-baroque" : undefined,
+      contrapuntalTechniques: suspension ? ["prepared_suspension"] : [],
+      claims,
+      preservationTargets,
+      createdAt: options.createdAt,
+    },
+    principal
+  );
 }
 
 function phraseGroups(score: NormalizedScore, partId: string): string[][] {
@@ -196,7 +200,7 @@ function analyzeImitativeScore(
     return finalNote.id;
   });
 
-  return {
+  return completeAnalysis(score, {
     id: options.id,
     normalizedScoreId: score.id,
     version: 1,
@@ -251,7 +255,228 @@ function analyzeImitativeScore(
       },
     ],
     createdAt: options.createdAt,
+  });
+}
+
+function completeAnalysis(
+  score: NormalizedScore,
+  record: AnalysisRecord,
+  principal?: PrincipalSelection
+): AnalysisRecord {
+  const claims = record.claims.map((claim) => {
+    const eventIds = claim.subjectIds.filter((id) => score.events.some((event) => event.id === id));
+    const partIds = claim.subjectIds.filter((id) => score.parts.some((part) => part.id === id));
+    const scopedEvents = [
+      ...eventIds,
+      ...score.events.filter((event) => partIds.includes(event.partId)).map((event) => event.id),
+    ].filter((id, index, all) => all.indexOf(id) === index);
+    const measureIds = score.measures
+      .filter((measure) =>
+        score.events.some(
+          (event) => event.measureId === measure.id && scopedEvents.includes(event.id)
+        )
+      )
+      .map((measure) => measure.id);
+    const alternatives =
+      claim.kind === "principal_voice" && principal?.basis === "inference"
+        ? score.parts
+            .filter((part) => part.id !== principal.part.id)
+            .map((part, index) => ({
+              id: `${claim.id}.alternative.${index + 1}`,
+              statement: `${part.name} may instead carry the Principal Voice.`,
+              subjectIds: [part.id],
+              confidence: Math.max(0.1, principal.confidence - 0.2 - index * 0.05),
+              arrangementConsequence:
+                "Faithful Reduction would protect this part and place its descendants in perceptual prominence.",
+            }))
+        : [];
+    return {
+      ...claim,
+      scope: { measureIds, eventIds: scopedEvents },
+      evidence: [
+        {
+          kind: "score_observation" as const,
+          sourceIds: claim.subjectIds,
+          explanation:
+            claim.basis === "observation"
+              ? "The claim is directly supported by labeled or symbolic score data."
+              : "The claim is inferred from register, timing, interval, rhythm, and voice-role evidence in the score.",
+        },
+      ],
+      alternatives,
+    };
+  });
+  const passages = passageAnalyses(score, record, claims);
+  const profiles = analysisProfiles(record, claims);
+  const principalClaim = claims.find((claim) => claim.kind === "principal_voice");
+  const ambiguities: NonNullable<AnalysisRecord["ambiguities"]> = [];
+  if (principalClaim && principalClaim.confidence < 0.8 && principalClaim.alternatives?.length) {
+    ambiguities.push({
+      id: `ambiguity.${record.id.slice("analysis.".length)}.principal-voice`,
+      claimId: principalClaim.id,
+      critical: true,
+      question: "Which source part carries the musical identity that must remain prominent?",
+      alternativeIds: principalClaim.alternatives.map((alternative) => alternative.id),
+    });
+  }
+  if (record.validationProfileId === "continuo.italian-baroque") {
+    const profileAlternative = profiles.find((profile) => profile.status === "alternative");
+    const profileClaim = claims.find((claim) => claim.kind === "continuo_foundation");
+    if (profileAlternative && profileClaim) {
+      ambiguities.push({
+        id: `ambiguity.${record.id.slice("analysis.".length)}.realization-profile`,
+        claimId: profileClaim.id,
+        critical: false,
+        question: "Could a different regional continuo practice materially change the realization?",
+        alternativeIds: [profileAlternative.id],
+      });
+    }
+  }
+  return {
+    ...record,
+    summary: analysisSummary(record, principal, passages, ambiguities),
+    passages,
+    profiles,
+    ambiguities,
+    claims,
   };
+}
+
+function passageAnalyses(
+  score: NormalizedScore,
+  record: AnalysisRecord,
+  claims: AnalysisRecord["claims"]
+): NonNullable<AnalysisRecord["passages"]> {
+  const suspensionEventIds = new Set(
+    claims.find((claim) => claim.kind === "prepared_suspension")?.subjectIds ?? []
+  );
+  const raw = score.measures.map((measure) => {
+    const events = score.events.filter((event) => event.measureId === measure.id);
+    const activeParts = new Set(
+      events.filter((event) => event.type === "note").map((event) => event.partId)
+    );
+    const hasContinuo = events.some((event) => event.type === "figured_bass");
+    const texture =
+      record.texture === "imitative-polyphony"
+        ? "imitative-polyphony"
+        : hasContinuo || record.texture === "continuo"
+          ? "continuo"
+          : activeParts.size <= 1
+            ? "monophony"
+            : activeParts.size === 2
+              ? "melody-with-accompaniment"
+              : record.texture;
+    const techniques = [
+      ...(record.texture === "imitative-polyphony" ? ["imitation"] : []),
+      ...(events.some((event) => suspensionEventIds.has(event.id)) ? ["prepared_suspension"] : []),
+    ];
+    return { measure, events, texture, techniques };
+  });
+  const grouped: (typeof raw)[] = [];
+  for (const passage of raw) {
+    const previous = grouped.at(-1);
+    const same =
+      previous?.[0]?.texture === passage.texture &&
+      previous[0].techniques.join(",") === passage.techniques.join(",");
+    if (same) previous.push(passage);
+    else grouped.push([passage]);
+  }
+  return grouped.map((group, index) => {
+    const eventIds = group.flatMap((item) => item.events.map((event) => event.id));
+    return {
+      id: `passage.${record.id.slice("analysis.".length)}.${index + 1}`,
+      measureIds: group.map((item) => item.measure.id),
+      eventIds,
+      texture: group[0]!.texture,
+      contrapuntalTechniques: group[0]!.techniques,
+      claimIds: claims
+        .filter((claim) => claim.scope?.eventIds.some((id) => eventIds.includes(id)))
+        .map((claim) => claim.id),
+    };
+  });
+}
+
+function analysisProfiles(
+  record: AnalysisRecord,
+  claims: AnalysisRecord["claims"]
+): NonNullable<AnalysisRecord["profiles"]> {
+  const evidenceClaimIds = claims.map((claim) => claim.id);
+  if (record.validationProfileId === "continuo.italian-baroque") {
+    return [
+      {
+        id: "continuo.italian-baroque",
+        label: "Italian Baroque continuo",
+        status: "selected",
+        confidence: 0.86,
+        scope: {
+          period: "seventeenth to early eighteenth century",
+          region: "Italy",
+          genre: "soprano with figured bass",
+          instruments: ["keyboard", "plucked continuo"],
+          ensembleRole: "continuo realization",
+        },
+        evidenceClaimIds,
+        arrangementConsequence:
+          "Realize written figures completely while preserving the authoritative bass and prepared dissonances.",
+      },
+      {
+        id: "continuo.french-baroque",
+        label: "French Baroque continuo",
+        status: "alternative",
+        confidence: 0.38,
+        scope: {
+          period: "late seventeenth to early eighteenth century",
+          region: "France",
+          genre: "soprano with figured bass",
+          instruments: ["keyboard", "plucked continuo"],
+          ensembleRole: "continuo realization",
+        },
+        evidenceClaimIds,
+        arrangementConsequence:
+          "Spacing, texture density, and ornamental assumptions may differ; select only with corroborating provenance.",
+      },
+    ];
+  }
+  if (record.validationProfileId === "counterpoint.renaissance-imitative") {
+    return [
+      {
+        id: "counterpoint.renaissance-imitative",
+        label: "Renaissance imitative counterpoint",
+        status: "selected",
+        confidence: 0.95,
+        scope: {
+          period: "sixteenth century",
+          region: "Western Europe",
+          genre: "imitative polyphony",
+          instruments: ["voices", "Renaissance lute"],
+          ensembleRole: "polyphonic intabulation",
+        },
+        evidenceClaimIds,
+        arrangementConsequence:
+          "Preserve ordered subject entries, voice continuity, interval-rhythm shape, and cadential goals.",
+      },
+    ];
+  }
+  return [];
+}
+
+function analysisSummary(
+  record: AnalysisRecord,
+  principal: PrincipalSelection | undefined,
+  passages: NonNullable<AnalysisRecord["passages"]>,
+  ambiguities: NonNullable<AnalysisRecord["ambiguities"]>
+): string {
+  const identity = principal
+    ? `${principal.part.name} is the best-supported Principal Voice`
+    : "The work's identity depends on relationships among independent voices";
+  const textures = [...new Set(passages.map((passage) => passage.texture))].join(", ");
+  const techniques = record.contrapuntalTechniques?.length
+    ? ` Protected techniques: ${record.contrapuntalTechniques.join(", ")}.`
+    : "";
+  const review = ambiguities.some((ambiguity) => ambiguity.critical)
+    ? " A material ambiguity requires review before faithful arrangement."
+    : "";
+  return `${identity}. Passage textures: ${textures}.${techniques}${review}`;
 }
 
 function detectImitativeTexture(score: NormalizedScore): ImitationEvidence | undefined {

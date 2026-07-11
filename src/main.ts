@@ -32,6 +32,7 @@ import type { CompileResult } from "./types.js";
 import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
+  installAnalysisSummary,
   installCandidateComparisonControls,
   installGuidedStart,
   type GuidedDeliverable,
@@ -413,6 +414,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     return;
   }
   type StoredArrangement = {
+    analysisRecordId: string;
     arrangementSearchId?: string;
     targetConfiguration: { id: string; instrumentId: string };
   };
@@ -430,13 +432,16 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       )
     )
   );
-  const [compiled, preview] = await Promise.all([
+  const [compiled, preview, analysis] = await Promise.all([
     browserApi<CompileResult>(
       `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/compile`,
       { method: "POST" }
     ),
     browserApi<import("./lib/audio-preview.js").AudioPreview>(
       `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`
+    ),
+    browserApi<GuidedDeliverable["analysis"]>(
+      `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
     ),
   ]);
   renderGuidedDeliverables(panel, [
@@ -445,6 +450,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       arrangementSearchId: search.id,
       targetConfigurationId: arrangement.targetConfiguration.id,
       label: arrangement.targetConfiguration.instrumentId,
+      analysis,
       compiled,
       preview,
       candidates,
@@ -482,6 +488,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
       header.append(label);
     }
     installAudioPreviewControls(panel, deliverable.preview);
+    installAnalysisSummary(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);
   };
   if (deliverables[0]) render(deliverables[0]);

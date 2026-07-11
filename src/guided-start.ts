@@ -16,6 +16,32 @@ export type GuidedDeliverable = {
   arrangementSearchId: string;
   targetConfigurationId: string;
   label: string;
+  analysis: {
+    id: string;
+    summary?: string;
+    passages?: Array<{ texture: string; contrapuntalTechniques: string[] }>;
+    claims: Array<{
+      id: string;
+      statement: string;
+      basis: string;
+      confidence: number;
+      alternatives?: Array<{
+        id: string;
+        statement: string;
+        subjectIds?: string[];
+        arrangementConsequence: string;
+      }>;
+    }>;
+    profiles?: Array<{ id: string; label: string; status: string; arrangementConsequence: string }>;
+    ambiguities?: Array<{
+      id: string;
+      claimId: string;
+      critical: boolean;
+      question: string;
+      alternativeIds: string[];
+      resolution?: string;
+    }>;
+  };
   compiled: CompileResult;
   preview: AudioPreview;
   candidates: Array<{
@@ -148,6 +174,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       for (const target of targetConfigurations) {
         status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
         const arranged = await api<{
+          analysis: GuidedDeliverable["analysis"];
           arrangementSearch: { id: string };
           candidates: GuidedDeliverable["candidates"];
           arrangementScore: { id: string };
@@ -174,6 +201,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
           label: targetLabel(target.id),
+          analysis: arranged.analysis,
           compiled,
           preview,
           candidates: arranged.candidates,
@@ -373,6 +401,78 @@ export function installCandidateComparisonControls(
   controls.append(label, branch, evidence);
   header.append(controls);
   void update();
+}
+
+export function installAnalysisSummary(panel: HTMLElement, deliverable: GuidedDeliverable): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".analysis-summary")?.remove();
+  const details = document.createElement("details");
+  details.className = "analysis-summary";
+  const summary = document.createElement("summary");
+  summary.textContent = deliverable.analysis.summary ?? "Musicological analysis";
+  const body = document.createElement("div");
+  const passages = document.createElement("p");
+  passages.textContent = `Passages: ${(deliverable.analysis.passages ?? [])
+    .map(
+      (passage) =>
+        `${passage.texture}${passage.contrapuntalTechniques.length ? ` (${passage.contrapuntalTechniques.join(", ")})` : ""}`
+    )
+    .join("; ")}`;
+  const claims = document.createElement("ul");
+  for (const claim of deliverable.analysis.claims) {
+    const item = document.createElement("li");
+    item.textContent = `${claim.statement} [${claim.basis}, ${(claim.confidence * 100).toFixed(0)}%]`;
+    claims.append(item);
+  }
+  const profiles = document.createElement("p");
+  profiles.textContent = (deliverable.analysis.profiles ?? [])
+    .map((profile) => `${profile.label} (${profile.status}): ${profile.arrangementConsequence}`)
+    .join(" ");
+  body.append(passages, claims);
+  if (profiles.textContent) body.append(profiles);
+  for (const ambiguity of deliverable.analysis.ambiguities ?? []) {
+    const ambiguityPanel = document.createElement("section");
+    ambiguityPanel.className = `analysis-ambiguity${ambiguity.critical ? " critical" : ""}`;
+    const question = document.createElement("p");
+    question.textContent = `${ambiguity.critical ? "Review required: " : "Alternative: "}${ambiguity.question}${ambiguity.resolution ? ` Resolved: ${ambiguity.resolution}` : ""}`;
+    ambiguityPanel.append(question);
+    const claim = deliverable.analysis.claims.find((item) => item.id === ambiguity.claimId);
+    if (!ambiguity.resolution) {
+      for (const alternative of claim?.alternatives ?? []) {
+        if (!alternative.subjectIds?.length) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = alternative.statement;
+        button.title = alternative.arrangementConsequence;
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try {
+            deliverable.analysis = await api<GuidedDeliverable["analysis"]>(
+              `/api/workspaces/${deliverable.workspaceId}/analyses/${deliverable.analysis.id}/claims/${claim!.id}/corrections`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  statement: alternative.statement,
+                  subjectIds: alternative.subjectIds,
+                  selectedAlternativeId: alternative.id,
+                  rationale: "The Owner selected this ranked analysis alternative.",
+                }),
+              }
+            );
+            installAnalysisSummary(panel, deliverable);
+            panel.querySelector<HTMLDetailsElement>(".analysis-summary")!.open = true;
+          } finally {
+            button.disabled = false;
+          }
+        });
+        ambiguityPanel.append(button);
+      }
+    }
+    body.append(ambiguityPanel);
+  }
+  details.append(summary, body);
+  header.append(details);
 }
 
 export function midiFrequency(midi: number): number {

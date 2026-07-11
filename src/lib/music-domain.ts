@@ -509,6 +509,96 @@ export const AnalysisClaimSchema = Type.Object(
       Type.Literal("user_correction"),
     ]),
     confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    scope: Type.Optional(
+      Type.Object(
+        {
+          measureIds: Type.Array(IdSchema),
+          eventIds: Type.Array(IdSchema),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    evidence: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            kind: Type.Union([
+              Type.Literal("score_observation"),
+              Type.Literal("source_metadata"),
+              Type.Literal("historical_profile"),
+              Type.Literal("owner_correction"),
+            ]),
+            sourceIds: Type.Array(IdSchema),
+            explanation: Type.String({ minLength: 1 }),
+          },
+          { additionalProperties: false }
+        ),
+        { minItems: 1 }
+      )
+    ),
+    alternatives: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: IdSchema,
+            statement: Type.String({ minLength: 1 }),
+            subjectIds: Type.Optional(Type.Array(IdSchema, { minItems: 1 })),
+            confidence: Type.Number({ minimum: 0, maximum: 1 }),
+            arrangementConsequence: Type.String({ minLength: 1 }),
+          },
+          { additionalProperties: false }
+        )
+      )
+    ),
+    correctedClaimId: Type.Optional(IdSchema),
+  },
+  { additionalProperties: false }
+);
+
+export type AnalysisClaim = Static<typeof AnalysisClaimSchema>;
+
+export const PassageAnalysisSchema = Type.Object(
+  {
+    id: IdSchema,
+    measureIds: Type.Array(IdSchema, { minItems: 1 }),
+    eventIds: Type.Array(IdSchema),
+    texture: Type.String({ minLength: 1 }),
+    contrapuntalTechniques: Type.Array(Type.String({ minLength: 1 })),
+    claimIds: Type.Array(IdSchema),
+  },
+  { additionalProperties: false }
+);
+
+export const AnalysisProfileSchema = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    label: Type.String({ minLength: 1 }),
+    status: Type.Union([Type.Literal("selected"), Type.Literal("alternative")]),
+    confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    scope: Type.Object(
+      {
+        period: Type.String({ minLength: 1 }),
+        region: Type.String({ minLength: 1 }),
+        genre: Type.String({ minLength: 1 }),
+        instruments: Type.Array(Type.String({ minLength: 1 })),
+        ensembleRole: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    evidenceClaimIds: Type.Array(IdSchema),
+    arrangementConsequence: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const AnalysisAmbiguitySchema = Type.Object(
+  {
+    id: IdSchema,
+    claimId: IdSchema,
+    critical: Type.Boolean(),
+    question: Type.String({ minLength: 1 }),
+    alternativeIds: Type.Array(IdSchema, { minItems: 1 }),
+    resolution: Type.Optional(Type.String({ minLength: 1 })),
   },
   { additionalProperties: false }
 );
@@ -522,6 +612,10 @@ export const AnalysisRecordSchema = Type.Object(
     principalVoicePartId: Type.Optional(IdSchema),
     validationProfileId: Type.Optional(Type.String({ minLength: 1 })),
     contrapuntalTechniques: Type.Optional(Type.Array(Type.String({ minLength: 1 }))),
+    summary: Type.Optional(Type.String({ minLength: 1 })),
+    passages: Type.Optional(Type.Array(PassageAnalysisSchema, { minItems: 1 })),
+    profiles: Type.Optional(Type.Array(AnalysisProfileSchema)),
+    ambiguities: Type.Optional(Type.Array(AnalysisAmbiguitySchema)),
     claims: Type.Array(AnalysisClaimSchema),
     preservationTargets: Type.Array(PreservationTargetSchema, { minItems: 1 }),
     createdAt: IsoDateSchema,

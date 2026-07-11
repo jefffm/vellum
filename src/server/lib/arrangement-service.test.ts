@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import { noteToMidi, transposeNote } from "../../lib/pitch.js";
 import { ArrangementService } from "./arrangement-service.js";
+import { AnalysisService } from "./analysis-service.js";
+import { createAnalysisCorrectionRoute } from "./analysis-route.js";
 import { OmrService } from "./omr.js";
 import type { OmrBackend } from "./omr.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -223,7 +225,16 @@ describe("Greensleeves faithful arrangement service", () => {
     });
 
     const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;
+    const principalClaim = result.analysis.claims.find(
+      (claim) => claim.kind === "principal_voice"
+    )!;
+    const analysisService = new AnalysisService({
+      store,
+      createId: () => "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      now: () => new Date("2026-07-10T15:00:00.000Z"),
+    });
     const app = express();
+    app.use(express.json());
     app.get(
       "/api/workspaces/:workspaceId/arrangement-searches/:searchId",
       createArrangementSearchGetRoute({ store, service })
@@ -231,6 +242,10 @@ describe("Greensleeves faithful arrangement service", () => {
     app.get(
       "/api/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview",
       createArrangementCandidatePreviewRoute({ store, service })
+    );
+    app.post(
+      "/api/workspaces/:workspaceId/analyses/:analysisRecordId/claims/:claimId/corrections",
+      createAnalysisCorrectionRoute(store, analysisService)
     );
     const server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -249,6 +264,24 @@ describe("Greensleeves faithful arrangement service", () => {
     };
     expect(preview.ok).toBe(true);
     expect(preview.data.events.length).toBeGreaterThan(0);
+    const correctionResponse = await fetch(
+      `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/analyses/${result.analysis.id}/claims/${principalClaim.id}/corrections`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          statement: "The alto is the Owner-confirmed Principal Voice for this arrangement.",
+          subjectIds: ["part.alto"],
+          rationale: "The Owner identified the tune in the alto for this source.",
+        }),
+      }
+    );
+    const correctionEnvelope = (await correctionResponse.json()) as {
+      ok: boolean;
+      data: ReturnType<AnalysisService["correctClaim"]>;
+    };
+    expect(correctionEnvelope.ok).toBe(true);
+    const correctedAnalysis = correctionEnvelope.data;
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
     );
@@ -263,6 +296,23 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(store.getArrangementBranch(workspace.id, branched.branchId)).toMatchObject({
       createdFromCandidateId: alternative.id,
     });
+
+    expect(correctedAnalysis).toMatchObject({
+      id: "analysis.cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      version: 2,
+      principalVoicePartId: "part.alto",
+      claims: expect.arrayContaining([
+        expect.objectContaining({
+          basis: "user_correction",
+          correctedClaimId: principalClaim.id,
+          confidence: 1,
+        }),
+      ]),
+    });
+    expect(
+      correctedAnalysis.preservationTargets.find((target) => target.kind === "principal_voice")
+    ).toMatchObject({ partId: "part.alto" });
+    expect(store.getAnalysisRecord(workspace.id, result.analysis.id).version).toBe(1);
 
     const uncertainTranscription = {
       ...omr.scoreTranscription,

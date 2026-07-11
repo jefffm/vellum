@@ -647,6 +647,36 @@ chat-panel > div > div:has(agent-interface) {
   align-items: end;
 }
 
+.analysis-summary {
+  flex-basis: 100%;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.analysis-summary summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.analysis-summary ul {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.analysis-ambiguity {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-left: 2px solid var(--border);
+}
+
+.analysis-ambiguity.critical {
+  border-left-color: #a8462b;
+}
+
+.analysis-ambiguity button {
+  margin-right: 0.4rem;
+}
+
 .candidate-comparison-controls label {
   display: grid;
   gap: 0.2rem;
