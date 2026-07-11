@@ -1167,6 +1167,11 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   dialog.id = "guided-start";
   dialog.innerHTML = guidedStartMarkup();
   document.body.append(dialog);
+  const ocrThreshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
+  const ocrThresholdValue = dialog.querySelector<HTMLElement>("[data-ocr-threshold-value]");
+  ocrThreshold?.addEventListener("input", () => {
+    if (ocrThresholdValue) ocrThresholdValue.textContent = `${ocrThreshold.value}%`;
+  });
   launcher.addEventListener("click", () => {
     dialog.showModal();
     if (activeWorkspaceId) void refreshModelActionRecovery(dialog, activeWorkspaceId);
@@ -1205,6 +1210,9 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       const preservationPolicy =
         form.querySelector<HTMLSelectElement>('[name="preservationPolicy"]')?.value ??
         "faithful_reduction";
+      const ocrAutoAcceptConfidence = Number(
+        form.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]')?.value ?? "80"
+      );
       const targetConfigurations = selectedTargets.map(targetConfiguration);
       const workspace = await api<{ id: string }>("/api/workspaces", {
         method: "POST",
@@ -1244,7 +1252,13 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         {
           method: "POST",
           body: JSON.stringify(
-            optical ? { sourceArtifactId: source.id, backend: "audiveris" } : {}
+            optical
+              ? {
+                  sourceArtifactId: source.id,
+                  backend: "audiveris",
+                  autoAcceptConfidence: ocrAutoAcceptConfidence / 100,
+                }
+              : {}
           ),
         }
       );
@@ -1259,7 +1273,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       const deliverables: GuidedDeliverable[] = [];
       for (const target of targetConfigurations) {
         status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
-        const arranged = await api<{
+        const arranged = await arrangeWithAnalysisReview<{
           analysis: GuidedDeliverable["analysis"];
           arrangementSearch: { id: string };
           candidates: GuidedDeliverable["candidates"];
@@ -1277,7 +1291,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
             preservationAudit: GuidedDeliverable["preservationAudit"];
             continuoDisposition?: GuidedDeliverable["continuoDisposition"];
           };
-        }>(`/api/workspaces/${workspace.id}/arrangements`, {
+        }>(dialog, workspace.id, `/api/workspaces/${workspace.id}/arrangements`, {
           method: "POST",
           body: JSON.stringify({
             normalizedScoreId: reviewed.normalizedScoreId,
@@ -1344,6 +1358,99 @@ export function installGuidedStart(options: GuidedStartOptions): void {
     localStorage.setItem("vellum.guided-start.seen", "true");
     dialog.showModal();
   }
+}
+
+export async function arrangeWithAnalysisReview<T>(
+  dialog: HTMLDialogElement,
+  workspaceId: string,
+  url: string,
+  init: RequestInit
+): Promise<T> {
+  while (true) {
+    try {
+      return await api<T>(url, init);
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("Musicological Analysis review")) {
+        throw error;
+      }
+      const workspace = await api<{ analysisRecordIds: string[] }>(
+        `/api/workspaces/${workspaceId}`
+      );
+      const analysisId = workspace.analysisRecordIds.at(-1);
+      if (!analysisId) throw error;
+      const analysis = await api<GuidedDeliverable["analysis"]>(
+        `/api/workspaces/${workspaceId}/analyses/${analysisId}`
+      );
+      await presentAnalysisReview(dialog, workspaceId, analysis);
+    }
+  }
+}
+
+function presentAnalysisReview(
+  dialog: HTMLDialogElement,
+  workspaceId: string,
+  analysis: GuidedDeliverable["analysis"]
+): Promise<void> {
+  const panel = dialog.querySelector<HTMLElement>("[data-analysis-review]")!;
+  const question = panel.querySelector<HTMLElement>("[data-analysis-question]")!;
+  const choices = panel.querySelector<HTMLElement>("[data-analysis-choices]")!;
+  const cancel = panel.querySelector<HTMLButtonElement>("[data-analysis-cancel]")!;
+  const ambiguity = analysis.ambiguities?.find((item) => item.critical && !item.resolution);
+  const claim = analysis.claims.find((item) => item.id === ambiguity?.claimId);
+  const alternatives = claim?.alternatives?.filter((item) => item.subjectIds?.length) ?? [];
+  if (!ambiguity || !claim || alternatives.length === 0) {
+    throw new Error("Musicological review has no selectable analysis alternatives.");
+  }
+  panel.hidden = false;
+  dialog.classList.add("review-active");
+  setGuidedNavigationDisabled(dialog, true);
+  question.textContent = ambiguity.question;
+  choices.replaceChildren();
+  return new Promise((resolve, reject) => {
+    const finish = () => {
+      panel.hidden = true;
+      dialog.classList.remove("review-active");
+      setGuidedNavigationDisabled(dialog, false);
+      cancel.onclick = null;
+    };
+    cancel.onclick = () => {
+      finish();
+      reject(new Error("Arrangement stopped before musicological review was completed."));
+    };
+    for (const alternative of alternatives) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = alternative.statement;
+      button.title = alternative.arrangementConsequence;
+      button.addEventListener("click", async () => {
+        choices.querySelectorAll("button").forEach((candidate) => {
+          (candidate as HTMLButtonElement).disabled = true;
+        });
+        try {
+          await api(
+            `/api/workspaces/${workspaceId}/analyses/${analysis.id}/claims/${claim.id}/corrections`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                statement: alternative.statement,
+                subjectIds: alternative.subjectIds,
+                selectedAlternativeId: alternative.id,
+                rationale: "Selected during Guided Start musicological review.",
+              }),
+            }
+          );
+          finish();
+          resolve();
+        } catch (error) {
+          choices.querySelectorAll("button").forEach((candidate) => {
+            (candidate as HTMLButtonElement).disabled = false;
+          });
+          reject(error);
+        }
+      });
+      choices.append(button);
+    }
+  });
 }
 
 type WorkspaceNavigation = {
@@ -2992,6 +3099,7 @@ export function guidedStartMarkup(): string {
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
+      <label>OCR auto-accept confidence <span data-ocr-threshold-value>80%</span><input type="range" name="ocrAutoAcceptConfidence" min="50" max="100" step="1" value="80"><small>Automatically accept OCR notes at or above this confidence. Lower this to 70% to accept a 72% note; voice identity and structurally abnormal readings still require review.</small></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
@@ -3003,6 +3111,7 @@ export function guidedStartMarkup(): string {
           <div class="score-review-notation"><strong>Recognized notation</strong><div data-review-editors></div><strong>Ranked suggestions</strong><div class="score-review-suggestions" data-review-suggestions></div><label>Review note<input type="text" data-review-rationale></label><p class="score-review-error" data-review-error></p><div class="score-review-actions"><button type="button" data-review-cancel>Cancel this run</button><button type="button" data-review-apply>Apply correction and continue</button></div></div>
         </div>
       </section>
+      <section class="analysis-review" data-analysis-review hidden><div class="score-review-heading"><div><p>Musicological review required</p><h2>Choose the Principal Voice</h2></div></div><p data-analysis-question></p><p>This is the line Vellum will preserve as the recognizable melody. The full analysis remains inspectable later.</p><div class="analysis-review-choices" data-analysis-choices></div><button type="button" data-analysis-cancel>Cancel this run</button></section>
       <p class="guided-status" data-guided-status>Vellum will preserve the Principal Voice automatically and show any source uncertainty before arranging.</p>
       <footer><button type="button" data-guided-skip>Skip to chat</button><button type="submit">Start arrangement</button></footer>
     </form>`;

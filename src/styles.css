@@ -858,6 +858,38 @@ chat-panel > div > div:has(agent-interface) {
   display: none;
 }
 
+.analysis-review {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid #8b6fb0;
+  border-radius: 0.8rem;
+  background: #fbf7ff;
+}
+
+.analysis-review[hidden] {
+  display: none;
+}
+
+.analysis-review > p {
+  margin: 0;
+}
+
+.analysis-review-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.65rem;
+}
+
+#guided-start .analysis-review-choices button {
+  min-height: 4rem;
+  padding: 0.8rem;
+  border-color: #8b6fb0;
+  background: #fff;
+  color: #3e2858;
+  text-align: left;
+}
+
 .score-anchored-review p,
 .score-anchored-review h2 {
   margin: 0;

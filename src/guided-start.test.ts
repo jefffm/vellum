@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
   guidedStartMarkup,
+  arrangeWithAnalysisReview,
   buildScoreSelectionContext,
   compareArrangementVersions,
   describeArrangementEvent,
@@ -330,8 +331,20 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain(".mei");
     expect(markup).toContain(".mscz");
     expect(markup).toContain("PDF and images use Audiveris review");
+    expect(markup).toContain('name="ocrAutoAcceptConfidence"');
+    expect(markup).toContain("Automatically accept OCR notes at or above");
+    expect(markup).toContain("data-analysis-review");
+    expect(markup).toContain("Choose the Principal Voice");
     expect(sourceMimeType({ name: "piece.ly", type: "" })).toBe("text/x-lilypond");
     expect(sourceMimeType({ name: "piece.mei", type: "" })).toBe("application/mei+xml");
+  });
+
+  it("resumes from the reviewed score after resolving a critical analysis ambiguity", () => {
+    const implementation = arrangeWithAnalysisReview.toString();
+    expect(implementation).toContain("Musicological Analysis review");
+    expect(implementation).toContain("presentAnalysisReview");
+    expect(implementation).toContain("analysisRecordIds");
+    expect(implementation).not.toContain("omr-runs");
   });
 
   it("exposes stale-lineage recovery and commitment release actions", () => {

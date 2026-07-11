@@ -10,6 +10,7 @@ const OmrRequestSchema = Type.Object(
   {
     sourceArtifactId: Type.String({ pattern: "^source\\.[a-f0-9]{16,}$" }),
     backend: Type.Optional(Type.Literal("audiveris", { default: "audiveris" })),
+    autoAcceptConfidence: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
   },
   { additionalProperties: false }
 );
@@ -22,6 +23,7 @@ type OmrRouteInput = {
   workspaceId: string;
   sourceArtifactId: string;
   backend?: "audiveris";
+  autoAcceptConfidence?: number;
 };
 
 type OmrRouteOptions = {
@@ -40,8 +42,15 @@ export function createOmrRunRoute(options: OmrRouteOptions = {}): RequestHandler
       ...Value.Decode(WorkspaceParamsSchema, request.params),
       ...Value.Decode(OmrRequestSchema, body),
     }),
-    handler: async ({ workspaceId, sourceArtifactId, backend = "audiveris" }) =>
-      service.recognize(workspaceId, sourceArtifactId, backendFactory(backend)),
+    handler: async ({
+      workspaceId,
+      sourceArtifactId,
+      backend = "audiveris",
+      autoAcceptConfidence,
+    }) =>
+      service.recognize(workspaceId, sourceArtifactId, backendFactory(backend), {
+        autoAcceptConfidence,
+      }),
   });
 }
 

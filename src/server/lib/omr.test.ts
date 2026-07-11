@@ -155,6 +155,99 @@ describe("OMR pipeline", () => {
     expect(result.scoreTranscription.uncertainties[0]!.message).toContain("Preservation Target");
   });
 
+  it("auto-accepts ordinary pitch recognition at the configured confidence threshold", async () => {
+    const opening = recognizedScore.events.find(
+      (event) => event.id === "event.soprano.1" && event.type === "note"
+    )!;
+    const uncertain: RecognizedScore = {
+      ...recognizedScore,
+      events: recognizedScore.events.map((event) =>
+        event.id === opening.id ? { ...event, confidence: 0.72 } : event
+      ),
+      uncertainties: [
+        {
+          id: "uncertainty.soprano-opening",
+          eventIds: [opening.id],
+          critical: false,
+          category: "pitch_recognition",
+          message: "Audiveris recognized the opening pitch with native confidence 0.720.",
+          alternatives: [],
+          resolved: false,
+        },
+      ],
+    };
+    const backend: OmrBackend = {
+      id: "fixture",
+      recognize: async () => ({
+        backend: { id: "fixture", version: "1", configuration: {} },
+        artifacts: [],
+        pageMappings: [],
+        diagnostics: [],
+        recognizedScore: uncertain,
+      }),
+    };
+    const service = new OmrService({ store });
+
+    const result = await service.recognize(workspaceId, sourceArtifactId, backend, {
+      autoAcceptConfidence: 0.7,
+    });
+
+    expect(result.scoreTranscription.status).toBe("reviewed");
+    expect(result.scoreTranscription.uncertainties[0]).toMatchObject({
+      critical: true,
+      resolved: true,
+    });
+    expect(result.scoreTranscription.corrections).toContainEqual(
+      expect.objectContaining({
+        uncertaintyId: "uncertainty.soprano-opening",
+        rationale: expect.stringContaining("70%"),
+      })
+    );
+  });
+
+  it("never auto-accepts recognition already marked structurally critical", async () => {
+    const opening = recognizedScore.events.find(
+      (event) => event.id === "event.soprano.1" && event.type === "note"
+    )!;
+    const backend: OmrBackend = {
+      id: "fixture",
+      recognize: async () => ({
+        backend: { id: "fixture", version: "1", configuration: {} },
+        artifacts: [],
+        pageMappings: [],
+        diagnostics: [],
+        recognizedScore: {
+          ...recognizedScore,
+          events: recognizedScore.events.map((event) =>
+            event.id === opening.id ? { ...event, confidence: 0.95 } : event
+          ),
+          uncertainties: [
+            {
+              id: "uncertainty.abnormal-opening",
+              eventIds: [opening.id],
+              critical: true,
+              category: "pitch_recognition",
+              message: "The recognized pitch is structurally abnormal.",
+              alternatives: [],
+              resolved: false,
+            },
+          ],
+        },
+      }),
+    };
+
+    const result = await new OmrService({ store }).recognize(
+      workspaceId,
+      sourceArtifactId,
+      backend,
+      { autoAcceptConfidence: 0.7 }
+    );
+
+    expect(result.scoreTranscription.status).toBe("needs_review");
+    expect(result.scoreTranscription.uncertainties[0]?.resolved).toBe(false);
+    expect(result.scoreTranscription.corrections).toBeUndefined();
+  });
+
   it("drives review from production-derived Audiveris native evidence", async () => {
     const nativeOmr = readFileSync(
       path.resolve(process.cwd(), "test/fixtures/audiveris/imitative-passage-audiveris-5.10.2.omr")

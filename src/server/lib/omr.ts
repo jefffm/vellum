@@ -231,6 +231,10 @@ export type OmrServiceResult = {
   normalizedScore: NormalizedScore;
 };
 
+export type OmrRecognitionOptions = {
+  autoAcceptConfidence?: number;
+};
+
 export class OmrService {
   private readonly store: WorkspaceStore;
   private readonly now: () => Date;
@@ -245,7 +249,8 @@ export class OmrService {
   async recognize(
     workspaceId: string,
     sourceArtifactId: string,
-    backend: OmrBackend
+    backend: OmrBackend,
+    options: OmrRecognitionOptions = {}
   ): Promise<OmrServiceResult> {
     const source = this.store.getSourceArtifact(workspaceId, sourceArtifactId);
     const runId = `omr.${this.createId()}`;
@@ -290,8 +295,13 @@ export class OmrService {
       };
       this.store.saveOmrRun(workspaceId, completed);
 
-      const recognizedScore = classifyCriticalUncertainties(
+      const { recognizedScore: thresholdedScore, corrections } = applyConfidenceAcceptance(
         result.recognizedScore,
+        options.autoAcceptConfidence,
+        completedAt
+      );
+      const recognizedScore = classifyCriticalUncertainties(
+        thresholdedScore,
         runId.slice("omr.".length),
         completedAt
       );
@@ -306,6 +316,7 @@ export class OmrService {
           ? "needs_review"
           : "reviewed",
         ...recognizedScore,
+        ...(corrections.length ? { corrections } : {}),
         createdAt: completedAt,
       };
       this.store.saveScoreTranscription(workspaceId, transcription);
@@ -341,6 +352,54 @@ export class OmrService {
       throw error;
     }
   }
+}
+
+function applyConfidenceAcceptance(
+  recognizedScore: RecognizedScore,
+  threshold: number | undefined,
+  createdAt: string
+): {
+  recognizedScore: RecognizedScore;
+  corrections: NonNullable<ScoreTranscription["corrections"]>;
+} {
+  if (threshold === undefined) return { recognizedScore, corrections: [] };
+  const accepted = new Set<string>();
+  for (const uncertainty of recognizedScore.uncertainties) {
+    if (
+      uncertainty.resolved ||
+      uncertainty.critical ||
+      uncertainty.category !== "pitch_recognition"
+    )
+      continue;
+    const events = uncertainty.eventIds.map((id) =>
+      recognizedScore.events.find((event) => event.id === id)
+    );
+    if (
+      events.length > 0 &&
+      events.every(
+        (event) =>
+          event?.type === "note" && event.confidence !== undefined && event.confidence >= threshold
+      )
+    ) {
+      accepted.add(uncertainty.id);
+    }
+  }
+  return {
+    recognizedScore: {
+      ...recognizedScore,
+      uncertainties: recognizedScore.uncertainties.map((uncertainty) =>
+        accepted.has(uncertainty.id) ? { ...uncertainty, resolved: true } : uncertainty
+      ),
+    },
+    corrections: recognizedScore.uncertainties
+      .filter((uncertainty) => accepted.has(uncertainty.id))
+      .map((uncertainty) => ({
+        uncertaintyId: uncertainty.id,
+        eventIds: uncertainty.eventIds,
+        rationale: `Automatically accepted from native OCR evidence at or above ${Math.round(threshold * 100)}% confidence.`,
+        createdAt,
+      })),
+  };
 }
 
 export function classifyCriticalUncertainties(
