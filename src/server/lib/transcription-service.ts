@@ -3,6 +3,7 @@ import type {
   NormalizedScore,
   ScoreEvent,
   ScoreTranscription,
+  TranscriptionUncertainty,
   TranscriptionCorrection,
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
@@ -19,6 +20,21 @@ export type TranscriptionCorrectionResult = {
   normalizedScore: NormalizedScore;
 };
 
+export type ScoreAnchoredReviewItem = {
+  uncertainty: TranscriptionUncertainty;
+  events: ScoreEvent[];
+};
+
+export type ScoreAnchoredReview = {
+  transcriptionId: string;
+  version: number;
+  status: ScoreTranscription["status"];
+  sourceArtifactId: string;
+  sourceFilename: string;
+  sourceContentUrl: string;
+  items: ScoreAnchoredReviewItem[];
+};
+
 export class TranscriptionService {
   private readonly store: WorkspaceStore;
   private readonly now: () => Date;
@@ -28,6 +44,36 @@ export class TranscriptionService {
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
+  }
+
+  review(workspaceId: string, transcriptionId: string): ScoreAnchoredReview {
+    const transcription = this.store.getScoreTranscription(workspaceId, transcriptionId);
+    const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
+    const items = transcription.uncertainties
+      .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)
+      .map((uncertainty) => ({
+        uncertainty,
+        events: uncertainty.eventIds.map((eventId) => {
+          const event = transcription.events.find((candidate) => candidate.id === eventId);
+          if (!event) {
+            throw new ApiRouteError(
+              `Transcription uncertainty ${uncertainty.id} references missing event ${eventId}`,
+              500
+            );
+          }
+          return event;
+        }),
+      }));
+
+    return {
+      transcriptionId: transcription.id,
+      version: transcription.version,
+      status: transcription.status,
+      sourceArtifactId: source.id,
+      sourceFilename: source.filename,
+      sourceContentUrl: `/api/workspaces/${workspaceId}/sources/${source.id}/content`,
+      items,
+    };
   }
 
   correct(
@@ -53,7 +99,16 @@ export class TranscriptionService {
     }
 
     const edits = new Map(correction.eventEdits.map((edit) => [edit.eventId, edit]));
+    if (edits.size !== correction.eventEdits.length) {
+      throw new ApiRouteError("A transcription correction cannot edit the same event twice", 400);
+    }
     for (const eventId of edits.keys()) {
+      if (!uncertainty.eventIds.includes(eventId)) {
+        throw new ApiRouteError(
+          `Event ${eventId} is outside transcription uncertainty ${uncertainty.id}`,
+          400
+        );
+      }
       if (!current.events.some((event) => event.id === eventId)) {
         throw new ApiRouteError(`Transcription event not found: ${eventId}`, 404);
       }

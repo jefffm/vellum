@@ -57,9 +57,10 @@ The **New arrangement** control opens Guided Start. Upload an arbitrary score PD
 1. saves the PDF unchanged in a local, versioned arrangement workspace;
 2. runs OMR through the backend-neutral recognition boundary;
 3. saves the recognized and normalized score with source regions and uncertainty records;
-4. identifies and protects the Principal Voice;
-5. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
-6. engraves the requested output - French letter tablature for the historical instruments or standard notation for classical guitar - and creates a literal synthesized Audio Preview with isolatable Principal Voice and accompaniment parts.
+4. pauses on Critical Uncertainty in Score-Anchored Review, focusing the immutable PDF region beside editable recognized notation and ranked alternatives, then saves accepted corrections as a new transcription version;
+5. identifies and protects the Principal Voice;
+6. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
+7. engraves the requested output - French letter tablature for the historical instruments or standard notation for classical guitar - and creates a literal synthesized Audio Preview with isolatable Principal Voice and accompaniment parts.
 
 [Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be available as `audiveris` on `PATH` for arbitrary PDF recognition. If it is unavailable, the source and Arrangement Brief remain saved and Vellum reports the missing backend without pretending that recognition succeeded. The checked-in public-domain Greensleeves fixture provides deterministic reviewed truth so arrangement and engraving tests do not drift with OMR versions.
 

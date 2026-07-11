@@ -1,5 +1,10 @@
 import type { AudioPreview, PlaybackPart } from "./lib/audio-preview.js";
-import type { TargetConfiguration } from "./lib/music-domain.js";
+import type {
+  ScoreEvent,
+  TargetConfiguration,
+  TranscriptionCorrection,
+  TranscriptionUncertainty,
+} from "./lib/music-domain.js";
 import type { CompileResult } from "./types.js";
 
 type GuidedStartOptions = {
@@ -14,6 +19,24 @@ export type GuidedDeliverable = {
 };
 
 type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+
+type ScoreAnchoredReview = {
+  transcriptionId: string;
+  version: number;
+  status: "needs_review" | "reviewed" | "best_effort";
+  sourceArtifactId: string;
+  sourceFilename: string;
+  sourceContentUrl: string;
+  items: Array<{
+    uncertainty: TranscriptionUncertainty;
+    events: ScoreEvent[];
+  }>;
+};
+
+type CorrectionResult = {
+  scoreTranscription: { id: string; status: ScoreAnchoredReview["status"] };
+  normalizedScore: { id: string };
+};
 
 export function installGuidedStart(options: GuidedStartOptions): void {
   const launcher = document.createElement("button");
@@ -30,6 +53,11 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   for (const skip of dialog.querySelectorAll<HTMLElement>("[data-guided-skip]")) {
     skip.addEventListener("click", () => dialog.close());
   }
+  dialog.addEventListener("cancel", (event) => {
+    if (!dialog.querySelector<HTMLElement>("[data-score-review]")?.hidden) {
+      event.preventDefault();
+    }
+  });
   installProviderConnection(dialog);
 
   const form = dialog.querySelector<HTMLFormElement>("form");
@@ -41,6 +69,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
     if (!file || !status || !submit) return;
     submit.disabled = true;
     try {
+      delete status.dataset.error;
       status.textContent = "Saving a local workspace…";
       const title =
         form.querySelector<HTMLInputElement>('[name="title"]')?.value.trim() ||
@@ -74,12 +103,18 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         body: file,
       });
       status.textContent = "Reading the score with optical music recognition…";
-      const recognized = await api<{ normalizedScore: { id: string } }>(
-        `/api/workspaces/${workspace.id}/omr-runs`,
-        {
-          method: "POST",
-          body: JSON.stringify({ sourceArtifactId: source.id, backend: "audiveris" }),
-        }
+      const recognized = await api<{
+        scoreTranscription: { id: string; status: ScoreAnchoredReview["status"] };
+        normalizedScore: { id: string };
+      }>(`/api/workspaces/${workspace.id}/omr-runs`, {
+        method: "POST",
+        body: JSON.stringify({ sourceArtifactId: source.id, backend: "audiveris" }),
+      });
+      const reviewed = await resolveCriticalUncertainties(
+        dialog,
+        workspace.id,
+        recognized.scoreTranscription.id,
+        recognized.normalizedScore.id
       );
       const deliverables: GuidedDeliverable[] = [];
       for (const target of targetConfigurations) {
@@ -89,7 +124,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           {
             method: "POST",
             body: JSON.stringify({
-              normalizedScoreId: recognized.normalizedScore.id,
+              normalizedScoreId: reviewed.normalizedScoreId,
               targetConfigurationId: target.id,
               preservationPolicy: "faithful_reduction",
             }),
@@ -162,6 +197,161 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
 
 export function midiFrequency(midi: number): number {
   return 440 * 2 ** ((midi - 69) / 12);
+}
+
+export function sourceFocusUrl(
+  sourceContentUrl: string,
+  region: TranscriptionUncertainty["region"]
+): string {
+  if (!region) return sourceContentUrl;
+  const x = Math.max(0, Math.round(region.x));
+  const y = Math.max(0, Math.round(region.y));
+  return `${sourceContentUrl}#page=${region.page}&zoom=180,${x},${y}`;
+}
+
+async function resolveCriticalUncertainties(
+  dialog: HTMLDialogElement,
+  workspaceId: string,
+  initialTranscriptionId: string,
+  initialNormalizedScoreId: string
+): Promise<{ transcriptionId: string; normalizedScoreId: string }> {
+  let transcriptionId = initialTranscriptionId;
+  let normalizedScoreId = initialNormalizedScoreId;
+
+  while (true) {
+    const review = await api<ScoreAnchoredReview>(
+      `/api/workspaces/${workspaceId}/transcriptions/${transcriptionId}/review`
+    );
+    const item = review.items[0];
+    if (!item) {
+      hideScoreAnchoredReview(dialog);
+      return { transcriptionId, normalizedScoreId };
+    }
+
+    const correction = await presentScoreAnchoredReview(dialog, review, item);
+    const result = await api<CorrectionResult>(
+      `/api/workspaces/${workspaceId}/transcriptions/${transcriptionId}/corrections`,
+      { method: "POST", body: JSON.stringify(correction) }
+    );
+    transcriptionId = result.scoreTranscription.id;
+    normalizedScoreId = result.normalizedScore.id;
+  }
+}
+
+function presentScoreAnchoredReview(
+  dialog: HTMLDialogElement,
+  review: ScoreAnchoredReview,
+  item: ScoreAnchoredReview["items"][number]
+): Promise<TranscriptionCorrection> {
+  const panel = dialog.querySelector<HTMLElement>("[data-score-review]")!;
+  const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]")!;
+  const heading = panel.querySelector<HTMLElement>("[data-review-heading]")!;
+  const message = panel.querySelector<HTMLElement>("[data-review-message]")!;
+  const location = panel.querySelector<HTMLElement>("[data-review-location]")!;
+  const editors = panel.querySelector<HTMLElement>("[data-review-editors]")!;
+  const suggestions = panel.querySelector<HTMLElement>("[data-review-suggestions]")!;
+  const rationale = panel.querySelector<HTMLInputElement>("[data-review-rationale]")!;
+  const apply = panel.querySelector<HTMLButtonElement>("[data-review-apply]")!;
+  const cancel = panel.querySelector<HTMLButtonElement>("[data-review-cancel]")!;
+  const error = panel.querySelector<HTMLElement>("[data-review-error]")!;
+  const status = dialog.querySelector<HTMLElement>("[data-guided-status]");
+  const region = item.uncertainty.region;
+
+  panel.hidden = false;
+  setGuidedNavigationDisabled(dialog, true);
+  if (status) {
+    status.textContent =
+      "Arrangement paused for this critical uncertainty. Apply a correction or cancel this run.";
+  }
+  source.src = sourceFocusUrl(review.sourceContentUrl, region);
+  source.title = `${review.sourceFilename}, source page ${region?.page ?? 1}`;
+  heading.textContent = `Review transcription v${review.version}`;
+  message.textContent = item.uncertainty.message;
+  location.textContent = region
+    ? `Source page ${region.page}, region x ${region.x}, y ${region.y}, ${region.width} × ${region.height}`
+    : "The recognition backend did not supply a precise source region.";
+  rationale.value = "Confirmed against the source facsimile in Score-Anchored Review.";
+  error.textContent = "";
+  editors.replaceChildren();
+  suggestions.replaceChildren();
+
+  const editableNotes = item.events.filter(
+    (event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note"
+  );
+  for (const event of editableNotes) {
+    const label = document.createElement("label");
+    label.textContent = `Recognized pitch · ${event.id}`;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = event.pitch;
+    input.pattern = "[A-G](?:#|b)?-?\\d+";
+    input.dataset.reviewEventId = event.id;
+    label.append(input);
+    editors.append(label);
+  }
+
+  item.uncertainty.alternatives.forEach((alternative, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `${index + 1}. ${alternative}`;
+    button.addEventListener("click", () => {
+      const first = editors.querySelector<HTMLInputElement>("input");
+      if (first) first.value = alternative;
+    });
+    suggestions.append(button);
+  });
+
+  return new Promise((resolve, reject) => {
+    cancel.onclick = () => {
+      apply.onclick = null;
+      cancel.onclick = null;
+      hideScoreAnchoredReview(dialog);
+      reject(new Error("Arrangement stopped before transcription review was completed."));
+    };
+    apply.onclick = () => {
+      const inputs = Array.from(
+        editors.querySelectorAll<HTMLInputElement>("[data-review-event-id]")
+      );
+      if (inputs.length === 0) {
+        error.textContent = "This uncertainty has no editable note event.";
+        return;
+      }
+      if (inputs.some((input) => !input.checkValidity())) {
+        error.textContent = "Use scientific pitch notation such as E4, F#4, or Bb3.";
+        return;
+      }
+      const explanation = rationale.value.trim();
+      if (!explanation) {
+        error.textContent = "Record why this correction was accepted.";
+        return;
+      }
+      apply.onclick = null;
+      cancel.onclick = null;
+      resolve({
+        uncertaintyId: item.uncertainty.id,
+        eventEdits: inputs.map((input) => ({
+          eventId: input.dataset.reviewEventId!,
+          pitch: input.value.trim(),
+        })),
+        rationale: explanation,
+      });
+    };
+  });
+}
+
+function hideScoreAnchoredReview(dialog: HTMLDialogElement): void {
+  const panel = dialog.querySelector<HTMLElement>("[data-score-review]");
+  if (!panel) return;
+  panel.hidden = true;
+  setGuidedNavigationDisabled(dialog, false);
+  const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]");
+  if (source) source.removeAttribute("src");
+}
+
+function setGuidedNavigationDisabled(dialog: HTMLDialogElement, disabled: boolean): void {
+  for (const control of dialog.querySelectorAll<HTMLButtonElement>("[data-guided-skip]")) {
+    control.disabled = disabled;
+  }
 }
 
 function playPreview(preview: AudioPreview, part: PlaybackPart, onEnded: () => void): () => void {
@@ -290,6 +480,14 @@ export function guidedStartMarkup(): string {
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
+      <section class="score-anchored-review" data-score-review hidden>
+        <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
+        <p data-review-message></p>
+        <div class="score-review-grid">
+          <div><strong>Source facsimile</strong><iframe data-review-source></iframe></div>
+          <div class="score-review-notation"><strong>Recognized notation</strong><div data-review-editors></div><strong>Ranked suggestions</strong><div class="score-review-suggestions" data-review-suggestions></div><label>Review note<input type="text" data-review-rationale></label><p class="score-review-error" data-review-error></p><div class="score-review-actions"><button type="button" data-review-cancel>Cancel this run</button><button type="button" data-review-apply>Apply correction and continue</button></div></div>
+        </div>
+      </section>
       <p class="guided-status" data-guided-status>Vellum will preserve the Principal Voice automatically and show any source uncertainty before arranging.</p>
       <footer><button type="button" data-guided-skip>Skip to chat</button><button type="submit">Start arrangement</button></footer>
     </form>`;

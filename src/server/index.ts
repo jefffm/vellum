@@ -34,7 +34,10 @@ import {
   createWorkspaceListRoute,
 } from "./lib/workspace-route.js";
 import { createOmrRunRoute } from "./lib/omr-route.js";
-import { createTranscriptionCorrectionRoute } from "./lib/transcription-route.js";
+import {
+  createTranscriptionCorrectionRoute,
+  createTranscriptionReviewRoute,
+} from "./lib/transcription-route.js";
 import { createFaithfulArrangementRoute } from "./lib/arrangement-workspace-route.js";
 import {
   createArrangementCompileRoute,
@@ -139,6 +142,10 @@ export function createApiRouter(): Router {
   router.post(
     "/workspaces/:workspaceId/transcriptions/:transcriptionId/corrections",
     createTranscriptionCorrectionRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/transcriptions/:transcriptionId/review",
+    createTranscriptionReviewRoute()
   );
   router.post("/workspaces/:workspaceId/arrangements", createFaithfulArrangementRoute());
   router.get(

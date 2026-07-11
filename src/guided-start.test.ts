@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { guidedStartMarkup, midiFrequency, targetConfiguration } from "./guided-start.js";
+import {
+  guidedStartMarkup,
+  midiFrequency,
+  sourceFocusUrl,
+  targetConfiguration,
+} from "./guided-start.js";
 
 describe("audio preview synthesis", () => {
   it("maps MIDI pitches to equal-tempered oscillator frequencies", () => {
@@ -14,6 +19,10 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain('value="target.classical-guitar"');
     expect(markup).toContain("Standard notation");
     expect(markup).toContain("standard EADGBE tuning");
+    expect(markup).toContain("data-score-review");
+    expect(markup).toContain("Source facsimile");
+    expect(markup).toContain("Recognized notation");
+    expect(markup).toContain("Cancel this run");
     expect(targetConfiguration("target.classical-guitar")).toEqual({
       id: "target.classical-guitar",
       instrumentId: "classical-guitar-6",
@@ -22,5 +31,17 @@ describe("Guided Start output choices", () => {
       notationLayouts: ["standard-notation"],
       deliverables: ["pdf", "audio-preview"],
     });
+  });
+
+  it("focuses the native PDF viewer on the exact uncertainty region", () => {
+    expect(
+      sourceFocusUrl("/api/source.pdf", {
+        page: 1,
+        x: 121.6,
+        y: 151.2,
+        width: 24,
+        height: 28,
+      })
+    ).toBe("/api/source.pdf#page=1&zoom=180,122,151");
   });
 });

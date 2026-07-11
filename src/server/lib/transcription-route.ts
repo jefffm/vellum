@@ -36,3 +36,17 @@ export function createTranscriptionCorrectionRoute(options: RouteOptions = {}): 
       service.correct(workspaceId, transcriptionId, correction),
   });
 }
+
+export function createTranscriptionReviewRoute(options: RouteOptions = {}): RequestHandler {
+  const store = options.store ?? new WorkspaceStore();
+  const service = options.service ?? new TranscriptionService({ store });
+
+  return createApiRoute<
+    { workspaceId: string; transcriptionId: string },
+    ReturnType<TranscriptionService["review"]>
+  >({
+    validate: (_body, request) => Value.Decode(ParamsSchema, request.params),
+    handler: async ({ workspaceId, transcriptionId }) =>
+      service.review(workspaceId, transcriptionId),
+  });
+}

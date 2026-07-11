@@ -117,4 +117,36 @@ describe("TranscriptionService", () => {
     ).toMatchObject({ type: "note", pitch: "F#4", confidence: 0.5 });
     expect(result.normalizedScore.scoreTranscriptionId).toBe(result.scoreTranscription.id);
   });
+
+  it("builds a persisted review model anchored to the immutable source", () => {
+    const review = new TranscriptionService({ store }).review(workspaceId, transcriptionId);
+
+    expect(review).toMatchObject({
+      transcriptionId,
+      version: 1,
+      status: "needs_review",
+      sourceFilename: "greensleeves.pdf",
+      sourceContentUrl: expect.stringContaining("/sources/source."),
+      items: [
+        {
+          uncertainty: {
+            id: "uncertainty.opening",
+            region: { page: 1, x: 100, y: 100, width: 20, height: 20 },
+            alternatives: ["E4", "F#4"],
+          },
+          events: [{ id: "event.soprano.1", type: "note", pitch: "F#4" }],
+        },
+      ],
+    });
+  });
+
+  it("cannot resolve an uncertainty by editing an unrelated event", () => {
+    expect(() =>
+      new TranscriptionService({ store }).correct(workspaceId, transcriptionId, {
+        uncertaintyId: "uncertainty.opening",
+        eventEdits: [{ eventId: "event.soprano.2", pitch: "E4" }],
+        rationale: "Wrong anchor.",
+      })
+    ).toThrow("outside transcription uncertainty");
+  });
 });

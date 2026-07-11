@@ -258,6 +258,8 @@ export const TranscriptionUncertaintySchema = Type.Object(
   { additionalProperties: false }
 );
 
+export type TranscriptionUncertainty = Static<typeof TranscriptionUncertaintySchema>;
+
 export const TranscriptionCorrectionRecordSchema = Type.Object(
   {
     uncertaintyId: IdSchema,
