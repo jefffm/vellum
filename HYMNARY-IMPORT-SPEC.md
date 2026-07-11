@@ -1,5 +1,7 @@
 # Generic Music Import and Arrangement Workflow — Hymnary/SATB Profile Spec
 
+> Reconciliation (2026-07-11): this document preserves the original importer design. PDF/image OMR and disclosed MSCZ conversion are now implemented; descriptions of those inputs as future work are superseded by ADR 0015 and `docs/SPEC_RECONCILIATION.md`.
+
 > Draft for iteration. Motivated by the Be Thou My Vision trace from
 > `~/Downloads/vellum-debug-trace-2026-04-28T22-34-07-813Z.json`, but scoped as a
 > general import-normalize-arrange pipeline. Hymns and SATB chorales should work

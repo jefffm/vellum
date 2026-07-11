@@ -72,7 +72,7 @@ function buildWorkflow(): string {
     'For baroque guitar rasgueado/strummed passages, call `alfabeto_lookup` first, then encode the choice as an engrave event like `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` (optionally add `prefer` or `chart_id`). Alfabeto chord events are for `baroque-guitar-5` and produce a five-course historical chord shape.',
     "When converting an existing LilyPond file to a supported tablature target, treat it as new tab generation: extract the musical events and use `engrave`; do not hand-write replacement TabStaff LilyPond.",
     "For small edits to an existing LilyPond file that is already in the requested target format, continue editing the source directly, then compile it.",
-    "For unsupported v2 templates (`grand-staff`, `continuo`, `satb`, `voice-and-piano`), write LilyPond manually using existing templates as reference, then compile.",
+    "For standard-notation ensemble layouts (`grand-staff`, `continuo`, `satb`, `voice-and-piano`), use the corresponding maintained template and structured source-generation path, then compile; do not describe these shipped templates as future or unsupported.",
     "",
     "## Auto-Compile",
     "",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   guidedStartMarkup,
+  installLineageSummary,
   midiFrequency,
   sourceFocusUrl,
   targetConfiguration,
@@ -51,6 +52,15 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain("PDF and images use Audiveris review");
     expect(sourceMimeType({ name: "piece.ly", type: "" })).toBe("text/x-lilypond");
     expect(sourceMimeType({ name: "piece.mei", type: "" })).toBe("application/mei+xml");
+  });
+
+  it("exposes stale-lineage recovery and commitment release actions", () => {
+    const implementation = installLineageSummary.toString();
+    expect(implementation).toContain("Conservative regenerate");
+    expect(implementation).toContain("Fresh Arrangement Search");
+    expect(implementation).toContain("Keep preserved prior version");
+    expect(implementation).toContain("Let Vellum reconsider");
+    expect(implementation).toContain("approving a scoped Policy Exception");
   });
 
   it("focuses the native PDF viewer on the exact uncertainty region", () => {

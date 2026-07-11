@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "spec:verify": "node scripts/verify-spec-reconciliation.mjs"
   },
   "dependencies": {
     "@mariozechner/pi-agent-core": "^0.70.2",

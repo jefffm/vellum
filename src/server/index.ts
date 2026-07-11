@@ -71,10 +71,13 @@ import {
 } from "./lib/family-deliverable-route.js";
 import {
   createArrangementLineageRoute,
+  createArrangementEventEditRoute,
   createCommitmentReleaseRoute,
   createConservativeRegenerationRoute,
   createEditorialCommitmentRoute,
+  createFamilyCommitmentPromotionRoute,
   createPolicyExceptionRoute,
+  createStaleAcknowledgementRoute,
 } from "./lib/lineage-route.js";
 import {
   createDefaultCandidateDecisionRoute,
@@ -190,6 +193,10 @@ export function createApiRouter(): Router {
     "/workspaces/:workspaceId/arrangement-families/:familyId",
     createArrangementFamilyGetRoute()
   );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/events/:eventId/edits",
+    createArrangementEventEditRoute()
+  );
   router.get("/workspaces/:workspaceId/deliverables/:deliverableId", createDeliverableGetRoute());
   router.get(
     "/workspaces/:workspaceId/deliverables/:deliverableId/content",
@@ -298,6 +305,14 @@ export function createApiRouter(): Router {
   router.post(
     "/workspaces/:workspaceId/commitments/:commitmentId/release",
     createCommitmentReleaseRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/commitments/:commitmentId/promote-to-family",
+    createFamilyCommitmentPromotionRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/stale-derivations/:staleDerivationId/acknowledge",
+    createStaleAcknowledgementRoute()
   );
   router.post(
     "/workspaces/:workspaceId/arrangements/:arrangementId/conservative-regeneration",

@@ -1,5 +1,7 @@
 # Alfabeto Chord Shape Lookup — Design Spec (v2)
 
+> Reconciliation (2026-07-11): this is the original design snapshot. The library, MCP `alfabeto_lookup` tool, `alfabeto_chord` engraving event, prompt workflow, and integration tests are now implemented. Statements below that call server exposure future work are superseded by `docs/SPEC_RECONCILIATION.md` and current tests.
+
 > Verified against Tyler, _A Guide to Playing the Baroque Guitar_ (2011), Example 6.7
 > and cross-referenced with Foscarini chart data. All fret numbers confirmed by
 > direct book transcription; pitch math verified against baroque guitar tuning.

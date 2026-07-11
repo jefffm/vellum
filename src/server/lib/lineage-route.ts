@@ -40,6 +40,16 @@ export function createArrangementLineageRoute(options: Options = {}): RequestHan
         conflicts: workspace.commitmentConflictIds
           .map((id) => store.getCommitmentConflict(workspaceId, id))
           .filter((record) => record.arrangementScoreId === arrangementId),
+        familyCommitments: workspace.familyCommitmentIds
+          .map((id) => store.getFamilyCommitment(workspaceId, id))
+          .filter(
+            (record) =>
+              record.arrangementFamilyId ===
+              store.getArrangementScore(workspaceId, arrangementId).arrangementFamilyId
+          ),
+        policyExceptions: workspace.policyExceptionIds
+          .map((id) => store.getPolicyException(workspaceId, id))
+          .filter((record) => record.arrangementScoreId === arrangementId),
       };
     },
   });
@@ -66,12 +76,84 @@ export function createEditorialCommitmentRoute(options: Options = {}): RequestHa
   });
 }
 
+export function createArrangementEventEditRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  const Params = Type.Object({
+    workspaceId: Type.String({ minLength: 1 }),
+    arrangementId: Type.String({ minLength: 1 }),
+    eventId: Type.String({ minLength: 1 }),
+  });
+  const Rational = Type.Object({
+    numerator: Type.Integer(),
+    denominator: Type.Integer({ minimum: 1 }),
+  });
+  const Body = Type.Object(
+    {
+      pitches: Type.Optional(Type.Array(Type.String({ minLength: 2 }), { minItems: 1 })),
+      duration: Type.Optional(Rational),
+      positions: Type.Optional(
+        Type.Array(
+          Type.Object({
+            course: Type.Integer({ minimum: 1 }),
+            fret: Type.Integer({ minimum: 0 }),
+            pitch: Type.String({ minLength: 2 }),
+            quality: Type.Union([
+              Type.Literal("open"),
+              Type.Literal("low_fret"),
+              Type.Literal("high_fret"),
+              Type.Literal("diapason"),
+            ]),
+          }),
+          { minItems: 1 }
+        )
+      ),
+    },
+    { additionalProperties: false }
+  );
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(Params, request.params),
+      patch: Value.Decode(Body, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, eventId, patch }) =>
+      service.editArrangementEvent(workspaceId, arrangementId, eventId, patch),
+  });
+}
+
 export function createCommitmentReleaseRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
   return createApiRoute<any, unknown>({
     validate: (_body, request) => Value.Decode(CommitmentParams, request.params),
     handler: async ({ workspaceId, commitmentId }) =>
       service.releaseEditorialCommitment(workspaceId, commitmentId),
+  });
+}
+
+export function createFamilyCommitmentPromotionRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  const Body = Type.Object({
+    targetConfigurationIds: Type.Array(Type.String({ minLength: 1 })),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(CommitmentParams, request.params),
+      ...Value.Decode(Body, body),
+    }),
+    handler: async ({ workspaceId, commitmentId, targetConfigurationIds }) =>
+      service.promoteFamilyCommitment(workspaceId, commitmentId, targetConfigurationIds),
+  });
+}
+
+export function createStaleAcknowledgementRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  const Params = Type.Object({
+    workspaceId: Type.String({ minLength: 1 }),
+    staleDerivationId: Type.String({ minLength: 1 }),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (_body, request) => Value.Decode(Params, request.params),
+    handler: async ({ workspaceId, staleDerivationId }) =>
+      service.acknowledgeStaleDerivation(workspaceId, staleDerivationId),
   });
 }
 

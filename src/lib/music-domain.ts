@@ -269,6 +269,7 @@ export const StaleDerivationSchema = Type.Object(
     reason: Type.String({ minLength: 1 }),
     priorInputVersions: Type.Array(LineageInputVersionSchema, { minItems: 1 }),
     currentInputVersions: Type.Array(LineageInputVersionSchema, { minItems: 1 }),
+    changedObjectIds: Type.Optional(Type.Array(IdSchema)),
     acknowledged: Type.Boolean(),
     createdAt: IsoDateSchema,
   },

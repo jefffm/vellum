@@ -1,5 +1,7 @@
 # Engrave Tool — LilyPond Codegen Engine
 
+> Reconciliation (2026-07-11): v1/v2 labels below are historical design sequencing. Maintained ensemble templates and structured polyphony are shipped; the current capability and evidence inventory is `docs/SPEC_RECONCILIATION.md`. Explicitly labeled optional refinements remain non-current scope unless promoted by a later accepted ADR.
+
 > Revised 2026-04-27 after blunder hunt. See `BLUNDER-HUNT-ENGRAVE.md` for findings.
 
 ## Problem

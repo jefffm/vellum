@@ -1,5 +1,7 @@
 # Historical Rendering — Design Spec
 
+> Reconciliation (2026-07-11): milestone labels in this design record describe its original sequencing, not current support. Concert pitch, structured polyphony, alfabeto, French tablature, diapasons, and literal playback are implemented and evidenced in `docs/SPEC_RECONCILIATION.md`.
+
 > Draft for review. Iterate before cutting beads.
 
 ## Problem

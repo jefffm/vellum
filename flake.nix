@@ -20,33 +20,18 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-          python = pkgs.python3.withPackages (ps: [
-            ps.pip
-          ]);
+          python = pkgs.python3.withPackages (ps: [ ps.music21 ]);
         in
         {
           default = pkgs.mkShell {
             packages = [
               pkgs.nodejs_20
               pkgs.lilypond
+              pkgs.musescore
               python
             ];
 
             shellHook = ''
-              if [ ! -d .venv ]; then
-                python -m venv .venv
-                .venv/bin/pip install -r requirements-python.txt
-              fi
-              source .venv/bin/activate
-              python - <<'PY'
-try:
-    import music21  # noqa: F401
-except Exception:
-    raise SystemExit(1)
-PY
-              if [ $? -ne 0 ]; then
-                pip install -r requirements-python.txt
-              fi
               echo "Vellum dev shell: Node $(node --version), npm $(npm --version), Python $(python --version)"
             '';
           };
@@ -57,43 +42,10 @@ PY
         let
           pkgs = import nixpkgs { inherit system; };
 
-          # -- Python environment with music21 --
-          # music21 is not in nixpkgs; build from PyPI.
-          # Most of its transitive deps ARE in nixpkgs already.
-          music21 = pkgs.python3Packages.buildPythonPackage rec {
-            pname = "music21";
-            version = "9.7.1";
-            format = "setuptools";
-
-            src = pkgs.python3Packages.fetchPypi {
-              inherit pname version;
-              # TODO: first `nix build` will fail and report the correct hash.
-              # Replace this with the SRI hash from the error message.
-              hash = "";
-            };
-
-            doCheck = false;
-
-            propagatedBuildInputs = with pkgs.python3Packages; [
-              chardet
-              joblib
-              jsonpickle
-              matplotlib
-              more-itertools
-              numpy
-              webcolors
-            ];
-
-            meta = {
-              description = "A toolkit for computer-aided musicology";
-              homepage = "https://web.mit.edu/music21/";
-            };
-          };
-
-          vellumPython = pkgs.python3.withPackages (_ps: [ music21 ]);
+          vellumPython = pkgs.python3.withPackages (ps: [ ps.music21 ]);
 
           # -- Node.js server build --
-          vellum-server = pkgs.buildNpmPackage rec {
+          vellum-server = pkgs.stdenv.mkDerivation rec {
             pname = "vellum";
             version = "0.1.0";
 
@@ -112,15 +64,17 @@ PY
                 && !(pkgs.lib.hasPrefix ".beads/" relPath);
             };
 
-            # TODO: first `nix build` will fail and report the correct hash.
-            # Replace this with the SRI hash from the error message.
-            npmDepsHash = "";
-
-            nativeBuildInputs = [ pkgs.makeWrapper ];
+            npmDeps = pkgs.importNpmLock { npmRoot = ./.; };
+            nativeBuildInputs = [
+              pkgs.nodejs_20
+              pkgs.importNpmLock.npmConfigHook
+              pkgs.makeWrapper
+            ];
 
             # TypeScript server compilation
             buildPhase = ''
               runHook preBuild
+              npm run build
               npm run server:build
               runHook postBuild
             '';
@@ -131,17 +85,19 @@ PY
               # Server code
               mkdir -p "$out/lib/vellum"
               cp -r dist-server "$out/lib/vellum/"
+              cp -r dist "$out/lib/vellum/"
               cp -r node_modules "$out/lib/vellum/"
               cp package.json "$out/lib/vellum/"
 
               # Runtime data (instruments, templates, theory.py)
               cp -r instruments "$out/lib/vellum/"
               cp -r templates "$out/lib/vellum/"
+              cp -r knowledge-packs "$out/lib/vellum/"
 
               # theory.py is resolved as cwd + "src/server/theory.py"
               # so we replicate that path inside the lib directory
               mkdir -p "$out/lib/vellum/src/server"
-              cp src/server/theory.py "$out/lib/vellum/src/server/theory.py"
+              cp src/server/*.py "$out/lib/vellum/src/server/"
 
               # Wrapper script
               mkdir -p "$out/bin"
@@ -151,6 +107,7 @@ PY
                 --prefix PATH : ${pkgs.lib.makeBinPath [
                   pkgs.nodejs_20
                   pkgs.lilypond
+                  pkgs.musescore
                   vellumPython
                 ]} \
                 --set VELLUM_INSTRUMENTS_DIR "$out/lib/vellum/instruments" \

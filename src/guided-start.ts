@@ -22,6 +22,7 @@ const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
 
 export type GuidedDeliverable = {
   workspaceId: string;
+  arrangementScoreId: string;
   arrangementFamilyId: string;
   arrangementSearchId: string;
   targetConfigurationId: string;
@@ -259,6 +260,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         ]);
         deliverables.push({
           workspaceId: workspace.id,
+          arrangementScoreId: arranged.arrangementScore.id,
           arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
@@ -802,6 +804,109 @@ export function installDeliverableSummary(
     list.append(row);
   }
   details.append(summary, list);
+  header.append(details);
+}
+
+type ArrangementLineage = {
+  staleDerivations: Array<{
+    id: string;
+    reason: string;
+    acknowledged: boolean;
+    changedObjectIds?: string[];
+    currentInputVersions: Array<{ recordType: string; recordId: string; version: number }>;
+  }>;
+  editorialCommitments: Array<{
+    id: string;
+    status: "active" | "released";
+    scope: { dimension: string; objectIds: string[] };
+  }>;
+  familyCommitments: Array<{ id: string; status: string; scope: { dimension: string } }>;
+  conflicts: Array<{ id: string; status: string; consequence: string }>;
+  policyExceptions: Array<{ id: string; musicalConsequence: string; rationale: string }>;
+};
+
+export async function installLineageSummary(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): Promise<void> {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".lineage-summary")?.remove();
+  const lineage = await api<ArrangementLineage>(
+    `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/lineage`
+  );
+  const details = document.createElement("details");
+  details.className = "lineage-summary";
+  const summary = document.createElement("summary");
+  const activeCommitments = lineage.editorialCommitments.filter(
+    (record) => record.status === "active"
+  );
+  summary.textContent = `${lineage.staleDerivations.some((record) => !record.acknowledged) ? "Stale derivation" : "Current lineage"} · ${activeCommitments.length} editorial commitments`;
+  details.append(summary);
+  for (const stale of lineage.staleDerivations.filter((record) => !record.acknowledged)) {
+    const section = document.createElement("section");
+    section.className = "stale-derivation";
+    const explanation = document.createElement("p");
+    explanation.textContent = stale.reason;
+    const regenerate = document.createElement("button");
+    regenerate.type = "button";
+    regenerate.textContent = "Conservative regenerate";
+    const currentScore = stale.currentInputVersions.find(
+      (record) => record.recordType === "normalized_score"
+    );
+    regenerate.disabled = !currentScore || !stale.changedObjectIds?.length;
+    regenerate.addEventListener("click", async () => {
+      await api(
+        `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/conservative-regeneration`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            normalizedScoreId: currentScore!.recordId,
+            changedSourceEventIds: stale.changedObjectIds,
+          }),
+        }
+      );
+      window.location.reload();
+    });
+    const fresh = document.createElement("button");
+    fresh.type = "button";
+    fresh.textContent = "Fresh Arrangement Search";
+    fresh.addEventListener("click", () =>
+      document.querySelector<HTMLButtonElement>("#guided-start-launcher")?.click()
+    );
+    const acknowledge = document.createElement("button");
+    acknowledge.type = "button";
+    acknowledge.textContent = "Keep preserved prior version";
+    acknowledge.addEventListener("click", async () => {
+      await api(
+        `/api/workspaces/${deliverable.workspaceId}/stale-derivations/${stale.id}/acknowledge`,
+        { method: "POST" }
+      );
+      await installLineageSummary(panel, deliverable);
+    });
+    section.append(explanation, regenerate, fresh, acknowledge);
+    details.append(section);
+  }
+  for (const commitment of activeCommitments) {
+    const row = document.createElement("p");
+    row.textContent = `${commitment.scope.dimension.replaceAll("_", " ")} · ${commitment.scope.objectIds.length} objects`;
+    const release = document.createElement("button");
+    release.type = "button";
+    release.textContent = "Let Vellum reconsider";
+    release.addEventListener("click", async () => {
+      await api(`/api/workspaces/${deliverable.workspaceId}/commitments/${commitment.id}/release`, {
+        method: "POST",
+      });
+      await installLineageSummary(panel, deliverable);
+    });
+    row.append(" ", release);
+    details.append(row);
+  }
+  for (const conflict of lineage.conflicts.filter((record) => record.status === "unresolved")) {
+    const row = document.createElement("p");
+    row.textContent = `${conflict.consequence} Resolve by releasing the commitment, revising the Score Transcription, or approving a scoped Policy Exception.`;
+    details.append(row);
+  }
   header.append(details);
 }
 

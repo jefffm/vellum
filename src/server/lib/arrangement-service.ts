@@ -11,6 +11,8 @@ import type {
   ArrangementSearch,
   AnalysisRecord,
   NormalizedScore,
+  PolicyException,
+  PreservationAudit,
 } from "../../lib/music-domain.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
@@ -251,6 +253,26 @@ export class ArrangementService {
       policyExceptionIds: input.policyExceptionIds ?? [],
       selectedCandidateId: selectedCandidate.id,
     };
+    if (arrangementScore.policyExceptionIds?.length) {
+      const exceptions = arrangementScore.policyExceptionIds.map((id) =>
+        this.store.getPolicyException(workspaceId, id)
+      );
+      const exceptionAudit = auditPolicyExceptions(arrangementScore, analysis, exceptions);
+      arrangementScore.preservationAudit = exceptionAudit.audit;
+      const { drift } = exceptionAudit;
+      if (drift && arrangementScore.preservationPolicy === "faithful_reduction") {
+        this.store.saveArrangementSearch(workspaceId, {
+          ...arrangementSearch,
+          status: "failed",
+          candidateIds: candidates.map((candidate) => candidate.id),
+          completedAt: timestamp,
+        });
+        throw new ApiRouteError(
+          "Policy Drift materially compromises the selected Preservation Policy. Revise the arrangement or explicitly select a less restrictive policy.",
+          409
+        );
+      }
+    }
     if (input.regenerationFrom) {
       arrangementScore.regeneration = {
         kind: "conservative",
@@ -349,6 +371,47 @@ export class ArrangementService {
     this.store.saveArrangementScore(workspaceId, arrangementScore);
     return { branchId, arrangementScore };
   }
+}
+
+export function auditPolicyExceptions(
+  arrangement: ArrangementScore,
+  analysis: AnalysisRecord,
+  exceptions: PolicyException[]
+): { audit: PreservationAudit; drift: boolean } {
+  const drift =
+    exceptions.some((exception) => exception.severity === "critical") ||
+    analysis.preservationTargets.some((target) => {
+      const affectedObjects = new Set(
+        exceptions
+          .filter((exception) => exception.affectedPreservationTargetIds.includes(target.id))
+          .flatMap((exception) => exception.scope.objectIds)
+      );
+      for (const event of arrangement.events) {
+        if (affectedObjects.has(event.id)) {
+          event.sourceEventIds.forEach((id) => affectedObjects.add(id));
+        }
+      }
+      const protectedObjects = target.eventIds.filter((id) => affectedObjects.has(id));
+      return target.eventIds.length > 0 && protectedObjects.length / target.eventIds.length >= 0.5;
+    });
+  return {
+    drift,
+    audit: {
+      ...arrangement.preservationAudit,
+      status: drift ? "fail" : "pass_with_exceptions",
+      findings: [
+        ...arrangement.preservationAudit.findings,
+        ...exceptions.flatMap((exception) =>
+          exception.affectedPreservationTargetIds.map((targetId) => ({
+            targetId,
+            severity: drift ? ("hard" as const) : ("soft" as const),
+            code: drift ? "policy.drift" : "policy.exception",
+            message: `${exception.musicalConsequence} Owner rationale: ${exception.rationale}`,
+          }))
+        ),
+      ],
+    },
+  };
 }
 
 type RankingWeights = ArrangementSearch["rankingWeights"];

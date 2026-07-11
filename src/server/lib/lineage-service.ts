@@ -1,4 +1,10 @@
 import { randomUUID } from "node:crypto";
+import { auditFaithfulPrincipalVoice } from "../../lib/baroque-guitar-arranger.js";
+import { auditContinuo } from "../../lib/continuo-arranger.js";
+import { auditImitative } from "../../lib/imitative-arranger.js";
+import { InstrumentModel } from "../../lib/instrument-model.js";
+import { applyPreservationPolicy } from "../../lib/preservation-policy.js";
+import { buildCompleteTransformationReport } from "../../lib/transformation-report.js";
 import type {
   CommitmentConflict,
   EditorialCommitment,
@@ -8,6 +14,7 @@ import type {
 import { ArrangementService } from "./arrangement-service.js";
 import { ApiRouteError } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { loadProfile } from "../profiles.js";
 
 type LineageServiceOptions = {
   store: WorkspaceStore;
@@ -34,7 +41,8 @@ export class LineageService {
     workspaceId: string,
     priorNormalizedScoreId: string,
     currentNormalizedScoreId: string,
-    reason: string
+    reason: string,
+    changedObjectIds: string[] = []
   ): StaleDerivation[] {
     const workspace = this.store.get(workspaceId);
     const current = this.store.getNormalizedScore(workspaceId, currentNormalizedScoreId);
@@ -59,7 +67,8 @@ export class LineageService {
               version: prior.version,
             },
           ],
-          [{ recordType: "normalized_score", recordId: current.id, version: current.version }]
+          [{ recordType: "normalized_score", recordId: current.id, version: current.version }],
+          changedObjectIds
         )
       );
       for (const deliverableId of workspace.deliverableIds) {
@@ -78,7 +87,8 @@ export class LineageService {
                 version: arrangement.version ?? 1,
               },
             ],
-            [{ recordType: "normalized_score", recordId: current.id, version: current.version }]
+            [{ recordType: "normalized_score", recordId: current.id, version: current.version }],
+            changedObjectIds
           )
         );
       }
@@ -107,6 +117,11 @@ export class LineageService {
       status: "released",
       releasedAt: this.now().toISOString(),
     });
+  }
+
+  acknowledgeStaleDerivation(workspaceId: string, staleDerivationId: string): StaleDerivation {
+    const record = this.store.getStaleDerivation(workspaceId, staleDerivationId);
+    return this.store.saveStaleDerivation(workspaceId, { ...record, acknowledged: true });
   }
 
   promoteFamilyCommitment(
@@ -186,6 +201,102 @@ export class LineageService {
       resolvedAt: timestamp,
     });
     return exception;
+  }
+
+  editArrangementEvent(
+    workspaceId: string,
+    arrangementScoreId: string,
+    eventId: string,
+    patch: {
+      pitches?: string[];
+      duration?: { numerator: number; denominator: number };
+      positions?: Array<{
+        course: number;
+        fret: number;
+        pitch: string;
+        quality: "open" | "low_fret" | "high_fret" | "diapason";
+      }>;
+    }
+  ) {
+    const original = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const event = original.events.find((candidate) => candidate.id === eventId);
+    if (!event) throw new ApiRouteError(`Arrangement event not found: ${eventId}`, 404);
+    const changed = [patch.pitches, patch.duration, patch.positions].filter(
+      (value) => value !== undefined
+    );
+    if (changed.length !== 1) {
+      throw new ApiRouteError("A direct edit must change exactly one semantic dimension", 400);
+    }
+    const dimension = patch.positions
+      ? "course_fingering"
+      : patch.duration
+        ? "rhythm"
+        : event.role === "principal_voice"
+          ? "principal_voice_pitch"
+          : event.role === "continuo_foundation"
+            ? "bass"
+            : "harmony";
+    const commitment = this.createEditorialCommitment(workspaceId, {
+      arrangementScoreId: original.id,
+      arrangementFamilyId: original.arrangementFamilyId!,
+      scope: { objectIds: [event.id], measureIds: [event.measureId], dimension },
+      value: patch.positions ?? patch.duration ?? patch.pitches,
+      origin: "user_edit",
+    });
+    const editedEvents = original.events.map((candidate) =>
+      candidate.id === event.id ? { ...candidate, ...patch } : candidate
+    );
+    const search = this.store.getArrangementSearch(workspaceId, original.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, original.analysisRecordId);
+    const faithfulAudit =
+      analysis.texture === "continuo"
+        ? auditContinuo(source, analysis, editedEvents)
+        : analysis.texture === "imitative-polyphony"
+          ? auditImitative(
+              source,
+              analysis,
+              editedEvents,
+              InstrumentModel.fromProfile(loadProfile(original.targetConfiguration.instrumentId))
+            )
+          : auditFaithfulPrincipalVoice(
+              source,
+              analysis,
+              editedEvents,
+              original.transpositionPlan.semitones
+            );
+    const timestamp = this.now().toISOString();
+    const branchId = `branch.${this.createId()}`;
+    this.store.saveArrangementBranch(workspaceId, {
+      id: branchId,
+      label: `Owner edit to ${event.id}`,
+      rootInputVersions: [
+        {
+          recordType: "arrangement_score",
+          recordId: original.id,
+          version: original.version ?? 1,
+        },
+      ],
+      createdAt: timestamp,
+    });
+    const edited = this.store.saveArrangementScore(workspaceId, {
+      ...original,
+      id: `arrangement.${this.createId()}`,
+      version: (original.version ?? 1) + 1,
+      parentArrangementScoreId: original.id,
+      branchId,
+      editorialCommitmentIds: [...(original.editorialCommitmentIds ?? []), commitment.id],
+      events: editedEvents,
+      transformationReport: buildCompleteTransformationReport(
+        source,
+        analysis,
+        editedEvents,
+        original.transpositionPlan.semitones
+      ),
+      preservationAudit: applyPreservationPolicy(faithfulAudit, original.preservationPolicy),
+      createdAt: timestamp,
+    });
+    return { arrangementScore: edited, editorialCommitment: commitment };
   }
 
   conservativeRegenerate(
@@ -277,7 +388,8 @@ export class LineageService {
     recordId: string,
     reason: string,
     priorInputVersions: StaleDerivation["priorInputVersions"],
-    currentInputVersions: StaleDerivation["currentInputVersions"]
+    currentInputVersions: StaleDerivation["currentInputVersions"],
+    changedObjectIds: string[] = []
   ): StaleDerivation {
     return this.store.saveStaleDerivation(workspaceId, {
       id: `stale.${this.createId()}`,
@@ -286,6 +398,7 @@ export class LineageService {
       reason,
       priorInputVersions,
       currentInputVersions,
+      changedObjectIds,
       acknowledged: false,
       createdAt: this.now().toISOString(),
     });
@@ -297,13 +410,21 @@ export class LineageService {
     commitment: EditorialCommitment,
     changedSourceEventIds: string[]
   ): CommitmentConflict {
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
+    const matchedTargetIds = analysis.preservationTargets
+      .filter((target) => target.eventIds.some((id) => changedSourceEventIds.includes(id)))
+      .map((target) => target.id);
+    const affectedPreservationTargetIds = matchedTargetIds.length
+      ? matchedTargetIds
+      : arrangement.preservationAudit.targetIds;
     return this.store.saveCommitmentConflict(workspaceId, {
       id: `conflict.${this.createId()}`,
       arrangementScoreId,
       commitmentId: commitment.id,
       scope: commitment.scope,
       conflictingObjectIds: commitment.scope.objectIds,
-      affectedPreservationTargetIds: changedSourceEventIds,
+      affectedPreservationTargetIds,
       consequence: "The upstream correction changes material protected by an active commitment.",
       status: "unresolved",
       createdAt: this.now().toISOString(),

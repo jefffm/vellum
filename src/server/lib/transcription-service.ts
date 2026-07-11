@@ -227,7 +227,8 @@ export class TranscriptionService {
           workspaceId,
           priorScore.id,
           normalized.id,
-          `Transcription correction ${correction.uncertaintyId} produced a new normalized score`
+          `Transcription correction ${correction.uncertaintyId} produced a new normalized score`,
+          correction.eventEdits.map((edit) => edit.eventId)
         )
       : [];
     return {

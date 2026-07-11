@@ -1897,6 +1897,8 @@ This remote configuration is optional and must not become the credential or owne
 
 ## v1 Scope
 
+> Historical planning record: unchecked boxes in this section preserve the original build sequence and are not current implementation status. Current normative status and executable evidence are maintained in `docs/SPEC_RECONCILIATION.md`. Items under the explicitly labeled v2 scope remain optional future work unless an accepted ADR or CONTEXT.md promotes them into the current product contract.
+
 ### Delivery Strategy
 
 V1 is delivered as production-path tracer-bullet slices, not as horizontal

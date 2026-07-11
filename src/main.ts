@@ -36,6 +36,7 @@ import {
   installAuditSummary,
   installCandidateComparisonControls,
   installDeliverableSummary,
+  installLineageSummary,
   installTransformationReport,
   installGuidedStart,
   type GuidedDeliverable,
@@ -456,6 +457,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
   renderGuidedDeliverables(panel, [
     {
       workspaceId,
+      arrangementScoreId: arrangementId,
       arrangementFamilyId: arrangement.arrangementFamilyId,
       arrangementSearchId: search.id,
       targetConfigurationId: arrangement.targetConfiguration.id,
@@ -505,6 +507,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
     installDeliverableSummary(panel, deliverable);
+    void installLineageSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);
   };

@@ -52,7 +52,8 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("french-tab");
     expect(prompt).toContain("tab-and-staff");
     expect(prompt).toContain("voice-and-tab");
-    expect(prompt).toContain("unsupported v2 templates");
+    expect(prompt).not.toContain("unsupported v2 templates");
+    expect(prompt).toContain("maintained template");
     expect(prompt).toContain("grand-staff");
     expect(prompt).toContain("alfabeto_lookup");
     expect(prompt).toContain("alfabeto_chord");

@@ -234,6 +234,10 @@ describe("Greensleeves faithful arrangement service", () => {
       "15151515-1515-4515-8515-151515151515",
       "16161616-1616-4616-8616-161616161616",
       "17171717-1717-4717-8717-171717171717",
+      "18181818-1818-4818-8818-181818181818",
+      "19191919-1919-4919-8919-191919191919",
+      "20202020-2020-4020-8020-202020202020",
+      "21212121-2121-4121-8121-212121212121",
     ];
     const lineage = new LineageService({
       store,
@@ -314,6 +318,27 @@ describe("Greensleeves faithful arrangement service", () => {
       })
     );
     expect(store.get(workspace.id).arrangementBranchIds).toHaveLength(1);
+
+    const directEdit = lineage.editArrangementEvent(
+      workspace.id,
+      result.arrangementScore.id,
+      protectedEvent.id,
+      { positions: protectedEvent.positions.slice().reverse() }
+    );
+    expect(directEdit.arrangementScore).toMatchObject({
+      version: 2,
+      parentArrangementScoreId: result.arrangementScore.id,
+      branchId: expect.stringMatching(/^branch\./),
+      editorialCommitmentIds: [directEdit.editorialCommitment.id],
+    });
+    expect(directEdit.editorialCommitment).toMatchObject({
+      origin: "user_edit",
+      status: "active",
+      scope: {
+        objectIds: [protectedEvent.id],
+        dimension: "course_fingering",
+      },
+    });
 
     const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;
     const principalClaim = result.analysis.claims.find(
