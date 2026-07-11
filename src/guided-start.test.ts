@@ -68,9 +68,11 @@ describe("Guided Start output choices", () => {
     const markup = guidedStartMarkup();
     const implementation = installProviderConnection.toString();
     expect(markup).toContain("data-provider-prompt-input");
+    expect(markup).toContain('data-provider-prompt-input autocomplete="off" disabled');
     expect(markup).toContain("Finish connection");
     expect(markup).toContain("Cancel login");
     expect(implementation).toContain("Continue ChatGPT login");
+    expect(implementation).toContain("promptInput.disabled = !current.prompt");
     expect(implementation).not.toContain("window.prompt");
   });
 

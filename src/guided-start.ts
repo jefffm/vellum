@@ -1264,7 +1264,8 @@ export async function installProviderConnection(root: HTMLElement): Promise<void
     promptPanel.hidden = !current.prompt;
     promptMessage.textContent = current.prompt?.message ?? "";
     promptInput.placeholder = current.prompt?.placeholder ?? "Paste the final redirect URL";
-    promptInput.required = !current.prompt?.allowEmpty;
+    promptInput.disabled = !current.prompt;
+    promptInput.required = Boolean(current.prompt && !current.prompt.allowEmpty);
     return current;
   };
   connect.addEventListener("click", async () => {
@@ -1359,7 +1360,7 @@ export function guidedStartMarkup(): string {
   return `
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
-      <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button><div data-provider-prompt hidden><label><span data-provider-prompt-message></span><input type="url" data-provider-prompt-input autocomplete="off"></label><button type="button" data-provider-prompt-submit>Finish connection</button><button type="button" data-provider-prompt-cancel>Cancel login</button></div></section>
+      <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button><div data-provider-prompt hidden><label><span data-provider-prompt-message></span><input type="url" data-provider-prompt-input autocomplete="off" disabled></label><button type="button" data-provider-prompt-submit>Finish connection</button><button type="button" data-provider-prompt-cancel>Cancel login</button></div></section>
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>

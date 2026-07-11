@@ -24,6 +24,9 @@ coverage/
 tmp/
 *.tmp
 
+# Local-first Vellum workspace state and generated deliverables
+workspaces/
+
 # OS
 .DS_Store
 
