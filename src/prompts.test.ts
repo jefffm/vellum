@@ -83,6 +83,16 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("separate semantic playback parts");
   });
 
+  it("includes imitative counterpoint preservation reasoning", () => {
+    const prompt = buildSystemPrompt([]);
+
+    expect(prompt).toContain("Imitative Counterpoint and Intabulation");
+    expect(prompt).toContain("ordered subject entries");
+    expect(prompt).toContain("interval-rhythm shape");
+    expect(prompt).toContain("course collisions");
+    expect(prompt).toContain("source-voice lineage");
+  });
+
   it("includes mandatory compile and bounded retry policy", () => {
     const prompt = buildSystemPrompt([]);
 

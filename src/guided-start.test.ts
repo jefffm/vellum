@@ -58,4 +58,16 @@ describe("Guided Start output choices", () => {
       deliverables: ["pdf", "audio-preview"],
     });
   });
+
+  it("offers six-course Renaissance lute with French tablature", () => {
+    expect(guidedStartMarkup()).toContain('value="target.renaissance-lute"');
+    expect(targetConfiguration("target.renaissance-lute")).toEqual({
+      id: "target.renaissance-lute",
+      instrumentId: "renaissance-lute-6",
+      role: "solo",
+      tuningId: "renaissance-g",
+      notationLayouts: ["french-letter-tablature"],
+      deliverables: ["pdf", "audio-preview"],
+    });
+  });
 });

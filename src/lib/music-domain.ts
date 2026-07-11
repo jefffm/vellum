@@ -441,6 +441,8 @@ export const ArrangementPositionSchema = Type.Object(
   { additionalProperties: false }
 );
 
+export type ArrangementPosition = Static<typeof ArrangementPositionSchema>;
+
 export const ArrangementEventSchema = Type.Object(
   {
     id: IdSchema,
@@ -458,8 +460,10 @@ export const ArrangementEventSchema = Type.Object(
         Type.Literal("continuo_foundation"),
         Type.Literal("realization"),
         Type.Literal("accompaniment"),
+        Type.Literal("source_voice"),
       ])
     ),
+    voiceId: Type.Optional(IdSchema),
   },
   { additionalProperties: false }
 );

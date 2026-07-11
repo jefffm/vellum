@@ -10,6 +10,8 @@ export function analyzeMusicologicalScore(
   score: NormalizedScore,
   options: AnalyzeMusicOptions
 ): AnalysisRecord {
+  const imitation = detectImitativeTexture(score);
+  if (imitation) return analyzeImitativeScore(score, options, imitation);
   const principal = selectPrincipalVoice(score);
   const principalEvents = score.events.filter(
     (event) => event.partId === principal.part.id && event.type === "note"
@@ -105,6 +107,147 @@ export function analyzeMusicologicalScore(
     preservationTargets,
     createdAt: options.createdAt,
   };
+}
+
+type ImitationEvidence = {
+  entries: Array<{
+    part: ScorePart;
+    notes: Array<Extract<ScoreEvent, { type: "note" }>>;
+    start: number;
+  }>;
+  intervalShape: number[];
+  durationShape: string[];
+};
+
+function analyzeImitativeScore(
+  score: NormalizedScore,
+  options: AnalyzeMusicOptions,
+  evidence: ImitationEvidence
+): AnalysisRecord {
+  const suffix = options.id.slice("analysis.".length);
+  const voiceTargets: AnalysisRecord["preservationTargets"] = evidence.entries.map((entry) => ({
+    id: `target.${suffix}.voice.${entry.part.id.slice("part.".length)}`,
+    kind: "voice",
+    partId: entry.part.id,
+    eventIds: score.events
+      .filter((event) => event.partId === entry.part.id)
+      .map((event) => event.id),
+    rationale:
+      "Imitative intabulation preserves this source voice's event order, rhythm, pitch contour, and continuity even when voices interleave on one tablature staff.",
+  }));
+  const subjectIds = evidence.entries.flatMap((entry) => entry.notes.map((note) => note.id));
+  const cadenceIds = evidence.entries.map((entry) => entry.notes.at(-1)!.id);
+
+  return {
+    id: options.id,
+    normalizedScoreId: score.id,
+    version: 1,
+    texture: "imitative-polyphony",
+    validationProfileId: "counterpoint.renaissance-imitative",
+    contrapuntalTechniques: ["imitation"],
+    claims: [
+      {
+        id: `claim.${suffix}.texture`,
+        kind: "texture",
+        subjectIds: score.parts.map((part) => part.id),
+        statement:
+          "The source is imitative polyphony: its identity depends on ordered entries across independent voices, not a permanent Principal Voice.",
+        basis: "observation",
+        confidence: 1,
+      },
+      {
+        id: `claim.${suffix}.imitation`,
+        kind: "contrapuntal_technique",
+        subjectIds,
+        statement: `Three ordered subject entries preserve interval shape ${evidence.intervalShape.join(",")} and rhythm shape ${evidence.durationShape.join(",")}.`,
+        basis: "observation",
+        confidence: 1,
+      },
+      {
+        id: `claim.${suffix}.cadence`,
+        kind: "cadential_goal",
+        subjectIds: cadenceIds,
+        statement: "The final events of all three voices form the required cadential goal.",
+        basis: "observation",
+        confidence: 0.95,
+      },
+    ],
+    preservationTargets: [
+      ...voiceTargets,
+      {
+        id: `target.${suffix}.ordered-entries`,
+        kind: "relationship",
+        eventIds: subjectIds,
+        rationale:
+          "Subject entries retain their source order, transposed interval-rhythm shape, and voice identity.",
+      },
+      {
+        id: `target.${suffix}.cadential-goal`,
+        kind: "relationship",
+        eventIds: cadenceIds,
+        rationale: "Every source voice must reach its reviewed cadential goal.",
+      },
+    ],
+    createdAt: options.createdAt,
+  };
+}
+
+function detectImitativeTexture(score: NormalizedScore): ImitationEvidence | undefined {
+  if (score.parts.length < 3) return undefined;
+  const entries = score.parts.map((part) => {
+    const notes = score.events.filter(
+      (event): event is Extract<ScoreEvent, { type: "note" }> =>
+        event.partId === part.id && event.type === "note"
+    );
+    return {
+      part,
+      notes: notes.slice(0, 4),
+      start: notes[0] ? absoluteOnset(score, notes[0]) : Number.POSITIVE_INFINITY,
+    };
+  });
+  if (entries.some((entry) => entry.notes.length < 4)) return undefined;
+  const shape = subjectShape(entries[0]!.notes);
+  if (
+    entries.some((entry) => {
+      const candidate = subjectShape(entry.notes);
+      return (
+        candidate.intervals.join(",") !== shape.intervals.join(",") ||
+        candidate.durations.join(",") !== shape.durations.join(",")
+      );
+    })
+  ) {
+    return undefined;
+  }
+  const ordered = entries.slice().sort((left, right) => left.start - right.start);
+  if (ordered.some((entry, index) => index > 0 && entry.start <= ordered[index - 1]!.start)) {
+    return undefined;
+  }
+  return {
+    entries: ordered,
+    intervalShape: shape.intervals,
+    durationShape: shape.durations,
+  };
+}
+
+function subjectShape(notes: Array<Extract<ScoreEvent, { type: "note" }>>): {
+  intervals: number[];
+  durations: string[];
+} {
+  return {
+    intervals: notes
+      .slice(1)
+      .map((note, index) => noteToMidi(note.pitch) - noteToMidi(notes[index]!.pitch)),
+    durations: notes.map((note) => `${note.duration.numerator}/${note.duration.denominator}`),
+  };
+}
+
+function absoluteOnset(score: NormalizedScore, event: ScoreEvent): number {
+  let result = 0;
+  for (const measure of score.measures) {
+    if (measure.id === event.measureId) break;
+    result += measure.duration.numerator / measure.duration.denominator;
+  }
+  return result + event.onset.numerator / event.onset.denominator;
 }
 
 type PrincipalSelection = {

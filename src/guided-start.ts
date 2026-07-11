@@ -478,7 +478,7 @@ export function guidedStartMarkup(): string {
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
-      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · Italian Baroque profile · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
+      <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · Italian Baroque profile · PDF + Audio Preview</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <section class="score-anchored-review" data-score-review hidden>
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
@@ -524,6 +524,16 @@ export function targetConfiguration(id: string): TargetConfiguration {
       deliverables: ["pdf", "audio-preview"],
     };
   }
+  if (id === "target.renaissance-lute") {
+    return {
+      id,
+      instrumentId: "renaissance-lute-6",
+      role: "solo",
+      tuningId: "renaissance-g",
+      notationLayouts: ["french-letter-tablature"],
+      deliverables: ["pdf", "audio-preview"],
+    };
+  }
   if (id === "target.piano-continuo") {
     return {
       id,
@@ -541,6 +551,7 @@ function targetLabel(id: string): string {
   if (id === "target.baroque-lute") return "13-course baroque lute";
   if (id === "target.baroque-guitar") return "5-course baroque guitar";
   if (id === "target.classical-guitar") return "classical guitar";
+  if (id === "target.renaissance-lute") return "6-course Renaissance lute";
   if (id === "target.piano-continuo") return "soprano and piano continuo";
   throw new Error(`Unknown target configuration: ${id}`);
 }

@@ -6,7 +6,8 @@ export type PlaybackPart =
   | "principal-voice"
   | "continuo-foundation"
   | "realization"
-  | "accompaniment";
+  | "accompaniment"
+  | `voice:${string}`;
 
 export type PlaybackEvent = {
   arrangementEventId: string;
@@ -63,7 +64,7 @@ export function buildAudioPreview(
     tempo,
     durationSeconds: elapsedQuarters * secondsPerQuarter,
     synthesis: "basic-oscillator",
-    parts: playbackParts(events),
+    parts: playbackParts(events, score),
     events,
   };
 }
@@ -76,11 +77,12 @@ function playbackPart(
   if (event.role === "principal_voice") return "principal-voice";
   if (event.role === "continuo_foundation") return "continuo-foundation";
   if (event.role === "realization") return "realization";
+  if (event.role === "source_voice" && event.voiceId) return `voice:${event.voiceId}`;
   return midi === principalMidi ? "principal-voice" : "accompaniment";
 }
 
-function playbackParts(events: PlaybackEvent[]): AudioPreview["parts"] {
-  const labels: Record<Exclude<PlaybackPart, "full">, string> = {
+function playbackParts(events: PlaybackEvent[], score: NormalizedScore): AudioPreview["parts"] {
+  const labels: Partial<Record<Exclude<PlaybackPart, "full">, string>> = {
     "principal-voice": "Principal Voice",
     "continuo-foundation": "Continuo Foundation",
     realization: "Generated realization",
@@ -93,9 +95,14 @@ function playbackParts(events: PlaybackEvent[]): AudioPreview["parts"] {
     "accompaniment",
   ];
   const used = new Set(events.map((event) => event.part));
+  const voiceParts = (score.parts ?? []).flatMap((part) => {
+    const id = `voice:${part.id}` as const;
+    return used.has(id) ? [{ id, label: part.name }] : [];
+  });
   return [
     { id: "full", label: "Full arrangement" },
-    ...order.filter((part) => used.has(part)).map((part) => ({ id: part, label: labels[part] })),
+    ...voiceParts,
+    ...order.filter((part) => used.has(part)).map((part) => ({ id: part, label: labels[part]! })),
   ];
 }
 

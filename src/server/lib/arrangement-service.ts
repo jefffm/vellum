@@ -3,6 +3,7 @@ import { arrangeFaithfulPluckedString } from "../../lib/baroque-guitar-arranger.
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import { arrangeContinuo } from "../../lib/continuo-arranger.js";
+import { arrangeImitativeIntabulation } from "../../lib/imitative-arranger.js";
 import type { ArrangementCandidate, ArrangementScore } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
@@ -84,6 +85,13 @@ export class ArrangementService {
     let search;
     if (targetConfiguration.realizationProfileId) {
       search = arrangeContinuo(score, analysis, {
+        arrangementId,
+        createdAt: timestamp,
+        targetConfiguration,
+      });
+    } else if (analysis.texture === "imitative-polyphony") {
+      const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+      search = arrangeImitativeIntabulation(score, analysis, instrument, {
         arrangementId,
         createdAt: timestamp,
         targetConfiguration,

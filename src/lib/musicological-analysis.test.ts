@@ -146,3 +146,48 @@ describe("continuo analysis", () => {
     );
   });
 });
+
+describe("imitative counterpoint analysis", () => {
+  it("protects ordered subject entries, each voice continuity, and the cadence", () => {
+    const parsed = parseExplicitVoiceLilypond(
+      readFileSync(
+        path.resolve(process.cwd(), "test/fixtures/imitation/imitative-passage.ly"),
+        "utf8"
+      ),
+      ["VoiceOne", "VoiceTwo", "VoiceThree"]
+    );
+    const score = {
+      id: "score.imitation",
+      scoreTranscriptionId: "transcription.imitation",
+      version: 1,
+      ...parsed,
+      createdAt: "2026-07-10T12:00:00.000Z",
+    };
+    const analysis = analyzeMusicologicalScore(score, {
+      id: "analysis.imitation",
+      createdAt: "2026-07-10T13:00:00.000Z",
+    });
+
+    expect(analysis).toMatchObject({
+      texture: "imitative-polyphony",
+      validationProfileId: "counterpoint.renaissance-imitative",
+      contrapuntalTechniques: ["imitation"],
+    });
+    expect(analysis.principalVoicePartId).toBeUndefined();
+    expect(analysis.claims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "contrapuntal_technique", confidence: 1 }),
+        expect.objectContaining({ kind: "cadential_goal" }),
+      ])
+    );
+    expect(analysis.preservationTargets.filter((target) => target.kind === "voice")).toHaveLength(
+      3
+    );
+    expect(
+      analysis.preservationTargets.find((target) => target.id.endsWith("ordered-entries"))?.eventIds
+    ).toHaveLength(12);
+    expect(
+      analysis.preservationTargets.find((target) => target.id.endsWith("cadential-goal"))?.eventIds
+    ).toHaveLength(3);
+  });
+});

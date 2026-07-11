@@ -52,7 +52,7 @@ Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API 
 
 ### PDF arrangement tracer bullet
 
-The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF; choose any compatible combination of five-course baroque guitar, 13-course baroque lute, six-string classical guitar, and soprano-plus-piano continuo; and optionally add a plain-language instruction. Vellum then:
+The **New arrangement** control opens Guided Start. Upload an arbitrary score PDF; choose any compatible combination of five-course baroque guitar, 13-course baroque lute, six-course Renaissance lute, six-string classical guitar, and soprano-plus-piano continuo; and optionally add a plain-language instruction. Vellum then:
 
 1. saves the PDF unchanged in a local, versioned arrangement workspace;
 2. runs OMR through the backend-neutral recognition boundary;
@@ -67,6 +67,8 @@ The **New arrangement** control opens Guided Start. Upload an arbitrary score PD
 The lute path uses the historical default 13-course D-minor tuning, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. The classical-guitar path uses standard EADGBE tuning and a single `treble_8` staff, so its PDF contains standard notation without tablature and its MIDI has one playback source. Each selected instrument gets an independent arrangement search and Preservation Audit while sharing the same reviewed source analysis.
 
 For a source containing an explicit Continuo Foundation, the soprano-plus-piano path preserves every bass event, figure, and accidental under the `continuo.italian-baroque` Realization Profile. Its contextual validator recognizes prepared dissonance such as a source-supported `4-3` suspension instead of applying blanket counterpoint prohibitions. Principal Voice, Continuo Foundation, and generated realization remain separately audible, and the compiled MIDI is derived from the same semantic events as the engraved score.
+
+For imitative polyphony, Vellum does not invent a permanent Principal Voice. It detects ordered entries with a shared interval-rhythm shape, protects every source voice and cadential goal, searches collision-free six-course assignments, and audits the resulting French-letter intabulation under `counterpoint.renaissance-imitative`. Three rhythm lanes keep each lineage readable above the shared tablature staff without duplicating MIDI playback, and Audio Preview can isolate every source voice.
 
 ## Stack
 

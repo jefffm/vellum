@@ -7,6 +7,7 @@ export function buildSystemPrompt(instruments: InstrumentProfile[]): string {
     buildWorkflow(),
     buildBaroqueGuitarWorkflow(),
     buildContinuoWorkflow(),
+    buildImitativeCounterpointWorkflow(),
     buildInstruments(instruments),
   ];
 
@@ -115,6 +116,21 @@ function buildContinuoWorkflow(): string {
     "5. Keep Principal Voice, Continuo Foundation, and generated realization as separate semantic playback parts even when engraving combines them.",
     "",
     "The Guided Start `target.piano-continuo` path uses the `continuo.italian-baroque` profile and the production `continuo-score` layout.",
+  ].join("\n");
+}
+
+function buildImitativeCounterpointWorkflow(): string {
+  return [
+    "## Imitative Counterpoint and Intabulation",
+    "",
+    "When musical identity depends on imitation rather than one permanent Principal Voice:",
+    "1. Classify the texture and contrapuntal technique before arranging; do not force the highest voice into a Principal Voice model.",
+    "2. Promote ordered subject entries, interval-rhythm shape, cadential goals, and each required voice continuity to Preservation Targets.",
+    "3. Intabulation may redistribute notes across playable courses, but it must not erase, reorder, merge, or silently octave-displace protected entries.",
+    "4. Validate course collisions and hand stretch across every simultaneous sonority under the selected instrument profile.",
+    "5. Preserve source-voice lineage as separately audible playback parts even when all voices interleave on one tablature staff.",
+    "",
+    "The Guided Start `target.renaissance-lute` path uses six-course G tuning, French letter tablature, and the `counterpoint.renaissance-imitative` Validation Profile when imitation is detected.",
   ].join("\n");
 }
 

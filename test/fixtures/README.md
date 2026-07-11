@@ -14,6 +14,12 @@ suspension, reviewed semantic truth, a deterministic MusicXML adapter sample,
 and a compiled PDF Source Artifact. See
 [`continuo/PROVENANCE.md`](continuo/PROVENANCE.md).
 
+## `imitation/`
+
+CC0 three-voice imitative golden fixture with ordered subject entries, reviewed
+LilyPond truth, and a compiled PDF Source Artifact. See
+[`imitation/PROVENANCE.md`](imitation/PROVENANCE.md).
+
 ## LilyPond Fixtures
 
 | File                      | Source              | License       |

@@ -3,6 +3,6 @@
 % 6-Course Renaissance Lute (G tuning)
 % All courses fretted.
 
-renaissanceLuteStringTunings = \stringTuning <g' d' a f c g,>
+renaissanceLuteStringTunings = \stringTuning <g, c f a d' g'>
 
 renaissanceLuteTabFormat = #fret-letter-tablature-format

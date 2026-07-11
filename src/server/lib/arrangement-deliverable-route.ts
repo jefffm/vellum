@@ -4,6 +4,7 @@ import type { RequestHandler } from "express";
 import { arrangementToEngraveParams } from "../../lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
 import { continuoArrangementToLilyPond } from "../../lib/continuo-engrave.js";
+import { imitativeArrangementToLilyPond } from "../../lib/imitative-engrave.js";
 import { compileLilyPond } from "./compile-route.js";
 import { engrave } from "./engrave.js";
 import { SubprocessRunner } from "./subprocess.js";
@@ -37,7 +38,10 @@ export function createArrangementCompileRoute(store = new WorkspaceStore()): Req
       const score = store.getNormalizedScore(workspaceId, analysis.normalizedScoreId);
       const source = arrangement.targetConfiguration.notationLayouts.includes("continuo-score")
         ? continuoArrangementToLilyPond(arrangement, score)
-        : engrave(arrangementToEngraveParams(arrangement, score)).source;
+        : arrangement.targetConfiguration.instrumentId === "renaissance-lute-6" &&
+            arrangement.events.some((event) => event.role === "source_voice")
+          ? imitativeArrangementToLilyPond(arrangement, score)
+          : engrave(arrangementToEngraveParams(arrangement, score)).source;
       const compiled = await compileLilyPond(
         { source, format: "both" },
         new SubprocessRunner(60_000),
