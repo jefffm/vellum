@@ -6,6 +6,7 @@ import { InstrumentModel } from "../../lib/instrument-model.js";
 import { applyPreservationPolicy } from "../../lib/preservation-policy.js";
 import { buildCompleteTransformationReport } from "../../lib/transformation-report.js";
 import type {
+  ArrangementEvent,
   CommitmentConflict,
   EditorialCommitment,
   FamilyCommitment,
@@ -22,6 +23,19 @@ type LineageServiceOptions = {
   now?: () => Date;
   createId?: () => string;
 };
+
+export type ArrangementEventPatch = {
+  pitches?: string[];
+  duration?: { numerator: number; denominator: number };
+  positions?: Array<{
+    course: number;
+    fret: number;
+    pitch: string;
+    quality: "open" | "low_fret" | "high_fret" | "diapason";
+  }>;
+};
+
+export type ArrangementEventEdit = { eventId: string; patch: ArrangementEventPatch };
 
 export class LineageService {
   private readonly store: WorkspaceStore;
@@ -207,69 +221,95 @@ export class LineageService {
     workspaceId: string,
     arrangementScoreId: string,
     eventId: string,
-    patch: {
-      pitches?: string[];
-      duration?: { numerator: number; denominator: number };
-      positions?: Array<{
-        course: number;
-        fret: number;
-        pitch: string;
-        quality: "open" | "low_fret" | "high_fret" | "diapason";
-      }>;
-    }
+    patch: ArrangementEventPatch
   ) {
+    const result = this.editArrangementEvents(workspaceId, arrangementScoreId, [
+      { eventId, patch },
+    ]);
+    return {
+      arrangementScore: result.arrangementScore,
+      editorialCommitment: result.editorialCommitments[0]!,
+    };
+  }
+
+  editArrangementEvents(
+    workspaceId: string,
+    arrangementScoreId: string,
+    edits: ArrangementEventEdit[]
+  ) {
+    if (edits.length === 0)
+      throw new ApiRouteError("An Edit Batch requires at least one edit", 400);
     const original = this.store.getArrangementScore(workspaceId, arrangementScoreId);
-    const event = original.events.find((candidate) => candidate.id === eventId);
-    if (!event) throw new ApiRouteError(`Arrangement event not found: ${eventId}`, 404);
-    const changed = [patch.pitches, patch.duration, patch.positions].filter(
-      (value) => value !== undefined
-    );
-    if (changed.length !== 1) {
-      throw new ApiRouteError("A direct edit must change exactly one semantic dimension", 400);
-    }
-    const dimension = patch.positions
-      ? "course_fingering"
-      : patch.duration
-        ? "rhythm"
-        : event.role === "principal_voice"
-          ? "principal_voice_pitch"
-          : event.role === "continuo_foundation"
-            ? "bass"
-            : "harmony";
-    const commitment = this.createEditorialCommitment(workspaceId, {
-      arrangementScoreId: original.id,
-      arrangementFamilyId: original.arrangementFamilyId!,
-      scope: { objectIds: [event.id], measureIds: [event.measureId], dimension },
-      value: patch.positions ?? patch.duration ?? patch.pitches,
-      origin: "user_edit",
+    const changes = edits.map((edit) => {
+      const event = original.events.find((candidate) => candidate.id === edit.eventId);
+      if (!event) throw new ApiRouteError(`Arrangement event not found: ${edit.eventId}`, 404);
+      const changed = [edit.patch.pitches, edit.patch.duration, edit.patch.positions].filter(
+        (value) => value !== undefined
+      );
+      if (changed.length !== 1) {
+        throw new ApiRouteError(
+          "Each Edit Batch item must change exactly one semantic dimension",
+          400
+        );
+      }
+      return {
+        event,
+        patch: edit.patch,
+        dimension: editDimension(event, edit.patch),
+      };
     });
-    const editedEvents = original.events.map((candidate) =>
-      candidate.id === event.id ? { ...candidate, ...patch } : candidate
+    const editKeys = changes.map(({ event, dimension }) => `${event.id}:${dimension}`);
+    if (new Set(editKeys).size !== editKeys.length) {
+      throw new ApiRouteError(
+        "An Edit Batch cannot change the same event dimension more than once",
+        400
+      );
+    }
+    const editedEvents = original.events.map((event) =>
+      changes
+        .filter((change) => change.event.id === event.id)
+        .reduce((current, change) => ({ ...current, ...change.patch }), event)
     );
     const search = this.store.getArrangementSearch(workspaceId, original.arrangementSearchId!);
     const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
     const analysis = this.store.getAnalysisRecord(workspaceId, original.analysisRecordId);
+    const model = InstrumentModel.fromProfile(
+      loadProfile(original.targetConfiguration.instrumentId)
+    );
+    validateEditedEvents(model, editedEvents);
     const faithfulAudit =
       analysis.texture === "continuo"
         ? auditContinuo(source, analysis, editedEvents)
         : analysis.texture === "imitative-polyphony"
-          ? auditImitative(
-              source,
-              analysis,
-              editedEvents,
-              InstrumentModel.fromProfile(loadProfile(original.targetConfiguration.instrumentId))
-            )
+          ? auditImitative(source, analysis, editedEvents, model)
           : auditFaithfulPrincipalVoice(
               source,
               analysis,
               editedEvents,
               original.transpositionPlan.semitones
             );
+    const preservationAudit = applyPreservationPolicy(faithfulAudit, original.preservationPolicy);
+    if (preservationAudit.status === "fail") {
+      throw new ApiRouteError(
+        `Edit Batch fails the ${original.preservationPolicy.replaceAll("_", " ")} Preservation Audit: ${preservationAudit.findings.map((finding) => finding.message).join("; ")}`,
+        409
+      );
+    }
     const timestamp = this.now().toISOString();
+    const commitments = changes.map(({ event, patch, dimension }) => ({
+      id: `commitment.${this.createId()}`,
+      arrangementScoreId: original.id,
+      arrangementFamilyId: original.arrangementFamilyId!,
+      scope: { objectIds: [event.id], measureIds: [event.measureId], dimension },
+      value: patch.positions ?? patch.duration ?? patch.pitches,
+      origin: "user_edit" as const,
+      status: "active" as const,
+      createdAt: timestamp,
+    }));
     const branchId = `branch.${this.createId()}`;
-    this.store.saveArrangementBranch(workspaceId, {
+    const branch = {
       id: branchId,
-      label: `Owner edit to ${event.id}`,
+      label: `Owner Edit Batch · ${changes.length} change${changes.length === 1 ? "" : "s"}`,
       rootInputVersions: [
         {
           recordType: "arrangement_score",
@@ -278,14 +318,17 @@ export class LineageService {
         },
       ],
       createdAt: timestamp,
-    });
-    const edited = this.store.saveArrangementScore(workspaceId, {
+    };
+    const editedInput = {
       ...original,
       id: `arrangement.${this.createId()}`,
       version: (original.version ?? 1) + 1,
       parentArrangementScoreId: original.id,
       branchId,
-      editorialCommitmentIds: [...(original.editorialCommitmentIds ?? []), commitment.id],
+      editorialCommitmentIds: [
+        ...(original.editorialCommitmentIds ?? []),
+        ...commitments.map((commitment) => commitment.id),
+      ],
       events: editedEvents,
       transformationReport: buildCompleteTransformationReport(
         source,
@@ -293,10 +336,14 @@ export class LineageService {
         editedEvents,
         original.transpositionPlan.semitones
       ),
-      preservationAudit: applyPreservationPolicy(faithfulAudit, original.preservationPolicy),
+      preservationAudit,
       createdAt: timestamp,
-    });
-    return { arrangementScore: edited, editorialCommitment: commitment };
+    };
+    for (const commitment of commitments)
+      this.store.saveEditorialCommitment(workspaceId, commitment);
+    this.store.saveArrangementBranch(workspaceId, branch);
+    const edited = this.store.saveArrangementScore(workspaceId, editedInput);
+    return { arrangementScore: edited, editorialCommitments: commitments, branch };
   }
 
   conservativeRegenerate(
@@ -429,5 +476,55 @@ export class LineageService {
       status: "unresolved",
       createdAt: this.now().toISOString(),
     });
+  }
+}
+
+function editDimension(
+  event: ArrangementEvent,
+  patch: ArrangementEventPatch
+): EditorialCommitment["scope"]["dimension"] {
+  if (patch.positions) return "course_fingering";
+  if (patch.duration) return "rhythm";
+  if (event.role === "principal_voice") return "principal_voice_pitch";
+  if (event.role === "continuo_foundation") return "bass";
+  return "harmony";
+}
+
+function validateEditedEvents(model: InstrumentModel, events: ArrangementEvent[]): void {
+  for (const event of events) {
+    if (event.type === "rest") continue;
+    if (event.pitches.length === 0) {
+      throw new ApiRouteError(`Edited sounding event has no pitches: ${event.id}`, 400);
+    }
+    if (event.positions.length === 0) {
+      throw new ApiRouteError(`Edited sounding event has no course positions: ${event.id}`, 400);
+    }
+    const playable = model.isPlayable(event.positions);
+    if (!playable.ok) {
+      throw new ApiRouteError(
+        `Edit Batch is not playable at ${event.id}: ${playable.violations.map((violation) => violation.description).join("; ")}`,
+        409
+      );
+    }
+    for (const position of event.positions) {
+      const sounding = model.soundingPitch(position.course, position.fret);
+      if (sounding !== position.pitch) {
+        throw new ApiRouteError(
+          `Edit Batch position pitch mismatch at ${event.id}: course ${position.course} fret ${position.fret} sounds ${sounding}, not ${position.pitch}`,
+          400
+        );
+      }
+    }
+    const eventPitches = event.pitches.slice().sort().join("|");
+    const positionPitches = event.positions
+      .map((position) => position.pitch)
+      .sort()
+      .join("|");
+    if (eventPitches !== positionPitches) {
+      throw new ApiRouteError(
+        `Edit Batch pitch and fingering disagree at ${event.id}: event pitches ${eventPitches} versus position pitches ${positionPitches}`,
+        400
+      );
+    }
   }
 }

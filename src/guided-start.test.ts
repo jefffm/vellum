@@ -4,6 +4,7 @@ import {
   buildScoreSelectionContext,
   describeArrangementEvent,
   installNotationSelection,
+  openEditBatchDialog,
   installLineageSummary,
   installProviderConnection,
   midiFrequency,
@@ -115,6 +116,14 @@ describe("interactive notation", () => {
     expect(prompt).toContain(events[0].id);
     expect(prompt).toContain(events[1].id);
     expect(prompt).toContain('"role": "principal_voice"');
+  });
+
+  it("stages a complete edit batch before saving one new version", () => {
+    const implementation = openEditBatchDialog.toString();
+    expect(implementation).toContain("Save as new version");
+    expect(implementation).toContain("Discard staged edits");
+    expect(implementation).toContain("edit-batches");
+    expect(implementation).toContain("vellum-arrangement-version-created");
   });
 });
 

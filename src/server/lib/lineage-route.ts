@@ -15,6 +15,33 @@ const CommitmentParams = Type.Object({
   workspaceId: Type.String({ minLength: 1 }),
   commitmentId: Type.String({ minLength: 1 }),
 });
+const Rational = Type.Object({
+  numerator: Type.Integer(),
+  denominator: Type.Integer({ minimum: 1 }),
+});
+const ArrangementEventPatchSchema = Type.Object(
+  {
+    pitches: Type.Optional(Type.Array(Type.String({ minLength: 2 }), { minItems: 1 })),
+    duration: Type.Optional(Rational),
+    positions: Type.Optional(
+      Type.Array(
+        Type.Object({
+          course: Type.Integer({ minimum: 1 }),
+          fret: Type.Integer({ minimum: 0 }),
+          pitch: Type.String({ minLength: 2 }),
+          quality: Type.Union([
+            Type.Literal("open"),
+            Type.Literal("low_fret"),
+            Type.Literal("high_fret"),
+            Type.Literal("diapason"),
+          ]),
+        }),
+        { minItems: 1 }
+      )
+    ),
+  },
+  { additionalProperties: false }
+);
 
 type Options = { store?: WorkspaceStore; service?: LineageService };
 
@@ -83,40 +110,40 @@ export function createArrangementEventEditRoute(options: Options = {}): RequestH
     arrangementId: Type.String({ minLength: 1 }),
     eventId: Type.String({ minLength: 1 }),
   });
-  const Rational = Type.Object({
-    numerator: Type.Integer(),
-    denominator: Type.Integer({ minimum: 1 }),
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(Params, request.params),
+      patch: Value.Decode(ArrangementEventPatchSchema, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, eventId, patch }) =>
+      service.editArrangementEvent(workspaceId, arrangementId, eventId, patch),
   });
+}
+
+export function createArrangementEditBatchRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
   const Body = Type.Object(
     {
-      pitches: Type.Optional(Type.Array(Type.String({ minLength: 2 }), { minItems: 1 })),
-      duration: Type.Optional(Rational),
-      positions: Type.Optional(
-        Type.Array(
-          Type.Object({
-            course: Type.Integer({ minimum: 1 }),
-            fret: Type.Integer({ minimum: 0 }),
-            pitch: Type.String({ minLength: 2 }),
-            quality: Type.Union([
-              Type.Literal("open"),
-              Type.Literal("low_fret"),
-              Type.Literal("high_fret"),
-              Type.Literal("diapason"),
-            ]),
-          }),
-          { minItems: 1 }
-        )
+      edits: Type.Array(
+        Type.Object(
+          {
+            eventId: Type.String({ minLength: 1 }),
+            patch: ArrangementEventPatchSchema,
+          },
+          { additionalProperties: false }
+        ),
+        { minItems: 1 }
       ),
     },
     { additionalProperties: false }
   );
   return createApiRoute<any, unknown>({
     validate: (body, request) => ({
-      ...Value.Decode(Params, request.params),
-      patch: Value.Decode(Body, body),
+      ...Value.Decode(ArrangementParams, request.params),
+      ...Value.Decode(Body, body),
     }),
-    handler: async ({ workspaceId, arrangementId, eventId, patch }) =>
-      service.editArrangementEvent(workspaceId, arrangementId, eventId, patch),
+    handler: async ({ workspaceId, arrangementId, edits }) =>
+      service.editArrangementEvents(workspaceId, arrangementId, edits),
   });
 }
 

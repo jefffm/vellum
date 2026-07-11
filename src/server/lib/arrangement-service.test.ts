@@ -340,6 +340,56 @@ describe("Greensleeves faithful arrangement service", () => {
       },
     });
 
+    const editableChords = result.arrangementScore.events
+      .filter((event) => event.positions.length > 1)
+      .slice(0, 2);
+    expect(editableChords).toHaveLength(2);
+    const beforeBatch = store.get(workspace.id);
+    const branchCount = beforeBatch.arrangementBranchIds.length;
+    const arrangementCount = beforeBatch.arrangementScoreIds.length;
+    const commitmentCount = beforeBatch.editorialCommitmentIds.length;
+    const batch = lineage.editArrangementEvents(
+      workspace.id,
+      result.arrangementScore.id,
+      editableChords.map((event) => ({
+        eventId: event.id,
+        patch: { positions: event.positions.slice().reverse() },
+      }))
+    );
+    expect(batch.arrangementScore).toMatchObject({
+      version: 2,
+      parentArrangementScoreId: result.arrangementScore.id,
+      branchId: batch.branch.id,
+      preservationAudit: { status: "pass" },
+    });
+    expect(batch.editorialCommitments).toHaveLength(2);
+    expect(new Set(batch.editorialCommitments.map((item) => item.scope.objectIds[0]))).toEqual(
+      new Set(editableChords.map((event) => event.id))
+    );
+    const afterBatch = store.get(workspace.id);
+    expect(afterBatch.arrangementBranchIds).toHaveLength(branchCount + 1);
+    expect(afterBatch.arrangementScoreIds).toHaveLength(arrangementCount + 1);
+    expect(afterBatch.editorialCommitmentIds).toHaveLength(commitmentCount + 2);
+
+    const beforeRejectedBatch = store.get(workspace.id);
+    expect(() =>
+      lineage.editArrangementEvents(workspace.id, result.arrangementScore.id, [
+        {
+          eventId: editableChords[0]!.id,
+          patch: { positions: editableChords[0]!.positions.slice().reverse() },
+        },
+        {
+          eventId: editableChords[0]!.id,
+          patch: { positions: editableChords[0]!.positions },
+        },
+      ])
+    ).toThrow(/same event dimension/i);
+    expect(store.get(workspace.id)).toMatchObject({
+      arrangementBranchIds: beforeRejectedBatch.arrangementBranchIds,
+      arrangementScoreIds: beforeRejectedBatch.arrangementScoreIds,
+      editorialCommitmentIds: beforeRejectedBatch.editorialCommitmentIds,
+    });
+
     const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;
     const principalClaim = result.analysis.claims.find(
       (claim) => claim.kind === "principal_voice"

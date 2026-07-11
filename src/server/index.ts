@@ -72,6 +72,7 @@ import {
 import {
   createArrangementLineageRoute,
   createArrangementEventEditRoute,
+  createArrangementEditBatchRoute,
   createCommitmentReleaseRoute,
   createConservativeRegenerationRoute,
   createEditorialCommitmentRoute,
@@ -196,6 +197,10 @@ export function createApiRouter(): Router {
   router.post(
     "/workspaces/:workspaceId/arrangements/:arrangementId/events/:eventId/edits",
     createArrangementEventEditRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/edit-batches",
+    createArrangementEditBatchRoute()
   );
   router.get("/workspaces/:workspaceId/deliverables/:deliverableId", createDeliverableGetRoute());
   router.get(

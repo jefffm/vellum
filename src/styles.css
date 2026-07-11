@@ -302,6 +302,53 @@ chat-panel > div > div:has(agent-interface) {
   white-space: nowrap;
 }
 
+.edit-batch-dialog {
+  width: min(48rem, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  border: 1px solid #cfc8ae;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: #fffef8;
+}
+
+.edit-batch-dialog form,
+.edit-batch-dialog fieldset,
+.edit-batch-dialog label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.edit-batch-dialog form {
+  gap: 1rem;
+}
+
+.edit-batch-dialog fieldset {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid #ddd4b7;
+  border-radius: 0.5rem;
+  padding: 0.8rem;
+}
+
+.edit-batch-dialog fieldset label:last-child {
+  grid-column: 1 / -1;
+}
+
+.edit-batch-dialog input,
+.edit-batch-dialog textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.45rem;
+  border: 1px solid #cfc8ae;
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
+.edit-batch-status {
+  min-height: 1.2rem;
+  margin: 0;
+}
+
 .artifact-preview-content[data-zoom-mode="zoom"] {
   max-width: none;
 }

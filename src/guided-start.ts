@@ -153,6 +153,135 @@ export function selectionPrompt(context: ScoreSelectionContext, request: string)
   return `${conciseRequest}\n\nUse this exact Vellum Selection Context; do not infer a different passage or score version:\n\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
 }
 
+type EditBatchResult = {
+  arrangementScore: ArrangementScore;
+  editorialCommitments: Array<{ id: string }>;
+  branch: { id: string };
+};
+
+export function openEditBatchDialog(
+  deliverable: GuidedDeliverable,
+  selectedEvents: ArrangementEvent[]
+): HTMLDialogElement {
+  document.querySelector("#vellum-edit-batch")?.remove();
+  const dialog = document.createElement("dialog");
+  dialog.id = "vellum-edit-batch";
+  dialog.className = "edit-batch-dialog";
+  const heading = document.createElement("h2");
+  heading.textContent = `Edit ${selectedEvents.length} selected musical object${selectedEvents.length === 1 ? "" : "s"}`;
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Changes remain staged until you save. One save creates one new Arrangement Score version and reruns the complete Preservation Audit.";
+  const form = document.createElement("form");
+  form.method = "dialog";
+  for (const event of selectedEvents) {
+    const fieldset = document.createElement("fieldset");
+    fieldset.dataset.editEventId = event.id;
+    const legend = document.createElement("legend");
+    legend.textContent = describeArrangementEvent(event);
+    const pitches = document.createElement("input");
+    pitches.name = "pitches";
+    pitches.value = event.pitches.join(", ");
+    pitches.setAttribute("aria-label", `Pitches for ${event.id}`);
+    const durationNumerator = document.createElement("input");
+    durationNumerator.name = "durationNumerator";
+    durationNumerator.type = "number";
+    durationNumerator.value = String(event.duration.numerator);
+    durationNumerator.setAttribute("aria-label", `Duration numerator for ${event.id}`);
+    const durationDenominator = document.createElement("input");
+    durationDenominator.name = "durationDenominator";
+    durationDenominator.type = "number";
+    durationDenominator.min = "1";
+    durationDenominator.value = String(event.duration.denominator);
+    durationDenominator.setAttribute("aria-label", `Duration denominator for ${event.id}`);
+    const positions = document.createElement("textarea");
+    positions.name = "positions";
+    positions.rows = Math.max(2, event.positions.length + 1);
+    positions.value = JSON.stringify(event.positions, null, 2);
+    positions.setAttribute("aria-label", `Course and fingering positions for ${event.id}`);
+    fieldset.append(
+      legend,
+      labeledControl("Pitches (comma-separated)", pitches),
+      labeledControl("Duration numerator", durationNumerator),
+      labeledControl("Duration denominator", durationDenominator),
+      labeledControl("Course/fret positions", positions)
+    );
+    form.append(fieldset);
+  }
+  const status = document.createElement("p");
+  status.className = "edit-batch-status";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Discard staged edits";
+  cancel.addEventListener("click", () => dialog.close());
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.textContent = "Save as new version";
+  form.append(status, cancel, save);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    save.disabled = true;
+    try {
+      const edits = stagedEventEdits(form, selectedEvents);
+      if (edits.length === 0) throw new Error("No staged changes to save.");
+      status.textContent = "Validating the complete Edit Batch…";
+      const result = await api<EditBatchResult>(
+        `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/edit-batches`,
+        { method: "POST", body: JSON.stringify({ edits }) }
+      );
+      document.dispatchEvent(
+        new CustomEvent("vellum-arrangement-version-created", { detail: { result, deliverable } })
+      );
+      status.textContent = `Saved Arrangement Score v${result.arrangementScore.version}.`;
+      dialog.close();
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "The Edit Batch failed.";
+      save.disabled = false;
+    }
+  });
+  dialog.append(heading, explanation, form);
+  document.body.append(dialog);
+  dialog.showModal();
+  return dialog;
+}
+
+function labeledControl(label: string, control: HTMLElement): HTMLLabelElement {
+  const wrapper = document.createElement("label");
+  wrapper.append(label, control);
+  return wrapper;
+}
+
+function stagedEventEdits(form: HTMLFormElement, originals: ArrangementEvent[]) {
+  const edits: Array<{ eventId: string; patch: Record<string, unknown> }> = [];
+  for (const fieldset of form.querySelectorAll<HTMLFieldSetElement>("[data-edit-event-id]")) {
+    const eventId = fieldset.dataset.editEventId!;
+    const original = originals.find((event) => event.id === eventId)!;
+    const pitches = fieldset
+      .querySelector<HTMLInputElement>('[name="pitches"]')!
+      .value.split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const duration = {
+      numerator: Number(
+        fieldset.querySelector<HTMLInputElement>('[name="durationNumerator"]')!.value
+      ),
+      denominator: Number(
+        fieldset.querySelector<HTMLInputElement>('[name="durationDenominator"]')!.value
+      ),
+    };
+    const positions = JSON.parse(
+      fieldset.querySelector<HTMLTextAreaElement>('[name="positions"]')!.value
+    ) as ArrangementEvent["positions"];
+    if (JSON.stringify(pitches) !== JSON.stringify(original.pitches))
+      edits.push({ eventId, patch: { pitches } });
+    if (JSON.stringify(duration) !== JSON.stringify(original.duration))
+      edits.push({ eventId, patch: { duration } });
+    if (JSON.stringify(positions) !== JSON.stringify(original.positions))
+      edits.push({ eventId, patch: { positions } });
+  }
+  return edits;
+}
+
 export function describeArrangementEvent(event: ArrangementEvent): string {
   const duration = `${event.duration.numerator}/${event.duration.denominator}`;
   const role = (event.role ?? "accompaniment").replaceAll("_", " ");
@@ -229,9 +358,13 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
       anchorId = undefined;
       renderSelection();
     });
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Edit selection";
+    edit.addEventListener("click", () => openEditBatchDialog(deliverable, selectedEvents));
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
-    actions.append(request, ask, clear);
+    actions.append(request, ask, edit, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
     if (seekEventId) {
