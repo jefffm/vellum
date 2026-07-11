@@ -1,6 +1,6 @@
 # Inline Edit Batch validation and repair
 
-Status: ready-for-agent
+Status: in-progress
 
 Type: AFK
 

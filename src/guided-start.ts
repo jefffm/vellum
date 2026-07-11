@@ -20,6 +20,7 @@ type GuidedStartOptions = {
 
 const audioSeekHandlers = new WeakMap<HTMLElement, EventListener>();
 const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
+const followedMeasureOccurrences = new WeakMap<HTMLElement, string>();
 
 export type GuidedDeliverable = {
   workspaceId: string;
@@ -449,9 +450,19 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     edit.type = "button";
     edit.textContent = "Edit selection";
     edit.addEventListener("click", () => openEditBatchDialog(deliverable, selectedEvents));
+    const loop = document.createElement("button");
+    loop.type = "button";
+    loop.textContent = "Loop selection";
+    loop.addEventListener("click", () =>
+      panel.dispatchEvent(
+        new CustomEvent("vellum-loop-selection", {
+          detail: { arrangementEventIds: selectedEvents.map((event) => event.id) },
+        })
+      )
+    );
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
-    actions.append(request, ask, edit, clear);
+    actions.append(request, ask, edit, loop, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
     if (seekEventId) {
@@ -844,6 +855,7 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
       <button type="button" data-audio-pause disabled>Ⅱ Pause</button>
       <button type="button" data-audio-stop disabled>■ Stop</button>
       <output data-audio-time>0:00 / ${formatTime(preview.durationSeconds)}</output>
+      <output data-audio-occurrence aria-live="polite"></output>
     </div>
     <input data-audio-progress aria-label="Playback position" type="range" min="0" max="${preview.durationSeconds}" value="0" step="0.01">
     <div class="audio-practice-controls">
@@ -864,6 +876,7 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
   const stop = controls.querySelector<HTMLButtonElement>("[data-audio-stop]")!;
   const progress = controls.querySelector<HTMLInputElement>("[data-audio-progress]")!;
   const time = controls.querySelector<HTMLOutputElement>("[data-audio-time]")!;
+  const occurrence = controls.querySelector<HTMLOutputElement>("[data-audio-occurrence]")!;
   const speed = controls.querySelector<HTMLSelectElement>("[data-audio-speed]")!;
   const volume = controls.querySelector<HTMLInputElement>("[data-audio-volume]")!;
   const skipRepeats = controls.querySelector<HTMLInputElement>("[data-audio-skip-repeats]")!;
@@ -891,11 +904,20 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
     });
     mixer.append(row);
   }
-  const updatePosition = (next: number, activeEvents: PlaybackEvent[] = []) => {
+  const updatePosition = (next: number, suppliedEvents?: PlaybackEvent[]) => {
+    const activeEvents =
+      suppliedEvents ??
+      activePreview.events.filter(
+        (event) => event.startSeconds <= next && next < event.startSeconds + event.durationSeconds
+      );
     position = next;
     progress.value = String(next);
     time.value = `${formatTime(next)} / ${formatTime(activePreview.durationSeconds)}`;
-    highlightLineage(panel, activeEvents);
+    const activeOccurrence = activeEvents[0];
+    occurrence.value = activeOccurrence
+      ? `${activeOccurrence.measureOccurrenceId} · iteration ${activeOccurrence.iteration}`
+      : "";
+    highlightLineage(panel, activeEvents, activePreview);
   };
   play.addEventListener("click", () => {
     playback?.stop(false);
@@ -941,7 +963,7 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
     playback?.stop(false);
     playback = undefined;
     audioPlaybackCleanups.delete(panel);
-    updatePosition(0);
+    updatePosition(0, []);
     play.disabled = false;
     pause.disabled = true;
     stop.disabled = true;
@@ -1008,6 +1030,26 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
   };
   panel.addEventListener("vellum-seek-playback", seekHandler);
   audioSeekHandlers.set(panel, seekHandler);
+  panel.addEventListener("vellum-loop-selection", (event) => {
+    const ids = new Set(
+      (event as CustomEvent<{ arrangementEventIds?: string[] }>).detail?.arrangementEventIds ?? []
+    );
+    const selectedOccurrences = activePreview.events.filter((candidate) =>
+      ids.has(candidate.arrangementEventId)
+    );
+    if (selectedOccurrences.length === 0) return;
+    loopStart.value = String(
+      Math.min(...selectedOccurrences.map((candidate) => candidate.startSeconds))
+    );
+    loopEnd.value = String(
+      Math.max(
+        ...selectedOccurrences.map(
+          (candidate) => candidate.startSeconds + candidate.durationSeconds
+        )
+      )
+    );
+    updatePosition(Number(loopStart.value));
+  });
 }
 
 export function installCandidateComparisonControls(
@@ -1642,7 +1684,11 @@ function playPreview(
   };
 }
 
-function highlightLineage(panel: HTMLElement, events: PlaybackEvent[]): void {
+export function highlightLineage(
+  panel: HTMLElement,
+  events: PlaybackEvent[],
+  preview?: AudioPreview
+): void {
   const dimensions = {
     arrangementEventIds: new Set(events.map((event) => event.arrangementEventId)),
     sourceEventIds: new Set(events.flatMap((event) => event.sourceEventIds)),
@@ -1651,16 +1697,59 @@ function highlightLineage(panel: HTMLElement, events: PlaybackEvent[]): void {
   };
   panel
     .querySelectorAll<HTMLElement>(
-      "[data-arrangement-event-ids], [data-source-event-ids], [data-transformation-id], [data-audit-target-ids]"
+      "[data-arrangement-event-id], [data-arrangement-event-ids], [data-source-event-ids], [data-transformation-id], [data-audit-target-ids]"
     )
     .forEach((element) => {
       const active =
+        datasetMatches(element.dataset.arrangementEventId, dimensions.arrangementEventIds) ||
         datasetMatches(element.dataset.arrangementEventIds, dimensions.arrangementEventIds) ||
         datasetMatches(element.dataset.sourceEventIds, dimensions.sourceEventIds) ||
         datasetMatches(element.dataset.transformationId, dimensions.transformationIds) ||
         datasetMatches(element.dataset.auditTargetIds, dimensions.auditTargetIds);
       element.classList.toggle("playback-active", active);
+      if (element.dataset.arrangementEventId) {
+        const event = events.find(
+          (candidate) => candidate.arrangementEventId === element.dataset.arrangementEventId
+        );
+        element.classList.toggle("playback-principal-active", event?.part === "principal-voice");
+      }
     });
+  const notation = panel.querySelector<SVGSVGElement>(".artifact-preview-content > svg");
+  if (!notation) return;
+  const activeOccurrenceId = events[0]?.measureOccurrenceId;
+  const activeMeasureId = activeOccurrenceId
+    ? preview?.performedForm.measureOccurrences.find((item) => item.id === activeOccurrenceId)
+        ?.measureId
+    : undefined;
+  const measureGroups = notation.querySelectorAll<SVGGElement>("[data-measure-id]");
+  let markerTarget: SVGGElement | undefined;
+  for (const group of measureGroups) {
+    const active = Boolean(activeMeasureId && group.dataset.measureId === activeMeasureId);
+    group.classList.toggle("playback-measure-active", active);
+    if (active && !markerTarget) markerTarget = group;
+  }
+  let marker = notation.querySelector<SVGLineElement>(".score-playhead");
+  if (!markerTarget || !activeOccurrenceId) {
+    marker?.remove();
+    notation.removeAttribute("data-playback-occurrence-id");
+    followedMeasureOccurrences.delete(panel);
+    return;
+  }
+  notation.dataset.playbackOccurrenceId = activeOccurrenceId;
+  if (!marker) {
+    marker = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    marker.classList.add("score-playhead");
+    notation.append(marker);
+  }
+  const box = markerTarget.getBBox();
+  marker.setAttribute("x1", String(box.x - 0.7));
+  marker.setAttribute("x2", String(box.x - 0.7));
+  marker.setAttribute("y1", String(box.y - 1.2));
+  marker.setAttribute("y2", String(box.y + box.height + 1.2));
+  if (followedMeasureOccurrences.get(panel) !== activeOccurrenceId) {
+    followedMeasureOccurrences.set(panel, activeOccurrenceId);
+    markerTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }
 }
 
 function datasetMatches(value: string | undefined, active: Set<string>): boolean {

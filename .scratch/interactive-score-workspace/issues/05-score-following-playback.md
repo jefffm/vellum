@@ -1,6 +1,6 @@
 # Score-following Audio Preview
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,12 +10,12 @@ Project current Playback Occurrences back onto interactive notation. During play
 
 ## Acceptance criteria
 
-- [ ] Playback shows a visible position marker and sounding-event highlights on notation.
-- [ ] Principal Voice highlighting is distinguishable without hiding simultaneous accompaniment.
-- [ ] The viewport follows the active measure without disruptive jumping.
-- [ ] Clicking notation seeks to its first matching occurrence and selection can define a loop range.
-- [ ] Repeat iterations retain distinct Playback Occurrences while sharing canonical Arrangement Event identity.
-- [ ] Pause, seek, speed, skip-repeats, and stop keep score state synchronized.
+- [x] Playback shows a visible position marker and sounding-event highlights on notation.
+- [x] Principal Voice highlighting is distinguishable without hiding simultaneous accompaniment.
+- [x] The viewport follows the active measure without disruptive jumping.
+- [x] Clicking notation seeks to its first matching occurrence and selection can define a loop range.
+- [x] Repeat iterations retain distinct Playback Occurrences while sharing canonical Arrangement Event identity.
+- [x] Pause, seek, speed, skip-repeats, and stop keep score state synchronized.
 
 ## Blocked by
 

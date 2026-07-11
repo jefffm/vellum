@@ -805,6 +805,32 @@ chat-panel > div > div:has(agent-interface) {
   outline: 2px solid #9a6a16;
 }
 
+.artifact-preview-content .vellum-score-event.playback-active {
+  color: #9a6a16;
+  filter: drop-shadow(0 0 2px rgba(154, 106, 22, 0.65));
+}
+
+.artifact-preview-content .vellum-score-event.playback-principal-active {
+  color: #185f8f;
+  filter: drop-shadow(0 0 1px #185f8f) drop-shadow(0 0 4px rgba(24, 95, 143, 0.55));
+}
+
+.artifact-preview-content .vellum-score-event.playback-measure-active:not(.playback-active) {
+  filter: drop-shadow(0 0 1px rgba(154, 106, 22, 0.22));
+}
+
+.artifact-preview-content .score-playhead {
+  stroke: #b33b28;
+  stroke-width: 0.55;
+  pointer-events: none;
+}
+
+[data-audio-occurrence] {
+  min-width: 13rem;
+  color: #6f5b24;
+  font-variant-numeric: tabular-nums;
+}
+
 .candidate-comparison-controls {
   display: grid;
   grid-template-columns: minmax(12rem, auto) auto;

@@ -5,6 +5,8 @@ import {
   compareArrangementVersions,
   describeArrangementEvent,
   installNotationSelection,
+  installAudioPreviewControls,
+  highlightLineage,
   openEditBatchDialog,
   installLineageSummary,
   installProviderConnection,
@@ -20,6 +22,19 @@ describe("audio preview synthesis", () => {
   it("maps MIDI pitches to equal-tempered oscillator frequencies", () => {
     expect(midiFrequency(69)).toBe(440);
     expect(midiFrequency(60)).toBeCloseTo(261.626, 3);
+  });
+
+  it("projects Playback Occurrences onto notation and selected loop bounds", () => {
+    const highlighting = highlightLineage.toString();
+    const controls = installAudioPreviewControls.toString();
+    expect(highlighting).toContain("data-arrangement-event-id");
+    expect(highlighting).toContain("playback-principal-active");
+    expect(highlighting).toContain("playback-measure-active");
+    expect(highlighting).toContain("score-playhead");
+    expect(highlighting).toContain("measureOccurrenceId");
+    expect(highlighting).toContain("scrollIntoView");
+    expect(controls).toContain("vellum-loop-selection");
+    expect(controls).toContain("measureOccurrenceId");
   });
 });
 
