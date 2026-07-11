@@ -1224,12 +1224,26 @@ function formatTime(seconds: number): string {
   return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
-async function installProviderConnection(root: HTMLElement): Promise<void> {
+export async function installProviderConnection(root: HTMLElement): Promise<void> {
   const status = root.querySelector<HTMLElement>("[data-provider-status]");
   const connect = root.querySelector<HTMLButtonElement>("[data-provider-connect]");
   const disconnect = root.querySelector<HTMLButtonElement>("[data-provider-disconnect]");
-  if (!status || !connect || !disconnect) return;
-  let handledPrompt: string | undefined;
+  const promptPanel = root.querySelector<HTMLElement>("[data-provider-prompt]");
+  const promptMessage = root.querySelector<HTMLElement>("[data-provider-prompt-message]");
+  const promptInput = root.querySelector<HTMLInputElement>("[data-provider-prompt-input]");
+  const promptSubmit = root.querySelector<HTMLButtonElement>("[data-provider-prompt-submit]");
+  const promptCancel = root.querySelector<HTMLButtonElement>("[data-provider-prompt-cancel]");
+  if (
+    !status ||
+    !connect ||
+    !disconnect ||
+    !promptPanel ||
+    !promptMessage ||
+    !promptInput ||
+    !promptSubmit ||
+    !promptCancel
+  )
+    return;
   let lastState = "disconnected";
   const refresh = async () => {
     const current = await api<{
@@ -1240,25 +1254,17 @@ async function installProviderConnection(root: HTMLElement): Promise<void> {
     lastState = current.state;
     status.textContent = current.error ? `${current.state}: ${current.error}` : current.state;
     connect.hidden = current.state === "connected" || current.state === "refreshing";
-    connect.disabled = current.state === "connecting";
     connect.textContent =
-      current.state === "expired" || current.error ? "Reconnect" : "Connect ChatGPT";
+      current.state === "connecting"
+        ? "Continue ChatGPT login"
+        : current.state === "expired" || current.error
+          ? "Reconnect"
+          : "Connect ChatGPT";
     disconnect.hidden = !["connected", "expired", "refreshing"].includes(current.state);
-    if (current.prompt && current.prompt.message !== handledPrompt) {
-      handledPrompt = current.prompt.message;
-      const value = window.prompt(current.prompt.message, current.prompt.placeholder ?? "");
-      if (value !== null && (current.prompt.allowEmpty || value.length > 0)) {
-        try {
-          await api("/api/provider-connection/prompt", {
-            method: "POST",
-            body: JSON.stringify({ value }),
-          });
-        } catch (error) {
-          handledPrompt = undefined;
-          status.textContent = error instanceof Error ? error.message : "Invalid provider callback";
-        }
-      }
-    }
+    promptPanel.hidden = !current.prompt;
+    promptMessage.textContent = current.prompt?.message ?? "";
+    promptInput.placeholder = current.prompt?.placeholder ?? "Paste the final redirect URL";
+    promptInput.required = !current.prompt?.allowEmpty;
     return current;
   };
   connect.addEventListener("click", async () => {
@@ -1286,6 +1292,31 @@ async function installProviderConnection(root: HTMLElement): Promise<void> {
     } finally {
       connect.disabled = false;
     }
+  });
+  promptSubmit.addEventListener("click", async () => {
+    const value = promptInput.value.trim();
+    if (promptInput.required && value.length === 0) {
+      status.textContent = "Paste the final redirect URL to finish connecting";
+      return;
+    }
+    promptSubmit.disabled = true;
+    try {
+      await api("/api/provider-connection/prompt", {
+        method: "POST",
+        body: JSON.stringify({ value }),
+      });
+      promptInput.value = "";
+      await refresh();
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "Invalid provider callback";
+    } finally {
+      promptSubmit.disabled = false;
+    }
+  });
+  promptCancel.addEventListener("click", async () => {
+    await api("/api/provider-connection", { method: "DELETE" });
+    promptInput.value = "";
+    await refresh();
   });
   disconnect.addEventListener("click", async () => {
     await api("/api/provider-connection", { method: "DELETE" });
@@ -1328,7 +1359,7 @@ export function guidedStartMarkup(): string {
   return `
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
-      <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button></section>
+      <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button><div data-provider-prompt hidden><label><span data-provider-prompt-message></span><input type="url" data-provider-prompt-input autocomplete="off"></label><button type="button" data-provider-prompt-submit>Finish connection</button><button type="button" data-provider-prompt-cancel>Cancel login</button></div></section>
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
       <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>

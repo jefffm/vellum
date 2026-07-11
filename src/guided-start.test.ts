@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   guidedStartMarkup,
   installLineageSummary,
+  installProviderConnection,
   midiFrequency,
   sourceFocusUrl,
   targetConfiguration,
@@ -61,6 +62,16 @@ describe("Guided Start output choices", () => {
     expect(implementation).toContain("Keep preserved prior version");
     expect(implementation).toContain("Let Vellum reconsider");
     expect(implementation).toContain("approving a scoped Policy Exception");
+  });
+
+  it("uses an inline, recoverable ChatGPT callback flow instead of window.prompt", () => {
+    const markup = guidedStartMarkup();
+    const implementation = installProviderConnection.toString();
+    expect(markup).toContain("data-provider-prompt-input");
+    expect(markup).toContain("Finish connection");
+    expect(markup).toContain("Cancel login");
+    expect(implementation).toContain("Continue ChatGPT login");
+    expect(implementation).not.toContain("window.prompt");
   });
 
   it("focuses the native PDF viewer on the exact uncertainty region", () => {
