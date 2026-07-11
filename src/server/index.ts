@@ -34,6 +34,9 @@ import {
   createArrangementCandidateGetRoute,
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
+  createPassageCandidateAdoptRoute,
+  createPassageCandidateListRoute,
+  createPassageCandidatePreviewRoute,
 } from "./lib/arrangement-search-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
@@ -300,6 +303,18 @@ export function createApiRouter(): Router {
   router.post(
     "/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/branch",
     createArrangementCandidateBranchRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/passage-candidates",
+    createPassageCandidateListRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/passage-candidates/audio-preview",
+    createPassageCandidatePreviewRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/passage-candidates/adopt",
+    createPassageCandidateAdoptRoute()
   );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId",

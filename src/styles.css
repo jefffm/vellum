@@ -312,6 +312,51 @@ chat-panel > div > div:has(agent-interface) {
   background: #fffef8;
 }
 
+.passage-candidates-dialog {
+  width: min(58rem, 94vw);
+  max-height: 88vh;
+  overflow: auto;
+  border: 1px solid #cfc8ae;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: #fffef8;
+}
+
+.passage-candidate-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.passage-candidate {
+  padding: 0.8rem;
+  border: 1px solid #ddd4b7;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.passage-candidate.rejected {
+  border-color: #c98b81;
+  background: #fff4f1;
+}
+
+.passage-candidate h3,
+.passage-candidate p {
+  margin: 0 0 0.45rem;
+}
+
+.passage-candidate ol {
+  max-height: 10rem;
+  overflow: auto;
+  padding-left: 1.4rem;
+  color: #5f5f58;
+  font-size: 0.78rem;
+}
+
+.passage-candidate button {
+  margin-right: 0.45rem;
+}
+
 .edit-batch-dialog form,
 .edit-batch-dialog fieldset,
 .edit-batch-dialog label {

@@ -1,6 +1,6 @@
 # Passage-level Arrangement Candidate adoption
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Use Selection Context to request, audition, compare, and adopt alternative arran
 
 ## Acceptance criteria
 
-- [ ] A selected passage can request ranked alternatives using its exact musical and historical context.
-- [ ] Alternatives can be auditioned and visually compared before adoption.
-- [ ] Adoption changes only the selected dependency region unless disclosed constraints require broader change.
-- [ ] One adoption creates one new version and retains the prior candidate/version.
-- [ ] Rejected candidates show the hard constraint or audit reason that rejected them.
+- [x] A selected passage can request ranked alternatives using its exact musical and historical context.
+- [x] Alternatives can be auditioned and visually compared before adoption.
+- [x] Adoption changes only the selected dependency region unless disclosed constraints require broader change.
+- [x] One adoption creates one new version and retains the prior candidate/version.
+- [x] Rejected candidates show the hard constraint or audit reason that rejected them.
 
 ## Blocked by
 

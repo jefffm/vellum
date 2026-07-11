@@ -247,6 +247,134 @@ type EditBatchResult = {
   branch: { id: string };
 };
 
+type PassageCandidate = {
+  id: string;
+  sourceCandidateId: string;
+  strategy: string;
+  status: "survived" | "selected" | "rejected";
+  rank?: number;
+  replacementEvents: ArrangementEvent[];
+  changedArrangementEventIds: string[];
+  evaluation?: { weightedTotal: number; rationale: string };
+  audit: GuidedDeliverable["preservationAudit"];
+  rejectionReason?: string;
+};
+
+export async function openPassageCandidatesDialog(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable,
+  selectedEvents: ArrangementEvent[]
+): Promise<HTMLDialogElement> {
+  document.querySelector("#vellum-passage-candidates")?.remove();
+  const dialog = document.createElement("dialog");
+  dialog.id = "vellum-passage-candidates";
+  dialog.className = "passage-candidates-dialog";
+  const heading = document.createElement("h2");
+  heading.textContent = `Alternatives for ${selectedEvents.length} selected musical object${selectedEvents.length === 1 ? "" : "s"}`;
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Alternatives use the selected source lineage and current historical context. Audition is temporary; Adopt creates one new audited version and leaves every unselected object unchanged.";
+  const status = document.createElement("p");
+  status.textContent = "Searching persisted arrangement candidates…";
+  const list = document.createElement("div");
+  list.className = "passage-candidate-list";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close";
+  close.addEventListener("click", () => dialog.close());
+  dialog.append(heading, explanation, status, list, close);
+  document.body.append(dialog);
+  dialog.showModal();
+  const eventIds = selectedEvents.map((event) => event.id);
+  try {
+    const result = await api<{ candidates: PassageCandidate[] }>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/passage-candidates`,
+      { method: "POST", body: JSON.stringify({ arrangement_event_ids: eventIds }) }
+    );
+    status.textContent = `${result.candidates.filter((candidate) => candidate.status !== "rejected").length} viable alternative projections; rejected options retain their audit evidence.`;
+    for (const candidate of result.candidates) {
+      const card = document.createElement("article");
+      card.className = `passage-candidate ${candidate.status}`;
+      const title = document.createElement("h3");
+      title.textContent = `${candidate.rank ? `#${candidate.rank} ` : ""}${candidate.strategy}`;
+      const evidence = document.createElement("p");
+      evidence.textContent =
+        candidate.status === "rejected"
+          ? `Rejected · ${candidate.rejectionReason ?? "A hard constraint failed."}`
+          : `${candidate.changedArrangementEventIds.length} selected object${candidate.changedArrangementEventIds.length === 1 ? "" : "s"} differ · ${candidate.evaluation ? `${(candidate.evaluation.weightedTotal * 100).toFixed(1)}% · ${candidate.evaluation.rationale}` : `Audit ${candidate.audit.status}`}`;
+      const comparison = document.createElement("ol");
+      for (const replacement of candidate.replacementEvents) {
+        const current = selectedEvents.find((event) => event.id === replacement.id)!;
+        const item = document.createElement("li");
+        item.textContent = `${describeArrangementEvent(current)} → ${describeArrangementEvent(replacement)}`;
+        comparison.append(item);
+      }
+      const audition = document.createElement("button");
+      audition.type = "button";
+      audition.textContent = "Audition passage alternative";
+      audition.disabled = candidate.status === "rejected";
+      audition.addEventListener("click", async () => {
+        audition.disabled = true;
+        try {
+          const preview = await api<AudioPreview>(
+            `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/passage-candidates/audio-preview`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                arrangement_event_ids: eventIds,
+                source_candidate_id: candidate.sourceCandidateId,
+              }),
+            }
+          );
+          installAudioPreviewControls(panel, preview);
+          panel.dispatchEvent(
+            new CustomEvent("vellum-loop-selection", {
+              detail: { arrangementEventIds: eventIds },
+            })
+          );
+          status.textContent = `Auditioning ${candidate.strategy}; the score remains unchanged.`;
+        } finally {
+          audition.disabled = false;
+        }
+      });
+      const adopt = document.createElement("button");
+      adopt.type = "button";
+      adopt.textContent = "Adopt as new version";
+      adopt.disabled =
+        candidate.status === "rejected" || candidate.changedArrangementEventIds.length === 0;
+      adopt.addEventListener("click", async () => {
+        adopt.disabled = true;
+        try {
+          const result = await api<EditBatchResult & { changedArrangementEventIds: string[] }>(
+            `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/passage-candidates/adopt`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                arrangement_event_ids: eventIds,
+                source_candidate_id: candidate.sourceCandidateId,
+              }),
+            }
+          );
+          document.dispatchEvent(
+            new CustomEvent("vellum-arrangement-version-created", {
+              detail: { result, deliverable },
+            })
+          );
+          dialog.close();
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : "Adoption failed.";
+          adopt.disabled = false;
+        }
+      });
+      card.append(title, evidence, comparison, audition, adopt);
+      list.append(card);
+    }
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : "Alternative search failed.";
+  }
+  return dialog;
+}
+
 type EditBatchValidation = {
   valid: boolean;
   arrangementScoreId: string;
@@ -593,6 +721,13 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     edit.type = "button";
     edit.textContent = "Edit selection";
     edit.addEventListener("click", () => openEditBatchDialog(deliverable, selectedEvents));
+    const alternatives = document.createElement("button");
+    alternatives.type = "button";
+    alternatives.textContent = "Try alternatives";
+    alternatives.addEventListener(
+      "click",
+      () => void openPassageCandidatesDialog(panel, deliverable, selectedEvents)
+    );
     const loop = document.createElement("button");
     loop.type = "button";
     loop.textContent = "Loop selection";
@@ -605,7 +740,7 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     );
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
-    actions.append(request, ask, edit, loop, clear);
+    actions.append(request, ask, edit, alternatives, loop, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
     panel.dispatchEvent(

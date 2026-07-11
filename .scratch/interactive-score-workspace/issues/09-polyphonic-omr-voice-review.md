@@ -1,6 +1,6 @@
 # Polyphonic OMR Voice Identity review
 
-Status: ready-for-agent
+Status: in-progress
 
 Type: AFK
 

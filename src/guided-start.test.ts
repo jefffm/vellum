@@ -9,6 +9,7 @@ import {
   installAudioPreviewControls,
   highlightLineage,
   openEditBatchDialog,
+  openPassageCandidatesDialog,
   installLineageSummary,
   installProviderConnection,
   midiFrequency,
@@ -182,6 +183,15 @@ describe("interactive notation", () => {
         dimensions: ["rhythm", "course_fingering"],
       },
     ]);
+  });
+
+  it("auditions and adopts bounded passage alternatives as one new version", () => {
+    const implementation = openPassageCandidatesDialog.toString();
+    expect(implementation).toContain("passage-candidates/audio-preview");
+    expect(implementation).toContain("passage-candidates/adopt");
+    expect(implementation).toContain("arrangement_event_ids");
+    expect(implementation).toContain("vellum-arrangement-version-created");
+    expect(implementation).toContain("rejectionReason");
   });
 });
 

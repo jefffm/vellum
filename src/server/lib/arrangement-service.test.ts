@@ -121,6 +121,8 @@ describe("Greensleeves faithful arrangement service", () => {
       "99999999-9999-4999-8999-999999999999",
       "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
     ];
     const service = new ArrangementService({
       store,
@@ -548,6 +550,58 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(store.getArrangementBranch(workspace.id, branched.branchId)).toMatchObject({
       createdFromCandidateId: alternative.id,
     });
+
+    const passageIds = result.arrangementScore.events.slice(0, 4).map((event) => event.id);
+    const passageSearch = service.passageCandidates(
+      workspace.id,
+      result.arrangementScore.id,
+      passageIds
+    );
+    expect(passageSearch.selectedEventIds).toEqual(passageIds);
+    expect(passageSearch.candidates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceCandidateId: alternative.id,
+          strategy: alternative.strategy,
+          status: "survived",
+          audit: expect.objectContaining({ status: "pass" }),
+        }),
+      ])
+    );
+    const passageAlternative = passageSearch.candidates.find(
+      (candidate) => candidate.sourceCandidateId === alternative.id
+    )!;
+    expect(passageAlternative.replacementEvents.map((event) => event.id)).toEqual(passageIds);
+    const passagePreview = service.previewPassageCandidate(
+      workspace.id,
+      result.arrangementScore.id,
+      passageIds,
+      alternative.id
+    );
+    expect(passagePreview.events.length).toBeGreaterThan(0);
+    const priorScores = [...store.get(workspace.id).arrangementScoreIds];
+    const adopted = service.adoptPassageCandidate(
+      workspace.id,
+      result.arrangementScore.id,
+      passageIds,
+      alternative.id
+    );
+    expect(adopted.arrangementScore).toMatchObject({
+      id: "arrangement.eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      parentArrangementScoreId: result.arrangementScore.id,
+      version: 2,
+      selectedCandidateId: alternative.id,
+    });
+    expect(adopted.branchId).toBe("branch.dddddddd-dddd-4ddd-8ddd-dddddddddddd");
+    expect(store.get(workspace.id).arrangementScoreIds).toEqual([
+      ...priorScores,
+      adopted.arrangementScore.id,
+    ]);
+    for (const originalEvent of result.arrangementScore.events.slice(4)) {
+      expect(
+        adopted.arrangementScore.events.find((event) => event.id === originalEvent.id)
+      ).toEqual(originalEvent);
+    }
 
     expect(correctedAnalysis).toMatchObject({
       id: "analysis.cccccccc-cccc-4ccc-8ccc-cccccccccccc",

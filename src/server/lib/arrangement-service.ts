@@ -1,12 +1,18 @@
 import { createHash, randomUUID } from "node:crypto";
-import { arrangeFaithfulPluckedString } from "../../lib/baroque-guitar-arranger.js";
+import {
+  arrangeFaithfulPluckedString,
+  auditFaithfulPrincipalVoice,
+} from "../../lib/baroque-guitar-arranger.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
-import { arrangeContinuo } from "../../lib/continuo-arranger.js";
-import { arrangeImitativeIntabulation } from "../../lib/imitative-arranger.js";
+import { arrangeContinuo, auditContinuo } from "../../lib/continuo-arranger.js";
+import { arrangeImitativeIntabulation, auditImitative } from "../../lib/imitative-arranger.js";
+import { applyPreservationPolicy } from "../../lib/preservation-policy.js";
+import { buildAudioPreview } from "../../lib/audio-preview.js";
 import { buildCompleteTransformationReport } from "../../lib/transformation-report.js";
 import type {
   ArrangementCandidate,
+  ArrangementEvent,
   ArrangementScore,
   ArrangementSearch,
   AnalysisRecord,
@@ -48,6 +54,19 @@ export type CreateFaithfulArrangementResult = {
   arrangementSearch: ArrangementSearch;
   candidates: ArrangementCandidate[];
   arrangementScore: ArrangementScore;
+};
+
+export type PassageCandidate = {
+  id: string;
+  sourceCandidateId: string;
+  strategy: string;
+  status: "survived" | "selected" | "rejected";
+  rank?: number;
+  replacementEvents: ArrangementEvent[];
+  changedArrangementEventIds: string[];
+  evaluation?: ArrangementCandidate["evaluation"];
+  audit: PreservationAudit;
+  rejectionReason?: string;
 };
 
 export class ArrangementService {
@@ -370,6 +389,228 @@ export class ArrangementService {
     };
     this.store.saveArrangementScore(workspaceId, arrangementScore);
     return { branchId, arrangementScore };
+  }
+
+  passageCandidates(
+    workspaceId: string,
+    arrangementScoreId: string,
+    arrangementEventIds: string[]
+  ): { arrangementScoreId: string; selectedEventIds: string[]; candidates: PassageCandidate[] } {
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const selected = selectedPassage(arrangement, arrangementEventIds);
+    const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const candidates = search.candidateIds
+      .map((id) => this.store.getArrangementCandidate(workspaceId, id))
+      .map((candidate) =>
+        this.projectPassageCandidate(workspaceId, arrangement, selected, candidate)
+      )
+      .sort(
+        (left, right) =>
+          (left.rank ?? Number.MAX_SAFE_INTEGER) - (right.rank ?? Number.MAX_SAFE_INTEGER)
+      );
+    return { arrangementScoreId, selectedEventIds: selected.map((event) => event.id), candidates };
+  }
+
+  previewPassageCandidate(
+    workspaceId: string,
+    arrangementScoreId: string,
+    arrangementEventIds: string[],
+    candidateId: string
+  ) {
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const selected = selectedPassage(arrangement, arrangementEventIds);
+    const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
+    assertCandidateBelongsToArrangement(arrangement, candidate);
+    const projection = this.projectPassageCandidate(workspaceId, arrangement, selected, candidate);
+    if (projection.status === "rejected") {
+      throw new ApiRouteError(
+        `Rejected passage candidates cannot be auditioned: ${projection.rejectionReason}`,
+        409
+      );
+    }
+    const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    return buildAudioPreview(
+      { ...arrangement, events: overlayPassage(arrangement.events, projection.replacementEvents) },
+      source
+    );
+  }
+
+  adoptPassageCandidate(
+    workspaceId: string,
+    arrangementScoreId: string,
+    arrangementEventIds: string[],
+    candidateId: string
+  ) {
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
+    const selected = selectedPassage(arrangement, arrangementEventIds);
+    const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
+    assertCandidateBelongsToArrangement(arrangement, candidate);
+    const projection = this.projectPassageCandidate(workspaceId, arrangement, selected, candidate);
+    if (projection.status === "rejected") {
+      throw new ApiRouteError(
+        `Rejected passage candidates cannot be adopted: ${projection.rejectionReason}`,
+        409
+      );
+    }
+    if (projection.changedArrangementEventIds.length === 0) {
+      throw new ApiRouteError("The passage candidate makes no change to the selected passage", 409);
+    }
+    const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
+    const timestamp = this.now().toISOString();
+    const branchId = `branch.${this.createId()}`;
+    const events = overlayPassage(arrangement.events, projection.replacementEvents);
+    this.store.saveArrangementBranch(workspaceId, {
+      id: branchId,
+      label: `Passage alternative · ${candidate.strategy}`,
+      rootInputVersions: [
+        {
+          recordType: "arrangement_score",
+          recordId: arrangement.id,
+          version: arrangement.version ?? 1,
+        },
+        { recordType: "arrangement_candidate", recordId: candidate.id, version: 1 },
+      ],
+      createdFromCandidateId: candidate.id,
+      createdAt: timestamp,
+    });
+    const adopted = this.store.saveArrangementScore(workspaceId, {
+      ...arrangement,
+      id: `arrangement.${this.createId()}`,
+      version: (arrangement.version ?? 1) + 1,
+      parentArrangementScoreId: arrangement.id,
+      branchId,
+      selectedCandidateId: candidate.id,
+      events,
+      transformationReport: buildCompleteTransformationReport(
+        source,
+        analysis,
+        events,
+        arrangement.transpositionPlan.semitones
+      ),
+      preservationAudit: projection.audit,
+      createdAt: timestamp,
+    });
+    return {
+      arrangementScore: adopted,
+      branchId,
+      sourceCandidateId: candidate.id,
+      changedArrangementEventIds: projection.changedArrangementEventIds,
+    };
+  }
+
+  private projectPassageCandidate(
+    workspaceId: string,
+    arrangement: ArrangementScore,
+    selected: ArrangementEvent[],
+    candidate: ArrangementCandidate
+  ): PassageCandidate {
+    const selectedSources = new Set(selected.flatMap((event) => event.sourceEventIds));
+    const replacements = selected.map((current) => {
+      const principalSource = current.principalVoiceSourceEventId;
+      const alternate = candidate.events.find(
+        (event) =>
+          (principalSource && event.principalVoiceSourceEventId === principalSource) ||
+          (event.sourceEventIds.some((id) => selectedSources.has(id)) &&
+            event.measureId === current.measureId &&
+            event.onset.numerator * current.onset.denominator ===
+              current.onset.numerator * event.onset.denominator)
+      );
+      return alternate
+        ? { ...alternate, id: current.id, sourceEventIds: current.sourceEventIds }
+        : current;
+    });
+    const events = overlayPassage(arrangement.events, replacements);
+    const audit = this.auditProjection(workspaceId, arrangement, events);
+    const hardReason =
+      candidate.status === "rejected"
+        ? (candidate.rejectionReason ?? "The source candidate failed a hard constraint.")
+        : audit.status === "fail"
+          ? (audit.findings.find((finding) => finding.severity === "hard")?.message ??
+            "The mixed passage projection failed its Preservation Audit.")
+          : undefined;
+    return {
+      id: `passage-candidate.${createHash("sha256")
+        .update(`${arrangement.id}:${selected.map((event) => event.id).join(",")}:${candidate.id}`)
+        .digest("hex")
+        .slice(0, 24)}`,
+      sourceCandidateId: candidate.id,
+      strategy: candidate.strategy,
+      status: hardReason
+        ? "rejected"
+        : candidate.id === arrangement.selectedCandidateId
+          ? "selected"
+          : "survived",
+      rank: candidate.rank,
+      replacementEvents: replacements,
+      changedArrangementEventIds: replacements
+        .filter((event, index) => JSON.stringify(event) !== JSON.stringify(selected[index]))
+        .map((event) => event.id),
+      evaluation: candidate.evaluation,
+      audit,
+      rejectionReason: hardReason,
+    };
+  }
+
+  private auditProjection(
+    workspaceId: string,
+    arrangement: ArrangementScore,
+    events: ArrangementEvent[]
+  ): PreservationAudit {
+    const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
+    const model = this.loadInstrument(arrangement.targetConfiguration.instrumentId);
+    if (
+      arrangement.targetConfiguration.tuningId &&
+      arrangement.targetConfiguration.instrumentId === "baroque-lute-13"
+    ) {
+      model.setDiapasonScheme(arrangement.targetConfiguration.tuningId);
+    }
+    const faithful =
+      analysis.texture === "continuo"
+        ? auditContinuo(source, analysis, events)
+        : analysis.texture === "imitative-polyphony"
+          ? auditImitative(source, analysis, events, model)
+          : auditFaithfulPrincipalVoice(
+              source,
+              analysis,
+              events,
+              arrangement.transpositionPlan.semitones
+            );
+    return applyPreservationPolicy(faithful, arrangement.preservationPolicy);
+  }
+}
+
+function selectedPassage(arrangement: ArrangementScore, ids: string[]): ArrangementEvent[] {
+  if (ids.length === 0) throw new ApiRouteError("Select at least one arrangement event", 400);
+  const selected = ids.map((id) => {
+    const event = arrangement.events.find((candidate) => candidate.id === id);
+    if (!event) throw new ApiRouteError(`Arrangement event not found: ${id}`, 404);
+    return event;
+  });
+  return selected;
+}
+
+function overlayPassage(
+  current: ArrangementEvent[],
+  replacements: ArrangementEvent[]
+): ArrangementEvent[] {
+  const byId = new Map(replacements.map((event) => [event.id, event]));
+  return current.map((event) => byId.get(event.id) ?? event);
+}
+
+function assertCandidateBelongsToArrangement(
+  arrangement: ArrangementScore,
+  candidate: ArrangementCandidate
+): void {
+  if (candidate.arrangementSearchId !== arrangement.arrangementSearchId) {
+    throw new ApiRouteError(
+      `Arrangement Candidate is not part of this Arrangement Score search: ${candidate.id}`,
+      404
+    );
   }
 }
 

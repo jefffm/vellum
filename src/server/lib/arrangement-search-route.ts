@@ -16,6 +16,20 @@ const CandidateParamsSchema = Type.Object({
   searchId: Type.String({ pattern: "^search\\.[a-f0-9-]{16,}$" }),
   candidateId: Type.String({ pattern: "^candidate\\.[a-f0-9-]{16,}$" }),
 });
+const ArrangementParamsSchema = Type.Object({
+  workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
+  arrangementId: Type.String({ pattern: "^arrangement\\.[a-f0-9-]{16,}$" }),
+});
+const PassageCandidateBodySchema = Type.Object(
+  {
+    arrangement_event_ids: Type.Array(Type.String({ minLength: 1 }), {
+      minItems: 1,
+      uniqueItems: true,
+    }),
+    source_candidate_id: Type.Optional(Type.String({ pattern: "^candidate\\.[a-f0-9-]{16,}$" })),
+  },
+  { additionalProperties: false }
+);
 
 type Options = { store?: WorkspaceStore; service?: ArrangementService };
 
@@ -74,6 +88,56 @@ export function createArrangementCandidateBranchRoute(options: Options = {}): Re
     handler: async ({ workspaceId, searchId, candidateId }) => {
       candidateForSearch(store, workspaceId, searchId, candidateId);
       return service.branchFromCandidate(workspaceId, candidateId);
+    },
+  });
+}
+
+export function createPassageCandidateListRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  return createApiRoute({
+    validate: (body, request) => ({
+      ...Value.Decode(ArrangementParamsSchema, request.params),
+      ...Value.Decode(PassageCandidateBodySchema, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, arrangement_event_ids }) =>
+      service.passageCandidates(workspaceId, arrangementId, arrangement_event_ids),
+  });
+}
+
+export function createPassageCandidatePreviewRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  return createApiRoute({
+    validate: (body, request) => ({
+      ...Value.Decode(ArrangementParamsSchema, request.params),
+      ...Value.Decode(PassageCandidateBodySchema, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, arrangement_event_ids, source_candidate_id }) => {
+      if (!source_candidate_id) throw new ApiRouteError("source_candidate_id is required", 400);
+      return service.previewPassageCandidate(
+        workspaceId,
+        arrangementId,
+        arrangement_event_ids,
+        source_candidate_id
+      );
+    },
+  });
+}
+
+export function createPassageCandidateAdoptRoute(options: Options = {}): RequestHandler {
+  const { service } = dependencies(options);
+  return createApiRoute({
+    validate: (body, request) => ({
+      ...Value.Decode(ArrangementParamsSchema, request.params),
+      ...Value.Decode(PassageCandidateBodySchema, body),
+    }),
+    handler: async ({ workspaceId, arrangementId, arrangement_event_ids, source_candidate_id }) => {
+      if (!source_candidate_id) throw new ApiRouteError("source_candidate_id is required", 400);
+      return service.adoptPassageCandidate(
+        workspaceId,
+        arrangementId,
+        arrangement_event_ids,
+        source_candidate_id
+      );
     },
   });
 }
