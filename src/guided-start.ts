@@ -2445,6 +2445,11 @@ function presentScoreAnchoredReview(
   const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]")!;
   const sourceImage = panel.querySelector<HTMLImageElement>("[data-review-source-image]")!;
   const sourceHighlight = panel.querySelector<HTMLElement>("[data-review-source-highlight]")!;
+  const sourceCanvas = panel.querySelector<HTMLElement>("[data-review-source-canvas]")!;
+  const zoomOut = panel.querySelector<HTMLButtonElement>("[data-review-zoom-out]")!;
+  const zoomReset = panel.querySelector<HTMLButtonElement>("[data-review-zoom-reset]")!;
+  const zoomIn = panel.querySelector<HTMLButtonElement>("[data-review-zoom-in]")!;
+  const zoomValue = panel.querySelector<HTMLElement>("[data-review-zoom-value]")!;
   const heading = panel.querySelector<HTMLElement>("[data-review-heading]")!;
   const message = panel.querySelector<HTMLElement>("[data-review-message]")!;
   const location = panel.querySelector<HTMLElement>("[data-review-location]")!;
@@ -2458,6 +2463,7 @@ function presentScoreAnchoredReview(
   const region = item.uncertainty.region;
 
   panel.hidden = false;
+  dialog.classList.add("review-active");
   setGuidedNavigationDisabled(dialog, true);
   if (status) {
     status.textContent =
@@ -2469,6 +2475,26 @@ function presentScoreAnchoredReview(
     sourceImage.hidden = false;
     sourceImage.src = item.sourceImageUrl;
     sourceImage.alt = `${review.sourceFilename}, Audiveris source page ${region.page}`;
+    let zoom = 1;
+    const updateZoom = () => {
+      sourceCanvas.style.width = `${zoom * 100}%`;
+      zoomValue.textContent = `${Math.round(zoom * 100)}%`;
+      zoomOut.disabled = zoom <= 1;
+      zoomIn.disabled = zoom >= 4;
+    };
+    zoomOut.onclick = () => {
+      zoom = Math.max(1, zoom - 0.5);
+      updateZoom();
+    };
+    zoomReset.onclick = () => {
+      zoom = 1;
+      updateZoom();
+    };
+    zoomIn.onclick = () => {
+      zoom = Math.min(4, zoom + 0.5);
+      updateZoom();
+    };
+    updateZoom();
     sourceImage.onload = () => {
       sourceHighlight.hidden = false;
       sourceHighlight.style.left = `${(region.x / sourceImage.naturalWidth) * 100}%`;
@@ -2477,6 +2503,7 @@ function presentScoreAnchoredReview(
       sourceHighlight.style.height = `${(region.height / sourceImage.naturalHeight) * 100}%`;
     };
   } else {
+    sourceCanvas.style.width = "100%";
     sourceImage.hidden = true;
     sourceImage.removeAttribute("src");
     sourceHighlight.hidden = true;
@@ -2632,6 +2659,7 @@ function hideScoreAnchoredReview(dialog: HTMLDialogElement): void {
   const panel = dialog.querySelector<HTMLElement>("[data-score-review]");
   if (!panel) return;
   panel.hidden = true;
+  dialog.classList.remove("review-active");
   setGuidedNavigationDisabled(dialog, false);
   const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]");
   if (source) source.removeAttribute("src");
@@ -2971,7 +2999,7 @@ export function guidedStartMarkup(): string {
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
         <p data-review-message></p>
         <div class="score-review-grid">
-          <div><strong>Source facsimile</strong><div class="source-page-frame"><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span><iframe data-review-source></iframe></div></div>
+          <div><div class="source-review-toolbar"><strong>Source facsimile</strong><span><button type="button" data-review-zoom-out aria-label="Zoom out source">−</button><button type="button" data-review-zoom-reset><span data-review-zoom-value>100%</span></button><button type="button" data-review-zoom-in aria-label="Zoom in source">+</button></span></div><div class="source-page-frame"><div class="source-page-canvas" data-review-source-canvas><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span></div><iframe data-review-source></iframe></div></div>
           <div class="score-review-notation"><strong>Recognized notation</strong><div data-review-editors></div><strong>Ranked suggestions</strong><div class="score-review-suggestions" data-review-suggestions></div><label>Review note<input type="text" data-review-rationale></label><p class="score-review-error" data-review-error></p><div class="score-review-actions"><button type="button" data-review-cancel>Cancel this run</button><button type="button" data-review-apply>Apply correction and continue</button></div></div>
         </div>
       </section>

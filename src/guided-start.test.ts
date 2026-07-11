@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import {
   guidedStartMarkup,
   buildScoreSelectionContext,
@@ -222,6 +224,18 @@ describe("polyphonic Score-Anchored Review", () => {
       "event.tenor": "tenor",
       "event.bass": "bass",
     });
+  });
+
+  it("expands the source review, zooms its canvas, and never covers the uncertain symbol", () => {
+    const markup = guidedStartMarkup();
+    const styles = readFileSync(path.resolve(process.cwd(), "src/styles.css"), "utf8");
+    expect(markup).toContain("data-review-zoom-in");
+    expect(markup).toContain("data-review-zoom-out");
+    expect(markup).toContain("data-review-zoom-reset");
+    expect(markup).toContain("source-page-canvas");
+    expect(styles).toContain("#guided-start.review-active");
+    expect(styles).toContain("outline-offset");
+    expect(styles).toContain("background: transparent");
   });
 });
 

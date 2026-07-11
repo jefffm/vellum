@@ -678,6 +678,10 @@ chat-panel > div > div:has(agent-interface) {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
 }
 
+#guided-start.review-active {
+  width: min(76rem, calc(100vw - 2rem));
+}
+
 #guided-start::backdrop {
   background: rgba(31, 31, 27, 0.45);
   backdrop-filter: blur(3px);
@@ -891,6 +895,10 @@ chat-panel > div > div:has(agent-interface) {
   gap: 0.85rem;
 }
 
+#guided-start.review-active .score-review-grid {
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 0.8fr);
+}
+
 .score-review-grid > div,
 .score-review-notation,
 .score-review-notation [data-review-editors] {
@@ -914,8 +922,18 @@ chat-panel > div > div:has(agent-interface) {
 .source-page-frame {
   position: relative;
   overflow: auto;
-  min-height: 24rem;
+  min-height: 32rem;
+  max-height: 68vh;
+  border: 1px solid #d4cab8;
+  border-radius: 0.55rem;
   background: #fff;
+}
+
+.source-page-canvas {
+  position: relative;
+  width: 100%;
+  min-width: 100%;
+  transition: width 120ms ease-out;
 }
 
 .source-page-frame img {
@@ -927,9 +945,37 @@ chat-panel > div > div:has(agent-interface) {
 .source-page-frame [data-review-source-highlight] {
   position: absolute;
   box-sizing: border-box;
-  border: 3px solid #d33b2f;
-  background: rgb(211 59 47 / 18%);
+  border: 0;
+  outline: 3px solid #d33b2f;
+  outline-offset: 5px;
+  background: transparent;
+  filter: drop-shadow(0 0 2px #fff);
   pointer-events: none;
+}
+
+.source-review-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.source-review-toolbar > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+#guided-start .source-review-toolbar button {
+  min-width: 2.15rem;
+  padding: 0.3rem 0.45rem;
+  border-color: #b9aa73;
+  background: #fff;
+}
+
+#guided-start .source-review-toolbar [data-review-zoom-reset] {
+  min-width: 4.2rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-review-suggestions {
