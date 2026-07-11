@@ -11,6 +11,7 @@ import type {
 } from "./music-domain.js";
 import { compareRational } from "./music-domain.js";
 import { parsePitch } from "./pitch.js";
+import { buildCompleteTransformationReport } from "./transformation-report.js";
 
 type ContinuoArrangementOptions = {
   arrangementId: string;
@@ -94,17 +95,12 @@ export function arrangeContinuo(
       },
       preservationPolicy: "faithful_reduction",
       events: selectedCandidate.events,
-      transformationReport: score.events.map((sourceEvent) => ({
-        sourceEventId: sourceEvent.id,
-        arrangementEventIds: selectedCandidate.events
-          .filter((event) => event.sourceEventIds.includes(sourceEvent.id))
-          .map((event) => event.id),
-        classification: sourceEvent.type === "figured_bass" ? "generated" : "retained",
-        rationale:
-          sourceEvent.type === "figured_bass"
-            ? `The ${profileId} profile realizes this source figure without replacing it.`
-            : "The source voice event is retained literally in its semantic playback part.",
-      })),
+      transformationReport: buildCompleteTransformationReport(
+        score,
+        analysis,
+        selectedCandidate.events,
+        0
+      ),
       preservationAudit: selectedCandidate.audit,
       createdAt: options.createdAt,
     },

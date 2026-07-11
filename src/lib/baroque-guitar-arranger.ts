@@ -12,6 +12,7 @@ import type {
 } from "./music-domain.js";
 import { addRational, compareRational } from "./music-domain.js";
 import { midiToNote, noteToMidi, transposeNote } from "./pitch.js";
+import { buildCompleteTransformationReport } from "./transformation-report.js";
 
 type ArrangementOptions = {
   arrangementId: string;
@@ -93,10 +94,10 @@ export function arrangeFaithfulPluckedString(
   );
   const selectedCandidate = survivors[0]!;
   selectedCandidate.status = "selected";
-  const transformationReport = buildTransformationReport(
+  const transformationReport = buildCompleteTransformationReport(
     score,
+    analysis,
     selectedCandidate.events,
-    target.eventIds,
     plan.semitones
   );
 
@@ -566,41 +567,6 @@ function candidateMetrics(events: ArrangementEvent[]): ArrangementCandidate["met
         : positions.reduce((sum, position) => sum + position.fret, 0) / positions.length,
     openStringCount: positions.filter((position) => position.fret === 0).length,
   };
-}
-
-function buildTransformationReport(
-  score: NormalizedScore,
-  arrangedEvents: ArrangementEvent[],
-  protectedEventIds: string[],
-  semitones: number
-): ArrangementScore["transformationReport"] {
-  return score.events.map((sourceEvent) => {
-    const descendants = arrangedEvents.filter((event) =>
-      event.sourceEventIds.includes(sourceEvent.id)
-    );
-    if (descendants.length === 0) {
-      return {
-        sourceEventId: sourceEvent.id,
-        arrangementEventIds: [],
-        classification: "omitted" as const,
-        rationale:
-          "Inner source material yielded to Principal Voice preservation and target playability.",
-      };
-    }
-    const protectedEvent = protectedEventIds.includes(sourceEvent.id);
-    return {
-      sourceEventId: sourceEvent.id,
-      arrangementEventIds: descendants.map((event) => event.id),
-      classification: protectedEvent
-        ? semitones === 0
-          ? ("retained" as const)
-          : ("transposed" as const)
-        : ("revoiced" as const),
-      rationale: protectedEvent
-        ? "Principal Voice event retained under the uniform Transposition Plan."
-        : "Source harmony pitch class retained in a playable target-instrument register.",
-    };
-  });
 }
 
 function deduplicateVoicings(choices: VoicingChoice[]): VoicingChoice[] {

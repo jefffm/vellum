@@ -64,8 +64,9 @@ describe("faithful baroque-guitar arrangement search", () => {
 
     expect(result.selected.events.some((event) => event.type === "chord")).toBe(true);
     expect(
-      result.selected.transformationReport.filter((entry) => entry.classification === "transposed")
-        .length
+      result.selected.transformationReport.filter(
+        (entry) => entry.entryType === "event" && entry.classification === "transposed"
+      ).length
     ).toBe(protectedEvents.length);
   });
 

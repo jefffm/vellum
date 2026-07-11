@@ -34,6 +34,8 @@ Language models can be useful musical collaborators, but neither model memory no
 
 The default result now includes a short Musicological Analysis summary. Expanding it reveals passage-by-passage textures and contrapuntal techniques, score-anchored claims with evidence and confidence, historically scoped profiles, and alternative interpretations. Corrections are durable new analysis versions, so an Owner can teach Vellum what this particular source means without silently rewriting the prior reading.
 
+Each result also exposes complete provenance: every source event, protected relationship, omission, transposition, octave move, revoicing, reharmonization, rhythm change, and generated event is classified and linked to its arrangement descendants. Continuo figures and the material generated from them remain visibly distinct.
+
 ## Quick start
 
 ```bash

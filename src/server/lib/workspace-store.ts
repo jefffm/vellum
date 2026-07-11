@@ -386,6 +386,34 @@ export class WorkspaceStore {
         400
       );
     }
+    const score = this.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.getAnalysisRecord(workspaceId, search.analysisRecordId);
+    const sourceEntryIds = arrangement.transformationReport
+      .filter((entry) => entry.entryType === "event" && entry.sourceEventId)
+      .map((entry) => entry.sourceEventId!);
+    const relationshipIds = arrangement.transformationReport
+      .filter((entry) => entry.entryType === "relationship" && entry.sourceRelationshipId)
+      .map((entry) => entry.sourceRelationshipId!);
+    const completeSourceCoverage = score.events.every(
+      (event) => sourceEntryIds.filter((id) => id === event.id).length === 1
+    );
+    const completeRelationshipCoverage = analysis.preservationTargets
+      .filter((target) => target.kind === "relationship")
+      .every((target) => relationshipIds.filter((id) => id === target.id).length === 1);
+    const generatedCoverage = arrangement.events
+      .filter((event) => event.role === "realization" || event.sourceEventIds.length === 0)
+      .every((event) =>
+        arrangement.transformationReport.some(
+          (entry) =>
+            entry.classification === "generated" && entry.arrangementEventIds.includes(event.id)
+        )
+      );
+    if (!completeSourceCoverage || !completeRelationshipCoverage || !generatedCoverage) {
+      throw new ApiRouteError(
+        "Arrangement Score requires a complete event, relationship, and generated-material Transformation Report",
+        400
+      );
+    }
     const decoded = Value.Decode(ArrangementScoreSchema, arrangement);
     this.writeImmutableRecord(workspaceId, "arrangement-scores", decoded.id, decoded);
     this.linkRecord(workspace, "arrangementScoreIds", decoded.id);

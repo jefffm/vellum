@@ -42,6 +42,15 @@ export type GuidedDeliverable = {
       resolution?: string;
     }>;
   };
+  transformationReport: Array<{
+    id?: string;
+    entryType?: "event" | "relationship";
+    sourceEventId?: string;
+    sourceRelationshipId?: string;
+    arrangementEventIds: string[];
+    classification: string;
+    rationale: string;
+  }>;
   compiled: CompileResult;
   preview: AudioPreview;
   candidates: Array<{
@@ -177,7 +186,10 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           analysis: GuidedDeliverable["analysis"];
           arrangementSearch: { id: string };
           candidates: GuidedDeliverable["candidates"];
-          arrangementScore: { id: string };
+          arrangementScore: {
+            id: string;
+            transformationReport: GuidedDeliverable["transformationReport"];
+          };
         }>(`/api/workspaces/${workspace.id}/arrangements`, {
           method: "POST",
           body: JSON.stringify({
@@ -202,6 +214,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           targetConfigurationId: target.id,
           label: targetLabel(target.id),
           analysis: arranged.analysis,
+          transformationReport: arranged.arrangementScore.transformationReport,
           compiled,
           preview,
           candidates: arranged.candidates,
@@ -472,6 +485,35 @@ export function installAnalysisSummary(panel: HTMLElement, deliverable: GuidedDe
     body.append(ambiguityPanel);
   }
   details.append(summary, body);
+  header.append(details);
+}
+
+export function installTransformationReport(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".transformation-report")?.remove();
+  const details = document.createElement("details");
+  details.className = "transformation-report";
+  const summary = document.createElement("summary");
+  const counts = new Map<string, number>();
+  for (const entry of deliverable.transformationReport) {
+    counts.set(entry.classification, (counts.get(entry.classification) ?? 0) + 1);
+  }
+  summary.textContent = `Provenance · ${[...counts]
+    .map(([classification, count]) => `${count} ${classification.replaceAll("_", " ")}`)
+    .join(" · ")}`;
+  const list = document.createElement("ol");
+  for (const entry of deliverable.transformationReport) {
+    const item = document.createElement("li");
+    item.dataset.transformationId = entry.id ?? "";
+    const source = entry.sourceRelationshipId ?? entry.sourceEventId ?? "new material";
+    item.textContent = `${source} → ${entry.arrangementEventIds.join(", ") || "omitted"}: ${entry.classification.replaceAll("_", " ")}. ${entry.rationale}`;
+    list.append(item);
+  }
+  details.append(summary, list);
   header.append(details);
 }
 

@@ -4,6 +4,7 @@ import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import { arrangeContinuo } from "../../lib/continuo-arranger.js";
 import { arrangeImitativeIntabulation } from "../../lib/imitative-arranger.js";
+import { buildCompleteTransformationReport } from "../../lib/transformation-report.js";
 import type {
   ArrangementCandidate,
   ArrangementScore,
@@ -247,6 +248,7 @@ export class ArrangementService {
       preservationAudit: candidate.audit,
       transformationReport: candidateTransformationReport(
         score,
+        analysis,
         candidate,
         selected.transpositionPlan.semitones
       ),
@@ -364,36 +366,9 @@ function clamp(value: number): number {
 
 function candidateTransformationReport(
   score: NormalizedScore,
+  analysis: AnalysisRecord,
   candidate: ArrangementCandidate,
   semitones: number
 ): ArrangementScore["transformationReport"] {
-  const sourceEntries = score.events.map((sourceEvent) => {
-    const mapped = candidate.events.filter((event) =>
-      event.sourceEventIds.includes(sourceEvent.id)
-    );
-    return {
-      sourceEventId: sourceEvent.id,
-      arrangementEventIds: mapped.map((event) => event.id),
-      classification:
-        mapped.length === 0
-          ? ("omitted" as const)
-          : semitones !== 0
-            ? ("transposed" as const)
-            : ("retained" as const),
-      rationale:
-        mapped.length === 0
-          ? "This candidate does not realize the source event."
-          : semitones !== 0
-            ? `This candidate realizes the source event under the uniform ${semitones}-semitone Transposition Plan.`
-            : "This candidate retains the source event at source pitch and time.",
-    };
-  });
-  const generated = candidate.events
-    .filter((event) => event.sourceEventIds.length === 0)
-    .map((event) => ({
-      arrangementEventIds: [event.id],
-      classification: "generated" as const,
-      rationale: "This candidate adds idiomatic material without claiming a source-event identity.",
-    }));
-  return [...sourceEntries, ...generated];
+  return buildCompleteTransformationReport(score, analysis, candidate.events, semitones);
 }

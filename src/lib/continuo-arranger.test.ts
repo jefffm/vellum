@@ -73,6 +73,21 @@ describe("profile-scoped Continuo Realization", () => {
     expect(
       result.selected.transformationReport.filter((entry) => entry.classification === "generated")
     ).toHaveLength(5);
+    expect(
+      result.selected.transformationReport.filter(
+        (entry) => entry.entryType === "event" && entry.sourceEventId
+      )
+    ).toHaveLength(score.events.length);
+    expect(
+      result.selected.transformationReport.find((entry) =>
+        entry.sourceRelationshipId?.endsWith("prepared-suspension")
+      )
+    ).toMatchObject({ entryType: "relationship", classification: "retained" });
+    expect(
+      result.selected.transformationReport
+        .filter((entry) => entry.classification === "generated")
+        .every((entry) => entry.sourceEventIds?.length === 2)
+    ).toBe(true);
 
     const mutated = result.selected.events.map((event) =>
       event.sourceEventIds.includes("event.figure.2") && event.role === "realization"

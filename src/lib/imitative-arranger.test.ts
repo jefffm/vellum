@@ -64,6 +64,14 @@ describe("three-voice imitative intabulation search", () => {
         expect(arranged.positions).toHaveLength(1);
       }
     }
+    expect(
+      result.selected.transformationReport.filter((entry) => entry.entryType === "event")
+    ).toHaveLength(score.events.length);
+    expect(
+      result.selected.transformationReport.filter((entry) => entry.entryType === "relationship")
+    ).toHaveLength(
+      analysis.preservationTargets.filter((target) => target.kind === "relationship").length
+    );
 
     const orderedEntries = analysis.preservationTargets.find(
       (target) => target.relationshipType === "ordered_entries"

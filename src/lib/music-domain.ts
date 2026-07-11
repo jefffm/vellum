@@ -671,13 +671,22 @@ export type ArrangementEvent = Static<typeof ArrangementEventSchema>;
 
 export const TransformationEntrySchema = Type.Object(
   {
+    id: Type.Optional(IdSchema),
+    entryType: Type.Optional(Type.Union([Type.Literal("event"), Type.Literal("relationship")])),
     sourceEventId: Type.Optional(IdSchema),
+    sourceEventIds: Type.Optional(Type.Array(IdSchema)),
+    sourceRelationshipId: Type.Optional(IdSchema),
+    relationshipType: Type.Optional(Type.String({ minLength: 1 })),
+    sourceEventGroups: Type.Optional(Type.Array(Type.Array(IdSchema))),
     arrangementEventIds: Type.Array(IdSchema),
+    arrangementEventGroups: Type.Optional(Type.Array(Type.Array(IdSchema))),
     classification: Type.Union([
       Type.Literal("retained"),
       Type.Literal("transposed"),
       Type.Literal("octave_relocated"),
       Type.Literal("revoiced"),
+      Type.Literal("reharmonized"),
+      Type.Literal("rhythm_changed"),
       Type.Literal("omitted"),
       Type.Literal("generated"),
     ]),
@@ -685,6 +694,8 @@ export const TransformationEntrySchema = Type.Object(
   },
   { additionalProperties: false }
 );
+
+export type TransformationEntry = Static<typeof TransformationEntrySchema>;
 
 export const PreservationAuditFindingSchema = Type.Object(
   {

@@ -34,6 +34,7 @@ import {
   installAudioPreviewControls,
   installAnalysisSummary,
   installCandidateComparisonControls,
+  installTransformationReport,
   installGuidedStart,
   type GuidedDeliverable,
 } from "./guided-start.js";
@@ -417,6 +418,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     analysisRecordId: string;
     arrangementSearchId?: string;
     targetConfiguration: { id: string; instrumentId: string };
+    transformationReport: GuidedDeliverable["transformationReport"];
   };
   const arrangement = await browserApi<StoredArrangement>(
     `/api/workspaces/${workspaceId}/arrangements/${arrangementId}`
@@ -451,6 +453,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       targetConfigurationId: arrangement.targetConfiguration.id,
       label: arrangement.targetConfiguration.instrumentId,
       analysis,
+      transformationReport: arrangement.transformationReport,
       compiled,
       preview,
       candidates,
@@ -489,6 +492,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
     }
     installAudioPreviewControls(panel, deliverable.preview);
     installAnalysisSummary(panel, deliverable);
+    installTransformationReport(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);
   };
   if (deliverables[0]) render(deliverables[0]);

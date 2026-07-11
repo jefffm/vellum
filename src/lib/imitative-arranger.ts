@@ -12,6 +12,7 @@ import type {
 } from "./music-domain.js";
 import { compareRational } from "./music-domain.js";
 import { noteToMidi } from "./pitch.js";
+import { buildCompleteTransformationReport } from "./transformation-report.js";
 
 type Options = {
   arrangementId: string;
@@ -85,15 +86,7 @@ export function arrangeImitativeIntabulation(
       },
       preservationPolicy: "faithful_reduction",
       events: selected.events,
-      transformationReport: score.events.map((source) => ({
-        sourceEventId: source.id,
-        arrangementEventIds: selected.events
-          .filter((event) => event.sourceEventIds.includes(source.id))
-          .map((event) => event.id),
-        classification: "retained" as const,
-        rationale:
-          "The source voice event is retained with its pitch, rhythm, order, voice identity, and explicit lute course assignment.",
-      })),
+      transformationReport: buildCompleteTransformationReport(score, analysis, selected.events, 0),
       preservationAudit: selected.audit,
       createdAt: options.createdAt,
     },
