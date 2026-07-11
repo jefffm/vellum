@@ -5,6 +5,7 @@ const root = process.cwd();
 const required = [
   "docs/SPEC_RECONCILIATION.md",
   "src/server/lib/omr.ts",
+  "src/server/lib/omr.real-smoke.test.ts",
   "src/server/lib/provider-connection.ts",
   "src/server/lib/source-import-service.ts",
   "src/server/lib/owner-store.ts",
