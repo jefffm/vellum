@@ -9,6 +9,7 @@ import {
   installWorkspaceNavigator,
   installOwnerKnowledgeWorkbench,
   installPersonalDefaultSummary,
+  installPerformanceInterpretationControls,
   installAudioPreviewControls,
   highlightLineage,
   openEditBatchDialog,
@@ -264,6 +265,19 @@ describe("Owner Knowledge workbench", () => {
     expect(implementation).toContain("application.reason");
     expect(implementation).toContain("application.status");
     expect(implementation).toContain("defaultId");
+  });
+});
+
+describe("Versioned Performance Interpretation", () => {
+  it("keeps literal playback default and makes interpreted choices inspectable and stale-aware", () => {
+    const implementation = installPerformanceInterpretationControls.toString();
+    expect(implementation).toContain("Literal Audio Preview · default reference");
+    expect(implementation).toContain("New interpretation version");
+    expect(implementation).toContain("parent_interpretation_id");
+    expect(implementation).toContain("principal_voice_ornament");
+    expect(implementation).toContain("Playback only");
+    expect(implementation).toContain("STALE:");
+    expect(implementation).toContain("deliverable.preview");
   });
 });
 

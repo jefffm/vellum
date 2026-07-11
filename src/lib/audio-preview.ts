@@ -1,4 +1,9 @@
-import type { ArrangementScore, NormalizedScore, Rational } from "./music-domain.js";
+import type {
+  ArrangementScore,
+  NormalizedScore,
+  PerformanceInterpretation,
+  Rational,
+} from "./music-domain.js";
 import { noteToMidi } from "./pitch.js";
 
 export type PlaybackPart =
@@ -28,7 +33,13 @@ export type AudioPreview = {
   tempo: number;
   durationSeconds: number;
   synthesis: "basic-oscillator";
-  mode: "literal";
+  mode: "literal" | "interpreted";
+  interpretation?: {
+    id: string;
+    version: number;
+    rationale: string;
+    choices: PerformanceInterpretation["choices"];
+  };
   performedForm: {
     measureOccurrences: Array<{
       id: string;
@@ -134,6 +145,80 @@ export function buildAudioPreview(
     },
     parts: playbackParts(events, score),
     events,
+  };
+}
+
+export function buildInterpretedAudioPreview(
+  arrangement: ArrangementScore,
+  score: NormalizedScore,
+  interpretation: PerformanceInterpretation
+): AudioPreview {
+  if (
+    interpretation.arrangementScoreId !== arrangement.id ||
+    interpretation.arrangementScoreVersion !== (arrangement.version ?? 1)
+  ) {
+    throw new Error(
+      "Performance Interpretation is linked to a different Arrangement Score version"
+    );
+  }
+  const literal = buildAudioPreview(arrangement, score, interpretation.choices.tempo);
+  const byArrangementEvent = new Map<string, PlaybackEvent[]>();
+  for (const event of literal.events) {
+    const key = `${event.measureOccurrenceId}:${event.arrangementEventId}`;
+    byArrangementEvent.set(key, [...(byArrangementEvent.get(key) ?? []), event]);
+  }
+  const arpeggiationSeconds = interpretation.choices.arpeggiationMs / 1_000;
+  const interpreted = literal.events.flatMap((event) => {
+    const group = byArrangementEvent
+      .get(`${event.measureOccurrenceId}:${event.arrangementEventId}`)!
+      .slice()
+      .sort((left, right) => left.midi - right.midi);
+    const arpeggiationOffset = group.indexOf(event) * arpeggiationSeconds;
+    const eighthIndex = Math.floor(event.startSeconds / (30 / interpretation.choices.tempo));
+    const inequalityOffset =
+      eighthIndex % 2 === 1
+        ? (30 / interpretation.choices.tempo) * interpretation.choices.inequality
+        : 0;
+    const shaped = {
+      ...event,
+      startSeconds: event.startSeconds + arpeggiationOffset + inequalityOffset,
+      durationSeconds: event.durationSeconds * interpretation.choices.articulation,
+    };
+    if (
+      interpretation.choices.principalVoiceOrnament !== "upper_neighbor" ||
+      event.part !== "principal-voice"
+    ) {
+      return [shaped];
+    }
+    const ornamentDuration = Math.min(shaped.durationSeconds / 2, 0.18);
+    return [
+      {
+        ...shaped,
+        occurrenceId: `${shaped.occurrenceId}.ornament-upper-neighbor`,
+        midi: shaped.midi + 2,
+        durationSeconds: ornamentDuration,
+      },
+      {
+        ...shaped,
+        startSeconds: shaped.startSeconds + ornamentDuration,
+        durationSeconds: Math.max(0.03, shaped.durationSeconds - ornamentDuration),
+      },
+    ];
+  });
+  return {
+    ...literal,
+    mode: "interpreted",
+    interpretation: {
+      id: interpretation.id,
+      version: interpretation.version,
+      rationale: interpretation.rationale,
+      choices: interpretation.choices,
+    },
+    durationSeconds: Math.max(
+      literal.durationSeconds,
+      ...interpreted.map((event) => event.startSeconds + event.durationSeconds)
+    ),
+    events: interpreted,
   };
 }
 

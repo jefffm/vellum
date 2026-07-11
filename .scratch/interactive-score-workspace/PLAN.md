@@ -1,6 +1,6 @@
 # Interactive Score Workspace execution plan
 
-Status: in-progress
+Status: complete
 
 ## Outcome
 

@@ -25,6 +25,7 @@ import {
   StaleDerivationSchema,
   CommitmentConflictSchema,
   PolicyExceptionSchema,
+  PerformanceInterpretationSchema,
   ModelActionSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
@@ -46,6 +47,7 @@ import type {
   StaleDerivation,
   CommitmentConflict,
   PolicyException,
+  PerformanceInterpretation,
   ModelAction,
   ModelActionInputVersion,
   NormalizedScore,
@@ -78,7 +80,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 5,
+      schemaVersion: 6,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -99,6 +101,7 @@ export class WorkspaceStore {
       familyCommitmentIds: [],
       commitmentConflictIds: [],
       policyExceptionIds: [],
+      performanceInterpretationIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -164,7 +167,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 5) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 6) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -172,7 +175,7 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 5,
+      schemaVersion: 6,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
@@ -198,10 +201,13 @@ export class WorkspaceStore {
         ? parsed.commitmentConflictIds
         : [],
       policyExceptionIds: Array.isArray(parsed.policyExceptionIds) ? parsed.policyExceptionIds : [],
+      performanceInterpretationIds: Array.isArray(parsed.performanceInterpretationIds)
+        ? parsed.performanceInterpretationIds
+        : [],
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 5 ||
+      parsed.schemaVersion !== 6 ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
@@ -212,7 +218,8 @@ export class WorkspaceStore {
       !Array.isArray(parsed.editorialCommitmentIds) ||
       !Array.isArray(parsed.familyCommitmentIds) ||
       !Array.isArray(parsed.commitmentConflictIds) ||
-      !Array.isArray(parsed.policyExceptionIds)
+      !Array.isArray(parsed.policyExceptionIds) ||
+      !Array.isArray(parsed.performanceInterpretationIds)
     ) {
       writeJsonAtomic(manifestPath, workspace);
     }
@@ -867,6 +874,31 @@ export class WorkspaceStore {
       branchId,
       "branch",
       ArrangementBranchSchema
+    );
+  }
+
+  savePerformanceInterpretation(
+    workspaceId: string,
+    interpretation: PerformanceInterpretation
+  ): PerformanceInterpretation {
+    const workspace = this.get(workspaceId);
+    const arrangement = this.getArrangementScore(workspaceId, interpretation.arrangementScoreId);
+    if ((arrangement.version ?? 1) !== interpretation.arrangementScoreVersion) {
+      throw new ApiRouteError("Performance Interpretation score version is inconsistent", 400);
+    }
+    const decoded = Value.Decode(PerformanceInterpretationSchema, interpretation);
+    this.writeImmutableRecord(workspaceId, "performance-interpretations", decoded.id, decoded);
+    this.linkRecord(workspace, "performanceInterpretationIds", decoded.id);
+    return decoded;
+  }
+
+  getPerformanceInterpretation(workspaceId: string, id: string): PerformanceInterpretation {
+    return this.readRecord(
+      workspaceId,
+      "performance-interpretations",
+      id,
+      "interpretation",
+      PerformanceInterpretationSchema
     );
   }
 

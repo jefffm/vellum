@@ -138,6 +138,119 @@ export function installPersonalDefaultSummary(
   header.append(details);
 }
 
+export async function installPerformanceInterpretationControls(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): Promise<void> {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".performance-interpretation-controls")?.remove();
+  const result = await api<{
+    literalIsDefault: true;
+    staleReason?: string;
+    interpretations: Array<{
+      id: string;
+      version: number;
+      parentInterpretationId?: string;
+      rationale: string;
+      choices: {
+        tempo: number;
+        arpeggiationMs: number;
+        inequality: number;
+        articulation: number;
+        principalVoiceOrnament: string;
+      };
+    }>;
+  }>(
+    `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/performance-interpretations`
+  );
+  const controls = document.createElement("div");
+  controls.className = "performance-interpretation-controls";
+  const label = document.createElement("label");
+  label.textContent = "Playback interpretation";
+  const select = document.createElement("select");
+  const literal = document.createElement("option");
+  literal.value = "literal";
+  literal.textContent = "Literal Audio Preview · default reference";
+  select.append(literal);
+  for (const interpretation of [...result.interpretations].sort(
+    (left, right) => right.version - left.version
+  )) {
+    const option = document.createElement("option");
+    option.value = interpretation.id;
+    option.textContent = `Interpretation v${interpretation.version} · ${interpretation.rationale}`;
+    select.append(option);
+  }
+  const evidence = document.createElement("p");
+  evidence.textContent = result.staleReason
+    ? `STALE: parent Arrangement Score evidence changed · ${result.staleReason}. The interpretation is preserved but not current.`
+    : "Literal playback reproduces canonical events. Interpretation is an optional playback-only projection.";
+  const create = document.createElement("button");
+  create.type = "button";
+  create.textContent = "New interpretation version";
+  create.addEventListener("click", async () => {
+    const parent = result.interpretations.find((item) => item.id === select.value);
+    const tempo = Number(
+      window.prompt("Tempo (quarter notes per minute)", String(parent?.choices.tempo ?? 70))
+    );
+    const arpeggiationMs = Number(
+      window.prompt(
+        "Chord arpeggiation in milliseconds",
+        String(parent?.choices.arpeggiationMs ?? 35)
+      )
+    );
+    const inequality = Number(
+      window.prompt("Rhythmic inequality (0 to 0.4)", String(parent?.choices.inequality ?? 0))
+    );
+    const articulation = Number(
+      window.prompt("Articulation length (0.1 to 1)", String(parent?.choices.articulation ?? 0.9))
+    );
+    const ornament =
+      window.prompt(
+        "Principal Voice ornament: none or upper_neighbor",
+        parent?.choices.principalVoiceOrnament ?? "none"
+      ) ?? "none";
+    const rationale = window.prompt("Why is this interpretation appropriate?")?.trim();
+    if (!rationale) return;
+    await api(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/performance-interpretations`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          ...(parent ? { parent_interpretation_id: parent.id } : {}),
+          choices: {
+            tempo,
+            arpeggiation_ms: arpeggiationMs,
+            inequality,
+            articulation,
+            principal_voice_ornament: ornament,
+          },
+          rationale,
+        }),
+      }
+    );
+    await installPerformanceInterpretationControls(panel, deliverable);
+  });
+  select.addEventListener("change", async () => {
+    if (select.value === "literal") {
+      installAudioPreviewControls(panel, deliverable.preview);
+      evidence.textContent = result.staleReason
+        ? `Literal reference restored. Arrangement evidence is stale: ${result.staleReason}`
+        : "Literal reference restored; no interpretive timing or ornament choices are active.";
+      return;
+    }
+    const interpretation = result.interpretations.find((item) => item.id === select.value)!;
+    const preview = await api<AudioPreview>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/performance-interpretations/${interpretation.id}/audio-preview`
+    );
+    installAudioPreviewControls(panel, preview);
+    evidence.textContent = `Playback only · ${JSON.stringify(interpretation.choices)} · ${interpretation.rationale}${result.staleReason ? ` · STALE: ${result.staleReason}` : ""}`;
+  });
+  label.append(select);
+  controls.append(label, create, evidence);
+  header.append(controls);
+}
+
 export type ArrangementVersionChange = {
   eventId: string;
   dimensions: Array<"pitch" | "rhythm" | "course_fingering">;

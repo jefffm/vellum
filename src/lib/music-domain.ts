@@ -122,7 +122,7 @@ export const ArrangementBriefSchema = Type.Object(
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 5 }),
+    schemaVersion: Type.Integer({ minimum: 6 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,
@@ -143,6 +143,7 @@ export const ArrangementWorkspaceSchema = Type.Object(
     familyCommitmentIds: Type.Array(IdSchema),
     commitmentConflictIds: Type.Array(IdSchema),
     policyExceptionIds: Type.Array(IdSchema),
+    performanceInterpretationIds: Type.Array(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -1190,6 +1191,31 @@ export const ArrangementScoreSchema = Type.Object(
 );
 
 export type ArrangementScore = Static<typeof ArrangementScoreSchema>;
+
+export const PerformanceInterpretationSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    arrangementScoreVersion: Type.Integer({ minimum: 1 }),
+    version: Type.Integer({ minimum: 1 }),
+    parentInterpretationId: Type.Optional(IdSchema),
+    choices: Type.Object(
+      {
+        tempo: Type.Integer({ minimum: 30, maximum: 240 }),
+        arpeggiationMs: Type.Integer({ minimum: 0, maximum: 250 }),
+        inequality: Type.Number({ minimum: 0, maximum: 0.4 }),
+        articulation: Type.Number({ minimum: 0.1, maximum: 1 }),
+        principalVoiceOrnament: Type.Union([Type.Literal("none"), Type.Literal("upper_neighbor")]),
+      },
+      { additionalProperties: false }
+    ),
+    rationale: Type.String({ minLength: 1 }),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type PerformanceInterpretation = Static<typeof PerformanceInterpretationSchema>;
 
 export function rational(numerator: number, denominator = 1): Rational {
   if (!Number.isInteger(numerator) || !Number.isInteger(denominator) || denominator <= 0) {

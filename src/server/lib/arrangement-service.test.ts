@@ -19,6 +19,11 @@ import {
   createArrangementSearchGetRoute,
 } from "./arrangement-search-route.js";
 import { createWorkspaceNavigationRoute } from "./workspace-route.js";
+import {
+  createPerformanceInterpretationCreateRoute,
+  createPerformanceInterpretationListRoute,
+  createPerformanceInterpretationPreviewRoute,
+} from "./performance-interpretation-route.js";
 
 describe("Greensleeves faithful arrangement service", () => {
   let rootDirectory: string;
@@ -496,6 +501,10 @@ describe("Greensleeves faithful arrangement service", () => {
       createId: () => "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
       now: () => new Date("2026-07-10T15:00:00.000Z"),
     });
+    const interpretationIds = [
+      "23232323-2323-4323-8323-232323232323",
+      "24242424-2424-4424-8424-242424242424",
+    ];
     const app = express();
     app.use(express.json());
     app.get(
@@ -503,6 +512,22 @@ describe("Greensleeves faithful arrangement service", () => {
       createArrangementSearchGetRoute({ store, service })
     );
     app.get("/api/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute(store));
+    app.get(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations",
+      createPerformanceInterpretationListRoute({ store })
+    );
+    app.post(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations",
+      createPerformanceInterpretationCreateRoute({
+        store,
+        createId: () => interpretationIds.shift()!,
+        now: () => new Date("2026-07-10T16:00:00.000Z"),
+      })
+    );
+    app.get(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations/:interpretationId/audio-preview",
+      createPerformanceInterpretationPreviewRoute({ store })
+    );
     app.get(
       "/api/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview",
       createArrangementCandidatePreviewRoute({ store, service })
@@ -542,6 +567,81 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(navigation.data.families[0]?.arrangements.map((item) => item.instrumentId)).toEqual(
       expect.arrayContaining(["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"])
     );
+    const arrangementBeforeInterpretation = JSON.stringify(
+      store.getArrangementScore(workspace.id, result.arrangementScore.id)
+    );
+    const interpretationBase = `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${result.arrangementScore.id}/performance-interpretations`;
+    const interpretationResponse = await fetch(interpretationBase, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        choices: {
+          tempo: 84,
+          arpeggiation_ms: 35,
+          inequality: 0.12,
+          articulation: 0.86,
+          principal_voice_ornament: "upper_neighbor",
+        },
+        rationale: "A restrained dance-like reading for comparison with the literal preview.",
+      }),
+    });
+    const interpretation = (await interpretationResponse.json()) as {
+      ok: boolean;
+      data: { id: string; version: number; arrangementScoreVersion: number };
+    };
+    expect(interpretation).toMatchObject({
+      ok: true,
+      data: { id: "interpretation.23232323-2323-4323-8323-232323232323", version: 1 },
+    });
+    const revisedInterpretationResponse = await fetch(interpretationBase, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        parent_interpretation_id: interpretation.data.id,
+        choices: {
+          tempo: 88,
+          arpeggiation_ms: 25,
+          inequality: 0.08,
+          articulation: 0.9,
+          principal_voice_ornament: "none",
+        },
+        rationale: "A slightly more direct second reading.",
+      }),
+    });
+    expect(await revisedInterpretationResponse.json()).toMatchObject({
+      ok: true,
+      data: {
+        id: "interpretation.24242424-2424-4424-8424-242424242424",
+        version: 2,
+        parentInterpretationId: interpretation.data.id,
+        arrangementScoreId: result.arrangementScore.id,
+      },
+    });
+    const interpretationList = (await (await fetch(interpretationBase)).json()) as {
+      ok: boolean;
+      data: { literalIsDefault: boolean; staleReason?: string; interpretations: unknown[] };
+    };
+    expect(interpretationList).toMatchObject({
+      ok: true,
+      data: {
+        literalIsDefault: true,
+        staleReason: "Corrected source pitch",
+        interpretations: expect.arrayContaining([
+          expect.objectContaining({ id: interpretation.data.id }),
+          expect.objectContaining({ version: 2, parentInterpretationId: interpretation.data.id }),
+        ]),
+      },
+    });
+    const interpretedPreview = (await (
+      await fetch(`${interpretationBase}/${interpretation.data.id}/audio-preview`)
+    ).json()) as { ok: boolean; data: { mode: string; interpretation: { id: string } } };
+    expect(interpretedPreview).toMatchObject({
+      ok: true,
+      data: { mode: "interpreted", interpretation: { id: interpretation.data.id } },
+    });
+    expect(
+      JSON.stringify(store.getArrangementScore(workspace.id, result.arrangementScore.id))
+    ).toBe(arrangementBeforeInterpretation);
     const correctionResponse = await fetch(
       `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/analyses/${result.analysis.id}/claims/${principalClaim.id}/corrections`,
       {

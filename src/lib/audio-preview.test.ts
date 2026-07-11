@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ArrangementScore, NormalizedScore } from "./music-domain.js";
-import { buildAudioPreview, skipRepeatedOccurrences } from "./audio-preview.js";
+import {
+  buildAudioPreview,
+  buildInterpretedAudioPreview,
+  skipRepeatedOccurrences,
+} from "./audio-preview.js";
 
 describe("buildAudioPreview", () => {
   it("uses arrangement pitches once and separates the protected top voice", () => {
@@ -149,5 +153,58 @@ describe("buildAudioPreview", () => {
     expect(condensed.events).toHaveLength(1);
     expect(condensed.performedForm.skipRepeats).toBe(true);
     expect(score.performedForm?.measureOccurrences).toHaveLength(4);
+  });
+
+  it("keeps literal playback canonical while interpretation shapes only occurrences", () => {
+    const score = {
+      measures: [{ id: "measure.1", duration: { numerator: 2, denominator: 1 } }],
+    } as unknown as NormalizedScore;
+    const arrangement = {
+      id: "arrangement.1111111111111111",
+      version: 3,
+      transformationReport: [],
+      events: [
+        {
+          id: "arrangement-event.1",
+          type: "chord",
+          measureId: "measure.1",
+          onset: { numerator: 0, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitches: ["C4", "E4", "G4"],
+          positions: [],
+          sourceEventIds: ["event.1"],
+          principalVoiceSourceEventId: "event.1",
+        },
+      ],
+      preservationAudit: { status: "pass", targetIds: [], findings: [] },
+    } as unknown as ArrangementScore;
+    const before = structuredClone(arrangement);
+    const literal = buildAudioPreview(arrangement, score);
+    const interpreted = buildInterpretedAudioPreview(arrangement, score, {
+      id: "interpretation.1111111111111111",
+      arrangementScoreId: arrangement.id,
+      arrangementScoreVersion: 3,
+      version: 1,
+      choices: {
+        tempo: 84,
+        arpeggiationMs: 40,
+        inequality: 0.15,
+        articulation: 0.8,
+        principalVoiceOrnament: "upper_neighbor",
+      },
+      rationale: "A restrained dance-like reading.",
+      createdAt: "2026-07-11T12:00:00.000Z",
+    });
+
+    expect(literal.mode).toBe("literal");
+    expect(literal.tempo).toBe(70);
+    expect(interpreted).toMatchObject({
+      mode: "interpreted",
+      tempo: 84,
+      interpretation: { id: "interpretation.1111111111111111", version: 1 },
+    });
+    expect(interpreted.events.length).toBeGreaterThan(literal.events.length);
+    expect(interpreted.events.some((event) => event.occurrenceId.includes("ornament"))).toBe(true);
+    expect(arrangement).toEqual(before);
   });
 });

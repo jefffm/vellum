@@ -40,6 +40,7 @@ import {
   installLineageSummary,
   installNotationSelection,
   installPersonalDefaultSummary,
+  installPerformanceInterpretationControls,
   installSourceLineageWorkspace,
   installVersionNavigator,
   installTransformationReport,
@@ -629,6 +630,7 @@ function renderGuidedDeliverables(
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
     installPersonalDefaultSummary(panel, deliverable);
+    void installPerformanceInterpretationControls(panel, deliverable);
     installDeliverableSummary(panel, deliverable);
     void installLineageSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);

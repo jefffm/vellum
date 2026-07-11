@@ -103,6 +103,11 @@ import {
   createOwnerReferenceRoute,
   createOwnerStateRoute,
 } from "./lib/owner-route.js";
+import {
+  createPerformanceInterpretationCreateRoute,
+  createPerformanceInterpretationListRoute,
+  createPerformanceInterpretationPreviewRoute,
+} from "./lib/performance-interpretation-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -340,6 +345,18 @@ export function createApiRouter(): Router {
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/restore",
     createArrangementRestoreRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations",
+    createPerformanceInterpretationListRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations",
+    createPerformanceInterpretationCreateRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations/:interpretationId/audio-preview",
+    createPerformanceInterpretationPreviewRoute()
   );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/lineage",

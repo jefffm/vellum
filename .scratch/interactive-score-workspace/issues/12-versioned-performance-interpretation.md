@@ -1,6 +1,6 @@
 # Versioned Performance Interpretation
 
-Status: in-progress
+Status: complete
 
 Type: AFK
 
@@ -10,11 +10,11 @@ Add an optional Performance Interpretation linked to an exact Arrangement Score 
 
 ## Acceptance criteria
 
-- [ ] Literal playback remains unchanged and clearly labeled.
-- [ ] Interpretation changes create an immutable version linked to one Arrangement Score version.
-- [ ] Users can toggle literal and interpreted playback and inspect the applied choices.
-- [ ] Interpretation never changes notation, Arrangement Events, Transformation Report, or Preservation Audit.
-- [ ] A stale parent Arrangement Score makes the interpretation visibly stale without deleting it.
+- [x] Literal playback remains unchanged and clearly labeled.
+- [x] Interpretation changes create an immutable version linked to one Arrangement Score version.
+- [x] Users can toggle literal and interpreted playback and inspect the applied choices.
+- [x] Interpretation never changes notation, Arrangement Events, Transformation Report, or Preservation Audit.
+- [x] A stale parent Arrangement Score makes the interpretation visibly stale without deleting it.
 
 ## Blocked by
 

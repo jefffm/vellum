@@ -594,6 +594,28 @@ chat-panel > div > div:has(agent-interface) {
   font-size: 0.74rem;
 }
 
+.performance-interpretation-controls {
+  display: grid;
+  grid-template-columns: minmax(16rem, auto) auto;
+  gap: 0.35rem 0.6rem;
+  align-items: end;
+  flex-basis: 100%;
+}
+
+.performance-interpretation-controls label {
+  display: grid;
+  gap: 0.2rem;
+  color: #625744;
+  font-size: 0.76rem;
+}
+
+.performance-interpretation-controls p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #625744;
+  font-size: 0.72rem;
+}
+
 .workspace-navigator {
   width: min(64rem, 94vw);
   max-height: 90vh;
