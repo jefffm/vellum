@@ -13,11 +13,13 @@ import type {
 import { compareRational } from "./music-domain.js";
 import { noteToMidi } from "./pitch.js";
 import { buildCompleteTransformationReport } from "./transformation-report.js";
+import { applyPreservationPolicy, type PreservationPolicy } from "./preservation-policy.js";
 
 type Options = {
   arrangementId: string;
   createdAt: string;
   targetConfiguration: TargetConfiguration;
+  preservationPolicy?: PreservationPolicy;
 };
 
 type AssignedNote = {
@@ -43,7 +45,10 @@ export function arrangeImitativeIntabulation(
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const assignments = assignCourses(score, model, strategy);
     const events = projectEvents(score, assignments);
-    const audit = auditImitative(score, analysis, events, model);
+    const audit = applyPreservationPolicy(
+      auditImitative(score, analysis, events, model),
+      options.preservationPolicy ?? "faithful_reduction"
+    );
     const positions = events.flatMap((event) => event.positions);
     return {
       id: `candidate.${strategy}`,
@@ -62,6 +67,7 @@ export function arrangeImitativeIntabulation(
     };
   });
   const survivors = candidates.filter((candidate) => candidate.status === "survived");
+  const policy = options.preservationPolicy ?? "faithful_reduction";
   survivors.sort(
     (left, right) =>
       left.metrics.averageFret - right.metrics.averageFret ||
@@ -84,7 +90,7 @@ export function arrangeImitativeIntabulation(
         rationale:
           "All three source voices and ordered subject entries fit the six-course lute at source pitch.",
       },
-      preservationPolicy: "faithful_reduction",
+      preservationPolicy: policy,
       events: selected.events,
       transformationReport: buildCompleteTransformationReport(score, analysis, selected.events, 0),
       preservationAudit: selected.audit,

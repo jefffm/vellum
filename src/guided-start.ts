@@ -5,6 +5,7 @@ import {
   type PlaybackPart,
 } from "./lib/audio-preview.js";
 import type {
+  ArrangementScore,
   ScoreEvent,
   TargetConfiguration,
   TranscriptionCorrection,
@@ -170,6 +171,9 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         form.querySelectorAll<HTMLInputElement>('[name="targets"]:checked')
       ).map((input) => input.value);
       if (selectedTargets.length === 0) throw new Error("Choose at least one output format");
+      const preservationPolicy =
+        form.querySelector<HTMLSelectElement>('[name="preservationPolicy"]')?.value ??
+        "faithful_reduction";
       const targetConfigurations = selectedTargets.map(targetConfiguration);
       const workspace = await api<{ id: string }>("/api/workspaces", {
         method: "POST",
@@ -227,7 +231,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           body: JSON.stringify({
             normalizedScoreId: reviewed.normalizedScoreId,
             targetConfigurationId: target.id,
-            preservationPolicy: "faithful_reduction",
+            preservationPolicy: preservationPolicy as ArrangementScore["preservationPolicy"],
           }),
         });
         status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
@@ -1196,6 +1200,7 @@ export function guidedStartMarkup(): string {
       <label>1. Upload score PDF<input type="file" accept="application/pdf,.pdf" required></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
+      <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <section class="score-anchored-review" data-score-review hidden>
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>

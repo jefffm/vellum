@@ -13,11 +13,13 @@ import type {
 import { addRational, compareRational } from "./music-domain.js";
 import { midiToNote, noteToMidi, transposeNote } from "./pitch.js";
 import { buildCompleteTransformationReport } from "./transformation-report.js";
+import { applyPreservationPolicy, type PreservationPolicy } from "./preservation-policy.js";
 
 type ArrangementOptions = {
   arrangementId: string;
   createdAt: string;
   targetConfiguration: TargetConfiguration;
+  preservationPolicy?: PreservationPolicy;
 };
 
 export type ArrangementSearchResult = {
@@ -70,7 +72,10 @@ export function arrangeFaithfulPluckedString(
   const strategies = ["source-coverage", "economical-fingering"] as const;
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const events = buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy);
-    const audit = auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones);
+    const audit = applyPreservationPolicy(
+      auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones),
+      options.preservationPolicy ?? "faithful_reduction"
+    );
     const metrics = candidateMetrics(events);
     return {
       id: `candidate.${strategy}`,
@@ -86,12 +91,26 @@ export function arrangeFaithfulPluckedString(
     throw new Error(
       `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit`
     );
-  survivors.sort(
-    (left, right) =>
+  const policy = options.preservationPolicy ?? "faithful_reduction";
+  survivors.sort((left, right) => {
+    if (policy === "free_paraphrase") {
+      return (
+        right.metrics.openStringCount - left.metrics.openStringCount ||
+        left.metrics.averageFret - right.metrics.averageFret
+      );
+    }
+    if (policy === "idiomatic_adaptation") {
+      return (
+        left.metrics.averageFret - right.metrics.averageFret ||
+        right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage
+      );
+    }
+    return (
       right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage ||
       left.metrics.averageFret - right.metrics.averageFret ||
       right.metrics.openStringCount - left.metrics.openStringCount
-  );
+    );
+  });
   const selectedCandidate = survivors[0]!;
   selectedCandidate.status = "selected";
   const transformationReport = buildCompleteTransformationReport(
@@ -109,7 +128,7 @@ export function arrangeFaithfulPluckedString(
       selectedCandidateId: selectedCandidate.id,
       targetConfiguration: options.targetConfiguration,
       transpositionPlan: plan,
-      preservationPolicy: "faithful_reduction",
+      preservationPolicy: policy,
       events: selectedCandidate.events,
       transformationReport,
       preservationAudit: selectedCandidate.audit,

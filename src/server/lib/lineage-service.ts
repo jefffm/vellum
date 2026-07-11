@@ -253,6 +253,7 @@ export class LineageService {
     return this.arrangementService.createFaithfulReduction(workspaceId, {
       normalizedScoreId: input.normalizedScoreId,
       targetConfigurationId: stale.targetConfiguration.id,
+      preservationPolicy: stale.preservationPolicy,
       arrangementFamilyId: stale.arrangementFamilyId,
       branchId,
       parentArrangementScoreId: stale.id,

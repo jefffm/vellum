@@ -192,4 +192,48 @@ describe("profile-scoped Continuo Realization", () => {
       })
     ).toThrow(/Choose a separate bass instrument/);
   });
+
+  it("allows an explicitly labeled reduction under a less restrictive policy", () => {
+    const result = arrangeContinuo(score, analysis, {
+      arrangementId: "arrangement.guitar-adaptation",
+      createdAt: "2026-07-10T14:00:00.000Z",
+      preservationPolicy: "idiomatic_adaptation",
+      targetInstrument: InstrumentModel.fromProfile(loadBrowserProfile("baroque-guitar-5")),
+      targetConfiguration: {
+        id: "target.guitar-continuo",
+        instrumentId: "baroque-guitar-5",
+        role: "ensemble",
+        realizationProfileId: "continuo.italian-baroque",
+        notationLayouts: ["continuo-score"],
+        deliverables: ["pdf"],
+      },
+    });
+
+    expect(result.selected).toMatchObject({
+      preservationPolicy: "idiomatic_adaptation",
+      selectedCandidateId: "candidate.continuo-reduction",
+      preservationAudit: { status: "pass" },
+      continuoDisposition: {
+        kind: "continuo_reduction",
+        soundedFoundationEventIds: [],
+        unsoundedFoundationEventIds: [
+          "event.bass.1",
+          "event.bass.2",
+          "event.bass.3",
+          "event.bass.4",
+        ],
+      },
+    });
+    expect(result.selected.preservationAudit.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "observation",
+        code: "idiomatic_adaptation.continuo.foundation_unsounded",
+      })
+    );
+    expect(result.selected.transformationReport).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ classification: "omitted", sourceEventId: "event.bass.1" }),
+      ])
+    );
+  });
 });

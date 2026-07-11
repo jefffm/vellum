@@ -12,6 +12,7 @@ import type {
   AnalysisRecord,
   NormalizedScore,
 } from "../../lib/music-domain.js";
+import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -26,6 +27,7 @@ type ArrangementServiceOptions = {
 export type CreateFaithfulArrangementInput = {
   normalizedScoreId: string;
   targetConfigurationId: string;
+  preservationPolicy?: PreservationPolicy;
   arrangementFamilyId?: string;
   branchId?: string;
   parentArrangementScoreId?: string;
@@ -149,7 +151,7 @@ export class ArrangementService {
       arrangementFamilyId: familyId,
       branchId: input.branchId,
       targetConfiguration,
-      preservationPolicy: "faithful_reduction",
+      preservationPolicy: input.preservationPolicy ?? "faithful_reduction",
       status: "running",
       candidateIds: [],
       rankingWeights,
@@ -167,6 +169,7 @@ export class ArrangementService {
           createdAt: timestamp,
           targetConfiguration,
           targetInstrument,
+          preservationPolicy: input.preservationPolicy,
         });
       } else if (analysis.texture === "imitative-polyphony") {
         const instrument = this.loadInstrument(targetConfiguration.instrumentId);
@@ -174,6 +177,7 @@ export class ArrangementService {
           arrangementId,
           createdAt: timestamp,
           targetConfiguration,
+          preservationPolicy: input.preservationPolicy,
         });
       } else {
         const instrument = this.loadInstrument(targetConfiguration.instrumentId);
@@ -187,6 +191,7 @@ export class ArrangementService {
           arrangementId,
           createdAt: timestamp,
           targetConfiguration,
+          preservationPolicy: input.preservationPolicy,
         });
       }
     } catch (error) {

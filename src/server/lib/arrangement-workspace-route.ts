@@ -17,7 +17,11 @@ const RequestSchema = Type.Object(
   {
     normalizedScoreId: Type.String({ pattern: "^score\\.[a-f0-9-]{16,}$" }),
     targetConfigurationId: Type.String({ minLength: 1 }),
-    preservationPolicy: Type.Literal("faithful_reduction"),
+    preservationPolicy: Type.Union([
+      Type.Literal("faithful_reduction"),
+      Type.Literal("idiomatic_adaptation"),
+      Type.Literal("free_paraphrase"),
+    ]),
   },
   { additionalProperties: false }
 );
@@ -39,6 +43,7 @@ export function createFaithfulArrangementRoute(options: RouteOptions = {}): Requ
         ...Value.Decode(ParamsSchema, request.params),
         normalizedScoreId: requestBody.normalizedScoreId,
         targetConfigurationId: requestBody.targetConfigurationId,
+        preservationPolicy: requestBody.preservationPolicy,
       };
     },
     handler: async ({ workspaceId, ...input }) =>

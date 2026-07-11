@@ -13,12 +13,14 @@ import type {
 import { compareRational } from "./music-domain.js";
 import { noteToMidi, parsePitch, transposeNote } from "./pitch.js";
 import { buildCompleteTransformationReport } from "./transformation-report.js";
+import { applyPreservationPolicy, type PreservationPolicy } from "./preservation-policy.js";
 
 type ContinuoArrangementOptions = {
   arrangementId: string;
   createdAt: string;
   targetConfiguration: TargetConfiguration;
   targetInstrument?: InstrumentModel;
+  preservationPolicy?: PreservationPolicy;
 };
 
 type ContinuoStrategy =
@@ -62,14 +64,21 @@ export function arrangeContinuo(
     options.targetConfiguration.instrumentId === "piano" ||
     (targetLowest !== undefined &&
       foundationNotes.every((event) => noteToMidi(event.pitch) >= noteToMidi(targetLowest)));
-  if (!targetCanSoundFoundation && !options.targetConfiguration.continuoBassInstrumentId) {
+  const policy = options.preservationPolicy ?? "faithful_reduction";
+  if (
+    !targetCanSoundFoundation &&
+    !options.targetConfiguration.continuoBassInstrumentId &&
+    policy === "faithful_reduction"
+  ) {
     throw new Error(
       `${options.targetConfiguration.instrumentId} cannot sound the complete Continuo Foundation. Choose a separate bass instrument or explicitly request a Continuo Reduction.`
     );
   }
   const strategies: ContinuoStrategy[] = targetCanSoundFoundation
     ? ["complete-realization", "lean-realization"]
-    : ["separate-bass-realization", "continuo-reduction"];
+    : options.targetConfiguration.continuoBassInstrumentId
+      ? ["separate-bass-realization", "continuo-reduction"]
+      : ["continuo-reduction"];
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const events = buildContinuoEvents(
       score,
@@ -80,7 +89,10 @@ export function arrangeContinuo(
       options.targetConfiguration.continuoBassInstrumentId,
       options.targetInstrument ? options.targetConfiguration.instrumentId : undefined
     );
-    const audit = auditContinuo(score, analysis, events);
+    const audit = applyPreservationPolicy(
+      auditContinuo(score, analysis, events),
+      options.preservationPolicy ?? "faithful_reduction"
+    );
     return {
       id: `candidate.${strategy}`,
       strategy,
@@ -94,9 +106,14 @@ export function arrangeContinuo(
       },
     };
   });
-  const preferredStrategy = targetCanSoundFoundation
-    ? "complete-realization"
-    : "separate-bass-realization";
+  const preferredStrategy =
+    policy === "faithful_reduction"
+      ? targetCanSoundFoundation
+        ? "complete-realization"
+        : "separate-bass-realization"
+      : targetCanSoundFoundation
+        ? "lean-realization"
+        : "continuo-reduction";
   const selectedCandidate = candidates.find(
     (candidate) => candidate.strategy === preferredStrategy && candidate.status === "survived"
   );
@@ -118,7 +135,7 @@ export function arrangeContinuo(
         rationale:
           "The complete Principal Voice and Continuo Foundation fit the keyboard target at source pitch.",
       },
-      preservationPolicy: "faithful_reduction",
+      preservationPolicy: policy,
       events: selectedCandidate.events,
       transformationReport: buildCompleteTransformationReport(
         score,
@@ -128,15 +145,32 @@ export function arrangeContinuo(
       ),
       preservationAudit: selectedCandidate.audit,
       continuoDisposition: {
-        kind: targetCanSoundFoundation ? "complete_realization" : "separate_bass_realization",
-        label: targetCanSoundFoundation
-          ? `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId}`
-          : `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId} with separate ${options.targetConfiguration.continuoBassInstrumentId}`,
-        soundedFoundationEventIds: foundationNotes.map((event) => event.id),
-        unsoundedFoundationEventIds: [],
-        bassInstrumentId: targetCanSoundFoundation
-          ? options.targetConfiguration.instrumentId
-          : options.targetConfiguration.continuoBassInstrumentId,
+        kind:
+          selectedCandidate.strategy === "continuo-reduction"
+            ? "continuo_reduction"
+            : targetCanSoundFoundation
+              ? "complete_realization"
+              : "separate_bass_realization",
+        label:
+          selectedCandidate.strategy === "continuo-reduction"
+            ? `Continuo Reduction · ${profileId} · ${options.targetConfiguration.instrumentId}`
+            : targetCanSoundFoundation
+              ? `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId}`
+              : `Complete Continuo Realization · ${profileId} · ${options.targetConfiguration.instrumentId} with separate ${options.targetConfiguration.continuoBassInstrumentId}`,
+        soundedFoundationEventIds:
+          selectedCandidate.strategy === "continuo-reduction"
+            ? []
+            : foundationNotes.map((event) => event.id),
+        unsoundedFoundationEventIds:
+          selectedCandidate.strategy === "continuo-reduction"
+            ? foundationNotes.map((event) => event.id)
+            : [],
+        bassInstrumentId:
+          selectedCandidate.strategy === "continuo-reduction"
+            ? undefined
+            : targetCanSoundFoundation
+              ? options.targetConfiguration.instrumentId
+              : options.targetConfiguration.continuoBassInstrumentId,
       },
       createdAt: options.createdAt,
     },

@@ -27,6 +27,10 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain("Cancel this run");
     expect(markup).toContain("data-model-action-recovery");
     expect(markup).toContain("Interrupted model work");
+    expect(markup).toContain('name="preservationPolicy"');
+    expect(markup).toContain('value="faithful_reduction" selected');
+    expect(markup).toContain('value="idiomatic_adaptation"');
+    expect(markup).toContain('value="free_paraphrase"');
     expect(targetConfiguration("target.classical-guitar")).toEqual({
       id: "target.classical-guitar",
       instrumentId: "classical-guitar-6",
