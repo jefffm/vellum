@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import zipfile
+from collections import defaultdict
 from fractions import Fraction
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -152,7 +153,102 @@ def figured_bass_tokens(element: ET.Element) -> list[dict[str, object]]:
     return result
 
 
-def normalize(root: ET.Element) -> dict[str, object]:
+def audiveris_native_evidence(file_path: Path) -> tuple[dict[tuple[int, str], list[dict[str, object]]], list[int]]:
+    queues: dict[tuple[int, str], list[dict[str, object]]] = defaultdict(list)
+    pages: list[int] = []
+    with zipfile.ZipFile(file_path) as archive:
+        sheet_names = sorted(
+            (
+                name
+                for name in archive.namelist()
+                if re.fullmatch(r"sheet#\d+/sheet#\d+\.xml", name)
+            ),
+            key=lambda name: int(re.search(r"sheet#(\d+)", name).group(1)),
+        )
+        for sheet_name in sheet_names:
+            page = int(re.search(r"sheet#(\d+)", sheet_name).group(1))
+            pages.append(page)
+            root = ET.fromstring(archive.read(sheet_name))
+            systems = [element for element in root.iter() if local_name(element.tag) == "system"]
+            for system in systems:
+                entities = {
+                    element.attrib["id"]: element
+                    for element in system.iter()
+                    if "id" in element.attrib
+                }
+                members: dict[str, list[str]] = defaultdict(list)
+                for relation in (
+                    element for element in system.iter() if local_name(element.tag) == "relation"
+                ):
+                    if child(relation, "containment") is not None:
+                        source = relation.attrib.get("source")
+                        target = relation.attrib.get("target")
+                        if source and target:
+                            members[source].append(target)
+                system_parts = children(system, "part")
+                for physical_index, part in enumerate(system_parts, start=1):
+                    part_index = int(part.attrib.get("id", physical_index))
+                    for measure in children(part, "measure"):
+                        for voice in children(measure, "voice"):
+                            voice_id = voice.attrib.get("id", "1")
+                            for entry in voice.iter():
+                                if local_name(entry.tag) != "value" or entry.attrib.get("status") != "BEGIN":
+                                    continue
+                                chord_id = entry.attrib.get("chord")
+                                chord = entities.get(chord_id or "")
+                                if chord is None:
+                                    continue
+                                chord_kind = local_name(chord.tag)
+                                note_members = [
+                                    entities[member_id]
+                                    for member_id in members.get(chord_id or "", [])
+                                    if member_id in entities
+                                    and local_name(entities[member_id].tag) in {"head", "rest"}
+                                ]
+                                if chord_kind == "head-chord":
+                                    note_members.sort(
+                                        key=lambda element: float(element.attrib.get("pitch", "0")),
+                                        reverse=True,
+                                    )
+                                for member in note_members:
+                                    bounds = child(member, "bounds")
+                                    if bounds is None:
+                                        continue
+                                    grade_values = [
+                                        float(value)
+                                        for value in (
+                                            member.attrib.get("ctx-grade"),
+                                            member.attrib.get("grade"),
+                                            chord.attrib.get("ctx-grade"),
+                                            chord.attrib.get("grade"),
+                                        )
+                                        if value is not None
+                                    ]
+                                    confidence = min(grade_values) if grade_values else 1.0
+                                    queues[(part_index, voice_id)].append(
+                                        {
+                                            "type": "rest"
+                                            if local_name(member.tag) == "rest"
+                                            else "note",
+                                            "confidence": max(0.0, min(1.0, confidence)),
+                                            "abnormal": member.attrib.get("abnormal") == "true",
+                                            "region": {
+                                                "coordinateSpace": "omr_raster",
+                                                "page": page,
+                                                "x": int(bounds.attrib["x"]),
+                                                "y": int(bounds.attrib["y"]),
+                                                "width": max(1, int(bounds.attrib["w"])),
+                                                "height": max(1, int(bounds.attrib["h"])),
+                                            },
+                                        }
+                                    )
+    return dict(queues), pages
+
+
+def normalize(
+    root: ET.Element,
+    native_queues: dict[tuple[int, str], list[dict[str, object]]] | None = None,
+) -> tuple[dict[str, object], dict[str, int]]:
     if local_name(root.tag) not in {"score-partwise", "score-timewise"}:
         raise ValueError(f"Unsupported MusicXML root: {local_name(root.tag)}")
     if local_name(root.tag) == "score-timewise":
@@ -178,6 +274,8 @@ def normalize(root: ET.Element) -> dict[str, object]:
     measure_durations: dict[int, Fraction] = {}
     time_signature = None
     score_key = None
+    evidence_offsets: dict[tuple[int, str], int] = defaultdict(int)
+    evidence_stats = {"mapped": 0, "unmapped": 0, "unused": 0}
 
     for part_index, part in enumerate(children(root, "part"), start=1):
         xml_part_id = part.attrib.get("id", f"P{part_index}")
@@ -279,6 +377,19 @@ def normalize(root: ET.Element) -> dict[str, object]:
                 }
                 if event["type"] == "note":
                     event["pitch"] = pitch_text(item)
+                if native_queues is not None:
+                    evidence_key = (part_index, voice)
+                    evidence_index = evidence_offsets[evidence_key]
+                    candidates = native_queues.get(evidence_key, [])
+                    evidence = candidates[evidence_index] if evidence_index < len(candidates) else None
+                    if evidence is not None and evidence["type"] == event["type"]:
+                        event["confidence"] = evidence["confidence"]
+                        event["sourceRegion"] = evidence["region"]
+                        event["_nativeAbnormal"] = evidence["abnormal"]
+                        evidence_offsets[evidence_key] += 1
+                        evidence_stats["mapped"] += 1
+                    else:
+                        evidence_stats["unmapped"] += 1
                 tie_types = [
                     tie.attrib.get("type") for tie in children(item, "tie") if tie.attrib.get("type")
                 ]
@@ -318,22 +429,77 @@ def normalize(root: ET.Element) -> dict[str, object]:
         "events": raw_events,
         "uncertainties": [],
     }
+    uncertainties: list[dict[str, object]] = []
+    for event in raw_events:
+        abnormal = bool(event.pop("_nativeAbnormal", False))
+        confidence = event.get("confidence")
+        if event["type"] != "note" or not isinstance(confidence, float):
+            continue
+        if confidence >= 0.8 and not abnormal:
+            continue
+        critical = abnormal
+        uncertainties.append(
+            {
+                "id": f"uncertainty.{event['id'].removeprefix('event.')}",
+                "eventIds": [event["id"]],
+                "critical": critical,
+                "category": "pitch_recognition",
+                "message": f"Audiveris recognized {event['pitch']} with native confidence {confidence:.3f}.",
+                "alternatives": [],
+                "region": event.get("sourceRegion"),
+                "resolved": False,
+            }
+        )
+    result["uncertainties"] = uncertainties
+    if native_queues is not None:
+        evidence_stats["unused"] = sum(
+            max(0, len(queue) - evidence_offsets[key]) for key, queue in native_queues.items()
+        )
     if title:
         result["title"] = title
     if time_signature:
         result["timeSignature"] = time_signature
     if score_key:
         result["key"] = score_key
-    return result
+    return result, evidence_stats
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print(json.dumps({"error": "Expected one MusicXML or MXL file path"}), file=sys.stderr)
+    if len(sys.argv) not in {2, 3}:
+        print(json.dumps({"error": "Expected MusicXML/MXL and optional Audiveris OMR paths"}), file=sys.stderr)
         return 2
     try:
-        result = normalize(load_root(Path(sys.argv[1])))
-        json.dump(result, sys.stdout, separators=(",", ":"))
+        native_queues = None
+        pages: list[int] = []
+        if len(sys.argv) == 3:
+            native_queues, pages = audiveris_native_evidence(Path(sys.argv[2]))
+        result, evidence_stats = normalize(load_root(Path(sys.argv[1])), native_queues)
+        if native_queues is None:
+            output: object = result
+        else:
+            diagnostics: list[dict[str, object]] = [
+                {
+                    "severity": "info",
+                    "code": "audiveris.native-evidence",
+                    "message": f"Mapped {evidence_stats['mapped']} score events to native Audiveris bounds and grades.",
+                }
+            ]
+            if evidence_stats["unmapped"] or evidence_stats["unused"]:
+                diagnostics.append(
+                    {
+                        "severity": "warning",
+                        "code": "audiveris.evidence-mismatch",
+                        "message": f"Native evidence correlation left {evidence_stats['unmapped']} score events unmapped and {evidence_stats['unused']} native symbols unused.",
+                    }
+                )
+            output = {
+                "recognizedScore": result,
+                "pageMappings": [
+                    {"sourcePage": page, "recognizedPage": page} for page in pages
+                ],
+                "diagnostics": diagnostics,
+            }
+        json.dump(output, sys.stdout, separators=(",", ":"))
         return 0
     except Exception as error:  # noqa: BLE001 - CLI error boundary
         print(json.dumps({"error": str(error)}), file=sys.stderr)

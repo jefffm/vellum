@@ -554,6 +554,27 @@ chat-panel > div > div:has(agent-interface) {
   background: #fff;
 }
 
+.source-page-frame {
+  position: relative;
+  overflow: auto;
+  min-height: 24rem;
+  background: #fff;
+}
+
+.source-page-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.source-page-frame [data-review-source-highlight] {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid #d33b2f;
+  background: rgb(211 59 47 / 18%);
+  pointer-events: none;
+}
+
 .score-review-suggestions {
   display: flex;
   flex-wrap: wrap;

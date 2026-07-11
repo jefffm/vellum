@@ -17,6 +17,9 @@ export type Rational = Static<typeof RationalSchema>;
 
 export const SourceRegionSchema = Type.Object(
   {
+    coordinateSpace: Type.Optional(
+      Type.Union([Type.Literal("source_document"), Type.Literal("omr_raster")])
+    ),
     page: Type.Integer({ minimum: 1 }),
     x: Type.Number({ minimum: 0 }),
     y: Type.Number({ minimum: 0 }),

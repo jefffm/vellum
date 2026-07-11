@@ -6,7 +6,7 @@ import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import type { OmrBackend } from "./omr.js";
-import { createOmrRunRoute } from "./omr-route.js";
+import { createOmrArtifactContentRoute, createOmrRunRoute } from "./omr-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 describe("OMR route", () => {
@@ -38,7 +38,13 @@ describe("OMR route", () => {
       id: "fixture",
       recognize: async () => ({
         backend: { id: "fixture", version: "1", configuration: {} },
-        artifacts: [],
+        artifacts: [
+          {
+            filename: "audiveris-page-1.png",
+            category: "native",
+            content: Buffer.from("native-page"),
+          },
+        ],
         pageMappings: [{ sourcePage: 1, recognizedPage: 1 }],
         diagnostics: [],
         recognizedScore: { ...parsed, uncertainties: [] },
@@ -49,6 +55,10 @@ describe("OMR route", () => {
     app.post(
       "/api/workspaces/:workspaceId/omr-runs",
       createOmrRunRoute({ store, backendFactory: () => backend })
+    );
+    app.get(
+      "/api/workspaces/:workspaceId/omr-runs/:omrRunId/artifacts/:filename",
+      createOmrArtifactContentRoute({ store })
     );
     server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -70,6 +80,7 @@ describe("OMR route", () => {
     const json = (await response.json()) as {
       ok: boolean;
       data?: {
+        omrRun: { id: string };
         scoreTranscription: { title?: string; status: string };
         normalizedScore: { events: unknown[] };
       };
@@ -82,6 +93,12 @@ describe("OMR route", () => {
       status: "reviewed",
     });
     expect(json.data?.normalizedScore.events.length).toBeGreaterThan(100);
+    const image = await fetch(
+      `${serverUrl()}/api/workspaces/${workspaceId}/omr-runs/${json.data!.omrRun.id}/artifacts/audiveris-page-1.png`
+    );
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toContain("image/png");
+    expect(Buffer.from(await image.arrayBuffer())).toEqual(Buffer.from("native-page"));
   });
 
   function serverUrl(): string {

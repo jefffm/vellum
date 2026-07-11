@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import type { RecognizedScore } from "../../lib/music-domain.js";
@@ -113,9 +114,9 @@ describe("OMR pipeline", () => {
         {
           id: "uncertainty.soprano-opening",
           eventIds: ["event.soprano.1"],
-          critical: true,
+          critical: false,
           category: "pitch",
-          message: "Opening pitch is uncertain.",
+          message: "Audiveris recognized the opening pitch with native confidence 0.420.",
           alternatives: ["E4", "F#4"],
           region: { page: 1, x: 100, y: 100, width: 20, height: 20 },
           resolved: false,
@@ -146,11 +147,81 @@ describe("OMR pipeline", () => {
       resolved: false,
       region: { page: 1 },
     });
+    expect(result.scoreTranscription.uncertainties[0]!.message).toContain("Preservation Target");
+  });
+
+  it("drives review from production-derived Audiveris native evidence", async () => {
+    const nativeOmr = readFileSync(
+      path.resolve(process.cwd(), "test/fixtures/audiveris/imitative-passage-audiveris-5.10.2.omr")
+    );
+    const musicXml = readFileSync(
+      path.resolve(process.cwd(), "test/fixtures/audiveris/imitative-passage-audiveris-5.10.2.mxl")
+    );
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({
+        stdout: "Audiveris\n- Version: 5.10.2\n",
+        stderr: "",
+        exitCode: 0,
+        files: new Map(),
+        durationMs: 1,
+      })
+      .mockResolvedValueOnce({
+        stdout: "done",
+        stderr: "",
+        exitCode: 0,
+        files: new Map([
+          ["imitative-passage.omr", nativeOmr],
+          ["imitative-passage.mxl", musicXml],
+        ]),
+        durationMs: 2,
+      });
+    const backend = new AudiverisBackend({ runner: { run } });
+    const ids = [
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      "ffffffff-ffff-4fff-8fff-ffffffffffff",
+    ];
+    const result = await new OmrService({ store, createId: () => ids.shift()! }).recognize(
+      workspaceId,
+      sourceArtifactId,
+      backend
+    );
+
+    expect(result.omrRun).toMatchObject({
+      status: "completed",
+      backend: { id: "audiveris", version: "5.10.2" },
+      pageMappings: [{ sourcePage: 1, recognizedPage: 1 }],
+      nativeArtifactPaths: expect.arrayContaining([
+        expect.stringMatching(/imitative-passage\.omr$/),
+        expect.stringMatching(/audiveris-page-1\.png$/),
+      ]),
+      interchangeArtifactPaths: [expect.stringMatching(/imitative-passage\.mxl$/)],
+    });
+    expect(result.omrRun.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "audiveris.native-evidence" })
+    );
+    expect(result.scoreTranscription.status).toBe("needs_review");
+    expect(
+      result.scoreTranscription.events.filter((event) => event.sourceRegion && event.confidence)
+    ).toHaveLength(22);
+    expect(result.scoreTranscription.uncertainties).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          critical: true,
+          region: expect.objectContaining({ page: 1, width: expect.any(Number) }),
+        }),
+      ])
+    );
+    expect(result.scoreTranscription.uncertainties.every((item) => item.critical)).toBe(true);
   });
 });
 
 describe("Audiveris backend", () => {
   it("uses documented batch/save/export arguments and normalizes MusicXML", async () => {
+    const nativeZip = new JSZip();
+    nativeZip.file("sheet#1/BINARY.png", Buffer.from("png"));
+    const nativeOmr = await nativeZip.generateAsync({ type: "nodebuffer" });
     const run = vi
       .fn()
       .mockResolvedValueOnce({
@@ -165,7 +236,7 @@ describe("Audiveris backend", () => {
         stderr: "",
         exitCode: 0,
         files: new Map([
-          ["source.omr", Buffer.from("omr")],
+          ["source.omr", nativeOmr],
           ["source.mxl", Buffer.from("mxl")],
         ]),
         durationMs: 2,
@@ -193,7 +264,11 @@ describe("Audiveris backend", () => {
       ],
       uncertainties: [],
     };
-    const normalizer = vi.fn(async () => normalized);
+    const normalizer = vi.fn(async () => ({
+      recognizedScore: normalized,
+      pageMappings: [{ sourcePage: 1, recognizedPage: 1 }],
+      diagnostics: [],
+    }));
     const backend = new AudiverisBackend({ runner: { run }, normalizer });
 
     const result = await backend.recognize({
@@ -222,11 +297,13 @@ describe("Audiveris backend", () => {
       "--",
       "source.pdf",
     ]);
-    expect(normalizer).toHaveBeenCalledWith(Buffer.from("mxl"), "source.mxl");
+    expect(normalizer).toHaveBeenCalledWith(Buffer.from("mxl"), "source.mxl", nativeOmr);
     expect(result.recognizedScore).toEqual(normalized);
+    expect(result.pageMappings).toEqual([{ sourcePage: 1, recognizedPage: 1 }]);
     expect(result.artifacts.map((artifact) => artifact.filename)).toEqual([
       "source.omr",
       "source.mxl",
+      "audiveris-page-1.png",
       "audiveris-process.log",
     ]);
   });

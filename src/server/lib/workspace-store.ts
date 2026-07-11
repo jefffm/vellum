@@ -203,6 +203,28 @@ export class WorkspaceStore {
     return this.readRecord(workspaceId, "omr-runs", omrRunId, "omr", OmrRunSchema);
   }
 
+  readOmrArtifact(workspaceId: string, omrRunId: string, filename: string): Buffer {
+    const run = this.getOmrRun(workspaceId, omrRunId);
+    const safeFilename = safeSourceFilename(filename);
+    const candidates = [
+      ...run.nativeArtifactPaths,
+      ...run.interchangeArtifactPaths,
+      ...(run.logPath ? [run.logPath] : []),
+    ];
+    const storedPath = candidates.find(
+      (candidate) => path.posix.basename(candidate) === safeFilename
+    );
+    if (!storedPath) {
+      throw new ApiRouteError(`OMR artifact not found: ${safeFilename}`, 404);
+    }
+    const filePath = path.resolve(this.workspaceDirectory(workspaceId), storedPath);
+    const workspaceDirectory = `${this.workspaceDirectory(workspaceId)}${path.sep}`;
+    if (!filePath.startsWith(workspaceDirectory)) {
+      throw new ApiRouteError(`Invalid OMR artifact path for ${omrRunId}`, 500);
+    }
+    return readFileSync(filePath);
+  }
+
   saveScoreTranscription(
     workspaceId: string,
     transcription: ScoreTranscription

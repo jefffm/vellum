@@ -11,6 +11,10 @@ export interface SubprocessConfig {
     name: string;
     content: string | Buffer;
   };
+  inputFiles?: Array<{
+    name: string;
+    content: string | Buffer;
+  }>;
   timeout?: number;
   outputGlobs?: string[];
   cwd?: string;
@@ -45,6 +49,9 @@ export class SubprocessRunner {
     try {
       if (config.inputFile) {
         await writeFile(path.join(workingDir, config.inputFile.name), config.inputFile.content);
+      }
+      for (const inputFile of config.inputFiles ?? []) {
+        await writeFile(path.join(workingDir, inputFile.name), inputFile.content);
       }
 
       const result = await this.spawnAndCapture(config, workingDir, startedAt);

@@ -1,7 +1,12 @@
 import { Value } from "@sinclair/typebox/value";
 import path from "node:path";
-import { RecognizedScoreSchema } from "../../lib/music-domain.js";
+import {
+  OmrDiagnosticSchema,
+  OmrPageMappingSchema,
+  RecognizedScoreSchema,
+} from "../../lib/music-domain.js";
 import type { RecognizedScore } from "../../lib/music-domain.js";
+import type { Static } from "@sinclair/typebox";
 import { ApiRouteError } from "./create-route.js";
 import { SubprocessRunner } from "./subprocess.js";
 
@@ -11,11 +16,35 @@ type MusicXmlNormalizerOptions = {
   timeout?: number;
 };
 
+export type AudiverisNormalizationResult = {
+  recognizedScore: RecognizedScore;
+  pageMappings: Array<Static<typeof OmrPageMappingSchema>>;
+  diagnostics: Array<Static<typeof OmrDiagnosticSchema>>;
+};
+
 export async function normalizeMusicXml(
   content: Buffer,
   filename: string,
   options: MusicXmlNormalizerOptions = {}
 ): Promise<RecognizedScore> {
+  return (await runNormalizer(content, filename, options)).recognizedScore;
+}
+
+export async function normalizeAudiverisMusicXml(
+  content: Buffer,
+  filename: string,
+  nativeOmr: Buffer,
+  options: MusicXmlNormalizerOptions = {}
+): Promise<AudiverisNormalizationResult> {
+  return await runNormalizer(content, filename, options, nativeOmr);
+}
+
+async function runNormalizer(
+  content: Buffer,
+  filename: string,
+  options: MusicXmlNormalizerOptions,
+  nativeOmr?: Buffer
+): Promise<AudiverisNormalizationResult> {
   const runner = options.runner ?? new SubprocessRunner(options.timeout ?? 30_000);
   const extension = path.extname(filename).toLowerCase() === ".mxl" ? ".mxl" : ".musicxml";
   const inputName = `recognized${extension}`;
@@ -24,8 +53,12 @@ export async function normalizeMusicXml(
     args: [
       options.scriptPath ?? path.resolve(process.cwd(), "src/server/musicxml_normalize.py"),
       inputName,
+      ...(nativeOmr ? ["recognized.omr"] : []),
     ],
-    inputFile: { name: inputName, content },
+    inputFiles: [
+      { name: inputName, content },
+      ...(nativeOmr ? [{ name: "recognized.omr", content: nativeOmr }] : []),
+    ],
     timeout: options.timeout ?? 30_000,
   });
 
@@ -34,7 +67,28 @@ export async function normalizeMusicXml(
   }
 
   try {
-    return Value.Decode(RecognizedScoreSchema, JSON.parse(result.stdout));
+    const parsed = JSON.parse(result.stdout) as unknown;
+    if (nativeOmr) {
+      const envelope = parsed as {
+        recognizedScore?: unknown;
+        pageMappings?: unknown;
+        diagnostics?: unknown;
+      };
+      return {
+        recognizedScore: Value.Decode(RecognizedScoreSchema, envelope.recognizedScore),
+        pageMappings: Array.isArray(envelope.pageMappings)
+          ? envelope.pageMappings.map((mapping) => Value.Decode(OmrPageMappingSchema, mapping))
+          : [],
+        diagnostics: Array.isArray(envelope.diagnostics)
+          ? envelope.diagnostics.map((diagnostic) => Value.Decode(OmrDiagnosticSchema, diagnostic))
+          : [],
+      };
+    }
+    return {
+      recognizedScore: Value.Decode(RecognizedScoreSchema, parsed),
+      pageMappings: [],
+      diagnostics: [],
+    };
   } catch (error) {
     throw new ApiRouteError(
       `MusicXML normalizer returned invalid score data: ${errorMessage(error)}`,

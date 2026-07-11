@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { normalizeMusicXml } from "./musicxml-normalizer.js";
+import { normalizeAudiverisMusicXml, normalizeMusicXml } from "./musicxml-normalizer.js";
 
 describe("MusicXML normalizer", () => {
   it("normalizes a score into stable parts, measures, and rational events", async () => {
@@ -45,6 +46,89 @@ describe("MusicXML normalizer", () => {
         figures: [{ interval: 6 }],
         duration: { numerator: 4, denominator: 1 },
       })
+    );
+  });
+
+  it("correlates genuine Audiveris native chord/head evidence to reviewable score events", async () => {
+    const musicXml = Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Soprano</part-name></score-part></part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>1</divisions><key><fifths>0</fifths><mode>major</mode></key><time><beats>2</beats><beat-type>4</beat-type></time></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice></note>
+    <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice></note>
+  </measure></part>
+</score-partwise>`);
+    const nativeXml = `<?xml version="1.0" encoding="UTF-8"?>
+<sheet><systems><system id="1">
+  <part id="1"><measure id="1"><head-chords>100 101</head-chords><voice id="1"><slots>
+    <entry><key>1</key><value chord="100" status="BEGIN"/></entry>
+    <entry><key>2</key><value chord="101" status="BEGIN"/></entry>
+  </slots></voice></measure></part>
+  <sig><inters>
+    <head pitch="0" shape="NOTEHEAD_BLACK" grade="0.420" ctx-grade="0.550" staff="1" id="10"><bounds x="120" y="150" w="24" h="28"/></head>
+    <head pitch="-1" shape="NOTEHEAD_BLACK" grade="0.950" ctx-grade="0.970" staff="1" id="11"><bounds x="180" y="142" w="24" h="28"/></head>
+    <head-chord grade="0.700" ctx-grade="0.800" staff="1" id="100"><bounds x="118" y="148" w="28" h="32"/></head-chord>
+    <head-chord grade="0.960" ctx-grade="0.980" staff="1" id="101"><bounds x="178" y="140" w="28" h="32"/></head-chord>
+  </inters><relations>
+    <relation source="100" target="10"><containment/></relation>
+    <relation source="101" target="11"><containment/></relation>
+  </relations></sig>
+</system></systems></sheet>`;
+    const zip = new JSZip();
+    zip.file("book.xml", '<book><stub number="1"/></book>');
+    zip.file("sheet#1/sheet#1.xml", nativeXml);
+    const nativeOmr = await zip.generateAsync({ type: "nodebuffer" });
+
+    const result = await normalizeAudiverisMusicXml(musicXml, "recognized.musicxml", nativeOmr);
+
+    expect(result.pageMappings).toEqual([{ sourcePage: 1, recognizedPage: 1 }]);
+    expect(result.recognizedScore.events[0]).toMatchObject({
+      id: "event.p1-voice-1.1",
+      pitch: "C4",
+      confidence: 0.42,
+      sourceRegion: {
+        coordinateSpace: "omr_raster",
+        page: 1,
+        x: 120,
+        y: 150,
+        width: 24,
+        height: 28,
+      },
+    });
+    expect(result.recognizedScore.events[1]).toMatchObject({
+      pitch: "D4",
+      confidence: 0.95,
+      sourceRegion: {
+        coordinateSpace: "omr_raster",
+        page: 1,
+        x: 180,
+        y: 142,
+        width: 24,
+        height: 28,
+      },
+    });
+    expect(result.recognizedScore.uncertainties).toEqual([
+      expect.objectContaining({
+        id: "uncertainty.p1-voice-1.1",
+        eventIds: ["event.p1-voice-1.1"],
+        critical: false,
+        category: "pitch_recognition",
+        region: {
+          coordinateSpace: "omr_raster",
+          page: 1,
+          x: 120,
+          y: 150,
+          width: 24,
+          height: 28,
+        },
+      }),
+    ]);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "audiveris.native-evidence" })
+    );
+    expect(result.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "audiveris.evidence-mismatch" })
     );
   });
 });

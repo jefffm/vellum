@@ -20,6 +20,14 @@ CC0 three-voice imitative golden fixture with ordered subject entries, reviewed
 LilyPond truth, and a compiled PDF Source Artifact. See
 [`imitation/PROVENANCE.md`](imitation/PROVENANCE.md).
 
+## `audiveris/`
+
+Production-derived Audiveris 5.10.2 `.omr` and `.mxl` outputs for the CC0
+imitative passage. These files exercise native recognition bounds, grades, page
+mappings, uncertainty classification, and Score-Anchored Review without relying
+on a fabricated backend result. See
+[`audiveris/PROVENANCE.md`](audiveris/PROVENANCE.md).
+
 ## LilyPond Fixtures
 
 | File                      | Source              | License       |

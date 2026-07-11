@@ -21,6 +21,8 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain("standard EADGBE tuning");
     expect(markup).toContain("data-score-review");
     expect(markup).toContain("Source facsimile");
+    expect(markup).toContain("data-review-source-image");
+    expect(markup).toContain("data-review-source-highlight");
     expect(markup).toContain("Recognized notation");
     expect(markup).toContain("Cancel this run");
     expect(targetConfiguration("target.classical-guitar")).toEqual({

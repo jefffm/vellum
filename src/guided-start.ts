@@ -30,6 +30,7 @@ type ScoreAnchoredReview = {
   items: Array<{
     uncertainty: TranscriptionUncertainty;
     events: ScoreEvent[];
+    sourceImageUrl?: string;
   }>;
 };
 
@@ -245,6 +246,8 @@ function presentScoreAnchoredReview(
 ): Promise<TranscriptionCorrection> {
   const panel = dialog.querySelector<HTMLElement>("[data-score-review]")!;
   const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]")!;
+  const sourceImage = panel.querySelector<HTMLImageElement>("[data-review-source-image]")!;
+  const sourceHighlight = panel.querySelector<HTMLElement>("[data-review-source-highlight]")!;
   const heading = panel.querySelector<HTMLElement>("[data-review-heading]")!;
   const message = panel.querySelector<HTMLElement>("[data-review-message]")!;
   const location = panel.querySelector<HTMLElement>("[data-review-location]")!;
@@ -263,8 +266,27 @@ function presentScoreAnchoredReview(
     status.textContent =
       "Arrangement paused for this critical uncertainty. Apply a correction or cancel this run.";
   }
-  source.src = sourceFocusUrl(review.sourceContentUrl, region);
-  source.title = `${review.sourceFilename}, source page ${region?.page ?? 1}`;
+  if (item.sourceImageUrl && region?.coordinateSpace === "omr_raster") {
+    source.hidden = true;
+    source.removeAttribute("src");
+    sourceImage.hidden = false;
+    sourceImage.src = item.sourceImageUrl;
+    sourceImage.alt = `${review.sourceFilename}, Audiveris source page ${region.page}`;
+    sourceImage.onload = () => {
+      sourceHighlight.hidden = false;
+      sourceHighlight.style.left = `${(region.x / sourceImage.naturalWidth) * 100}%`;
+      sourceHighlight.style.top = `${(region.y / sourceImage.naturalHeight) * 100}%`;
+      sourceHighlight.style.width = `${(region.width / sourceImage.naturalWidth) * 100}%`;
+      sourceHighlight.style.height = `${(region.height / sourceImage.naturalHeight) * 100}%`;
+    };
+  } else {
+    sourceImage.hidden = true;
+    sourceImage.removeAttribute("src");
+    sourceHighlight.hidden = true;
+    source.hidden = false;
+    source.src = sourceFocusUrl(review.sourceContentUrl, region);
+    source.title = `${review.sourceFilename}, source page ${region?.page ?? 1}`;
+  }
   heading.textContent = `Review transcription v${review.version}`;
   message.textContent = item.uncertainty.message;
   location.textContent = region
@@ -346,6 +368,10 @@ function hideScoreAnchoredReview(dialog: HTMLDialogElement): void {
   setGuidedNavigationDisabled(dialog, false);
   const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]");
   if (source) source.removeAttribute("src");
+  const sourceImage = panel.querySelector<HTMLImageElement>("[data-review-source-image]");
+  if (sourceImage) sourceImage.removeAttribute("src");
+  const sourceHighlight = panel.querySelector<HTMLElement>("[data-review-source-highlight]");
+  if (sourceHighlight) sourceHighlight.hidden = true;
 }
 
 function setGuidedNavigationDisabled(dialog: HTMLDialogElement, disabled: boolean): void {
@@ -484,7 +510,7 @@ export function guidedStartMarkup(): string {
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
         <p data-review-message></p>
         <div class="score-review-grid">
-          <div><strong>Source facsimile</strong><iframe data-review-source></iframe></div>
+          <div><strong>Source facsimile</strong><div class="source-page-frame"><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span><iframe data-review-source></iframe></div></div>
           <div class="score-review-notation"><strong>Recognized notation</strong><div data-review-editors></div><strong>Ranked suggestions</strong><div class="score-review-suggestions" data-review-suggestions></div><label>Review note<input type="text" data-review-rationale></label><p class="score-review-error" data-review-error></p><div class="score-review-actions"><button type="button" data-review-cancel>Cancel this run</button><button type="button" data-review-apply>Apply correction and continue</button></div></div>
         </div>
       </section>

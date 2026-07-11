@@ -33,7 +33,7 @@ import {
   createWorkspaceGetRoute,
   createWorkspaceListRoute,
 } from "./lib/workspace-route.js";
-import { createOmrRunRoute } from "./lib/omr-route.js";
+import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
 import {
   createTranscriptionCorrectionRoute,
   createTranscriptionReviewRoute,
@@ -139,6 +139,10 @@ export function createApiRouter(): Router {
     createSourceContentRoute()
   );
   router.post("/workspaces/:workspaceId/omr-runs", createOmrRunRoute());
+  router.get(
+    "/workspaces/:workspaceId/omr-runs/:omrRunId/artifacts/:filename",
+    createOmrArtifactContentRoute()
+  );
   router.post(
     "/workspaces/:workspaceId/transcriptions/:transcriptionId/corrections",
     createTranscriptionCorrectionRoute()

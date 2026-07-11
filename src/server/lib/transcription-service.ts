@@ -23,6 +23,7 @@ export type TranscriptionCorrectionResult = {
 export type ScoreAnchoredReviewItem = {
   uncertainty: TranscriptionUncertainty;
   events: ScoreEvent[];
+  sourceImageUrl?: string;
 };
 
 export type ScoreAnchoredReview = {
@@ -49,21 +50,34 @@ export class TranscriptionService {
   review(workspaceId: string, transcriptionId: string): ScoreAnchoredReview {
     const transcription = this.store.getScoreTranscription(workspaceId, transcriptionId);
     const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
+    const omrRun = this.store.getOmrRun(workspaceId, transcription.omrRunId);
     const items = transcription.uncertainties
       .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)
-      .map((uncertainty) => ({
-        uncertainty,
-        events: uncertainty.eventIds.map((eventId) => {
-          const event = transcription.events.find((candidate) => candidate.id === eventId);
-          if (!event) {
-            throw new ApiRouteError(
-              `Transcription uncertainty ${uncertainty.id} references missing event ${eventId}`,
-              500
-            );
-          }
-          return event;
-        }),
-      }));
+      .map((uncertainty) => {
+        const page = uncertainty.region?.page;
+        const imagePath =
+          page && uncertainty.region?.coordinateSpace === "omr_raster"
+            ? omrRun.nativeArtifactPaths.find((candidate) =>
+                candidate.endsWith(`/audiveris-page-${page}.png`)
+              )
+            : undefined;
+        return {
+          uncertainty,
+          sourceImageUrl: imagePath
+            ? `/api/workspaces/${workspaceId}/omr-runs/${omrRun.id}/artifacts/${encodeURIComponent(`audiveris-page-${page}.png`)}`
+            : undefined,
+          events: uncertainty.eventIds.map((eventId) => {
+            const event = transcription.events.find((candidate) => candidate.id === eventId);
+            if (!event) {
+              throw new ApiRouteError(
+                `Transcription uncertainty ${uncertainty.id} references missing event ${eventId}`,
+                500
+              );
+            }
+            return event;
+          }),
+        };
+      });
 
     return {
       transcriptionId: transcription.id,

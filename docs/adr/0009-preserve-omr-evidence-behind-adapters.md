@@ -35,6 +35,13 @@ OMR Run and Score Transcription version rather than mutating prior results.
   every recognized note.
 - Page and region mappings support Score-Anchored Review in which the source
   facsimile and editable recognized notation are presented together.
+- Audiveris adapters correlate MusicXML events with native `.omr` voice and symbol
+  records. Native recognition grades become event confidence, and native raster
+  bounds use an explicit `omr_raster` coordinate space so a review client never
+  draws them over an incompatible PDF coordinate system.
+- The review API serves retained backend page rasters through a linkage-checked
+  workspace route. Clients use the immutable source document only as a fallback
+  when a backend does not preserve a compatible page raster.
 - Audiveris can be replaced or supplemented without migrating Vellum's canonical
   score representation.
 - Recognition runs consume more local storage than keeping MusicXML alone.

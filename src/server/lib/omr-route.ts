@@ -3,7 +3,7 @@ import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
 import type { OmrBackend } from "./omr.js";
 import { AudiverisBackend, OmrService } from "./omr.js";
-import { createApiRoute } from "./create-route.js";
+import { ApiRouteError, createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 const OmrRequestSchema = Type.Object(
@@ -43,4 +43,29 @@ export function createOmrRunRoute(options: OmrRouteOptions = {}): RequestHandler
     handler: async ({ workspaceId, sourceArtifactId, backend = "audiveris" }) =>
       service.recognize(workspaceId, sourceArtifactId, backendFactory(backend)),
   });
+}
+
+export function createOmrArtifactContentRoute(
+  options: Pick<OmrRouteOptions, "store"> = {}
+): RequestHandler {
+  const store = options.store ?? new WorkspaceStore();
+  return (request, response, next) => {
+    try {
+      const workspaceId = String(request.params.workspaceId ?? "");
+      const omrRunId = String(request.params.omrRunId ?? "");
+      const filename = String(request.params.filename ?? "");
+      if (
+        !workspaceId?.match(/^workspace\.[a-f0-9-]{16,}$/) ||
+        !omrRunId?.match(/^omr\.[a-f0-9-]{16,}$/) ||
+        !filename?.match(/^[A-Za-z0-9._-]+$/)
+      ) {
+        throw new ApiRouteError("Invalid OMR artifact request", 400);
+      }
+      const content = store.readOmrArtifact(workspaceId, omrRunId, filename);
+      response.type(filename.endsWith(".png") ? "image/png" : "application/octet-stream");
+      response.send(content);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
