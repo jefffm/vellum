@@ -21,6 +21,7 @@ const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
 
 export type GuidedDeliverable = {
   workspaceId: string;
+  arrangementFamilyId: string;
   arrangementSearchId: string;
   targetConfigurationId: string;
   label: string;
@@ -84,6 +85,13 @@ export type GuidedDeliverable = {
       weightedTotal: number;
       rationale: string;
     };
+  }>;
+  deliverables: Array<{
+    id: string;
+    kind: string;
+    notationLayout: string;
+    arrangementScoreVersion: number;
+    sha256: string;
   }>;
 };
 
@@ -209,6 +217,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           candidates: GuidedDeliverable["candidates"];
           arrangementScore: {
             id: string;
+            arrangementFamilyId: string;
             transformationReport: GuidedDeliverable["transformationReport"];
             preservationAudit: GuidedDeliverable["preservationAudit"];
             continuoDisposition?: GuidedDeliverable["continuoDisposition"];
@@ -223,16 +232,17 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         });
         status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
         const [compiled, preview] = await Promise.all([
-          api<CompileResult>(
+          api<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
             `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/compile`,
             { method: "POST" }
           ),
-          api<AudioPreview>(
+          api<AudioPreview & { deliverable: GuidedDeliverable["deliverables"][number] }>(
             `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/audio-preview`
           ),
         ]);
         deliverables.push({
           workspaceId: workspace.id,
+          arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
           arrangementSearchId: arranged.arrangementSearch.id,
           targetConfigurationId: target.id,
           label: targetLabel(target.id),
@@ -242,6 +252,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
           continuoDisposition: arranged.arrangementScore.continuoDisposition,
           compiled,
           preview,
+          deliverables: [...compiled.deliverables, preview.deliverable],
           candidates: arranged.candidates,
         });
       }
@@ -753,6 +764,27 @@ export function installAuditSummary(panel: HTMLElement, deliverable: GuidedDeliv
   }
   if (!details.contains(summary)) details.append(summary);
   details.append(list);
+  header.append(details);
+}
+
+export function installDeliverableSummary(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".deliverable-summary")?.remove();
+  const details = document.createElement("details");
+  details.className = "deliverable-summary";
+  const summary = document.createElement("summary");
+  summary.textContent = `Arrangement Family · ${deliverable.arrangementFamilyId} · ${deliverable.deliverables.length} versioned deliverables`;
+  const list = document.createElement("ul");
+  for (const item of deliverable.deliverables) {
+    const row = document.createElement("li");
+    row.textContent = `${item.kind.replaceAll("_", " ")} · ${item.notationLayout} · Arrangement Score v${item.arrangementScoreVersion} · ${item.sha256.slice(0, 10)}`;
+    list.append(row);
+  }
+  details.append(summary, list);
   header.append(details);
 }
 

@@ -9,6 +9,7 @@ import { compileLilyPond } from "./compile-route.js";
 import { engrave } from "./engrave.js";
 import { SubprocessRunner } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { persistDeliverable } from "./deliverable-service.js";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -22,7 +23,14 @@ export function createArrangementPreviewRoute(store = new WorkspaceStore()): Req
       const arrangement = store.getArrangementScore(workspaceId, arrangementId);
       const analysis = store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
       const score = store.getNormalizedScore(workspaceId, analysis.normalizedScoreId);
-      response.json({ ok: true, data: buildAudioPreview(arrangement, score) });
+      const preview = buildAudioPreview(arrangement, score);
+      const deliverable = persistDeliverable(store, workspaceId, arrangement, {
+        kind: "audio_preview",
+        mimeType: "application/json",
+        extension: "json",
+        content: Buffer.from(JSON.stringify(preview)),
+      });
+      response.json({ ok: true, data: { ...preview, deliverable } });
     } catch (error) {
       next(error);
     }
@@ -58,7 +66,45 @@ export function createArrangementCompileRoute(store = new WorkspaceStore()): Req
         new SubprocessRunner(60_000),
         60_000
       );
-      response.json({ ok: true, data: { ...compiled, source } });
+      const deliverables = [
+        persistDeliverable(store, workspaceId, arrangement, {
+          kind: "lilypond",
+          mimeType: "text/x-lilypond",
+          extension: "ly",
+          content: Buffer.from(source),
+        }),
+        ...(compiled.svg
+          ? [
+              persistDeliverable(store, workspaceId, arrangement, {
+                kind: "browser_preview" as const,
+                mimeType: "image/svg+xml",
+                extension: "svg",
+                content: Buffer.from(compiled.svg),
+              }),
+            ]
+          : []),
+        ...(compiled.pdf
+          ? [
+              persistDeliverable(store, workspaceId, arrangement, {
+                kind: "pdf" as const,
+                mimeType: "application/pdf",
+                extension: "pdf",
+                content: Buffer.from(compiled.pdf, "base64"),
+              }),
+            ]
+          : []),
+        ...(compiled.midi
+          ? [
+              persistDeliverable(store, workspaceId, arrangement, {
+                kind: "midi" as const,
+                mimeType: "audio/midi",
+                extension: "midi",
+                content: Buffer.from(compiled.midi, "base64"),
+              }),
+            ]
+          : []),
+      ];
+      response.json({ ok: true, data: { ...compiled, source, deliverables } });
     } catch (error) {
       next(error);
     }

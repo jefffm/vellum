@@ -102,6 +102,19 @@ export class ArrangementService {
         409
       );
     }
+    const familyId = stableFamilyId(score.id, analysis.id, workspace.brief);
+    const currentWorkspace = this.store.get(workspaceId);
+    if (!currentWorkspace.arrangementFamilyIds.includes(familyId)) {
+      this.store.saveArrangementFamily(workspaceId, {
+        id: familyId,
+        normalizedScoreId: score.id,
+        analysisRecordId: analysis.id,
+        brief: workspace.brief,
+        arrangementScoreIds: [],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    }
     const arrangementId = `arrangement.${this.createId()}`;
     const searchId = `search.${arrangementId.slice("arrangement.".length)}`;
     const rankingWeights = {
@@ -116,6 +129,7 @@ export class ArrangementService {
       id: searchId,
       normalizedScoreId: score.id,
       analysisRecordId: analysis.id,
+      arrangementFamilyId: familyId,
       targetConfiguration,
       preservationPolicy: "faithful_reduction",
       status: "running",
@@ -184,6 +198,7 @@ export class ArrangementService {
       ...generated.selected,
       version: 1,
       arrangementSearchId: searchId,
+      arrangementFamilyId: familyId,
       selectedCandidateId: selectedCandidate.id,
     };
     this.store.saveArrangementScore(workspaceId, arrangementScore);
@@ -364,6 +379,13 @@ function scoreTotal(
 
 function stableCandidateId(searchId: string, strategy: string): string {
   return `candidate.${createHash("sha256").update(`${searchId}:${strategy}`).digest("hex").slice(0, 24)}`;
+}
+
+function stableFamilyId(scoreId: string, analysisId: string, brief: object): string {
+  return `family.${createHash("sha256")
+    .update(JSON.stringify({ scoreId, analysisId, brief }))
+    .digest("hex")
+    .slice(0, 24)}`;
 }
 
 function clamp(value: number): number {

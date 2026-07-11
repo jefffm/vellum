@@ -9,7 +9,10 @@ import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { continuoArrangementToLilyPond } from "../../src/lib/continuo-engrave.js";
 import { RecognizedScoreSchema } from "../../src/lib/music-domain.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
-import { createArrangementCompileRoute } from "../../src/server/lib/arrangement-deliverable-route.js";
+import {
+  createArrangementCompileRoute,
+  createArrangementPreviewRoute,
+} from "../../src/server/lib/arrangement-deliverable-route.js";
 import { OmrService } from "../../src/server/lib/omr.js";
 import type { OmrBackend } from "../../src/server/lib/omr.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
@@ -103,6 +106,9 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       targetConfigurationId: "target.baroque-guitar-continuo",
     });
     expect(guitarArranged.analysisRecordId).toBe(arranged.analysisRecordId);
+    expect(guitarArranged.arrangementScore.arrangementFamilyId).toBe(
+      arranged.arrangementScore.arrangementFamilyId
+    );
     expect(guitarArranged.candidates).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ strategy: "separate-bass-realization", status: "selected" }),
@@ -169,6 +175,10 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       "/api/workspaces/:workspaceId/arrangements/:arrangementId/compile",
       createArrangementCompileRoute(store)
     );
+    app.get(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/audio-preview",
+      createArrangementPreviewRoute(store)
+    );
     const server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
@@ -179,7 +189,14 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     );
     const envelope = (await response.json()) as {
       ok: boolean;
-      data: { errors: unknown[]; pdf?: string; svg?: string; midi?: string; source: string };
+      data: {
+        errors: unknown[];
+        pdf?: string;
+        svg?: string;
+        midi?: string;
+        source: string;
+        deliverables: Array<{ id: string; kind: string; arrangementScoreVersion: number }>;
+      };
     };
     const guitarResponse = await fetch(
       `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${guitarArranged.arrangementScore.id}/compile`,
@@ -189,6 +206,20 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       ok: boolean;
       data: { errors: unknown[]; pdf?: string; source: string };
     };
+    const previewResponse = await fetch(
+      `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${guitarArranged.arrangementScore.id}/audio-preview`
+    );
+    const previewEnvelope = (await previewResponse.json()) as {
+      ok: boolean;
+      data: { deliverable: { id: string; kind: string; arrangementScoreVersion: number } };
+    };
+    const repeatedCompileResponse = await fetch(
+      `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/compile`,
+      { method: "POST" }
+    );
+    const repeatedCompileEnvelope = (await repeatedCompileResponse.json()) as {
+      data: { deliverables: Array<{ id: string }> };
+    };
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
     );
@@ -196,6 +227,18 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     expect(envelope.ok).toBe(true);
     const compiled = envelope.data;
     expect(compiled.source).toBe(lilypond);
+    expect(envelope.data.deliverables.map((item) => item.kind).sort()).toEqual([
+      "browser_preview",
+      "lilypond",
+      "midi",
+      "pdf",
+    ]);
+    expect(envelope.data.deliverables.every((item) => item.arrangementScoreVersion === 1)).toBe(
+      true
+    );
+    expect(repeatedCompileEnvelope.data.deliverables.map((item) => item.id)).toEqual(
+      envelope.data.deliverables.map((item) => item.id)
+    );
     expect(compiled.errors).toEqual([]);
     expect(compiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(compiled.svg?.length ?? 0).toBeGreaterThan(1_000);
@@ -213,6 +256,26 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     expect(guitarEnvelope.data.source).toContain(
       "Complete Continuo Realization · continuo.italian-baroque · baroque-guitar-5 with separate voice-bass"
     );
+    expect(previewResponse.status).toBe(200);
+    expect(previewEnvelope.data.deliverable).toMatchObject({
+      kind: "audio_preview",
+      arrangementScoreVersion: 1,
+    });
+    const family = store.getArrangementFamily(
+      workspace.id,
+      arranged.arrangementScore.arrangementFamilyId!
+    );
+    expect(family.arrangementScoreIds).toEqual([
+      arranged.arrangementScore.id,
+      guitarArranged.arrangementScore.id,
+    ]);
+    expect(store.get(workspace.id).deliverableIds).toHaveLength(9);
+    const audioMetadata = store.getDeliverable(workspace.id, previewEnvelope.data.deliverable.id);
+    expect(
+      JSON.parse(store.readDeliverableContent(workspace.id, audioMetadata.id).toString())
+    ).toMatchObject({
+      mode: "literal",
+    });
     expect(guitarEnvelope.data.source).toContain('instrumentName = "Separate bass (voice-bass)"');
 
     if (process.env.VELLUM_CAPTURE_FIXTURE_ARTIFACTS === "1") {

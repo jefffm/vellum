@@ -35,6 +35,7 @@ import {
   installAnalysisSummary,
   installAuditSummary,
   installCandidateComparisonControls,
+  installDeliverableSummary,
   installTransformationReport,
   installGuidedStart,
   type GuidedDeliverable,
@@ -418,6 +419,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
   type StoredArrangement = {
     analysisRecordId: string;
     arrangementSearchId?: string;
+    arrangementFamilyId: string;
     targetConfiguration: { id: string; instrumentId: string };
     transformationReport: GuidedDeliverable["transformationReport"];
     preservationAudit: GuidedDeliverable["preservationAudit"];
@@ -438,13 +440,15 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
     )
   );
   const [compiled, preview, analysis] = await Promise.all([
-    browserApi<CompileResult>(
+    browserApi<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
       `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/compile`,
       { method: "POST" }
     ),
-    browserApi<import("./lib/audio-preview.js").AudioPreview>(
-      `/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`
-    ),
+    browserApi<
+      import("./lib/audio-preview.js").AudioPreview & {
+        deliverable: GuidedDeliverable["deliverables"][number];
+      }
+    >(`/api/workspaces/${workspaceId}/arrangements/${arrangementId}/audio-preview`),
     browserApi<GuidedDeliverable["analysis"]>(
       `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
     ),
@@ -452,6 +456,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
   renderGuidedDeliverables(panel, [
     {
       workspaceId,
+      arrangementFamilyId: arrangement.arrangementFamilyId,
       arrangementSearchId: search.id,
       targetConfigurationId: arrangement.targetConfiguration.id,
       label: arrangement.targetConfiguration.instrumentId,
@@ -461,6 +466,7 @@ async function restoreLinkedArrangement(panel: HTMLElement): Promise<void> {
       continuoDisposition: arrangement.continuoDisposition,
       compiled,
       preview,
+      deliverables: [...compiled.deliverables, preview.deliverable],
       candidates,
     },
   ]);
@@ -498,6 +504,7 @@ function renderGuidedDeliverables(panel: HTMLElement, deliverables: GuidedDelive
     installAudioPreviewControls(panel, deliverable.preview);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
+    installDeliverableSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);
   };

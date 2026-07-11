@@ -40,6 +40,8 @@ Audio Preview is a literal synthetic check of that same Arrangement Score. It fo
 
 Continuo output is labeled by what actually sounds. Capable targets produce a complete realization; an incapable re-entrant baroque guitar can be paired with an explicit separate bass. The competing Continuo Reduction discloses every unsounded foundation event and is rejected under Faithful Reduction rather than passing on implied harmony.
 
+Multiple targets from one brief form an explicit Arrangement Family while remaining independently searched and audited musical solutions. Every PDF, browser preview, MIDI file, LilyPond source, and literal Audio Preview is a content-addressed Deliverable tied to one exact Arrangement Score version and Notation Layout, so recompilation cannot blur musical lineage.
+
 ## Quick start
 
 ```bash

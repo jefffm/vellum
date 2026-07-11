@@ -103,7 +103,7 @@ export const ArrangementBriefSchema = Type.Object(
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 3 }),
+    schemaVersion: Type.Integer({ minimum: 4 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,
@@ -117,6 +117,8 @@ export const ArrangementWorkspaceSchema = Type.Object(
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
+    arrangementFamilyIds: Type.Array(IdSchema),
+    deliverableIds: Type.Array(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -134,6 +136,46 @@ export const CreateWorkspaceSchema = Type.Object(
 );
 
 export type CreateWorkspace = Static<typeof CreateWorkspaceSchema>;
+
+export const ArrangementFamilySchema = Type.Object(
+  {
+    id: IdSchema,
+    normalizedScoreId: IdSchema,
+    analysisRecordId: IdSchema,
+    brief: ArrangementBriefSchema,
+    arrangementScoreIds: Type.Array(IdSchema),
+    createdAt: IsoDateSchema,
+    updatedAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type ArrangementFamily = Static<typeof ArrangementFamilySchema>;
+
+export const DeliverableSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    arrangementScoreVersion: Type.Integer({ minimum: 1 }),
+    notationLayout: Type.String({ minLength: 1 }),
+    kind: Type.Union([
+      Type.Literal("browser_preview"),
+      Type.Literal("pdf"),
+      Type.Literal("midi"),
+      Type.Literal("lilypond"),
+      Type.Literal("musicxml"),
+      Type.Literal("audio_preview"),
+    ]),
+    mimeType: Type.String({ minLength: 1 }),
+    sha256: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    byteLength: Type.Integer({ minimum: 0 }),
+    storedPath: Type.String({ minLength: 1 }),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type Deliverable = Static<typeof DeliverableSchema>;
 
 export const ModelActionInputVersionSchema = Type.Object(
   {
@@ -846,6 +888,7 @@ export const ArrangementSearchSchema = Type.Object(
     id: IdSchema,
     normalizedScoreId: IdSchema,
     analysisRecordId: IdSchema,
+    arrangementFamilyId: Type.Optional(IdSchema),
     targetConfiguration: TargetConfigurationSchema,
     preservationPolicy: Type.Union([
       Type.Literal("faithful_reduction"),
@@ -886,6 +929,7 @@ export const ArrangementScoreSchema = Type.Object(
     version: Type.Optional(Type.Integer({ minimum: 1 })),
     arrangementSearchId: Type.Optional(IdSchema),
     branchId: Type.Optional(IdSchema),
+    arrangementFamilyId: Type.Optional(IdSchema),
     analysisRecordId: IdSchema,
     selectedCandidateId: IdSchema,
     targetConfiguration: TargetConfigurationSchema,

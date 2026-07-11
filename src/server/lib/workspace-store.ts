@@ -12,11 +12,13 @@ import {
 import path from "node:path";
 import {
   AnalysisRecordSchema,
+  ArrangementFamilySchema,
   ArrangementBranchSchema,
   ArrangementCandidateSchema,
   ArrangementSearchSchema,
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
+  DeliverableSchema,
   ModelActionSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
@@ -25,12 +27,14 @@ import {
 } from "../../lib/music-domain.js";
 import type {
   AnalysisRecord,
+  ArrangementFamily,
   ArrangementBranch,
   ArrangementCandidate,
   ArrangementSearch,
   ArrangementScore,
   ArrangementWorkspace,
   CreateWorkspace,
+  Deliverable,
   ModelAction,
   ModelActionInputVersion,
   NormalizedScore,
@@ -63,7 +67,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -77,6 +81,8 @@ export class WorkspaceStore {
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
+      arrangementFamilyIds: [],
+      deliverableIds: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -110,7 +116,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 3) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 4) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -118,7 +124,7 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 3,
+      schemaVersion: 4,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
@@ -129,14 +135,20 @@ export class WorkspaceStore {
       arrangementCandidateIds: Array.isArray(parsed.arrangementCandidateIds)
         ? parsed.arrangementCandidateIds
         : [],
+      arrangementFamilyIds: Array.isArray(parsed.arrangementFamilyIds)
+        ? parsed.arrangementFamilyIds
+        : [],
+      deliverableIds: Array.isArray(parsed.deliverableIds) ? parsed.deliverableIds : [],
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 3 ||
+      parsed.schemaVersion !== 4 ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
-      !Array.isArray(parsed.arrangementCandidateIds)
+      !Array.isArray(parsed.arrangementCandidateIds) ||
+      !Array.isArray(parsed.arrangementFamilyIds) ||
+      !Array.isArray(parsed.deliverableIds)
     ) {
       writeJsonAtomic(manifestPath, workspace);
     }
@@ -354,6 +366,63 @@ export class WorkspaceStore {
     );
   }
 
+  saveArrangementFamily(workspaceId: string, family: ArrangementFamily): ArrangementFamily {
+    const workspace = this.get(workspaceId);
+    if (
+      !workspace.normalizedScoreIds.includes(family.normalizedScoreId) ||
+      !workspace.analysisRecordIds.includes(family.analysisRecordId)
+    ) {
+      throw new ApiRouteError("Arrangement Family source or analysis is not in the workspace", 400);
+    }
+    const decoded = Value.Decode(ArrangementFamilySchema, family);
+    this.writeRecord(workspaceId, "arrangement-families", decoded.id, decoded);
+    this.linkRecord(workspace, "arrangementFamilyIds", decoded.id);
+    return decoded;
+  }
+
+  getArrangementFamily(workspaceId: string, familyId: string): ArrangementFamily {
+    return this.readRecord(
+      workspaceId,
+      "arrangement-families",
+      familyId,
+      "family",
+      ArrangementFamilySchema
+    );
+  }
+
+  saveDeliverable(workspaceId: string, deliverable: Deliverable, content: Buffer): Deliverable {
+    const workspace = this.get(workspaceId);
+    const arrangement = this.getArrangementScore(workspaceId, deliverable.arrangementScoreId);
+    if (arrangement.version !== deliverable.arrangementScoreVersion) {
+      throw new ApiRouteError("Deliverable Arrangement Score version is inconsistent", 400);
+    }
+    const sha256 = createHash("sha256").update(content).digest("hex");
+    if (sha256 !== deliverable.sha256 || content.byteLength !== deliverable.byteLength) {
+      throw new ApiRouteError("Deliverable content hash or length is inconsistent", 400);
+    }
+    const decoded = Value.Decode(DeliverableSchema, deliverable);
+    const artifactPath = path.join(this.workspaceDirectory(workspaceId), decoded.storedPath);
+    writeFileAtomic(artifactPath, content);
+    this.writeImmutableRecord(workspaceId, "deliverables", decoded.id, decoded);
+    this.linkRecord(workspace, "deliverableIds", decoded.id);
+    return decoded;
+  }
+
+  getDeliverable(workspaceId: string, deliverableId: string): Deliverable {
+    return this.readRecord(
+      workspaceId,
+      "deliverables",
+      deliverableId,
+      "deliverable",
+      DeliverableSchema
+    );
+  }
+
+  readDeliverableContent(workspaceId: string, deliverableId: string): Buffer {
+    const deliverable = this.getDeliverable(workspaceId, deliverableId);
+    return readFileSync(path.join(this.workspaceDirectory(workspaceId), deliverable.storedPath));
+  }
+
   saveArrangementScore(workspaceId: string, arrangement: ArrangementScore): ArrangementScore {
     const workspace = this.get(workspaceId);
     if (!workspace.analysisRecordIds.includes(arrangement.analysisRecordId)) {
@@ -362,13 +431,18 @@ export class WorkspaceStore {
         400
       );
     }
-    if (!arrangement.arrangementSearchId || !arrangement.version) {
+    if (
+      !arrangement.arrangementSearchId ||
+      !arrangement.version ||
+      !arrangement.arrangementFamilyId
+    ) {
       throw new ApiRouteError(
-        "A persisted Arrangement Score requires an Arrangement Search and version",
+        "A persisted Arrangement Score requires an Arrangement Family, Search, and version",
         400
       );
     }
     const search = this.getArrangementSearch(workspaceId, arrangement.arrangementSearchId);
+    const family = this.getArrangementFamily(workspaceId, arrangement.arrangementFamilyId);
     const candidate = this.getArrangementCandidate(workspaceId, arrangement.selectedCandidateId);
     if (
       candidate.arrangementSearchId !== search.id ||
@@ -417,6 +491,13 @@ export class WorkspaceStore {
     const decoded = Value.Decode(ArrangementScoreSchema, arrangement);
     this.writeImmutableRecord(workspaceId, "arrangement-scores", decoded.id, decoded);
     this.linkRecord(workspace, "arrangementScoreIds", decoded.id);
+    if (!family.arrangementScoreIds.includes(decoded.id)) {
+      this.saveArrangementFamily(workspaceId, {
+        ...family,
+        arrangementScoreIds: [...family.arrangementScoreIds, decoded.id],
+        updatedAt: this.now().toISOString(),
+      });
+    }
     return decoded;
   }
 

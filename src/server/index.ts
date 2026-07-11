@@ -63,6 +63,11 @@ import {
   createArrangementScoreGetRoute,
 } from "./lib/arrangement-deliverable-route.js";
 import { createAnalysisCorrectionRoute, createAnalysisGetRoute } from "./lib/analysis-route.js";
+import {
+  createArrangementFamilyGetRoute,
+  createDeliverableContentRoute,
+  createDeliverableGetRoute,
+} from "./lib/family-deliverable-route.js";
 
 type HealthResponse = {
   status: "ok";
@@ -150,6 +155,15 @@ export function createApiRouter(): Router {
   router.get("/workspaces", createWorkspaceListRoute());
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
+  router.get(
+    "/workspaces/:workspaceId/arrangement-families/:familyId",
+    createArrangementFamilyGetRoute()
+  );
+  router.get("/workspaces/:workspaceId/deliverables/:deliverableId", createDeliverableGetRoute());
+  router.get(
+    "/workspaces/:workspaceId/deliverables/:deliverableId/content",
+    createDeliverableContentRoute()
+  );
   router.get("/workspaces/:workspaceId/analyses/:analysisRecordId", createAnalysisGetRoute());
   router.post(
     "/workspaces/:workspaceId/analyses/:analysisRecordId/claims/:claimId/corrections",

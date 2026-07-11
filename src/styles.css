@@ -724,6 +724,13 @@ chat-panel > div > div:has(agent-interface) {
   font-size: 0.72rem;
 }
 
+.deliverable-summary,
+.preservation-audit-summary {
+  flex-basis: 100%;
+  color: #5f5f58;
+  font-size: 0.74rem;
+}
+
 .transformation-report summary {
   position: sticky;
   top: 0;

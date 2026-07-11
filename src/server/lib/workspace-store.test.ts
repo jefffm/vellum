@@ -68,19 +68,23 @@ describe("WorkspaceStore", () => {
     );
 
     expect(store.get(id)).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: 4,
       sourceArtifactIds: ["source.1111111111111111"],
       modelActionIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
+      arrangementFamilyIds: [],
+      deliverableIds: [],
     });
     expect(JSON.parse(readFileSync(path.join(directory, "workspace.json"), "utf8"))).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: 4,
       modelActionIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
+      arrangementFamilyIds: [],
+      deliverableIds: [],
     });
   });
 
