@@ -4,6 +4,8 @@ import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import path from "node:path";
 import { promisify } from "node:util";
 
+const KEYCHAIN_TIMEOUT_MS = 10_000;
+
 export interface ProviderCredentialStore {
   readonly kind: "macos-keychain" | "restricted-file";
   read(): Promise<string | undefined>;
@@ -61,7 +63,8 @@ export class MacOsKeychainCredentialStore implements ProviderCredentialStore {
         this.service,
         "-w",
       ]);
-      return stdout.trim() || undefined;
+      const stored = stdout.trim();
+      return stored ? decodeKeychainSecret(stored) : undefined;
     } catch {
       return undefined;
     }
@@ -69,10 +72,7 @@ export class MacOsKeychainCredentialStore implements ProviderCredentialStore {
 
   async write(value: string): Promise<void> {
     try {
-      await securityWithSecretInput(
-        ["add-generic-password", "-U", "-a", this.account, "-s", this.service, "-w"],
-        value
-      );
+      await securityWithSecretInput(this.account, this.service, value);
     } catch {
       throw new Error("Could not write provider credentials to the macOS Keychain");
     }
@@ -93,13 +93,49 @@ export class MacOsKeychainCredentialStore implements ProviderCredentialStore {
   }
 }
 
-async function securityWithSecretInput(args: string[], secret: string): Promise<void> {
+async function securityWithSecretInput(
+  account: string,
+  service: string,
+  secret: string
+): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn("security", args, { stdio: ["pipe", "ignore", "ignore"] });
-    child.once("error", reject);
-    child.once("close", (code) =>
-      code === 0 ? resolve() : reject(new Error("macOS Keychain command failed"))
+    const child = spawn("security", ["-i"], { stdio: ["pipe", "ignore", "ignore"] });
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error("macOS Keychain command timed out"));
+    }, KEYCHAIN_TIMEOUT_MS);
+    child.once("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.once("close", (code) => {
+      clearTimeout(timeout);
+      code === 0 ? resolve() : reject(new Error("macOS Keychain command failed"));
+    });
+    child.stdin.end(
+      `add-generic-password -U -a ${securityToken(account)} -s ${securityToken(service)} -w ${encodeKeychainSecret(secret)}\n`
     );
-    child.stdin.end(`${secret}\n`);
   });
+}
+
+export function encodeKeychainSecret(value: string): string {
+  return Buffer.from(value, "utf8").toString("base64");
+}
+
+export function decodeKeychainSecret(value: string): string {
+  try {
+    const decoded = Buffer.from(value, "base64").toString("utf8");
+    return encodeKeychainSecret(decoded).replace(/=+$/, "") === value.replace(/=+$/, "")
+      ? decoded
+      : value;
+  } catch {
+    return value;
+  }
+}
+
+function securityToken(value: string): string {
+  if (!/^[A-Za-z0-9._@-]+$/.test(value)) {
+    throw new Error("Keychain account and service must use safe identifier characters");
+  }
+  return value;
 }

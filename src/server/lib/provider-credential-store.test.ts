@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defaultCredentialStore } from "./provider-connection.js";
-import { RestrictedFileCredentialStore } from "./provider-credential-store.js";
+import {
+  decodeKeychainSecret,
+  encodeKeychainSecret,
+  RestrictedFileCredentialStore,
+} from "./provider-credential-store.js";
 
 describe("provider credential stores", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -26,5 +30,13 @@ describe("provider credential stores", () => {
   it("allows an explicit restricted-file fallback", () => {
     vi.stubEnv("VELLUM_PROVIDER_CREDENTIAL_STORE", "file");
     expect(defaultCredentialStore().kind).toBe("restricted-file");
+  });
+
+  it("round-trips Keychain payloads without exposing raw structured credentials", () => {
+    const credentials = JSON.stringify({ access: "secret-access", refresh: "secret-refresh" });
+    const encoded = encodeKeychainSecret(credentials);
+    expect(encoded).not.toContain("secret-access");
+    expect(decodeKeychainSecret(encoded)).toBe(credentials);
+    expect(decodeKeychainSecret(credentials)).toBe(credentials);
   });
 });
