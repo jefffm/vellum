@@ -124,6 +124,101 @@ export class LineageService {
     return records;
   }
 
+  markSourceTruthDependentsStale(
+    workspaceId: string,
+    priorAssessmentId: string,
+    currentAssessmentId: string,
+    reason: string,
+    changedObjectIds: string[] = []
+  ): StaleDerivation[] {
+    const workspace = this.store.get(workspaceId);
+    const prior = this.store.getSourceTruthAssessment(workspaceId, priorAssessmentId);
+    const current = this.store.getSourceTruthAssessment(workspaceId, currentAssessmentId);
+    const records: StaleDerivation[] = [];
+    const plans = workspace.arrangementPlanIds
+      .map((id) => this.store.getArrangementPlan(workspaceId, id))
+      .filter((plan) => plan.sourceTruthAssessmentId === prior.id);
+    for (const plan of plans) {
+      records.push(
+        this.saveStale(
+          workspaceId,
+          "arrangement_plan",
+          plan.id,
+          reason,
+          [{ recordType: "source_truth_assessment", recordId: prior.id, version: 1 }],
+          [{ recordType: "source_truth_assessment", recordId: current.id, version: 1 }],
+          changedObjectIds
+        )
+      );
+      const scores = workspace.arrangementScoreIds
+        .map((id) => this.store.getArrangementScore(workspaceId, id))
+        .filter((score) => score.arrangementPlanId === plan.id);
+      const searchIds = new Set(scores.flatMap((score) => score.arrangementSearchId ?? []));
+      for (const searchId of searchIds) {
+        const search = this.store.getArrangementSearch(workspaceId, searchId);
+        records.push(
+          this.saveStale(
+            workspaceId,
+            "arrangement_search",
+            search.id,
+            reason,
+            [{ recordType: "arrangement_plan", recordId: plan.id, version: plan.version }],
+            [{ recordType: "source_truth_assessment", recordId: current.id, version: 1 }],
+            changedObjectIds
+          )
+        );
+        for (const candidateId of search.candidateIds) {
+          records.push(
+            this.saveStale(
+              workspaceId,
+              "arrangement_candidate",
+              candidateId,
+              reason,
+              [{ recordType: "arrangement_search", recordId: search.id, version: 1 }],
+              [{ recordType: "source_truth_assessment", recordId: current.id, version: 1 }],
+              changedObjectIds
+            )
+          );
+        }
+      }
+      for (const score of scores) {
+        records.push(
+          this.saveStale(
+            workspaceId,
+            "arrangement_score",
+            score.id,
+            reason,
+            [{ recordType: "arrangement_plan", recordId: plan.id, version: plan.version }],
+            [{ recordType: "source_truth_assessment", recordId: current.id, version: 1 }],
+            changedObjectIds
+          )
+        );
+        for (const deliverableId of workspace.deliverableIds) {
+          const deliverable = this.store.getDeliverable(workspaceId, deliverableId);
+          if (deliverable.arrangementScoreId !== score.id) continue;
+          records.push(
+            this.saveStale(
+              workspaceId,
+              "deliverable",
+              deliverable.id,
+              reason,
+              [
+                {
+                  recordType: "arrangement_score",
+                  recordId: score.id,
+                  version: score.version ?? 1,
+                },
+              ],
+              [{ recordType: "source_truth_assessment", recordId: current.id, version: 1 }],
+              changedObjectIds
+            )
+          );
+        }
+      }
+    }
+    return records;
+  }
+
   createEditorialCommitment(
     workspaceId: string,
     input: Omit<EditorialCommitment, "id" | "status" | "createdAt">

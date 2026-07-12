@@ -61,6 +61,9 @@ export function buildNarrowPlanningRecords(input: {
     analysisRecordId: input.analysis.id,
     analysisRecordVersion: input.analysis.version,
     purpose: "arrangement_planning",
+    scope: { kind: "whole_score", partIds: [], measureIds: [], eventIds: [] },
+    preservationPolicy: input.preservationPolicy,
+    targetConfigurationIds: [input.target.id],
     outcome:
       unresolved.length === 0
         ? input.transcription.status === "best_effort"
@@ -70,7 +73,29 @@ export function buildNarrowPlanningRecords(input: {
     authorizedClaimIds:
       unresolved.length === 0 ? input.analysis.claims.map((claim) => claim.id) : [],
     blockedClaimIds: [],
+    consideredUncertaintyIds: input.transcription.uncertainties.map(
+      (uncertainty) => uncertainty.id
+    ),
     unresolvedUncertaintyIds: unresolved,
+    blockingUncertaintyIds: unresolved,
+    consequences: input.transcription.uncertainties.map((uncertainty) => ({
+      uncertaintyId: uncertainty.id,
+      discoveredBy: "transcription" as const,
+      dimensions: ["relationship" as const],
+      affectedPartIds: [],
+      affectedMeasureIds: [],
+      affectedEventIds: uncertainty.eventIds,
+      affectedTargetConfigurationIds: [],
+      critical: uncertainty.critical,
+      material: true,
+      unresolved: !uncertainty.resolved,
+      rationale: uncertainty.message,
+    })),
+    stability: {
+      iteration: 1,
+      newMaterialUncertaintyIds: unresolved,
+      stable: unresolved.length === 0,
+    },
     createdAt: input.createdAt,
   };
   const performanceBrief: PerformanceBrief = {

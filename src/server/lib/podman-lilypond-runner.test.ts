@@ -76,6 +76,41 @@ describe("PodmanLilyPondRunner policy", () => {
     ).rejects.toThrow("exceeds");
     expect(run).not.toHaveBeenCalled();
   });
+
+  it("retries a transient Podman machine startup without masking durable failures", async () => {
+    const run = vi
+      .fn<(config: SubprocessConfig) => Promise<SubprocessResult>>()
+      .mockResolvedValueOnce(
+        result({ exitCode: 125, stderr: "unable to connect to Podman socket: machine is starting" })
+      )
+      .mockResolvedValueOnce(result({ stdout: `${"b".repeat(64)}\n` }))
+      .mockResolvedValueOnce(result())
+      .mockResolvedValueOnce(result())
+      .mockResolvedValueOnce(result({ stdout: "0" }))
+      .mockResolvedValueOnce(result())
+      .mockResolvedValueOnce(result())
+      .mockResolvedValueOnce(result());
+    await new PodmanLilyPondRunner({ commandRunner: { run }, defaultTimeout: 5_000 }).run({
+      command: "lilypond",
+      args: ["--svg", "-o", "output", "source.ly"],
+      inputFile: { name: "source.ly", content: "{ c'4 }" },
+      outputGlobs: ["*.svg"],
+    });
+    expect(run.mock.calls[0]![0].args[0]).toBe("create");
+    expect(run.mock.calls[1]![0].args[0]).toBe("create");
+
+    const durable = vi
+      .fn<(config: SubprocessConfig) => Promise<SubprocessResult>>()
+      .mockResolvedValue(result({ exitCode: 125, stderr: "image not known" }));
+    await expect(
+      new PodmanLilyPondRunner({ commandRunner: { run: durable } }).run({
+        command: "lilypond",
+        args: [],
+        inputFile: { name: "source.ly", content: "{ c'4 }" },
+      })
+    ).rejects.toThrow(/image not known/);
+    expect(durable).toHaveBeenCalledTimes(1);
+  });
 });
 
 const podmanAvailable = (() => {

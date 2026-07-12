@@ -221,6 +221,51 @@ export const GuidedWorkflowSchema = Type.Object(
 
 export type GuidedWorkflow = Static<typeof GuidedWorkflowSchema>;
 
+export const SourceTruthScopeSchema = Type.Object(
+  {
+    kind: Type.Union([Type.Literal("whole_score"), Type.Literal("passage")]),
+    partIds: Type.Array(IdSchema),
+    measureIds: Type.Array(IdSchema),
+    eventIds: Type.Array(IdSchema),
+  },
+  { additionalProperties: false }
+);
+export type SourceTruthScope = Static<typeof SourceTruthScopeSchema>;
+
+export const SourceTruthConsequenceSchema = Type.Object(
+  {
+    uncertaintyId: IdSchema,
+    discoveredBy: Type.Union([Type.Literal("transcription"), Type.Literal("analysis")]),
+    dimensions: Type.Array(
+      Type.Union([
+        Type.Literal("pitch"),
+        Type.Literal("rhythm"),
+        Type.Literal("order"),
+        Type.Literal("voice"),
+        Type.Literal("figure"),
+        Type.Literal("text"),
+        Type.Literal("relationship"),
+        Type.Literal("identity"),
+        Type.Literal("key_meter_form"),
+        Type.Literal("texture_technique_profile"),
+        Type.Literal("target_feasibility"),
+        Type.Literal("recognizable_identity"),
+      ]),
+      { minItems: 1 }
+    ),
+    affectedPartIds: Type.Array(IdSchema),
+    affectedMeasureIds: Type.Array(IdSchema),
+    affectedEventIds: Type.Array(IdSchema),
+    affectedTargetConfigurationIds: Type.Array(IdSchema),
+    critical: Type.Boolean(),
+    material: Type.Boolean(),
+    unresolved: Type.Boolean(),
+    rationale: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+export type SourceTruthConsequence = Static<typeof SourceTruthConsequenceSchema>;
+
 export const SourceTruthAssessmentSchema = Type.Object(
   {
     id: IdSchema,
@@ -232,6 +277,14 @@ export const SourceTruthAssessmentSchema = Type.Object(
     analysisRecordId: IdSchema,
     analysisRecordVersion: Type.Integer({ minimum: 1 }),
     purpose: Type.Literal("arrangement_planning"),
+    scope: SourceTruthScopeSchema,
+    preservationPolicy: Type.Union([
+      Type.Literal("faithful_reduction"),
+      Type.Literal("idiomatic_adaptation"),
+      Type.Literal("free_paraphrase"),
+    ]),
+    performanceBriefId: Type.Optional(IdSchema),
+    targetConfigurationIds: Type.Array(IdSchema, { minItems: 1 }),
     outcome: Type.Union([
       Type.Literal("authoritative_for_purpose"),
       Type.Literal("authoritative_with_disclosed_uncertainty"),
@@ -241,7 +294,18 @@ export const SourceTruthAssessmentSchema = Type.Object(
     ]),
     authorizedClaimIds: Type.Array(IdSchema),
     blockedClaimIds: Type.Array(IdSchema),
+    consideredUncertaintyIds: Type.Array(IdSchema),
     unresolvedUncertaintyIds: Type.Array(IdSchema),
+    blockingUncertaintyIds: Type.Array(IdSchema),
+    consequences: Type.Array(SourceTruthConsequenceSchema),
+    stability: Type.Object(
+      {
+        iteration: Type.Integer({ minimum: 1 }),
+        newMaterialUncertaintyIds: Type.Array(IdSchema),
+        stable: Type.Boolean(),
+      },
+      { additionalProperties: false }
+    ),
     supersedesAssessmentId: Type.Optional(IdSchema),
     createdAt: IsoDateSchema,
   },
@@ -467,7 +531,13 @@ const LineageInputVersionSchema = Type.Object(
 export const StaleDerivationSchema = Type.Object(
   {
     id: IdSchema,
-    recordType: Type.Union([Type.Literal("arrangement_score"), Type.Literal("deliverable")]),
+    recordType: Type.Union([
+      Type.Literal("arrangement_plan"),
+      Type.Literal("arrangement_search"),
+      Type.Literal("arrangement_candidate"),
+      Type.Literal("arrangement_score"),
+      Type.Literal("deliverable"),
+    ]),
     recordId: IdSchema,
     reason: Type.String({ minLength: 1 }),
     priorInputVersions: Type.Array(LineageInputVersionSchema, { minItems: 1 }),
@@ -1128,6 +1198,28 @@ export const AnalysisAmbiguitySchema = Type.Object(
     question: Type.String({ minLength: 1 }),
     alternativeIds: Type.Array(IdSchema, { minItems: 1 }),
     resolution: Type.Optional(Type.String({ minLength: 1 })),
+    sourceUncertaintyIds: Type.Optional(Type.Array(IdSchema, { minItems: 1 })),
+    affectedEventIds: Type.Optional(Type.Array(IdSchema)),
+    affectedTargetConfigurationIds: Type.Optional(Type.Array(IdSchema)),
+    consequenceDimensions: Type.Optional(
+      Type.Array(
+        Type.Union([
+          Type.Literal("pitch"),
+          Type.Literal("rhythm"),
+          Type.Literal("order"),
+          Type.Literal("voice"),
+          Type.Literal("figure"),
+          Type.Literal("text"),
+          Type.Literal("relationship"),
+          Type.Literal("identity"),
+          Type.Literal("key_meter_form"),
+          Type.Literal("texture_technique_profile"),
+          Type.Literal("target_feasibility"),
+          Type.Literal("recognizable_identity"),
+        ]),
+        { minItems: 1 }
+      )
+    ),
   },
   { additionalProperties: false }
 );

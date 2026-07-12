@@ -11,6 +11,7 @@ import type {
 import { ApiRouteError } from "./create-route.js";
 import { LineageService } from "./lineage-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { SourceTruthService } from "./source-truth-service.js";
 
 type TranscriptionServiceOptions = {
   store: WorkspaceStore;
@@ -22,6 +23,7 @@ export type TranscriptionCorrectionResult = {
   scoreTranscription: ScoreTranscription;
   normalizedScore: NormalizedScore;
   analysisRecord: AnalysisRecord;
+  sourceTruthAssessmentIds: string[];
   staleDerivationIds: string[];
 };
 
@@ -63,8 +65,12 @@ export class TranscriptionService {
       );
     }
     const omrRun = this.store.getOmrRun(workspaceId, transcription.omrRunId);
+    const reopenedIds = this.analysisReopenedUncertaintyIds(workspaceId, transcription.id);
     const items = transcription.uncertainties
-      .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)
+      .filter(
+        (uncertainty) =>
+          uncertainty.critical && (!uncertainty.resolved || reopenedIds.has(uncertainty.id))
+      )
       .map((uncertainty) => {
         const page = uncertainty.region?.page;
         const imagePath =
@@ -74,7 +80,13 @@ export class TranscriptionService {
               )
             : undefined;
         return {
-          uncertainty,
+          uncertainty: reopenedIds.has(uncertainty.id)
+            ? {
+                ...uncertainty,
+                resolved: false,
+                message: `${uncertainty.message} Analysis introduced a new material consequence requiring review.`,
+              }
+            : uncertainty,
           sourceImageUrl: imagePath
             ? `/api/workspaces/${workspaceId}/omr-runs/${omrRun.id}/artifacts/${encodeURIComponent(`audiveris-page-${page}.png`)}`
             : undefined,
@@ -122,7 +134,10 @@ export class TranscriptionService {
         404
       );
     }
-    if (uncertainty.resolved) {
+    const analysisReopened = this.analysisReopenedUncertaintyIds(workspaceId, current.id).has(
+      uncertainty.id
+    );
+    if (uncertainty.resolved && !analysisReopened) {
       throw new ApiRouteError(
         `Transcription uncertainty is already resolved: ${uncertainty.id}`,
         409
@@ -240,23 +255,67 @@ export class TranscriptionService {
       };
     }
     this.store.saveAnalysisRecord(workspaceId, analysisRecord);
-    const staleDerivations = priorScore
-      ? new LineageService({
-          store: this.store,
-          now: this.now,
-          createId: this.createId,
-        }).markArrangementsStale(
+    const allAssessments = this.store
+      .get(workspaceId)
+      .sourceTruthAssessmentIds.map((id) => this.store.getSourceTruthAssessment(workspaceId, id));
+    const supersededIds = new Set(
+      allAssessments.flatMap((assessment) => assessment.supersedesAssessmentId ?? [])
+    );
+    const priorAssessments = allAssessments.filter(
+      (assessment) =>
+        assessment.scoreTranscriptionId === current.id && !supersededIds.has(assessment.id)
+    );
+    const truthService = new SourceTruthService({
+      store: this.store,
+      now: this.now,
+      createId: this.createId,
+    });
+    const nextAssessments = priorAssessments.map((priorAssessment) =>
+      truthService.assess(workspaceId, {
+        sourceArtifactId: next.sourceArtifactId,
+        scoreTranscriptionId: next.id,
+        normalizedScoreId: normalized.id,
+        analysisRecordId: analysisRecord.id,
+        scope: priorAssessment.scope,
+        preservationPolicy: priorAssessment.preservationPolicy,
+        ...(priorAssessment.performanceBriefId
+          ? { performanceBriefId: priorAssessment.performanceBriefId }
+          : {}),
+        targetConfigurationIds: priorAssessment.targetConfigurationIds,
+        priorAssessmentId: priorAssessment.id,
+      })
+    );
+    const lineage = new LineageService({
+      store: this.store,
+      now: this.now,
+      createId: this.createId,
+    });
+    const changedEventIds = correction.eventEdits.map((edit) => edit.eventId);
+    const staleDerivations = nextAssessments.flatMap((assessment, index) =>
+      lineage.markSourceTruthDependentsStale(
+        workspaceId,
+        priorAssessments[index]!.id,
+        assessment.id,
+        `Transcription correction ${correction.uncertaintyId} superseded Source Truth Assessment ${priorAssessments[index]!.id}`,
+        changedEventIds
+      )
+    );
+    if (priorScore && priorAssessments.length === 0) {
+      staleDerivations.push(
+        ...lineage.markArrangementsStale(
           workspaceId,
           priorScore.id,
           normalized.id,
           `Transcription correction ${correction.uncertaintyId} produced a new normalized score`,
-          correction.eventEdits.map((edit) => edit.eventId)
+          changedEventIds
         )
-      : [];
+      );
+    }
     return {
       scoreTranscription: next,
       normalizedScore: normalized,
       analysisRecord,
+      sourceTruthAssessmentIds: nextAssessments.map((assessment) => assessment.id),
       staleDerivationIds: staleDerivations.map((record) => record.id),
     };
   }
@@ -291,8 +350,38 @@ export class TranscriptionService {
       scoreTranscription,
       normalizedScore,
       analysisRecord,
+      sourceTruthAssessmentIds: workspace.sourceTruthAssessmentIds.filter((id) => {
+        const assessment = this.store.getSourceTruthAssessment(workspaceId, id);
+        return assessment.scoreTranscriptionId === scoreTranscription.id;
+      }),
       staleDerivationIds: [],
     };
+  }
+
+  private analysisReopenedUncertaintyIds(
+    workspaceId: string,
+    transcriptionId: string
+  ): Set<string> {
+    const assessments = this.store
+      .get(workspaceId)
+      .sourceTruthAssessmentIds.map((id) => this.store.getSourceTruthAssessment(workspaceId, id))
+      .filter((assessment) => assessment.scoreTranscriptionId === transcriptionId);
+    const supersededIds = new Set(
+      assessments.flatMap((assessment) => assessment.supersedesAssessmentId ?? [])
+    );
+    return new Set(
+      assessments
+        .filter((assessment) => !supersededIds.has(assessment.id))
+        .flatMap((assessment) => assessment.consequences)
+        .filter(
+          (consequence) =>
+            consequence.discoveredBy === "analysis" &&
+            consequence.unresolved &&
+            consequence.material &&
+            consequence.critical
+        )
+        .map((consequence) => consequence.uncertaintyId)
+    );
   }
 }
 

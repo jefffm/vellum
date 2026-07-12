@@ -30,6 +30,7 @@ import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { OwnerStore } from "./owner-store.js";
+import { SourceTruthService } from "./source-truth-service.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
@@ -129,23 +130,6 @@ export class ArrangementService {
     }
     const score = this.store.getNormalizedScore(workspaceId, input.normalizedScoreId);
     const transcription = this.store.getScoreTranscription(workspaceId, score.scoreTranscriptionId);
-    if (transcription.status === "needs_review") {
-      const critical = transcription.uncertainties.filter(
-        (uncertainty) => uncertainty.critical && !uncertainty.resolved
-      );
-      throw new ApiRouteError(
-        `Score-Anchored Review is required before arrangement. Unresolved critical uncertainties: ${critical
-          .map((uncertainty) => uncertainty.id)
-          .join(", ")}`,
-        409,
-        "score_review_required",
-        {
-          workspaceId,
-          scoreTranscriptionId: transcription.id,
-          uncertaintyIds: critical.map((uncertainty) => uncertainty.id),
-        }
-      );
-    }
     const timestamp = this.now().toISOString();
     const analysis =
       workspace.analysisRecordIds
@@ -217,7 +201,7 @@ export class ArrangementService {
             )
             .digest("hex")
             .slice(0, 24),
-        createdAt: timestamp,
+        createdAt: score.createdAt,
         workspaceRevision: currentPlanningWorkspace.revision,
         source,
         transcription,
@@ -228,11 +212,61 @@ export class ArrangementService {
         preservationPolicy,
         performanceBrief: input.performanceBrief,
       });
-      if (planning.sourceTruthAssessment.outcome !== "authoritative_for_purpose") {
+      const performanceBrief = this.store
+        .get(workspaceId)
+        .performanceBriefIds.includes(planning.performanceBrief.id)
+        ? this.store.getPerformanceBrief(workspaceId, planning.performanceBrief.id)
+        : this.store.savePerformanceBrief(workspaceId, planning.performanceBrief);
+      planning = { ...planning, performanceBrief };
+      const sourceTruthAssessment = new SourceTruthService({
+        store: this.store,
+        now: () => new Date(score.createdAt),
+        createId: () =>
+          createHash("sha256")
+            .update(
+              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:source-truth:${narrowIdIndex++}`
+            )
+            .digest("hex")
+            .slice(0, 24),
+      }).assess(workspaceId, {
+        sourceArtifactId: source.id,
+        scoreTranscriptionId: transcription.id,
+        normalizedScoreId: score.id,
+        analysisRecordId: analysis.id,
+        scope: { kind: "whole_score", partIds: [], measureIds: [], eventIds: [] },
+        preservationPolicy,
+        performanceBriefId: planning.performanceBrief.id,
+        targetConfigurationIds: [targetConfiguration.id],
+      });
+      planning = {
+        ...planning,
+        sourceTruthAssessment,
+        arrangementPlan: {
+          ...planning.arrangementPlan,
+          sourceTruthAssessmentId: sourceTruthAssessment.id,
+        },
+      };
+      if (
+        !["authoritative_for_purpose", "authoritative_with_disclosed_uncertainty"].includes(
+          planning.sourceTruthAssessment.outcome
+        ) ||
+        !planning.sourceTruthAssessment.stability.stable
+      ) {
+        if (planning.sourceTruthAssessment.outcome === "review_required") {
+          throw new ApiRouteError(
+            `Score-Anchored Review is required before arrangement. Unresolved critical uncertainties: ${planning.sourceTruthAssessment.blockingUncertaintyIds.join(", ")}`,
+            409,
+            "score_review_required",
+            {
+              workspaceId,
+              scoreTranscriptionId: transcription.id,
+              uncertaintyIds: planning.sourceTruthAssessment.blockingUncertaintyIds,
+              sourceTruthAssessmentId: planning.sourceTruthAssessment.id,
+            }
+          );
+        }
         throw new ApiRouteError("Source Truth does not authorize arrangement planning", 409);
       }
-      this.store.saveSourceTruthAssessment(workspaceId, planning.sourceTruthAssessment);
-      this.store.savePerformanceBrief(workspaceId, planning.performanceBrief);
       this.store.saveArrangementPlan(workspaceId, planning.arrangementPlan);
     }
     const familyId =

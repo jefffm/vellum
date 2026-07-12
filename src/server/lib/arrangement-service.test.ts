@@ -833,5 +833,14 @@ describe("Greensleeves faithful arrangement service", () => {
         targetConfigurationId: "target.baroque-guitar",
       })
     ).toThrow("Score-Anchored Review is required");
+    const blockedTruth = store
+      .get(workspace.id)
+      .sourceTruthAssessmentIds.map((id) => store.getSourceTruthAssessment(workspace.id, id))
+      .find((assessment) => assessment.scoreTranscriptionId === uncertainTranscription.id);
+    expect(blockedTruth).toMatchObject({
+      outcome: "review_required",
+      blockingUncertaintyIds: ["uncertainty.principal-pitch"],
+      stability: { stable: false },
+    });
   });
 });

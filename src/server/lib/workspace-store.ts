@@ -1033,6 +1033,105 @@ export class WorkspaceStore {
     ) {
       throw new ApiRouteError("Source Truth Assessment lineage versions do not match", 400);
     }
+    const workspace = this.get(workspaceId);
+    const validScopeIds = new Set([
+      ...normalized.parts.map((part) => part.id),
+      ...normalized.measures.map((measure) => measure.id),
+      ...normalized.events.map((event) => event.id),
+    ]);
+    if (
+      [...decoded.scope.partIds, ...decoded.scope.measureIds, ...decoded.scope.eventIds].some(
+        (id) => !validScopeIds.has(id)
+      )
+    ) {
+      throw new ApiRouteError("Source Truth Assessment scope is outside its Normalized Score", 400);
+    }
+    if (
+      decoded.targetConfigurationIds.some(
+        (id) => !workspace.brief.targetConfigurations.some((target) => target.id === id)
+      )
+    ) {
+      throw new ApiRouteError(
+        "Source Truth Assessment target is outside its Arrangement Brief",
+        400
+      );
+    }
+    if (decoded.performanceBriefId) {
+      const brief = this.getPerformanceBrief(workspaceId, decoded.performanceBriefId);
+      if (!decoded.targetConfigurationIds.includes(brief.targetConfigurationId)) {
+        throw new ApiRouteError(
+          "Source Truth Assessment Performance Brief target is not assessed",
+          400
+        );
+      }
+    }
+    const claimIds = new Set(analysis.claims.map((claim) => claim.id));
+    const authorized = new Set(decoded.authorizedClaimIds);
+    if (
+      [...decoded.authorizedClaimIds, ...decoded.blockedClaimIds].some((id) => !claimIds.has(id)) ||
+      decoded.blockedClaimIds.some((id) => authorized.has(id))
+    ) {
+      throw new ApiRouteError("Source Truth Assessment claim authorization is inconsistent", 400);
+    }
+    const uncertaintyIds = new Set(transcription.uncertainties.map((item) => item.id));
+    if (
+      [
+        ...decoded.consideredUncertaintyIds,
+        ...decoded.unresolvedUncertaintyIds,
+        ...decoded.blockingUncertaintyIds,
+      ].some((id) => !uncertaintyIds.has(id)) ||
+      decoded.consequences.some((consequence) => !uncertaintyIds.has(consequence.uncertaintyId))
+    ) {
+      throw new ApiRouteError("Source Truth Assessment uncertainty lineage is inconsistent", 400);
+    }
+    const considered = new Set(decoded.consideredUncertaintyIds);
+    const unresolved = new Set(decoded.unresolvedUncertaintyIds);
+    if (
+      decoded.unresolvedUncertaintyIds.some((id) => !considered.has(id)) ||
+      decoded.blockingUncertaintyIds.some((id) => !unresolved.has(id))
+    ) {
+      throw new ApiRouteError("Source Truth Assessment uncertainty sets are inconsistent", 400);
+    }
+    if (decoded.supersedesAssessmentId) {
+      const prior = this.getSourceTruthAssessment(workspaceId, decoded.supersedesAssessmentId);
+      const sameScope =
+        JSON.stringify({
+          ...prior.scope,
+          partIds: [...prior.scope.partIds].sort(),
+          measureIds: [...prior.scope.measureIds].sort(),
+          eventIds: [...prior.scope.eventIds].sort(),
+        }) ===
+        JSON.stringify({
+          ...decoded.scope,
+          partIds: [...decoded.scope.partIds].sort(),
+          measureIds: [...decoded.scope.measureIds].sort(),
+          eventIds: [...decoded.scope.eventIds].sort(),
+        });
+      const sameTargets =
+        JSON.stringify([...prior.targetConfigurationIds].sort()) ===
+        JSON.stringify([...decoded.targetConfigurationIds].sort());
+      const lineageContinues =
+        decoded.scoreTranscriptionId === prior.scoreTranscriptionId ||
+        transcription.parentId === prior.scoreTranscriptionId;
+      if (
+        prior.id === decoded.id ||
+        prior.purpose !== decoded.purpose ||
+        !sameScope ||
+        !sameTargets ||
+        prior.preservationPolicy !== decoded.preservationPolicy ||
+        prior.performanceBriefId !== decoded.performanceBriefId ||
+        !lineageContinues
+      ) {
+        throw new ApiRouteError("Source Truth Assessment supersession is invalid", 400);
+      }
+      if (
+        workspace.sourceTruthAssessmentIds
+          .map((id) => this.getSourceTruthAssessment(workspaceId, id))
+          .some((assessment) => assessment.supersedesAssessmentId === prior.id)
+      ) {
+        throw new ApiRouteError("Source Truth Assessment already has a superseding iteration", 409);
+      }
+    }
     this.writeImmutableRecord(workspaceId, "source-truth-assessments", decoded.id, decoded);
     this.linkWorkspaceRecord(workspaceId, "sourceTruthAssessmentIds", decoded.id);
     return decoded;

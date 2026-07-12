@@ -177,12 +177,24 @@ describe("Score-Anchored Review tracer", () => {
       expect(compiled.midi?.length ?? 0).toBeGreaterThan(100);
     }
 
-    expect(store.get(workspace.id)).toMatchObject({
+    const persistedWorkspace = store.get(workspace.id);
+    const blockedTruth = persistedWorkspace.sourceTruthAssessmentIds
+      .map((id) => store.getSourceTruthAssessment(workspace.id, id))
+      .find(
+        (assessment) =>
+          assessment.scoreTranscriptionId === recognized.scoreTranscription.id &&
+          assessment.outcome === "review_required"
+      );
+    expect(blockedTruth).toBeDefined();
+    expect(persistedWorkspace).toMatchObject({
       sourceArtifactIds: [source.id],
       scoreTranscriptionIds: [recognized.scoreTranscription.id, corrected.scoreTranscription.id],
       normalizedScoreIds: [recognized.normalizedScore.id, corrected.normalizedScore.id],
-      analysisRecordIds: [arranged.analysisRecordId],
       arrangementScoreIds: [arranged.arrangementScore.id],
     });
+    expect(persistedWorkspace.analysisRecordIds).toEqual(
+      expect.arrayContaining([blockedTruth!.analysisRecordId, arranged.analysisRecordId])
+    );
+    expect(persistedWorkspace.analysisRecordIds).toHaveLength(2);
   }, 90_000);
 });

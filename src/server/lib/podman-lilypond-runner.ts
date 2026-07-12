@@ -1,4 +1,4 @@
-import { lstat, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -32,6 +32,7 @@ export class PodmanLilyPondRunner {
   private readonly image: string;
   private readonly projectRoot: string;
   private readonly commandRunner: Pick<SubprocessRunner, "run">;
+  private readonly usesDefaultRunner: boolean;
   private readonly defaultTimeout: number;
 
   constructor(options: PodmanLilyPondRunnerOptions = {}) {
@@ -41,10 +42,22 @@ export class PodmanLilyPondRunner {
     }
     this.projectRoot = options.projectRoot ?? process.cwd();
     this.defaultTimeout = options.defaultTimeout ?? 30_000;
+    this.usesDefaultRunner = options.commandRunner === undefined;
     this.commandRunner = options.commandRunner ?? new SubprocessRunner(this.defaultTimeout);
   }
 
   async run(config: SubprocessConfig): Promise<SubprocessResult> {
+    const release = this.usesDefaultRunner
+      ? await acquirePodmanCompilerSlot()
+      : async () => undefined;
+    try {
+      return await this.runInSandbox(config);
+    } finally {
+      await release();
+    }
+  }
+
+  private async runInSandbox(config: SubprocessConfig): Promise<SubprocessResult> {
     if (config.command !== "lilypond") {
       throw new SubprocessError("The LilyPond sandbox only accepts the lilypond command");
     }
@@ -68,11 +81,7 @@ export class PodmanLilyPondRunner {
 
     try {
       await writeFile(sourcePath, normalizeMountedIncludes(source), { mode: 0o600 });
-      const create = await this.commandRunner.run({
-        command: "podman",
-        args: this.createArgs(config.args, timeout),
-        timeout,
-      });
+      const create = await this.createSandbox(config.args, timeout);
       if (create.exitCode !== 0) {
         throw new SubprocessError(
           `Unable to create the LilyPond sandbox: ${create.stderr.trim() || create.stdout.trim()}`
@@ -164,6 +173,21 @@ export class PodmanLilyPondRunner {
     ];
   }
 
+  private async createSandbox(lilypondArgs: string[], timeout: number): Promise<SubprocessResult> {
+    const deadline = Date.now() + Math.min(timeout, 45_000);
+    let result: SubprocessResult;
+    do {
+      result = await this.commandRunner.run({
+        command: "podman",
+        args: this.createArgs(lilypondArgs, timeout),
+        timeout: Math.min(10_000, Math.max(500, deadline - Date.now())),
+      });
+      if (result.exitCode === 0 || !isTransientPodmanStartupFailure(result)) return result;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } while (Date.now() < deadline);
+    return result!;
+  }
+
   private async requireSuccess(args: string[], timeout: number, action: string): Promise<void> {
     const result = await this.commandRunner.run({ command: "podman", args, timeout });
     if (result.exitCode !== 0) {
@@ -187,6 +211,44 @@ export class PodmanLilyPondRunner {
     }
     throw new SubprocessError(`LilyPond sandbox timed out after ${timeout}ms`);
   }
+}
+
+async function acquirePodmanCompilerSlot(): Promise<() => Promise<void>> {
+  const lockPath = path.join(tmpdir(), "vellum-lilypond-podman.lock");
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    try {
+      await mkdir(lockPath, { mode: 0o700 });
+      return async () => rm(lockPath, { recursive: true, force: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      try {
+        if (Date.now() - (await stat(lockPath)).mtimeMs > 10 * 60_000) {
+          await rm(lockPath, { recursive: true, force: true });
+          continue;
+        }
+      } catch (statError) {
+        if ((statError as NodeJS.ErrnoException).code !== "ENOENT") throw statError;
+        continue;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+  throw new SubprocessError("Timed out waiting for the bounded Podman compiler slot");
+}
+
+function isTransientPodmanStartupFailure(result: SubprocessResult): boolean {
+  const message = `${result.stderr}\n${result.stdout}`.toLowerCase();
+  return [
+    "connection refused",
+    "cannot connect",
+    "unable to connect",
+    "connection reset",
+    "connection closed",
+    "machine is starting",
+    "currently starting",
+    "podman socket",
+  ].some((fragment) => message.includes(fragment));
 }
 
 function normalizeMountedIncludes(source: Buffer): Buffer {

@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T12",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T14:30:00Z",
+  "requirements": {
+    "M01": {
+      "status": "machine_verified",
+      "remaining": "T39 adds the focused ADR and migration boundary"
+    },
+    "M04": {
+      "status": "partial",
+      "remaining": "Purpose, passage, target, Analysis-reopen, convergence, confidence independence, and correction fixtures pass; T14 and T33-T35 expand every declared consequence class and mutation"
+    },
+    "M13": {
+      "status": "machine_verified",
+      "remaining": "T27-T28 and T33-T34 expand sibling-target resume, interruption, retention, and garbage-collection behavior"
+    }
+  },
+  "auditFindings": {
+    "F009": "partial: Analysis ambiguity can now reopen exact source uncertainty and block only its passage and target; richer Principal Voice inference evidence remains for T14",
+    "F026": "partial: correction supersession chooses leaf assessments and emits exact stale records for Plans, Searches, Candidates, Scores, and Deliverables; broader concurrent workspace mutations remain covered by T07 and later stress suites",
+    "F027": "partial: old lineage bytes remain immutable and correction descendants/stale records survive reload; exhaustive fault injection remains for T33-T34"
+  },
+  "summary": {
+    "fullSuitePassed": 954,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "29 Source Truth, transcription, arrangement, workspace, evaluation, and plan-verifier tests passed together",
+      "Score-Anchored Review correction tracer passed with blocked Analysis and Source Truth evidence retained",
+      "Podman policy retry tests passed; adversarial isolation plus Greensleeves compilation passed under the bounded compiler slot"
+    ],
+    "evaluation": {
+      "invocation": "npm run --silent eval:fast -- --output /tmp/vellum-t12-eval-final",
+      "manifestId": "evaluation-manifest.42e3854bcf14e04c23ffd94b",
+      "runId": "evaluation-run.1d0d2c66-f178-4c12-8981-c4bd7e909637",
+      "cardId": "evaluation-card.bdee3dfa-5cbf-4e5f-9e9f-178d6f4fb6fb",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "sourceAuthority": "pass"
+    },
+    "convergence": {
+      "blockedScope": "event.soprano.1",
+      "authorizedScope": "event.soprano.20",
+      "analysisReopenedUncertainty": "uncertainty.opening",
+      "unaffectedTarget": "target.classical-guitar",
+      "staleRecordTypes": [
+        "arrangement_plan",
+        "arrangement_search",
+        "arrangement_candidate",
+        "arrangement_score",
+        "deliverable"
+      ]
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 954 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/source-truth-service.test.ts src/server/lib/transcription-service.test.ts src/server/lib/arrangement-service.test.ts src/server/lib/workspace-store.test.ts src/server/lib/evaluation-harness.test.ts src/server/lib/evaluation-comparison.test.ts test/verify-arrangement-intelligence.test.ts",
+      "result": "pass: 29 passed"
+    },
+    {
+      "command": "npx vitest run test/e2e/score-anchored-review-tracer.test.ts",
+      "result": "pass: correction preserved blocked and corrected lineage"
+    },
+    {
+      "command": "npx vitest run src/server/lib/podman-lilypond-runner.test.ts test/e2e/greensleeves-tracer.test.ts",
+      "result": "pass: 7 passed after transient VM recovery"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t12-eval-final",
+      "result": "pass: source-authority hard gate passed; unrelated unevaluated dimensions remained explicit"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/12-source-truth-convergence.md",
+      "sha256": "7f3b2cca74f8baeadaf2c7bff989977d131151e0bf905c05f51d4abe0aad9fb5"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "ffc425975ee91573df9687e4286c146b9eb24843ca387c46f743d7026237b053"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "39dca580a0641711130b1ee3c5210caa238cfe5828cbcd1947db9796dc0bedca"
+    },
+    {
+      "path": "src/server/lib/source-truth-service.ts",
+      "sha256": "b81c81d7e6d34204b6c744769369518f84a32d8a7e2a8852af6423309f16216c"
+    },
+    {
+      "path": "src/server/lib/source-truth-service.test.ts",
+      "sha256": "0a11b8d8886099975d6fe3c7c466c5ee90ff8c07a8f51df6317bf8da4b62b805"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "c74143a9eaf0bb486c76d32427d0178327f170d476b96c1027fc48ca3c1e36d7"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "3629a3bf36972f57e2462b4061a7fab6fbe0b2eaaf445ddefb020aeab083bd98"
+    },
+    {
+      "path": "src/server/lib/transcription-service.ts",
+      "sha256": "f99f7fe24ef41972a93f45a8a1bae4bc348fb92d548e20163683fb7cf942206f"
+    },
+    {
+      "path": "src/server/lib/lineage-service.ts",
+      "sha256": "df7bddc0a8bb2ee991a24267dfdc37a055894d7ccd48d2c8c51890795cda0284"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "4afca371d2d8e467926fb2cb71cf0cd7acd32f9a6e4a37c0941d42a79e335164"
+    },
+    {
+      "path": "src/server/lib/podman-lilypond-runner.ts",
+      "sha256": "132cb6d57cd034706af8aef2b37f69e184ab40ca143054a1c01cdf7fe143b0f7"
+    },
+    {
+      "path": "src/server/lib/podman-lilypond-runner.test.ts",
+      "sha256": "7e3f1eee97fc5eb4d47cbf13a2126388ccea351baed54dc2e5f3886441e3e5fe"
+    },
+    {
+      "path": "test/e2e/score-anchored-review-tracer.test.ts",
+      "sha256": "442b11406eed35b7dd01d355aa4413f2df8fc948eadeb898952ea16d06268698"
+    }
+  ]
+}
