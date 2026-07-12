@@ -24,6 +24,7 @@ import type {
   PerformanceBriefInput,
   PolicyException,
   PreservationAudit,
+  TargetConfiguration,
 } from "../../lib/music-domain.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
@@ -186,7 +187,8 @@ export class ArrangementService {
           plan.preservationPolicy === preservationPolicy &&
           performanceBriefMatches(
             this.store.getPerformanceBrief(workspaceId, plan.performanceBriefId),
-            input.performanceBrief
+            input.performanceBrief,
+            targetConfiguration
           )
       );
     let planning: NarrowPlanningRecords;
@@ -204,17 +206,24 @@ export class ArrangementService {
       };
     } else {
       let narrowIdIndex = 0;
+      const performanceRequestDigest = createHash("sha256")
+        .update(JSON.stringify(input.performanceBrief ?? { status: "guided_default" }))
+        .digest("hex");
       const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
       planning = buildNarrowPlanningRecords({
         createId: () =>
           createHash("sha256")
             .update(
-              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:${narrowIdIndex++}`
+              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:${performanceRequestDigest}:${narrowIdIndex++}`
             )
             .digest("hex")
             .slice(0, 24),
         createdAt: score.createdAt,
         workspaceRevision: currentPlanningWorkspace.revision,
+        arrangementBriefDigest: createHash("sha256")
+          .update(JSON.stringify(currentPlanningWorkspace.brief))
+          .digest("hex"),
+        arrangementBrief: currentPlanningWorkspace.brief,
         source,
         transcription,
         normalizedScoreId: score.id,
@@ -236,7 +245,7 @@ export class ArrangementService {
         createId: () =>
           createHash("sha256")
             .update(
-              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:source-truth:${narrowIdIndex++}`
+              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:${planning.performanceBrief.id}:source-truth:${narrowIdIndex++}`
             )
             .digest("hex")
             .slice(0, 24),
@@ -317,6 +326,7 @@ export class ArrangementService {
       id: searchId,
       normalizedScoreId: score.id,
       analysisRecordId: analysis.id,
+      performanceBriefId: planning.performanceBrief.id,
       arrangementFamilyId: familyId,
       branchId: input.branchId,
       targetConfiguration,
@@ -720,16 +730,32 @@ export class ArrangementService {
 
 function performanceBriefMatches(
   actual: NarrowPlanningRecords["performanceBrief"],
-  requested: PerformanceBriefInput | undefined
+  requested: PerformanceBriefInput | undefined,
+  target: TargetConfiguration
 ): boolean {
-  if (!requested) return true;
+  const expected: PerformanceBriefInput = requested ?? {
+    intendedUse: "study",
+    performerProfile: {
+      proficiency: "intermediate",
+      assumptionSource: "guided_start_default_pending_owner_review",
+      techniqueFamiliarity: [],
+    },
+    tempoContext: { status: "not_specified" },
+    difficultyIntent: "intermediate",
+    preparationExpectation: "practice_expected",
+    reliabilityGoal: "repeatable",
+    techniqueContext: { status: "unspecified" },
+    notationContext: { needs: target.notationLayouts, ensembleRole: target.role },
+  };
   return (
-    actual.intendedUse === requested.intendedUse &&
-    JSON.stringify(actual.performerProfile) === JSON.stringify(requested.performerProfile) &&
-    JSON.stringify(actual.tempoContext) === JSON.stringify(requested.tempoContext) &&
-    actual.difficultyIntent === requested.difficultyIntent &&
-    actual.preparationExpectation === requested.preparationExpectation &&
-    actual.reliabilityGoal === requested.reliabilityGoal
+    actual.intendedUse === expected.intendedUse &&
+    JSON.stringify(actual.performerProfile) === JSON.stringify(expected.performerProfile) &&
+    JSON.stringify(actual.tempoContext) === JSON.stringify(expected.tempoContext) &&
+    actual.difficultyIntent === expected.difficultyIntent &&
+    actual.preparationExpectation === expected.preparationExpectation &&
+    actual.reliabilityGoal === expected.reliabilityGoal &&
+    JSON.stringify(actual.techniqueContext) === JSON.stringify(expected.techniqueContext) &&
+    JSON.stringify(actual.notationContext) === JSON.stringify(expected.notationContext)
   );
 }
 

@@ -8,6 +8,7 @@ import type {
   ArrangementEvent,
   ArrangementScore,
   GuidedWorkflow,
+  PerformanceBriefInput,
   ScoreEvent,
   ScoreTranscription,
   TargetConfiguration,
@@ -1251,6 +1252,7 @@ async function runGuidedWorkflowTargets(
   let workflow = initial;
   const deliverables: GuidedDeliverable[] = [];
   for (const target of targetConfigurations) {
+    const performanceBrief = workflow.performanceBrief ?? defaultGuidedPerformanceBrief();
     const progress = workflow.targets.find(
       (candidate) => candidate.targetConfigurationId === target.id
     );
@@ -1295,6 +1297,15 @@ async function runGuidedWorkflowTargets(
         normalizedScoreId: workflow.normalizedScoreId,
         targetConfigurationId: target.id,
         preservationPolicy: workflow.preservationPolicy,
+        performanceBrief: {
+          ...performanceBrief,
+          notationContext: {
+            ...performanceBrief.notationContext,
+            needs: [
+              ...new Set([...performanceBrief.notationContext.needs, ...target.notationLayouts]),
+            ],
+          },
+        },
       }),
     });
     workflow = await checkpointGuidedWorkflow(workflow, {
@@ -1506,6 +1517,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
       const preservationPolicy =
         form.querySelector<HTMLSelectElement>('[name="preservationPolicy"]')?.value ??
         "faithful_reduction";
+      const performanceBrief = performanceBriefFromForm(form);
       const ocrAutoAcceptConfidence = Number(
         form.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]')?.value ?? "80"
       );
@@ -1544,6 +1556,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
             optical,
             ...(optical ? { ocrAutoAcceptConfidence: ocrAutoAcceptConfidence / 100 } : {}),
             preservationPolicy,
+            performanceBrief,
           }),
         }
       );
@@ -3465,6 +3478,7 @@ export function guidedStartMarkup(): string {
       <label data-ocr-threshold-field hidden>OCR auto-accept confidence <span data-ocr-threshold-value>80%</span><input type="range" name="ocrAutoAcceptConfidence" min="50" max="100" step="1" value="80"><small>Automatically accept OCR notes at or above this confidence. Lower this to 70% to accept a 72% note; voice identity and structurally abnormal readings still require review.</small></label>
       <fieldset><legend>2. Output format(s)</legend><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar" checked> <span><strong>5-course baroque guitar</strong><small>French letter tablature · French stringing · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-lute"> <span><strong>13-course baroque lute</strong><small>French letter tablature · default D-minor tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.renaissance-lute"> <span><strong>6-course Renaissance lute</strong><small>French letter tablature · polyphonic lineage preservation · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.classical-guitar"> <span><strong>Classical guitar</strong><small>Standard notation · standard EADGBE tuning · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.piano-continuo"> <span><strong>Soprano + piano continuo</strong><small>For figured-bass sources · complete Italian Baroque realization · PDF + Audio Preview</small></span></label><label class="output-choice"><input type="checkbox" name="targets" value="target.baroque-guitar-continuo"> <span><strong>Soprano + baroque guitar + bass</strong><small>For figured-bass sources · separate bass preserves the foundation the re-entrant guitar cannot sound</small></span></label><p>Select any combination to create independently searched and audited siblings from one saved analysis.</p></fieldset>
       <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>
+      <fieldset><legend>4. Performance context</legend><p>These choices make “playable” and “difficult” specific to this arrangement.</p><label>Intended use <select name="intendedUse"><option value="study" selected>Study and learning</option><option value="sight_reading">Sight reading</option><option value="prepared_performance">Prepared performance</option><option value="accompaniment">Accompaniment</option><option value="edition">Edition</option></select></label><label>Performer level <select name="performerProficiency"><option value="elementary">Elementary</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option><option value="expert">Expert</option></select></label><label>Difficulty goal <select name="difficultyIntent"><option value="elementary">Elementary</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option><option value="unrestricted">Unrestricted</option></select></label><details data-performance-details><summary>Tempo, preparation, technique, and notation details</summary><div><label>Minimum tempo (BPM, optional)<input type="number" name="minimumBpm" min="1"></label><label>Maximum tempo (BPM, optional)<input type="number" name="maximumBpm" min="1"></label><label>Preparation <select name="preparationExpectation"><option value="immediate">Immediate</option><option value="practice_expected" selected>Practice expected</option><option value="performance_ready">Performance ready</option></select></label><label>Reliability <select name="reliabilityGoal"><option value="possible">Possible once</option><option value="repeatable" selected>Repeatable</option><option value="performance_reliable">Performance reliable</option></select></label><label>Familiar techniques<input name="techniqueFamiliarity" placeholder="Comma-separated, optional"></label><label>Allowed techniques<input name="allowedTechniques" placeholder="Comma-separated, optional"></label><label>Avoided techniques<input name="avoidedTechniques" placeholder="Comma-separated, optional"></label><label>Notation needs<input name="notationNeeds" value="target-appropriate notation" placeholder="Comma-separated"></label><label>Ensemble role<input name="ensembleRole" value="solo" required></label></div></details></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <section class="score-anchored-review" data-score-review hidden>
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div><p data-review-acceptance hidden></p>
@@ -3478,6 +3492,71 @@ export function guidedStartMarkup(): string {
       <p class="guided-status" data-guided-status>Vellum will preserve the Principal Voice automatically and show any source uncertainty before arranging.</p>
       <footer><button type="button" data-guided-skip>Skip to chat</button><button type="submit">Start arrangement</button></footer>
     </form>`;
+}
+
+export function performanceBriefFromForm(form: HTMLFormElement): PerformanceBriefInput {
+  const value = (name: string) =>
+    form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)?.value.trim() ??
+    "";
+  const list = (name: string) =>
+    value(name)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  const minimum = value("minimumBpm");
+  const maximum = value("maximumBpm");
+  if ((minimum && !maximum) || (!minimum && maximum)) {
+    throw new Error("Specify both minimum and maximum tempo, or leave both blank.");
+  }
+  if (minimum && Number(minimum) > Number(maximum)) {
+    throw new Error("Minimum tempo cannot exceed maximum tempo.");
+  }
+  const allowed = list("allowedTechniques");
+  const avoided = list("avoidedTechniques");
+  return {
+    intendedUse: value("intendedUse") as PerformanceBriefInput["intendedUse"],
+    performerProfile: {
+      proficiency: value(
+        "performerProficiency"
+      ) as PerformanceBriefInput["performerProfile"]["proficiency"],
+      assumptionSource: "owner_declared",
+      techniqueFamiliarity: list("techniqueFamiliarity"),
+    },
+    tempoContext:
+      minimum && maximum
+        ? { status: "specified", minimumBpm: Number(minimum), maximumBpm: Number(maximum) }
+        : { status: "not_specified" },
+    difficultyIntent: value("difficultyIntent") as PerformanceBriefInput["difficultyIntent"],
+    preparationExpectation: value(
+      "preparationExpectation"
+    ) as PerformanceBriefInput["preparationExpectation"],
+    reliabilityGoal: value("reliabilityGoal") as PerformanceBriefInput["reliabilityGoal"],
+    techniqueContext:
+      allowed.length || avoided.length
+        ? { status: "specified", allowed, avoided }
+        : { status: "unspecified" },
+    notationContext: {
+      needs: list("notationNeeds"),
+      ensembleRole: value("ensembleRole"),
+    },
+  };
+}
+
+function defaultGuidedPerformanceBrief(): PerformanceBriefInput {
+  return {
+    intendedUse: "study",
+    performerProfile: {
+      proficiency: "intermediate",
+      assumptionSource: "guided_start_default_pending_owner_review",
+      techniqueFamiliarity: [],
+    },
+    tempoContext: { status: "not_specified" },
+    difficultyIntent: "intermediate",
+    preparationExpectation: "practice_expected",
+    reliabilityGoal: "repeatable",
+    techniqueContext: { status: "unspecified" },
+    notationContext: { needs: ["target-appropriate notation"], ensembleRole: "solo" },
+  };
 }
 
 export function targetConfiguration(id: string): TargetConfiguration {

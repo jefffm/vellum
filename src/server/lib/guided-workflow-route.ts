@@ -1,7 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
-import { GuidedWorkflowTargetSchema } from "../../lib/music-domain.js";
+import { GuidedWorkflowTargetSchema, PerformanceBriefInputSchema } from "../../lib/music-domain.js";
 import { createApiRoute } from "./create-route.js";
 import { GuidedWorkflowService, type GuidedWorkflowCheckpoint } from "./guided-workflow-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -23,6 +23,7 @@ const CreateBody = Type.Object(
       Type.Literal("idiomatic_adaptation"),
       Type.Literal("free_paraphrase"),
     ]),
+    performanceBrief: Type.Optional(PerformanceBriefInputSchema),
   },
   { additionalProperties: false }
 );

@@ -6,6 +6,7 @@ import type {
   CreateFaithfulArrangementInput,
   CreateFaithfulArrangementResult,
 } from "./arrangement-service.js";
+import { PerformanceBriefInputSchema } from "../../lib/music-domain.js";
 import { createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { OwnerStore } from "./owner-store.js";
@@ -23,6 +24,7 @@ const RequestSchema = Type.Object(
       Type.Literal("idiomatic_adaptation"),
       Type.Literal("free_paraphrase"),
     ]),
+    performanceBrief: Type.Optional(PerformanceBriefInputSchema),
   },
   { additionalProperties: false }
 );
@@ -46,6 +48,7 @@ export function createFaithfulArrangementRoute(options: RouteOptions = {}): Requ
         normalizedScoreId: requestBody.normalizedScoreId,
         targetConfigurationId: requestBody.targetConfigurationId,
         preservationPolicy: requestBody.preservationPolicy,
+        performanceBrief: requestBody.performanceBrief,
       };
     },
     handler: async ({ workspaceId, ...input }) =>

@@ -1,11 +1,32 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { guidedStartMarkup, refreshGuidedWorkflowRecovery } from "./guided-start.js";
+import {
+  guidedStartMarkup,
+  performanceBriefFromForm,
+  refreshGuidedWorkflowRecovery,
+} from "./guided-start.js";
 
 describe("Guided Start workflow recovery", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     document.body.replaceChildren();
+  });
+
+  it("captures the visible default and progressively disclosed Performance Brief controls", () => {
+    const dialog = document.createElement("dialog");
+    dialog.innerHTML = guidedStartMarkup();
+    const form = dialog.querySelector("form")!;
+    expect(form.querySelector("details[data-performance-details]")).not.toBeNull();
+    expect(performanceBriefFromForm(form)).toMatchObject({
+      intendedUse: "study",
+      performerProfile: { proficiency: "intermediate", assumptionSource: "owner_declared" },
+      tempoContext: { status: "not_specified" },
+      difficultyIntent: "intermediate",
+      preparationExpectation: "practice_expected",
+      reliabilityGoal: "repeatable",
+      techniqueContext: { status: "unspecified" },
+      notationContext: { ensembleRole: "solo" },
+    });
   });
 
   it("restores an interrupted checkpoint beside provider recovery with explicit choices", async () => {

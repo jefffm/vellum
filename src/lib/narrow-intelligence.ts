@@ -1,6 +1,7 @@
 import type {
   AnalysisRecord,
   ArrangementPlan,
+  ArrangementBrief,
   ArrangementScore,
   PerformanceBrief,
   PerformanceBriefInput,
@@ -39,6 +40,8 @@ export function buildNarrowPlanningRecords(input: {
   createId: () => string;
   createdAt: string;
   workspaceRevision: number;
+  arrangementBriefDigest: string;
+  arrangementBrief: ArrangementBrief;
   source: SourceArtifact;
   transcription: ScoreTranscription;
   normalizedScoreId: string;
@@ -101,17 +104,30 @@ export function buildNarrowPlanningRecords(input: {
   const performanceBrief: PerformanceBrief = {
     id: `performance.${input.createId()}`,
     arrangementBriefRevision: input.workspaceRevision,
+    arrangementBriefDigest: input.arrangementBriefDigest,
+    arrangementBriefSnapshot: input.arrangementBrief,
     targetConfigurationId: input.target.id,
+    difficultyContext: {
+      targetConfigurationId: input.target.id,
+      definitionId: `difficulty.${input.target.instrumentId}.${(input.performanceBrief?.difficultyIntent ?? "intermediate").replaceAll("_", "-")}.v1`,
+      evidenceIds: [`profile.${input.target.instrumentId}`],
+    },
     ...(input.performanceBrief ?? {
       intendedUse: "study",
       performerProfile: {
         proficiency: "intermediate",
         assumptionSource: "guided_start_default_pending_owner_review",
+        techniqueFamiliarity: [],
       },
       tempoContext: { status: "not_specified" },
       difficultyIntent: "intermediate",
       preparationExpectation: "practice_expected",
       reliabilityGoal: "repeatable",
+      techniqueContext: { status: "unspecified" },
+      notationContext: {
+        needs: input.target.notationLayouts,
+        ensembleRole: input.target.role,
+      },
     }),
     createdAt: input.createdAt,
   };

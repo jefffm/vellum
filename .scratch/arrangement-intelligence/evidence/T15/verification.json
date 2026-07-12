@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T15",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T18:49:11Z",
+  "requirements": {
+    "AI-PROD-020": {
+      "status": "machine_verified",
+      "remaining": "Later corpus and human tracers broaden evidence without changing Performance Brief ownership"
+    },
+    "AI-STP-030": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-031": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-032": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-033": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-034": {
+      "status": "partial",
+      "remaining": "Owner-authored profile management remains in its dedicated later tracer"
+    },
+    "AI-STP-035": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-036": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-037": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-038": {
+      "status": "partial",
+      "remaining": "T16 consumes the exact brief in proportional plan construction"
+    },
+    "AI-STP-039": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-040": {
+      "status": "partial",
+      "remaining": "Later evaluation tracers broaden brief-relative grading across the corpus"
+    },
+    "AI-STP-041": { "status": "machine_verified", "remaining": "none" }
+  },
+  "summary": {
+    "fullSuitePassed": 971,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Guided Start captures concise defaults and progressively disclosed tempo, preparation, reliability, technique, notation, and ensemble context",
+      "Performance Briefs preserve an exact Arrangement Brief revision, digest, and snapshot with target-specific difficulty evidence",
+      "Owner anatomy and Instrument Instance facts are rejected at the Intended Performer Profile schema boundary",
+      "Search, Source Truth, Plan, Score lineage, and Evaluation Card cite one exact Performance Brief identity",
+      "Brief changes make evaluation cases incomparable unless a reviewed compatibility migration explicitly maps them"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.8c069e54-702e-4dc9-9a8d-faa9d1226e16",
+      "cardId": "evaluation-card.25758c40-9319-405d-878c-3eba101975b3",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "specialistAndHumanEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 971 passed, 1 skipped" },
+    {
+      "command": "focused Performance Brief, Guided Start, service, store, lineage, and comparison tests",
+      "result": "pass"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t15-eval",
+      "result": "pass: hard gates pass and unmeasured specialist and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/15-performance-brief.md",
+      "sha256": "f77fa16c5743511c582c7a86262d108a9802fb87d05cedf0c8a9bd74656d06cf"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "941cbac903e2285d6c83244dcd2a53737640c153acf32b04847165cafb81a973"
+    },
+    {
+      "path": "src/guided-start-workflow-recovery.test.ts",
+      "sha256": "679665584b1a0c9f7343bf7e958c0ce78ef281a35270c54eee159c2e8fda17ad"
+    },
+    {
+      "path": "src/guided-start.test.ts",
+      "sha256": "008b7f110ed9e451ed554873425cbb8d8a927f9844a855f079f0a8057b14cb5d"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "32a37b58a3189532ff594999bee53cb96b8c6a5b1cc0dac06635cea4c66d5e93"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "965a84a728639087e2e817d741de8fb4ce93a17af8ae3b503a523b31856a174e"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "009f0354086621b6478f4a62bd79c4c7b0a287c1a29507c4269ad826fd099c30"
+    },
+    {
+      "path": "src/lib/performance-brief.test.ts",
+      "sha256": "d1c44ee9b488fcc993d7931fc33d22993a019e8565555e8ef232206d46336f73"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "2634ca27214e6b84be9d9ba05eb7c86ce5cce63fd76ca651937e731e24baf1e4"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "f112fe4bec58d645430302f9353297cdec24ce514b2918472c9c53afdb003ef7"
+    },
+    {
+      "path": "src/server/lib/arrangement-workspace-route.ts",
+      "sha256": "303161c3b68cc61f4ecc5f149c3c47aa51b92e27fa255c74ee8c3579763d0b72"
+    },
+    {
+      "path": "src/server/lib/evaluation-comparison.test.ts",
+      "sha256": "916fd45d80b62b8ab36750388eb4ff256fb1bfcd8155accd9727037b8969389c"
+    },
+    {
+      "path": "src/server/lib/evaluation-comparison.ts",
+      "sha256": "a17f4a1d0bf75db4e29f1559f40ca8280799503d6c6d754b9a6e96ba4ad7b3f9"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "sha256": "3d9440aa2430defd5888b907ed23dbc6a960396bd13c0c8c9332424c47364c42"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-route.ts",
+      "sha256": "7ff911cf16300964d5be6972d7b3e7f875ac1a1af846142f10185d9ff8326882"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-service.test.ts",
+      "sha256": "cd77b893a16a4888babdcfaf7bed230381d742a3e26246bd711cd372cdaf8cbd"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-service.ts",
+      "sha256": "9d330b359671142b7928c5e59da60433166b8589ae20150cd3633c13c1d78b99"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "9a7743603f4eadec5292b6799beee373f903dcd18c58372ca732f9665761be16"
+    }
+  ]
+}

@@ -64,11 +64,17 @@ export function createFirstLoopRegistry(projectRoot = process.cwd()): Evaluation
       performerProfile: {
         proficiency: "intermediate",
         assumptionSource: "guided_start_default_pending_owner_review",
+        techniqueFamiliarity: [],
       },
       tempoContext: { status: "not_specified" },
       difficultyIntent: "intermediate",
       preparationExpectation: "practice_expected",
       reliabilityGoal: "repeatable",
+      techniqueContext: { status: "unspecified" },
+      notationContext: {
+        needs: ["french-letter-tablature"],
+        ensembleRole: "solo",
+      },
     }),
     definition("expectation.source-authority", "expectation", {
       dimensionId: "source_authority",

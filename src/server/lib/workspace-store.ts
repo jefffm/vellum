@@ -799,6 +799,12 @@ export class WorkspaceStore {
     const candidate = this.getArrangementCandidate(workspaceId, arrangement.selectedCandidateId);
     if (arrangement.arrangementPlanId) {
       const plan = this.getArrangementPlan(workspaceId, arrangement.arrangementPlanId);
+      if (search.performanceBriefId !== plan.performanceBriefId) {
+        throw new ApiRouteError(
+          "Arrangement Score Search and Plan cite different Performance Briefs",
+          400
+        );
+      }
       const required = plan.decisions
         .filter((decision) =>
           decision.targetConfigurationIds.includes(arrangement.targetConfiguration.id)
@@ -893,6 +899,19 @@ export class WorkspaceStore {
         `Arrangement Search analysis is not part of workspace: ${search.analysisRecordId}`,
         400
       );
+    }
+    if (
+      !search.performanceBriefId ||
+      !workspace.performanceBriefIds.includes(search.performanceBriefId)
+    ) {
+      throw new ApiRouteError(
+        `Arrangement Search Performance Brief is not part of workspace: ${search.performanceBriefId}`,
+        400
+      );
+    }
+    const performanceBrief = this.getPerformanceBrief(workspaceId, search.performanceBriefId);
+    if (performanceBrief.targetConfigurationId !== search.targetConfiguration.id) {
+      throw new ApiRouteError("Arrangement Search and Performance Brief targets do not match", 400);
     }
     if (
       search.status === "completed" &&
@@ -1161,6 +1180,41 @@ export class WorkspaceStore {
       )
     )
       throw new ApiRouteError("Performance Brief target is not part of workspace", 400);
+    if (decoded.difficultyContext.targetConfigurationId !== decoded.targetConfigurationId) {
+      throw new ApiRouteError(
+        "Performance Brief difficulty context belongs to another target",
+        400
+      );
+    }
+    const expectedDigest = createHash("sha256")
+      .update(JSON.stringify(workspace.brief))
+      .digest("hex");
+    if (
+      decoded.arrangementBriefRevision !== workspace.revision ||
+      decoded.arrangementBriefDigest !== expectedDigest ||
+      JSON.stringify(decoded.arrangementBriefSnapshot) !== JSON.stringify(workspace.brief)
+    ) {
+      throw new ApiRouteError(
+        "Performance Brief does not reference the exact current Arrangement Brief",
+        400
+      );
+    }
+    if (
+      decoded.tempoContext.status === "specified" &&
+      decoded.tempoContext.minimumBpm > decoded.tempoContext.maximumBpm
+    ) {
+      throw new ApiRouteError("Performance Brief minimum tempo exceeds maximum tempo", 400);
+    }
+    if (
+      decoded.techniqueContext.status === "specified" &&
+      decoded.techniqueContext.allowed.some((technique) =>
+        decoded.techniqueContext.status === "specified"
+          ? decoded.techniqueContext.avoided.includes(technique)
+          : false
+      )
+    ) {
+      throw new ApiRouteError("A technique cannot be both allowed and avoided", 400);
+    }
     this.writeImmutableRecord(workspaceId, "performance-briefs", decoded.id, decoded);
     this.linkWorkspaceRecord(workspaceId, "performanceBriefIds", decoded.id);
     return decoded;

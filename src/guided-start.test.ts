@@ -27,6 +27,7 @@ import {
   sourceMimeType,
   isOpticalSource,
   proposeSelectionDefault,
+  performanceBriefFromForm,
 } from "./guided-start.js";
 import type { GuidedDeliverable } from "./guided-start.js";
 
@@ -49,6 +50,81 @@ describe("audio preview synthesis", () => {
     expect(controls).toContain("measureOccurrenceId");
   });
 });
+
+describe("Guided Start Performance Brief", () => {
+  it("uses concise safe defaults and progressively discloses specialist context", () => {
+    expect(guidedStartMarkup()).toContain("data-performance-details");
+    const form = performanceForm();
+    expect(performanceBriefFromForm(form)).toEqual({
+      intendedUse: "study",
+      performerProfile: {
+        proficiency: "intermediate",
+        assumptionSource: "owner_declared",
+        techniqueFamiliarity: [],
+      },
+      tempoContext: { status: "not_specified" },
+      difficultyIntent: "intermediate",
+      preparationExpectation: "practice_expected",
+      reliabilityGoal: "repeatable",
+      techniqueContext: { status: "unspecified" },
+      notationContext: { needs: ["target-appropriate notation"], ensembleRole: "solo" },
+    });
+  });
+
+  it("captures declared tempo, technique, notation, and reliability without anatomy", () => {
+    const form = performanceForm({
+      minimumBpm: "72",
+      maximumBpm: "88",
+      techniqueFamiliarity: "barre, campanella",
+      allowedTechniques: "barre",
+      avoidedTechniques: "thumb-over",
+      reliabilityGoal: "performance_reliable",
+    });
+    const brief = performanceBriefFromForm(form);
+    expect(brief).toMatchObject({
+      tempoContext: { status: "specified", minimumBpm: 72, maximumBpm: 88 },
+      performerProfile: { techniqueFamiliarity: ["barre", "campanella"] },
+      techniqueContext: { status: "specified", allowed: ["barre"], avoided: ["thumb-over"] },
+      reliabilityGoal: "performance_reliable",
+    });
+    expect(JSON.stringify(brief)).not.toMatch(
+      /hand span|anatom|injury|scale length|stringing|tuning/i
+    );
+  });
+
+  it("rejects incomplete or inverted tempo ranges before creating a workspace", () => {
+    expect(() => performanceBriefFromForm(performanceForm({ minimumBpm: "80" }))).toThrow(
+      /both minimum and maximum/i
+    );
+    expect(() =>
+      performanceBriefFromForm(performanceForm({ minimumBpm: "100", maximumBpm: "80" }))
+    ).toThrow(/cannot exceed/i);
+  });
+});
+
+function performanceForm(overrides: Record<string, string> = {}): HTMLFormElement {
+  const values: Record<string, string> = {
+    intendedUse: "study",
+    performerProficiency: "intermediate",
+    minimumBpm: "",
+    maximumBpm: "",
+    difficultyIntent: "intermediate",
+    preparationExpectation: "practice_expected",
+    reliabilityGoal: "repeatable",
+    techniqueFamiliarity: "",
+    allowedTechniques: "",
+    avoidedTechniques: "",
+    notationNeeds: "target-appropriate notation",
+    ensembleRole: "solo",
+    ...overrides,
+  };
+  return {
+    querySelector: (selector: string) => {
+      const name = selector.match(/name="([^"]+)"/)?.[1];
+      return name ? { value: values[name] ?? "" } : null;
+    },
+  } as unknown as HTMLFormElement;
+}
 
 describe("interactive notation", () => {
   it("describes an Arrangement Event using stable musical facts", () => {

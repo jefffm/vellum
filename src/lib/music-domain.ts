@@ -119,6 +119,7 @@ export const ArrangementBriefSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+export type ArrangementBrief = Static<typeof ArrangementBriefSchema>;
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
@@ -156,6 +157,83 @@ export const ArrangementWorkspaceSchema = Type.Object(
 );
 
 export type ArrangementWorkspace = Static<typeof ArrangementWorkspaceSchema>;
+
+const PerformanceBriefInputProperties = {
+  intendedUse: Type.Union([
+    Type.Literal("learning"),
+    Type.Literal("sight_reading"),
+    Type.Literal("prepared_performance"),
+    Type.Literal("accompaniment"),
+    Type.Literal("study"),
+    Type.Literal("edition"),
+  ]),
+  performerProfile: Type.Object(
+    {
+      proficiency: Type.Union([
+        Type.Literal("elementary"),
+        Type.Literal("intermediate"),
+        Type.Literal("advanced"),
+        Type.Literal("expert"),
+      ]),
+      assumptionSource: Type.Union([
+        Type.Literal("guided_start_default_pending_owner_review"),
+        Type.Literal("owner_declared"),
+      ]),
+      techniqueFamiliarity: Type.Array(Type.String({ minLength: 1 })),
+    },
+    { additionalProperties: false }
+  ),
+  tempoContext: Type.Union([
+    Type.Object({ status: Type.Literal("not_specified") }, { additionalProperties: false }),
+    Type.Object(
+      {
+        status: Type.Literal("specified"),
+        minimumBpm: Type.Integer({ minimum: 1 }),
+        maximumBpm: Type.Integer({ minimum: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+  ]),
+  difficultyIntent: Type.Union([
+    Type.Literal("elementary"),
+    Type.Literal("intermediate"),
+    Type.Literal("advanced"),
+    Type.Literal("unrestricted"),
+  ]),
+  preparationExpectation: Type.Union([
+    Type.Literal("immediate"),
+    Type.Literal("practice_expected"),
+    Type.Literal("performance_ready"),
+  ]),
+  reliabilityGoal: Type.Union([
+    Type.Literal("possible"),
+    Type.Literal("repeatable"),
+    Type.Literal("performance_reliable"),
+  ]),
+  techniqueContext: Type.Union([
+    Type.Object({ status: Type.Literal("unspecified") }, { additionalProperties: false }),
+    Type.Object(
+      {
+        status: Type.Literal("specified"),
+        allowed: Type.Array(Type.String({ minLength: 1 })),
+        avoided: Type.Array(Type.String({ minLength: 1 })),
+      },
+      { additionalProperties: false }
+    ),
+  ]),
+  notationContext: Type.Object(
+    {
+      needs: Type.Array(Type.String({ minLength: 1 })),
+      ensembleRole: Type.String({ minLength: 1 }),
+    },
+    { additionalProperties: false }
+  ),
+};
+
+export const PerformanceBriefInputSchema = Type.Object(PerformanceBriefInputProperties, {
+  additionalProperties: false,
+});
+export type PerformanceBriefInput = Static<typeof PerformanceBriefInputSchema>;
 
 export const GuidedWorkflowTargetSchema = Type.Object(
   {
@@ -203,6 +281,7 @@ export const GuidedWorkflowSchema = Type.Object(
       Type.Literal("idiomatic_adaptation"),
       Type.Literal("free_paraphrase"),
     ]),
+    performanceBrief: Type.Optional(PerformanceBriefInputSchema),
     omrRunId: Type.Optional(IdSchema),
     scoreTranscriptionId: Type.Optional(IdSchema),
     scoreTranscriptionVersion: Type.Optional(Type.Integer({ minimum: 1 })),
@@ -317,66 +396,23 @@ export const PerformanceBriefSchema = Type.Object(
   {
     id: IdSchema,
     arrangementBriefRevision: Type.Integer({ minimum: 1 }),
+    arrangementBriefDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    arrangementBriefSnapshot: ArrangementBriefSchema,
     targetConfigurationId: IdSchema,
-    intendedUse: Type.Union([
-      Type.Literal("learning"),
-      Type.Literal("sight_reading"),
-      Type.Literal("prepared_performance"),
-      Type.Literal("accompaniment"),
-      Type.Literal("study"),
-      Type.Literal("edition"),
-    ]),
-    performerProfile: Type.Object(
+    difficultyContext: Type.Object(
       {
-        proficiency: Type.Union([
-          Type.Literal("elementary"),
-          Type.Literal("intermediate"),
-          Type.Literal("advanced"),
-          Type.Literal("expert"),
-        ]),
-        assumptionSource: Type.Literal("guided_start_default_pending_owner_review"),
+        targetConfigurationId: IdSchema,
+        definitionId: IdSchema,
+        evidenceIds: Type.Array(IdSchema, { minItems: 1 }),
       },
       { additionalProperties: false }
     ),
-    tempoContext: Type.Union([
-      Type.Object({ status: Type.Literal("not_specified") }, { additionalProperties: false }),
-      Type.Object(
-        {
-          status: Type.Literal("specified"),
-          minimumBpm: Type.Integer({ minimum: 1 }),
-          maximumBpm: Type.Integer({ minimum: 1 }),
-        },
-        { additionalProperties: false }
-      ),
-    ]),
-    difficultyIntent: Type.Union([
-      Type.Literal("elementary"),
-      Type.Literal("intermediate"),
-      Type.Literal("advanced"),
-      Type.Literal("unrestricted"),
-    ]),
-    preparationExpectation: Type.Union([
-      Type.Literal("immediate"),
-      Type.Literal("practice_expected"),
-      Type.Literal("performance_ready"),
-    ]),
-    reliabilityGoal: Type.Union([
-      Type.Literal("possible"),
-      Type.Literal("repeatable"),
-      Type.Literal("performance_reliable"),
-    ]),
+    ...PerformanceBriefInputProperties,
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }
 );
 export type PerformanceBrief = Static<typeof PerformanceBriefSchema>;
-export const PerformanceBriefInputSchema = Type.Omit(PerformanceBriefSchema, [
-  "id",
-  "arrangementBriefRevision",
-  "targetConfigurationId",
-  "createdAt",
-]);
-export type PerformanceBriefInput = Static<typeof PerformanceBriefInputSchema>;
 
 export const PlanDecisionSchema = Type.Object(
   {
@@ -1517,6 +1553,7 @@ export const ArrangementSearchSchema = Type.Object(
     id: IdSchema,
     normalizedScoreId: IdSchema,
     analysisRecordId: IdSchema,
+    performanceBriefId: IdSchema,
     arrangementFamilyId: Type.Optional(IdSchema),
     targetConfiguration: TargetConfigurationSchema,
     preservationPolicy: Type.Union([

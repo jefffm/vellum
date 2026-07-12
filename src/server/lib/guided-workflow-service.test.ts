@@ -46,6 +46,14 @@ describe("GuidedWorkflowService", () => {
       preservationPolicy: "faithful_reduction",
     });
     expect(created.stage).toBe("source_saved");
+    expect(created.performanceBrief).toMatchObject({
+      intendedUse: "study",
+      performerProfile: {
+        proficiency: "intermediate",
+        assumptionSource: "guided_start_default_pending_owner_review",
+      },
+      reliabilityGoal: "repeatable",
+    });
     expect(created.targets.map((target) => target.status)).toEqual(["pending", "pending"]);
 
     service.checkpoint(workspace.id, created.id, {
@@ -75,6 +83,7 @@ describe("GuidedWorkflowService", () => {
     expect(service.resume(workspace.id, created.id)).toMatchObject({
       status: "active",
       resumeCount: 1,
+      performanceBrief: created.performanceBrief,
     });
     const secondFailed = service.checkpoint(workspace.id, created.id, {
       targets: [

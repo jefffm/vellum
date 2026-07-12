@@ -11,6 +11,7 @@ import type {
   EvaluationReport,
   EvaluationScope,
   KnownDefect,
+  ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
 import { digestValue } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
@@ -31,6 +32,7 @@ export type EvaluationComparisonMigrations = {
   suite?: DigestedRef;
   evaluators?: DigestedRef;
   cases?: Array<{ baselineCaseId: string; proposedCaseId: string; mappingRef: DigestedRef }>;
+  briefs?: DigestedRef;
 };
 
 export class EvaluationComparisonService {
@@ -121,7 +123,7 @@ export class EvaluationComparisonService {
       input.migrations?.evaluators
     );
     const proposedCases = new Map(
-      proposedManifest.cases.map((entry) => [refKey(entry.caseRef), entry.caseRef])
+      proposedManifest.cases.map((entry) => [refKey(entry.caseRef), entry])
     );
     const caseAlignment = baselineManifest.cases.map((entry) => {
       const exact = proposedCases.get(refKey(entry.caseRef));
@@ -129,30 +131,33 @@ export class EvaluationComparisonService {
         (candidate) =>
           candidate.caseRef.id === entry.caseRef.id &&
           candidate.caseRef.version === entry.caseRef.version
-      )?.caseRef;
+      );
       const migration = input.migrations?.cases?.find(
         (candidate) => candidate.baselineCaseId === entry.caseRef.id
       );
       const migratedCase = migration
         ? proposedManifest.cases.find(
             (candidate) => candidate.caseRef.id === migration.proposedCaseId
-          )?.caseRef
+          )
+        : undefined;
+      const aligned = exact ?? sameIdentity ?? migratedCase;
+      const exactCompatibility = exact
+        ? compareCaseManifestEntries(entry, exact, input.migrations?.briefs)
         : undefined;
       return {
         baselineCaseRef: entry.caseRef,
-        ...(exact || sameIdentity || migratedCase
-          ? { proposedCaseRef: exact ?? sameIdentity ?? migratedCase }
-          : {}),
-        compatibility: exact
-          ? compatible("Exact case identity and digest match.")
-          : sameIdentity
-            ? changedSemantics("Case identity matches but authored semantics changed.")
-            : migratedCase && migration
-              ? migrated(
-                  "A reviewed migration mapping aligns the changed case identity.",
-                  migration.mappingRef
-                )
-              : incomparable("No exact case identity or declared migration mapping exists."),
+        ...(aligned ? { proposedCaseRef: aligned.caseRef } : {}),
+        compatibility:
+          exact && exactCompatibility
+            ? exactCompatibility
+            : sameIdentity
+              ? changedSemantics("Case identity matches but authored semantics changed.")
+              : migratedCase && migration
+                ? migrated(
+                    "A reviewed migration mapping aligns the changed case identity.",
+                    migration.mappingRef
+                  )
+                : incomparable("No exact case identity or declared migration mapping exists."),
       };
     });
     const globallyComparable =
@@ -442,6 +447,28 @@ export function compareEvaluationRefLists(
     statuses.find((item) => item.status !== "compatible") ??
     compatible(`Exact ${label} sets match.`)
   );
+}
+
+export function compareCaseManifestEntries(
+  baseline: ResolvedEvaluationManifest["cases"][number],
+  proposed: ResolvedEvaluationManifest["cases"][number],
+  compatibilityMappingRef?: DigestedRef
+): Compatibility {
+  const caseCompatibility = compareEvaluationRef(baseline.caseRef, proposed.caseRef, "case");
+  if (caseCompatibility.status !== "compatible") return caseCompatibility;
+  const briefCompatibility = compareEvaluationRefLists(
+    baseline.briefRefs,
+    proposed.briefRefs,
+    "Arrangement/Performance Brief",
+    compatibilityMappingRef
+  );
+  return briefCompatibility.status === "compatible" || briefCompatibility.status === "migrated"
+    ? briefCompatibility.status === "migrated"
+      ? briefCompatibility
+      : compatible("Exact case and Arrangement/Performance Brief identities and digests match.")
+    : incomparable(
+        `Case identity matches but its Arrangement/Performance Brief is incompatible: ${briefCompatibility.rationale}`
+      );
 }
 
 function compatible(rationale: string): Compatibility {

@@ -206,15 +206,32 @@ describe("Greensleeves faithful arrangement service", () => {
     });
     expect(result.performanceBrief).toMatchObject({
       targetConfigurationId: "target.baroque-guitar",
+      arrangementBriefRevision: expect.any(Number),
+      arrangementBriefDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+      arrangementBriefSnapshot: workspace.brief,
       intendedUse: "study",
+      performerProfile: { techniqueFamiliarity: [] },
       tempoContext: { status: "not_specified" },
       difficultyIntent: "intermediate",
       reliabilityGoal: "repeatable",
+      techniqueContext: { status: "unspecified" },
+      notationContext: {
+        needs: ["french-letter-tablature"],
+        ensembleRole: "solo",
+      },
+      difficultyContext: {
+        targetConfigurationId: "target.baroque-guitar",
+        definitionId: "difficulty.baroque-guitar-5.intermediate.v1",
+        evidenceIds: ["profile.baroque-guitar-5"],
+      },
     });
+    expect(result.sourceTruthAssessment.performanceBriefId).toBe(result.performanceBrief.id);
+    expect(result.arrangementSearch.performanceBriefId).toBe(result.performanceBrief.id);
     expect(result.arrangementPlan).toMatchObject({
       kind: "minimal_projection",
       status: "applicable_without_consequential_choice",
       targetConfigurationId: "target.baroque-guitar",
+      performanceBriefId: result.performanceBrief.id,
     });
     expect(result.arrangementScore.arrangementPlanId).toBe(result.arrangementPlan.id);
     expect(result.arrangementScore.realizedPlanDecisionIds).toEqual(
@@ -229,6 +246,7 @@ describe("Greensleeves faithful arrangement service", () => {
       },
       deliverableIds: [],
     });
+    expect(evaluationCard.performanceBriefId).toBe(result.performanceBrief.id);
     expect(evaluationCard.hardGateStatus).toBe("pass");
     expect(evaluationCard.dimensions).toEqual(
       expect.arrayContaining([
@@ -267,6 +285,8 @@ describe("Greensleeves faithful arrangement service", () => {
       targetConfigurationId: "target.baroque-lute",
     });
     expect(luteResult.analysisRecordId).toBe(result.analysisRecordId);
+    expect(luteResult.arrangementSearch.performanceBriefId).toBe(luteResult.performanceBrief.id);
+    expect(luteResult.arrangementPlan.performanceBriefId).toBe(luteResult.performanceBrief.id);
     expect(luteResult.arrangementScore).toMatchObject({
       id: "arrangement.88888888-8888-4888-8888-888888888888",
       targetConfiguration: { instrumentId: "baroque-lute-13", tuningId: "d_minor" },
@@ -285,6 +305,19 @@ describe("Greensleeves faithful arrangement service", () => {
       ]).size
     ).toBe(1);
     expect(classicalResult.analysisRecordId).toBe(result.analysisRecordId);
+    expect(classicalResult.arrangementSearch.performanceBriefId).toBe(
+      classicalResult.performanceBrief.id
+    );
+    expect(classicalResult.arrangementPlan.performanceBriefId).toBe(
+      classicalResult.performanceBrief.id
+    );
+    expect(
+      new Set([
+        result.performanceBrief.id,
+        luteResult.performanceBrief.id,
+        classicalResult.performanceBrief.id,
+      ]).size
+    ).toBe(3);
     expect(classicalResult.arrangementScore).toMatchObject({
       id: "arrangement.99999999-9999-4999-8999-999999999999",
       targetConfiguration: {

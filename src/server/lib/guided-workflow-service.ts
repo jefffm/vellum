@@ -7,7 +7,7 @@ type Options = { store?: WorkspaceStore; now?: () => Date; createId?: () => stri
 export type CreateGuidedWorkflow = Pick<
   GuidedWorkflow,
   "sourceArtifactId" | "optical" | "ocrAutoAcceptConfidence" | "preservationPolicy"
->;
+> & { performanceBrief?: GuidedWorkflow["performanceBrief"] };
 export type GuidedWorkflowCheckpoint = Partial<
   Pick<
     GuidedWorkflow,
@@ -67,6 +67,7 @@ export class GuidedWorkflowService {
         ? {}
         : { ocrAutoAcceptConfidence: input.ocrAutoAcceptConfidence }),
       preservationPolicy: input.preservationPolicy,
+      performanceBrief: input.performanceBrief ?? defaultPerformanceBrief(),
       targets: workspace.brief.targetConfigurations.map((target) => ({
         targetConfigurationId: target.id,
         status: "pending",
@@ -197,6 +198,23 @@ export class GuidedWorkflowService {
       for (const id of target.deliverableIds) this.store.getDeliverable(workspaceId, id);
     }
   }
+}
+
+function defaultPerformanceBrief(): NonNullable<GuidedWorkflow["performanceBrief"]> {
+  return {
+    intendedUse: "study",
+    performerProfile: {
+      proficiency: "intermediate",
+      assumptionSource: "guided_start_default_pending_owner_review",
+      techniqueFamiliarity: [],
+    },
+    tempoContext: { status: "not_specified" },
+    difficultyIntent: "intermediate",
+    preparationExpectation: "practice_expected",
+    reliabilityGoal: "repeatable",
+    techniqueContext: { status: "unspecified" },
+    notationContext: { needs: ["target-appropriate notation"], ensembleRole: "solo" },
+  };
 }
 
 function mergeTargetProgress(

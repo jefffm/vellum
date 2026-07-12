@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   compareEvaluationRef,
   compareEvaluationRefLists,
+  compareCaseManifestEntries,
   EvaluationComparisonService,
 } from "./evaluation-comparison.js";
 import { digestValue } from "./evaluation-harness.js";
@@ -32,6 +33,36 @@ describe("Evaluation baseline, mutation comparison, and report", () => {
     });
     expect(compareEvaluationRefLists([exact], [], "evaluator").status).toBe("incomparable");
     expect(compareEvaluationRefLists([exact], [], "evaluator", mapping).status).toBe("migrated");
+  });
+
+  it("makes an otherwise identical case incomparable when its Performance Brief changes", () => {
+    const caseRef = { id: "case.performance", version: 1, digest: "a".repeat(64) };
+    const arrangementBrief = { id: "brief.arrangement", version: 1, digest: "b".repeat(64) };
+    const noviceBrief = { id: "brief.performance", version: 1, digest: "c".repeat(64) };
+    const expertBrief = { ...noviceBrief, digest: "d".repeat(64) };
+    const fixture = {
+      caseRef,
+      expectationRefs: [],
+      mutationRefs: [],
+      fixtureRefs: [],
+      briefRefs: [arrangementBrief, noviceBrief],
+    };
+    const compatibility = compareCaseManifestEntries(fixture, {
+      ...fixture,
+      briefRefs: [arrangementBrief, expertBrief],
+    });
+    expect(compatibility).toMatchObject({
+      status: "incomparable",
+      rationale: expect.stringMatching(/Performance Brief is incompatible/i),
+    });
+    const mapping = { id: "mapping.novice-expert", version: 1, digest: "e".repeat(64) };
+    expect(
+      compareCaseManifestEntries(
+        fixture,
+        { ...fixture, briefRefs: [arrangementBrief, expertBrief] },
+        mapping
+      )
+    ).toMatchObject({ status: "migrated", migrationRef: mapping });
   });
 
   it("retains known defects and detects a Principal Voice omission without hiding unknowns", async () => {
