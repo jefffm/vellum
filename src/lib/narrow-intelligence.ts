@@ -3,6 +3,7 @@ import type {
   ArrangementPlan,
   ArrangementScore,
   PerformanceBrief,
+  PerformanceBriefInput,
   ScoreTranscription,
   SourceArtifact,
   SourceTruthAssessment,
@@ -45,6 +46,7 @@ export function buildNarrowPlanningRecords(input: {
   analysis: AnalysisRecord;
   target: TargetConfiguration;
   preservationPolicy: PreservationPolicy;
+  performanceBrief?: PerformanceBriefInput;
 }): NarrowPlanningRecords {
   const unresolved = input.transcription.uncertainties
     .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)
@@ -75,15 +77,17 @@ export function buildNarrowPlanningRecords(input: {
     id: `performance.${input.createId()}`,
     arrangementBriefRevision: input.workspaceRevision,
     targetConfigurationId: input.target.id,
-    intendedUse: "study",
-    performerProfile: {
-      proficiency: "intermediate",
-      assumptionSource: "guided_start_default_pending_owner_review",
-    },
-    tempoContext: { status: "not_specified" },
-    difficultyIntent: "intermediate",
-    preparationExpectation: "practice_expected",
-    reliabilityGoal: "repeatable",
+    ...(input.performanceBrief ?? {
+      intendedUse: "study",
+      performerProfile: {
+        proficiency: "intermediate",
+        assumptionSource: "guided_start_default_pending_owner_review",
+      },
+      tempoContext: { status: "not_specified" },
+      difficultyIntent: "intermediate",
+      preparationExpectation: "practice_expected",
+      reliabilityGoal: "repeatable",
+    }),
     createdAt: input.createdAt,
   };
   const evidenceIds = [
@@ -171,12 +175,44 @@ export function buildNarrowEvaluationCard(input: {
       rationale: "Every applicable minimal Plan Decision is linked to the selected score.",
     },
     {
+      id: "mechanical_and_technique_evidence",
+      status: "unknown",
+      hardGate: false,
+      evidenceIds: input.score.events.map((event) => event.id),
+      rationale:
+        "Modeled positions exist, but modeled feasibility and physical technique evidence are not interchangeable.",
+    },
+    {
+      id: "historical_and_analytical_evidence",
+      status: "unknown",
+      hardGate: false,
+      evidenceIds: [input.planning.arrangementPlan.analysisRecordId],
+      rationale:
+        "A machine Analysis Record exists; specialist historical or analytical review is not inferred.",
+    },
+    {
       id: "engraving_and_notation",
       status: input.deliverableIds.length > 0 ? "pass" : "unknown",
       hardGate: false,
       evidenceIds: input.deliverableIds,
       rationale:
         "Deliverables are evidence of successful projection; visual quality is not inferred.",
+    },
+    {
+      id: "playback_and_performed_form",
+      status: "unknown",
+      hardGate: false,
+      evidenceIds: [],
+      rationale:
+        "Canonical playback and Performed Form have not been independently evaluated in this tracer.",
+    },
+    {
+      id: "workflow_and_recovery",
+      status: "unknown",
+      hardGate: false,
+      evidenceIds: [input.score.id, input.planning.arrangementPlan.id],
+      rationale:
+        "This run completed and persisted, but the full recovery protocol is separate evidence.",
     },
     {
       id: "human_and_physical_evidence",

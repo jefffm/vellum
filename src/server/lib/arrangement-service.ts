@@ -21,6 +21,7 @@ import type {
   ArrangementSearch,
   AnalysisRecord,
   NormalizedScore,
+  PerformanceBriefInput,
   PolicyException,
   PreservationAudit,
 } from "../../lib/music-domain.js";
@@ -49,6 +50,7 @@ export type CreateFaithfulArrangementInput = {
   editorialCommitmentIds?: string[];
   familyCommitmentIds?: string[];
   policyExceptionIds?: string[];
+  performanceBrief?: PerformanceBriefInput;
   regenerationFrom?: { arrangementScoreId: string; changedSourceEventIds: string[] };
 };
 
@@ -185,7 +187,11 @@ export class ArrangementService {
           plan.analysisRecordId === analysis.id &&
           plan.analysisRecordVersion === analysis.version &&
           plan.targetConfigurationId === targetConfiguration.id &&
-          plan.preservationPolicy === preservationPolicy
+          plan.preservationPolicy === preservationPolicy &&
+          performanceBriefMatches(
+            this.store.getPerformanceBrief(workspaceId, plan.performanceBriefId),
+            input.performanceBrief
+          )
       );
     let planning: NarrowPlanningRecords;
     if (existingPlan) {
@@ -220,6 +226,7 @@ export class ArrangementService {
         analysis,
         target: targetConfiguration,
         preservationPolicy,
+        performanceBrief: input.performanceBrief,
       });
       if (planning.sourceTruthAssessment.outcome !== "authoritative_for_purpose") {
         throw new ApiRouteError("Source Truth does not authorize arrangement planning", 409);
@@ -663,6 +670,21 @@ export class ArrangementService {
             );
     return applyPreservationPolicy(faithful, arrangement.preservationPolicy);
   }
+}
+
+function performanceBriefMatches(
+  actual: NarrowPlanningRecords["performanceBrief"],
+  requested: PerformanceBriefInput | undefined
+): boolean {
+  if (!requested) return true;
+  return (
+    actual.intendedUse === requested.intendedUse &&
+    JSON.stringify(actual.performerProfile) === JSON.stringify(requested.performerProfile) &&
+    JSON.stringify(actual.tempoContext) === JSON.stringify(requested.tempoContext) &&
+    actual.difficultyIntent === requested.difficultyIntent &&
+    actual.preparationExpectation === requested.preparationExpectation &&
+    actual.reliabilityGoal === requested.reliabilityGoal
+  );
 }
 
 function selectedPassage(arrangement: ArrangementScore, ids: string[]): ArrangementEvent[] {

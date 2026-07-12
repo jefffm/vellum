@@ -26,6 +26,7 @@ tmp/
 
 # Local-first Vellum workspace state and generated deliverables
 workspaces/
+.vellum/
 
 # OS
 .DS_Store

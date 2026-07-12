@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T10",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T13:26:30Z",
+  "requirements": {
+    "M01": {
+      "status": "machine_verified",
+      "remaining": "T11 adds comparison and Baseline records; T29-T34 add human evidence, retention, privacy, reporting, and CI contracts"
+    },
+    "M11": {
+      "status": "partial",
+      "remaining": "T11 adds deltas, compatibility, mutation execution, Baselines, and safe report rendering"
+    },
+    "M13": {
+      "status": "machine_verified",
+      "remaining": "T34 adds retention classes, pin-safe garbage collection, and private deletion semantics"
+    },
+    "M16": {
+      "status": "partial",
+      "remaining": "The machine-readable eval:fast command exists; T32-T34 add the remaining declared commands and CI selection"
+    }
+  },
+  "auditFindings": {
+    "F016": "partial: absolute results now expose actual applicability, execution, outcome, completeness, basis, authority, and presentation without an overall grade; T11 and T19 replace remaining candidate-ranking proxies",
+    "F026": "machine fixed+verified for evaluation records: immutable files publish atomically and Run transitions append snapshots rather than overwrite state",
+    "F027": "machine fixed+verified for evaluation records: completed immutable files cannot expose partial bytes or be replaced with different content",
+    "F036": "partial: Evaluation Run identity is persistent and machine-readable; T32-T34 propagate it through structured cross-process logs"
+  },
+  "summary": {
+    "fullSuitePassed": 947,
+    "fullSuiteSkipped": 1,
+    "focusedTestsPassedAfterFinalTestAddition": 9,
+    "command": {
+      "invocation": "npm run --silent eval:fast -- --output /tmp/vellum-t10-eval-final",
+      "manifestId": "evaluation-manifest.3d3768f1062c5f7be6326103",
+      "manifestDigest": "3d3768f1062c5f7be6326103b0690516dd9b7efe24a1d00597f37f28165f6057",
+      "runId": "evaluation-run.c6e00e99-6f6e-4a04-a52c-679c345e6255",
+      "cardId": "evaluation-card.d787936c-7355-4bc4-b640-f7fd0ed435a7",
+      "executionStatus": "completed",
+      "acceptanceStatus": "incomplete",
+      "hardGateStatus": "pass",
+      "reasonIncomplete": "Modeled mechanics, Analysis, and workflow evidence are partial; engraving, playback, human/physical evidence, and Owner usefulness remain unknown."
+    },
+    "manifestPins": [
+      "suite",
+      "case",
+      "expectations",
+      "mutation",
+      "source_fixture",
+      "arrangement_brief",
+      "performance_brief",
+      "evaluator",
+      "adapter",
+      "target_profile",
+      "comparison_policy",
+      "report_profile",
+      "human_protocol",
+      "execution_identity"
+    ]
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 947 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/evaluation-harness.test.ts test/verify-arrangement-intelligence.test.ts",
+      "result": "pass: 9 passed after the final state-transition test was added"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t10-eval-final",
+      "result": "pass: completed Run and incomplete-but-honest Card with all ten dimension families"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/10-evaluation-harness-core.md",
+      "sha256": "baebd6a2e14a92b582f1e6198b5291a3d61ae95654575da62432680769c7c24f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "570987a0ddd8fc1885667d915105b389cdc08bfba0eb9209ce3b72fe4c2e9068"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "c49888df208fa16a3451a43cba996680d9ea82d69455678a07a748044d959599"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "35c37e950b0196fc8ccf32a8110024fe45ad15aa740101cb90c151686050d706"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "67fa3ccbbd174276c98ba3e1aa5f16efe9fdf1ff0e479ee49f1a5503a782f667"
+    },
+    {
+      "path": "src/server/lib/evaluation-harness.ts",
+      "sha256": "ff2f3c46c98f4504d1acd4b5ccf12855fc51d0ef9c7490b9f123f13cf362d236"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "sha256": "4a46d7da91afafeead05863fcdac81fbde2cf22e1ce00943c8c88dcf0c8b8939"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "sha256": "8af2f4c4b440f2e8b14b732fe7c81a77b4c4df67c39c0d562a9e86b28c38834c"
+    },
+    {
+      "path": "src/server/evaluation-cli.ts",
+      "sha256": "fa13f5b4e5abfbed8b9c3c4526cab87eadd46bd7dfef7b8a9e5792e8c42804b7"
+    }
+  ]
+}

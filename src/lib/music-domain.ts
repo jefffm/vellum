@@ -306,6 +306,13 @@ export const PerformanceBriefSchema = Type.Object(
   { additionalProperties: false }
 );
 export type PerformanceBrief = Static<typeof PerformanceBriefSchema>;
+export const PerformanceBriefInputSchema = Type.Omit(PerformanceBriefSchema, [
+  "id",
+  "arrangementBriefRevision",
+  "targetConfigurationId",
+  "createdAt",
+]);
+export type PerformanceBriefInput = Static<typeof PerformanceBriefInputSchema>;
 
 export const PlanDecisionSchema = Type.Object(
   {
