@@ -28,6 +28,11 @@ import {
   createPerformanceInterpretationListRoute,
   createPerformanceInterpretationPreviewRoute,
 } from "./performance-interpretation-route.js";
+import {
+  createArrangementReadinessRoute,
+  createOwnerPlaytestCreateRoute,
+  readiness,
+} from "./owner-playtest-route.js";
 
 describe("Greensleeves faithful arrangement service", () => {
   let rootDirectory: string;
@@ -993,6 +998,23 @@ describe("Greensleeves faithful arrangement service", () => {
       "23232323-2323-4323-8323-232323232323",
       "24242424-2424-4424-8424-242424242424",
     ];
+    const playtestIds = [
+      "25252525-2525-4525-8525-252525252525",
+      "26262626-2626-4626-8626-262626262626",
+      "27272727-2727-4727-8727-272727272727",
+    ];
+    const deferredScoreStaleness = store
+      .get(workspace.id)
+      .staleDerivationIds.map((id) => store.getStaleDerivation(workspace.id, id))
+      .filter(
+        (record) =>
+          record.recordType === "arrangement_score" &&
+          record.recordId === result.arrangementScore.id &&
+          !record.acknowledged
+      );
+    for (const record of deferredScoreStaleness) {
+      lineage.acknowledgeStaleDerivation(workspace.id, record.id);
+    }
     const app = express();
     app.use(express.json());
     app.get(
@@ -1010,6 +1032,18 @@ describe("Greensleeves faithful arrangement service", () => {
         store,
         createId: () => interpretationIds.shift()!,
         now: () => new Date("2026-07-10T16:00:00.000Z"),
+      })
+    );
+    app.get(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/readiness",
+      createArrangementReadinessRoute({ store })
+    );
+    app.post(
+      "/api/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests",
+      createOwnerPlaytestCreateRoute({
+        store,
+        createId: () => playtestIds.shift()!,
+        now: () => new Date("2026-07-10T16:30:00.000Z"),
       })
     );
     app.get(
@@ -1041,6 +1075,116 @@ describe("Greensleeves faithful arrangement service", () => {
     };
     expect(preview.ok).toBe(true);
     expect(preview.data.events.length).toBeGreaterThan(0);
+    const playtestBase = `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/arrangements/${result.arrangementScore.id}`;
+    expect(await (await fetch(`${playtestBase}/readiness`)).json()).toMatchObject({
+      ok: true,
+      data: { status: "inspection_only", currentPlaytestIds: [], stalePlaytestIds: [] },
+    });
+    const occurrenceId = omr.normalizedScore.performedForm!.measureOccurrences[0]!.id;
+    const testedEventIds = result.arrangementScore.events.slice(0, 2).map(({ id }) => id);
+    const playtestRecordCounts = {
+      scores: store.get(workspace.id).arrangementScoreIds.length,
+      commitments: store.get(workspace.id).editorialCommitmentIds.length,
+      familyCommitments: store.get(workspace.id).familyCommitmentIds.length,
+    };
+    const submitPlaytest = async (body: Record<string, unknown>) => {
+      const response = (await (
+        await fetch(`${playtestBase}/owner-playtests`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            arrangement_event_ids: testedEventIds,
+            playback_occurrence_ids: [occurrenceId],
+            practice_context: "First pass at a slow practice tempo",
+            confidence: 0.8,
+            observations: [],
+            proposed_consequences: [],
+            ...body,
+          }),
+        })
+      ).json()) as ApiResponse<{
+        playtest: { id: string; proposedConsequences: string[] };
+        readiness: { status: string };
+      }>;
+      if (!response.ok) throw new Error(response.error.message);
+      return response.data;
+    };
+    expect(
+      await submitPlaytest({
+        evidence_basis: ["notation", "listening"],
+        outcome: "not_tested",
+        rationale: "Inspected and listened, but did not yet put the passage under the fingers.",
+      })
+    ).toMatchObject({ readiness: { status: "playtest_available" } });
+    expect(
+      await submitPlaytest({
+        tempo_bpm: 72,
+        evidence_basis: ["physical_playing"],
+        outcome: "practice_playable",
+        observations: [
+          {
+            dimension: "technique",
+            code: "shift_reliability",
+            outcome: "concern",
+            rationale: "The shift succeeds reliably after slow isolated practice.",
+          },
+          {
+            dimension: "identity",
+            code: "source_identity",
+            outcome: "supports",
+            rationale: "The principal voice remains immediately recognizable.",
+          },
+        ],
+        rationale: "Physically playable in the declared practice context.",
+      })
+    ).toMatchObject({ readiness: { status: "owner_tested" } });
+    const blockedPlaytest = await submitPlaytest({
+      candidate_id: result.arrangementScore.selectedCandidateId,
+      tempo_bpm: 72,
+      evidence_basis: ["physical_playing"],
+      outcome: "unplayable",
+      observations: [
+        {
+          dimension: "mechanics",
+          code: "reach",
+          outcome: "blocks",
+          rationale: "The required stopped-course span cannot be held in this context.",
+        },
+        {
+          dimension: "notation",
+          code: "notation",
+          outcome: "concern",
+          rationale: "The fingering display does not make the release point clear.",
+        },
+      ],
+      proposed_consequences: ["correction", "ergonomic_profile", "fixture_nomination"],
+      rationale: "This exact passage is not physically executable on the tested instrument.",
+    });
+    expect(blockedPlaytest).toMatchObject({
+      playtest: {
+        proposedConsequences: ["correction", "ergonomic_profile", "fixture_nomination"],
+      },
+      readiness: { status: "blocked" },
+    });
+    const afterPlaytests = store.get(workspace.id);
+    expect(afterPlaytests.arrangementScoreIds).toHaveLength(playtestRecordCounts.scores);
+    expect(afterPlaytests.editorialCommitmentIds).toHaveLength(playtestRecordCounts.commitments);
+    expect(afterPlaytests.familyCommitmentIds).toHaveLength(playtestRecordCounts.familyCommitments);
+    expect(afterPlaytests.ownerPlaytestIds).toHaveLength(3);
+    const staleTemplate = deferredScoreStaleness[0]!;
+    store.saveStaleDerivation(workspace.id, {
+      ...staleTemplate,
+      id: "stale.77777777-7777-4777-8777-777777777777",
+      acknowledged: false,
+      createdAt: "2026-07-10T16:45:00.000Z",
+    });
+    expect(await (await fetch(`${playtestBase}/readiness`)).json()).toMatchObject({
+      ok: true,
+      data: {
+        status: "stale",
+        currentPlaytestIds: expect.arrayContaining(afterPlaytests.ownerPlaytestIds),
+      },
+    });
     const navigationResponse = await fetch(
       `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/navigation`
     );
@@ -1276,6 +1420,11 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(adopted.branchId).toBe("branch.dddddddd-dddd-4ddd-8ddd-dddddddddddd");
     expect(adopted.arrangementScore.preservationAudit.status).toBe("pass");
     expect(adopted.arrangementScore.transformationReport.length).toBeGreaterThan(0);
+    expect(readiness(store, workspace.id, adopted.arrangementScore.id)).toMatchObject({
+      status: "stale",
+      currentPlaytestIds: [],
+      stalePlaytestIds: expect.arrayContaining(afterPlaytests.ownerPlaytestIds),
+    });
     expect(store.get(workspace.id).arrangementScoreIds).toEqual([
       ...priorScores,
       adopted.arrangementScore.id,

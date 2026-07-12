@@ -129,6 +129,10 @@ import {
   createPerformanceInterpretationPreviewRoute,
 } from "./lib/performance-interpretation-route.js";
 import {
+  createArrangementReadinessRoute,
+  createOwnerPlaytestCreateRoute,
+} from "./lib/owner-playtest-route.js";
+import {
   createApiBoundary,
   errorCodeForStatus,
   logApiError,
@@ -395,6 +399,14 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations",
     createPerformanceInterpretationCreateRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/readiness",
+    createArrangementReadinessRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests",
+    createOwnerPlaytestCreateRoute()
   );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations/:interpretationId/audio-preview",

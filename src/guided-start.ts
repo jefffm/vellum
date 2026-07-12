@@ -937,6 +937,182 @@ export function describeArrangementEvent(event: ArrangementEvent): string {
   return `${pitches} · duration ${duration} · ${role} · ${event.measureId}${position}`;
 }
 
+export function openOwnerPlaytestDialog(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable,
+  selectedEvents: ArrangementEvent[]
+): HTMLDialogElement {
+  document.querySelector("#vellum-owner-playtest")?.remove();
+  const dialog = document.createElement("dialog");
+  dialog.id = "vellum-owner-playtest";
+  const occurrenceId = followedMeasureOccurrences.get(panel);
+  const heading = document.createElement("h2");
+  heading.textContent = `Record playtest for ${selectedEvents.length} selected object${selectedEvents.length === 1 ? "" : "s"}`;
+  const readiness = document.createElement("p");
+  readiness.setAttribute("aria-live", "polite");
+  readiness.textContent = "Loading exact-score readiness…";
+  void api<{ status: string; rationale: string }>(
+    `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/readiness`
+  )
+    .then((view) => {
+      readiness.textContent = `Current readiness: ${view.status.replaceAll("_", " ")} — ${view.rationale}`;
+    })
+    .catch((error) => {
+      readiness.textContent = error instanceof Error ? error.message : "Readiness unavailable.";
+    });
+  const form = document.createElement("form");
+  form.method = "dialog";
+  const field = (label: string, control: HTMLElement) => {
+    const wrapper = document.createElement("label");
+    wrapper.append(document.createTextNode(label), control);
+    return wrapper;
+  };
+  const select = (label: string, values: string[]) => {
+    const control = document.createElement("select");
+    control.setAttribute("aria-label", label);
+    values.forEach((value) => control.add(new Option(value.replaceAll("_", " "), value)));
+    return control;
+  };
+  const outcome = select("Playtest outcome", [
+    "comfortable",
+    "practice_playable",
+    "marginal",
+    "unplayable",
+    "unclear_unmusical",
+    "historically_questionable",
+    "notation_problem",
+    "not_tested",
+  ]);
+  const basis = select("Evidence basis", ["physical_playing", "notation", "listening"]);
+  const tempo = document.createElement("input");
+  tempo.type = "number";
+  tempo.min = "1";
+  tempo.placeholder = "Actual BPM (optional)";
+  const practice = document.createElement("input");
+  practice.required = true;
+  practice.placeholder = "Instrument, posture, warm-up, practice conditions…";
+  const confidence = document.createElement("input");
+  confidence.type = "range";
+  confidence.min = "0";
+  confidence.max = "1";
+  confidence.step = "0.05";
+  confidence.value = "0.8";
+  const dimension = select("Finding dimension", [
+    "mechanics",
+    "technique",
+    "clarity",
+    "identity",
+    "history",
+    "notation",
+  ]);
+  const findingCode = select("Finding type", [
+    "reach",
+    "shift_reliability",
+    "held_note_conflict",
+    "right_hand_difficulty",
+    "damping",
+    "voice_clarity",
+    "cadence",
+    "source_identity",
+    "historical_practice",
+    "notation",
+  ]);
+  const findingOutcome = select("Finding outcome", [
+    "supports",
+    "concern",
+    "blocks",
+    "not_applicable",
+  ]);
+  const findingRationale = document.createElement("input");
+  findingRationale.placeholder = "Optional structured finding detail";
+  const rationale = document.createElement("textarea");
+  rationale.required = true;
+  rationale.placeholder = "What happened in this exact context?";
+  const proposal = select("Optional proposed next action", [
+    "none",
+    "adoption",
+    "rejection",
+    "correction",
+    "commitment",
+    "ergonomic_profile",
+    "calibration_candidate",
+    "fixture_nomination",
+  ]);
+  const warning = document.createElement("p");
+  warning.textContent = occurrenceId
+    ? `Anchored to playback occurrence ${occurrenceId}. Proposed consequences remain proposals until explicitly adopted.`
+    : "Start or seek playback for this passage first so the playtest can be anchored to an exact Playback Occurrence.";
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.textContent = "Save scoped playtest";
+  save.disabled = !occurrenceId;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Cancel";
+  close.addEventListener("click", () => dialog.close());
+  form.append(
+    warning,
+    field("Outcome", outcome),
+    field("Evidence came from", basis),
+    field("Actual tempo", tempo),
+    field("Practice context", practice),
+    field("Confidence", confidence),
+    field("Finding dimension", dimension),
+    field("Finding type", findingCode),
+    field("Finding outcome", findingOutcome),
+    field("Finding detail", findingRationale),
+    field("Overall rationale", rationale),
+    field("Proposed next action", proposal),
+    save,
+    close
+  );
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!occurrenceId) return;
+    save.disabled = true;
+    const observation = findingRationale.value.trim()
+      ? [
+          {
+            dimension: dimension.value,
+            code: findingCode.value,
+            outcome: findingOutcome.value,
+            rationale: findingRationale.value.trim(),
+          },
+        ]
+      : [];
+    void api<{ playtest: { id: string }; readiness: { status: string; rationale: string } }>(
+      `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/owner-playtests`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          arrangement_event_ids: selectedEvents.map(({ id }) => id),
+          playback_occurrence_ids: [occurrenceId],
+          ...(tempo.value ? { tempo_bpm: Number(tempo.value) } : {}),
+          practice_context: practice.value,
+          evidence_basis: [basis.value],
+          outcome: outcome.value,
+          confidence: Number(confidence.value),
+          observations: observation,
+          rationale: rationale.value,
+          proposed_consequences: proposal.value === "none" ? [] : [proposal.value],
+        }),
+      }
+    )
+      .then((result) => {
+        readiness.textContent = `Saved ${result.playtest.id}. Readiness: ${result.readiness.status.replaceAll("_", " ")} — ${result.readiness.rationale}`;
+        form.hidden = true;
+      })
+      .catch((error) => {
+        readiness.textContent = error instanceof Error ? error.message : "Playtest save failed.";
+        save.disabled = false;
+      });
+  });
+  dialog.append(heading, readiness, form);
+  document.body.append(dialog);
+  dialog.showModal();
+  return dialog;
+}
+
 export function installNotationSelection(panel: HTMLElement, deliverable: GuidedDeliverable): void {
   const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
   const notation = panel.querySelector<HTMLElement>(".artifact-preview-content > svg");
@@ -1067,9 +1243,15 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
         })
       )
     );
+    const playtest = document.createElement("button");
+    playtest.type = "button";
+    playtest.textContent = "Record playtest";
+    playtest.addEventListener("click", () =>
+      openOwnerPlaytestDialog(panel, deliverable, selectedEvents)
+    );
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
-    actions.append(request, ask, edit, alternatives, proposeDefault, loop, clear);
+    actions.append(request, ask, edit, alternatives, proposeDefault, loop, playtest, clear);
     summary.replaceChildren(title, facts, actions);
     summary.hidden = false;
     panel.dispatchEvent(

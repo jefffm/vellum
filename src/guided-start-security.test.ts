@@ -108,5 +108,8 @@ describe("Guided Start active-content boundaries", () => {
     expect(panel.querySelector<HTMLElement>(".score-selection-summary")?.hidden).toBe(true);
     valid.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(panel.querySelector<HTMLElement>(".score-selection-summary")?.hidden).toBe(false);
+    expect(panel.querySelector(".score-selection-summary")?.textContent).toContain(
+      "Record playtest"
+    );
   });
 });

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T29",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T23:51:19Z",
+  "requirements": {
+    "AI-PROD-012": {
+      "status": "partial",
+      "remaining": "T30 role-qualified Human Evaluation and non-substitution Card coverage"
+    },
+    "AI-PROD-024": { "status": "machine_verified", "remaining": "late signed Owner evidence" },
+    "AI-PROD-026": { "status": "machine_verified", "remaining": "late Owner wording review" },
+    "AI-PROD-035": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-006": {
+      "status": "service_and_ui_verified",
+      "remaining": "late real-browser usability and target-player review"
+    },
+    "AI-WPL-033": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-034": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-035": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-036": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-037": { "status": "machine_verified", "remaining": "late wording review" },
+    "AI-WPL-038": { "status": "machine_verified", "remaining": "late vocabulary review" },
+    "AI-WPL-039": {
+      "status": "partial",
+      "remaining": "T31 explicit reviewed-learning actions for every proposed consequence"
+    },
+    "AI-WPL-040": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-067": {
+      "status": "partial",
+      "remaining": "T34 local media retention lifecycle; media remains optional and absent"
+    },
+    "AI-DEL-032": {
+      "status": "partial",
+      "remaining": "T30 role-qualified Human Evaluation records"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1023,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Immutable Playtests bind exact score and optional candidate digests, score passage, Playback Occurrence, Instrument Instance digest, Performance Brief digest, actual context, outcome, confidence, observations, rationale, and proposals",
+      "Structured observations keep mechanics, technique, clarity, identity, history, and notation independent and expose the required finding vocabulary",
+      "Derived readiness distinguishes inspection-only, playtest-available, Owner-tested, blocked, and stale states without owning canonical decisions",
+      "Ancestor-version Playtests remain visible as stale evidence and unresolved upstream Arrangement Score staleness takes precedence",
+      "Three saved Playtests create zero Arrangement Scores, Editorial Commitments, or Family Commitments; proposed consequences are retained but not applied",
+      "Selected score passages expose a Playback-Occurrence-anchored Record playtest dialog and current readiness summary"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.0b4bc366-2827-4528-8f09-8301d5e5af03",
+      "cardId": "evaluation-card.46e84b9e-84e6-4238-afff-0f10f0f5194e",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "automatedFixturePhysicalEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    {
+      "command": "npm test",
+      "result": "pass on clean rerun: 1023 passed, 1 skipped; an earlier run had one transient Podman compiler availability failure after 1022 passes, and the failed real Greensleeves tracer then passed alone before the clean full rerun"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t29-eval-final",
+      "result": "pass: hard gates pass and automated fixture physical evidence remains unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "aa28a36137e5b422e1092123b4223c800e4773dead65a6c3dd44be51d50c5d19"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/29-owner-playtest-readiness.md",
+      "sha256": "f3d8bef473ddb27b852f1e6bbf920bddfb8893a0f73b1c44cb1a09b60db35376"
+    },
+    {
+      "path": "src/guided-start-security.test.ts",
+      "sha256": "8ad3484c590860ae8979c336f019b4ba04b1c10e23d761b83282ab69621f2ec6"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "bd70a689d0f011ef72da3e31498671dbf426d329813f8e5d503c9b139c49c732"
+    },
+    {
+      "path": "src/lib/music-domain.test.ts",
+      "sha256": "b6ff6c2e282932081028949190a3642766fc5ddb0a89bd7afc1437abe8f7a495"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "1af9638747249e576b9f1857051fa2ad265249fd2c619ad155c018af0c6ec337"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "76d50d3747b045dd66b3b0d8cfcf6b69dec3a9c924612767806eab5541fcd4bb"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "17b5730369453a52c2162a265e75b1e3ff131046ed2c05d6d2485fddb27fc69f"
+    },
+    {
+      "path": "src/server/lib/owner-playtest-route.ts",
+      "sha256": "25cc293879747ade2498258feaefa68c0e1b7996665a1432e98085e0367b0bb9"
+    },
+    {
+      "path": "src/server/lib/workspace-store.test.ts",
+      "sha256": "c6c478703b9ff8264e71baf6ce6e6eac11c19bd573e3fbc1b670cfcdc879be1a"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "b7f9642a5866f3f9f05ab494dad8fe704f2147bae8871af77275975d71dc3c55"
+    }
+  ]
+}

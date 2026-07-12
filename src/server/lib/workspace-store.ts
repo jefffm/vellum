@@ -17,6 +17,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { assertInstrumentInstanceIdentity } from "../../lib/instrument-instance.js";
+import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
+import { digestValue } from "./evaluation-harness.js";
 import {
   AnalysisRecordSchema,
   ArrangementFamilySchema,
@@ -24,6 +26,7 @@ import {
   ArrangementCandidateSchema,
   ArrangementSearchSchema,
   PassageSearchRecordSchema,
+  OwnerPlaytestSchema,
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
   DeliverableSchema,
@@ -51,6 +54,7 @@ import type {
   ArrangementCandidate,
   ArrangementSearch,
   PassageSearchRecord,
+  OwnerPlaytest,
   ArrangementScore,
   ArrangementWorkspace,
   CreateWorkspace,
@@ -105,6 +109,7 @@ const recoverableRecordCollections = [
   ["arrangement-branches", "arrangementBranchIds", ArrangementBranchSchema],
   ["arrangement-searches", "arrangementSearchIds", ArrangementSearchSchema],
   ["passage-searches", "passageSearchIds", PassageSearchRecordSchema],
+  ["owner-playtests", "ownerPlaytestIds", OwnerPlaytestSchema],
   ["arrangement-candidates", "arrangementCandidateIds", ArrangementCandidateSchema],
   ["arrangement-families", "arrangementFamilyIds", ArrangementFamilySchema],
   ["deliverables", "deliverableIds", DeliverableSchema],
@@ -133,7 +138,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 7,
+      schemaVersion: 8,
       revision: 1,
       id,
       title: input.title,
@@ -153,6 +158,7 @@ export class WorkspaceStore {
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       passageSearchIds: [],
+      ownerPlaytestIds: [],
       arrangementCandidateIds: [],
       arrangementFamilyIds: [],
       deliverableIds: [],
@@ -271,7 +277,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 7) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 8) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -279,7 +285,7 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 7,
+      schemaVersion: 8,
       revision:
         typeof parsed.revision === "number" && Number.isInteger(parsed.revision)
           ? parsed.revision
@@ -301,6 +307,7 @@ export class WorkspaceStore {
         ? parsed.arrangementSearchIds
         : [],
       passageSearchIds: Array.isArray(parsed.passageSearchIds) ? parsed.passageSearchIds : [],
+      ownerPlaytestIds: Array.isArray(parsed.ownerPlaytestIds) ? parsed.ownerPlaytestIds : [],
       arrangementCandidateIds: Array.isArray(parsed.arrangementCandidateIds)
         ? parsed.arrangementCandidateIds
         : [],
@@ -325,7 +332,7 @@ export class WorkspaceStore {
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 7 ||
+      parsed.schemaVersion !== 8 ||
       typeof parsed.revision !== "number" ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.guidedWorkflowIds) ||
@@ -336,6 +343,7 @@ export class WorkspaceStore {
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
       !Array.isArray(parsed.passageSearchIds) ||
+      !Array.isArray(parsed.ownerPlaytestIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
       !Array.isArray(parsed.arrangementFamilyIds) ||
       !Array.isArray(parsed.deliverableIds) ||
@@ -1044,6 +1052,60 @@ export class WorkspaceStore {
       id,
       "passage-search",
       PassageSearchRecordSchema
+    );
+  }
+
+  saveOwnerPlaytest(workspaceId: string, playtest: OwnerPlaytest): OwnerPlaytest {
+    const workspace = this.get(workspaceId);
+    const score = this.getArrangementScore(workspaceId, playtest.arrangementScoreId);
+    const scoreVersion = score.version ?? 1;
+    const brief = score.arrangementSearchId
+      ? this.getPerformanceBrief(
+          workspaceId,
+          this.getArrangementSearch(workspaceId, score.arrangementSearchId).performanceBriefId
+        )
+      : undefined;
+    if (
+      scoreVersion !== playtest.arrangementScoreVersion ||
+      digestValue(score) !== playtest.arrangementScoreDigest ||
+      !brief ||
+      brief.id !== playtest.performanceBriefId ||
+      digestValue(brief) !== playtest.performanceBriefDigest ||
+      !score.targetConfiguration.instrumentInstance ||
+      digestInstrumentInstance(score.targetConfiguration.instrumentInstance) !==
+        playtest.instrumentInstanceDigest
+    ) {
+      throw new ApiRouteError("Owner Playtest exact context is stale or incompatible", 409);
+    }
+    const eventIds = new Set(score.events.map((event) => event.id));
+    if (playtest.arrangementEventIds.some((id) => !eventIds.has(id))) {
+      throw new ApiRouteError("Owner Playtest passage references an unknown score event", 400);
+    }
+    if ((playtest.candidateId === undefined) !== (playtest.candidateDigest === undefined)) {
+      throw new ApiRouteError("Owner Playtest candidate identity requires both id and digest", 400);
+    }
+    if (playtest.candidateId) {
+      const candidate = this.getArrangementCandidate(workspaceId, playtest.candidateId);
+      if (
+        candidate.arrangementSearchId !== score.arrangementSearchId ||
+        digestValue(candidate) !== playtest.candidateDigest
+      ) {
+        throw new ApiRouteError("Owner Playtest candidate is incompatible with its score", 409);
+      }
+    }
+    const decoded = Value.Decode(OwnerPlaytestSchema, playtest);
+    this.writeImmutableRecord(workspaceId, "owner-playtests", decoded.id, decoded);
+    this.linkRecord(workspace, "ownerPlaytestIds", decoded.id);
+    return decoded;
+  }
+
+  getOwnerPlaytest(workspaceId: string, id: string): OwnerPlaytest {
+    return this.readRecord(workspaceId, "owner-playtests", id, "playtest", OwnerPlaytestSchema);
+  }
+
+  listOwnerPlaytests(workspaceId: string): OwnerPlaytest[] {
+    return this.get(workspaceId).ownerPlaytestIds.map((id) =>
+      this.getOwnerPlaytest(workspaceId, id)
     );
   }
 

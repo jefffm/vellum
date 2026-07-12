@@ -135,7 +135,7 @@ export type ArrangementBrief = Static<typeof ArrangementBriefSchema>;
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 7 }),
+    schemaVersion: Type.Integer({ minimum: 8 }),
     revision: Type.Integer({ minimum: 1 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
@@ -155,6 +155,7 @@ export const ArrangementWorkspaceSchema = Type.Object(
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
     passageSearchIds: Type.Array(IdSchema),
+    ownerPlaytestIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
     arrangementFamilyIds: Type.Array(IdSchema),
     deliverableIds: Type.Array(IdSchema),
@@ -2103,6 +2104,118 @@ export const PassageSearchRecordSchema = Type.Object(
   { additionalProperties: false }
 );
 export type PassageSearchRecord = Static<typeof PassageSearchRecordSchema>;
+
+export const OwnerPlaytestObservationSchema = Type.Object(
+  {
+    dimension: Type.Union([
+      Type.Literal("mechanics"),
+      Type.Literal("technique"),
+      Type.Literal("clarity"),
+      Type.Literal("identity"),
+      Type.Literal("history"),
+      Type.Literal("notation"),
+    ]),
+    code: Type.Union([
+      Type.Literal("reach"),
+      Type.Literal("shift_reliability"),
+      Type.Literal("held_note_conflict"),
+      Type.Literal("right_hand_difficulty"),
+      Type.Literal("damping"),
+      Type.Literal("voice_clarity"),
+      Type.Literal("cadence"),
+      Type.Literal("source_identity"),
+      Type.Literal("historical_practice"),
+      Type.Literal("notation"),
+    ]),
+    outcome: Type.Union([
+      Type.Literal("supports"),
+      Type.Literal("concern"),
+      Type.Literal("blocks"),
+      Type.Literal("not_applicable"),
+    ]),
+    rationale: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const OwnerPlaytestSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementScoreId: IdSchema,
+    arrangementScoreVersion: Type.Integer({ minimum: 1 }),
+    arrangementScoreDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    candidateId: Type.Optional(IdSchema),
+    candidateDigest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })),
+    arrangementEventIds: Type.Array(IdSchema, { minItems: 1 }),
+    playbackOccurrenceIds: Type.Array(IdSchema, { minItems: 1 }),
+    instrumentInstanceDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    performanceBriefId: IdSchema,
+    performanceBriefDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    actualContext: Type.Object(
+      {
+        tempoBpm: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
+        practiceContext: Type.String({ minLength: 1 }),
+        evidenceBasis: Type.Array(
+          Type.Union([
+            Type.Literal("notation"),
+            Type.Literal("listening"),
+            Type.Literal("physical_playing"),
+          ]),
+          { minItems: 1, uniqueItems: true }
+        ),
+      },
+      { additionalProperties: false }
+    ),
+    outcome: Type.Union([
+      Type.Literal("comfortable"),
+      Type.Literal("practice_playable"),
+      Type.Literal("marginal"),
+      Type.Literal("unplayable"),
+      Type.Literal("unclear_unmusical"),
+      Type.Literal("historically_questionable"),
+      Type.Literal("notation_problem"),
+      Type.Literal("not_tested"),
+    ]),
+    confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    observations: Type.Array(OwnerPlaytestObservationSchema),
+    rationale: Type.String({ minLength: 1 }),
+    proposedConsequences: Type.Array(
+      Type.Union([
+        Type.Literal("adoption"),
+        Type.Literal("rejection"),
+        Type.Literal("correction"),
+        Type.Literal("commitment"),
+        Type.Literal("ergonomic_profile"),
+        Type.Literal("calibration_candidate"),
+        Type.Literal("fixture_nomination"),
+      ]),
+      { uniqueItems: true }
+    ),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type OwnerPlaytest = Static<typeof OwnerPlaytestSchema>;
+
+export const ArrangementReadinessViewSchema = Type.Object(
+  {
+    arrangementScoreId: IdSchema,
+    arrangementScoreVersion: Type.Integer({ minimum: 1 }),
+    status: Type.Union([
+      Type.Literal("inspection_only"),
+      Type.Literal("playtest_available"),
+      Type.Literal("owner_tested"),
+      Type.Literal("blocked"),
+      Type.Literal("stale"),
+    ]),
+    currentPlaytestIds: Type.Array(IdSchema),
+    stalePlaytestIds: Type.Array(IdSchema),
+    blockingPlaytestIds: Type.Array(IdSchema),
+    rationale: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+export type ArrangementReadinessView = Static<typeof ArrangementReadinessViewSchema>;
 
 export const ArrangementScoreSchema = Type.Object(
   {
