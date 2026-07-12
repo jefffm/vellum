@@ -265,7 +265,7 @@ describe("Arrangement Score engraving projection", () => {
     expect(result.source).toContain("fis'8");
     expect(result.source).toContain("dis'16");
     expect(result.source).not.toContain("\\new TabStaff");
-    expect(result.source).not.toContain("ges'");
-    expect(result.source).not.toContain("ees'");
+    expect(result.source).toContain('\\new Voice = "part.soprano"');
+    expect(result.source).toContain("\\stemDown");
   });
 });

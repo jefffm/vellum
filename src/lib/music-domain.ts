@@ -1670,6 +1670,29 @@ export const ArrangementEventSchema = Type.Object(
         { additionalProperties: false }
       )
     ),
+    voiceConstituents: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: IdSchema,
+            sourceEventId: IdSchema,
+            voiceId: IdSchema,
+            role: Type.Union([Type.Literal("principal_voice"), Type.Literal("source_voice")]),
+            pitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
+            position: ArrangementPositionSchema,
+            onset: RationalSchema,
+            duration: RationalSchema,
+            voiceLayer: Type.Integer({ minimum: 1, maximum: 4 }),
+            stemDirection: Type.Union([Type.Literal("up"), Type.Literal("down")]),
+            writtenPitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
+            writtenToSoundingSemitones: Type.Integer({ minimum: -24, maximum: 24 }),
+            tie: Type.Union([Type.Literal("none"), Type.Literal("start"), Type.Literal("stop")]),
+          },
+          { additionalProperties: false }
+        ),
+        { minItems: 1 }
+      )
+    ),
   },
   { additionalProperties: false }
 );
@@ -1820,6 +1843,18 @@ export const ArrangementCandidateSchema = Type.Object(
               { additionalProperties: false }
             )
           ),
+          classicalTechniqueEvidence: Type.Optional(
+            Type.Object(
+              {
+                leftHandScope: Type.Literal("represented"),
+                rightHandScope: Type.Literal("unknown"),
+                rightHandRationale: Type.String({ minLength: 1 }),
+                independentVoiceDuration: Type.Literal("represented"),
+                standardNotationVoices: Type.Literal("represented"),
+              },
+              { additionalProperties: false }
+            )
+          ),
           referenceComparison: Type.Optional(
             Type.Object(
               {
@@ -1874,6 +1909,19 @@ export const ArrangementCandidateSchema = Type.Object(
                 dampingRequiredCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
                 rightHandBassAccessCount: Type.Optional(Type.Integer({ minimum: 0 })),
                 styleBriseApplied: Type.Optional(Type.Boolean()),
+                activeVoiceDurations: Type.Optional(
+                  Type.Array(
+                    Type.Object(
+                      {
+                        voiceId: IdSchema,
+                        duration: RationalSchema,
+                      },
+                      { additionalProperties: false }
+                    )
+                  )
+                ),
+                guideFingerCount: Type.Optional(Type.Integer({ minimum: 0 })),
+                sustainedPositionCount: Type.Optional(Type.Integer({ minimum: 0 })),
               },
               { additionalProperties: false }
             )

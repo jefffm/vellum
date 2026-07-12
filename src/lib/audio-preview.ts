@@ -105,6 +105,43 @@ export function buildAudioPreview(
       const exactInstance = arrangement.targetConfiguration?.instrumentInstance;
       const usesTargetInstance =
         exactInstance && (!event.instrumentId || event.instrumentId === exactInstance.profileId);
+      const transformationEntries = (arrangement.transformationReport ?? []).filter((entry) =>
+        entry.arrangementEventIds.includes(event.id)
+      );
+      if (event.voiceConstituents?.length) {
+        for (const [constituentIndex, constituent] of event.voiceConstituents.entries()) {
+          const stringId = usesTargetInstance
+            ? exactInstance!.courses.find((course) => course.course === constituent.position.course)
+                ?.strings[0]?.id
+            : undefined;
+          events.push({
+            occurrenceId: `playback-occurrence.${occurrence.id}.${event.id}.voice.${constituentIndex + 1}`,
+            measureOccurrenceId: occurrence.id,
+            iteration: occurrence.iteration,
+            arrangementEventId: event.id,
+            sourceEventIds: [constituent.sourceEventId],
+            transformationEntryIds: transformationEntries.flatMap((entry) =>
+              entry.id ? [entry.id] : []
+            ),
+            auditTargetIds: transformationEntries.flatMap(
+              (entry) =>
+                entry.preservationTargetIds ??
+                (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
+            ),
+            instrumentId: event.instrumentId,
+            ...(stringId ? { constituentStringId: stringId } : {}),
+            part:
+              constituent.role === "principal_voice"
+                ? "principal-voice"
+                : (`voice:${constituent.voiceId}` as const),
+            midi: noteToMidi(constituent.pitch),
+            startSeconds:
+              occurrence.startSeconds + rationalValue(constituent.onset) * secondsPerQuarter,
+            durationSeconds: rationalValue(constituent.duration) * secondsPerQuarter,
+          });
+        }
+        continue;
+      }
       const playbackPitches = usesTargetInstance
         ? event.positions.flatMap((position) =>
             instrumentSoundingPitches(exactInstance!, position.course, position.fret)
@@ -125,9 +162,6 @@ export function buildAudioPreview(
         principalMidi === undefined ? -1 : pitches.findIndex(({ midi }) => midi === principalMidi);
       for (const [{ midi }, pitchIndex] of pitches.map((pitch, index) => [pitch, index] as const)) {
         const part = playbackPart(event, pitchIndex === principalPitchIndex);
-        const transformationEntries = (arrangement.transformationReport ?? []).filter((entry) =>
-          entry.arrangementEventIds.includes(event.id)
-        );
         events.push({
           occurrenceId: `playback-occurrence.${occurrence.id}.${event.id}.${pitchIndex + 1}`,
           measureOccurrenceId: occurrence.id,

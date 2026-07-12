@@ -521,6 +521,32 @@ describe("Greensleeves faithful arrangement service", () => {
         .every((position) => position.leftHandFinger && position.handPosition)
     ).toBe(true);
     expect(
+      classicalResult.candidates.every(
+        (candidate) =>
+          candidate.phraseSearchEvidence?.arrangementPlanId ===
+            classicalResult.arrangementPlan.id &&
+          candidate.phraseSearchEvidence.performanceBriefId ===
+            classicalResult.performanceBrief.id &&
+          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope === "unknown" &&
+          candidate.phraseSearchEvidence.classicalTechniqueEvidence.independentVoiceDuration ===
+            "represented"
+      )
+    ).toBe(true);
+    expect(
+      classicalResult.arrangementScore.events
+        .flatMap((event) => event.voiceConstituents ?? [])
+        .every((constituent) => {
+          const source = omr.normalizedScore.events.find(
+            (event) => event.id === constituent.sourceEventId
+          );
+          return (
+            source?.type === "note" &&
+            source.partId === constituent.voiceId &&
+            JSON.stringify(source.duration) === JSON.stringify(constituent.duration)
+          );
+        })
+    ).toBe(true);
+    expect(
       classicalResult.arrangementScore.events
         .filter((event) => event.type !== "rest")
         .every(

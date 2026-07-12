@@ -217,6 +217,19 @@ export const EngraveParamsSchema = Type.Object({
 
   bars: Type.Array(EngraveBarSchema, { minItems: 1 }),
 
+  notation_voices: Type.Optional(
+    Type.Array(
+      Type.Object(
+        {
+          id: Type.String({ minLength: 1 }),
+          bars: Type.Array(EngraveBarSchema, { minItems: 1 }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 2 }
+    )
+  ),
+
   melody: Type.Optional(MelodySchema),
 });
 

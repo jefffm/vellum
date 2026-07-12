@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T25",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T21:43:20Z",
+  "requirements": {
+    "AI-ICC-014": {
+      "status": "machine_verified",
+      "remaining": "target-player authority remains unknown"
+    },
+    "AI-ICC-015": {
+      "status": "machine_verified",
+      "remaining": "target-player authority remains unknown"
+    },
+    "AI-ICC-018": {
+      "status": "machine_verified",
+      "remaining": "visual/player authority remains unknown"
+    },
+    "AI-ICC-040": {
+      "status": "machine_verified_for_classical_guitar",
+      "remaining": "T26 adds differential omitted-history verification"
+    },
+    "AI-ICC-068": {
+      "status": "machine_verified",
+      "remaining": "right-hand fingering remains explicitly unknown pending player evidence"
+    },
+    "AI-ICC-069": { "status": "machine_verified", "remaining": "T43 adds visual/player review" },
+    "AI-ICC-071": { "status": "machine_verified", "remaining": "T43 adds visual/player review" },
+    "AI-DEL-031": {
+      "status": "machine_verified",
+      "remaining": "target-player evidence remains unknown"
+    },
+    "AI-DEL-040": {
+      "status": "machine_verified",
+      "remaining": "target-player evidence remains unknown"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1017,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Classical phrase state carries position, fingers, barre, guide fingers, sustain, active voices, notation voices, and right-hand disclosure",
+      "Complete-position motion makes the selected economical path strictly better than event-local first fit",
+      "Canonical voice constituents retain source event, voice, role, pitch spelling, position, onset, independent duration, layer, stem, tie, and octave displacement",
+      "Standard notation projects simultaneous LilyPond Voice contexts with voice-local spacers and independent durations",
+      "Literal playback projects each canonical voice constituent once with its own source voice and duration",
+      "Hidden physical fingering persists without leaking into standard notation",
+      "Right-hand fingering remains explicitly unknown rather than becoming a general playability pass",
+      "Public-domain Greensleeves compiles to simultaneous-voice PDF, SVG, and MIDI with exact instance lineage"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.d8f4a61b-683d-4845-84af-ed92888cf52c",
+      "cardId": "evaluation-card.0aea7ec3-2df1-42e3-85d2-57614b444a03",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "rightHandPhysicalVisualAndOwnerAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1017 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t25-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "1353ad3b48720527e68105de65e7fed78c698d50b989c2bea423a959452efe74"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/25-classical-guitar-phrase-search.md",
+      "sha256": "16bf1001eca0dc3c9104468e0d3ae819dad950c7431f06ecdec41dbf983c19da"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "8057aa3adb861437796c49923afecbe94a1174da0ae289f87b5780f816474e17"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.ts",
+      "sha256": "12b36050d37c8458bc8af16d13908052760fa2319611d8c3e36616c2e486b7ab"
+    },
+    {
+      "path": "src/lib/classical-guitar-arranger.test.ts",
+      "sha256": "d957a919c795c63e39b2412693dcc7919fb225bb008691c2d715c0e42c14ca92"
+    },
+    {
+      "path": "src/lib/audio-preview.ts",
+      "sha256": "ee187a54dc5084ac2b839a2051638e1cabc49cc29a719df8751e19447239827e"
+    },
+    {
+      "path": "src/lib/arrangement-engrave.ts",
+      "sha256": "7bb4f52b23b4a6b9943ae2e6ae9d71fc177d92870f33f7524f8177692d64fd83"
+    },
+    {
+      "path": "src/lib/arrangement-engrave.test.ts",
+      "sha256": "99e7b2484e8e086f7827c552670eecddf12f822d84a52fbe0e82ea682dbfe2ee"
+    },
+    {
+      "path": "src/lib/engrave-schema.ts",
+      "sha256": "458cb0e3548ec5e48ad67cd8077bfd7ec6776ceaeba13bb3e0198fa5708f0eea"
+    },
+    {
+      "path": "src/server/lib/engrave.ts",
+      "sha256": "9d79c1be9842f368694e4308ead3fa11563c62cebb957df1f12c2b05637cb3d5"
+    },
+    {
+      "path": "src/server/lib/template-strategies.ts",
+      "sha256": "5c89b4a29b030964e776a9928d8b1567153d22de00b6e639690848fac65983b6"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "e7ecc7a6542c948119e82142d77be63b778814d916d13ab91dbca3d40d1ab10a"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "dae9123262774c14d45ba3be36dc9ac9d8fc535e3985151bcf69d3a28af31000"
+    }
+  ]
+}

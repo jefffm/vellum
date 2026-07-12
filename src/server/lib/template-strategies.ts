@@ -28,11 +28,16 @@ export type TemplateResult = {
 export function buildSoloStaff(
   musicLeaves: LyLeaf[],
   _vars: InstrumentLyVars,
-  _params: EngraveParams
+  _params: EngraveParams,
+  notationVoiceLeaves?: Array<{ id: string; leaves: LyLeaf[] }>
 ): TemplateResult {
+  const voices = notationVoiceLeaves?.length
+    ? notationVoiceLeaves.map((voice) => lyVoice(voice.id, stripTabStringIndicators(voice.leaves)))
+    : [lyVoice("notation", stripTabStringIndicators(musicLeaves))];
   return {
     scoreChildren: [
-      lyStaff([lyVoice("notation", stripTabStringIndicators(musicLeaves))], {
+      lyStaff(voices, {
+        simultaneous: voices.length > 1,
         indicators: [{ kind: "literal", text: '\\clef "treble_8"', site: "before" }],
       }),
     ],
@@ -170,11 +175,12 @@ export function dispatchTemplate(
   musicLeaves: LyLeaf[],
   vars: InstrumentLyVars,
   params: EngraveParams,
-  diapasonTuning?: string
+  diapasonTuning?: string,
+  notationVoiceLeaves?: Array<{ id: string; leaves: LyLeaf[] }>
 ): TemplateResult {
   switch (templateId) {
     case "solo-staff":
-      return buildSoloStaff(musicLeaves, vars, params);
+      return buildSoloStaff(musicLeaves, vars, params, notationVoiceLeaves);
     case "solo-tab":
       return buildSoloTab(musicLeaves, vars, params, diapasonTuning);
     case "french-tab":

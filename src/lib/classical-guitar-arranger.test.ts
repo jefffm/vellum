@@ -107,6 +107,52 @@ describe("faithful classical-guitar arrangement search", () => {
       hiddenFrettedPositions.every((position) => position.leftHandFinger && position.handPosition)
     ).toBe(true);
     expect(hiddenFrettedPositions.some((position) => position.guideFromPreviousEventId)).toBe(true);
+    const voiceConstituents = result.selected.events.flatMap(
+      (event) => event.voiceConstituents ?? []
+    );
+    expect(
+      new Set(voiceConstituents.map((constituent) => constituent.voiceId)).size
+    ).toBeGreaterThan(1);
+    expect(
+      voiceConstituents.every((constituent) => {
+        const source = score.events.find((event) => event.id === constituent.sourceEventId);
+        return (
+          source?.type === "note" &&
+          source.partId === constituent.voiceId &&
+          JSON.stringify(source.duration) === JSON.stringify(constituent.duration)
+        );
+      })
+    ).toBe(true);
+    const phraseEvidence = result.candidates.find(
+      (candidate) => candidate.strategy === "economical-fingering"
+    )!.phraseSearchEvidence!;
+    expect(phraseEvidence).toMatchObject({
+      completeness: "bounded",
+      stateDimensions: expect.arrayContaining([
+        "left_hand_position",
+        "finger_occupation",
+        "barre_frets",
+        "guide_fingers",
+        "sustained_positions",
+        "active_voice_durations",
+        "standard_notation_voices",
+        "right_hand_scope_disclosure",
+      ]),
+      classicalTechniqueEvidence: {
+        leftHandScope: "represented",
+        rightHandScope: "unknown",
+        independentVoiceDuration: "represented",
+        standardNotationVoices: "represented",
+      },
+    });
+    expect(phraseEvidence.referenceComparison!.selectedTotalMotion).toBeLessThan(
+      phraseEvidence.referenceComparison!.referenceTotalMotion
+    );
+    expect(
+      phraseEvidence.transitions.some(
+        (transition) => (transition.activeVoiceDurations?.length ?? 0) > 1
+      )
+    ).toBe(true);
 
     const params = arrangementToEngraveParams(result.selected, score);
     expect(params.template).toBe("solo-staff");
@@ -124,6 +170,8 @@ describe("faithful classical-guitar arrangement search", () => {
     const sourceOutput = engrave(params).source;
     expect(sourceOutput).toContain('\\clef "treble_8"');
     expect(sourceOutput).toContain("\\stemUp");
+    expect(sourceOutput).toContain("\\stemDown");
+    expect(sourceOutput).toContain('\\new Voice = "part.soprano"');
     expect(sourceOutput).not.toContain("\\new TabStaff");
     expect(sourceOutput).not.toContain("stringNumberOrientations");
 
@@ -131,9 +179,20 @@ describe("faithful classical-guitar arrangement search", () => {
     expect(preview.instrumentInstanceDigest).toBe(instrumentInstance.contentDigest);
     expect(preview.events).toHaveLength(
       result.selected.events.reduce(
-        (count, event) => count + (event.type === "rest" ? 0 : event.pitches.length),
+        (count, event) =>
+          count +
+          (event.type === "rest" ? 0 : (event.voiceConstituents?.length ?? event.pitches.length)),
         0
       )
     );
+    for (const playback of preview.events.filter((event) => event.part.startsWith("voice:"))) {
+      const source = score.events.find((event) => event.id === playback.sourceEventIds[0]);
+      expect(source?.type).toBe("note");
+      if (source?.type === "note") {
+        expect(playback.durationSeconds).toBeCloseTo(
+          (source.duration.numerator / source.duration.denominator) * (60 / 70)
+        );
+      }
+    }
   });
 });

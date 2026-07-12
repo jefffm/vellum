@@ -112,7 +112,9 @@ export function arrangeFaithfulPluckedString(
     const built: {
       events: ArrangementEvent[];
       phraseSearchEvidence?: PhraseSearchEvidence;
-    } = ["baroque-guitar-5", "baroque-lute-13"].includes(model.exactInstance()?.profileId ?? "")
+    } = ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"].includes(
+      model.exactInstance()?.profileId ?? ""
+    )
       ? buildHistoricalPluckedPhraseCandidate(
           score,
           analysis,
@@ -475,7 +477,10 @@ function buildHistoricalPluckedPhraseCandidate(
   options: ArrangementOptions
 ): { events: ArrangementEvent[]; phraseSearchEvidence: PhraseSearchEvidence } {
   const instance = model.exactInstance();
-  if (!instance || !["baroque-guitar-5", "baroque-lute-13"].includes(instance.profileId)) {
+  if (
+    !instance ||
+    !["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"].includes(instance.profileId)
+  ) {
     throw new Error("Historical phrase search requires an exact supported Instrument Instance");
   }
   const limits = options.phraseSearch ?? {
@@ -486,10 +491,21 @@ function buildHistoricalPluckedPhraseCandidate(
     throw new Error("Phrase-search limits must be positive integers");
   }
   const baroqueGuitar = instance.profileId === "baroque-guitar-5";
+  const baroqueLute = instance.profileId === "baroque-lute-13";
+  const classicalGuitar = instance.profileId === "classical-guitar-6";
   const technique = baroqueGuitar
     ? selectBaroqueGuitarTechnique(options.performanceBrief, instance)
-    : "right_hand_thumb";
-  const styleBrise = styleBriseAuthorization(options.arrangementPlan, analysis);
+    : baroqueLute
+      ? "right_hand_thumb"
+      : "right_hand_fingering_unknown";
+  const styleBrise = baroqueLute
+    ? styleBriseAuthorization(options.arrangementPlan, analysis)
+    : {
+        status: "not_applied" as const,
+        planDecisionIds: [],
+        historicalClaimIds: [],
+        rationale: "Style brisé is not applicable to this target adapter.",
+      };
   const effectiveFrontierWidth = Math.min(limits.frontierWidth, 8);
   let expandedStates = 0;
   let frontier: PhraseState[] = [
@@ -556,7 +572,9 @@ function buildHistoricalPluckedPhraseCandidate(
         const positions = annotatePhraseFingering(
           choice.positions,
           eventId,
-          sourceEvent.tie === "start" ? `arrangement-event.${strategy}.${index + 2}` : undefined
+          sourceEvent.tie === "start" ? `arrangement-event.${strategy}.${index + 2}` : undefined,
+          classicalGuitar ? state.positions : [],
+          classicalGuitar ? state.events.at(-1)?.id : undefined
         );
         const principalPosition = positions.find((position) =>
           model
@@ -573,7 +591,8 @@ function buildHistoricalPluckedPhraseCandidate(
           handPosition,
           technique,
           instance.profileId,
-          styleBrise.status === "applied"
+          styleBrise.status === "applied",
+          sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration }))
         );
         if (baroqueGuitar && transition.violentCrossNeckJump) continue;
         const occupiedFingers = positions.flatMap((position) =>
@@ -592,6 +611,28 @@ function buildHistoricalPluckedPhraseCandidate(
           positions,
           sourceEventIds: Array.from(new Set([sourceEvent.id, ...choice.sourceEventIds])),
           principalVoiceSourceEventId: sourceEvent.id,
+          ...(classicalGuitar
+            ? {
+                notationSemantics: {
+                  voiceId: sourceEvent.partId,
+                  voiceLayer: 1,
+                  stemDirection: "up" as const,
+                  writtenPitches: choice.pitches.map(raiseWrittenOctave),
+                  soundingPitches: choice.pitches,
+                  writtenToSoundingSemitones: -12,
+                  duration: sourceEvent.duration,
+                  tie: sourceEvent.tie ?? ("none" as const),
+                },
+                voiceConstituents: buildClassicalVoiceConstituents(
+                  score,
+                  sourceEvent,
+                  sourceHarmony,
+                  choice,
+                  positions,
+                  semitones
+                ),
+              }
+            : {}),
         };
         successors.push({
           events: [...state.events, arranged],
@@ -608,7 +649,7 @@ function buildHistoricalPluckedPhraseCandidate(
           occupiedCourses: positions.map((position) => position.course),
           technique,
           transitions: [...state.transitions, transition],
-          cost: state.cost + phraseChoiceCost(choice, transition, strategy),
+          cost: state.cost + phraseChoiceCost(choice, transition, strategy, state.positions),
         });
       }
     }
@@ -658,17 +699,28 @@ function buildHistoricalPluckedPhraseCandidate(
             "exact_stringing",
             "applicable_technique",
           ]
-        : [
-            "left_hand_stopped_courses",
-            "right_hand_diapason_access",
-            "prepared_bass_courses",
-            "resonating_bass_courses",
-            "damping_requirements",
-            "held_notes",
-            "voice_lineage",
-            "exact_bass_tuning",
-            "style_brise_authorization",
-          ],
+        : baroqueLute
+          ? [
+              "left_hand_stopped_courses",
+              "right_hand_diapason_access",
+              "prepared_bass_courses",
+              "resonating_bass_courses",
+              "damping_requirements",
+              "held_notes",
+              "voice_lineage",
+              "exact_bass_tuning",
+              "style_brise_authorization",
+            ]
+          : [
+              "left_hand_position",
+              "finger_occupation",
+              "barre_frets",
+              "guide_fingers",
+              "sustained_positions",
+              "active_voice_durations",
+              "standard_notation_voices",
+              "right_hand_scope_disclosure",
+            ],
       techniqueApplicability: instance.techniqueApplicability.map((claim) => ({
         technique: claim.technique,
         status: claim.status,
@@ -692,19 +744,30 @@ function buildHistoricalPluckedPhraseCandidate(
                 "Bass claims derive from the exact constituent-string set; re-entrant courses are not treated as a complete low foundation.",
             },
           }
-        : {
-            luteTechniqueEvidence: {
-              stoppedCourseCount: instance.courses.filter((course) => course.stopped).length,
-              diapasonCount: instance.courses.filter((course) => !course.stopped).length,
-              rightHandBassAccess: "represented" as const,
-              bassPreparation: "represented" as const,
-              resonance: "represented" as const,
-              damping: "represented" as const,
-              sustain: "represented" as const,
-              voiceLineage: "represented" as const,
-              styleBrise,
-            },
-          }),
+        : baroqueLute
+          ? {
+              luteTechniqueEvidence: {
+                stoppedCourseCount: instance.courses.filter((course) => course.stopped).length,
+                diapasonCount: instance.courses.filter((course) => !course.stopped).length,
+                rightHandBassAccess: "represented" as const,
+                bassPreparation: "represented" as const,
+                resonance: "represented" as const,
+                damping: "represented" as const,
+                sustain: "represented" as const,
+                voiceLineage: "represented" as const,
+                styleBrise,
+              },
+            }
+          : {
+              classicalTechniqueEvidence: {
+                leftHandScope: "represented" as const,
+                rightHandScope: "unknown" as const,
+                rightHandRationale:
+                  "No right-hand fingering has been generated or evaluated; phrase feasibility is limited to represented left-hand and notation state.",
+                independentVoiceDuration: "represented" as const,
+                standardNotationVoices: "represented" as const,
+              },
+            }),
       ...(referenceComparison ? { referenceComparison } : {}),
       transitions: selected.transitions,
     },
@@ -753,10 +816,90 @@ function physicalMotionSummary(events: ArrangementEvent[]): {
   return { totalMotion, maximumHandShift, diapasonPreparations };
 }
 
+function buildClassicalVoiceConstituents(
+  score: NormalizedScore,
+  principalEvent: Extract<ScoreEvent, { type: "note" }>,
+  soundingSourceEvents: Extract<ScoreEvent, { type: "note" }>[],
+  choice: VoicingChoice,
+  positions: ArrangementPosition[],
+  semitones: number
+): NonNullable<ArrangementEvent["voiceConstituents"]> {
+  const partIds = Array.from(
+    new Set(
+      score.events.flatMap((event) =>
+        event.type === "note" && event.partId !== principalEvent.partId ? [event.partId] : []
+      )
+    )
+  );
+  const orderedPartIds = [principalEvent.partId, ...partIds].slice(0, 4);
+  const usedCourses = new Set<number>();
+  const retainedSources = [
+    principalEvent,
+    ...soundingSourceEvents.filter(
+      (event) =>
+        event.id !== principalEvent.id &&
+        choice.sourceEventIds.includes(event.id) &&
+        compareRational(event.onset, principalEvent.onset) === 0
+    ),
+  ];
+  const constituents = retainedSources.flatMap((source) => {
+    const desired = transposeNote(source.pitch, semitones);
+    const desiredMidi = noteToMidi(desired);
+    const positionIndex = positions.findIndex((position, index) => {
+      if (usedCourses.has(position.course)) return false;
+      const sounded = choice.pitches[index];
+      if (!sounded) return false;
+      return source.id === principalEvent.id
+        ? noteToMidi(sounded) === desiredMidi
+        : noteToMidi(sounded) % 12 === desiredMidi % 12;
+    });
+    if (positionIndex < 0) return [];
+    const position = positions[positionIndex]!;
+    const pitch = respellAtPhysicalOctave(desired, choice.pitches[positionIndex]!);
+    usedCourses.add(position.course);
+    const voiceLayer = Math.max(1, orderedPartIds.indexOf(source.partId) + 1);
+    return [
+      {
+        id: `voice-constituent.${source.id}`,
+        sourceEventId: source.id,
+        voiceId: source.partId,
+        role:
+          source.id === principalEvent.id
+            ? ("principal_voice" as const)
+            : ("source_voice" as const),
+        pitch,
+        position,
+        onset: source.onset,
+        duration: source.duration,
+        voiceLayer,
+        stemDirection: source.id === principalEvent.id ? ("up" as const) : ("down" as const),
+        writtenPitch: raiseWrittenOctave(pitch),
+        writtenToSoundingSemitones: -12,
+        tie: source.tie ?? ("none" as const),
+      },
+    ];
+  });
+  if (!constituents.some((constituent) => constituent.role === "principal_voice")) {
+    throw new Error(`Classical-guitar phrase state lost Principal Voice ${principalEvent.id}`);
+  }
+  return constituents;
+}
+
+function respellAtPhysicalOctave(desired: string, physical: string): string {
+  const desiredMatch = desired.match(/^([A-G](?:#|b)?)-?\d+$/);
+  const physicalMatch = physical.match(/^([A-G](?:#|b)?)(-?\d+)$/);
+  if (!desiredMatch || !physicalMatch) {
+    throw new Error(`Cannot preserve canonical spelling ${desired} at physical pitch ${physical}`);
+  }
+  return `${desiredMatch[1]}${physicalMatch[2]}`;
+}
+
 function annotatePhraseFingering(
   positions: ArrangementPosition[],
   eventId: string,
-  sustainThroughEventId: string | undefined
+  sustainThroughEventId: string | undefined,
+  previous: ArrangementPosition[] = [],
+  previousEventId?: string
 ): ArrangementPosition[] {
   const fretted = positions.filter((position) => position.fret > 0);
   const handPosition = fretted.length ? Math.min(...fretted.map((position) => position.fret)) : 1;
@@ -767,11 +910,17 @@ function annotatePhraseFingering(
   return positions.map((position) => {
     if (position.fret === 0) return position;
     const barred = (fretCounts.get(position.fret) ?? 0) > 1;
+    const leftHandFinger = barred ? 1 : Math.max(1, Math.min(4, position.fret - handPosition + 1));
+    const guide = previous.find(
+      (candidate) =>
+        candidate.course === position.course && candidate.leftHandFinger === leftHandFinger
+    );
     return {
       ...position,
-      leftHandFinger: barred ? 1 : Math.max(1, Math.min(4, position.fret - handPosition + 1)),
+      leftHandFinger,
       handPosition,
       ...(barred ? { barreId: `barre.${eventId}.${position.fret}` } : {}),
+      ...(guide && previousEventId ? { guideFromPreviousEventId: previousEventId } : {}),
       ...(sustainThroughEventId ? { sustainThroughEventId } : {}),
     };
   });
@@ -785,7 +934,8 @@ function buildPhraseTransition(
   handPositionTo: number,
   technique: string,
   profileId: string,
-  styleBriseApplied: boolean
+  styleBriseApplied: boolean,
+  activeVoiceDurations: Array<{ voiceId: string; duration: Rational }>
 ): PhraseSearchEvidence["transitions"][number] {
   const previousCourses = new Set(state.occupiedCourses);
   const nextCourses = new Set(positions.map((position) => position.course));
@@ -851,15 +1001,27 @@ function buildPhraseTransition(
           styleBriseApplied,
         }
       : {}),
+    ...(profileId === "classical-guitar-6"
+      ? {
+          activeVoiceDurations,
+          guideFingerCount: positions.filter((position) => position.guideFromPreviousEventId)
+            .length,
+          sustainedPositionCount: positions.filter((position) => position.sustainThroughEventId)
+            .length,
+        }
+      : {}),
   };
 }
 
 function phraseChoiceCost(
   choice: VoicingChoice,
   transition: PhraseSearchEvidence["transitions"][number],
-  strategy: "source-coverage" | "economical-fingering"
+  strategy: "source-coverage" | "economical-fingering",
+  previousPositions: ArrangementPosition[]
 ): number {
+  const fullPositionMotion = transitionCost(choice.positions, previousPositions);
   const movement =
+    fullPositionMotion +
     transition.fretDisplacement +
     transition.courseDisplacement * 0.75 +
     transition.handPositionDelta * 1.5 +

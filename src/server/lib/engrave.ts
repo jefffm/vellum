@@ -725,6 +725,9 @@ export function engrave(params: EngraveParams): EngraveResult {
 
   // Step 2: Validate events (tab + global time/key)
   const { warnings } = validateEvents(params.bars, model, params);
+  for (const voice of params.notation_voices ?? []) {
+    validateEvents(voice.bars, model, params);
+  }
 
   // Step 2b: Validate melody if present
   if (params.melody) {
@@ -733,9 +736,20 @@ export function engrave(params: EngraveParams): EngraveResult {
 
   // Step 3: Resolve pitches → LyLeaf[]
   const musicLeaves = eventsToLeaves(params.bars, params, model);
+  const notationVoiceLeaves = params.notation_voices?.map((voice) => ({
+    id: voice.id,
+    leaves: eventsToLeaves(voice.bars, params, model),
+  }));
 
   // Step 4: Build LyTree based on template strategy
-  const { file, templateWarnings } = buildLyFile(params, vars, model, templateId, musicLeaves);
+  const { file, templateWarnings } = buildLyFile(
+    params,
+    vars,
+    model,
+    templateId,
+    musicLeaves,
+    notationVoiceLeaves
+  );
 
   // Step 5: Serialize
   const source = serializeFile(file);
@@ -785,7 +799,8 @@ function buildLyFile(
   vars: InstrumentLyVars,
   model: InstrumentModel,
   templateId: EngraveTemplateId,
-  musicLeaves: LyLeaf[]
+  musicLeaves: LyLeaf[],
+  notationVoiceLeaves?: Array<{ id: string; leaves: LyLeaf[] }>
 ): { file: LyFile; templateWarnings: string[] } {
   const header: Record<string, string> = {};
 
@@ -801,7 +816,14 @@ function buildLyFile(
   const diapasonTuning = params.diapason_scheme
     ? lilyPondDiapasonTuning(model.diapasonPitches())
     : undefined;
-  const templateResult = dispatchTemplate(templateId, musicLeaves, vars, params, diapasonTuning);
+  const templateResult = dispatchTemplate(
+    templateId,
+    musicLeaves,
+    vars,
+    params,
+    diapasonTuning,
+    notationVoiceLeaves
+  );
   const scoreChildren = templateResult.scoreChildren;
   const variables = templateResult.variables ?? [];
   const templateWarnings = templateResult.warnings ?? [];

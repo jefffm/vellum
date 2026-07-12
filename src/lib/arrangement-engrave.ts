@@ -38,6 +38,9 @@ export function arrangementToEngraveParams(
     compareRational(firstMeasure.duration, fullMeasureDuration) < 0
       ? rationalToLilyDuration(firstMeasure.duration)
       : undefined;
+  const notationVoices = standardNotation
+    ? buildNotationVoices(arrangement, sourceScore)
+    : undefined;
 
   return {
     instrument: arrangement.targetConfiguration.instrumentId,
@@ -61,6 +64,79 @@ export function arrangementToEngraveParams(
         ? arrangement.targetConfiguration.instrumentInstance?.tuningState.variant
         : undefined,
     bars,
+    ...(notationVoices?.length ? { notation_voices: notationVoices } : {}),
+  };
+}
+
+function buildNotationVoices(
+  arrangement: ArrangementScore,
+  sourceScore: NormalizedScore
+): NonNullable<EngraveParams["notation_voices"]> | undefined {
+  const constituents = arrangement.events.flatMap((event) => event.voiceConstituents ?? []);
+  const voiceIds = [...new Set(constituents.map((constituent) => constituent.voiceId))];
+  if (voiceIds.length < 2) return undefined;
+  return voiceIds.map((voiceId) => ({
+    id: voiceId,
+    bars: sourceScore.measures.map((measure) => {
+      const voiceEvents = constituents
+        .filter(
+          (constituent) =>
+            constituent.voiceId === voiceId &&
+            arrangement.events.some(
+              (event) =>
+                event.measureId === measure.id &&
+                event.voiceConstituents?.some((candidate) => candidate.id === constituent.id)
+            )
+        )
+        .sort((left, right) => compareRational(left.onset, right.onset));
+      const events: EngraveMusicEvent[] = [];
+      let cursor: Rational = { numerator: 0, denominator: 1 };
+      for (const constituent of voiceEvents) {
+        if (compareRational(constituent.onset, cursor) < 0) {
+          throw new Error(`Overlapping retained events in notation voice ${voiceId}`);
+        }
+        if (compareRational(constituent.onset, cursor) > 0) {
+          events.push({
+            type: "rest",
+            spacer: true,
+            duration: rationalToLilyDuration(subtractRational(constituent.onset, cursor)),
+          });
+        }
+        events.push({
+          type: "note",
+          input: "pitch",
+          pitch: constituent.pitch,
+          duration: rationalToLilyDuration(constituent.duration),
+          event_id: constituent.id,
+          measure_id: measure.id,
+          stem_direction: constituent.stemDirection,
+          ...(constituent.tie === "start" ? { tie: true } : {}),
+        });
+        cursor = addRational(constituent.onset, constituent.duration);
+      }
+      if (compareRational(cursor, measure.duration) < 0) {
+        events.push({
+          type: "rest",
+          spacer: true,
+          duration: rationalToLilyDuration(subtractRational(measure.duration, cursor)),
+        });
+      }
+      if (events.length === 0) {
+        events.push({
+          type: "rest",
+          spacer: true,
+          duration: rationalToLilyDuration(measure.duration),
+        });
+      }
+      return { events };
+    }),
+  }));
+}
+
+function subtractRational(left: Rational, right: Rational): Rational {
+  return {
+    numerator: left.numerator * right.denominator - right.numerator * left.denominator,
+    denominator: left.denominator * right.denominator,
   };
 }
 

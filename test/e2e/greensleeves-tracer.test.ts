@@ -205,6 +205,16 @@ describe("Greensleeves PDF tracer bullet", () => {
       classicalInstance.contentDigest
     );
     expect(
+      classicalArranged.candidates.every(
+        (candidate) =>
+          candidate.phraseSearchEvidence?.arrangementPlanId ===
+            classicalArranged.arrangementPlan.id &&
+          candidate.phraseSearchEvidence.performanceBriefId ===
+            classicalArranged.performanceBrief.id &&
+          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope === "unknown"
+      )
+    ).toBe(true);
+    expect(
       classicalArranged.arrangementScore.events
         .flatMap((event) => event.positions)
         .filter((position) => position.fret > 0)
@@ -285,7 +295,9 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(classicalEngraving.source).not.toContain("handPosition");
     expect(midiNoteOns(Buffer.from(classicalCompiled.midi!, "base64"))).toHaveLength(
       classicalArranged.arrangementScore.events.reduce(
-        (total, event) => total + (event.type === "rest" ? 0 : event.pitches.length),
+        (total, event) =>
+          total +
+          (event.type === "rest" ? 0 : (event.voiceConstituents?.length ?? event.pitches.length)),
         0
       )
     );
@@ -354,7 +366,9 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(classicalAudioPreview.instrumentInstanceDigest).toBe(classicalInstance.contentDigest);
     expect(classicalAudioPreview.events).toHaveLength(
       classicalArranged.arrangementScore.events.reduce(
-        (total, event) => total + (event.type === "rest" ? 0 : event.pitches.length),
+        (total, event) =>
+          total +
+          (event.type === "rest" ? 0 : (event.voiceConstituents?.length ?? event.pitches.length)),
         0
       )
     );
