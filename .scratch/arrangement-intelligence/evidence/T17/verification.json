@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T17",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T19:16:46Z",
+  "requirements": {
+    "AI-STP-066": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-011": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-012": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-013": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-014": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-015": {
+      "status": "partial",
+      "remaining": "T28 broadens synchronized source and finding navigation around this exact selection anchor"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 985,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "A closed nine-layer classifier distinguishes source, Analysis, Plan, Score, interpretation, Commitment, exception, Personal Default, and explanation ownership",
+      "Server resolution rejects stale score versions, mismatched lineage, out-of-scope events, and stale findings before proposing a route",
+      "Both deterministic and model-suggested classifications are fixed no-effect proposals and leave workspace state unchanged",
+      "Low-consequence explanations proceed without redundant confirmation while every mutating request stops for explicit confirmation",
+      "Cross-layer ambiguity remains uncommitted until the Owner selects a canonical layer",
+      "Natural-language and direct score actions expose exact scope, consequence, authority, and progressive evidence before continuing",
+      "Reloaded artifacts fetch the exact persisted Arrangement Plan before rebuilding score-selection context"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.f60fc011-56e4-430c-906e-8f37afa8ff0a",
+      "cardId": "evaluation-card.19030dbf-cb1c-411d-b22c-fca5cf39905d",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "specialistAndHumanEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 985 passed, 1 skipped" },
+    {
+      "command": "focused classifier, UI, service, arrangement, and artifact tests",
+      "result": "pass: 49 passed"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t17-eval",
+      "result": "pass: hard gates pass and unmeasured claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/17-owner-intent-router.md",
+      "sha256": "33734aad793b111562bc8a1e7137196d7527ba75b5cf8604cb5ec10c4768bc5b"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "5299cba573188a40f3926a4ee81ba614d38350dd30dac3186eae9a06b01d4570"
+    },
+    {
+      "path": "src/lib/owner-intent.ts",
+      "sha256": "d65c4d22271401898c3447a3e9a8e9271dcba3a55212cf62b52d52f1eb8dfb1d"
+    },
+    {
+      "path": "src/lib/owner-intent.test.ts",
+      "sha256": "8040ea910f4367baa9b29def91e77686a7febe4c3b87776981115453239902a4"
+    },
+    {
+      "path": "src/server/lib/owner-intent-service.ts",
+      "sha256": "21cf30be201583395135eee67ee7cba3a5596f8dbc2e4f67dd2155b705655597"
+    },
+    {
+      "path": "src/server/lib/owner-intent-route.ts",
+      "sha256": "64c75c0a32cdcc762d504b2d87888dd17452a3ad3aaf235b69ae29d0d9060337"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "0448a1a9365162949d6b18f04a15a22c365496f4d0ca799c2a1c56d88f55c4f7"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "014cb06df9dd817d72582ea15d4a3a5f97d0c957ee755f6b8a2bb2493a838506"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "af33c69fd21a5730ae138aea3218a62d8eac7ff8322a8c6ed772005124d0a4cb"
+    },
+    {
+      "path": "src/guided-start.test.ts",
+      "sha256": "997b66bb334c40b22547a0b821c5e5944d310756399d7918edbb417fed0d5e7d"
+    },
+    {
+      "path": "src/guided-start-owner-intent.test.ts",
+      "sha256": "b03582a3543545f58ae6b67fa4ab415b49e01dc1dd823174a7cc79bd65d1e00d"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "6e0dc01f34c18b6b2f900a6c15e69046fb5521c940b5abb6702b2278a177dacc"
+    }
+  ]
+}

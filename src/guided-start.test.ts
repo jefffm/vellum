@@ -187,6 +187,7 @@ describe("interactive notation", () => {
       arrangementScoreVersion: 3,
       arrangementFamilyId: "family.greensleeves",
       arrangementSearchId: "search.greensleeves",
+      arrangementPlan: { id: "plan.greensleeves" },
       targetConfigurationId: "target.baroque-guitar",
       targetConfiguration: {
         id: "target.baroque-guitar",
@@ -196,6 +197,7 @@ describe("interactive notation", () => {
         deliverables: ["pdf", "audio-preview"],
       },
       preservationPolicy: "faithful_reduction",
+      analysis: { id: "analysis.greensleeves" },
       arrangementEvents: events,
       transformationReport: [
         {

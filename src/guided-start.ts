@@ -16,6 +16,11 @@ import type {
   TranscriptionCorrection,
   TranscriptionUncertainty,
 } from "./lib/music-domain.js";
+import type {
+  CanonicalOwnerIntentLayer,
+  OwnerIntentAnchor,
+  OwnerIntentProposal,
+} from "./lib/owner-intent.js";
 import type { CompileResult } from "./types.js";
 import { noteToMidi } from "./lib/pitch.js";
 import {
@@ -351,6 +356,10 @@ export type ScoreSelectionContext = {
   workspaceId: string;
   arrangementScoreId: string;
   arrangementScoreVersion: number;
+  arrangementFamilyId: string;
+  arrangementSearchId: string;
+  arrangementPlanId: string;
+  analysisRecordId: string;
   targetConfiguration: TargetConfiguration;
   preservationPolicy: ArrangementScore["preservationPolicy"];
   eventIds: string[];
@@ -359,6 +368,7 @@ export type ScoreSelectionContext = {
   events: ArrangementEvent[];
   lineage: GuidedDeliverable["transformationReport"];
   findings: GuidedDeliverable["preservationAudit"]["findings"];
+  findingIds: string[];
 };
 
 export function buildScoreSelectionContext(
@@ -378,6 +388,10 @@ export function buildScoreSelectionContext(
     workspaceId: deliverable.workspaceId,
     arrangementScoreId: deliverable.arrangementScoreId,
     arrangementScoreVersion: deliverable.arrangementScoreVersion,
+    arrangementFamilyId: deliverable.arrangementFamilyId,
+    arrangementSearchId: deliverable.arrangementSearchId,
+    arrangementPlanId: deliverable.arrangementPlan?.id ?? "plan.unavailable",
+    analysisRecordId: deliverable.analysis.id,
     targetConfiguration: deliverable.targetConfiguration,
     preservationPolicy: deliverable.preservationPolicy,
     eventIds: events.map((event) => event.id),
@@ -388,6 +402,27 @@ export function buildScoreSelectionContext(
     findings: deliverable.preservationAudit.findings.filter((finding) =>
       targetIds.has(finding.targetId)
     ),
+    findingIds: deliverable.preservationAudit.findings
+      .filter((finding) => targetIds.has(finding.targetId))
+      .map((finding) => `${finding.targetId}:${finding.code}`),
+  };
+}
+
+export function ownerIntentAnchorFromContext(context: ScoreSelectionContext): OwnerIntentAnchor {
+  return {
+    workspaceId: context.workspaceId,
+    arrangementScoreId: context.arrangementScoreId,
+    arrangementScoreVersion: context.arrangementScoreVersion,
+    arrangementFamilyId: context.arrangementFamilyId,
+    arrangementSearchId: context.arrangementSearchId,
+    arrangementPlanId: context.arrangementPlanId,
+    analysisRecordId: context.analysisRecordId,
+    targetConfigurationId: context.targetConfiguration.id,
+    preservationPolicy: context.preservationPolicy,
+    eventIds: context.eventIds,
+    measureIds: context.measureIds,
+    sourceEventIds: context.sourceEventIds,
+    findingIds: context.findingIds,
   };
 }
 
@@ -395,6 +430,94 @@ export function selectionPrompt(context: ScoreSelectionContext, request: string)
   const conciseRequest =
     request.trim() || "Give me interactive musical feedback on this selection.";
   return `${conciseRequest}\n\nUse this exact Vellum Selection Context; do not infer a different passage or score version:\n\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
+}
+
+export async function proposeOwnerIntent(
+  container: HTMLElement,
+  context: ScoreSelectionContext,
+  request: string,
+  onProceed?: (layer: CanonicalOwnerIntentLayer) => void
+): Promise<OwnerIntentProposal> {
+  container.querySelector(".owner-intent-proposal")?.remove();
+  const effectiveRequest =
+    request.trim() || "Give me interactive musical feedback on this selection.";
+  const proposal = await api<OwnerIntentProposal>("/api/owner/intent-proposals", {
+    method: "POST",
+    body: JSON.stringify({
+      request: effectiveRequest,
+      anchor: ownerIntentAnchorFromContext(context),
+    }),
+  });
+  const section = document.createElement("section");
+  section.className = "owner-intent-proposal";
+  section.dataset.resolution = proposal.resolution;
+  const heading = document.createElement("strong");
+  heading.textContent = proposal.proposedLayer
+    ? `Proposed layer: ${proposal.proposedLayer.replaceAll("_", " ")}`
+    : "Choose the intended canonical layer";
+  const scope = document.createElement("p");
+  scope.textContent = `Scope: Arrangement Score v${context.arrangementScoreVersion}, ${context.eventIds.length} selected object${context.eventIds.length === 1 ? "" : "s"}, ${context.measureIds.length} measure${context.measureIds.length === 1 ? "" : "s"}.`;
+  const consequence = document.createElement("p");
+  consequence.textContent = `Consequence: ${proposal.consequence}. ${proposal.consequenceSummary}`;
+  const confirmation = document.createElement("p");
+  confirmation.textContent = `Confirmation: ${proposal.confirmation.replaceAll("_", " ")}. No mutation has occurred.`;
+  const evidence = document.createElement("details");
+  const evidenceSummary = document.createElement("summary");
+  evidenceSummary.textContent = "Why this route?";
+  const rationale = document.createElement("p");
+  rationale.textContent = proposal.rationale;
+  const identities = document.createElement("code");
+  identities.textContent = `${proposal.anchor.arrangementScoreId}@${proposal.anchor.arrangementScoreVersion} · ${proposal.anchor.arrangementPlanId} · ${proposal.anchor.analysisRecordId}`;
+  evidence.append(evidenceSummary, rationale, identities);
+  section.append(heading, scope, consequence, confirmation, evidence);
+
+  const continueRequest = (layer: CanonicalOwnerIntentLayer) => {
+    if (onProceed) {
+      onProceed(layer);
+      return;
+    }
+    document.dispatchEvent(
+      new CustomEvent("vellum-ask-selection", {
+        detail: {
+          message: `${selectionPrompt(context, effectiveRequest)}\n\nCanonical Owner-intent classification: ${layer}. The classification is confirmed, but no mutation is authorized merely by this message. Use the existing canonical ${layer.replaceAll("_", " ")} boundary and preserve its confirmation and lineage rules.`,
+          context,
+          canonicalLayer: layer,
+        },
+      })
+    );
+  };
+  if (proposal.proposedLayer === "explanation" && proposal.confirmation === "not_required") {
+    continueRequest("explanation");
+  } else if (proposal.resolution === "resolved" && proposal.proposedLayer) {
+    const confirm = document.createElement("button");
+    confirm.type = "button";
+    confirm.textContent = `Continue with ${proposal.proposedLayer.replaceAll("_", " ")}`;
+    confirm.addEventListener("click", () => {
+      confirm.disabled = true;
+      continueRequest(proposal.proposedLayer!);
+    });
+    section.append(confirm);
+  } else {
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "Canonical Owner-intent layer");
+    for (const layer of proposal.alternatives) {
+      const option = document.createElement("option");
+      option.value = layer;
+      option.textContent = layer.replaceAll("_", " ");
+      select.append(option);
+    }
+    const resolve = document.createElement("button");
+    resolve.type = "button";
+    resolve.textContent = "Resolve and continue";
+    resolve.disabled = select.options.length === 0;
+    resolve.addEventListener("click", () => {
+      resolve.disabled = true;
+      continueRequest(select.value as CanonicalOwnerIntentLayer);
+    });
+    section.append(select, resolve);
+  }
+  container.append(section);
+  return proposal;
 }
 
 type EditBatchResult = {
@@ -854,16 +977,23 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     const ask = document.createElement("button");
     ask.type = "button";
     ask.textContent = "Ask Vellum";
-    ask.addEventListener("click", () => {
+    ask.addEventListener("click", async () => {
       const context = buildScoreSelectionContext(
         deliverable,
         selectedEvents.map((event) => event.id)
       );
-      document.dispatchEvent(
-        new CustomEvent("vellum-ask-selection", {
-          detail: { message: selectionPrompt(context, request.value), context },
-        })
-      );
+      ask.disabled = true;
+      try {
+        await proposeOwnerIntent(summary, context, request.value);
+      } catch (error) {
+        summary.querySelector(".owner-intent-error")?.remove();
+        const failure = document.createElement("p");
+        failure.className = "owner-intent-error";
+        failure.textContent = `${error instanceof Error ? error.message : "Intent classification failed"} Your selection and request are still here; retry when ready.`;
+        summary.append(failure);
+      } finally {
+        ask.disabled = false;
+      }
     });
     const clear = document.createElement("button");
     clear.type = "button";
@@ -873,24 +1003,48 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
       anchorId = undefined;
       renderSelection();
     });
+    const routeDirectAction = (
+      directRequest: string,
+      proceed: (layer: CanonicalOwnerIntentLayer) => void
+    ) => {
+      const context = buildScoreSelectionContext(
+        deliverable,
+        selectedEvents.map((event) => event.id)
+      );
+      void proposeOwnerIntent(summary, context, directRequest, proceed).catch((error) => {
+        summary.querySelector(".owner-intent-error")?.remove();
+        const failure = document.createElement("p");
+        failure.className = "owner-intent-error";
+        failure.textContent = `${error instanceof Error ? error.message : "Intent classification failed"} No action was applied; retry when ready.`;
+        summary.append(failure);
+      });
+    };
     const edit = document.createElement("button");
     edit.type = "button";
     edit.textContent = "Edit selection";
-    edit.addEventListener("click", () => openEditBatchDialog(deliverable, selectedEvents));
+    edit.addEventListener("click", () => {
+      routeDirectAction("Change these notes", (layer) => {
+        if (layer === "arrangement_score") openEditBatchDialog(deliverable, selectedEvents);
+      });
+    });
     const alternatives = document.createElement("button");
     alternatives.type = "button";
     alternatives.textContent = "Try alternatives";
-    alternatives.addEventListener(
-      "click",
-      () => void openPassageCandidatesDialog(panel, deliverable, selectedEvents)
-    );
+    alternatives.addEventListener("click", () => {
+      routeDirectAction("Change these notes by trying alternative score realizations", (layer) => {
+        if (layer === "arrangement_score")
+          void openPassageCandidatesDialog(panel, deliverable, selectedEvents);
+      });
+    });
     const proposeDefault = document.createElement("button");
     proposeDefault.type = "button";
     proposeDefault.textContent = "Propose default";
-    proposeDefault.addEventListener(
-      "click",
-      () => void proposeSelectionDefault(deliverable, selectedEvents)
-    );
+    proposeDefault.addEventListener("click", () => {
+      routeDirectAction("Make this my default going forward", (layer) => {
+        if (layer === "personal_default_candidate")
+          void proposeSelectionDefault(deliverable, selectedEvents);
+      });
+    });
     const loop = document.createElement("button");
     loop.type = "button";
     loop.textContent = "Loop selection";

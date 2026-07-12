@@ -393,6 +393,7 @@ type StoredArrangement = {
   branchId?: string;
   editorialCommitmentIds?: string[];
   analysisRecordId: string;
+  arrangementPlanId?: string;
   arrangementSearchId?: string;
   arrangementFamilyId: string;
   targetConfiguration: TargetConfiguration;
@@ -422,10 +423,15 @@ async function loadGuidedDeliverable(
       )
     )
   );
-  const [projections, analysis, workspace] = await Promise.all([
+  if (!arrangement.arrangementPlanId)
+    throw new Error(`Arrangement Score has no persisted plan: ${arrangementId}`);
+  const [projections, analysis, plan, workspace] = await Promise.all([
     loadSavedProjections(workspaceId, arrangementId),
     browserApi<GuidedDeliverable["analysis"]>(
       `/api/workspaces/${workspaceId}/analyses/${arrangement.analysisRecordId}`
+    ),
+    browserApi<NonNullable<GuidedDeliverable["arrangementPlan"]>>(
+      `/api/workspaces/${workspaceId}/arrangement-plans/${arrangement.arrangementPlanId}`
     ),
     browserApi<{
       brief: { personalDefaultApplications?: GuidedDeliverable["personalDefaultApplications"] };
@@ -441,6 +447,7 @@ async function loadGuidedDeliverable(
     editorialCommitmentIds: arrangement.editorialCommitmentIds ?? [],
     arrangementFamilyId: arrangement.arrangementFamilyId,
     arrangementSearchId: search.id,
+    arrangementPlan: plan,
     targetConfigurationId: arrangement.targetConfiguration.id,
     targetConfiguration: arrangement.targetConfiguration,
     preservationPolicy: arrangement.preservationPolicy,

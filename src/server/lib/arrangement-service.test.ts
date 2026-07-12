@@ -17,6 +17,7 @@ import { WorkspaceStore } from "./workspace-store.js";
 import { ApiRouteError } from "./create-route.js";
 import { LineageService } from "./lineage-service.js";
 import { ArrangementPlanService } from "./arrangement-plan-service.js";
+import { OwnerIntentService } from "./owner-intent-service.js";
 import {
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
@@ -263,6 +264,46 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(result.arrangementScore.realizedPlanDecisionIds).toEqual(
       result.arrangementPlan.decisions.map((decision) => decision.id)
     );
+    const selectedEvent = result.arrangementScore.events[0]!;
+    const intentAnchor = {
+      workspaceId: workspace.id,
+      arrangementScoreId: result.arrangementScore.id,
+      arrangementScoreVersion: result.arrangementScore.version ?? 1,
+      arrangementFamilyId: result.arrangementScore.arrangementFamilyId!,
+      arrangementSearchId: result.arrangementSearch.id,
+      arrangementPlanId: result.arrangementPlan.id,
+      analysisRecordId: result.analysis.id,
+      targetConfigurationId: result.arrangementScore.targetConfiguration.id,
+      preservationPolicy: result.arrangementScore.preservationPolicy,
+      eventIds: [selectedEvent.id],
+      measureIds: [selectedEvent.measureId],
+      sourceEventIds: selectedEvent.sourceEventIds,
+      findingIds: [],
+    };
+    const beforeIntentProposal = structuredClone(store.get(workspace.id));
+    const intentService = new OwnerIntentService({
+      store,
+      createId: () => "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    });
+    expect(intentService.classify(intentAnchor, "Why is this note here?")).toMatchObject({
+      proposedLayer: "explanation",
+      consequence: "none",
+      confirmation: "not_required",
+      mutationAuthorized: false,
+    });
+    expect(intentService.classify(intentAnchor, "The OCR misread this source note")).toMatchObject({
+      proposedLayer: "score_transcription",
+      consequence: "lineage",
+      confirmation: "required",
+      mutationAuthorized: false,
+    });
+    expect(store.get(workspace.id)).toEqual(beforeIntentProposal);
+    expect(() =>
+      intentService.classify(
+        { ...intentAnchor, arrangementScoreVersion: intentAnchor.arrangementScoreVersion + 1 },
+        "Change this note to G4"
+      )
+    ).toThrow("stale Arrangement Score version");
     const evaluationCard = buildNarrowEvaluationCard({
       score: result.arrangementScore,
       planning: {
