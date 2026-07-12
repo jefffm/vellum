@@ -192,6 +192,12 @@ describe("constraint and search protocol", () => {
     expect(Value.Check(SearchCheckpointSchema, checkpoint)).toBe(true);
     expect(() => assertCheckpointCompatible(checkpoint, otherIdentity)).toThrow(/incompatible/);
     expect(() =>
+      assertCheckpointCompatible(checkpoint, {
+        ...executionIdentity,
+        adapter: { ...executionIdentity.adapter, version: "tampered-without-digest-change" },
+      })
+    ).toThrow(/incompatible/);
+    expect(() =>
       decodeSearchOutcome({
         kind: "cancelled",
         executionIdentity: otherIdentity,

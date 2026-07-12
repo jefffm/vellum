@@ -44,6 +44,12 @@ import {
   type BaroqueLuteBassTuning,
   type InstrumentInstanceConfiguration,
 } from "../../lib/instrument-instance.js";
+import {
+  DEFAULT_CANDIDATE_METRICS,
+  DEFAULT_LEXICOGRAPHIC_PRIORITIES,
+  selectLexicographically,
+  type CandidateMeasurement,
+} from "../../lib/candidate-comparison.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
@@ -507,6 +513,12 @@ export class ArrangementService {
       candidateIds: [],
       ...searchProtocol,
       rankingWeights,
+      comparisonPolicy: {
+        method: "policy_lexicographic",
+        metricDefinitions: DEFAULT_CANDIDATE_METRICS,
+        priorityMetricIds: [...DEFAULT_LEXICOGRAPHIC_PRIORITIES],
+        automaticTieBreak: "none",
+      },
       createdAt: timestamp,
     });
     let generated;
@@ -1118,7 +1130,7 @@ function persistableCandidates(
   generated: ArrangementCandidate[],
   searchId: string,
   createdAt: string,
-  weights: RankingWeights,
+  _weights: RankingWeights,
   plannedStrategy?: string
 ): ArrangementCandidate[] {
   const evaluated = generated.map((candidate) => {
@@ -1148,8 +1160,8 @@ function persistableCandidates(
           (candidate.strategy === "voice-continuity" ? 0.1 : 0)
       ),
     };
-    const weightedTotal = scoreTotal(scores, weights);
     const hardFailure = candidate.audit.status === "fail";
+    const measurements = candidateMeasurements(candidate, plannedStrategy);
     return {
       ...candidate,
       id: stableCandidateId(searchId, candidate.strategy),
@@ -1180,8 +1192,13 @@ function persistableCandidates(
           },
         ],
         scores,
-        weightedTotal,
-        rationale: `Weighted ranking combines historical profile, idiom, playability, voice leading, notation clarity, and soft preferences for ${candidate.strategy}.`,
+        measurements,
+        selectionBasis: {
+          method: "policy_lexicographic",
+          status: hardFailure ? "rejected" : "survived",
+        } as NonNullable<NonNullable<ArrangementCandidate["evaluation"]>["selectionBasis"]>,
+        rationale:
+          "Legacy normalized display scores are non-authoritative. Automatic selection uses the persisted hard-gate-first lexicographic comparison policy.",
       },
       rejectionReason: hardFailure
         ? (candidate.audit.findings.find((finding) => finding.severity === "hard")?.message ??
@@ -1190,31 +1207,100 @@ function persistableCandidates(
       createdAt,
     } satisfies ArrangementCandidate;
   });
+  const selection = selectLexicographically(
+    evaluated.map((candidate) => ({
+      id: candidate.id,
+      hardGatePassed: candidate.status !== "rejected",
+      measurements: candidate.evaluation!.measurements!,
+    })),
+    DEFAULT_CANDIDATE_METRICS,
+    [...DEFAULT_LEXICOGRAPHIC_PRIORITIES]
+  );
+  if (selection.kind !== "selected") {
+    throw new Error(
+      selection.kind === "ambiguous"
+        ? `Automatic candidate selection is ambiguous: ${selection.reason}`
+        : selection.reason
+    );
+  }
   const survivors = evaluated
     .filter((candidate) => candidate.status !== "rejected")
-    .sort((left, right) => right.evaluation!.weightedTotal - left.evaluation!.weightedTotal);
+    .sort((left, right) =>
+      left.id === selection.candidateId
+        ? -1
+        : right.id === selection.candidateId
+          ? 1
+          : left.id.localeCompare(right.id)
+    );
   survivors.forEach((candidate, index) => (candidate.rank = index + 1));
-  const winnerId =
-    survivors.find((candidate) => candidate.strategy === plannedStrategy)?.id ?? survivors[0]?.id;
   for (const candidate of evaluated) {
-    if (candidate.status === "rejected") continue;
-    candidate.status = candidate.id === winnerId ? "selected" : "survived";
+    if (candidate.status === "rejected") {
+      candidate.evaluation!.selectionBasis = {
+        method: "policy_lexicographic",
+        status: "rejected",
+      };
+      continue;
+    }
+    candidate.status = candidate.id === selection.candidateId ? "selected" : "survived";
+    candidate.evaluation!.selectionBasis = {
+      method: "policy_lexicographic",
+      decisiveMetricId: selection.decisiveMetricId,
+      status: candidate.status,
+    };
   }
   return evaluated;
 }
 
-function scoreTotal(
-  scores: NonNullable<ArrangementCandidate["evaluation"]>["scores"],
-  weights: RankingWeights
-): number {
-  return clamp(
-    scores.historicalProfile * weights.historicalProfile +
-      scores.idiom * weights.idiom +
-      scores.playability * weights.playability +
-      scores.voiceLeading * weights.voiceLeading +
-      scores.notationClarity * weights.notationClarity +
-      scores.softPreferences * weights.softPreferences
+function candidateMeasurements(
+  candidate: ArrangementCandidate,
+  preferredStrategy?: string
+): CandidateMeasurement[] {
+  const transitionMotion = candidate.phraseSearchEvidence?.transitions.reduce(
+    (total, transition) =>
+      total +
+      transition.fretDisplacement +
+      transition.courseDisplacement +
+      transition.handPositionDelta,
+    0
   );
+  const evidenceIds = candidate.events.map((event) => event.id);
+  return [
+    {
+      metricId: "metric.adapter-preferred-strategy",
+      applicability: preferredStrategy ? "applicable" : "unknown",
+      ...(preferredStrategy ? { value: candidate.strategy === preferredStrategy ? 1 : 0 } : {}),
+      uncertainty: preferredStrategy ? "exact_modeled_value" : "unknown",
+      evidenceIds,
+    },
+    {
+      metricId: "metric.source-pitch-class-coverage",
+      applicability: "applicable",
+      value: candidate.metrics.sourcePitchClassCoverage,
+      uncertainty: "exact_modeled_value",
+      evidenceIds,
+    },
+    {
+      metricId: "metric.total-position-motion",
+      applicability: transitionMotion === undefined ? "unknown" : "applicable",
+      ...(transitionMotion === undefined ? {} : { value: transitionMotion }),
+      uncertainty: transitionMotion === undefined ? "unknown" : "bounded_estimate",
+      evidenceIds,
+    },
+    {
+      metricId: "metric.average-fret",
+      applicability: "applicable",
+      value: candidate.metrics.averageFret,
+      uncertainty: "exact_modeled_value",
+      evidenceIds,
+    },
+    {
+      metricId: "metric.open-string-count",
+      applicability: "applicable",
+      value: candidate.metrics.openStringCount,
+      uncertainty: "exact_modeled_value",
+      evidenceIds,
+    },
+  ];
 }
 
 function stableCandidateId(searchId: string, strategy: string): string {

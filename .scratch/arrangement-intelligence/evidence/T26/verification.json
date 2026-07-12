@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T26",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T21:57:34Z",
+  "requirements": {
+    "AI-ICC-041": {
+      "status": "machine_verified_for_comparison_replay",
+      "remaining": "ordered-frontier replay remains adapter-specific"
+    },
+    "AI-ICC-042": {
+      "status": "machine_verified_for_finite_reference_fixture",
+      "remaining": "adapter-specific exhaustive counterexample suites remain partial"
+    },
+    "AI-ICC-049": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-050": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-051": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-054": {
+      "status": "machine_verified",
+      "remaining": "T31 owns future calibration governance"
+    },
+    "AI-ICC-055": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-056": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-057": {
+      "status": "machine_verified",
+      "remaining": "no Owner-approved tie break exists; exact ties remain ambiguous"
+    },
+    "AI-EVAL-047": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-050": { "status": "machine_verified", "remaining": "none" },
+    "AI-DEL-030": { "status": "machine_verified", "remaining": "none" }
+  },
+  "summary": {
+    "fullSuitePassed": 1023,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Metric definitions require units, direction, normalization, uncertainty, applicability, missing-value behavior, and materiality",
+      "Hard failures and missing required measurements are rejected before lexicographic quality comparison",
+      "Reversing candidate enumeration replays the same sole policy winner",
+      "Exact metric ties remain ambiguous instead of using an arbitrary automatic tie break",
+      "Dominance-pruned finite search retains the same optimum as the unpruned reference while expanding fewer states",
+      "Checkpoint reuse rejects any changed execution component even when a forged top-level digest is unchanged",
+      "Arrangement Search persists the comparison policy and candidates persist typed measurements and the decisive selection basis",
+      "Legacy display scores do not participate in authoritative selection and weighted totals are absent"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.afefb8e6-c16c-40c8-bab0-b515213c009f",
+      "cardId": "evaluation-card.b7159423-3d2b-4f39-86c8-1f4f159e752c",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalVisualPlaybackAndHumanAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1023 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t26-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "ad73b92be93d7ff536113edcea4f1699002f4251e3273c0fbdc9709bf3f5ecb2"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/26-search-correctness-replay.md",
+      "sha256": "419b30240c9d859ffd6caf2ec8d28f44f55131af290a6818ff7226ccb01762b8"
+    },
+    {
+      "path": "src/lib/candidate-comparison.ts",
+      "sha256": "785154330795f855bd8f0a40c2cc464b961de733f987f48b8ed728afae7c8185"
+    },
+    {
+      "path": "src/lib/candidate-comparison.test.ts",
+      "sha256": "ce00ccdf474d121c7e2d07f60709ff6c078e6d6ee4118279055b14f0622fe58e"
+    },
+    {
+      "path": "src/lib/constraint-search.ts",
+      "sha256": "ee71f7acb8a5eb747d07da0f93dd3b3518437a37a952b33f19694bc6e30fcb7e"
+    },
+    {
+      "path": "src/lib/constraint-search.test.ts",
+      "sha256": "1c856e98a9e925ca7a4f556c808c6ab545d584118316cffd3a553fbcf67b0656"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "0d932b51bc3aac6113932f78479e0bee4b7fd8a9418171e581d94d08a864ca5f"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "71eae72a9fa93ca5783b7a7b72d5c4e1346101e9bc274ec21449049a0fff0c0e"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "b665c98ef6cb7c87205854bfcef5708027f1d88d0f93bee12e3958e6d1e739bc"
+    }
+  ]
+}

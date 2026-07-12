@@ -228,14 +228,29 @@ describe("Greensleeves faithful arrangement service", () => {
         notationClarity: expect.any(Number),
         softPreferences: expect.any(Number),
       },
-      weightedTotal: expect.any(Number),
+      measurements: expect.arrayContaining([
+        expect.objectContaining({
+          metricId: "metric.adapter-preferred-strategy",
+          applicability: "applicable",
+        }),
+        expect.objectContaining({
+          metricId: "metric.source-pitch-class-coverage",
+          applicability: "applicable",
+        }),
+      ]),
+      selectionBasis: expect.objectContaining({ method: "policy_lexicographic" }),
     });
     const rankedCandidates = result.candidates
       .filter((candidate) => candidate.rank)
       .sort((left, right) => left.rank! - right.rank!);
-    expect(rankedCandidates[0]?.evaluation?.weightedTotal).toBeGreaterThanOrEqual(
-      rankedCandidates[1]?.evaluation?.weightedTotal ?? 0
-    );
+    expect(result.arrangementSearch.comparisonPolicy).toMatchObject({
+      method: "policy_lexicographic",
+      automaticTieBreak: "none",
+      priorityMetricIds: expect.arrayContaining([
+        "metric.adapter-preferred-strategy",
+        "metric.source-pitch-class-coverage",
+      ]),
+    });
     expect(rankedCandidates[0]?.status).toBe("selected");
     expect(result.arrangementScore.selectedCandidateId).toBe(rankedCandidates[0]?.id);
     expect(result.arrangementScore.events).toEqual(rankedCandidates[0]?.events);

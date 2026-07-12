@@ -345,14 +345,17 @@ export function decodeSearchOutcome(value: unknown): SearchOutcome {
   const outcome = Value.Decode(SearchOutcomeSchema, value);
   if (
     outcome.kind === "exhaustively_infeasible" &&
-    outcome.certificate.executionIdentity.digest !== outcome.executionIdentity.digest
+    !searchExecutionIdentitiesEqual(
+      outcome.certificate.executionIdentity,
+      outcome.executionIdentity
+    )
   ) {
     throw new Error("Completeness certificate execution identity does not match search outcome");
   }
   if (
     (outcome.kind === "search_exhausted" || outcome.kind === "cancelled") &&
     outcome.checkpoint &&
-    outcome.checkpoint.executionIdentity.digest !== outcome.executionIdentity.digest
+    !searchExecutionIdentitiesEqual(outcome.checkpoint.executionIdentity, outcome.executionIdentity)
   ) {
     throw new Error("Search checkpoint execution identity does not match search outcome");
   }
@@ -373,9 +376,28 @@ export function assertCheckpointCompatible(
   checkpoint: SearchCheckpoint,
   identity: SearchExecutionIdentity
 ): void {
-  if (checkpoint.executionIdentity.digest !== identity.digest) {
+  if (!searchExecutionIdentitiesEqual(checkpoint.executionIdentity, identity)) {
     throw new Error("Search checkpoint is incompatible with the requested execution identity");
   }
+}
+
+export function searchExecutionIdentitiesEqual(
+  left: SearchExecutionIdentity,
+  right: SearchExecutionIdentity
+): boolean {
+  return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, canonicalize(item)])
+    );
+  }
+  return value;
 }
 
 export function searchOutcomeDescription(outcome: SearchOutcome): string {

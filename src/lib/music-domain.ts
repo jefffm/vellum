@@ -6,6 +6,10 @@ import {
   SearchOutcomeSchema,
 } from "./constraint-search.js";
 import { InstrumentInstanceConfigurationSchema } from "./instrument-instance.js";
+import {
+  CandidateMeasurementSchema,
+  ComparisonMetricDefinitionSchema,
+} from "./candidate-comparison.js";
 
 const IdSchema = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 const IsoDateSchema = Type.String({
@@ -1973,7 +1977,23 @@ export const ArrangementCandidateSchema = Type.Object(
             },
             { additionalProperties: false }
           ),
-          weightedTotal: Type.Number({ minimum: 0, maximum: 1 }),
+          weightedTotal: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
+          measurements: Type.Optional(Type.Array(CandidateMeasurementSchema, { minItems: 1 })),
+          selectionBasis: Type.Optional(
+            Type.Object(
+              {
+                method: Type.Literal("policy_lexicographic"),
+                decisiveMetricId: Type.Optional(IdSchema),
+                status: Type.Union([
+                  Type.Literal("selected"),
+                  Type.Literal("survived"),
+                  Type.Literal("rejected"),
+                  Type.Literal("ambiguous"),
+                ]),
+              },
+              { additionalProperties: false }
+            )
+          ),
           rationale: Type.String({ minLength: 1 }),
         },
         { additionalProperties: false }
@@ -2024,6 +2044,17 @@ export const ArrangementSearchSchema = Type.Object(
         softPreferences: Type.Number({ minimum: 0, maximum: 1 }),
       },
       { additionalProperties: false }
+    ),
+    comparisonPolicy: Type.Optional(
+      Type.Object(
+        {
+          method: Type.Literal("policy_lexicographic"),
+          metricDefinitions: Type.Array(ComparisonMetricDefinitionSchema, { minItems: 1 }),
+          priorityMetricIds: Type.Array(IdSchema, { minItems: 1 }),
+          automaticTieBreak: Type.Literal("none"),
+        },
+        { additionalProperties: false }
+      )
     ),
     createdAt: IsoDateSchema,
     completedAt: Type.Optional(IsoDateSchema),
