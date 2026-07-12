@@ -96,6 +96,23 @@ describe("SubprocessRunner", () => {
     expect(result.stdout).toBe(bytes.toString("hex"));
   });
 
+  it("bounds stdout and stderr while retaining their tails", async () => {
+    const result = await runSubprocess({
+      command: process.execPath,
+      args: [
+        "-e",
+        "process.stdout.write('a'.repeat(1000)+'TAIL');process.stderr.write('b'.repeat(1000)+'END')",
+      ],
+      maxCaptureBytes: 128,
+    });
+
+    expect(Buffer.byteLength(result.stdout)).toBeLessThanOrEqual(128);
+    expect(Buffer.byteLength(result.stderr)).toBeLessThanOrEqual(128);
+    expect(result.stdout).toContain("truncated");
+    expect(result.stdout.endsWith("TAIL")).toBe(true);
+    expect(result.stderr.endsWith("END")).toBe(true);
+  });
+
   it("cleans up temporary directories after successful runs", async () => {
     const result = await runSubprocess({ command: "pwd", args: [] });
     const tempDir = result.stdout.trim();

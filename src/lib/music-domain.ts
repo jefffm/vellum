@@ -192,6 +192,7 @@ export const DeliverableSchema = Type.Object(
       Type.Literal("audio_preview"),
     ]),
     mimeType: Type.String({ minLength: 1 }),
+    artifactPolicyVersion: Type.Optional(Type.String({ minLength: 1 })),
     sha256: Type.String({ pattern: "^[a-f0-9]{64}$" }),
     byteLength: Type.Integer({ minimum: 0 }),
     storedPath: Type.String({ minLength: 1 }),

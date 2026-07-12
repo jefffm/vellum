@@ -16,6 +16,7 @@ import {
 import { OmrService } from "../../src/server/lib/omr.js";
 import type { OmrBackend } from "../../src/server/lib/omr.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
+import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
 import { midiNoteOns } from "../lib/midi.js";
 
 describe("soprano plus Figured Bass Continuo Realization tracer", () => {
@@ -173,7 +174,7 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
     const app = express();
     app.post(
       "/api/workspaces/:workspaceId/arrangements/:arrangementId/compile",
-      createArrangementCompileRoute(store)
+      createArrangementCompileRoute(store, new SubprocessRunner(60_000))
     );
     app.get(
       "/api/workspaces/:workspaceId/arrangements/:arrangementId/audio-preview",
@@ -301,5 +302,5 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       analysisRecordIds: [arranged.analysisRecordId],
       arrangementScoreIds: [arranged.arrangementScore.id, guitarArranged.arrangementScore.id],
     });
-  }, 90_000);
+  }, 180_000);
 });

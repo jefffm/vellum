@@ -12,7 +12,7 @@ Prove the active goal complete at the final accepted commit through requirement-
 
 ## Acceptance criteria
 
-- [ ] Every requirement and F001–F046 has an allowed final disposition with current evidence.
+- [ ] Every requirement and F001–F047 has an allowed final disposition with current evidence.
 - [ ] Every mandatory machine and human gate passes without stale or incompatible evidence.
 - [ ] All quality, evaluation, rendered, browser, and specification gates pass at the final commit.
 - [ ] The goal is marked complete only after the manifest proves no required work remains.

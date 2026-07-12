@@ -49,6 +49,9 @@ import {
   type GuidedDeliverable,
 } from "./guided-start.js";
 import { vellumStreamProxy } from "./lib/vellum-stream-proxy.js";
+import { renderCompilePreview } from "./artifact-preview.js";
+
+export { renderCompilePreview } from "./artifact-preview.js";
 
 import "./styles.css";
 
@@ -265,104 +268,6 @@ function isCompileResult(value: unknown): value is CompileResult {
 
   const candidate = value as Partial<CompileResult>;
   return Array.isArray(candidate.errors);
-}
-
-function formatCompileMeta(details: CompileResult): string {
-  const parts = [
-    details.barCount ? `${details.barCount} bars` : undefined,
-    details.voiceCount ? `${details.voiceCount} voices` : undefined,
-    details.pdf ? "PDF available" : undefined,
-  ].filter(Boolean);
-
-  return parts.length > 0 ? parts.join(" · ") : "Compiled successfully";
-}
-
-function setPreviewZoom(panel: HTMLElement, mode: "fit" | "zoom", zoomPercent: number): void {
-  const content = panel.querySelector<HTMLElement>(".artifact-preview-content");
-  if (!content) {
-    return;
-  }
-
-  const nextZoom = Math.min(300, Math.max(50, zoomPercent));
-  content.dataset.zoomMode = mode;
-  content.style.width = mode === "fit" ? "100%" : `${nextZoom}%`;
-
-  const zoomLabel = panel.querySelector<HTMLElement>("[data-artifact-zoom-label]");
-  if (zoomLabel) {
-    zoomLabel.textContent = mode === "fit" ? "Fit width" : `${nextZoom}%`;
-  }
-}
-
-export function renderCompilePreview(panel: HTMLElement, details: CompileResult): boolean {
-  if (details.errors.length > 0 || (!details.svg && !details.pdf)) {
-    return false;
-  }
-
-  panel.replaceChildren();
-  panel.dataset.preview = "compile";
-
-  const shell = document.createElement("section");
-  shell.className = "artifact-preview-shell";
-  shell.innerHTML = `
-    <header class="artifact-preview-header">
-      <div>
-        <p class="artifact-preview-eyebrow">Compile output</p>
-        <h1>Score preview</h1>
-        <p class="artifact-preview-meta"></p>
-      </div>
-      <div class="artifact-preview-controls" aria-label="Preview zoom controls">
-        <button type="button" data-artifact-fit>Fit width</button>
-        <button type="button" data-artifact-zoom-out aria-label="Zoom out">−</button>
-        <span data-artifact-zoom-label>Fit width</span>
-        <button type="button" data-artifact-zoom-in aria-label="Zoom in">+</button>
-      </div>
-    </header>
-    <div class="artifact-preview-viewport">
-      <div class="artifact-preview-content" data-zoom-mode="fit"></div>
-    </div>
-  `;
-
-  const meta = shell.querySelector<HTMLElement>(".artifact-preview-meta");
-  if (meta) {
-    meta.textContent = formatCompileMeta(details);
-  }
-
-  const content = shell.querySelector<HTMLElement>(".artifact-preview-content");
-  if (!content) {
-    return false;
-  }
-
-  if (details.svg) {
-    content.innerHTML = details.svg;
-  } else if (details.pdf) {
-    const iframe = document.createElement("iframe");
-    iframe.className = "artifact-preview-pdf";
-    iframe.title = "Compiled PDF preview";
-    iframe.src = `data:application/pdf;base64,${details.pdf}`;
-    content.append(iframe);
-  }
-
-  let zoomPercent = 100;
-  shell.querySelector<HTMLButtonElement>("[data-artifact-fit]")?.addEventListener("click", () => {
-    zoomPercent = 100;
-    setPreviewZoom(panel, "fit", zoomPercent);
-  });
-  shell
-    .querySelector<HTMLButtonElement>("[data-artifact-zoom-out]")
-    ?.addEventListener("click", () => {
-      zoomPercent -= 25;
-      setPreviewZoom(panel, "zoom", zoomPercent);
-    });
-  shell
-    .querySelector<HTMLButtonElement>("[data-artifact-zoom-in]")
-    ?.addEventListener("click", () => {
-      zoomPercent += 25;
-      setPreviewZoom(panel, "zoom", zoomPercent);
-    });
-
-  panel.append(shell);
-  setPreviewZoom(panel, "fit", zoomPercent);
-  return true;
 }
 
 function installCompileArtifactPreview(agent: Agent): void {

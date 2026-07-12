@@ -275,7 +275,7 @@ export function validatePlanningState(state) {
     errors,
     "audit finding IDs",
     findings.map(({ id }) => id),
-    expectedRange(46, "F")
+    expectedRange(47, "F")
   );
   for (const finding of findings) {
     if (!FINDING_ID.test(finding.id)) errors.push(`invalid finding ID ${finding.id}`);

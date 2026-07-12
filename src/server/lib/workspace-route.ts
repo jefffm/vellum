@@ -9,6 +9,10 @@ import type {
   UploadSourceArtifact,
 } from "../../lib/music-domain.js";
 import { createApiRoute } from "./create-route.js";
+import {
+  setSourceArtifactResponseHeaders,
+  validateSourceArtifactForServing,
+} from "./artifact-response.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 const WorkspaceParamsSchema = Type.Object({
@@ -172,10 +176,8 @@ export function createSourceContentRoute(store = new WorkspaceStore()): RequestH
       const artifact = store.getSourceArtifact(workspaceId, sourceArtifactId);
       const content = store.readSourceContent(workspaceId, sourceArtifactId);
 
-      response.setHeader("Content-Type", artifact.mimeType);
-      response.setHeader("Content-Length", content.byteLength);
-      response.setHeader("Content-Disposition", `inline; filename="${artifact.filename}"`);
-      response.setHeader("ETag", `"sha256-${artifact.sha256}"`);
+      validateSourceArtifactForServing(artifact, content);
+      setSourceArtifactResponseHeaders(response, artifact);
       response.send(content);
     } catch (error) {
       next(error);

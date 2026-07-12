@@ -8,6 +8,7 @@ import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { imitativeArrangementToLilyPond } from "../../src/lib/imitative-engrave.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { createArrangementCompileRoute } from "../../src/server/lib/arrangement-deliverable-route.js";
+import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
 import { OmrService } from "../../src/server/lib/omr.js";
 import type { OmrBackend } from "../../src/server/lib/omr.js";
@@ -107,7 +108,7 @@ describe("three-voice imitative counterpoint tracer", () => {
     const app = express();
     app.post(
       "/api/workspaces/:workspaceId/arrangements/:arrangementId/compile",
-      createArrangementCompileRoute(store)
+      createArrangementCompileRoute(store, new SubprocessRunner(60_000))
     );
     const server = createServer(app);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));

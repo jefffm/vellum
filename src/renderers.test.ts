@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
+
 import type { ToolResultMessage } from "@mariozechner/pi-ai";
 import type { ToolRenderer } from "@mariozechner/pi-web-ui";
-import { describe, expect, it, vi } from "vitest";
+import { render } from "lit";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { FretboardResult } from "./fretboard.js";
 import type { CompileResult, PlayabilityResult } from "./types.js";
@@ -8,6 +11,10 @@ import type { CompileResult, PlayabilityResult } from "./types.js";
 function installBrowserUiStubs(): void {
   vi.stubGlobal("DOMMatrix", class DOMMatrix {});
 }
+
+afterEach(() => {
+  document.body.replaceChildren();
+});
 
 function toolResult<TDetails>(toolName: string, details?: TDetails): ToolResultMessage<TDetails> {
   return {
@@ -82,11 +89,67 @@ describe("tool renderers", () => {
 
     const result = fretboard.render(
       undefined,
-      toolResult("fretboard", { svg: "<svg></svg>", coursesShown: 6, fretsShown: 4 }),
+      toolResult("fretboard", {
+        svg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        coursesShown: 6,
+        fretsShown: 4,
+      }),
       false
     );
 
     expect(result.isCustom).toBe(true);
+    const container = document.createElement("div");
+    render(result.content, container);
+    expect(container.querySelector(".fretboard-result > svg")).not.toBeNull();
+  });
+
+  it("mounts fretboard SVG as sanitized DOM rather than executable raw markup", async () => {
+    const fretboard = await getRegisteredRenderer<unknown, FretboardResult>("fretboard");
+    const result = fretboard.render(
+      undefined,
+      toolResult("fretboard", {
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" onload="globalThis.__vellumFretboardExecuted=true">
+          <script>globalThis.__vellumFretboardExecuted=true</script>
+          <a href="javascript:alert(1)"><text>Course 1</text></a>
+          <circle cx="5" cy="5" r="2" onclick="globalThis.__vellumFretboardExecuted=true"/>
+        </svg>`,
+        coursesShown: 6,
+        fretsShown: 4,
+      }),
+      false
+    );
+    const container = document.createElement("div");
+
+    render(result.content, container);
+
+    expect(container.querySelector(".fretboard-result > svg")).not.toBeNull();
+    expect(container.querySelector("circle")).not.toBeNull();
+    expect(container.querySelector("script, a, [onload], [onclick], [href]")).toBeNull();
+    expect(container.textContent).toContain("Course 1");
+    expect((globalThis as { __vellumFretboardExecuted?: boolean }).__vellumFretboardExecuted).toBe(
+      undefined
+    );
+  });
+
+  it("shows a closed failure state for malformed fretboard markup", async () => {
+    const fretboard = await getRegisteredRenderer<unknown, FretboardResult>("fretboard");
+    const result = fretboard.render(
+      undefined,
+      toolResult("fretboard", {
+        svg: '<svg xmlns="http://www.w3.org/2000/svg"><g></svg>',
+        coursesShown: 6,
+        fretsShown: 4,
+      }),
+      false
+    );
+    const container = document.createElement("div");
+
+    render(result.content, container);
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      "Fretboard preview unavailable"
+    );
+    expect(container.querySelector("svg")).toBeNull();
   });
 
   it("renders clean playability results with Playable text", async () => {

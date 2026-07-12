@@ -37,6 +37,7 @@ export type CompileError = Static<typeof CompileErrorSchema>;
 
 export const CompileResultSchema = Type.Object({
   svg: Type.Optional(Type.String()),
+  artifactPolicyVersion: Type.Optional(Type.String({ minLength: 1 })),
   pdf: Type.Optional(Type.String()),
   midi: Type.Optional(Type.String()),
   errors: Type.Array(CompileErrorSchema),

@@ -1124,6 +1124,7 @@ function sourceFacsimile(
     figure.append(caption, image);
   } else {
     const frame = document.createElement("iframe");
+    isolateArtifactFrame(frame);
     frame.title = `${source.filename}, source page ${item.region!.page}`;
     frame.src = sourceFocusUrl(source.contentUrl, item.region!);
     figure.append(caption, frame);
@@ -2007,14 +2008,35 @@ export function installAudioPreviewControls(panel: HTMLElement, preview: AudioPr
     partState.set(id, { mute: false, solo: false, level: 1 });
     const row = document.createElement("div");
     row.className = "playback-part-row";
-    row.innerHTML = `<span>${part.label}</span><label><input type="checkbox" data-part-mute> Mute</label><label><input type="checkbox" data-part-solo> Solo</label><label>Level <input type="range" min="0" max="1" value="1" step="0.01" data-part-level></label>`;
-    row.querySelector<HTMLInputElement>("[data-part-mute]")!.addEventListener("change", (event) => {
+    const partLabel = document.createElement("span");
+    partLabel.textContent = part.label;
+    const muteLabel = document.createElement("label");
+    const mute = document.createElement("input");
+    mute.type = "checkbox";
+    mute.dataset.partMute = "";
+    muteLabel.append(mute, " Mute");
+    const soloLabel = document.createElement("label");
+    const solo = document.createElement("input");
+    solo.type = "checkbox";
+    solo.dataset.partSolo = "";
+    soloLabel.append(solo, " Solo");
+    const levelLabel = document.createElement("label");
+    const level = document.createElement("input");
+    level.type = "range";
+    level.min = "0";
+    level.max = "1";
+    level.value = "1";
+    level.step = "0.01";
+    level.dataset.partLevel = "";
+    levelLabel.append("Level ", level);
+    row.append(partLabel, muteLabel, soloLabel, levelLabel);
+    mute.addEventListener("change", (event) => {
       partState.get(id)!.mute = (event.currentTarget as HTMLInputElement).checked;
     });
-    row.querySelector<HTMLInputElement>("[data-part-solo]")!.addEventListener("change", (event) => {
+    solo.addEventListener("change", (event) => {
       partState.get(id)!.solo = (event.currentTarget as HTMLInputElement).checked;
     });
-    row.querySelector<HTMLInputElement>("[data-part-level]")!.addEventListener("input", (event) => {
+    level.addEventListener("input", (event) => {
       partState.get(id)!.level = Number((event.currentTarget as HTMLInputElement).value);
     });
     mixer.append(row);
@@ -2532,6 +2554,11 @@ export function sourceFocusUrl(
   return `${sourceContentUrl}#page=${region.page}&zoom=180,${x},${y}`;
 }
 
+export function isolateArtifactFrame(frame: HTMLIFrameElement): void {
+  frame.setAttribute("sandbox", "");
+  frame.setAttribute("referrerpolicy", "no-referrer");
+}
+
 async function resolveCriticalUncertainties(
   dialog: HTMLDialogElement,
   workspaceId: string,
@@ -2587,6 +2614,7 @@ function presentScoreAnchoredReview(
   const status = dialog.querySelector<HTMLElement>("[data-guided-status]");
   const region = item.uncertainty.region;
 
+  isolateArtifactFrame(source);
   panel.hidden = false;
   dialog.classList.add("review-active");
   setGuidedNavigationDisabled(dialog, true);
@@ -3127,7 +3155,7 @@ export function guidedStartMarkup(): string {
         <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
         <p data-review-message></p>
         <div class="score-review-grid">
-          <div><div class="source-review-toolbar"><strong>Source facsimile</strong><span><button type="button" data-review-zoom-out aria-label="Zoom out source">−</button><button type="button" data-review-zoom-reset><span data-review-zoom-value>100%</span></button><button type="button" data-review-zoom-in aria-label="Zoom in source">+</button></span></div><div class="source-page-frame"><div class="source-page-canvas" data-review-source-canvas><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span></div><iframe data-review-source></iframe></div></div>
+          <div><div class="source-review-toolbar"><strong>Source facsimile</strong><span><button type="button" data-review-zoom-out aria-label="Zoom out source">−</button><button type="button" data-review-zoom-reset><span data-review-zoom-value>100%</span></button><button type="button" data-review-zoom-in aria-label="Zoom in source">+</button></span></div><div class="source-page-frame"><div class="source-page-canvas" data-review-source-canvas><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span></div><iframe data-review-source sandbox="" referrerpolicy="no-referrer"></iframe></div></div>
           <div class="score-review-notation"><strong>Recognized notation</strong><div data-review-editors></div><strong>Ranked suggestions</strong><div class="score-review-suggestions" data-review-suggestions></div><label>Review note<input type="text" data-review-rationale></label><p class="score-review-error" data-review-error></p><div class="score-review-actions"><button type="button" data-review-cancel>Cancel this run</button><button type="button" data-review-apply>Apply correction and continue</button></div></div>
         </div>
       </section>

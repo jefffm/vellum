@@ -247,6 +247,13 @@ chat-panel > div > div:has(agent-interface) {
   height: auto;
 }
 
+/* LilyPond emits this rule inside generated SVG. Keep it host-owned so the
+ * generated-artifact policy can remove all active CSS and <style> elements. */
+.artifact-preview-content > svg tspan,
+.fretboard-result > svg tspan {
+  white-space: pre;
+}
+
 .artifact-preview-content .vellum-selectable-event {
   cursor: pointer;
   transition: filter 100ms ease;

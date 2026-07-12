@@ -10,6 +10,7 @@ Before arrangement-intelligence work depends on the browser surface:
 
 - bind the local API to loopback and restrict CORS;
 - establish the compiled-SVG sanitization boundary;
+- execute every externally influenced notation compiler in a pinned, disposable, no-network, resource-bounded host-isolated sandbox that exposes no secrets or writable host path and fails closed when unavailable;
 - normalize typed safe API errors;
 - add coordinated frontend and API development startup;
 - repair completed-artifact handoff;

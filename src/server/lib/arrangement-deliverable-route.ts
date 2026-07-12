@@ -7,11 +7,15 @@ import { continuoArrangementToLilyPond } from "../../lib/continuo-engrave.js";
 import { imitativeArrangementToLilyPond } from "../../lib/imitative-engrave.js";
 import { compileLilyPond } from "./compile-route.js";
 import { engrave } from "./engrave.js";
-import { SubprocessRunner } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { persistDeliverable } from "./deliverable-service.js";
 import type { Deliverable } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
+import { createNodeGeneratedArtifactSecurity } from "./generated-artifact-security-node.js";
+import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
+import type { SubprocessRunner } from "./subprocess.js";
+
+const generatedArtifactSecurity = createNodeGeneratedArtifactSecurity();
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -73,12 +77,23 @@ export function createArrangementRestoreRoute(store = new WorkspaceStore()): Req
         byKind.has(kind)
           ? store.readDeliverableContent(workspaceId, byKind.get(kind)!.id).toString("base64")
           : undefined;
+      let svg: string;
+      try {
+        svg = generatedArtifactSecurity.sanitizeNotationSvg(text("browser_preview")).markup;
+      } catch {
+        throw new ApiRouteError(
+          "The saved browser preview predates the active artifact policy and must be regenerated",
+          409,
+          "conflict"
+        );
+      }
       response.json({
         ok: true,
         data: {
           compiled: {
             source: text("lilypond"),
-            svg: text("browser_preview"),
+            svg,
+            artifactPolicyVersion: generatedArtifactSecurity.policyVersion,
             pdf: base64("pdf"),
             midi: base64("midi"),
             errors: [],
@@ -96,7 +111,10 @@ export function createArrangementRestoreRoute(store = new WorkspaceStore()): Req
   };
 }
 
-export function createArrangementCompileRoute(store = new WorkspaceStore()): RequestHandler {
+export function createArrangementCompileRoute(
+  store = new WorkspaceStore(),
+  runner: Pick<SubprocessRunner, "run"> = new PodmanLilyPondRunner({ defaultTimeout: 60_000 })
+): RequestHandler {
   return async (request, response, next) => {
     try {
       const { workspaceId, arrangementId } = Value.Decode(ParamsSchema, request.params);
@@ -109,11 +127,7 @@ export function createArrangementCompileRoute(store = new WorkspaceStore()): Req
             arrangement.events.some((event) => event.role === "source_voice")
           ? imitativeArrangementToLilyPond(arrangement, score)
           : engrave(arrangementToEngraveParams(arrangement, score)).source;
-      const compiled = await compileLilyPond(
-        { source, format: "both" },
-        new SubprocessRunner(60_000),
-        60_000
-      );
+      const compiled = await compileLilyPond({ source, format: "both" }, runner, 60_000);
       const deliverables = [
         persistDeliverable(store, workspaceId, arrangement, {
           kind: "lilypond",
@@ -128,6 +142,7 @@ export function createArrangementCompileRoute(store = new WorkspaceStore()): Req
                 mimeType: "image/svg+xml",
                 extension: "svg",
                 content: Buffer.from(compiled.svg),
+                artifactPolicyVersion: compiled.artifactPolicyVersion,
               }),
             ]
           : []),

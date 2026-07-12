@@ -138,6 +138,37 @@ describe("serializeFile", () => {
     expect(output).toContain('composer = "John Dowland"');
   });
 
+  it("escapes untrusted header and include strings without creating LilyPond code", () => {
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: ['templates/quote"\\name.ily'],
+      header: {
+        title: 'Title"\n#(system "touch /tmp/vellum-injected")\\markup',
+      },
+      score: lyScore([]),
+      layout: true,
+    };
+
+    const output = serializeFile(file);
+    expect(output).toContain('\\include "templates/quote\\"\\\\name.ily"');
+    expect(output).toContain(
+      'title = "Title\\" #(system \\"touch /tmp/vellum-injected\\")\\\\markup"'
+    );
+    expect(output).not.toContain("\n#(system");
+  });
+
+  it("rejects invalid LilyPond header field names", () => {
+    const file: LyFile = {
+      version: "2.24.0",
+      includes: [],
+      header: { 'title } #(system "id") %': "unsafe" },
+      score: lyScore([]),
+      layout: true,
+    };
+
+    expect(() => serializeFile(file)).toThrow("Invalid LilyPond header field");
+  });
+
   it("serializes variables with braces (default)", () => {
     const file: LyFile = {
       version: "2.24.0",

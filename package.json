@@ -15,21 +15,25 @@
     "format:check": "prettier --check .",
     "spec:verify": "node scripts/verify-spec-reconciliation.mjs && node scripts/verify-arrangement-intelligence.mjs",
     "spec:arrangement-intelligence": "node scripts/verify-arrangement-intelligence.mjs",
-    "spec:arrangement-intelligence:complete": "node scripts/verify-arrangement-intelligence.mjs --complete"
+    "spec:arrangement-intelligence:complete": "node scripts/verify-arrangement-intelligence.mjs --complete",
+    "sandbox:lilypond:verify": "node scripts/verify-lilypond-sandbox.mjs"
   },
   "dependencies": {
     "@mariozechner/pi-agent-core": "^0.70.2",
     "@mariozechner/pi-ai": "^0.70.2",
     "@mariozechner/pi-web-ui": "^0.70.2",
     "@sinclair/typebox": "^0.34.38",
+    "dompurify": "^3.4.12",
     "express": "^5.1.0",
     "js-yaml": "^4.1.0",
+    "jsdom": "^29.1.1",
     "jszip": "^3.10.1",
     "tonal": "^6.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/js-yaml": "^4.0.9",
+    "@types/jsdom": "^28.0.3",
     "@types/node": "^22.15.3",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
@@ -37,6 +41,6 @@
     "vitest": "^3.1.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   }
 }

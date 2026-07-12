@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { VELLUM_BROWSER_SECURITY_HEADERS } from "./src/lib/content-security-policy.js";
 
 export default defineConfig({
   build: {
@@ -10,6 +11,7 @@ export default defineConfig({
   },
   server: {
     host: "127.0.0.1",
+    headers: VELLUM_BROWSER_SECURITY_HEADERS,
     proxy: {
       "/api": {
         target: "http://127.0.0.1:3000",

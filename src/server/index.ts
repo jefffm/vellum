@@ -6,9 +6,11 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import type { InstrumentProfile } from "../types.js";
+import { VELLUM_BROWSER_SECURITY_HEADERS } from "../lib/content-security-policy.js";
 import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
+import type { SubprocessRunner } from "./lib/subprocess.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
 import { createStreamRoute, providerConnection } from "./lib/stream-route.js";
 import {
@@ -173,7 +175,11 @@ function requestParserStatus(error: unknown): number {
   return 500;
 }
 
-export function createApiRouter(): Router {
+type ApiRouterOptions = {
+  compilerRunner?: Pick<SubprocessRunner, "run">;
+};
+
+export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const router = Router();
 
   router.get("/", (_request, response) => {
@@ -186,9 +192,9 @@ export function createApiRouter(): Router {
   router.post("/provider-connection/prompt", createProviderPromptRoute(providerConnection));
   router.post("/provider-connection/reconnect", createProviderReconnectRoute(providerConnection));
   router.delete("/provider-connection", createProviderDisconnectRoute(providerConnection));
-  router.post("/compile", createCompileRoute());
+  router.post("/compile", createCompileRoute({ runner: options.compilerRunner }));
   router.post("/engrave", createEngraveRoute());
-  router.post("/validate", createValidateRoute());
+  router.post("/validate", createValidateRoute({ runner: options.compilerRunner }));
   router.post("/chordify", createChordifyRoute());
   router.post("/analyze", createAnalyzeRoute());
   router.post("/lint", createLintRoute());
@@ -405,7 +411,7 @@ export function createApiRouter(): Router {
   );
   router.post(
     "/workspaces/:workspaceId/arrangements/:arrangementId/compile",
-    createArrangementCompileRoute()
+    createArrangementCompileRoute(undefined, options.compilerRunner)
   );
 
   router.get(
@@ -449,6 +455,7 @@ function instrumentSummary(profile: InstrumentProfile): InstrumentSummary {
 
 type CreateAppOptions = {
   security?: RuntimeSecurity;
+  compilerRunner?: Pick<SubprocessRunner, "run">;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -457,6 +464,12 @@ export function createApp(options: CreateAppOptions = {}) {
   const security = validateRuntimeSecurity(options.security ?? resolveRuntimeSecurity());
 
   app.disable("x-powered-by");
+  app.use((_request, response, next) => {
+    for (const [name, value] of Object.entries(VELLUM_BROWSER_SECURITY_HEADERS)) {
+      response.setHeader(name, value);
+    }
+    next();
+  });
   app.use(requestContext);
   app.use(normalizeApiErrorResponses);
   app.use("/api", createApiBoundary(security));
@@ -467,7 +480,7 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(body);
   });
 
-  app.use("/api", createApiRouter());
+  app.use("/api", createApiRouter({ compilerRunner: options.compilerRunner }));
   app.use(express.static(distPath));
 
   app.use(notFound);

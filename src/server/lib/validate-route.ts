@@ -8,6 +8,7 @@ import {
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
 import { lilypondIncludeDirs, parseLilyPondErrors } from "./compile-route.js";
+import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import { SubprocessRunner } from "./subprocess.js";
 
 export type ValidateRouteOptions = {
@@ -16,7 +17,8 @@ export type ValidateRouteOptions = {
 };
 
 export function createValidateRoute(options: ValidateRouteOptions = {}): RequestHandler {
-  const runner = options.runner ?? new SubprocessRunner(options.timeout ?? 15_000);
+  const runner =
+    options.runner ?? new PodmanLilyPondRunner({ defaultTimeout: options.timeout ?? 15_000 });
   const timeout = options.timeout ?? 15_000;
 
   return createApiRoute<ValidateParams, ValidateResult>({

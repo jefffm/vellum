@@ -9,7 +9,7 @@ This directory is the executable control plane for the draft specification in
 - `REQUIREMENTS.md` assigns one stable ID, source section, owner tracer, gate,
   machine-evidence obligation, human-evidence obligation, and initial status to
   every atomic normative requirement.
-- `AUDIT_TRACEABILITY.md` assigns every audit finding F001-F046 to tracers,
+- `AUDIT_TRACEABILITY.md` assigns every audit finding F001-F047 to tracers,
   verification obligations, and allowed final dispositions.
 - `completion-manifest.json` links current evidence and closure records without
   rewriting either ledger.

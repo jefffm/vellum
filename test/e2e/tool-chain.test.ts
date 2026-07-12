@@ -75,7 +75,7 @@ describe("tool chain pipeline", () => {
     expect(body.ok).toBe(true);
     expect(body.data.errors).toEqual([]);
     expect(body.data.svg?.length ?? 0).toBeGreaterThan(0);
-  });
+  }, 90_000);
 });
 
 function scalarPitches(): string[] {

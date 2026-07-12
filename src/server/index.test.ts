@@ -40,6 +40,17 @@ describe("server API endpoints", () => {
     expect(address && typeof address !== "string" ? address.address : address).toBe("127.0.0.1");
   });
 
+  it("serves the application and API with the shared browser security headers", async () => {
+    const server = await listen();
+    servers.push(server);
+    const response = await fetch(`${serverUrl(server)}/health`);
+
+    expect(response.headers.get("content-security-policy")).toContain("script-src 'self'");
+    expect(response.headers.get("content-security-policy")).toContain("object-src 'none'");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+  });
+
   it("allows only the exact configured browser origin and emits a strict preflight", async () => {
     const server = await listen();
     servers.push(server);

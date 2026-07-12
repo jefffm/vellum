@@ -18,6 +18,8 @@ export interface SubprocessConfig {
   timeout?: number;
   outputGlobs?: string[];
   cwd?: string;
+  /** Maximum retained bytes per stdout/stderr stream. The newest output is retained. */
+  maxCaptureBytes?: number;
 }
 
 export interface SubprocessResult {
@@ -73,6 +75,7 @@ export class SubprocessRunner {
     startedAt: number
   ): Promise<Omit<SubprocessResult, "files" | "durationMs">> {
     const timeout = config.timeout ?? this.defaultTimeout;
+    const maxCaptureBytes = config.maxCaptureBytes ?? 4 * 1024 * 1024;
 
     return await new Promise<Omit<SubprocessResult, "files" | "durationMs">>((resolve, reject) => {
       let stdout = "";
@@ -89,7 +92,7 @@ export class SubprocessRunner {
 
       const timeoutTimer = setTimeout(() => {
         timedOut = true;
-        stderr += `Timed out after ${timeout}ms`;
+        stderr = appendBounded(stderr, `Timed out after ${timeout}ms`, maxCaptureBytes, "stderr");
         child.kill("SIGTERM");
         killTimer = setTimeout(() => {
           if (child.exitCode === null && child.signalCode === null) {
@@ -102,11 +105,11 @@ export class SubprocessRunner {
       child.stderr.setEncoding("utf8");
 
       child.stdout.on("data", (chunk: string) => {
-        stdout += chunk;
+        stdout = appendBounded(stdout, chunk, maxCaptureBytes, "stdout");
       });
 
       child.stderr.on("data", (chunk: string) => {
-        stderr += chunk;
+        stderr = appendBounded(stderr, chunk, maxCaptureBytes, "stderr");
       });
 
       child.on("error", (error) => {
@@ -149,6 +152,14 @@ export class SubprocessRunner {
       );
     });
   }
+}
+
+function appendBounded(current: string, chunk: string, limit: number, stream: string): string {
+  const combined = current + chunk;
+  if (Buffer.byteLength(combined) <= limit) return combined;
+  const marker = `[vellum: ${stream} truncated; retaining tail]\n`;
+  const tailBudget = Math.max(0, limit - Buffer.byteLength(marker));
+  return marker + Buffer.from(combined).subarray(-tailBudget).toString("utf8");
 }
 
 export async function runSubprocess(config: SubprocessConfig): Promise<SubprocessResult> {

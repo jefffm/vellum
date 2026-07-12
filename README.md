@@ -76,6 +76,18 @@ tool execution.
 
 On macOS, Vellum stores ChatGPT authorization in Keychain. Set `VELLUM_PROVIDER_CREDENTIAL_STORE=file` only when you explicitly need the atomic, permission-restricted local fallback.
 
+### Isolated notation compiler
+
+Vellum treats LilyPond source as executable input because LilyPond embeds Guile. Browser and arrangement compilation therefore fail closed unless Podman is running and the pinned compiler image is installed. No host LilyPond fallback is used for externally influenced source.
+
+```bash
+podman machine start
+podman pull --platform linux/amd64 docker.io/codello/lilypond@sha256:e9aeee661e40f9cd4b7cd573e3787f09abc52858b074e03ba04c2e17326b69f4
+npm run sandbox:lilypond:verify
+```
+
+Each compile uses a disposable container with no network, no inherited secrets, no writable host path, a read-only root, dropped capabilities, and bounded CPU, memory, processes, duration, source, logs, and artifacts. Only `instruments/` and `templates/` are mounted read-only. `VELLUM_LILYPOND_IMAGE` may select another digest-pinned image for controlled testing; mutable tags are not an acceptable production configuration.
+
 The deterministic fake-provider contract suite runs in ordinary tests. To opt into the real ChatGPT subscription lifecycle smoke test (it opens the authorization page twice and never prints tokens, callback parameters, or model content), run:
 
 ```bash

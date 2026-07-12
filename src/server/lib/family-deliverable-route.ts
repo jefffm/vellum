@@ -1,6 +1,10 @@
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import {
+  setDeliverableResponseHeaders,
+  validateDeliverableForServing,
+} from "./artifact-response.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 const FamilyParams = Type.Object({
@@ -45,9 +49,10 @@ export function createDeliverableContentRoute(store = new WorkspaceStore()): Req
     try {
       const params = Value.Decode(DeliverableParams, request.params);
       const deliverable = store.getDeliverable(params.workspaceId, params.deliverableId);
-      response
-        .type(deliverable.mimeType)
-        .send(store.readDeliverableContent(params.workspaceId, params.deliverableId));
+      const content = store.readDeliverableContent(params.workspaceId, params.deliverableId);
+      validateDeliverableForServing(deliverable, content);
+      setDeliverableResponseHeaders(response, deliverable);
+      response.send(content);
     } catch (error) {
       next(error);
     }

@@ -4,14 +4,14 @@ Status: in-progress
 
 ## Outcome
 
-Implement and verify the complete modular specification under `docs/proposals/arrangement-intelligence/`, disposition every `TECH_DEBT_AUDIT.md` finding F001–F046, achieve three-target parity, validate the shared architecture through continuo and imitative domains, and retain exact machine and human evidence for every completion claim.
+Implement and verify the complete modular specification under `docs/proposals/arrangement-intelligence/`, disposition every `TECH_DEBT_AUDIT.md` finding F001–F047, achieve three-target parity, validate the shared architecture through continuo and imitative domains, and retain exact machine and human evidence for every completion claim.
 
 ## Goal judge
 
 The active goal is complete only when:
 
 - every normative specification clause has a stable requirement ID and current evidence;
-- every F001–F046 finding is fixed and verified, disproven, superseded by an accepted decision, or explicitly accepted by the Owner;
+- every F001–F047 finding is fixed and verified, disproven, superseded by an accepted decision, or explicitly accepted by the Owner;
 - every required AFK tracer is committed and pushed;
 - every mandatory HITL attestation is current and accepted;
 - all required evaluation suites and repository quality gates pass at the final commit;

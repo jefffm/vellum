@@ -9,15 +9,15 @@ import {
   type CompileResult,
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
+import { createNodeGeneratedArtifactSecurity } from "./generated-artifact-security-node.js";
+import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import { SubprocessError, SubprocessRunner, type SubprocessResult } from "./subprocess.js";
+
+const generatedArtifactSecurity = createNodeGeneratedArtifactSecurity();
 
 export function lilypondIncludeDirs(): string[] {
   const base = process.cwd();
-  return [
-    base,
-    process.env.VELLUM_INSTRUMENTS_DIR ?? path.join(base, "instruments"),
-    path.join(base, "templates"),
-  ];
+  return [base, path.join(base, "instruments"), path.join(base, "templates")];
 }
 
 export type CompileRouteOptions = {
@@ -26,7 +26,8 @@ export type CompileRouteOptions = {
 };
 
 export function createCompileRoute(options: CompileRouteOptions = {}): RequestHandler {
-  const runner = options.runner ?? new SubprocessRunner(options.timeout ?? 30_000);
+  const runner =
+    options.runner ?? new PodmanLilyPondRunner({ defaultTimeout: options.timeout ?? 30_000 });
 
   return createApiRoute<CompileParams, CompileResult>({
     validate: (body) => Value.Decode(CompileParamsSchema, body),
@@ -87,10 +88,27 @@ export async function compileLilyPond(
     }
   }
 
-  const failed = runs.some((run) => run.exitCode !== 0);
+  let failed = runs.some((run) => run.exitCode !== 0);
+  const rawSvg = failed ? undefined : readTextArtifact(files, ".svg");
+  let svg: string | undefined;
+  if (rawSvg) {
+    try {
+      svg = generatedArtifactSecurity.sanitizeNotationSvg(rawSvg).markup;
+    } catch {
+      failed = true;
+      errors.push({
+        bar: 0,
+        beat: 0,
+        line: 0,
+        type: "artifact_security",
+        message: "Generated notation did not pass the active-content security boundary",
+      });
+    }
+  }
 
   return {
-    svg: failed ? undefined : readTextArtifact(files, ".svg"),
+    svg: failed ? undefined : svg,
+    artifactPolicyVersion: svg ? generatedArtifactSecurity.policyVersion : undefined,
     pdf: failed ? undefined : readBase64Artifact(files, ".pdf"),
     midi: failed
       ? undefined
@@ -222,15 +240,17 @@ function extractBeat(message: string): number {
 }
 
 function compileEnvironmentError(error: SubprocessError): CompileError {
-  const missingExecutable = /ENOENT|not found|no such file/i.test(error.message);
+  const unavailableSandbox = /ENOENT|not found|no such file|sandbox|podman|image/i.test(
+    error.message
+  );
 
   return {
     bar: 0,
     beat: 0,
     line: 0,
     type: "environment",
-    message: missingExecutable
-      ? "LilyPond executable not found on PATH. Install LilyPond or run Vellum inside `nix develop` before compiling."
+    message: unavailableSandbox
+      ? "The isolated LilyPond compiler is unavailable. Start the Podman machine and install the pinned Vellum LilyPond image before compiling."
       : error.message,
   };
 }

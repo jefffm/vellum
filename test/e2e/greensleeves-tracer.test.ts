@@ -5,23 +5,28 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { arrangementToEngraveParams } from "../../src/lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../src/lib/audio-preview.js";
+import { GENERATED_ARTIFACT_POLICY_VERSION } from "../../src/lib/generated-artifact-security.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
 import { compileLilyPond } from "../../src/server/lib/compile-route.js";
 import { engrave } from "../../src/server/lib/engrave.js";
 import { OmrService } from "../../src/server/lib/omr.js";
 import type { OmrBackend } from "../../src/server/lib/omr.js";
-import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
+import {
+  DEFAULT_LILYPOND_IMAGE,
+  PodmanLilyPondRunner,
+} from "../../src/server/lib/podman-lilypond-runner.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
 
-let lilypondAvailable = false;
+let lilypondSandboxAvailable = false;
 
 beforeAll(() => {
   try {
-    execFileSync("lilypond", ["--version"], { stdio: "pipe" });
-    lilypondAvailable = true;
+    execFileSync("podman", ["info"], { stdio: "pipe" });
+    execFileSync("podman", ["image", "exists", DEFAULT_LILYPOND_IMAGE], { stdio: "pipe" });
+    lilypondSandboxAvailable = true;
   } catch {
-    lilypondAvailable = false;
+    lilypondSandboxAvailable = false;
   }
 });
 
@@ -33,7 +38,7 @@ describe("Greensleeves PDF tracer bullet", () => {
   });
 
   it("uploads, recognizes, analyzes, arranges, audits, engraves, and compiles", async () => {
-    if (!lilypondAvailable) return;
+    if (!lilypondSandboxAvailable) return;
 
     const store = new WorkspaceStore({ rootDirectory });
     const workspace = store.create({
@@ -135,7 +140,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     );
     const compiled = await compileLilyPond(
       { source: engraving.source, format: "both" },
-      new SubprocessRunner(60_000),
+      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
       60_000
     );
     const luteEngraving = engrave(
@@ -143,7 +148,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     );
     const luteCompiled = await compileLilyPond(
       { source: luteEngraving.source, format: "both" },
-      new SubprocessRunner(60_000),
+      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
       60_000
     );
     const classicalParams = arrangementToEngraveParams(
@@ -154,7 +159,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     const classicalEngraving = engrave(classicalParams);
     const classicalCompiled = await compileLilyPond(
       { source: classicalEngraving.source, format: "both" },
-      new SubprocessRunner(60_000),
+      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
       60_000
     );
 
@@ -166,14 +171,22 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(compiled.svg).toContain(
       `data-measure-id="${arranged.arrangementScore.events[0]!.measureId}"`
     );
+    expect(compiled.artifactPolicyVersion).toBe(GENERATED_ARTIFACT_POLICY_VERSION);
+    expect(compiled.svg).not.toMatch(
+      /<script|<style|<a\b|\shref=|xlink:href|textedit:|\son[a-z]+=/i
+    );
     expect(compiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(compiled.midi?.length ?? 0).toBeGreaterThan(100);
     expect(luteCompiled.errors).toEqual([]);
     expect(luteCompiled.svg?.length ?? 0).toBeGreaterThan(1_000);
+    expect(luteCompiled.artifactPolicyVersion).toBe(GENERATED_ARTIFACT_POLICY_VERSION);
+    expect(luteCompiled.svg).not.toMatch(/<script|<style|<a\b|\shref=|xlink:href|textedit:/i);
     expect(luteCompiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(luteCompiled.midi?.length ?? 0).toBeGreaterThan(100);
     expect(classicalCompiled.errors).toEqual([]);
     expect(classicalCompiled.svg?.length ?? 0).toBeGreaterThan(1_000);
+    expect(classicalCompiled.artifactPolicyVersion).toBe(GENERATED_ARTIFACT_POLICY_VERSION);
+    expect(classicalCompiled.svg).not.toMatch(/<script|<style|<a\b|\shref=|xlink:href|textedit:/i);
     expect(classicalCompiled.pdf?.length ?? 0).toBeGreaterThan(1_000);
     expect(classicalCompiled.midi?.length ?? 0).toBeGreaterThan(100);
     expect(classicalEngraving.source).toContain('\\include "instruments/classical-guitar-6.ily"');
@@ -304,7 +317,7 @@ describe("Greensleeves PDF tracer bullet", () => {
         classicalArranged.arrangementScore.id,
       ],
     });
-  }, 90_000);
+  }, 300_000);
 });
 
 function midiNoteOns(midi: Buffer): number[] {

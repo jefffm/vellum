@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T03",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T10:53:00Z",
+  "requirements": {
+    "AI-DEL-002": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H7 trust-boundary review at the deferred human gate"
+    },
+    "AI-EVAL-049": {
+      "status": "partial",
+      "remaining": "T10 and T11 enforce the same hard gate in evaluation promotion and retained reports"
+    },
+    "AI-EVAL-069": {
+      "status": "partial",
+      "remaining": "The shared sanitizer and report-fragment consumer are verified; T11 and T33 add complete Evaluation Report and browser suites"
+    },
+    "AI-DEL-026": {
+      "status": "partial",
+      "remaining": "Safe report rendering is implemented; the first-tracer report is produced in T11"
+    },
+    "AI-DEL-072": {
+      "status": "partial",
+      "remaining": "Pinned container confinement, source/log/artifact/time/process bounds, cleanup, and fail-closed setup are verified; T08 adds exhaustive network and resource-bomb measurements"
+    }
+  },
+  "auditFindings": {
+    "F031": "partial: subprocess capture and LilyPond output/time/process limits implemented; exhaustive tool-family budgets remain T08",
+    "F043": "machine fixed+verified; final browser/report mutation evidence continues in T11 and T33",
+    "F047": "machine implementation complete for compiler confinement; exhaustive resource/network replay and final closure evidence continue in T08, T33, and T34"
+  },
+  "summary": {
+    "testsPassed": 923,
+    "testsSkipped": 1,
+    "generatedArtifactFocusedTestsPassed": 149,
+    "sandboxPolicyAndIsolationTestsPassed": 5,
+    "threeTargetSandboxTracerTestsPassed": 1,
+    "specRequirements": 447,
+    "auditFindings": 47
+  },
+  "commands": [
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm test", "result": "pass: 923 passed, 1 skipped" },
+    { "command": "npm run format:check", "result": "pass" },
+    {
+      "command": "npm run spec:verify",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "npm run sandbox:lilypond:verify", "result": "pass: pinned LilyPond 2.26.0" },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/03-safe-generated-artifact-rendering.md",
+      "sha256": "556af117157e91a8a90b1b6f84cc17be104c75e865eeae6ba6eec4045e0dd868"
+    },
+    {
+      "path": "src/lib/generated-artifact-security.ts",
+      "sha256": "17bc2b1511b7e914706033930fc788e7edf215caa8ed8b13d9241983479db00e"
+    },
+    {
+      "path": "src/server/lib/podman-lilypond-runner.ts",
+      "sha256": "1fcfb56ee2d4d26ec3de96f3dccfa9df647e1ab43faf5dada796219fcee1b05a"
+    },
+    {
+      "path": "src/server/lib/podman-lilypond-runner.test.ts",
+      "sha256": "01a7ea63357992ccbca96733f9e203221c244a90bb2b646c14c7aeed30a879cb"
+    },
+    {
+      "path": "src/artifact-preview.ts",
+      "sha256": "2354dd1605a286e5eef8bad2bfcd18f1cff42a417ced082554c9ba585d0d98c3"
+    },
+    {
+      "path": "src/renderers.ts",
+      "sha256": "0c7a08c2694506a9407315dd55376ecb989e50408f6d22475c156937ff2b5b40"
+    },
+    {
+      "path": "src/server/lib/compile-route.ts",
+      "sha256": "48b1fdb581a7b46e82b967f2ca23b2dcc762b5a3c7068179aa33b014df01d020"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "e2cb535670c9a3523a65d616134331a68242522a08ea7305d5a8554be4d33995"
+    },
+    {
+      "path": "README.md",
+      "sha256": "488dbc52cd8cca04a993aeef42139fb95d4a08d031be2bb6cc65f90190dc9631"
+    }
+  ]
+}

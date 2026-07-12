@@ -1,9 +1,10 @@
 import express from "express";
 import { createServer, type Server } from "node:http";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ApiResponse } from "../../lib/api-contract.js";
 import path from "node:path";
 import process from "node:process";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
+import { GENERATED_ARTIFACT_POLICY_VERSION } from "../../lib/generated-artifact-security.js";
 import { createCompileRoute, lilypondIncludeDirs, parseLilyPondErrors } from "./compile-route.js";
 import { SubprocessError, type SubprocessResult } from "./subprocess.js";
 
@@ -11,6 +12,7 @@ type ApiEnvelope<T> = ApiResponse<T>;
 
 type CompileResponse = {
   svg?: string;
+  artifactPolicyVersion?: string;
   pdf?: string;
   errors: unknown[];
 };
@@ -32,7 +34,12 @@ describe("createCompileRoute", () => {
   it("returns SVG artifacts from LilyPond", async () => {
     const run = vi.fn(async () =>
       subprocessResult({
-        files: new Map([["output.svg", Buffer.from("<svg><g class='note'/></svg>")]]),
+        files: new Map([
+          [
+            "output.svg",
+            Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><g class="note"/></svg>'),
+          ],
+        ]),
       })
     );
     const server = await listen(createCompileRoute({ runner: { run } }));
@@ -45,6 +52,7 @@ describe("createCompileRoute", () => {
     expect(json.ok).toBe(true);
     if (json.ok) {
       expect(json.data.svg).toContain("<svg");
+      expect(json.data.artifactPolicyVersion).toBe(GENERATED_ARTIFACT_POLICY_VERSION);
       expect(json.data.errors).toEqual([]);
     }
     expect(run).toHaveBeenCalledWith(expect.objectContaining({ command: "lilypond" }));
@@ -55,6 +63,32 @@ describe("createCompileRoute", () => {
     expect(callArgs).toContain("output");
     expect(callArgs).toContain("source.ly");
     expect(callArgs).toContain("-I");
+  });
+
+  it("sanitizes active LilyPond SVG output before returning it", async () => {
+    const hostile = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="alert(1)">
+      <style>@import url(https://attacker.invalid/x.css)</style>
+      <script>alert(1)</script>
+      <a xlink:href="textedit:///private/tmp/source.ly:1:2:3"><g class="vellum-score-event" data-arrangement-event-id="event.1" data-measure-id="measure.1"><text>Safe note</text></g></a>
+    </svg>`;
+    const run = vi.fn(async () =>
+      subprocessResult({ files: new Map([["output.svg", Buffer.from(hostile)]]) })
+    );
+    const server = await listen(createCompileRoute({ runner: { run } }));
+    servers.push(server);
+
+    const response = await postCompile(server, { source: "{ c'4 }" });
+    const json = (await response.json()) as ApiEnvelope<CompileResponse>;
+
+    expect(response.status).toBe(200);
+    expect(json.ok).toBe(true);
+    if (!json.ok) return;
+    expect(json.data.errors).toEqual([]);
+    expect(json.data.svg).toContain("Safe note");
+    expect(json.data.svg).toContain('data-arrangement-event-id="event.1"');
+    expect(json.data.svg).not.toMatch(
+      /<script|<style|<a\b|onload|href=|textedit:|attacker\.invalid/i
+    );
   });
 
   it("returns base64 PDFs", async () => {
@@ -121,10 +155,10 @@ describe("createCompileRoute", () => {
       expect(json.data.errors).toEqual([
         expect.objectContaining({
           type: "environment",
-          message: expect.stringContaining("LilyPond executable not found"),
+          message: expect.stringContaining("isolated LilyPond compiler is unavailable"),
         }),
       ]);
-      expect(json.data.errors[0].message).toContain("nix develop");
+      expect(json.data.errors[0].message).toContain("Podman");
     }
   });
 
@@ -136,7 +170,7 @@ describe("createCompileRoute", () => {
 });
 
 describe("lilypondIncludeDirs", () => {
-  it("includes the project root so engrave-generated includes resolve", () => {
+  it("exposes only the container-owned include root", () => {
     expect(lilypondIncludeDirs()).toEqual([
       process.cwd(),
       path.join(process.cwd(), "instruments"),

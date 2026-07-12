@@ -1,6 +1,7 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createApp } from "../../src/server/index.js";
+import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
 
 export type TestResponse<TData = unknown> = {
   status: number;
@@ -15,7 +16,7 @@ export class TestServer {
   ) {}
 
   static async start(opts: { port?: number } = {}): Promise<TestServer> {
-    const app = createApp();
+    const app = createApp({ compilerRunner: new SubprocessRunner(60_000) });
     const requestedPort = opts.port ?? 0;
 
     return await new Promise<TestServer>((resolve, reject) => {

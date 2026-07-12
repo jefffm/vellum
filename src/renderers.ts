@@ -1,8 +1,8 @@
 import { registerToolRenderer } from "@mariozechner/pi-web-ui";
 import type { ToolRenderResult, ToolRenderer } from "@mariozechner/pi-web-ui";
 import { html } from "lit";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
+import { createSafeNotationSvgElement } from "./artifact-preview.js";
 import type { CompileResult, PlayabilityResult } from "./types.js";
 import type { FretboardResult } from "./fretboard.js";
 
@@ -71,13 +71,27 @@ const fretboardRenderer: ToolRenderer<unknown, FretboardResult> = {
     const svg = result?.details?.svg;
 
     if (typeof svg === "string" && svg.length > 0) {
+      let notation: SVGSVGElement;
+      try {
+        notation = createSafeNotationSvgElement(svg);
+      } catch {
+        return {
+          content: html`
+            <div class="fretboard-result-unavailable" role="alert">
+              Fretboard preview unavailable because generated content did not pass Vellum's safety
+              checks.
+            </div>
+          `,
+          isCustom: true,
+        };
+      }
       return {
         content: html`
           <div
             class="fretboard-result"
             style="max-width:320px; padding:8px; border:1px solid #e0e0e0; border-radius:8px; background:#fff;"
           >
-            ${unsafeHTML(svg)}
+            ${notation}
           </div>
         `,
         isCustom: true,

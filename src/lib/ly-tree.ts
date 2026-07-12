@@ -240,7 +240,7 @@ export function serializeFile(file: LyFile): string {
   lines.push(`\\version "${file.version}"`);
 
   for (const inc of file.includes) {
-    lines.push(`\\include "${inc}"`);
+    lines.push(`\\include "${escapeLilyPondString(inc)}"`);
   }
 
   if (file.header && Object.keys(file.header).length > 0) {
@@ -248,7 +248,10 @@ export function serializeFile(file: LyFile): string {
     lines.push("\\header {");
 
     for (const [k, v] of Object.entries(file.header)) {
-      lines.push(`  ${k} = "${v}"`);
+      if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(k)) {
+        throw new Error(`Invalid LilyPond header field: ${k}`);
+      }
+      lines.push(`  ${k} = "${escapeLilyPondString(v)}"`);
     }
 
     lines.push("}");
@@ -281,6 +284,15 @@ export function serializeFile(file: LyFile): string {
   lines.push("}");
 
   return lines.join("\n") + "\n";
+}
+
+/** Escape an untrusted value for a LilyPond quoted string literal. */
+export function escapeLilyPondString(value: string): string {
+  return value
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ")
+    .replace(/\r\n?|\n/g, " ")
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"');
 }
 
 /** Serialize a container node to indented LilyPond text. */
