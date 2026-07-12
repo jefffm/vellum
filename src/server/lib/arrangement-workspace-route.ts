@@ -25,6 +25,7 @@ const RequestSchema = Type.Object(
       Type.Literal("free_paraphrase"),
     ]),
     performanceBrief: Type.Optional(PerformanceBriefInputSchema),
+    arrangementPlanId: Type.Optional(Type.String({ pattern: "^plan\\.[a-zA-Z0-9.-]+$" })),
   },
   { additionalProperties: false }
 );
@@ -49,6 +50,7 @@ export function createFaithfulArrangementRoute(options: RouteOptions = {}): Requ
         targetConfigurationId: requestBody.targetConfigurationId,
         preservationPolicy: requestBody.preservationPolicy,
         performanceBrief: requestBody.performanceBrief,
+        arrangementPlanId: requestBody.arrangementPlanId,
       };
     },
     handler: async ({ workspaceId, ...input }) =>

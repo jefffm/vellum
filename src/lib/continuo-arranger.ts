@@ -21,6 +21,7 @@ type ContinuoArrangementOptions = {
   targetConfiguration: TargetConfiguration;
   targetInstrument?: InstrumentModel;
   preservationPolicy?: PreservationPolicy;
+  allowedStrategies?: ContinuoStrategy[];
 };
 
 type ContinuoStrategy =
@@ -74,11 +75,17 @@ export function arrangeContinuo(
       `${options.targetConfiguration.instrumentId} cannot sound the complete Continuo Foundation. Choose a separate bass instrument or explicitly request a Continuo Reduction.`
     );
   }
-  const strategies: ContinuoStrategy[] = targetCanSoundFoundation
+  const availableStrategies: ContinuoStrategy[] = targetCanSoundFoundation
     ? ["complete-realization", "lean-realization"]
     : options.targetConfiguration.continuoBassInstrumentId
       ? ["separate-bass-realization", "continuo-reduction"]
       : ["continuo-reduction"];
+  const strategies = options.allowedStrategies
+    ? availableStrategies.filter((strategy) => options.allowedStrategies!.includes(strategy))
+    : availableStrategies;
+  if (strategies.length === 0) {
+    throw new Error("The Continuo Plan permits no strategy feasible for this target");
+  }
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const events = buildContinuoEvents(
       score,

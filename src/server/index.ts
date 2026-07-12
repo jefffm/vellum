@@ -89,6 +89,7 @@ import {
   createArrangementPlanGetRoute,
 } from "./lib/arrangement-plan-route.js";
 import { createOwnerIntentClassificationRoute } from "./lib/owner-intent-route.js";
+import { createPlanConflictResolutionRoute } from "./lib/plan-conflict-route.js";
 import {
   createArrangementFamilyGetRoute,
   createDeliverableContentRoute,
@@ -239,6 +240,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute());
   router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
   router.post("/owner/intent-proposals", createOwnerIntentClassificationRoute());
+  router.post(
+    "/workspaces/:workspaceId/plan-conflicts/:conflictId/resolution",
+    createPlanConflictResolutionRoute()
+  );
   router.post("/owner/knowledge-candidates/:id/reject", createKnowledgeRejectionRoute());
   router.patch("/owner/knowledge-candidates/:id", createKnowledgeCorrectionRoute());
   router.post("/owner/historical-practice-claims/:id/release", createHistoricalClaimReleaseRoute());

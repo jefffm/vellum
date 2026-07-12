@@ -275,6 +275,7 @@ export function buildNarrowPlanningRecords(input: {
       disposition: "retained" as const,
       rationale: `Minimal projection retains Preservation Target ${target.id}.`,
     })),
+    specialistIntent: { kind: "none" },
     decisions,
     status: "ready",
     createdAt: input.createdAt,

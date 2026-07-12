@@ -48,6 +48,7 @@ describe("music domain contracts", () => {
       sourceTruthAssessmentIds: [],
       performanceBriefIds: [],
       arrangementPlanIds: [],
+      planConflictIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],

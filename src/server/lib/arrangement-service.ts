@@ -6,6 +6,7 @@ import {
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import { arrangeContinuo, auditContinuo } from "../../lib/continuo-arranger.js";
+import { arrangeCreativeParaphrase } from "../../lib/creative-arranger.js";
 import { arrangeImitativeIntabulation, auditImitative } from "../../lib/imitative-arranger.js";
 import { applyPreservationPolicy } from "../../lib/preservation-policy.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
@@ -14,6 +15,7 @@ import {
   buildNarrowPlanningRecords,
   type NarrowPlanningRecords,
 } from "../../lib/narrow-intelligence.js";
+import { specializeArrangementPlan } from "../../lib/specialist-planning.js";
 import type {
   ArrangementCandidate,
   ArrangementEvent,
@@ -57,6 +59,7 @@ export type CreateFaithfulArrangementInput = {
   familyCommitmentIds?: string[];
   policyExceptionIds?: string[];
   performanceBrief?: PerformanceBriefInput;
+  arrangementPlanId?: string;
   regenerationFrom?: { arrangementScoreId: string; changedSourceEventIds: string[] };
 };
 
@@ -175,22 +178,47 @@ export class ArrangementService {
     }
     const preservationPolicy = input.preservationPolicy ?? "faithful_reduction";
     const currentPlanningWorkspace = this.store.get(workspaceId);
-    const existingPlan = currentPlanningWorkspace.arrangementPlanIds
-      .map((id) => this.store.getArrangementPlan(workspaceId, id))
-      .find(
-        (plan) =>
-          plan.normalizedScoreId === score.id &&
-          plan.normalizedScoreVersion === score.version &&
-          plan.analysisRecordId === analysis.id &&
-          plan.analysisRecordVersion === analysis.version &&
-          plan.targetConfigurationId === targetConfiguration.id &&
-          plan.preservationPolicy === preservationPolicy &&
-          performanceBriefMatches(
-            this.store.getPerformanceBrief(workspaceId, plan.performanceBriefId),
-            input.performanceBrief,
-            targetConfiguration
-          )
+    const existingPlan = input.arrangementPlanId
+      ? this.store.getArrangementPlan(workspaceId, input.arrangementPlanId)
+      : currentPlanningWorkspace.arrangementPlanIds
+          .map((id) => this.store.getArrangementPlan(workspaceId, id))
+          .find(
+            (plan) =>
+              plan.normalizedScoreId === score.id &&
+              plan.normalizedScoreVersion === score.version &&
+              plan.analysisRecordId === analysis.id &&
+              plan.analysisRecordVersion === analysis.version &&
+              plan.targetConfigurationId === targetConfiguration.id &&
+              plan.preservationPolicy === preservationPolicy &&
+              performanceBriefMatches(
+                this.store.getPerformanceBrief(workspaceId, plan.performanceBriefId),
+                input.performanceBrief,
+                targetConfiguration
+              )
+          );
+    if (
+      input.arrangementPlanId &&
+      existingPlan &&
+      (existingPlan.normalizedScoreId !== score.id ||
+        existingPlan.normalizedScoreVersion !== score.version ||
+        existingPlan.analysisRecordId !== analysis.id ||
+        existingPlan.analysisRecordVersion !== analysis.version ||
+        existingPlan.targetConfigurationId !== targetConfiguration.id ||
+        existingPlan.preservationPolicy !== preservationPolicy ||
+        !performanceBriefMatches(
+          this.store.getPerformanceBrief(workspaceId, existingPlan.performanceBriefId),
+          input.performanceBrief,
+          targetConfiguration
+        ))
+    ) {
+      throw new ApiRouteError(
+        "Requested Arrangement Plan is incompatible with this realization",
+        409
       );
+    }
+    if (input.arrangementPlanId && existingPlan?.status !== "ready") {
+      throw new ApiRouteError("Requested Arrangement Plan is not confirmed and ready", 409);
+    }
     let planning: NarrowPlanningRecords;
     if (existingPlan) {
       planning = {
@@ -267,6 +295,15 @@ export class ArrangementService {
           sourceTruthAssessmentId: sourceTruthAssessment.id,
         },
       };
+      planning = {
+        ...planning,
+        arrangementPlan: specializeArrangementPlan({
+          base: planning.arrangementPlan,
+          analysis,
+          target: targetConfiguration,
+          preservationPolicy,
+        }),
+      };
       if (
         !["authoritative_for_purpose", "authoritative_with_disclosed_uncertainty"].includes(
           planning.sourceTruthAssessment.outcome
@@ -338,7 +375,19 @@ export class ArrangementService {
     });
     let generated;
     try {
-      if (targetConfiguration.realizationProfileId) {
+      if (planning.arrangementPlan.kind === "creative_arrangement") {
+        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        generated = arrangeCreativeParaphrase(score, analysis, instrument, {
+          arrangementId,
+          createdAt: timestamp,
+          targetConfiguration,
+          preservationPolicy,
+          allowedStrategies:
+            planning.arrangementPlan.specialistIntent.kind === "creative_arrangement"
+              ? planning.arrangementPlan.specialistIntent.candidateStrategies
+              : [],
+        });
+      } else if (targetConfiguration.realizationProfileId) {
         const targetInstrument =
           targetConfiguration.instrumentId === "piano"
             ? undefined
@@ -349,6 +398,10 @@ export class ArrangementService {
           targetConfiguration,
           targetInstrument,
           preservationPolicy: input.preservationPolicy,
+          allowedStrategies:
+            planning.arrangementPlan.specialistIntent.kind === "continuo_realization"
+              ? planning.arrangementPlan.specialistIntent.candidateStrategies
+              : undefined,
         });
       } else if (analysis.texture === "imitative-polyphony") {
         const instrument = this.loadInstrument(targetConfiguration.instrumentId);
@@ -357,6 +410,10 @@ export class ArrangementService {
           createdAt: timestamp,
           targetConfiguration,
           preservationPolicy: input.preservationPolicy,
+          allowedStrategies:
+            planning.arrangementPlan.specialistIntent.kind === "imitative_intabulation"
+              ? planning.arrangementPlan.specialistIntent.candidateStrategies
+              : undefined,
         });
       } else {
         const instrument = this.loadInstrument(targetConfiguration.instrumentId);
@@ -379,13 +436,49 @@ export class ArrangementService {
         status: "failed",
         completedAt: timestamp,
       });
-      throw error;
+      if (error instanceof ApiRouteError) throw error;
+      const specialistDecisions = planning.arrangementPlan.decisions.filter((decision) =>
+        ["creative_design", "continuo_realization", "imitative_voice_distribution"].includes(
+          decision.dimension
+        )
+      );
+      const conflictingDecisions = specialistDecisions.length
+        ? specialistDecisions
+        : planning.arrangementPlan.decisions;
+      const conflict = this.store.savePlanConflict(workspaceId, {
+        id: `plan-conflict.${this.createId()}`,
+        arrangementPlanId: planning.arrangementPlan.id,
+        targetConfigurationId: targetConfiguration.id,
+        scope: conflictingDecisions[0]!.scope,
+        conflictingDecisionIds: conflictingDecisions.map((decision) => decision.id),
+        reasonCode: "target_realization_infeasible",
+        consequence: error instanceof Error ? error.message : "Target realization is infeasible",
+        evidenceIds: [
+          planning.arrangementPlan.id,
+          ...new Set(conflictingDecisions.flatMap((decision) => decision.evidenceIds)),
+        ],
+        resolutionOptions: [
+          "revise_target_local_extension",
+          "revise_shared_plan",
+          "change_policy",
+          "request_policy_exception",
+          "block",
+        ],
+        status: "unresolved",
+        createdAt: timestamp,
+      });
+      throw new ApiRouteError(conflict.consequence, 409, "plan_conflict", {
+        planConflict: conflict,
+      });
     }
     const candidates = persistableCandidates(
       generated.candidates,
       searchId,
       timestamp,
-      rankingWeights
+      rankingWeights,
+      generated.candidates.find(
+        (candidate) => candidate.id === generated.selected.selectedCandidateId
+      )?.strategy
     ).map((candidate) => this.store.saveArrangementCandidate(workspaceId, candidate));
     const selectedCandidate = candidates.find((candidate) => candidate.status === "selected")!;
     const selectedGeneratedCandidate = generated.candidates.find(
@@ -836,7 +929,8 @@ function persistableCandidates(
   generated: ArrangementCandidate[],
   searchId: string,
   createdAt: string,
-  weights: RankingWeights
+  weights: RankingWeights,
+  plannedStrategy?: string
 ): ArrangementCandidate[] {
   const evaluated = generated.map((candidate) => {
     const positionCount = candidate.events.reduce((sum, event) => sum + event.positions.length, 0);
@@ -911,7 +1005,8 @@ function persistableCandidates(
     .filter((candidate) => candidate.status !== "rejected")
     .sort((left, right) => right.evaluation!.weightedTotal - left.evaluation!.weightedTotal);
   survivors.forEach((candidate, index) => (candidate.rank = index + 1));
-  const winnerId = survivors[0]?.id;
+  const winnerId =
+    survivors.find((candidate) => candidate.strategy === plannedStrategy)?.id ?? survivors[0]?.id;
   for (const candidate of evaluated) {
     if (candidate.status === "rejected") continue;
     candidate.status = candidate.id === winnerId ? "selected" : "survived";

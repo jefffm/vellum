@@ -20,6 +20,7 @@ type Options = {
   createdAt: string;
   targetConfiguration: TargetConfiguration;
   preservationPolicy?: PreservationPolicy;
+  allowedStrategies?: Array<"low-fret-polyphony" | "voice-continuity">;
 };
 
 type AssignedNote = {
@@ -41,7 +42,7 @@ export function arrangeImitativeIntabulation(
   if (options.targetConfiguration.instrumentId !== "renaissance-lute-6") {
     throw new Error("Initial imitative intabulation target must be renaissance-lute-6");
   }
-  const strategies = ["low-fret-polyphony", "voice-continuity"] as const;
+  const strategies = options.allowedStrategies ?? ["low-fret-polyphony", "voice-continuity"];
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
     const assignments = assignCourses(score, model, strategy);
     const events = projectEvents(score, assignments);

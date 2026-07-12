@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T18",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T19:44:40Z",
+  "requirements": {
+    "AI-STP-057": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-058": {
+      "status": "partial",
+      "remaining": "T37 adds the contextual Continuo Golden corpus and specialist human evidence"
+    },
+    "AI-STP-059": {
+      "status": "partial",
+      "remaining": "T38 adds the imitative Golden corpus and specialist human evidence"
+    },
+    "AI-STP-069": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-070": {
+      "status": "partial",
+      "remaining": "T27 executes selected family and target-local resolution paths"
+    },
+    "AI-DEL-028": {
+      "status": "partial",
+      "remaining": "T37-T38 promote specialist fixtures to the complete Golden corpus"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 987,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Five proportional Plan kinds retain domain-specific, kind-matched intent and exact Analysis/target references",
+      "Creative Plans own generated formal, textural, harmonic, and idiomatic material through confirmed evidence-bearing decisions",
+      "Corrected creative Plans drive materially different candidate families and generic ranking cannot override Plan selection",
+      "Continuo Plans bind exact Realization Profile, Foundation disposition, figures, voice leading, and permitted strategies",
+      "Imitative Plans bind voice distribution, overlap, ordered entries, cadential goals, and permitted strategies",
+      "Infeasible targets persist typed Plan Conflicts, fail their search, and create no Arrangement Score",
+      "Conflict resolution selection remains distinct from execution and cannot be silently changed",
+      "Workspace migration and recovery retain Plan Conflict identities"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.098bc895-34e3-49f9-b877-b6e32b7bf1ea",
+      "cardId": "evaluation-card.8980bf90-5ee3-4c7e-83b6-9849f6e1721f",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "specialistAndHumanEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 987 passed, 1 skipped" },
+    {
+      "command": "focused creative, continuo, imitative, conflict, store, and contract tests",
+      "result": "pass"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t18-eval-final",
+      "result": "pass: hard gates pass and unmeasured specialist/human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/18-specialist-plan-kinds.md",
+      "sha256": "bd51af7e8bbbf01809438d06edef3b645bec8f597eb40984756201cbcd839a50"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "d44a760d01e66b0360edc3bd8b4e75d5a2a6672c41b8c24f5342c2ca27d4c0ae"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "1a15a84ec14eb0368e6620baff58691b50e3bef33c53bca4449b19787137aeea"
+    },
+    {
+      "path": "src/lib/specialist-planning.ts",
+      "sha256": "dd63872a941a2a2e0a1cc1bad28c34401cba5f4810c7497561424e0c50df904f"
+    },
+    {
+      "path": "src/lib/creative-arranger.ts",
+      "sha256": "0fbeba582c52e942798c6da0a1dfc392c78e55015c3ab905010d613c83d0bd04"
+    },
+    {
+      "path": "src/lib/continuo-arranger.ts",
+      "sha256": "ef865780b628d0c021f29e907e2cf452e279cf2368d77c97d09f1ed0cd2215df"
+    },
+    {
+      "path": "src/lib/imitative-arranger.ts",
+      "sha256": "04ac21b927caaa45f4ebda3ecadb92368afc8d45a6671757fab0296c60d171c8"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "09f5d67274682c4a8db1a28b3baefc4af962d2deabe470cd0ecc0e733fc07fb6"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "bcff3a9a17cec574310003f6ef6f93a0c0b16a12151ef94c6643674adba384ef"
+    },
+    {
+      "path": "src/server/lib/plan-conflict-route.ts",
+      "sha256": "a545c178a27b1733813a58ef178027f7b191d3c8692481d7d5b1ef4e5175b739"
+    },
+    {
+      "path": "test/e2e/creative-plan-tracer.test.ts",
+      "sha256": "0eb03fd4461317abf7d8684a5432d447292fa5055d35d8481e9c9a6984d5363d"
+    },
+    {
+      "path": "test/e2e/continuo-tracer.test.ts",
+      "sha256": "895fccb99c24113b52da19c6fc1c35b7fc3b623bd0284e90da53a7f359318dd2"
+    },
+    {
+      "path": "test/e2e/imitative-counterpoint-tracer.test.ts",
+      "sha256": "aa292af6c9fc02f8adce1ba8f58a74365af8362122485dbadedf9a747e5ae111"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.test.ts",
+      "sha256": "0b38ea341d6826cb7a7fbf84588c73f4c6f8652105a4a2cdee24664ffd67788d"
+    },
+    {
+      "path": "src/lib/music-domain.test.ts",
+      "sha256": "60537662f975ac93f787dcf186add367305df79f212ba95e3004089744c0a294"
+    },
+    {
+      "path": "src/server/lib/workspace-store.test.ts",
+      "sha256": "1d49f67267a4a1deee8a892c8f3555516303f4de66e1cb7b49b9384b41d08bdf"
+    }
+  ]
+}

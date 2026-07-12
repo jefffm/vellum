@@ -36,6 +36,7 @@ import {
   SourceTruthAssessmentSchema,
   PerformanceBriefSchema,
   ArrangementPlanSchema,
+  PlanConflictSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
   ScoreTranscriptionSchema,
@@ -62,6 +63,7 @@ import type {
   SourceTruthAssessment,
   PerformanceBrief,
   ArrangementPlan,
+  PlanConflict,
   ModelActionInputVersion,
   NormalizedScore,
   OmrRun,
@@ -96,6 +98,7 @@ const recoverableRecordCollections = [
   ["source-truth-assessments", "sourceTruthAssessmentIds", SourceTruthAssessmentSchema],
   ["performance-briefs", "performanceBriefIds", PerformanceBriefSchema],
   ["arrangement-plans", "arrangementPlanIds", ArrangementPlanSchema],
+  ["plan-conflicts", "planConflictIds", PlanConflictSchema],
   ["arrangement-branches", "arrangementBranchIds", ArrangementBranchSchema],
   ["arrangement-searches", "arrangementSearchIds", ArrangementSearchSchema],
   ["arrangement-candidates", "arrangementCandidateIds", ArrangementCandidateSchema],
@@ -142,6 +145,7 @@ export class WorkspaceStore {
       sourceTruthAssessmentIds: [],
       performanceBriefIds: [],
       arrangementPlanIds: [],
+      planConflictIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
@@ -284,6 +288,7 @@ export class WorkspaceStore {
         ? parsed.performanceBriefIds
         : [],
       arrangementPlanIds: Array.isArray(parsed.arrangementPlanIds) ? parsed.arrangementPlanIds : [],
+      planConflictIds: Array.isArray(parsed.planConflictIds) ? parsed.planConflictIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
         : [],
@@ -321,6 +326,7 @@ export class WorkspaceStore {
       !Array.isArray(parsed.sourceTruthAssessmentIds) ||
       !Array.isArray(parsed.performanceBriefIds) ||
       !Array.isArray(parsed.arrangementPlanIds) ||
+      !Array.isArray(parsed.planConflictIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
@@ -1236,6 +1242,9 @@ export class WorkspaceStore {
     const normalized = this.getNormalizedScore(workspaceId, decoded.normalizedScoreId);
     const analysis = this.getAnalysisRecord(workspaceId, decoded.analysisRecordId);
     const brief = this.getPerformanceBrief(workspaceId, decoded.performanceBriefId);
+    const target = this.get(workspaceId).brief.targetConfigurations.find(
+      (candidate) => candidate.id === decoded.targetConfigurationId
+    );
     if (
       truth.normalizedScoreId !== normalized.id ||
       truth.normalizedScoreVersion !== decoded.normalizedScoreVersion ||
@@ -1250,6 +1259,8 @@ export class WorkspaceStore {
     ) {
       throw new ApiRouteError("Arrangement Plan lineage versions do not match", 400);
     }
+    if (!target)
+      throw new ApiRouteError("Arrangement Plan target is not in the Arrangement Brief", 400);
     const passageIds = new Set((analysis.passages ?? []).map((passage) => passage.id));
     if (
       decoded.planningScope.passageIds.some((id) => !passageIds.has(id)) ||
@@ -1304,6 +1315,66 @@ export class WorkspaceStore {
     ) {
       throw new ApiRouteError("Sectional reduction must declare an actual reduction", 400);
     }
+    const specialistKindMatches =
+      (["minimal_projection", "sectional_reduction"].includes(decoded.kind) &&
+        decoded.specialistIntent.kind === "none") ||
+      decoded.specialistIntent.kind === decoded.kind;
+    if (!specialistKindMatches) {
+      throw new ApiRouteError("Arrangement Plan kind and specialist intent do not match", 400);
+    }
+    if (
+      decoded.kind === "creative_arrangement" &&
+      (decoded.specialistIntent.kind !== "creative_arrangement" ||
+        !decoded.specialistIntent.generatedMaterialDecisionIds.every((id) =>
+          decoded.decisions.some(
+            (decision) =>
+              decision.id === id &&
+              decision.confirmation.requirement === "owner" &&
+              decision.confirmation.status === "confirmed"
+          )
+        ) ||
+        !decoded.materialDisposition.some((item) => item.disposition === "generated"))
+    ) {
+      throw new ApiRouteError(
+        "Creative arrangement requires generated material and an explicit Owner decision",
+        400
+      );
+    }
+    if (
+      decoded.kind === "continuo_realization" &&
+      decoded.specialistIntent.kind === "continuo_realization" &&
+      (decoded.specialistIntent.realizationProfileId !== target.realizationProfileId ||
+        !decoded.specialistIntent.foundationTargetIds.every((id) =>
+          analysis.preservationTargets.some(
+            (preservationTarget) =>
+              preservationTarget.id === id && preservationTarget.kind === "continuo_foundation"
+          )
+        ))
+    ) {
+      throw new ApiRouteError("Continuo Plan does not resolve its foundation targets", 400);
+    }
+    if (
+      decoded.kind === "imitative_intabulation" &&
+      decoded.specialistIntent.kind === "imitative_intabulation" &&
+      (!decoded.specialistIntent.entryTargetIds.every((id) =>
+        analysis.preservationTargets.some(
+          (target) =>
+            target.id === id &&
+            target.kind === "relationship" &&
+            target.relationshipType === "ordered_entries"
+        )
+      ) ||
+        !decoded.specialistIntent.cadenceTargetIds.every((id) =>
+          analysis.preservationTargets.some(
+            (target) =>
+              target.id === id &&
+              target.kind === "relationship" &&
+              target.relationshipType === "cadential_goal"
+          )
+        ))
+    ) {
+      throw new ApiRouteError("Imitative Plan does not resolve entry and cadence targets", 400);
+    }
     if (decoded.supersedesPlanId) {
       const prior = this.getArrangementPlan(workspaceId, decoded.supersedesPlanId);
       if (decoded.version !== prior.version + 1) {
@@ -1319,6 +1390,60 @@ export class WorkspaceStore {
 
   getArrangementPlan(workspaceId: string, id: string): ArrangementPlan {
     return this.readRecord(workspaceId, "arrangement-plans", id, "plan", ArrangementPlanSchema);
+  }
+
+  savePlanConflict(workspaceId: string, conflict: PlanConflict): PlanConflict {
+    const decoded = Value.Decode(PlanConflictSchema, conflict);
+    const plan = this.getArrangementPlan(workspaceId, decoded.arrangementPlanId);
+    if (
+      plan.targetConfigurationId !== decoded.targetConfigurationId ||
+      decoded.conflictingDecisionIds.some(
+        (id) => !plan.decisions.some((decision) => decision.id === id)
+      )
+    ) {
+      throw new ApiRouteError("Plan Conflict does not resolve against its Arrangement Plan", 400);
+    }
+    const workspace = this.get(workspaceId);
+    if (workspace.planConflictIds.includes(decoded.id)) {
+      const prior = this.getPlanConflict(workspaceId, decoded.id);
+      if (
+        prior.status !== "unresolved" ||
+        decoded.status !== "resolution_selected" ||
+        !decoded.selectedResolution ||
+        JSON.stringify({ ...prior, status: undefined, selectedResolution: undefined }) !==
+          JSON.stringify({ ...decoded, status: undefined, selectedResolution: undefined })
+      ) {
+        throw new ApiRouteError("Plan Conflict may only select one explicit resolution path", 409);
+      }
+      this.writeRecord(workspaceId, "plan-conflicts", decoded.id, decoded);
+    } else {
+      if (decoded.status !== "unresolved" || decoded.selectedResolution) {
+        throw new ApiRouteError("New Plan Conflict must begin unresolved", 400);
+      }
+      this.writeImmutableRecord(workspaceId, "plan-conflicts", decoded.id, decoded);
+    }
+    this.linkWorkspaceRecord(workspaceId, "planConflictIds", decoded.id);
+    return decoded;
+  }
+
+  getPlanConflict(workspaceId: string, id: string): PlanConflict {
+    return this.readRecord(workspaceId, "plan-conflicts", id, "plan-conflict", PlanConflictSchema);
+  }
+
+  selectPlanConflictResolution(
+    workspaceId: string,
+    id: string,
+    selectedResolution: NonNullable<PlanConflict["selectedResolution"]>
+  ): PlanConflict {
+    const conflict = this.getPlanConflict(workspaceId, id);
+    if (!conflict.resolutionOptions.includes(selectedResolution)) {
+      throw new ApiRouteError("Selected Plan Conflict resolution is not available", 400);
+    }
+    return this.savePlanConflict(workspaceId, {
+      ...conflict,
+      status: "resolution_selected",
+      selectedResolution,
+    });
   }
 
   resolveCurrentInputVersions(

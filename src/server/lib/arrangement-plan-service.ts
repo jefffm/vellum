@@ -10,6 +10,7 @@ export type ArrangementPlanCorrection = Pick<
   | "transpositionPlan"
   | "sectionalIntent"
   | "materialDisposition"
+  | "specialistIntent"
   | "decisions"
   | "status"
 >;

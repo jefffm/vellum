@@ -20,6 +20,7 @@ const CorrectionSchema = Type.Object(
         transpositionPlan: ArrangementPlanSchema.properties.transpositionPlan,
         sectionalIntent: ArrangementPlanSchema.properties.sectionalIntent,
         materialDisposition: ArrangementPlanSchema.properties.materialDisposition,
+        specialistIntent: ArrangementPlanSchema.properties.specialistIntent,
         decisions: ArrangementPlanSchema.properties.decisions,
         status: ArrangementPlanSchema.properties.status,
       },

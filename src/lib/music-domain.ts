@@ -139,6 +139,7 @@ export const ArrangementWorkspaceSchema = Type.Object(
     sourceTruthAssessmentIds: Type.Array(IdSchema),
     performanceBriefIds: Type.Array(IdSchema),
     arrangementPlanIds: Type.Array(IdSchema),
+    planConflictIds: Type.Array(IdSchema),
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
@@ -493,7 +494,13 @@ export const ArrangementPlanSchema = Type.Object(
     id: IdSchema,
     version: Type.Integer({ minimum: 1 }),
     supersedesPlanId: Type.Optional(IdSchema),
-    kind: Type.Union([Type.Literal("minimal_projection"), Type.Literal("sectional_reduction")]),
+    kind: Type.Union([
+      Type.Literal("minimal_projection"),
+      Type.Literal("sectional_reduction"),
+      Type.Literal("creative_arrangement"),
+      Type.Literal("continuo_realization"),
+      Type.Literal("imitative_intabulation"),
+    ]),
     sourceTruthAssessmentId: IdSchema,
     normalizedScoreId: IdSchema,
     normalizedScoreVersion: Type.Integer({ minimum: 1 }),
@@ -567,6 +574,65 @@ export const ArrangementPlanSchema = Type.Object(
       ),
       { minItems: 1 }
     ),
+    specialistIntent: Type.Union([
+      Type.Object({ kind: Type.Literal("none") }, { additionalProperties: false }),
+      Type.Object(
+        {
+          kind: Type.Literal("creative_arrangement"),
+          formalDesign: Type.String({ minLength: 1 }),
+          texturalDesign: Type.String({ minLength: 1 }),
+          harmonicDesign: Type.String({ minLength: 1 }),
+          idiomaticDesign: Type.String({ minLength: 1 }),
+          generatedMaterialDecisionIds: Type.Array(IdSchema, { minItems: 1 }),
+          candidateStrategies: Type.Array(
+            Type.Union([
+              Type.Literal("ornamented-paraphrase"),
+              Type.Literal("idiomatic-revoicing"),
+            ]),
+            { minItems: 1 }
+          ),
+        },
+        { additionalProperties: false }
+      ),
+      Type.Object(
+        {
+          kind: Type.Literal("continuo_realization"),
+          realizationProfileId: IdSchema,
+          foundationDisposition: Type.Union([
+            Type.Literal("complete"),
+            Type.Literal("separate_bass"),
+            Type.Literal("reduced"),
+          ]),
+          figureTreatment: Type.String({ minLength: 1 }),
+          voiceLeadingPriority: Type.String({ minLength: 1 }),
+          foundationTargetIds: Type.Array(IdSchema, { minItems: 1 }),
+          candidateStrategies: Type.Array(
+            Type.Union([
+              Type.Literal("complete-realization"),
+              Type.Literal("lean-realization"),
+              Type.Literal("separate-bass-realization"),
+              Type.Literal("continuo-reduction"),
+            ]),
+            { minItems: 1 }
+          ),
+        },
+        { additionalProperties: false }
+      ),
+      Type.Object(
+        {
+          kind: Type.Literal("imitative_intabulation"),
+          voiceDistribution: Type.String({ minLength: 1 }),
+          overlapPolicy: Type.String({ minLength: 1 }),
+          entryTargetIds: Type.Array(IdSchema, { minItems: 1 }),
+          cadenceTargetIds: Type.Array(IdSchema, { minItems: 1 }),
+          candidateStrategies: Type.Array(
+            Type.Union([Type.Literal("low-fret-polyphony"), Type.Literal("voice-continuity")]),
+            { minItems: 1 }
+          ),
+        },
+        { additionalProperties: false }
+      ),
+    ]),
     decisions: Type.Array(PlanDecisionSchema, { minItems: 1 }),
     status: Type.Union([
       Type.Literal("ready"),
@@ -578,6 +644,47 @@ export const ArrangementPlanSchema = Type.Object(
   { additionalProperties: false }
 );
 export type ArrangementPlan = Static<typeof ArrangementPlanSchema>;
+
+export const PlanConflictSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementPlanId: IdSchema,
+    targetConfigurationId: IdSchema,
+    scope: PlanDecisionSchema.properties.scope,
+    conflictingDecisionIds: Type.Array(IdSchema, { minItems: 1 }),
+    reasonCode: Type.String({ minLength: 1 }),
+    consequence: Type.String({ minLength: 1 }),
+    evidenceIds: Type.Array(IdSchema, { minItems: 1 }),
+    resolutionOptions: Type.Array(
+      Type.Union([
+        Type.Literal("revise_target_local_extension"),
+        Type.Literal("revise_shared_plan"),
+        Type.Literal("change_policy"),
+        Type.Literal("request_policy_exception"),
+        Type.Literal("block"),
+      ]),
+      { minItems: 1 }
+    ),
+    status: Type.Union([
+      Type.Literal("unresolved"),
+      Type.Literal("resolution_selected"),
+      Type.Literal("resolved"),
+    ]),
+    selectedResolution: Type.Optional(
+      Type.Union([
+        Type.Literal("revise_target_local_extension"),
+        Type.Literal("revise_shared_plan"),
+        Type.Literal("change_policy"),
+        Type.Literal("request_policy_exception"),
+        Type.Literal("block"),
+      ])
+    ),
+    createdAt: IsoDateSchema,
+    resolvedAt: Type.Optional(IsoDateSchema),
+  },
+  { additionalProperties: false }
+);
+export type PlanConflict = Static<typeof PlanConflictSchema>;
 
 export const CreateWorkspaceSchema = Type.Object(
   {

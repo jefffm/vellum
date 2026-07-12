@@ -2858,6 +2858,7 @@ export function installArrangementPlanSummary(
                   transpositionPlan: plan.transpositionPlan,
                   sectionalIntent: plan.sectionalIntent,
                   materialDisposition: plan.materialDisposition,
+                  specialistIntent: plan.specialistIntent,
                   decisions,
                   status: decisions.some(
                     (candidate) =>

@@ -11,9 +11,38 @@ import {
   auditFaithfulPrincipalVoice,
 } from "./baroque-guitar-arranger.js";
 import { noteToMidi, transposeNote } from "./pitch.js";
+import { arrangeCreativeParaphrase } from "./creative-arranger.js";
 
 describe("faithful baroque-guitar arrangement search", () => {
   const fixture = buildFixture();
+
+  it("produces materially distinct creative candidate families only under free paraphrase", () => {
+    const result = arrangeCreativeParaphrase(fixture.score, fixture.analysis, fixture.model, {
+      arrangementId: "arrangement.greensleeves-creative",
+      createdAt: "2026-07-12T19:30:00.000Z",
+      targetConfiguration: {
+        id: "target.baroque-guitar",
+        instrumentId: "baroque-guitar-5",
+        role: "solo",
+        stringing: "french",
+        notationLayouts: ["french-letter-tablature"],
+        deliverables: ["pdf", "audio-preview"],
+      },
+      preservationPolicy: "free_paraphrase",
+      allowedStrategies: ["ornamented-paraphrase", "idiomatic-revoicing"],
+    });
+    expect(result.candidates.map((candidate) => candidate.strategy)).toEqual([
+      "ornamented-paraphrase",
+      "idiomatic-revoicing",
+    ]);
+    expect(result.candidates[0]!.events).not.toEqual(result.candidates[1]!.events);
+    expect(
+      result.candidates[0]!.events.some(
+        (event, index) =>
+          event.pitches.length !== result.candidates[1]!.events[index]?.pitches.length
+      )
+    ).toBe(true);
+  });
 
   it("keeps every Greensleeves melody event recognizable as the sounding top line", () => {
     const result = arrangeFaithfulBaroqueGuitar(fixture.score, fixture.analysis, fixture.model, {

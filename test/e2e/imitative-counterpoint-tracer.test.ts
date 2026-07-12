@@ -73,6 +73,25 @@ describe("three-voice imitative counterpoint tracer", () => {
       targetConfigurationId: "target.renaissance-lute",
     });
     expect(arranged.candidates).toHaveLength(2);
+    expect(arranged.arrangementPlan).toMatchObject({
+      kind: "imitative_intabulation",
+      specialistIntent: {
+        kind: "imitative_intabulation",
+        candidateStrategies: ["low-fret-polyphony", "voice-continuity"],
+      },
+    });
+    expect(
+      arranged.arrangementPlan.decisions.find(
+        (decision) => decision.dimension === "imitative_voice_distribution"
+      )
+    ).toMatchObject({
+      alternatives: [
+        expect.objectContaining({ value: "low_fret_polyphony", viable: true }),
+        expect.objectContaining({ value: "voice_continuity", viable: true }),
+      ],
+      confirmation: { requirement: "not_required", status: "not_required" },
+    });
+    expect(arranged.candidates[0]!.events).not.toEqual(arranged.candidates[1]!.events);
     expect(arranged.arrangementScore).toMatchObject({
       targetConfiguration: { instrumentId: "renaissance-lute-6" },
       preservationAudit: { status: "pass" },

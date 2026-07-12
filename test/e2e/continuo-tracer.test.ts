@@ -9,6 +9,7 @@ import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { continuoArrangementToLilyPond } from "../../src/lib/continuo-engrave.js";
 import { RecognizedScoreSchema } from "../../src/lib/music-domain.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
+import { ApiRouteError } from "../../src/server/lib/create-route.js";
 import {
   createArrangementCompileRoute,
   createArrangementPreviewRoute,
@@ -51,6 +52,15 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
             notationLayouts: ["continuo-score"],
             deliverables: ["pdf", "audio-preview"],
           },
+          {
+            id: "target.infeasible-guitar-continuo",
+            instrumentId: "baroque-guitar-5",
+            role: "ensemble",
+            stringing: "french",
+            realizationProfileId: "continuo.italian-baroque",
+            notationLayouts: ["continuo-score"],
+            deliverables: ["pdf"],
+          },
         ],
       },
     });
@@ -92,6 +102,24 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       targetConfigurationId: "target.piano-continuo",
     });
     expect(arranged.candidates).toHaveLength(2);
+    expect(arranged.arrangementPlan).toMatchObject({
+      kind: "continuo_realization",
+      specialistIntent: {
+        kind: "continuo_realization",
+        realizationProfileId: "continuo.italian-baroque",
+        foundationDisposition: "complete",
+        candidateStrategies: ["complete-realization", "lean-realization"],
+      },
+    });
+    expect(
+      arranged.arrangementPlan.decisions.find(
+        (decision) => decision.dimension === "continuo_realization"
+      )
+    ).toMatchObject({
+      alternatives: [expect.objectContaining({ value: "lean_realization", viable: true })],
+      confirmation: { requirement: "not_required", status: "not_required" },
+    });
+    expect(arranged.candidates[0]!.events).not.toEqual(arranged.candidates[1]!.events);
     expect(arranged.arrangementScore).toMatchObject({
       targetConfiguration: {
         instrumentId: "piano",
@@ -107,6 +135,13 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       targetConfigurationId: "target.baroque-guitar-continuo",
     });
     expect(guitarArranged.analysisRecordId).toBe(arranged.analysisRecordId);
+    expect(guitarArranged.arrangementPlan).toMatchObject({
+      kind: "continuo_realization",
+      specialistIntent: {
+        foundationDisposition: "separate_bass",
+        candidateStrategies: ["separate-bass-realization", "continuo-reduction"],
+      },
+    });
     expect(guitarArranged.arrangementScore.arrangementFamilyId).toBe(
       arranged.arrangementScore.arrangementFamilyId
     );
@@ -302,5 +337,53 @@ describe("soprano plus Figured Bass Continuo Realization tracer", () => {
       analysisRecordIds: [arranged.analysisRecordId],
       arrangementScoreIds: [arranged.arrangementScore.id, guitarArranged.arrangementScore.id],
     });
+    const scoresBeforeConflict = [...store.get(workspace.id).arrangementScoreIds];
+    let conflictError: unknown;
+    try {
+      new ArrangementService({ store }).createFaithfulReduction(workspace.id, {
+        normalizedScoreId: omr.normalizedScore.id,
+        targetConfigurationId: "target.infeasible-guitar-continuo",
+      });
+    } catch (error) {
+      conflictError = error;
+    }
+    expect(conflictError).toBeInstanceOf(ApiRouteError);
+    expect(conflictError).toMatchObject({
+      status: 409,
+      code: "plan_conflict",
+      details: {
+        planConflict: {
+          reasonCode: "target_realization_infeasible",
+          targetConfigurationId: "target.infeasible-guitar-continuo",
+          resolutionOptions: [
+            "revise_target_local_extension",
+            "revise_shared_plan",
+            "change_policy",
+            "request_policy_exception",
+            "block",
+          ],
+          status: "unresolved",
+        },
+      },
+    });
+    expect(store.get(workspace.id).arrangementScoreIds).toEqual(scoresBeforeConflict);
+    expect(store.get(workspace.id).planConflictIds).toHaveLength(1);
+    expect(
+      store.getPlanConflict(workspace.id, store.get(workspace.id).planConflictIds[0]!)
+    ).toEqual((conflictError as ApiRouteError).details?.planConflict);
+    expect(
+      store.selectPlanConflictResolution(
+        workspace.id,
+        store.get(workspace.id).planConflictIds[0]!,
+        "block"
+      )
+    ).toMatchObject({ status: "resolution_selected", selectedResolution: "block" });
+    expect(() =>
+      store.selectPlanConflictResolution(
+        workspace.id,
+        store.get(workspace.id).planConflictIds[0]!,
+        "change_policy"
+      )
+    ).toThrow("only select one explicit resolution path");
   }, 180_000);
 });

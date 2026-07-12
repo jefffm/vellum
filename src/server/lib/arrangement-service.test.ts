@@ -971,6 +971,7 @@ describe("Greensleeves faithful arrangement service", () => {
         materialDisposition: result.arrangementPlan.materialDisposition.map((item, index) =>
           index === 0 ? { ...item, disposition: "implied" as const } : item
         ),
+        specialistIntent: { kind: "none" },
         decisions: result.arrangementPlan.decisions.map((decision, index) =>
           index === 0
             ? {
