@@ -23,6 +23,7 @@ import {
   ArrangementBranchSchema,
   ArrangementCandidateSchema,
   ArrangementSearchSchema,
+  PassageSearchRecordSchema,
   ArrangementScoreSchema,
   ArrangementWorkspaceSchema,
   DeliverableSchema,
@@ -49,6 +50,7 @@ import type {
   ArrangementBranch,
   ArrangementCandidate,
   ArrangementSearch,
+  PassageSearchRecord,
   ArrangementScore,
   ArrangementWorkspace,
   CreateWorkspace,
@@ -102,6 +104,7 @@ const recoverableRecordCollections = [
   ["plan-conflicts", "planConflictIds", PlanConflictSchema],
   ["arrangement-branches", "arrangementBranchIds", ArrangementBranchSchema],
   ["arrangement-searches", "arrangementSearchIds", ArrangementSearchSchema],
+  ["passage-searches", "passageSearchIds", PassageSearchRecordSchema],
   ["arrangement-candidates", "arrangementCandidateIds", ArrangementCandidateSchema],
   ["arrangement-families", "arrangementFamilyIds", ArrangementFamilySchema],
   ["deliverables", "deliverableIds", DeliverableSchema],
@@ -130,7 +133,7 @@ export class WorkspaceStore {
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
-      schemaVersion: 6,
+      schemaVersion: 7,
       revision: 1,
       id,
       title: input.title,
@@ -149,6 +152,7 @@ export class WorkspaceStore {
       planConflictIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
+      passageSearchIds: [],
       arrangementCandidateIds: [],
       arrangementFamilyIds: [],
       deliverableIds: [],
@@ -267,7 +271,7 @@ export class WorkspaceStore {
     if (!isRecord(parsed)) {
       throw new ApiRouteError(`Invalid Arrangement Workspace manifest: ${workspaceId}`, 500);
     }
-    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 6) {
+    if (typeof parsed.schemaVersion === "number" && parsed.schemaVersion > 7) {
       throw new ApiRouteError(
         `Arrangement Workspace ${workspaceId} uses unsupported schema version ${parsed.schemaVersion}`,
         409
@@ -275,7 +279,7 @@ export class WorkspaceStore {
     }
     const migrated = {
       ...parsed,
-      schemaVersion: 6,
+      schemaVersion: 7,
       revision:
         typeof parsed.revision === "number" && Number.isInteger(parsed.revision)
           ? parsed.revision
@@ -296,6 +300,7 @@ export class WorkspaceStore {
       arrangementSearchIds: Array.isArray(parsed.arrangementSearchIds)
         ? parsed.arrangementSearchIds
         : [],
+      passageSearchIds: Array.isArray(parsed.passageSearchIds) ? parsed.passageSearchIds : [],
       arrangementCandidateIds: Array.isArray(parsed.arrangementCandidateIds)
         ? parsed.arrangementCandidateIds
         : [],
@@ -320,7 +325,7 @@ export class WorkspaceStore {
     };
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
-      parsed.schemaVersion !== 6 ||
+      parsed.schemaVersion !== 7 ||
       typeof parsed.revision !== "number" ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.guidedWorkflowIds) ||
@@ -330,6 +335,7 @@ export class WorkspaceStore {
       !Array.isArray(parsed.planConflictIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
+      !Array.isArray(parsed.passageSearchIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
       !Array.isArray(parsed.arrangementFamilyIds) ||
       !Array.isArray(parsed.deliverableIds) ||
@@ -1010,6 +1016,34 @@ export class WorkspaceStore {
       searchId,
       "search",
       ArrangementSearchSchema
+    );
+  }
+
+  savePassageSearch(workspaceId: string, passageSearch: PassageSearchRecord): PassageSearchRecord {
+    const workspace = this.get(workspaceId);
+    const arrangement = this.getArrangementScore(workspaceId, passageSearch.arrangementScoreId);
+    if (
+      (arrangement.version ?? 1) !== passageSearch.arrangementScoreVersion ||
+      arrangement.arrangementPlanId !== passageSearch.arrangementPlanId ||
+      arrangement.arrangementSearchId !== passageSearch.arrangementSearchId ||
+      arrangement.analysisRecordId !== passageSearch.analysisRecordId ||
+      arrangement.targetConfiguration.id !== passageSearch.targetConfigurationId
+    ) {
+      throw new ApiRouteError("Passage Search lineage is inconsistent with its score", 400);
+    }
+    const decoded = Value.Decode(PassageSearchRecordSchema, passageSearch);
+    this.writeImmutableRecord(workspaceId, "passage-searches", decoded.id, decoded);
+    this.linkRecord(workspace, "passageSearchIds", decoded.id);
+    return decoded;
+  }
+
+  getPassageSearch(workspaceId: string, id: string): PassageSearchRecord {
+    return this.readRecord(
+      workspaceId,
+      "passage-searches",
+      id,
+      "passage-search",
+      PassageSearchRecordSchema
     );
   }
 

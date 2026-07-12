@@ -528,13 +528,18 @@ type EditBatchResult = {
 
 type PassageCandidate = {
   id: string;
+  passageSearchId: string;
   sourceCandidateId: string;
   strategy: string;
   status: "survived" | "selected" | "rejected";
   rank?: number;
   replacementEvents: ArrangementEvent[];
   changedArrangementEventIds: string[];
-  evaluation?: { weightedTotal: number; rationale: string };
+  evaluation?: {
+    weightedTotal?: number;
+    rationale: string;
+    selectionBasis?: { method: "policy_lexicographic"; decisiveMetricId?: string; status: string };
+  };
   audit: GuidedDeliverable["preservationAudit"];
   rejectionReason?: string;
 };
@@ -566,11 +571,14 @@ export async function openPassageCandidatesDialog(
   dialog.showModal();
   const eventIds = selectedEvents.map((event) => event.id);
   try {
-    const result = await api<{ candidates: PassageCandidate[] }>(
+    const result = await api<{
+      passageSearch: { id: string; dependencyContext: { expandedEventIds: string[] } };
+      candidates: PassageCandidate[];
+    }>(
       `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/passage-candidates`,
       { method: "POST", body: JSON.stringify({ arrangement_event_ids: eventIds }) }
     );
-    status.textContent = `${result.candidates.filter((candidate) => candidate.status !== "rejected").length} viable alternative projections; rejected options retain their audit evidence.`;
+    status.textContent = `${result.candidates.filter((candidate) => candidate.status !== "rejected").length} viable plan-aware alternatives across ${result.passageSearch.dependencyContext.expandedEventIds.length} dependency-expanded objects; rejected options retain their audit evidence.`;
     for (const candidate of result.candidates) {
       const card = document.createElement("article");
       card.className = `passage-candidate ${candidate.status}`;
@@ -580,7 +588,7 @@ export async function openPassageCandidatesDialog(
       evidence.textContent =
         candidate.status === "rejected"
           ? `Rejected · ${candidate.rejectionReason ?? "A hard constraint failed."}`
-          : `${candidate.changedArrangementEventIds.length} selected object${candidate.changedArrangementEventIds.length === 1 ? "" : "s"} differ · ${candidate.evaluation ? `${(candidate.evaluation.weightedTotal * 100).toFixed(1)}% · ${candidate.evaluation.rationale}` : `Audit ${candidate.audit.status}`}`;
+          : `${candidate.changedArrangementEventIds.length} dependency-scoped object${candidate.changedArrangementEventIds.length === 1 ? "" : "s"} differ · ${candidate.evaluation ? `${candidate.evaluation.selectionBasis?.decisiveMetricId?.replaceAll("metric.", "") ?? "policy survivor"} · ${candidate.evaluation.rationale}` : `Audit ${candidate.audit.status}`}`;
       const comparison = document.createElement("ol");
       for (const replacement of candidate.replacementEvents) {
         const current = selectedEvents.find((event) => event.id === replacement.id)!;
@@ -602,6 +610,7 @@ export async function openPassageCandidatesDialog(
               body: JSON.stringify({
                 arrangement_event_ids: eventIds,
                 source_candidate_id: candidate.sourceCandidateId,
+                passage_search_id: result.passageSearch.id,
               }),
             }
           );
@@ -624,19 +633,22 @@ export async function openPassageCandidatesDialog(
       adopt.addEventListener("click", async () => {
         adopt.disabled = true;
         try {
-          const result = await api<EditBatchResult & { changedArrangementEventIds: string[] }>(
+          const adoptedResult = await api<
+            EditBatchResult & { changedArrangementEventIds: string[] }
+          >(
             `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/passage-candidates/adopt`,
             {
               method: "POST",
               body: JSON.stringify({
                 arrangement_event_ids: eventIds,
                 source_candidate_id: candidate.sourceCandidateId,
+                passage_search_id: result.passageSearch.id,
               }),
             }
           );
           document.dispatchEvent(
             new CustomEvent("vellum-arrangement-version-created", {
-              detail: { result, deliverable },
+              detail: { result: adoptedResult, deliverable },
             })
           );
           dialog.close();

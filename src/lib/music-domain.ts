@@ -135,7 +135,7 @@ export type ArrangementBrief = Static<typeof ArrangementBriefSchema>;
 
 export const ArrangementWorkspaceSchema = Type.Object(
   {
-    schemaVersion: Type.Integer({ minimum: 6 }),
+    schemaVersion: Type.Integer({ minimum: 7 }),
     revision: Type.Integer({ minimum: 1 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
@@ -154,6 +154,7 @@ export const ArrangementWorkspaceSchema = Type.Object(
     planConflictIds: Type.Array(IdSchema),
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
+    passageSearchIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
     arrangementFamilyIds: Type.Array(IdSchema),
     deliverableIds: Type.Array(IdSchema),
@@ -2067,6 +2068,41 @@ export const ArrangementSearchSchema = Type.Object(
 );
 
 export type ArrangementSearch = Static<typeof ArrangementSearchSchema>;
+
+export const PassageDependencyContextSchema = Type.Object(
+  {
+    requestedEventIds: Type.Array(IdSchema, { minItems: 1 }),
+    expandedEventIds: Type.Array(IdSchema, { minItems: 1 }),
+    incomingStateEventIds: Type.Array(IdSchema),
+    outgoingStateEventIds: Type.Array(IdSchema),
+    sustainedEventIds: Type.Array(IdSchema),
+    harmonyEventIds: Type.Array(IdSchema),
+    phraseAndCadenceTargetIds: Type.Array(IdSchema),
+    repeatMeasureIds: Type.Array(IdSchema),
+    activeCommitmentIds: Type.Array(IdSchema),
+    derivationEvidenceIds: Type.Array(IdSchema, { minItems: 1 }),
+  },
+  { additionalProperties: false }
+);
+export type PassageDependencyContext = Static<typeof PassageDependencyContextSchema>;
+
+export const PassageSearchRecordSchema = Type.Object(
+  {
+    id: IdSchema,
+    digest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+    arrangementScoreId: IdSchema,
+    arrangementScoreVersion: Type.Integer({ minimum: 1 }),
+    arrangementPlanId: IdSchema,
+    arrangementSearchId: IdSchema,
+    analysisRecordId: IdSchema,
+    targetConfigurationId: IdSchema,
+    dependencyContext: PassageDependencyContextSchema,
+    sourceCandidateIds: Type.Array(IdSchema, { minItems: 1 }),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type PassageSearchRecord = Static<typeof PassageSearchRecordSchema>;
 
 export const ArrangementScoreSchema = Type.Object(
   {

@@ -27,6 +27,8 @@ import type {
   NormalizedScore,
   PerformanceBriefInput,
   PolicyException,
+  PassageDependencyContext,
+  PassageSearchRecord,
   PreservationAudit,
   TargetConfiguration,
 } from "../../lib/music-domain.js";
@@ -101,6 +103,7 @@ export type CreateFaithfulArrangementResult = {
 
 export type PassageCandidate = {
   id: string;
+  passageSearchId: string;
   sourceCandidateId: string;
   strategy: string;
   status: "survived" | "selected" | "rejected";
@@ -110,7 +113,20 @@ export type PassageCandidate = {
   evaluation?: ArrangementCandidate["evaluation"];
   audit: PreservationAudit;
   rejectionReason?: string;
+  lineage: {
+    arrangementScoreId: string;
+    arrangementScoreVersion: number;
+    arrangementPlanId: string;
+    arrangementSearchId: string;
+    sourceCandidateId: string;
+    requestedEventIds: string[];
+    expandedEventIds: string[];
+    planDecisionIds: string[];
+    evidenceIds: string[];
+  };
 };
+
+export type PassageSearch = PassageSearchRecord;
 
 export class ArrangementService {
   private readonly store: WorkspaceStore;
@@ -829,39 +845,98 @@ export class ArrangementService {
     workspaceId: string,
     arrangementScoreId: string,
     arrangementEventIds: string[]
-  ): { arrangementScoreId: string; selectedEventIds: string[]; candidates: PassageCandidate[] } {
+  ): {
+    arrangementScoreId: string;
+    selectedEventIds: string[];
+    expandedEventIds: string[];
+    passageSearch: PassageSearch;
+    candidates: PassageCandidate[];
+  } {
     const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
-    const selected = selectedPassage(arrangement, arrangementEventIds);
+    const requested = selectedPassage(arrangement, arrangementEventIds);
     const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
+    const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
+    const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
+    const plan = this.store.getArrangementPlan(workspaceId, arrangement.arrangementPlanId!);
+    const dependencyContext = passageDependencyContext(
+      this.store,
+      workspaceId,
+      arrangement,
+      source,
+      analysis,
+      requested
+    );
+    const expanded = dependencyContext.expandedEventIds.map(
+      (id) => arrangement.events.find((event) => event.id === id)!
+    );
+    const identityWithoutDigest = {
+      arrangementScoreId: arrangement.id,
+      arrangementScoreVersion: arrangement.version ?? 1,
+      arrangementPlanId: plan.id,
+      arrangementSearchId: search.id,
+      analysisRecordId: analysis.id,
+      targetConfigurationId: arrangement.targetConfiguration.id,
+      dependencyContext,
+      sourceCandidateIds: [...search.candidateIds].sort(),
+    };
+    const digest = digestJson(identityWithoutDigest);
+    const passageSearchId = `passage-search.${digest.slice(0, 24)}`;
+    const passageSearch: PassageSearch = this.store
+      .get(workspaceId)
+      .passageSearchIds.includes(passageSearchId)
+      ? this.store.getPassageSearch(workspaceId, passageSearchId)
+      : this.store.savePassageSearch(workspaceId, {
+          id: passageSearchId,
+          digest,
+          ...identityWithoutDigest,
+          createdAt: this.now().toISOString(),
+        });
     const candidates = search.candidateIds
       .map((id) => this.store.getArrangementCandidate(workspaceId, id))
       .map((candidate) =>
-        this.projectPassageCandidate(workspaceId, arrangement, selected, candidate)
+        this.projectPassageCandidate(
+          workspaceId,
+          arrangement,
+          requested,
+          expanded,
+          candidate,
+          passageSearch,
+          plan
+        )
       )
       .sort(
         (left, right) =>
           (left.rank ?? Number.MAX_SAFE_INTEGER) - (right.rank ?? Number.MAX_SAFE_INTEGER)
       );
-    return { arrangementScoreId, selectedEventIds: selected.map((event) => event.id), candidates };
+    return {
+      arrangementScoreId,
+      selectedEventIds: requested.map((event) => event.id),
+      expandedEventIds: expanded.map((event) => event.id),
+      passageSearch,
+      candidates,
+    };
   }
 
   previewPassageCandidate(
     workspaceId: string,
     arrangementScoreId: string,
     arrangementEventIds: string[],
-    candidateId: string
+    candidateId: string,
+    passageSearchId: string
   ) {
-    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
-    const selected = selectedPassage(arrangement, arrangementEventIds);
-    const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
-    assertCandidateBelongsToArrangement(arrangement, candidate);
-    const projection = this.projectPassageCandidate(workspaceId, arrangement, selected, candidate);
+    const passage = this.passageCandidates(workspaceId, arrangementScoreId, arrangementEventIds);
+    assertPassageSearchIdentity(passage.passageSearch, passageSearchId);
+    const projection = passage.candidates.find(
+      (candidate) => candidate.sourceCandidateId === candidateId
+    );
+    if (!projection) throw new ApiRouteError(`Passage candidate not found: ${candidateId}`, 404);
     if (projection.status === "rejected") {
       throw new ApiRouteError(
         `Rejected passage candidates cannot be auditioned: ${projection.rejectionReason}`,
         409
       );
     }
+    const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
     const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
     const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
     return buildAudioPreview(
@@ -874,13 +949,17 @@ export class ArrangementService {
     workspaceId: string,
     arrangementScoreId: string,
     arrangementEventIds: string[],
-    candidateId: string
+    candidateId: string,
+    passageSearchId: string
   ) {
     const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
-    const selected = selectedPassage(arrangement, arrangementEventIds);
+    const passage = this.passageCandidates(workspaceId, arrangementScoreId, arrangementEventIds);
+    assertPassageSearchIdentity(passage.passageSearch, passageSearchId);
+    const projection = passage.candidates.find(
+      (candidate) => candidate.sourceCandidateId === candidateId
+    );
+    if (!projection) throw new ApiRouteError(`Passage candidate not found: ${candidateId}`, 404);
     const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
-    assertCandidateBelongsToArrangement(arrangement, candidate);
-    const projection = this.projectPassageCandidate(workspaceId, arrangement, selected, candidate);
     if (projection.status === "rejected") {
       throw new ApiRouteError(
         `Rejected passage candidates cannot be adopted: ${projection.rejectionReason}`,
@@ -906,6 +985,7 @@ export class ArrangementService {
           version: arrangement.version ?? 1,
         },
         { recordType: "arrangement_candidate", recordId: candidate.id, version: 1 },
+        { recordType: "passage_search", recordId: passage.passageSearch.id, version: 1 },
       ],
       createdFromCandidateId: candidate.id,
       createdAt: timestamp,
@@ -932,17 +1012,21 @@ export class ArrangementService {
       branchId,
       sourceCandidateId: candidate.id,
       changedArrangementEventIds: projection.changedArrangementEventIds,
+      passageSearch: passage.passageSearch,
     };
   }
 
   private projectPassageCandidate(
     workspaceId: string,
     arrangement: ArrangementScore,
-    selected: ArrangementEvent[],
-    candidate: ArrangementCandidate
+    requested: ArrangementEvent[],
+    expanded: ArrangementEvent[],
+    candidate: ArrangementCandidate,
+    passageSearch: PassageSearch,
+    plan: ArrangementPlan
   ): PassageCandidate {
-    const selectedSources = new Set(selected.flatMap((event) => event.sourceEventIds));
-    const replacements = selected.map((current) => {
+    const selectedSources = new Set(expanded.flatMap((event) => event.sourceEventIds));
+    const replacements = expanded.map((current) => {
       const principalSource = current.principalVoiceSourceEventId;
       const alternate = candidate.events.find(
         (event) =>
@@ -967,7 +1051,7 @@ export class ArrangementService {
           : undefined;
     return {
       id: `passage-candidate.${createHash("sha256")
-        .update(`${arrangement.id}:${selected.map((event) => event.id).join(",")}:${candidate.id}`)
+        .update(`${passageSearch.digest}:${candidate.id}`)
         .digest("hex")
         .slice(0, 24)}`,
       sourceCandidateId: candidate.id,
@@ -980,11 +1064,27 @@ export class ArrangementService {
       rank: candidate.rank,
       replacementEvents: replacements,
       changedArrangementEventIds: replacements
-        .filter((event, index) => JSON.stringify(event) !== JSON.stringify(selected[index]))
+        .filter((event, index) => JSON.stringify(event) !== JSON.stringify(expanded[index]))
         .map((event) => event.id),
       evaluation: candidate.evaluation,
       audit,
       rejectionReason: hardReason,
+      passageSearchId: passageSearch.id,
+      lineage: {
+        arrangementScoreId: arrangement.id,
+        arrangementScoreVersion: arrangement.version ?? 1,
+        arrangementPlanId: plan.id,
+        arrangementSearchId: arrangement.arrangementSearchId!,
+        sourceCandidateId: candidate.id,
+        requestedEventIds: requested.map((event) => event.id),
+        expandedEventIds: expanded.map((event) => event.id),
+        planDecisionIds: plan.decisions.map((decision) => decision.id),
+        evidenceIds: [
+          passageSearch.analysisRecordId,
+          ...plan.decisions.flatMap((decision) => decision.evidenceIds),
+          ...passageSearch.dependencyContext.activeCommitmentIds,
+        ],
+      },
     };
   }
 
@@ -1061,6 +1161,140 @@ function selectedPassage(arrangement: ArrangementScore, ids: string[]): Arrangem
     return event;
   });
   return selected;
+}
+
+function passageDependencyContext(
+  store: WorkspaceStore,
+  workspaceId: string,
+  arrangement: ArrangementScore,
+  source: NormalizedScore,
+  analysis: AnalysisRecord,
+  requested: ArrangementEvent[]
+): PassageDependencyContext {
+  const requestedIds = new Set(requested.map((event) => event.id));
+  const indices = requested.map((event) => arrangement.events.indexOf(event));
+  const firstIndex = Math.min(...indices);
+  const lastIndex = Math.max(...indices);
+  const incoming = firstIndex > 0 ? [arrangement.events[firstIndex - 1]!.id] : [];
+  const outgoing =
+    lastIndex + 1 < arrangement.events.length ? [arrangement.events[lastIndex + 1]!.id] : [];
+  const requestedMeasures = new Set(requested.map((event) => event.measureId));
+  const harmony = arrangement.events
+    .filter((event) => requestedMeasures.has(event.measureId) && !requestedIds.has(event.id))
+    .map((event) => event.id);
+  const firstByMeasure = new Map<string, ArrangementEvent>();
+  for (const event of requested) {
+    const prior = firstByMeasure.get(event.measureId);
+    if (!prior || rationalLess(event.onset, prior.onset))
+      firstByMeasure.set(event.measureId, event);
+  }
+  const sustained = arrangement.events
+    .filter((event) => {
+      const boundary = firstByMeasure.get(event.measureId);
+      if (!boundary || requestedIds.has(event.id) || !rationalLess(event.onset, boundary.onset)) {
+        return false;
+      }
+      return rationalGreaterThan(rationalSum(event.onset, event.duration), boundary.onset);
+    })
+    .map((event) => event.id);
+  const requestedSourceIds = new Set(requested.flatMap((event) => event.sourceEventIds));
+  const phraseAndCadenceTargets = analysis.preservationTargets.filter(
+    (target) =>
+      ["phrase_contour", "cadential_goal"].includes(target.relationshipType ?? "") &&
+      target.eventIds.some((id) => requestedSourceIds.has(id))
+  );
+  const phraseSources = new Set(phraseAndCadenceTargets.flatMap((target) => target.eventIds));
+  const phraseEvents = arrangement.events
+    .filter((event) => event.sourceEventIds.some((id) => phraseSources.has(id)))
+    .map((event) => event.id);
+  const occurrenceCount = new Map<string, number>();
+  for (const occurrence of source.performedForm?.measureOccurrences ?? []) {
+    occurrenceCount.set(occurrence.measureId, (occurrenceCount.get(occurrence.measureId) ?? 0) + 1);
+  }
+  const repeatMeasures = [...requestedMeasures].filter(
+    (measureId) => (occurrenceCount.get(measureId) ?? 0) > 1
+  );
+  const repeatEvents = arrangement.events
+    .filter((event) => repeatMeasures.includes(event.measureId))
+    .map((event) => event.id);
+  const workspace = store.get(workspaceId);
+  const editorialCommitments = workspace.editorialCommitmentIds
+    .map((id) => store.getEditorialCommitment(workspaceId, id))
+    .filter((record) => record.status === "active" && record.arrangementScoreId === arrangement.id);
+  const familyCommitments = workspace.familyCommitmentIds
+    .map((id) => store.getFamilyCommitment(workspaceId, id))
+    .filter(
+      (record) =>
+        record.status === "active" &&
+        record.arrangementFamilyId === arrangement.arrangementFamilyId &&
+        record.targetConfigurationIds.includes(arrangement.targetConfiguration.id)
+    );
+  const commitmentEvents = editorialCommitments.flatMap((record) => record.scope.objectIds);
+  const activeCommitmentIds = [...editorialCommitments, ...familyCommitments].map(
+    (record) => record.id
+  );
+  const expandedIds = new Set([
+    ...requestedIds,
+    ...incoming,
+    ...outgoing,
+    ...harmony,
+    ...sustained,
+    ...phraseEvents,
+    ...repeatEvents,
+    ...commitmentEvents,
+  ]);
+  const expandedEventIds = arrangement.events
+    .filter((event) => expandedIds.has(event.id))
+    .map((event) => event.id);
+  return {
+    requestedEventIds: requested.map((event) => event.id),
+    expandedEventIds,
+    incomingStateEventIds: incoming,
+    outgoingStateEventIds: outgoing,
+    sustainedEventIds: sustained,
+    harmonyEventIds: harmony,
+    phraseAndCadenceTargetIds: phraseAndCadenceTargets.map((target) => target.id),
+    repeatMeasureIds: repeatMeasures,
+    activeCommitmentIds,
+    derivationEvidenceIds: [
+      analysis.id,
+      ...phraseAndCadenceTargets.map((target) => target.id),
+      ...activeCommitmentIds,
+    ],
+  };
+}
+
+function assertPassageSearchIdentity(search: PassageSearch, suppliedId: string): void {
+  if (search.id !== suppliedId) {
+    throw new ApiRouteError(
+      `Passage Search identity is stale or incompatible: expected ${search.id}, received ${suppliedId}`,
+      409
+    );
+  }
+}
+
+function rationalSum(
+  left: { numerator: number; denominator: number },
+  right: { numerator: number; denominator: number }
+) {
+  return {
+    numerator: left.numerator * right.denominator + right.numerator * left.denominator,
+    denominator: left.denominator * right.denominator,
+  };
+}
+
+function rationalLess(
+  left: { numerator: number; denominator: number },
+  right: { numerator: number; denominator: number }
+): boolean {
+  return left.numerator * right.denominator < right.numerator * left.denominator;
+}
+
+function rationalGreaterThan(
+  left: { numerator: number; denominator: number },
+  right: { numerator: number; denominator: number }
+): boolean {
+  return left.numerator * right.denominator > right.numerator * left.denominator;
 }
 
 function overlayPassage(

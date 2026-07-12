@@ -99,6 +99,29 @@ describe("Greensleeves faithful arrangement service", () => {
         diagnostics: [],
         recognizedScore: {
           ...parsed,
+          performedForm: {
+            id: "performed-form.greensleeves-repeat",
+            measureOccurrences: [
+              {
+                id: "occurrence.greensleeves.1a",
+                measureId: parsed.measures[0]!.id,
+                iteration: 1,
+                repeatIteration: 1,
+              },
+              {
+                id: "occurrence.greensleeves.1b",
+                measureId: parsed.measures[0]!.id,
+                iteration: 2,
+                repeatIteration: 2,
+              },
+              ...parsed.measures.slice(1).map((measure, index) => ({
+                id: `occurrence.greensleeves.${index + 2}`,
+                measureId: measure.id,
+                iteration: 1,
+              })),
+            ],
+            traversalDecisions: ["Repeat the opening measure twice in this dependency fixture."],
+          },
           events: parsed.events.map((event, index) => ({
             ...event,
             sourceRegion: {
@@ -1148,6 +1171,14 @@ describe("Greensleeves faithful arrangement service", () => {
       createdFromCandidateId: alternative.id,
     });
 
+    const commitmentContextEvent = result.arrangementScore.events.at(-1)!;
+    const passageCommitment = lineage.createEditorialCommitment(workspace.id, {
+      arrangementScoreId: result.arrangementScore.id,
+      arrangementFamilyId: result.arrangementScore.arrangementFamilyId!,
+      scope: { objectIds: [commitmentContextEvent.id], dimension: "notation" },
+      value: { retain: "current notation semantics" },
+      origin: "approved_model_choice",
+    });
     const passageIds = result.arrangementScore.events.slice(0, 4).map((event) => event.id);
     const passageSearch = service.passageCandidates(
       workspace.id,
@@ -1155,6 +1186,36 @@ describe("Greensleeves faithful arrangement service", () => {
       passageIds
     );
     expect(passageSearch.selectedEventIds).toEqual(passageIds);
+    expect(passageSearch.passageSearch).toMatchObject({
+      id: expect.stringMatching(/^passage-search\./),
+      digest: expect.stringMatching(/^[a-f0-9]{64}$/),
+      arrangementScoreId: result.arrangementScore.id,
+      arrangementScoreVersion: 1,
+      arrangementPlanId: result.arrangementPlan.id,
+      dependencyContext: {
+        requestedEventIds: passageIds,
+        expandedEventIds: passageSearch.expandedEventIds,
+        incomingStateEventIds: [],
+        outgoingStateEventIds: expect.not.arrayContaining(passageIds),
+        harmonyEventIds: expect.any(Array),
+        sustainedEventIds: expect.any(Array),
+        phraseAndCadenceTargetIds: expect.any(Array),
+        repeatMeasureIds: [result.arrangementScore.events[0]!.measureId],
+        activeCommitmentIds: [passageCommitment.id],
+        derivationEvidenceIds: expect.arrayContaining([result.analysis.id]),
+      },
+    });
+    expect(passageSearch.expandedEventIds.length).toBeGreaterThan(passageIds.length);
+    expect(passageSearch.expandedEventIds).toContain(commitmentContextEvent.id);
+    expect(store.getPassageSearch(workspace.id, passageSearch.passageSearch.id)).toEqual(
+      passageSearch.passageSearch
+    );
+    expect(
+      new WorkspaceStore({ rootDirectory }).getPassageSearch(
+        workspace.id,
+        passageSearch.passageSearch.id
+      )
+    ).toEqual(passageSearch.passageSearch);
     expect(passageSearch.candidates).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1162,26 +1223,48 @@ describe("Greensleeves faithful arrangement service", () => {
           strategy: alternative.strategy,
           status: "survived",
           audit: expect.objectContaining({ status: "pass" }),
+          passageSearchId: passageSearch.passageSearch.id,
+          lineage: expect.objectContaining({
+            requestedEventIds: passageIds,
+            expandedEventIds: passageSearch.expandedEventIds,
+            arrangementPlanId: result.arrangementPlan.id,
+            sourceCandidateId: alternative.id,
+          }),
         }),
       ])
     );
     const passageAlternative = passageSearch.candidates.find(
       (candidate) => candidate.sourceCandidateId === alternative.id
     )!;
-    expect(passageAlternative.replacementEvents.map((event) => event.id)).toEqual(passageIds);
+    expect(passageAlternative.replacementEvents.map((event) => event.id)).toEqual(
+      passageSearch.expandedEventIds
+    );
+    expect(() =>
+      service.previewPassageCandidate(
+        workspace.id,
+        result.arrangementScore.id,
+        passageIds,
+        alternative.id,
+        "passage-search.stale"
+      )
+    ).toThrow(/identity is stale or incompatible/);
+    const beforePassagePreview = structuredClone(store.get(workspace.id));
     const passagePreview = service.previewPassageCandidate(
       workspace.id,
       result.arrangementScore.id,
       passageIds,
-      alternative.id
+      alternative.id,
+      passageSearch.passageSearch.id
     );
     expect(passagePreview.events.length).toBeGreaterThan(0);
+    expect(store.get(workspace.id)).toEqual(beforePassagePreview);
     const priorScores = [...store.get(workspace.id).arrangementScoreIds];
     const adopted = service.adoptPassageCandidate(
       workspace.id,
       result.arrangementScore.id,
       passageIds,
-      alternative.id
+      alternative.id,
+      passageSearch.passageSearch.id
     );
     expect(adopted.arrangementScore).toMatchObject({
       id: "arrangement.eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
@@ -1189,12 +1272,17 @@ describe("Greensleeves faithful arrangement service", () => {
       version: 2,
       selectedCandidateId: alternative.id,
     });
+    expect(adopted.passageSearch).toEqual(passageSearch.passageSearch);
     expect(adopted.branchId).toBe("branch.dddddddd-dddd-4ddd-8ddd-dddddddddddd");
+    expect(adopted.arrangementScore.preservationAudit.status).toBe("pass");
+    expect(adopted.arrangementScore.transformationReport.length).toBeGreaterThan(0);
     expect(store.get(workspace.id).arrangementScoreIds).toEqual([
       ...priorScores,
       adopted.arrangementScore.id,
     ]);
-    for (const originalEvent of result.arrangementScore.events.slice(4)) {
+    for (const originalEvent of result.arrangementScore.events.filter(
+      (event) => !passageSearch.expandedEventIds.includes(event.id)
+    )) {
       expect(
         adopted.arrangementScore.events.find((event) => event.id === originalEvent.id)
       ).toEqual(originalEvent);

@@ -27,6 +27,7 @@ const PassageCandidateBodySchema = Type.Object(
       uniqueItems: true,
     }),
     source_candidate_id: Type.Optional(Type.String({ pattern: "^candidate\\.[a-f0-9-]{16,}$" })),
+    passage_search_id: Type.Optional(Type.String({ pattern: "^passage-search\\.[a-f0-9-]{16,}$" })),
   },
   { additionalProperties: false }
 );
@@ -111,13 +112,21 @@ export function createPassageCandidatePreviewRoute(options: Options = {}): Reque
       ...Value.Decode(ArrangementParamsSchema, request.params),
       ...Value.Decode(PassageCandidateBodySchema, body),
     }),
-    handler: async ({ workspaceId, arrangementId, arrangement_event_ids, source_candidate_id }) => {
+    handler: async ({
+      workspaceId,
+      arrangementId,
+      arrangement_event_ids,
+      source_candidate_id,
+      passage_search_id,
+    }) => {
       if (!source_candidate_id) throw new ApiRouteError("source_candidate_id is required", 400);
+      if (!passage_search_id) throw new ApiRouteError("passage_search_id is required", 400);
       return service.previewPassageCandidate(
         workspaceId,
         arrangementId,
         arrangement_event_ids,
-        source_candidate_id
+        source_candidate_id,
+        passage_search_id
       );
     },
   });
@@ -130,13 +139,21 @@ export function createPassageCandidateAdoptRoute(options: Options = {}): Request
       ...Value.Decode(ArrangementParamsSchema, request.params),
       ...Value.Decode(PassageCandidateBodySchema, body),
     }),
-    handler: async ({ workspaceId, arrangementId, arrangement_event_ids, source_candidate_id }) => {
+    handler: async ({
+      workspaceId,
+      arrangementId,
+      arrangement_event_ids,
+      source_candidate_id,
+      passage_search_id,
+    }) => {
       if (!source_candidate_id) throw new ApiRouteError("source_candidate_id is required", 400);
+      if (!passage_search_id) throw new ApiRouteError("passage_search_id is required", 400);
       return service.adoptPassageCandidate(
         workspaceId,
         arrangementId,
         arrangement_event_ids,
-        source_candidate_id
+        source_candidate_id,
+        passage_search_id
       );
     },
   });
