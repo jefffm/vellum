@@ -105,6 +105,7 @@ import {
   createConservativeRegenerationRoute,
   createEditorialCommitmentRoute,
   createFamilyCommitmentPromotionRoute,
+  createPlanDecisionFamilyCommitmentPromotionRoute,
   createPolicyExceptionRoute,
   createStaleAcknowledgementRoute,
 } from "./lib/lineage-route.js";
@@ -418,6 +419,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/workspaces/:workspaceId/commitments/:commitmentId/promote-to-family",
     createFamilyCommitmentPromotionRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/plans/:planId/decisions/:decisionId/promote-to-family",
+    createPlanDecisionFamilyCommitmentPromotionRoute()
   );
   router.post(
     "/workspaces/:workspaceId/stale-derivations/:staleDerivationId/acknowledge",

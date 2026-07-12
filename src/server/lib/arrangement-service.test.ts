@@ -508,6 +508,43 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(classicalResult.arrangementPlan.performanceBriefId).toBe(
       classicalResult.performanceBrief.id
     );
+    for (const arranged of [result, luteResult, classicalResult]) {
+      for (const decision of arranged.arrangementPlan.decisions) {
+        expect(decision.downstreamConstraintIds.length).toBeGreaterThan(0);
+        expect(arranged.arrangementSearch.constraintSpecifications).toEqual(
+          expect.arrayContaining(
+            decision.downstreamConstraintIds.map((constraintId) =>
+              expect.objectContaining({
+                id: constraintId,
+                scope: expect.objectContaining({
+                  targetConfigurationId: arranged.arrangementScore.targetConfiguration.id,
+                }),
+                provenance: expect.objectContaining({
+                  kind: "plan_decision",
+                  sourceRecordId: decision.id,
+                  evidenceIds: decision.evidenceIds,
+                }),
+              })
+            )
+          )
+        );
+      }
+    }
+    const portableFamilyKeys = [result, luteResult, classicalResult].map((arranged) =>
+      arranged.arrangementPlan.decisions
+        .filter((decision) => decision.portability === "target_portable")
+        .map((decision) => decision.familyDecisionKey)
+        .sort()
+    );
+    expect(portableFamilyKeys[1]).toEqual(portableFamilyKeys[0]);
+    expect(portableFamilyKeys[2]).toEqual(portableFamilyKeys[0]);
+    expect(
+      new Set(
+        [result, luteResult, classicalResult].flatMap((arranged) =>
+          arranged.arrangementPlan.decisions.flatMap((decision) => decision.downstreamConstraintIds)
+        )
+      ).size
+    ).toBeGreaterThan(portableFamilyKeys[0]!.length);
     const exactClassicalGuitar =
       classicalResult.arrangementScore.targetConfiguration.instrumentInstance!;
     expect(exactClassicalGuitar).toMatchObject({
@@ -616,6 +653,14 @@ describe("Greensleeves faithful arrangement service", () => {
       "20202020-2020-4020-8020-202020202020",
       "21212121-2121-4121-8121-212121212121",
       "22222222-2222-4222-8222-222222222223",
+      "25252525-2525-4525-8525-252525252525",
+      "26262626-2626-4626-8626-262626262626",
+      "27272727-2727-4727-8727-272727272727",
+      "28282828-2828-4828-8828-282828282828",
+      "29292929-2929-4929-8929-292929292929",
+      "30303030-3030-4030-8030-303030303030",
+      "31313131-3131-4131-8131-313131313131",
+      "32323232-3232-4232-8232-323232323232",
     ];
     const lineage = new LineageService({
       store,
@@ -651,6 +696,31 @@ describe("Greensleeves faithful arrangement service", () => {
       new Set(sourceLineage.items.map((item) => `${item.arrangementEventId}:${item.sourceEventId}`))
         .size
     ).toBe(sourceLineage.items.length);
+    const preservationDecision = result.arrangementPlan.decisions.find(
+      (decision) => decision.dimension === "preservation"
+    )!;
+    const promotedPlanDecision = lineage.promotePlanDecisionToFamilyCommitment(
+      workspace.id,
+      result.arrangementPlan.id,
+      preservationDecision.id,
+      ["target.baroque-lute"]
+    );
+    expect(promotedPlanDecision).toMatchObject({
+      version: 1,
+      sourcePlanDecisionId: preservationDecision.id,
+      sourceArrangementScoreId: result.arrangementScore.id,
+      targetConfigurationIds: ["target.baroque-lute"],
+      scope: { dimension: "texture" },
+      value: {
+        semanticBasis: "plan_decision",
+        familyDecisionKey: preservationDecision.familyDecisionKey,
+        selectedValue: "faithful_reduction",
+      },
+    });
+    expect(lineage.releaseCommitment(workspace.id, promotedPlanDecision.id)).toMatchObject({
+      version: 2,
+      status: "released",
+    });
     const commitment = lineage.createEditorialCommitment(workspace.id, {
       arrangementScoreId: result.arrangementScore.id,
       arrangementFamilyId: result.arrangementScore.arrangementFamilyId!,
@@ -738,15 +808,65 @@ describe("Greensleeves faithful arrangement service", () => {
       version: 2,
       parentArrangementScoreId: result.arrangementScore.id,
       branchId: expect.stringMatching(/^branch\./),
-      editorialCommitmentIds: [directEdit.editorialCommitment.id],
+      editorialCommitmentIds: [],
     });
-    expect(directEdit.editorialCommitment).toMatchObject({
-      origin: "user_edit",
-      status: "active",
+    expect(directEdit.editorialCommitment).toBeUndefined();
+    const promotedEdit = lineage.createEditorialCommitment(workspace.id, {
+      arrangementScoreId: directEdit.arrangementScore.id,
+      arrangementFamilyId: directEdit.arrangementScore.arrangementFamilyId!,
       scope: {
         objectIds: [protectedEvent.id],
         dimension: "course_fingering",
       },
+      value: protectedEvent.positions.slice().reverse(),
+      origin: "user_edit",
+    });
+    expect(promotedEdit).toMatchObject({ origin: "user_edit", status: "active" });
+    expect(() =>
+      lineage.promoteFamilyCommitment(workspace.id, promotedEdit.id, ["target.classical-guitar"])
+    ).toThrow(/target-local/i);
+
+    const portableCommitment = lineage.createEditorialCommitment(workspace.id, {
+      arrangementScoreId: directEdit.arrangementScore.id,
+      arrangementFamilyId: directEdit.arrangementScore.arrangementFamilyId!,
+      scope: {
+        objectIds: [protectedEvent.id],
+        dimension: "principal_voice_pitch",
+      },
+      value: protectedEvent.pitches,
+      origin: "approved_model_choice",
+    });
+    const staleBeforeFamilyPromotion = store.get(workspace.id).staleDerivationIds.length;
+    const familyCommitment = lineage.promoteFamilyCommitment(workspace.id, portableCommitment.id, [
+      "target.classical-guitar",
+      "target.baroque-lute",
+    ]);
+    expect(familyCommitment).toMatchObject({
+      version: 1,
+      sourceArrangementScoreId: directEdit.arrangementScore.id,
+      targetConfigurationIds: ["target.baroque-lute", "target.classical-guitar"],
+      scope: {
+        objectIds: protectedEvent.sourceEventIds,
+        dimension: "principal_voice_pitch",
+      },
+    });
+    const familyPromotionStaleRecords = store
+      .get(workspace.id)
+      .staleDerivationIds.slice(staleBeforeFamilyPromotion)
+      .map((id) => store.getStaleDerivation(workspace.id, id));
+    expect(new Set(familyPromotionStaleRecords.map((record) => record.recordId))).toEqual(
+      new Set([luteResult.arrangementScore.id, classicalResult.arrangementScore.id])
+    );
+    expect(() =>
+      lineage.conservativeRegenerate(workspace.id, {
+        arrangementScoreId: classicalResult.arrangementScore.id,
+        normalizedScoreId: correctedScore.id,
+        changedSourceEventIds: [changedSourceEventId],
+      })
+    ).toThrow(/Family Commitment|Commitment Conflicts/);
+    expect(lineage.releaseCommitment(workspace.id, familyCommitment.id)).toMatchObject({
+      version: 2,
+      status: "released",
     });
 
     const editableChords = result.arrangementScore.events
@@ -771,14 +891,11 @@ describe("Greensleeves faithful arrangement service", () => {
       branchId: batch.branch.id,
       preservationAudit: { status: "pass" },
     });
-    expect(batch.editorialCommitments).toHaveLength(2);
-    expect(new Set(batch.editorialCommitments.map((item) => item.scope.objectIds[0]))).toEqual(
-      new Set(editableChords.map((event) => event.id))
-    );
+    expect(batch.editorialCommitments).toEqual([]);
     const afterBatch = store.get(workspace.id);
     expect(afterBatch.arrangementBranchIds).toHaveLength(branchCount + 1);
     expect(afterBatch.arrangementScoreIds).toHaveLength(arrangementCount + 1);
-    expect(afterBatch.editorialCommitmentIds).toHaveLength(commitmentCount + 2);
+    expect(afterBatch.editorialCommitmentIds).toHaveLength(commitmentCount);
     expect(
       store.getArrangementFamily(workspace.id, result.arrangementScore.arrangementFamilyId!)
         .arrangementScoreIds

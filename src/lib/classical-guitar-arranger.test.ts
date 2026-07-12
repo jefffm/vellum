@@ -58,6 +58,18 @@ describe("faithful classical-guitar arrangement search", () => {
       targetKey: "G major",
       semitones: 0,
     });
+    expect(result.selected.transpositionPlan.alternatives).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          semitones: 0,
+          status: "complete_solution",
+          selected: true,
+          sourcePitchClassCoverage: expect.any(Number),
+          totalPositionMotion: expect.any(Number),
+        }),
+        expect.objectContaining({ status: "complete_solution", selected: false }),
+      ])
+    );
     expect(result.selected.targetConfiguration).toMatchObject({
       instrumentId: "classical-guitar-6",
       tuningId: "standard",

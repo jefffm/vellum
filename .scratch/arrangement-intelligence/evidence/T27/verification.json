@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T27",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T23:10:38Z",
+  "requirements": {
+    "AI-PROD-014": { "status": "machine_verified", "remaining": "none" },
+    "AI-PROD-034": {
+      "status": "machine_verified",
+      "remaining": "deferred Owner usability review"
+    },
+    "AI-PROD-038": {
+      "status": "partial",
+      "remaining": "portable family intent uses stable keys across target Plan projections rather than one separately persisted family Plan"
+    },
+    "AI-STP-018": {
+      "status": "machine_verified",
+      "remaining": "recognition and physical suitability remain human-authority dimensions"
+    },
+    "AI-STP-071": {
+      "status": "machine_verified",
+      "remaining": "deferred Owner promotion confirmation review"
+    },
+    "AI-STP-075": {
+      "status": "machine_verified",
+      "remaining": "deferred Owner conflict-language review"
+    },
+    "AI-WPL-008": {
+      "status": "machine_verified",
+      "remaining": "deferred Owner promotion usability review"
+    },
+    "AI-WPL-021": {
+      "status": "service_and_api_verified",
+      "remaining": "T28 owns complete workbench presentation and browser interaction"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1023,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Baroque guitar, 13-course lute, and classical guitar retain independent Search, Audit, target constraint, and exact Instrument Instance identities",
+      "Portable Plan decisions retain stable family keys while each target constraint cites the exact local decision and its evidence",
+      "The first two policy-eligible transpositions are completely realized and audited before target key selection; the bounded alternatives and metrics persist",
+      "Ordinary manual edit batches create immutable score versions and zero implicit commitments",
+      "Explicit Editorial and Plan Decision promotion create versioned commitments while target-local notation and course fingering cannot be promoted",
+      "Portable edited scope is translated from target event IDs to source-event lineage and affects only selected sibling targets",
+      "An applicable Family Commitment conflict blocks conservative regeneration and release creates version 2",
+      "The accepted commitment ADR now distinguishes durable edits from explicitly protected future intent",
+      "Podman 5.8.3 AppleHV with one non-racing supervisor passes pinned-image compilation and host/secret isolation"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.38491934-f709-409a-a6e2-08568e910eab",
+      "cardId": "evaluation-card.3b561937-3b07-4760-a7e2-54f242b02393",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "humanHistoricalVisualPlaybackAndUsefulnessAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1023 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/podman-lilypond-runner.test.ts",
+      "result": "pass: pinned sandbox compilation and host/secret isolation"
+    },
+    {
+      "command": "npx vitest run test/e2e/greensleeves-tracer.test.ts",
+      "result": "pass: three target PDF/SVG/MIDI projections"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t27-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "a33c4b0d2b57a624ad780c3ff62733571ca0799e164a76018375693dbe721c90"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/27-family-planning-commitments.md",
+      "sha256": "8f876b47e7c625125398882f78fa16cf92375e558b41bc55d6c20cad82761d7c"
+    },
+    {
+      "path": "docs/adr/0013-treat-edits-as-versioned-commitments.md",
+      "sha256": "252d092e3820410b38b34aaaa2b854dbd5e39ad781058a49657a771c86a5ba41"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.ts",
+      "sha256": "6875a3ded978b69595683548faa30cdecc50863a6d771bd7d7e4d0a85a11fcbd"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.test.ts",
+      "sha256": "3344aedf5f9cbe6c966445f8aeef5322f9aa66c1e852e6523704b61923a926dd"
+    },
+    {
+      "path": "src/lib/classical-guitar-arranger.test.ts",
+      "sha256": "a2791453c0cc157bbcd626cc1b4857a19d959a98cf91072dff0a311faf024309"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "645ed49f4aa47240b25f5771d16d50f11e572a2968c048e2de1d4bc3c9c7c09e"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "61280ba2827d368145090ef5b2ab25c0d839e69ca75ef2035be764d627ca3ce5"
+    },
+    {
+      "path": "src/lib/specialist-planning.ts",
+      "sha256": "68b7ab1db3f364d612d91154dd5ec676d68354701389f172da64d78751dd4a24"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "8fc86f04ade98965a843a9cd9fc5af7f8e9bc7d8afdbd5dc57859c28ab853499"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "515656e495b549ea80457bd9b8468586b4e231f3bb5e38ffa4ae199a41418b83"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "fc93d09e9b8f8d7e019ecedd600ecc43e54234e79e4f064397742e1fd576cc47"
+    },
+    {
+      "path": "src/server/lib/lineage-route.ts",
+      "sha256": "c4407ee1ad0c345bb92cef45811bc68b5f44bcd1bbfd3cc0cf8dee1943b3d0d9"
+    },
+    {
+      "path": "src/server/lib/lineage-service.ts",
+      "sha256": "2192247fa669eef43bdca87983045ad6f070507050b19777169314f6016c4d19"
+    }
+  ]
+}

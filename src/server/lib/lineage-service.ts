@@ -310,6 +310,26 @@ export class LineageService {
     });
   }
 
+  releaseCommitment(
+    workspaceId: string,
+    commitmentId: string
+  ): EditorialCommitment | FamilyCommitment {
+    const workspace = this.store.get(workspaceId);
+    if (workspace.editorialCommitmentIds.includes(commitmentId)) {
+      return this.releaseEditorialCommitment(workspaceId, commitmentId);
+    }
+    if (workspace.familyCommitmentIds.includes(commitmentId)) {
+      const commitment = this.store.getFamilyCommitment(workspaceId, commitmentId);
+      return this.store.saveFamilyCommitment(workspaceId, {
+        ...commitment,
+        version: commitment.version + 1,
+        status: "released",
+        releasedAt: this.now().toISOString(),
+      });
+    }
+    throw new ApiRouteError(`Commitment not found: ${commitmentId}`, 404);
+  }
+
   acknowledgeStaleDerivation(workspaceId: string, staleDerivationId: string): StaleDerivation {
     const record = this.store.getStaleDerivation(workspaceId, staleDerivationId);
     return this.store.saveStaleDerivation(workspaceId, { ...record, acknowledged: true });
@@ -403,19 +423,55 @@ export class LineageService {
     targetConfigurationIds: string[]
   ): FamilyCommitment {
     const source = this.store.getEditorialCommitment(workspaceId, commitmentId);
+    if (source.status !== "active") {
+      throw new ApiRouteError(`Released commitment cannot be promoted: ${source.id}`, 409);
+    }
+    if (targetConfigurationIds.length === 0) {
+      throw new ApiRouteError("Family Commitment promotion requires at least one target", 400);
+    }
     if (["notation", "course_fingering"].includes(source.scope.dimension)) {
       throw new ApiRouteError(
         `${source.scope.dimension} is target-local and cannot become a Family Commitment`,
         409
       );
     }
+    const sourceScore = this.store.getArrangementScore(workspaceId, source.arrangementScoreId);
+    const family = this.store.getArrangementFamily(workspaceId, source.arrangementFamilyId);
+    const siblingTargetIds = new Set(
+      family.arrangementScoreIds.map(
+        (id) => this.store.getArrangementScore(workspaceId, id).targetConfiguration.id
+      )
+    );
+    const unknownTargetIds = targetConfigurationIds.filter((id) => !siblingTargetIds.has(id));
+    if (unknownTargetIds.length > 0) {
+      throw new ApiRouteError(
+        `Family Commitment targets are not arrangements in ${family.id}: ${unknownTargetIds.join(", ")}`,
+        409
+      );
+    }
+    const portableSourceObjectIds = [
+      ...new Set(
+        source.scope.objectIds.flatMap((objectId) => {
+          const event = sourceScore.events.find((candidate) => candidate.id === objectId);
+          return event?.sourceEventIds.length ? event.sourceEventIds : [objectId];
+        })
+      ),
+    ];
     const record = this.store.saveFamilyCommitment(workspaceId, {
       id: `family-commitment.${this.createId()}`,
+      version: 1,
       arrangementFamilyId: source.arrangementFamilyId,
       sourceCommitmentId: source.id,
-      scope: source.scope,
-      value: source.value,
-      targetConfigurationIds,
+      sourceArrangementScoreId: sourceScore.id,
+      scope: { ...source.scope, objectIds: portableSourceObjectIds },
+      value: {
+        semanticBasis: "source_event_lineage",
+        sourceEventIds: portableSourceObjectIds,
+        dimension: source.scope.dimension,
+        sourceTargetConfigurationId: sourceScore.targetConfiguration.id,
+        approvedTargetExemplar: source.value,
+      },
+      targetConfigurationIds: [...new Set(targetConfigurationIds)].sort(),
       status: "active",
       createdAt: this.now().toISOString(),
     });
@@ -423,6 +479,7 @@ export class LineageService {
     for (const arrangementId of workspace.arrangementScoreIds) {
       const score = this.store.getArrangementScore(workspaceId, arrangementId);
       if (score.arrangementFamilyId !== source.arrangementFamilyId) continue;
+      if (!record.targetConfigurationIds.includes(score.targetConfiguration.id)) continue;
       this.saveStale(
         workspaceId,
         "arrangement_score",
@@ -430,6 +487,80 @@ export class LineageService {
         `Family Commitment ${record.id} changed`,
         [{ recordType: "arrangement_score", recordId: score.id, version: score.version ?? 1 }],
         [{ recordType: "family_commitment", recordId: record.id, version: 1 }]
+      );
+    }
+    return record;
+  }
+
+  promotePlanDecisionToFamilyCommitment(
+    workspaceId: string,
+    planId: string,
+    decisionId: string,
+    targetConfigurationIds: string[]
+  ): FamilyCommitment {
+    if (targetConfigurationIds.length === 0) {
+      throw new ApiRouteError("Family Commitment promotion requires at least one target", 400);
+    }
+    const plan = this.store.getArrangementPlan(workspaceId, planId);
+    const decision = plan.decisions.find((candidate) => candidate.id === decisionId);
+    if (!decision) throw new ApiRouteError(`Plan Decision not found: ${decisionId}`, 404);
+    if (decision.portability !== "target_portable") {
+      throw new ApiRouteError(
+        `Target-local Plan Decision cannot become a Family Commitment: ${decision.id}`,
+        409
+      );
+    }
+    const workspace = this.store.get(workspaceId);
+    const sourceScore = workspace.arrangementScoreIds
+      .map((id) => this.store.getArrangementScore(workspaceId, id))
+      .find((score) => score.arrangementPlanId === plan.id);
+    if (!sourceScore?.arrangementFamilyId) {
+      throw new ApiRouteError(`Plan has no realized Arrangement Family: ${plan.id}`, 409);
+    }
+    const family = this.store.getArrangementFamily(workspaceId, sourceScore.arrangementFamilyId);
+    const siblingTargetIds = new Set(
+      family.arrangementScoreIds.map(
+        (id) => this.store.getArrangementScore(workspaceId, id).targetConfiguration.id
+      )
+    );
+    const unknownTargetIds = targetConfigurationIds.filter((id) => !siblingTargetIds.has(id));
+    if (unknownTargetIds.length > 0) {
+      throw new ApiRouteError(
+        `Family Commitment targets are not arrangements in ${family.id}: ${unknownTargetIds.join(", ")}`,
+        409
+      );
+    }
+    const record = this.store.saveFamilyCommitment(workspaceId, {
+      id: `family-commitment.${this.createId()}`,
+      version: 1,
+      arrangementFamilyId: family.id,
+      sourcePlanDecisionId: decision.id,
+      sourceArrangementScoreId: sourceScore.id,
+      scope: {
+        objectIds: decision.scope.eventIds.length ? decision.scope.eventIds : [decision.id],
+        measureIds: decision.scope.measureIds,
+        dimension: planDecisionCommitmentDimension(decision.dimension),
+      },
+      value: {
+        semanticBasis: "plan_decision",
+        familyDecisionKey: decision.familyDecisionKey ?? decision.id,
+        selectedValue: decision.selectedValue,
+        evidenceIds: decision.evidenceIds,
+      },
+      targetConfigurationIds: [...new Set(targetConfigurationIds)].sort(),
+      status: "active",
+      createdAt: this.now().toISOString(),
+    });
+    for (const arrangementId of family.arrangementScoreIds) {
+      const score = this.store.getArrangementScore(workspaceId, arrangementId);
+      if (!record.targetConfigurationIds.includes(score.targetConfiguration.id)) continue;
+      this.saveStale(
+        workspaceId,
+        "arrangement_score",
+        score.id,
+        `Family Commitment ${record.id} promoted from Plan Decision ${decision.id}`,
+        [{ recordType: "arrangement_score", recordId: score.id, version: score.version ?? 1 }],
+        [{ recordType: "family_commitment", recordId: record.id, version: record.version }]
       );
     }
     return record;
@@ -487,7 +618,7 @@ export class LineageService {
     ]);
     return {
       arrangementScore: result.arrangementScore,
-      editorialCommitment: result.editorialCommitments[0]!,
+      editorialCommitment: result.editorialCommitments[0],
     };
   }
 
@@ -566,16 +697,6 @@ export class LineageService {
       );
     }
     const timestamp = this.now().toISOString();
-    const commitments = changes.map(({ event, patch, dimension }) => ({
-      id: `commitment.${this.createId()}`,
-      arrangementScoreId: original.id,
-      arrangementFamilyId: original.arrangementFamilyId!,
-      scope: { objectIds: [event.id], measureIds: [event.measureId], dimension },
-      value: patch.positions ?? patch.duration ?? patch.pitches,
-      origin: "user_edit" as const,
-      status: "active" as const,
-      createdAt: timestamp,
-    }));
     const branchId = `branch.${this.createId()}`;
     const branch = {
       id: branchId,
@@ -595,10 +716,7 @@ export class LineageService {
       version: (original.version ?? 1) + 1,
       parentArrangementScoreId: original.id,
       branchId,
-      editorialCommitmentIds: [
-        ...(original.editorialCommitmentIds ?? []),
-        ...commitments.map((commitment) => commitment.id),
-      ],
+      editorialCommitmentIds: [...(original.editorialCommitmentIds ?? [])],
       events: editedEvents,
       transformationReport: buildCompleteTransformationReport(
         source,
@@ -609,11 +727,9 @@ export class LineageService {
       preservationAudit,
       createdAt: timestamp,
     };
-    for (const commitment of commitments)
-      this.store.saveEditorialCommitment(workspaceId, commitment);
     this.store.saveArrangementBranch(workspaceId, branch);
     const edited = this.store.saveArrangementScore(workspaceId, editedInput);
-    return { arrangementScore: edited, editorialCommitments: commitments, branch };
+    return { arrangementScore: edited, editorialCommitments: [], branch };
   }
 
   validateArrangementEvents(
@@ -684,13 +800,14 @@ export class LineageService {
       .map((id) => this.store.getEditorialCommitment(workspaceId, id))
       .filter((record) => record.arrangementScoreId === stale.id)
       .filter((record) => record.status === "active");
-    const familyCommitmentIds = workspace.familyCommitmentIds
+    const familyCommitments = workspace.familyCommitmentIds
       .map((id) => this.store.getFamilyCommitment(workspaceId, id))
       .filter(
         (record) =>
-          record.arrangementFamilyId === stale.arrangementFamilyId && record.status === "active"
-      )
-      .map((record) => record.id);
+          record.arrangementFamilyId === stale.arrangementFamilyId &&
+          record.status === "active" &&
+          record.targetConfigurationIds.includes(stale.targetConfiguration.id)
+      );
     const exceptedCommitmentIds = new Set(
       workspace.commitmentConflictIds
         .map((id) => this.store.getCommitmentConflict(workspaceId, id))
@@ -713,12 +830,24 @@ export class LineageService {
           )
         )
     );
-    if (conflicts.length) {
+    const familyConflicts = familyCommitments.filter(
+      (commitment) =>
+        !exceptedCommitmentIds.has(commitment.id) &&
+        ((commitment.sourcePlanDecisionId !== undefined &&
+          input.changedSourceEventIds.length > 0) ||
+          commitment.scope.objectIds.some((sourceId) =>
+            input.changedSourceEventIds.includes(sourceId)
+          ))
+    );
+    if (conflicts.length || familyConflicts.length) {
       const saved = conflicts.map((commitment) =>
         this.saveConflict(workspaceId, stale.id, commitment, input.changedSourceEventIds)
       );
+      const savedFamily = familyConflicts.map((commitment) =>
+        this.saveFamilyConflict(workspaceId, stale.id, commitment, input.changedSourceEventIds)
+      );
       throw new ApiRouteError(
-        `Conservative regeneration is blocked by Commitment Conflicts ${saved.map((item) => item.id).join(", ")}. Resolve by releasing the commitment, revising the source correction, or approving a scoped Policy Exception.`,
+        `Conservative regeneration is blocked by Commitment Conflicts ${[...saved, ...savedFamily].map((item) => item.id).join(", ")}. Resolve by releasing the commitment, revising the source correction, or approving a scoped Policy Exception.`,
         409
       );
     }
@@ -741,7 +870,7 @@ export class LineageService {
       parentArrangementScoreId: stale.id,
       version: (stale.version ?? 1) + 1,
       editorialCommitmentIds: commitments.map((item) => item.id),
-      familyCommitmentIds,
+      familyCommitmentIds: familyCommitments.map((record) => record.id),
       policyExceptionIds: workspace.policyExceptionIds
         .map((id) => this.store.getPolicyException(workspaceId, id))
         .filter((record) => record.arrangementScoreId === stale.id)
@@ -781,6 +910,40 @@ export class LineageService {
     commitment: EditorialCommitment,
     changedSourceEventIds: string[]
   ): CommitmentConflict {
+    return this.saveScopedConflict(
+      workspaceId,
+      arrangementScoreId,
+      commitment.id,
+      commitment.scope,
+      changedSourceEventIds,
+      "The upstream correction changes material protected by an active Editorial Commitment."
+    );
+  }
+
+  private saveFamilyConflict(
+    workspaceId: string,
+    arrangementScoreId: string,
+    commitment: FamilyCommitment,
+    changedSourceEventIds: string[]
+  ): CommitmentConflict {
+    return this.saveScopedConflict(
+      workspaceId,
+      arrangementScoreId,
+      commitment.id,
+      commitment.scope,
+      changedSourceEventIds,
+      "The upstream correction changes source material protected across this target by an active Family Commitment."
+    );
+  }
+
+  private saveScopedConflict(
+    workspaceId: string,
+    arrangementScoreId: string,
+    commitmentId: string,
+    scope: EditorialCommitment["scope"],
+    changedSourceEventIds: string[],
+    consequence: string
+  ): CommitmentConflict {
     const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
     const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
     const matchedTargetIds = analysis.preservationTargets
@@ -792,11 +955,11 @@ export class LineageService {
     return this.store.saveCommitmentConflict(workspaceId, {
       id: `conflict.${this.createId()}`,
       arrangementScoreId,
-      commitmentId: commitment.id,
-      scope: commitment.scope,
-      conflictingObjectIds: commitment.scope.objectIds,
+      commitmentId,
+      scope,
+      conflictingObjectIds: scope.objectIds,
       affectedPreservationTargetIds,
-      consequence: "The upstream correction changes material protected by an active commitment.",
+      consequence,
       status: "unresolved",
       createdAt: this.now().toISOString(),
     });
@@ -812,6 +975,27 @@ function editDimension(
   if (event.role === "principal_voice") return "principal_voice_pitch";
   if (event.role === "continuo_foundation") return "bass";
   return "harmony";
+}
+
+function planDecisionCommitmentDimension(
+  dimension: string
+): EditorialCommitment["scope"]["dimension"] {
+  switch (dimension) {
+    case "preservation":
+    case "musical_structure":
+      return "texture";
+    case "continuo_realization":
+      return "bass";
+    case "imitative_voice_distribution":
+      return "counterpoint";
+    case "creative_design":
+      return "ornament";
+    default:
+      throw new ApiRouteError(
+        `Plan Decision dimension is not narrow enough for commitment promotion: ${dimension}`,
+        409
+      );
+  }
 }
 
 type ValidatedEditChange = {

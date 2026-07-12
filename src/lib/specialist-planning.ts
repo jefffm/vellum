@@ -200,7 +200,7 @@ function specialistDecision(
     confirmation: input.confirmedAt
       ? { requirement: "owner", status: "confirmed", confirmedAt: input.confirmedAt }
       : { requirement: "not_required", status: "not_required" },
-    downstreamConstraintIds: [],
+    downstreamConstraintIds: [`constraint.plan.${input.suffix}.${base.targetConfigurationId}`],
     downstreamStrategyIds: input.strategies,
   };
 }

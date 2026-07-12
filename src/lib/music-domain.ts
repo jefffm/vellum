@@ -430,6 +430,7 @@ export type PerformanceBrief = Static<typeof PerformanceBriefSchema>;
 export const PlanDecisionSchema = Type.Object(
   {
     id: IdSchema,
+    familyDecisionKey: Type.Optional(IdSchema),
     scope: Type.Object(
       {
         kind: Type.Union([
@@ -787,11 +788,14 @@ export type EditorialCommitment = Static<typeof EditorialCommitmentSchema>;
 export const FamilyCommitmentSchema = Type.Object(
   {
     id: IdSchema,
+    version: Type.Integer({ minimum: 1 }),
     arrangementFamilyId: IdSchema,
     sourceCommitmentId: Type.Optional(IdSchema),
+    sourcePlanDecisionId: Type.Optional(IdSchema),
+    sourceArrangementScoreId: IdSchema,
     scope: CommitmentScopeSchema,
     value: Type.Unknown(),
-    targetConfigurationIds: Type.Array(IdSchema),
+    targetConfigurationIds: Type.Array(IdSchema, { minItems: 1 }),
     status: Type.Union([Type.Literal("active"), Type.Literal("released")]),
     createdAt: IsoDateSchema,
     releasedAt: Type.Optional(IsoDateSchema),
@@ -2098,6 +2102,24 @@ export const ArrangementScoreSchema = Type.Object(
         targetKey: Type.Optional(Type.String({ minLength: 1 })),
         semitones: Type.Integer({ minimum: -24, maximum: 24 }),
         rationale: Type.String({ minLength: 1 }),
+        alternatives: Type.Optional(
+          Type.Array(
+            Type.Object(
+              {
+                semitones: Type.Integer({ minimum: -24, maximum: 24 }),
+                targetKey: Type.Optional(Type.String({ minLength: 1 })),
+                status: Type.Union([Type.Literal("complete_solution"), Type.Literal("rejected")]),
+                selected: Type.Boolean(),
+                sourcePitchClassCoverage: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
+                totalPositionMotion: Type.Optional(Type.Number({ minimum: 0 })),
+                averageFret: Type.Optional(Type.Number({ minimum: 0 })),
+                reason: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            ),
+            { minItems: 1 }
+          )
+        ),
       },
       { additionalProperties: false }
     ),

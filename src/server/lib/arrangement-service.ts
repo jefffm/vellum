@@ -1387,6 +1387,69 @@ function buildSearchProtocol(input: {
         compilerIdentity,
       })
     );
+  for (const decision of input.plan.decisions.filter((candidate) =>
+    candidate.targetConfigurationIds.includes(input.targetConfiguration.id)
+  )) {
+    for (const constraintId of decision.downstreamConstraintIds) {
+      constraintSpecifications.push({
+        id: constraintId,
+        schemaVersion: 1,
+        evaluatorId: evaluator.id,
+        evaluatorVersion: evaluator.version,
+        scope: {
+          kind:
+            decision.scope.kind === "whole_score"
+              ? "whole_target"
+              : decision.scope.kind === "section"
+                ? "section"
+                : "passage",
+          targetConfigurationId: input.targetConfiguration.id,
+          subjectIds: [
+            ...decision.scope.eventIds,
+            ...decision.scope.measureIds,
+            ...decision.scope.passageIds,
+            ...decision.scope.sectionIds,
+          ].length
+            ? [
+                ...decision.scope.eventIds,
+                ...decision.scope.measureIds,
+                ...decision.scope.passageIds,
+                ...decision.scope.sectionIds,
+              ]
+            : [decision.id],
+        },
+        parameters: {
+          planDecisionId: decision.id,
+          familyDecisionKey: decision.familyDecisionKey ?? null,
+          dimension: decision.dimension,
+          selectedValue: decision.selectedValue,
+          portability: decision.portability,
+          policyConsequence: decision.policyConsequence,
+        },
+        provenance: {
+          kind: "plan_decision",
+          sourceRecordId: decision.id,
+          evidenceIds: decision.evidenceIds,
+          observationDigest: digestJson(decision),
+        },
+        enforcement: {
+          rejection: "reject",
+          comparisonPriority: 0,
+          exceptionPolicy: "policy_exception_required",
+          confirmationPolicy:
+            decision.confirmation.requirement === "owner" ? "owner_confirmation_required" : "none",
+          rationale: `Realize Plan Decision ${decision.id} for target ${input.targetConfiguration.id}: ${decision.rationale}`,
+          evaluationPhase: "both",
+        },
+        applicability: {
+          status: "applicable",
+          rationale: `Plan Decision ${decision.id} explicitly names this target configuration.`,
+          requiredCapabilityIds: [],
+        },
+        compilerIdentity,
+      });
+    }
+  }
   const mechanicalEvaluator = componentIdentity("evaluator.instrument-instance", "1.0.0", {
     modeledProperties: ["course construction", "sounding set", "stopped behavior"],
   });

@@ -106,70 +106,143 @@ export function arrangeFaithfulPluckedString(
     ): event is Extract<ScoreEvent, { type: "note" }> | Extract<ScoreEvent, { type: "rest" }> =>
       event.partId === target.partId && event.type !== "figured_bass"
   );
-  const plan = chooseTranspositionPlan(score, principalEvents, model);
   const strategies = ["source-coverage", "economical-fingering"] as const;
+  const policy = options.preservationPolicy ?? "faithful_reduction";
+  const transpositionAttempts = enumerateTranspositionPlans(score, principalEvents, model)
+    .slice(0, 2)
+    .map((plan) => {
+      try {
+        const candidates: ArrangementCandidate[] = strategies.slice(0, 1).map((strategy) => {
+          const built: {
+            events: ArrangementEvent[];
+            phraseSearchEvidence?: PhraseSearchEvidence;
+          } = {
+            events: buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy),
+          };
+          const events = built.events;
+          const audit = applyPreservationPolicy(
+            auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones),
+            policy
+          );
+          return {
+            id: `candidate.${strategy}`,
+            strategy,
+            status: audit.status === "fail" ? ("rejected" as const) : ("survived" as const),
+            events,
+            audit,
+            metrics: candidateMetrics(events),
+            ...(built.phraseSearchEvidence
+              ? { phraseSearchEvidence: built.phraseSearchEvidence }
+              : {}),
+          };
+        });
+        const survivors = candidates.filter((candidate) => candidate.status === "survived");
+        survivors.sort((left, right) => compareCandidatesForPolicy(left, right, policy));
+        const best = survivors[0];
+        return best
+          ? { plan, candidates, best, totalPositionMotion: candidatePositionMotion(best) }
+          : { plan, candidates, reason: "Every complete candidate failed Preservation Audit." };
+      } catch (error) {
+        return {
+          plan,
+          candidates: [] as ArrangementCandidate[],
+          error,
+          reason: error instanceof Error ? error.message : "Target realization failed.",
+        };
+      }
+    });
+  const completeAttempts = transpositionAttempts.filter(
+    (attempt): attempt is (typeof transpositionAttempts)[number] & { best: ArrangementCandidate } =>
+      "best" in attempt && attempt.best !== undefined
+  );
+  completeAttempts.sort(
+    (left, right) =>
+      preferredTranspositionRank(left.plan.semitones) -
+        preferredTranspositionRank(right.plan.semitones) ||
+      compareCandidatesForPolicy(left.best, right.best, policy) ||
+      left.totalPositionMotion - right.totalPositionMotion ||
+      left.plan.semitones - right.plan.semitones
+  );
+  const selectedAttempt = completeAttempts[0];
+  if (!selectedAttempt) {
+    const exhausted = transpositionAttempts.find(
+      (attempt) => "error" in attempt && attempt.error instanceof PhraseSearchExhaustedError
+    );
+    if (exhausted && "error" in exhausted) throw exhausted.error;
+    throw new Error(
+      `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit`
+    );
+  }
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
-    const built: {
-      events: ArrangementEvent[];
-      phraseSearchEvidence?: PhraseSearchEvidence;
-    } = ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"].includes(
-      model.exactInstance()?.profileId ?? ""
-    )
+    const built: { events: ArrangementEvent[]; phraseSearchEvidence?: PhraseSearchEvidence } = [
+      "baroque-guitar-5",
+      "baroque-lute-13",
+      "classical-guitar-6",
+    ].includes(model.exactInstance()?.profileId ?? "")
       ? buildHistoricalPluckedPhraseCandidate(
           score,
           analysis,
           principalEvents,
           model,
-          plan.semitones,
+          selectedAttempt.plan.semitones,
           strategy,
           options
         )
       : {
-          events: buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy),
+          events: buildCandidateEvents(
+            score,
+            principalEvents,
+            model,
+            selectedAttempt.plan.semitones,
+            strategy
+          ),
         };
-    const events = built.events;
     const audit = applyPreservationPolicy(
-      auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones),
-      options.preservationPolicy ?? "faithful_reduction"
+      auditFaithfulPrincipalVoice(score, analysis, built.events, selectedAttempt.plan.semitones),
+      policy
     );
-    const metrics = candidateMetrics(events);
     return {
       id: `candidate.${strategy}`,
       strategy,
-      status: audit.status === "fail" ? ("rejected" as const) : ("survived" as const),
-      events,
+      status: audit.status === "fail" ? "rejected" : "survived",
+      events: built.events,
       audit,
-      metrics,
+      metrics: candidateMetrics(built.events),
       ...(built.phraseSearchEvidence ? { phraseSearchEvidence: built.phraseSearchEvidence } : {}),
     };
   });
-  const survivors = candidates.filter((candidate) => candidate.status === "survived");
-  if (survivors.length === 0)
+  const finalists = candidates.filter((candidate) => candidate.status === "survived");
+  finalists.sort((left, right) => compareCandidatesForPolicy(left, right, policy));
+  const selectedCandidate = finalists[0];
+  if (!selectedCandidate) {
     throw new Error(
       `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit`
     );
-  const policy = options.preservationPolicy ?? "faithful_reduction";
-  survivors.sort((left, right) => {
-    if (policy === "free_paraphrase") {
-      return (
-        right.metrics.openStringCount - left.metrics.openStringCount ||
-        left.metrics.averageFret - right.metrics.averageFret
-      );
-    }
-    if (policy === "idiomatic_adaptation") {
-      return (
-        left.metrics.averageFret - right.metrics.averageFret ||
-        right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage
-      );
-    }
-    return (
-      right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage ||
-      left.metrics.averageFret - right.metrics.averageFret ||
-      right.metrics.openStringCount - left.metrics.openStringCount
-    );
-  });
-  const selectedCandidate = survivors[0]!;
+  }
   selectedCandidate.status = "selected";
+  const plan = {
+    ...selectedAttempt.plan,
+    rationale: `${selectedAttempt.plan.rationale} Selected after comparing ${completeAttempts.length} complete target solution${completeAttempts.length === 1 ? "" : "s"}: faithful policy applies the declared target key preference before target mechanics, so range fit alone does not select the key.`,
+    alternatives: transpositionAttempts.map((attempt) => ({
+      semitones: attempt.plan.semitones,
+      targetKey: attempt.plan.targetKey,
+      status: "best" in attempt ? ("complete_solution" as const) : ("rejected" as const),
+      selected: attempt === selectedAttempt,
+      ...(attempt.best
+        ? {
+            sourcePitchClassCoverage: attempt.best.metrics.sourcePitchClassCoverage,
+            totalPositionMotion: attempt.totalPositionMotion,
+            averageFret: attempt.best.metrics.averageFret,
+          }
+        : {}),
+      reason:
+        attempt === selectedAttempt
+          ? "Selected by the policy comparison over complete realized and audited target events."
+          : "best" in attempt
+            ? "A complete audited solution existed but another complete solution outranked it."
+            : attempt.reason,
+    })),
+  };
   const transformationReport = buildCompleteTransformationReport(
     score,
     analysis,
@@ -192,6 +265,56 @@ export function arrangeFaithfulPluckedString(
       createdAt: options.createdAt,
     },
   };
+}
+
+function compareCandidatesForPolicy(
+  left: ArrangementCandidate,
+  right: ArrangementCandidate,
+  policy: PreservationPolicy
+): number {
+  if (policy === "free_paraphrase") {
+    return (
+      right.metrics.openStringCount - left.metrics.openStringCount ||
+      left.metrics.averageFret - right.metrics.averageFret
+    );
+  }
+  if (policy === "idiomatic_adaptation") {
+    return (
+      left.metrics.averageFret - right.metrics.averageFret ||
+      right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage
+    );
+  }
+  return (
+    right.metrics.sourcePitchClassCoverage - left.metrics.sourcePitchClassCoverage ||
+    candidatePositionMotion(left) - candidatePositionMotion(right) ||
+    left.metrics.averageFret - right.metrics.averageFret ||
+    right.metrics.openStringCount - left.metrics.openStringCount
+  );
+}
+
+function candidatePositionMotion(candidate: ArrangementCandidate): number {
+  const modeled = candidate.phraseSearchEvidence?.transitions.reduce(
+    (total, transition) =>
+      total +
+      transition.fretDisplacement +
+      transition.courseDisplacement +
+      transition.handPositionDelta,
+    0
+  );
+  if (modeled !== undefined) return modeled;
+  const representatives = candidate.events.flatMap((event) =>
+    event.positions.length
+      ? [
+          event.positions.reduce((highest, position) =>
+            noteToMidi(position.pitch) > noteToMidi(highest.pitch) ? position : highest
+          ),
+        ]
+      : []
+  );
+  return representatives.slice(1).reduce((total, position, index) => {
+    const prior = representatives[index]!;
+    return total + Math.abs(position.fret - prior.fret) + Math.abs(position.course - prior.course);
+  }, 0);
 }
 
 export function arrangeFaithfulBaroqueGuitar(
@@ -435,26 +558,25 @@ function intervalContour(pitches: string[]): number[] {
   return pitches.slice(1).map((pitch, index) => noteToMidi(pitch) - noteToMidi(pitches[index]!));
 }
 
-function chooseTranspositionPlan(
+function enumerateTranspositionPlans(
   score: NormalizedScore,
   principalEvents: ScoreEvent[],
   model: InstrumentModel
-): ArrangementScore["transpositionPlan"] {
+): ArrangementScore["transpositionPlan"][] {
   const notes = principalEvents.filter(
     (event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note"
   );
-  const preferredIntervals = [0, -5, 5, -7, 7, -2, -3];
-  const semitones = preferredIntervals.find((interval) =>
+  const feasibleIntervals = PREFERRED_TRANSPOSITION_INTERVALS.filter((interval) =>
     notes.every(
       (event) => principalPositions(model, transposeNote(event.pitch, interval)).length > 0
     )
   );
-  if (semitones === undefined) {
+  if (feasibleIntervals.length === 0) {
     throw new Error(
       "Principal Voice cannot fit the target instrument range under a uniform transposition"
     );
   }
-  return {
+  return feasibleIntervals.map((semitones) => ({
     sourceKey: score.key,
     targetKey: transposeKey(score.key, semitones),
     semitones,
@@ -462,7 +584,16 @@ function chooseTranspositionPlan(
       semitones === 0
         ? "The source key fits the complete Principal Voice on the target instrument."
         : `Uniformly transpose ${semitones} semitones so every Principal Voice event is playable while preserving intervals and rhythm.`,
-  };
+  }));
+}
+
+const PREFERRED_TRANSPOSITION_INTERVALS = [0, -5, 5, -7, 7, -2, -3] as const;
+
+function preferredTranspositionRank(semitones: number): number {
+  const index = PREFERRED_TRANSPOSITION_INTERVALS.indexOf(
+    semitones as (typeof PREFERRED_TRANSPOSITION_INTERVALS)[number]
+  );
+  return index < 0 ? Number.MAX_SAFE_INTEGER : index;
 }
 
 function buildHistoricalPluckedPhraseCandidate(

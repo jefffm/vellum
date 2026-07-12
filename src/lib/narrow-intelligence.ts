@@ -152,6 +152,7 @@ export function buildNarrowPlanningRecords(input: {
   const decisions = [
     {
       id: `decision.${input.createId()}`,
+      familyDecisionKey: `family-decision.${input.analysis.id}.musical-structure`,
       scope: {
         kind: "whole_score" as const,
         sectionIds: [],
@@ -173,11 +174,12 @@ export function buildNarrowPlanningRecords(input: {
         requiresPolicyException: false,
       },
       confirmation: { requirement: "not_required" as const, status: "not_required" as const },
-      downstreamConstraintIds: [],
+      downstreamConstraintIds: [`constraint.plan.musical-structure.${input.target.id}`],
       downstreamStrategyIds: [],
     },
     {
       id: `decision.${input.createId()}`,
+      familyDecisionKey: `family-decision.${input.analysis.id}.preservation.${input.preservationPolicy}`,
       scope: {
         kind: "whole_score" as const,
         sectionIds: [],
@@ -199,7 +201,7 @@ export function buildNarrowPlanningRecords(input: {
         requiresPolicyException: false,
       },
       confirmation: { requirement: "not_required" as const, status: "not_required" as const },
-      downstreamConstraintIds: [],
+      downstreamConstraintIds: [`constraint.plan.preservation.${input.target.id}`],
       downstreamStrategyIds: [],
     },
     {
@@ -225,7 +227,7 @@ export function buildNarrowPlanningRecords(input: {
         requiresPolicyException: false,
       },
       confirmation: { requirement: "not_required" as const, status: "not_required" as const },
-      downstreamConstraintIds: [],
+      downstreamConstraintIds: [`constraint.plan.notation-projection.${input.target.id}`],
       downstreamStrategyIds: [],
     },
   ];

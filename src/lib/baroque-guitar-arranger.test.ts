@@ -74,6 +74,19 @@ describe("faithful baroque-guitar arrangement search", () => {
       targetKey: "F major",
       semitones: -2,
     });
+    expect(result.selected.transpositionPlan.alternatives).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          semitones: -2,
+          status: "complete_solution",
+          selected: true,
+          sourcePitchClassCoverage: expect.any(Number),
+          totalPositionMotion: expect.any(Number),
+        }),
+        expect.objectContaining({ status: "complete_solution", selected: false }),
+      ])
+    );
+    expect(result.selected.transpositionPlan.rationale).toMatch(/complete target solution/);
 
     const protectedEvents = fixture.score.events.filter(
       (event) =>

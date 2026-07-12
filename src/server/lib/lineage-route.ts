@@ -182,14 +182,14 @@ export function createCommitmentReleaseRoute(options: Options = {}): RequestHand
   return createApiRoute<any, unknown>({
     validate: (_body, request) => Value.Decode(CommitmentParams, request.params),
     handler: async ({ workspaceId, commitmentId }) =>
-      service.releaseEditorialCommitment(workspaceId, commitmentId),
+      service.releaseCommitment(workspaceId, commitmentId),
   });
 }
 
 export function createFamilyCommitmentPromotionRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
   const Body = Type.Object({
-    targetConfigurationIds: Type.Array(Type.String({ minLength: 1 })),
+    targetConfigurationIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
   });
   return createApiRoute<any, unknown>({
     validate: (body, request) => ({
@@ -198,6 +198,33 @@ export function createFamilyCommitmentPromotionRoute(options: Options = {}): Req
     }),
     handler: async ({ workspaceId, commitmentId, targetConfigurationIds }) =>
       service.promoteFamilyCommitment(workspaceId, commitmentId, targetConfigurationIds),
+  });
+}
+
+export function createPlanDecisionFamilyCommitmentPromotionRoute(
+  options: Options = {}
+): RequestHandler {
+  const { service } = dependencies(options);
+  const Params = Type.Object({
+    workspaceId: Type.String({ minLength: 1 }),
+    planId: Type.String({ minLength: 1 }),
+    decisionId: Type.String({ minLength: 1 }),
+  });
+  const Body = Type.Object({
+    targetConfigurationIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+  });
+  return createApiRoute<any, unknown>({
+    validate: (body, request) => ({
+      ...Value.Decode(Params, request.params),
+      ...Value.Decode(Body, body),
+    }),
+    handler: async ({ workspaceId, planId, decisionId, targetConfigurationIds }) =>
+      service.promotePlanDecisionToFamilyCommitment(
+        workspaceId,
+        planId,
+        decisionId,
+        targetConfigurationIds
+      ),
   });
 }
 
