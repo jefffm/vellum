@@ -60,6 +60,20 @@ npm run dev
 
 Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `VELLUM_LLM_API_KEY`) remain fallback configuration for providers that need them. Vellum owns its credentials and does not import Pi or Codex login files.
 
+### Local API trust boundary
+
+The API binds `127.0.0.1` by default. `VELLUM_SERVER_HOST` may select another
+numeric loopback address such as `::1`; wildcard, LAN, and hostname binds are
+rejected before the server starts. Browser API requests are accepted only from
+the exact loopback origin in `VELLUM_FRONTEND_ORIGIN`, which defaults to
+`http://127.0.0.1:5173`. Trusted local CLI and native clients may omit `Origin`.
+Unknown, malformed, and `null` browser origins are actively rejected.
+
+Authenticated remote access is intentionally unavailable until a focused ADR
+defines its transport and authorization boundary. Setting a non-loopback host
+does not silently expose the Owner's workspaces, provider connection, or local
+tool execution.
+
 On macOS, Vellum stores ChatGPT authorization in Keychain. Set `VELLUM_PROVIDER_CREDENTIAL_STORE=file` only when you explicitly need the atomic, permission-restricted local fallback.
 
 The deterministic fake-provider contract suite runs in ordinary tests. To opt into the real ChatGPT subscription lifecycle smoke test (it opens the authorization page twice and never prints tokens, callback parameters, or model content), run:

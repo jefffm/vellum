@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import {
   createSourceContentRoute,
   createSourceUploadRoute,
@@ -16,7 +17,7 @@ import {
 } from "./workspace-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 describe("workspace API routes", () => {
   let rootDirectory: string;
@@ -123,7 +124,7 @@ describe("workspace API routes", () => {
   it("navigates, renames, and safely removes a local workspace", async () => {
     const created = await post("/api/workspaces", { title: "Untitled" });
     const workspace = (await created.json()) as ApiEnvelope<{ id: string }>;
-    if (!workspace.ok) throw new Error(workspace.error);
+    if (!workspace.ok) throw new Error(workspace.error.message);
     const navigation = await fetch(`${serverUrl()}/api/workspaces/${workspace.data.id}/navigation`);
     expect(await navigation.json()).toMatchObject({
       ok: true,

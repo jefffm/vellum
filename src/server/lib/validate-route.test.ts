@@ -1,10 +1,11 @@
 import express from "express";
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import { createValidateRoute } from "./validate-route.js";
 import type { SubprocessResult } from "./subprocess.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 type ValidateResponse = {
   valid: boolean;

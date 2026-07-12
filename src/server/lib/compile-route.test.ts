@@ -1,12 +1,13 @@
 import express from "express";
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import path from "node:path";
 import process from "node:process";
 import { createCompileRoute, lilypondIncludeDirs, parseLilyPondErrors } from "./compile-route.js";
 import { SubprocessError, type SubprocessResult } from "./subprocess.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 type CompileResponse = {
   svg?: string;

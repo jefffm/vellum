@@ -1,17 +1,15 @@
 import type { Request, RequestHandler } from "express";
+import type { ApiErrorCode, ApiSuccess } from "../../lib/api-contract.js";
+import {
+  ensureCorrelationId,
+  errorCodeForStatus,
+  logApiError,
+  safeRequestPath,
+  sendApiFailure,
+} from "./api-boundary.js";
 import { redactSecretText } from "./secret-redaction.js";
 
-export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
-
-export type ApiSuccess<T> = {
-  ok: true;
-  data: T;
-};
-
-export type ApiFailure = {
-  ok: false;
-  error: string;
-};
+export type { ApiResponse } from "../../lib/api-contract.js";
 
 export type ApiRouteConfig<TInput, TOutput> = {
   validate: (body: unknown, request: Request) => TInput;
@@ -24,6 +22,7 @@ export function createApiRoute<TInput, TOutput>(
   return async (request, response) => {
     const startedAt = Date.now();
     let status = 200;
+    ensureCorrelationId(response);
 
     try {
       let input: TInput;
@@ -32,9 +31,11 @@ export function createApiRoute<TInput, TOutput>(
         input = config.validate(request.body, request);
       } catch (error) {
         status = 400;
-        response
-          .status(status)
-          .json({ ok: false, error: errorMessage(error) } satisfies ApiFailure);
+        sendApiFailure(response, {
+          status,
+          code: "invalid_request",
+          message: errorMessage(error),
+        });
         return;
       }
 
@@ -42,11 +43,37 @@ export function createApiRoute<TInput, TOutput>(
       status = 200;
       response.status(status).json({ ok: true, data } satisfies ApiSuccess<TOutput>);
     } catch (error) {
-      status = httpStatus(error);
-      response.status(status).json({ ok: false, error: errorMessage(error) } satisfies ApiFailure);
+      status = error instanceof ApiRouteError ? error.status : 500;
+      if (
+        error instanceof ApiRouteError &&
+        (error.status < 500 || error.code !== "internal_error")
+      ) {
+        sendApiFailure(response, {
+          status,
+          code: error.code,
+          message: errorMessage(error),
+          details: error.details,
+        });
+      } else {
+        logApiError(request, response, error, status, "internal_error");
+        sendApiFailure(response, {
+          status,
+          code: "internal_error",
+          message: "Internal server error",
+        });
+      }
     } finally {
       const durationMs = Date.now() - startedAt;
-      console.log(`${request.method} ${request.path} ${status} ${durationMs}ms`);
+      console.log(
+        JSON.stringify({
+          event: "api_request",
+          correlationId: ensureCorrelationId(response),
+          method: request.method,
+          path: safeRequestPath(request),
+          status,
+          durationMs,
+        })
+      );
     }
   };
 }
@@ -54,23 +81,13 @@ export function createApiRoute<TInput, TOutput>(
 export class ApiRouteError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    public readonly code: ApiErrorCode = errorCodeForStatus(status),
+    public readonly details?: Record<string, unknown>
   ) {
     super(message);
     this.name = "ApiRouteError";
   }
-}
-
-function httpStatus(error: unknown): number {
-  if (error instanceof ApiRouteError) {
-    return error.status;
-  }
-
-  if (isRecord(error) && typeof error.status === "number") {
-    return error.status;
-  }
-
-  return 500;
 }
 
 function errorMessage(error: unknown): string {
@@ -83,8 +100,4 @@ function errorMessage(error: unknown): string {
   }
 
   return "Internal server error";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

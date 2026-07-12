@@ -1,8 +1,9 @@
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import { createApp } from "../index.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 type TemplateSummary = {
   name: string;

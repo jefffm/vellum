@@ -1,4 +1,4 @@
-import { Agent, streamProxy } from "@mariozechner/pi-agent-core";
+import { Agent } from "@mariozechner/pi-agent-core";
 import { getModel } from "@mariozechner/pi-ai";
 import {
   AppStorage,
@@ -30,6 +30,7 @@ import {
 } from "./tools.js";
 import type { CompileResult } from "./types.js";
 import type { ArrangementScore, TargetConfiguration } from "./lib/music-domain.js";
+import { apiErrorFromResponse, isApiSuccess, type ApiResponse } from "./lib/api-contract.js";
 import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
@@ -47,6 +48,7 @@ import {
   installGuidedStart,
   type GuidedDeliverable,
 } from "./guided-start.js";
+import { vellumStreamProxy } from "./lib/vellum-stream-proxy.js";
 
 import "./styles.css";
 
@@ -99,7 +101,7 @@ export const vellumTools: AgentTool[] = [
 
 export function createStreamFn(): StreamFn {
   return (model, context, options) =>
-    streamProxy(model, context, {
+    vellumStreamProxy(model, context, {
       ...options,
       proxyUrl: "",
       authToken: "server-managed",
@@ -592,10 +594,9 @@ function installArrangementVersionBridge(panel: HTMLElement): void {
 
 async function browserApi<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
-  const envelope = (await response.json()) as { ok: true; data: T } | { ok: false; error: string };
-  if (!response.ok || !envelope.ok) {
-    throw new Error(envelope.ok ? `Request failed (${response.status})` : envelope.error);
-  }
+  const envelope = (await response.json()) as ApiResponse<T>;
+  if (!response.ok || !isApiSuccess<T>(envelope))
+    throw apiErrorFromResponse(response.status, envelope);
   return envelope.data;
 }
 

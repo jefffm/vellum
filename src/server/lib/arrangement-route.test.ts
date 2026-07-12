@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import {
   createArrangementCreateRoute,
   createArrangementDeleteRoute,
@@ -11,7 +12,7 @@ import {
   createArrangementListRoute,
 } from "./arrangement-route.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 type ArrangementCreateResponse = {
   id: string;
@@ -190,7 +191,7 @@ async function create(
   const json = (await response.json()) as ApiEnvelope<ArrangementCreateResponse>;
 
   if (!json.ok) {
-    throw new Error(json.error);
+    throw new Error(json.error.message);
   }
 
   return json.data;

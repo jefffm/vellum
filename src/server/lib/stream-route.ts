@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express";
+import type { RequestHandler, Response } from "express";
 import { readFileSync } from "node:fs";
 import type {
   AssistantMessageEvent,
@@ -8,6 +8,7 @@ import type {
 } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
 import { ProviderConnection } from "./provider-connection.js";
+import { ensureCorrelationId, logApiError, sendApiFailure } from "./api-boundary.js";
 import { redactSecretText } from "./secret-redaction.js";
 
 export const providerConnection = new ProviderConnection();
@@ -39,7 +40,11 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
     const parsed = parseStreamRequest(request.body);
 
     if (!parsed.ok) {
-      response.status(400).json({ error: parsed.error });
+      sendApiFailure(response, {
+        status: 400,
+        code: "invalid_request",
+        message: parsed.error,
+      });
       return;
     }
 
@@ -48,14 +53,13 @@ export function createStreamRoute(options: StreamRouteOptions = {}): RequestHand
     try {
       apiKey = await resolveApiKey(parsed.request.model.provider);
     } catch (error) {
-      response.status(500).json({ error: errorMessage(error) });
+      logApiError(request, response, error, 500, "internal_error");
+      endStreamError(response, "LLM stream failed");
       return;
     }
 
     if (!apiKey) {
-      response
-        .status(500)
-        .json({ error: missingCredentialsMessage(parsed.request.model.provider) });
+      endStreamError(response, missingCredentialsMessage(parsed.request.model.provider));
       return;
     }
 
@@ -243,6 +247,21 @@ function writeSse(
   data: Record<string, unknown>
 ): void {
   response.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+function endStreamError(response: Response, message: string): void {
+  response.status(200);
+  response.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  response.setHeader("Cache-Control", "no-cache, no-transform");
+  response.setHeader("Connection", "close");
+  writeSse(response, {
+    type: "error",
+    reason: "error",
+    errorMessage: message,
+    correlationId: ensureCorrelationId(response),
+    usage: emptyUsage(),
+  });
+  response.end();
 }
 
 function emptyUsage() {

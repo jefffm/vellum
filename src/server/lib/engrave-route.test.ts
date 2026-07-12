@@ -2,9 +2,11 @@ import express, { type ErrorRequestHandler } from "express";
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import type { EngraveParams, EngraveResult } from "../../lib/engrave-schema.js";
+import type { ApiResponse } from "../../lib/api-contract.js";
+import { sendApiFailure } from "./api-boundary.js";
 import { createEngraveRoute } from "./engrave-route.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 describe("createEngraveRoute", () => {
   const servers: Server[] = [];
@@ -86,11 +88,14 @@ describe("createEngraveRoute", () => {
       headers: { "Content-Type": "application/json" },
       body: "{ malformed",
     });
-    const json = (await response.json()) as { error: { message: string; status: number } };
+    const json = (await response.json()) as ApiEnvelope<unknown>;
 
     expect(response.status).toBe(400);
-    expect(json.error.status).toBe(400);
-    expect(json.error.message.length).toBeGreaterThan(0);
+    expect(json.ok).toBe(false);
+    if (!json.ok) {
+      expect(json.error.status).toBe(400);
+      expect(json.error.message.length).toBeGreaterThan(0);
+    }
   });
 
   it("returns 400 for semantic engrave errors", async () => {
@@ -103,7 +108,7 @@ describe("createEngraveRoute", () => {
     expect(response.status).toBe(400);
     expect(json.ok).toBe(false);
     if (!json.ok) {
-      expect(json.error).toContain("Unknown instrument");
+      expect(json.error.message).toContain("Unknown instrument");
     }
   });
 });
@@ -154,11 +159,9 @@ async function listen(handler: express.RequestHandler): Promise<Server> {
 
 const jsonErrorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
   const status = typeof error.status === "number" ? error.status : 500;
-  response.status(status).json({
-    error: {
-      message: error instanceof Error ? error.message : "Internal server error",
-      status,
-    },
+  sendApiFailure(response, {
+    status,
+    message: status === 400 ? "Invalid request body" : "Internal server error",
   });
 };
 

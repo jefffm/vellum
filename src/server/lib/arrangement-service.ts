@@ -128,7 +128,13 @@ export class ArrangementService {
         `Score-Anchored Review is required before arrangement. Unresolved critical uncertainties: ${critical
           .map((uncertainty) => uncertainty.id)
           .join(", ")}`,
-        409
+        409,
+        "score_review_required",
+        {
+          workspaceId,
+          scoreTranscriptionId: transcription.id,
+          uncertaintyIds: critical.map((uncertainty) => uncertainty.id),
+        }
       );
     }
     const timestamp = this.now().toISOString();
@@ -152,7 +158,13 @@ export class ArrangementService {
         `Musicological Analysis review is required before arrangement: ${criticalAnalysisAmbiguities
           .map((ambiguity) => ambiguity.id)
           .join(", ")}`,
-        409
+        409,
+        "analysis_review_required",
+        {
+          workspaceId,
+          analysisRecordId: analysis.id,
+          ambiguityIds: criticalAnalysisAmbiguities.map((ambiguity) => ambiguity.id),
+        }
       );
     }
     const familyId =

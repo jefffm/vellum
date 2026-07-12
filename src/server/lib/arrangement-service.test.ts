@@ -6,6 +6,7 @@ import { createServer } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import { noteToMidi, transposeNote } from "../../lib/pitch.js";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import { ArrangementService } from "./arrangement-service.js";
 import { AnalysisService } from "./analysis-service.js";
 import { createAnalysisCorrectionRoute } from "./analysis-route.js";
@@ -559,12 +560,10 @@ describe("Greensleeves faithful arrangement service", () => {
     const navigationResponse = await fetch(
       `http://127.0.0.1:${address.port}/api/workspaces/${workspace.id}/navigation`
     );
-    const navigation = (await navigationResponse.json()) as {
-      ok: boolean;
-      error?: string;
-      data: { families: Array<{ arrangements: Array<{ instrumentId: string }> }> };
-    };
-    if (!navigation.ok) throw new Error(navigation.error);
+    const navigation = (await navigationResponse.json()) as ApiResponse<{
+      families: Array<{ arrangements: Array<{ instrumentId: string }> }>;
+    }>;
+    if (!navigation.ok) throw new Error(navigation.error.message);
     expect(navigation.ok).toBe(true);
     expect(navigation.data.families).toHaveLength(1);
     expect(navigation.data.families[0]?.arrangements.map((item) => item.instrumentId)).toEqual(

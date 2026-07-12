@@ -1,10 +1,11 @@
 import express from "express";
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ApiResponse } from "../../lib/api-contract.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./theory-route.js";
 import type { SubprocessResult } from "./subprocess.js";
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
+type ApiEnvelope<T> = ApiResponse<T>;
 
 describe("theory routes", () => {
   const servers: Server[] = [];
@@ -128,7 +129,7 @@ describe("theory routes", () => {
     expect(run).not.toHaveBeenCalled();
   });
 
-  it("maps theory.py errors to API errors", async () => {
+  it("maps theory.py failures without exposing raw internal diagnostics", async () => {
     const run = vi.fn(async () =>
       subprocessResult({ exitCode: 1, stderr: JSON.stringify({ error: "malformed MusicXML" }) })
     );
@@ -141,7 +142,10 @@ describe("theory routes", () => {
     expect(response.status).toBe(500);
     expect(json.ok).toBe(false);
     if (!json.ok) {
-      expect(json.error).toContain("malformed MusicXML");
+      expect(json.error).toMatchObject({
+        code: "internal_error",
+        message: "Internal server error",
+      });
     }
   });
 
@@ -178,7 +182,10 @@ describe("theory routes", () => {
     expect(response.status).toBe(500);
     expect(json.ok).toBe(false);
     if (!json.ok) {
-      expect(json.error).toContain("Timed out");
+      expect(json.error).toMatchObject({
+        code: "internal_error",
+        message: "Internal server error",
+      });
     }
   });
 });

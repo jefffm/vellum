@@ -346,9 +346,10 @@ describe("Guided Start output choices", () => {
 
   it("resumes from the reviewed score after resolving a critical analysis ambiguity", () => {
     const implementation = arrangeWithAnalysisReview.toString();
-    expect(implementation).toContain("Musicological Analysis review");
+    expect(implementation).toContain("analysis_review_required");
     expect(implementation).toContain("presentAnalysisReview");
-    expect(implementation).toContain("analysisRecordIds");
+    expect(implementation).toContain("analysisRecordId");
+    expect(implementation).not.toContain("message.includes");
     expect(implementation).not.toContain("omr-runs");
     expect(readFileSync(path.resolve(process.cwd(), "src/guided-start.ts"), "utf8")).toContain(
       "Use recommended Principal Voice"

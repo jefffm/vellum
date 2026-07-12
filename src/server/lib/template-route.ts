@@ -33,11 +33,6 @@ export function createTemplateGetRoute(options: TemplateRouteOptions = {}): Requ
       const source = getTemplateSource(String(request.params.name ?? ""), directory);
       response.type("text/plain").send(source);
     } catch (error) {
-      if (error instanceof ApiRouteError) {
-        response.status(error.status).json({ ok: false, error: error.message });
-        return;
-      }
-
       next(error);
     }
   };

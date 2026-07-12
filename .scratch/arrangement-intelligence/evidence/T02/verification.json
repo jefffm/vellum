@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T02",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T01:50:14Z",
+  "requirements": {
+    "AI-DEL-001": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H7 trust-boundary review at the deferred human gate"
+    },
+    "AI-DEL-003": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H7 trust-boundary review at the deferred human gate"
+    },
+    "AI-EVAL-049": {
+      "status": "partial",
+      "remaining": "T03 and T10 add generated-artifact and Evaluation Harness trust gates"
+    }
+  },
+  "auditFindings": {
+    "F004": "machine fixed+verified; final closure evidence pending",
+    "F019": "partial: stable analysis-review code and exact IDs implemented; behavioral review coverage continues in T05 and T33",
+    "F025": "machine fixed+verified; final closure evidence pending",
+    "F030": "open for bounded ingestion in T08",
+    "F036": "partial: request correlation and redacted diagnostics implemented; workspace/run/phase correlation remains",
+    "F044": "machine fixed+verified; final closure evidence pending"
+  },
+  "summary": {
+    "testsPassed": 865,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 97,
+    "sensitiveRouteFamiliesCovered": 9
+  },
+  "commands": [
+    {
+      "command": "npm run server:build",
+      "result": "pass"
+    },
+    {
+      "command": "npm run build",
+      "result": "pass"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npx vitest run src/lib/api-contract.test.ts src/lib/create-server-tool.test.ts src/lib/vellum-stream-proxy.test.ts src/server/lib/api-boundary.test.ts src/server/lib/create-route.test.ts src/server/lib/stream-route.test.ts src/server/index.test.ts src/guided-start.test.ts src/main.test.ts",
+      "result": "pass"
+    },
+    {
+      "command": "npm test",
+      "result": "pass"
+    },
+    {
+      "command": "npm run format:check",
+      "result": "pass"
+    },
+    {
+      "command": "npm run spec:verify",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/completion-manifest.json",
+      "sha256": "1ac0046f0e199e47343beba71312f76364a2607da8c43496a7b787d77be9dc92"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/02-safe-local-api-boundary.md",
+      "sha256": "b5a1a826c7356ba278bb2d6e8a141867e5926c9305a7049b17550e94d5c14c35"
+    },
+    {
+      "path": "README.md",
+      "sha256": "f362ce21d7fec3a6707e3e1576689b9df260faed48c615c864403bd3c6e8a329"
+    },
+    {
+      "path": "src/lib/api-contract.ts",
+      "sha256": "08269257ea5899486ed388a97eb5022c51106276eee37a4cbccaff4d7d8b0822"
+    },
+    {
+      "path": "src/lib/api-contract.test.ts",
+      "sha256": "e75beb1533e69f65a74e1d0cd31b51e1231e7045c4d596ef4d1789757f49dfd9"
+    },
+    {
+      "path": "src/lib/create-server-tool.ts",
+      "sha256": "8dd10458ff5c6ef1bc9ac99ca817453a0a6bcf953089682e9840cda9a5875a32"
+    },
+    {
+      "path": "src/lib/create-server-tool.test.ts",
+      "sha256": "c22f816e56f142f93a1a3527ca7fb9b82959d84ec44fc0cae25f5eb97f2b73c3"
+    },
+    {
+      "path": "src/lib/vellum-stream-proxy.ts",
+      "sha256": "e46f9ec0c8fdeac5d427be920bfcac1dde2a7fc571d77a423799a2f955151d3d"
+    },
+    {
+      "path": "src/lib/vellum-stream-proxy.test.ts",
+      "sha256": "9cb9dd0c4503699e5e77820676af9d849e661c19f355bd6c85e3c45881e7b1b6"
+    },
+    {
+      "path": "src/server/lib/api-boundary.ts",
+      "sha256": "40e436b93b21df2fda42b9efd82c37924e2f86b7970a60aa718d5b1b4ad9348c"
+    },
+    {
+      "path": "src/server/lib/api-boundary.test.ts",
+      "sha256": "e286e737fc30addb97d5eb01866fa8e1a33272d1e02c6c20bb6bcde9c4da30d4"
+    },
+    {
+      "path": "src/server/lib/create-route.ts",
+      "sha256": "89eb95ea812c5dc40f7e89ce994acb68af1eeec19bf65c97d69005fb098665be"
+    },
+    {
+      "path": "src/server/lib/create-route.test.ts",
+      "sha256": "cab840ac49c0fd3c91b16fe95dd3c1ac32d265df1988fdaa82d520c22d766449"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "94c68a5060ee93cc7649f80a01323e586d8f1ba66473a83f4bb02b3775ae8873"
+    },
+    {
+      "path": "src/server/index.test.ts",
+      "sha256": "101c6c4367302ee40f04b100e6da0549c14323ccb9d0412a0e0d9f9ab0935652"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "4908ac750231ce6f94e160ef9a44834778d9c14d3d3e0d126367cdeb73080ede"
+    },
+    {
+      "path": "src/guided-start.test.ts",
+      "sha256": "4fbb17714661e49281c922fbe6a8f60199d25a7c0e7b19801ead3e2e2393d83f"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "34c348f6bfeef7d5dbffa2166285d0376726df44d0902ccc1d7f46542c188984"
+    },
+    {
+      "path": "src/server/lib/stream-route.ts",
+      "sha256": "2c645933f8340754881aa9ba07a59b73450fffbb3b3aef4c3f6e0db816d7d1a1"
+    },
+    {
+      "path": "src/server/lib/stream-route.test.ts",
+      "sha256": "5e3410899b64e3aa491e7464c0701098fcdeeef9c56f70bea99af11db7178cad"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "76f37b32fb7e2b12bb2a3a89692e43d00d44d7c312c0e306d20f16fb0746e2ff"
+    },
+    {
+      "path": "src/server/lib/arrangement-deliverable-route.ts",
+      "sha256": "ea450f10d23321af82e7ce164ba0fec97dbdf4167913abb0b16aca5cecc7a072"
+    },
+    {
+      "path": "src/server/lib/arrangement-route.test.ts",
+      "sha256": "e21bb8e177385424266c2b19e950491c764f542851eeb101d0bd760fcdc26e0f"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "cd856811458811998822ee0140362a6cd90befcf47a14c93c8dcc304df42cd6f"
+    },
+    {
+      "path": "src/server/lib/compile-route.test.ts",
+      "sha256": "65dd2ff98745656e24bfe9f465dbdbc5107254e26a5f4c8d1243f174652cac76"
+    },
+    {
+      "path": "src/server/lib/engrave-route.test.ts",
+      "sha256": "6e5473b056a64b047d84bfd31867aef1e52b4770f75dc85b5dacb4a41309fbe3"
+    },
+    {
+      "path": "src/server/lib/provider-connection-route.ts",
+      "sha256": "649cd199ff1336a612b3e087893211d5661ecc003fc830dddd62279086a62e1b"
+    },
+    {
+      "path": "src/server/lib/template-route.ts",
+      "sha256": "4520b9e0b20060a641da612a5487a993f995b93117953e8623c35d08499d04cf"
+    },
+    {
+      "path": "src/server/lib/template-route.test.ts",
+      "sha256": "4615ffaaa6b3844364dcebbd7185cc18b7efc7e3afc9bd114414aed8b1f21f69"
+    },
+    {
+      "path": "src/server/lib/theory-route.test.ts",
+      "sha256": "804c9e7da33e5b4a3a463e936af23ef9b9863d01968f24ce2847d73e4f2850f1"
+    },
+    {
+      "path": "src/server/lib/validate-route.test.ts",
+      "sha256": "ed759c6af84206320110c9c2c260c2dad3e15437de4cc2495ed430822cee1cc1"
+    },
+    {
+      "path": "src/server/lib/workspace-route.test.ts",
+      "sha256": "200aba0ade6e8f8f4ea83add5c590431dbedb34ef35074870e6238f9fc3ef289"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "d82790cf22443a46c3f69e11a72af3e6301fa5da350196e06d2d43af2391676c"
+    }
+  ]
+}

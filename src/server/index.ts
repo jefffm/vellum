@@ -108,6 +108,17 @@ import {
   createPerformanceInterpretationListRoute,
   createPerformanceInterpretationPreviewRoute,
 } from "./lib/performance-interpretation-route.js";
+import {
+  createApiBoundary,
+  errorCodeForStatus,
+  logApiError,
+  normalizeApiErrorResponses,
+  requestContext,
+  resolveRuntimeSecurity,
+  sendApiFailure,
+  type RuntimeSecurity,
+  validateRuntimeSecurity,
+} from "./lib/api-boundary.js";
 
 type HealthResponse = {
   status: "ok";
@@ -126,43 +137,41 @@ const InstrumentParamsSchema = Type.Object({ id: Type.String({ minLength: 1 }) }
 
 const packageVersion = process.env.npm_package_version ?? "0.1.0";
 
-const devCors: RequestHandler = (request, response, next) => {
-  if (process.env.NODE_ENV !== "production") {
-    response.header("Access-Control-Allow-Origin", request.header("Origin") ?? "*");
-    response.header(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, X-Source-Filename, X-Source-License"
-    );
-    response.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-  }
-
-  if (request.method === "OPTIONS") {
-    response.sendStatus(204);
-    return;
-  }
-
-  next();
-};
-
 const notFound: RequestHandler = (request, response) => {
-  response.status(404).json({
-    error: {
-      message: `No route for ${request.method} ${request.path}`,
-      status: 404,
-    },
+  sendApiFailure(response, {
+    status: 404,
+    code: "not_found",
+    message: `No route for ${request.method} ${request.path}`,
   });
 };
 
-const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-  const status = typeof error.status === "number" ? error.status : 500;
-
-  response.status(status).json({
-    error: {
-      message: error instanceof Error ? redactSecretText(error.message) : "Internal server error",
-      status,
-    },
+const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
+  const declared = error instanceof ApiRouteError;
+  const status = declared ? error.status : requestParserStatus(error);
+  const expected = declared && (status < 500 || error.code !== "internal_error");
+  const code = expected ? error.code : errorCodeForStatus(status);
+  if (!expected) logApiError(request, response, error, status, code);
+  sendApiFailure(response, {
+    status,
+    code,
+    message: expected
+      ? redactSecretText(error.message)
+      : status === 400
+        ? "Invalid request body"
+        : status === 413
+          ? "Request body is too large"
+          : "Internal server error",
+    details: expected ? error.details : undefined,
   });
 };
+
+function requestParserStatus(error: unknown): number {
+  if (typeof error !== "object" || error === null) return 500;
+  const type = (error as { type?: unknown }).type;
+  if (type === "entity.parse.failed") return 400;
+  if (type === "entity.too.large") return 413;
+  return 500;
+}
 
 export function createApiRouter(): Router {
   const router = Router();
@@ -438,12 +447,19 @@ function instrumentSummary(profile: InstrumentProfile): InstrumentSummary {
   };
 }
 
-export function createApp() {
+type CreateAppOptions = {
+  security?: RuntimeSecurity;
+};
+
+export function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const distPath = path.resolve(process.cwd(), "dist");
+  const security = validateRuntimeSecurity(options.security ?? resolveRuntimeSecurity());
 
   app.disable("x-powered-by");
-  app.use(devCors);
+  app.use(requestContext);
+  app.use(normalizeApiErrorResponses);
+  app.use("/api", createApiBoundary(security));
   app.use(express.json({ limit: "4mb" }));
 
   app.get("/health", (_request, response) => {
@@ -460,12 +476,22 @@ export function createApp() {
   return app;
 }
 
-export function startServer(port = Number(process.env.PORT ?? 3000)): Server {
-  const app = createApp();
+type StartServerOptions = CreateAppOptions & {
+  installSignalHandlers?: boolean;
+};
+
+export function startServer(
+  port = Number(process.env.PORT ?? 3000),
+  options: StartServerOptions = {}
+): Server {
+  const security = validateRuntimeSecurity(options.security ?? resolveRuntimeSecurity());
+  const app = createApp({ security });
   const server = createServer(app);
 
-  server.listen(port, () => {
-    console.log(`Vellum server listening on http://localhost:${port}`);
+  server.listen(port, security.host, () => {
+    const address = server.address();
+    const actualPort = address && typeof address !== "string" ? address.port : port;
+    console.log(`Vellum server listening on http://${formatHost(security.host)}:${actualPort}`);
   });
 
   const shutdown = (signal: NodeJS.Signals) => {
@@ -478,10 +504,16 @@ export function startServer(port = Number(process.env.PORT ?? 3000)): Server {
     });
   };
 
-  process.once("SIGTERM", shutdown);
-  process.once("SIGINT", shutdown);
+  if (options.installSignalHandlers !== false) {
+    process.once("SIGTERM", shutdown);
+    process.once("SIGINT", shutdown);
+  }
 
   return server;
+}
+
+function formatHost(host: string): string {
+  return host.includes(":") ? `[${host}]` : host;
 }
 
 const isDirectRun = process.argv[1] === fileURLToPath(import.meta.url);

@@ -9,7 +9,25 @@
   "evidenceDirectory": ".scratch/arrangement-intelligence/evidence",
   "tracerCount": 45,
   "humanTracerIds": [41, 42, 43, 44],
-  "requirementEvidence": {},
+  "requirementEvidence": {
+    "AI-DEL-001": {
+      "status": "machine_verified",
+      "tracerId": "T02",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T02/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-DEL-003": {
+      "status": "machine_verified",
+      "tracerId": "T02",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T02/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-EVAL-049": {
+      "status": "partial",
+      "tracerId": "T02",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T02/verification.json"
+    }
+  },
   "findingClosures": {},
   "finalSuites": []
 }

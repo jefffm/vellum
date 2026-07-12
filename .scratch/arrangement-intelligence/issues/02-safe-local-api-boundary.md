@@ -1,6 +1,6 @@
 # Safe local API boundary
 
-Status: ready-for-agent
+Status: complete
 
 Type: AFK
 
@@ -12,10 +12,14 @@ Make the Local-First Runtime safe by default while preserving an explicit path f
 
 ## Acceptance criteria
 
-- [ ] The API binds loopback by default and rejects unknown browser origins.
-- [ ] Expected and unexpected errors use one typed, redacted envelope.
-- [ ] Remote exposure requires explicit configuration and an authorization boundary.
-- [ ] Hostile-origin and non-loopback regression tests cover all sensitive route families.
+- [x] The API binds loopback by default and rejects unknown browser origins.
+- [x] Expected and unexpected errors use one typed, redacted envelope.
+- [x] Remote exposure requires explicit configuration and an authorization boundary. Non-loopback exposure fails closed until a focused ADR accepts that boundary.
+- [x] Hostile-origin and non-loopback regression tests cover all sensitive route families.
+
+## Verification
+
+See `../evidence/T02/verification.json`.
 
 ## Blocked by
 

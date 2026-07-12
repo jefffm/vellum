@@ -14,6 +14,12 @@ import type {
 } from "./lib/music-domain.js";
 import type { CompileResult } from "./types.js";
 import { noteToMidi } from "./lib/pitch.js";
+import {
+  apiErrorFromResponse,
+  isApiSuccess,
+  VellumApiError,
+  type ApiResponse,
+} from "./lib/api-contract.js";
 
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
@@ -1125,8 +1131,6 @@ function sourceFacsimile(
   return figure;
 }
 
-type ApiEnvelope<T> = { ok: true; data: T } | { ok: false; error: string };
-
 type ScoreAnchoredReview = {
   transcriptionId: string;
   version: number;
@@ -1378,14 +1382,11 @@ export async function arrangeWithAnalysisReview<T>(
     try {
       return await api<T>(url, init);
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("Musicological Analysis review")) {
+      if (!(error instanceof VellumApiError) || error.code !== "analysis_review_required") {
         throw error;
       }
-      const workspace = await api<{ analysisRecordIds: string[] }>(
-        `/api/workspaces/${workspaceId}`
-      );
-      const analysisId = workspace.analysisRecordIds.at(-1);
-      if (!analysisId) throw error;
+      const analysisId = error.details?.analysisRecordId;
+      if (typeof analysisId !== "string") throw error;
       const analysis = await api<GuidedDeliverable["analysis"]>(
         `/api/workspaces/${workspaceId}/analyses/${analysisId}`
       );
@@ -3083,12 +3084,9 @@ async function api<T>(url: string, init: RequestInit = {}): Promise<T> {
     ...init,
     headers: { "Content-Type": "application/json", ...init.headers },
   });
-  const envelope = (await response.json()) as ApiEnvelope<T> | { error?: { message?: string } };
-  if (!response.ok || !("ok" in envelope) || !envelope.ok) {
-    const error = "error" in envelope ? envelope.error : undefined;
-    const message =
-      typeof error === "string" ? error : (error?.message ?? `Request failed (${response.status})`);
-    throw new Error(message);
+  const envelope = (await response.json()) as ApiResponse<T>;
+  if (!response.ok || !isApiSuccess<T>(envelope)) {
+    throw apiErrorFromResponse(response.status, envelope);
   }
   return envelope.data;
 }

@@ -11,6 +11,7 @@ import { SubprocessRunner } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { persistDeliverable } from "./deliverable-service.js";
 import type { Deliverable } from "../../lib/music-domain.js";
+import { ApiRouteError } from "./create-route.js";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -60,11 +61,11 @@ export function createArrangementRestoreRoute(store = new WorkspaceStore()): Req
       const byKind = new Map(deliverables.map((item) => [item.kind, item]));
       const required = ["lilypond", "browser_preview", "audio_preview"] as const;
       if (required.some((kind) => !byKind.has(kind))) {
-        response.status(409).json({
-          ok: false,
-          error: "This Arrangement Score version does not yet have a complete saved projection set",
-        });
-        return;
+        throw new ApiRouteError(
+          "This Arrangement Score version does not yet have a complete saved projection set",
+          409,
+          "conflict"
+        );
       }
       const text = (kind: Deliverable["kind"]) =>
         store.readDeliverableContent(workspaceId, byKind.get(kind)!.id).toString("utf8");

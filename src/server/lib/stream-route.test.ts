@@ -2,6 +2,9 @@ import express from "express";
 import { createServer, type Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AssistantMessage, Model } from "@mariozechner/pi-ai";
+import type { ApiResponse } from "../../lib/api-contract.js";
+import { vellumStreamProxy } from "../../lib/vellum-stream-proxy.js";
+import { sendApiFailure } from "./api-boundary.js";
 import {
   createStreamRoute,
   resolveApiKeyForProvider,
@@ -33,11 +36,13 @@ describe("createStreamRoute", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(validRequest()),
     });
-    const json = (await response.json()) as { error: string };
+    const body = await response.text();
 
-    expect(response.status).toBe(500);
-    expect(json.error).toContain("No API key configured");
-    expect(JSON.stringify(json)).not.toContain("secret-key");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    expect(body).toContain("No API key configured");
+    expect(body).toContain('"type":"error"');
+    expect(body).not.toContain("secret-key");
   });
 
   it("returns an actionable error when openai-codex credentials are missing", async () => {
@@ -49,12 +54,70 @@ describe("createStreamRoute", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(validRequest({}, openAICodexModel())),
     });
-    const json = (await response.json()) as { error: string };
+    const body = await response.text();
 
-    expect(response.status).toBe(500);
-    expect(json.error).toBe(
+    expect(response.status).toBe(200);
+    expect(body).toContain(
       "ChatGPT is not connected. Use Vellum's Connect ChatGPT control, or configure an API key fallback."
     );
+  });
+
+  it("keeps the application proxy client actionable under the typed API contract", async () => {
+    const server = await listen(createStreamRoute({ resolveApiKey: () => undefined }));
+    servers.push(server);
+    const stream = vellumStreamProxy(
+      openAICodexModel(),
+      { messages: [] },
+      {
+        proxyUrl: serverUrl(server),
+        authToken: "local-runtime",
+      }
+    );
+    const events = [];
+    for await (const event of stream) events.push(event);
+    const error = events.find((event) => event.type === "error");
+    expect(error?.type === "error" ? error.error.errorMessage : undefined).toContain(
+      "ChatGPT is not connected"
+    );
+  });
+
+  it.each([
+    [400, "invalid_request", "Request model is invalid"],
+    [413, "request_too_large", "Request body is too large"],
+  ] as const)(
+    "decodes a typed %i pre-stream failure through the actual client",
+    async (status, code, message) => {
+      const server = await listen((_request, response) => {
+        sendApiFailure(response, { status, code, message });
+      });
+      servers.push(server);
+      const events = [];
+      for await (const event of vellumStreamProxy(
+        openAICodexModel(),
+        { messages: [] },
+        { proxyUrl: serverUrl(server), authToken: "local-runtime" }
+      )) {
+        events.push(event);
+      }
+      const error = events.find((event) => event.type === "error");
+      expect(error?.type === "error" ? error.error.errorMessage : undefined).toMatch(
+        new RegExp(`^${message} \\(reference [0-9a-f-]+\\)$`)
+      );
+    }
+  );
+
+  it("uses the typed API envelope before SSE starts for invalid requests", async () => {
+    const server = await listen(createStreamRoute({ resolveApiKey: () => undefined }));
+    servers.push(server);
+    const response = await fetch(`${serverUrl(server)}/api/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const json = (await response.json()) as ApiResponse<unknown>;
+    expect(response.status).toBe(400);
+    expect(json.ok).toBe(false);
+    if (!json.ok) expect(json.error.code).toBe("invalid_request");
   });
 
   it("awaits async API key resolvers and injects the server-side API key", async () => {

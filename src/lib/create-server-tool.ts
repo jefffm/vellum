@@ -1,6 +1,7 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
 import type { Static, TSchema } from "@sinclair/typebox";
 import { errorMessage } from "./errors.js";
+import { isApiFailure, isApiSuccess } from "./api-contract.js";
 import { toolError, toolResult } from "./tool-helpers.js";
 
 export type CreateServerToolConfig<TParams extends TSchema, TDetails> = {
@@ -13,15 +14,7 @@ export type CreateServerToolConfig<TParams extends TSchema, TDetails> = {
   formatDetails?: (response: TDetails) => TDetails;
 };
 
-type ApiEnvelope<T> =
-  | {
-      ok: true;
-      data: T;
-    }
-  | {
-      ok: false;
-      error: string;
-    };
+type Unwrapped<T> = { ok: true; data: T } | { ok: false; error: string };
 
 export function createServerTool<TParams extends TSchema, TDetails>(
   config: CreateServerToolConfig<TParams, TDetails>
@@ -86,22 +79,16 @@ async function parseJson(response: Response): Promise<unknown> {
   }
 }
 
-function unwrapEnvelope<T>(body: unknown): ApiEnvelope<T> {
-  if (isRecord(body) && typeof body.ok === "boolean") {
-    if (body.ok) {
-      return { ok: true, data: body.data as T };
-    }
-
-    return { ok: false, error: typeof body.error === "string" ? body.error : "Server error" };
-  }
+function unwrapEnvelope<T>(body: unknown): Unwrapped<T> {
+  if (isApiSuccess<T>(body)) return { ok: true, data: body.data };
+  if (isApiFailure(body)) return { ok: false, error: body.error.message };
+  if (isRecord(body) && body.ok === false) return { ok: false, error: "Server error" };
 
   return { ok: true, data: body as T };
 }
 
 function httpErrorMessage(response: Response, body: unknown): string {
-  if (isRecord(body) && typeof body.error === "string") {
-    return body.error;
-  }
+  if (isApiFailure(body)) return body.error.message;
 
   if (typeof body === "string" && body.length > 0) {
     return body;

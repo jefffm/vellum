@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { ApiRouteError } from "./create-route.js";
 import { ProviderConnection } from "./provider-connection.js";
 
 export function createProviderStatusRoute(connection: ProviderConnection): RequestHandler {
@@ -25,8 +26,7 @@ export function createProviderPromptRoute(connection: ProviderConnection): Reque
   return (request, response, next) => {
     try {
       if (typeof request.body?.value !== "string") {
-        response.status(400).json({ error: { message: "value must be a string", status: 400 } });
-        return;
+        throw new ApiRouteError("value must be a string", 400, "invalid_request");
       }
       connection.submitPrompt(request.body.value);
       response.json({ ok: true, data: { accepted: true } });

@@ -62,7 +62,18 @@ describe("createServerTool", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        jsonResponse({ error: "compile failed" }, { status: 500, statusText: "Server Error" })
+        jsonResponse(
+          {
+            ok: false,
+            error: {
+              code: "internal_error",
+              message: "compile failed",
+              status: 500,
+              correlationId: "request-1",
+            },
+          },
+          { status: 500, statusText: "Server Error" }
+        )
       )
     );
     const tool = createServerTool({
@@ -82,7 +93,17 @@ describe("createServerTool", () => {
   it("returns structured error content for ok:false envelopes", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => jsonResponse({ ok: false, error: "bad input" }))
+      vi.fn(async () =>
+        jsonResponse({
+          ok: false,
+          error: {
+            code: "invalid_request",
+            message: "bad input",
+            status: 400,
+            correlationId: "request-2",
+          },
+        })
+      )
     );
     const tool = createServerTool({
       name: "test-envelope-error",
