@@ -5,6 +5,7 @@ import express from "express";
 import { createServer } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
+import { buildNarrowEvaluationCard } from "../../lib/narrow-intelligence.js";
 import { noteToMidi, transposeNote } from "../../lib/pitch.js";
 import type { ApiResponse } from "../../lib/api-contract.js";
 import { ArrangementService } from "./arrangement-service.js";
@@ -195,6 +196,51 @@ describe("Greensleeves faithful arrangement service", () => {
       preservationAudit: { status: "pass", findings: [] },
       transpositionPlan: { sourceKey: "G major", targetKey: "F major", semitones: -2 },
     });
+    expect(result.sourceTruthAssessment).toMatchObject({
+      sourceArtifactId: source.id,
+      scoreTranscriptionId: omr.scoreTranscription.id,
+      normalizedScoreId: omr.normalizedScore.id,
+      analysisRecordId: result.analysis.id,
+      purpose: "arrangement_planning",
+      outcome: "authoritative_for_purpose",
+    });
+    expect(result.performanceBrief).toMatchObject({
+      targetConfigurationId: "target.baroque-guitar",
+      intendedUse: "study",
+      tempoContext: { status: "not_specified" },
+      difficultyIntent: "intermediate",
+      reliabilityGoal: "repeatable",
+    });
+    expect(result.arrangementPlan).toMatchObject({
+      kind: "minimal_projection",
+      status: "applicable_without_consequential_choice",
+      targetConfigurationId: "target.baroque-guitar",
+    });
+    expect(result.arrangementScore.arrangementPlanId).toBe(result.arrangementPlan.id);
+    expect(result.arrangementScore.realizedPlanDecisionIds).toEqual(
+      result.arrangementPlan.decisions.map((decision) => decision.id)
+    );
+    const evaluationCard = buildNarrowEvaluationCard({
+      score: result.arrangementScore,
+      planning: {
+        sourceTruthAssessment: result.sourceTruthAssessment,
+        performanceBrief: result.performanceBrief,
+        arrangementPlan: result.arrangementPlan,
+      },
+      deliverableIds: [],
+    });
+    expect(evaluationCard.hardGateStatus).toBe("pass");
+    expect(evaluationCard.dimensions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "source_authority", status: "pass", hardGate: true }),
+        expect.objectContaining({
+          id: "human_and_physical_evidence",
+          status: "unknown",
+          hardGate: false,
+        }),
+        expect.objectContaining({ id: "explicit_owner_usefulness", status: "not_evaluated" }),
+      ])
+    );
     const sourceMelody = omr.normalizedScore.events.filter(
       (event) => event.partId === "part.soprano" && event.type === "note"
     );
@@ -251,6 +297,9 @@ describe("Greensleeves faithful arrangement service", () => {
     });
     expect(store.get(workspace.id)).toMatchObject({
       analysisRecordIds: [result.analysisRecordId],
+      sourceTruthAssessmentIds: expect.arrayContaining([result.sourceTruthAssessment.id]),
+      performanceBriefIds: expect.arrayContaining([result.performanceBrief.id]),
+      arrangementPlanIds: expect.arrayContaining([result.arrangementPlan.id]),
       arrangementScoreIds: [
         result.arrangementScore.id,
         luteResult.arrangementScore.id,

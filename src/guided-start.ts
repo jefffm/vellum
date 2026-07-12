@@ -2651,6 +2651,50 @@ export function installDeliverableSummary(
   header.append(details);
 }
 
+export async function installEvaluationCard(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): Promise<void> {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  if (!header) return;
+  header.querySelector(".evaluation-card")?.remove();
+  const card = await api<{
+    hardGateStatus: "pass" | "fail";
+    sourceTruthAssessmentId: string;
+    arrangementPlanId: string;
+    performanceBriefId: string;
+    dimensions: Array<{
+      id: string;
+      status: "pass" | "fail" | "unknown" | "not_evaluated";
+      hardGate: boolean;
+      evidenceIds: string[];
+      rationale: string;
+    }>;
+  }>(
+    `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/evaluation-card`
+  );
+  const details = document.createElement("details");
+  details.className = "evaluation-card";
+  details.dataset.arrangementPlanId = card.arrangementPlanId;
+  details.dataset.sourceTruthAssessmentId = card.sourceTruthAssessmentId;
+  details.dataset.performanceBriefId = card.performanceBriefId;
+  const summary = document.createElement("summary");
+  const unknown = card.dimensions.filter(
+    (dimension) => dimension.status === "unknown" || dimension.status === "not_evaluated"
+  ).length;
+  summary.textContent = `Evaluation Card · hard gates ${card.hardGateStatus} · ${unknown} explicitly unknown`;
+  const list = document.createElement("ul");
+  for (const dimension of card.dimensions) {
+    const item = document.createElement("li");
+    item.dataset.evaluationDimension = dimension.id;
+    item.dataset.status = dimension.status;
+    item.textContent = `${dimension.id.replaceAll("_", " ")} — ${dimension.status.replaceAll("_", " ")}${dimension.hardGate ? " (hard gate)" : ""}. ${dimension.rationale}`;
+    list.append(item);
+  }
+  details.append(summary, list);
+  header.append(details);
+}
+
 type ArrangementLineage = {
   staleDerivations: Array<{
     id: string;

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T09",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T12:58:00Z",
+  "requirements": {
+    "M01": {
+      "status": "machine_verified",
+      "remaining": "T10-T16 generalize the first-tracer records into the complete versioned evaluation, Source Truth, brief, and Plan schemas"
+    },
+    "M03": {
+      "status": "partial",
+      "remaining": "H1 later reviews the guided defaults and a materially different passage adoption; the browser correctly refused both no-op alternatives exercised here"
+    },
+    "M05": {
+      "status": "partial",
+      "remaining": "T10-T11 add versioned Evaluation Cases, Runs, baselines, mutations, and broader plan-realization evaluation"
+    },
+    "M13": {
+      "status": "machine_verified",
+      "remaining": "T28 broadens exact branch and stale-derivation history beyond the existing adoption/correction regression"
+    }
+  },
+  "auditFindings": {
+    "F024": "partial: a production-shaped browser workflow now exercises exact project opening, score selection, passage alternatives, Evaluation Card rendering, and reload; CI browser coverage remains T33-T34",
+    "F041": "machine fixed+verified: completion opens the exact selected score with PDF, audio, audit, deliverables, Evaluation Card, and version identity and preserves them on reload",
+    "F047": "machine fixed+verified for this tracer: the source was imported through the production restricted-LilyPond path and compiled through the pinned disposable sandbox"
+  },
+  "summary": {
+    "testsPassed": 942,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 18,
+    "browser": {
+      "workspaceId": "workspace.92f45e3a-8452-440a-a19e-bcf4732f156d",
+      "arrangementScoreId": "arrangement.606bd980-7044-43e6-b32c-b0cd079afa88",
+      "arrangementScoreVersion": 1,
+      "sourceTruthAssessmentId": "truth.968ef891f8bfc807e8e190fc",
+      "performanceBriefId": "performance.e2c5b560a9fde7dd0135fe9b",
+      "arrangementPlanId": "plan.d6b96383bcc74c0fcd5c42b9",
+      "scoreObjectCount": 85,
+      "pdfAvailable": true,
+      "audioPreviewAvailable": true,
+      "reloadPreservedExactIdentity": true,
+      "hardGateStatus": "pass",
+      "unknownDimensions": ["human_and_physical_evidence", "explicit_owner_usefulness"],
+      "adoption": "Both live alternatives changed zero selected objects, so the UI correctly disabled adoption; the exact new-version and stale-response paths passed in arrangement-service.test.ts."
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    {
+      "command": "npx vitest run src/lib/music-domain.test.ts src/server/lib/workspace-store.test.ts src/server/lib/arrangement-service.test.ts src/guided-start-evaluation-card.test.ts src/main.test.ts",
+      "result": "pass: 18 passed"
+    },
+    {
+      "command": "npx vitest run test/verify-arrangement-intelligence.test.ts test/e2e/greensleeves-tracer.test.ts",
+      "result": "pass: 5 passed"
+    },
+    { "command": "npm test", "result": "pass: 942 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/09-first-narrow-loop.md",
+      "sha256": "fff13e4d0e7f9da224b40a36b5131f9c50440d229384775fda5af7a095a291b9"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "4ab80aa01f78d2e96e5245b35c5f140b99c0cd149ea9c7dadf0cb690c195383c"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "53d8916f95bbed84c12f2a705b9aef707bb7671cbf984e9ef62334a4c79c74a0"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "d051bef0d3d1319fb413ef298fdc729e245eacc0c28ed0d20614f980f8cb42f7"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "6b05c5d3bfe115574fe0b17daf96ba757375b963dede1fd36fde9c4c48d0bc54"
+    },
+    {
+      "path": "src/server/lib/narrow-evaluation-route.ts",
+      "sha256": "00a39d0c0c08bf8eaeb6454d3a54b80eaa98a3b6573e87dcb6366db0ce3efbb1"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "151bb348e2e32b8d428f2fa1b71271c339ce99c34d8bcef4631b34bfa6a4eb19"
+    }
+  ]
+}

@@ -10,6 +10,10 @@ import { arrangeImitativeIntabulation, auditImitative } from "../../lib/imitativ
 import { applyPreservationPolicy } from "../../lib/preservation-policy.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
 import { buildCompleteTransformationReport } from "../../lib/transformation-report.js";
+import {
+  buildNarrowPlanningRecords,
+  type NarrowPlanningRecords,
+} from "../../lib/narrow-intelligence.js";
 import type {
   ArrangementCandidate,
   ArrangementEvent,
@@ -54,6 +58,9 @@ export type CreateFaithfulArrangementResult = {
   arrangementSearch: ArrangementSearch;
   candidates: ArrangementCandidate[];
   arrangementScore: ArrangementScore;
+  sourceTruthAssessment: NarrowPlanningRecords["sourceTruthAssessment"];
+  performanceBrief: NarrowPlanningRecords["performanceBrief"];
+  arrangementPlan: NarrowPlanningRecords["arrangementPlan"];
 };
 
 export type PassageCandidate = {
@@ -167,6 +174,60 @@ export class ArrangementService {
         }
       );
     }
+    const preservationPolicy = input.preservationPolicy ?? "faithful_reduction";
+    const currentPlanningWorkspace = this.store.get(workspaceId);
+    const existingPlan = currentPlanningWorkspace.arrangementPlanIds
+      .map((id) => this.store.getArrangementPlan(workspaceId, id))
+      .find(
+        (plan) =>
+          plan.normalizedScoreId === score.id &&
+          plan.normalizedScoreVersion === score.version &&
+          plan.analysisRecordId === analysis.id &&
+          plan.analysisRecordVersion === analysis.version &&
+          plan.targetConfigurationId === targetConfiguration.id &&
+          plan.preservationPolicy === preservationPolicy
+      );
+    let planning: NarrowPlanningRecords;
+    if (existingPlan) {
+      planning = {
+        arrangementPlan: existingPlan,
+        sourceTruthAssessment: this.store.getSourceTruthAssessment(
+          workspaceId,
+          existingPlan.sourceTruthAssessmentId
+        ),
+        performanceBrief: this.store.getPerformanceBrief(
+          workspaceId,
+          existingPlan.performanceBriefId
+        ),
+      };
+    } else {
+      let narrowIdIndex = 0;
+      const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
+      planning = buildNarrowPlanningRecords({
+        createId: () =>
+          createHash("sha256")
+            .update(
+              `${workspaceId}:${score.id}:${analysis.id}:${targetConfiguration.id}:${preservationPolicy}:${narrowIdIndex++}`
+            )
+            .digest("hex")
+            .slice(0, 24),
+        createdAt: timestamp,
+        workspaceRevision: currentPlanningWorkspace.revision,
+        source,
+        transcription,
+        normalizedScoreId: score.id,
+        normalizedScoreVersion: score.version,
+        analysis,
+        target: targetConfiguration,
+        preservationPolicy,
+      });
+      if (planning.sourceTruthAssessment.outcome !== "authoritative_for_purpose") {
+        throw new ApiRouteError("Source Truth does not authorize arrangement planning", 409);
+      }
+      this.store.saveSourceTruthAssessment(workspaceId, planning.sourceTruthAssessment);
+      this.store.savePerformanceBrief(workspaceId, planning.performanceBrief);
+      this.store.saveArrangementPlan(workspaceId, planning.arrangementPlan);
+    }
     const familyId =
       input.arrangementFamilyId ?? stableFamilyId(score.id, analysis.id, workspace.brief);
     const currentWorkspace = this.store.get(workspaceId);
@@ -206,7 +267,7 @@ export class ArrangementService {
       arrangementFamilyId: familyId,
       branchId: input.branchId,
       targetConfiguration,
-      preservationPolicy: input.preservationPolicy ?? "faithful_reduction",
+      preservationPolicy,
       status: "running",
       candidateIds: [],
       rankingWeights,
@@ -274,6 +335,8 @@ export class ArrangementService {
       arrangementFamilyId: familyId,
       branchId: input.branchId,
       parentArrangementScoreId: input.parentArrangementScoreId,
+      arrangementPlanId: planning.arrangementPlan.id,
+      realizedPlanDecisionIds: planning.arrangementPlan.decisions.map((decision) => decision.id),
       editorialCommitmentIds: input.editorialCommitmentIds ?? [],
       familyCommitmentIds: input.familyCommitmentIds ?? [],
       policyExceptionIds: input.policyExceptionIds ?? [],
@@ -344,6 +407,9 @@ export class ArrangementService {
       arrangementSearch,
       candidates,
       arrangementScore,
+      sourceTruthAssessment: planning.sourceTruthAssessment,
+      performanceBrief: planning.performanceBrief,
+      arrangementPlan: planning.arrangementPlan,
     };
   }
 

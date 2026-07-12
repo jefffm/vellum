@@ -33,6 +33,9 @@ import {
   PerformanceInterpretationSchema,
   ModelActionSchema,
   GuidedWorkflowSchema,
+  SourceTruthAssessmentSchema,
+  PerformanceBriefSchema,
+  ArrangementPlanSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
   ScoreTranscriptionSchema,
@@ -56,6 +59,9 @@ import type {
   PerformanceInterpretation,
   ModelAction,
   GuidedWorkflow,
+  SourceTruthAssessment,
+  PerformanceBrief,
+  ArrangementPlan,
   ModelActionInputVersion,
   NormalizedScore,
   OmrRun,
@@ -87,6 +93,9 @@ const recoverableRecordCollections = [
   ["arrangement-scores", "arrangementScoreIds", ArrangementScoreSchema],
   ["model-actions", "modelActionIds", ModelActionSchema],
   ["guided-workflows", "guidedWorkflowIds", GuidedWorkflowSchema],
+  ["source-truth-assessments", "sourceTruthAssessmentIds", SourceTruthAssessmentSchema],
+  ["performance-briefs", "performanceBriefIds", PerformanceBriefSchema],
+  ["arrangement-plans", "arrangementPlanIds", ArrangementPlanSchema],
   ["arrangement-branches", "arrangementBranchIds", ArrangementBranchSchema],
   ["arrangement-searches", "arrangementSearchIds", ArrangementSearchSchema],
   ["arrangement-candidates", "arrangementCandidateIds", ArrangementCandidateSchema],
@@ -130,6 +139,9 @@ export class WorkspaceStore {
       arrangementScoreIds: [],
       modelActionIds: [],
       guidedWorkflowIds: [],
+      sourceTruthAssessmentIds: [],
+      performanceBriefIds: [],
+      arrangementPlanIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
@@ -265,6 +277,13 @@ export class WorkspaceStore {
           : 1,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       guidedWorkflowIds: Array.isArray(parsed.guidedWorkflowIds) ? parsed.guidedWorkflowIds : [],
+      sourceTruthAssessmentIds: Array.isArray(parsed.sourceTruthAssessmentIds)
+        ? parsed.sourceTruthAssessmentIds
+        : [],
+      performanceBriefIds: Array.isArray(parsed.performanceBriefIds)
+        ? parsed.performanceBriefIds
+        : [],
+      arrangementPlanIds: Array.isArray(parsed.arrangementPlanIds) ? parsed.arrangementPlanIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
         : [],
@@ -299,6 +318,9 @@ export class WorkspaceStore {
       typeof parsed.revision !== "number" ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.guidedWorkflowIds) ||
+      !Array.isArray(parsed.sourceTruthAssessmentIds) ||
+      !Array.isArray(parsed.performanceBriefIds) ||
+      !Array.isArray(parsed.arrangementPlanIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
@@ -773,6 +795,22 @@ export class WorkspaceStore {
     const search = this.getArrangementSearch(workspaceId, arrangement.arrangementSearchId);
     const family = this.getArrangementFamily(workspaceId, arrangement.arrangementFamilyId);
     const candidate = this.getArrangementCandidate(workspaceId, arrangement.selectedCandidateId);
+    if (arrangement.arrangementPlanId) {
+      const plan = this.getArrangementPlan(workspaceId, arrangement.arrangementPlanId);
+      const required = plan.decisions
+        .filter((decision) =>
+          decision.targetConfigurationIds.includes(arrangement.targetConfiguration.id)
+        )
+        .map((decision) => decision.id)
+        .sort();
+      const realized = [...(arrangement.realizedPlanDecisionIds ?? [])].sort();
+      if (JSON.stringify(required) !== JSON.stringify(realized)) {
+        throw new ApiRouteError(
+          "Arrangement Score does not realize every applicable Plan Decision",
+          400
+        );
+      }
+    }
     if (
       candidate.arrangementSearchId !== search.id ||
       search.analysisRecordId !== arrangement.analysisRecordId ||
@@ -974,6 +1012,90 @@ export class WorkspaceStore {
     return this.get(workspaceId).guidedWorkflowIds.map((id) =>
       this.getGuidedWorkflow(workspaceId, id)
     );
+  }
+
+  saveSourceTruthAssessment(
+    workspaceId: string,
+    assessment: SourceTruthAssessment
+  ): SourceTruthAssessment {
+    const decoded = Value.Decode(SourceTruthAssessmentSchema, assessment);
+    const source = this.getSourceArtifact(workspaceId, decoded.sourceArtifactId);
+    const transcription = this.getScoreTranscription(workspaceId, decoded.scoreTranscriptionId);
+    const normalized = this.getNormalizedScore(workspaceId, decoded.normalizedScoreId);
+    const analysis = this.getAnalysisRecord(workspaceId, decoded.analysisRecordId);
+    if (
+      transcription.sourceArtifactId !== source.id ||
+      transcription.version !== decoded.scoreTranscriptionVersion ||
+      normalized.scoreTranscriptionId !== transcription.id ||
+      normalized.version !== decoded.normalizedScoreVersion ||
+      analysis.normalizedScoreId !== normalized.id ||
+      analysis.version !== decoded.analysisRecordVersion
+    ) {
+      throw new ApiRouteError("Source Truth Assessment lineage versions do not match", 400);
+    }
+    this.writeImmutableRecord(workspaceId, "source-truth-assessments", decoded.id, decoded);
+    this.linkWorkspaceRecord(workspaceId, "sourceTruthAssessmentIds", decoded.id);
+    return decoded;
+  }
+
+  getSourceTruthAssessment(workspaceId: string, id: string): SourceTruthAssessment {
+    return this.readRecord(
+      workspaceId,
+      "source-truth-assessments",
+      id,
+      "truth",
+      SourceTruthAssessmentSchema
+    );
+  }
+
+  savePerformanceBrief(workspaceId: string, brief: PerformanceBrief): PerformanceBrief {
+    const decoded = Value.Decode(PerformanceBriefSchema, brief);
+    const workspace = this.get(workspaceId);
+    if (
+      !workspace.brief.targetConfigurations.some(
+        (target) => target.id === decoded.targetConfigurationId
+      )
+    )
+      throw new ApiRouteError("Performance Brief target is not part of workspace", 400);
+    this.writeImmutableRecord(workspaceId, "performance-briefs", decoded.id, decoded);
+    this.linkWorkspaceRecord(workspaceId, "performanceBriefIds", decoded.id);
+    return decoded;
+  }
+
+  getPerformanceBrief(workspaceId: string, id: string): PerformanceBrief {
+    return this.readRecord(
+      workspaceId,
+      "performance-briefs",
+      id,
+      "performance",
+      PerformanceBriefSchema
+    );
+  }
+
+  saveArrangementPlan(workspaceId: string, plan: ArrangementPlan): ArrangementPlan {
+    const decoded = Value.Decode(ArrangementPlanSchema, plan);
+    const truth = this.getSourceTruthAssessment(workspaceId, decoded.sourceTruthAssessmentId);
+    const normalized = this.getNormalizedScore(workspaceId, decoded.normalizedScoreId);
+    const analysis = this.getAnalysisRecord(workspaceId, decoded.analysisRecordId);
+    const brief = this.getPerformanceBrief(workspaceId, decoded.performanceBriefId);
+    if (
+      truth.normalizedScoreId !== normalized.id ||
+      truth.normalizedScoreVersion !== decoded.normalizedScoreVersion ||
+      truth.analysisRecordId !== analysis.id ||
+      truth.analysisRecordVersion !== decoded.analysisRecordVersion ||
+      normalized.version !== decoded.normalizedScoreVersion ||
+      analysis.version !== decoded.analysisRecordVersion ||
+      brief.targetConfigurationId !== decoded.targetConfigurationId
+    ) {
+      throw new ApiRouteError("Arrangement Plan lineage versions do not match", 400);
+    }
+    this.writeImmutableRecord(workspaceId, "arrangement-plans", decoded.id, decoded);
+    this.linkWorkspaceRecord(workspaceId, "arrangementPlanIds", decoded.id);
+    return decoded;
+  }
+
+  getArrangementPlan(workspaceId: string, id: string): ArrangementPlan {
+    return this.readRecord(workspaceId, "arrangement-plans", id, "plan", ArrangementPlanSchema);
   }
 
   resolveCurrentInputVersions(

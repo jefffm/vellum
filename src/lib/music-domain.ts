@@ -135,6 +135,9 @@ export const ArrangementWorkspaceSchema = Type.Object(
     arrangementScoreIds: Type.Array(IdSchema),
     modelActionIds: Type.Array(IdSchema),
     guidedWorkflowIds: Type.Array(IdSchema),
+    sourceTruthAssessmentIds: Type.Array(IdSchema),
+    performanceBriefIds: Type.Array(IdSchema),
+    arrangementPlanIds: Type.Array(IdSchema),
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
@@ -217,6 +220,131 @@ export const GuidedWorkflowSchema = Type.Object(
 );
 
 export type GuidedWorkflow = Static<typeof GuidedWorkflowSchema>;
+
+export const SourceTruthAssessmentSchema = Type.Object(
+  {
+    id: IdSchema,
+    sourceArtifactId: IdSchema,
+    scoreTranscriptionId: IdSchema,
+    scoreTranscriptionVersion: Type.Integer({ minimum: 1 }),
+    normalizedScoreId: IdSchema,
+    normalizedScoreVersion: Type.Integer({ minimum: 1 }),
+    analysisRecordId: IdSchema,
+    analysisRecordVersion: Type.Integer({ minimum: 1 }),
+    purpose: Type.Literal("arrangement_planning"),
+    outcome: Type.Union([
+      Type.Literal("authoritative_for_purpose"),
+      Type.Literal("authoritative_with_disclosed_uncertainty"),
+      Type.Literal("review_required"),
+      Type.Literal("best_effort_only"),
+      Type.Literal("blocked"),
+    ]),
+    authorizedClaimIds: Type.Array(IdSchema),
+    blockedClaimIds: Type.Array(IdSchema),
+    unresolvedUncertaintyIds: Type.Array(IdSchema),
+    supersedesAssessmentId: Type.Optional(IdSchema),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type SourceTruthAssessment = Static<typeof SourceTruthAssessmentSchema>;
+
+export const PerformanceBriefSchema = Type.Object(
+  {
+    id: IdSchema,
+    arrangementBriefRevision: Type.Integer({ minimum: 1 }),
+    targetConfigurationId: IdSchema,
+    intendedUse: Type.Union([
+      Type.Literal("learning"),
+      Type.Literal("sight_reading"),
+      Type.Literal("prepared_performance"),
+      Type.Literal("accompaniment"),
+      Type.Literal("study"),
+      Type.Literal("edition"),
+    ]),
+    performerProfile: Type.Object(
+      {
+        proficiency: Type.Union([
+          Type.Literal("elementary"),
+          Type.Literal("intermediate"),
+          Type.Literal("advanced"),
+          Type.Literal("expert"),
+        ]),
+        assumptionSource: Type.Literal("guided_start_default_pending_owner_review"),
+      },
+      { additionalProperties: false }
+    ),
+    tempoContext: Type.Union([
+      Type.Object({ status: Type.Literal("not_specified") }, { additionalProperties: false }),
+      Type.Object(
+        {
+          status: Type.Literal("specified"),
+          minimumBpm: Type.Integer({ minimum: 1 }),
+          maximumBpm: Type.Integer({ minimum: 1 }),
+        },
+        { additionalProperties: false }
+      ),
+    ]),
+    difficultyIntent: Type.Union([
+      Type.Literal("elementary"),
+      Type.Literal("intermediate"),
+      Type.Literal("advanced"),
+      Type.Literal("unrestricted"),
+    ]),
+    preparationExpectation: Type.Union([
+      Type.Literal("immediate"),
+      Type.Literal("practice_expected"),
+      Type.Literal("performance_ready"),
+    ]),
+    reliabilityGoal: Type.Union([
+      Type.Literal("possible"),
+      Type.Literal("repeatable"),
+      Type.Literal("performance_reliable"),
+    ]),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type PerformanceBrief = Static<typeof PerformanceBriefSchema>;
+
+export const PlanDecisionSchema = Type.Object(
+  {
+    id: IdSchema,
+    dimension: Type.String({ minLength: 1 }),
+    selectedValue: Type.String({ minLength: 1 }),
+    rationale: Type.String({ minLength: 1 }),
+    evidenceIds: Type.Array(IdSchema),
+    targetConfigurationIds: Type.Array(IdSchema, { minItems: 1 }),
+    confirmationStatus: Type.Literal("not_required_for_literal_projection"),
+  },
+  { additionalProperties: false }
+);
+export type PlanDecision = Static<typeof PlanDecisionSchema>;
+
+export const ArrangementPlanSchema = Type.Object(
+  {
+    id: IdSchema,
+    version: Type.Integer({ minimum: 1 }),
+    kind: Type.Literal("minimal_projection"),
+    sourceTruthAssessmentId: IdSchema,
+    normalizedScoreId: IdSchema,
+    normalizedScoreVersion: Type.Integer({ minimum: 1 }),
+    analysisRecordId: IdSchema,
+    analysisRecordVersion: Type.Integer({ minimum: 1 }),
+    performanceBriefId: IdSchema,
+    targetConfigurationId: IdSchema,
+    preservationPolicy: Type.Union([
+      Type.Literal("faithful_reduction"),
+      Type.Literal("idiomatic_adaptation"),
+      Type.Literal("free_paraphrase"),
+    ]),
+    decisions: Type.Array(PlanDecisionSchema, { minItems: 1 }),
+    status: Type.Literal("applicable_without_consequential_choice"),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+export type ArrangementPlan = Static<typeof ArrangementPlanSchema>;
 
 export const CreateWorkspaceSchema = Type.Object(
   {
@@ -1245,6 +1373,8 @@ export const ArrangementScoreSchema = Type.Object(
     branchId: Type.Optional(IdSchema),
     arrangementFamilyId: Type.Optional(IdSchema),
     parentArrangementScoreId: Type.Optional(IdSchema),
+    arrangementPlanId: Type.Optional(IdSchema),
+    realizedPlanDecisionIds: Type.Optional(Type.Array(IdSchema)),
     editorialCommitmentIds: Type.Optional(Type.Array(IdSchema)),
     familyCommitmentIds: Type.Optional(Type.Array(IdSchema)),
     policyExceptionIds: Type.Optional(Type.Array(IdSchema)),

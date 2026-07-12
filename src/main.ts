@@ -38,6 +38,7 @@ import {
   installAuditSummary,
   installCandidateComparisonControls,
   installDeliverableSummary,
+  installEvaluationCard,
   installLineageSummary,
   installNotationSelection,
   installPersonalDefaultSummary,
@@ -579,6 +580,9 @@ function renderGuidedDeliverables(
     installPersonalDefaultSummary(panel, deliverable);
     void installPerformanceInterpretationControls(panel, deliverable);
     installDeliverableSummary(panel, deliverable);
+    void installEvaluationCard(panel, deliverable).catch((error: unknown) => {
+      console.warn("Evaluation Card is unavailable for this score version.", error);
+    });
     void installLineageSummary(panel, deliverable);
     installTransformationReport(panel, deliverable);
     installCandidateComparisonControls(panel, deliverable);

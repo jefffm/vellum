@@ -71,6 +71,7 @@ import {
 import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
 import { createSourceImportRoute } from "./lib/source-import-route.js";
 import { WorkspaceStore } from "./lib/workspace-store.js";
+import { createNarrowEvaluationCardRoute } from "./lib/narrow-evaluation-route.js";
 import {
   createTranscriptionCorrectionRoute,
   createTranscriptionReviewRoute,
@@ -330,6 +331,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createTranscriptionReviewRoute()
   );
   router.post("/workspaces/:workspaceId/arrangements", createFaithfulArrangementRoute());
+  router.get(
+    "/workspaces/:workspaceId/arrangements/:arrangementId/evaluation-card",
+    createNarrowEvaluationCardRoute()
+  );
   router.get(
     "/workspaces/:workspaceId/arrangement-searches/:searchId",
     createArrangementSearchGetRoute()
