@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T01",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T01:15:50Z",
+  "summary": {
+    "requirements": 446,
+    "auditFindings": 46,
+    "tracers": 45,
+    "testsPassed": 819,
+    "testsSkipped": 1
+  },
+  "commands": [
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm test",
+      "result": "pass"
+    },
+    {
+      "command": "npm run format:check",
+      "result": "pass"
+    },
+    {
+      "command": "npm run spec:verify",
+      "result": "pass"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "npm run spec:arrangement-intelligence:complete",
+      "result": "expected-fail",
+      "reason": "The completion judge correctly rejects open implementation and HITL evidence."
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "397157635e6eacb0ec116ce09504389f20d69148de5ef6b98ecdfdf60690295b"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/AUDIT_TRACEABILITY.md",
+      "sha256": "b6a505452a027d2e7952019bc04b5c38ad3ac0250029887b0464a9390770f485"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/PLAN.md",
+      "sha256": "1a7e4408fe096bc71f85884ba27c85bb20dab7b7e29b69b6faaab6b6ee7a0eab"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/completion-manifest.json",
+      "sha256": "f1f6bb633cdeccf8c4dced3fcaa6e6cd7407274c50c9188800e51fdaff863115"
+    },
+    {
+      "path": "scripts/verify-arrangement-intelligence.mjs",
+      "sha256": "3e53efc6001b1b5dc7180b1b1fd4b57fb3bae041c5fb30c57755401a3c20db39"
+    },
+    {
+      "path": "test/verify-arrangement-intelligence.test.ts",
+      "sha256": "c63bd21facf0e6b82ab89d9cfa240d637715cd8aa69a9a46e888280e8e62cb7b"
+    },
+    {
+      "path": "package.json",
+      "sha256": "8b3bb2dcfa35a93fdaba2143399b2374baa82d66ad681ec6395714d62abb891f"
+    }
+  ]
+}

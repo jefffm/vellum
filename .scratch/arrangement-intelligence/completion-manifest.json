@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "status": "in_progress",
+  "objective": "Implement and verify the complete Vellum Arrangement Intelligence specification",
+  "requirementsLedger": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+  "auditLedger": ".scratch/arrangement-intelligence/AUDIT_TRACEABILITY.md",
+  "plan": ".scratch/arrangement-intelligence/PLAN.md",
+  "issueDirectory": ".scratch/arrangement-intelligence/issues",
+  "evidenceDirectory": ".scratch/arrangement-intelligence/evidence",
+  "tracerCount": 45,
+  "humanTracerIds": [41, 42, 43, 44],
+  "requirementEvidence": {},
+  "findingClosures": {},
+  "finalSuites": []
+}
