@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T05",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T11:33:00Z",
+  "requirements": {
+    "AI-STP-020": {
+      "status": "partial",
+      "remaining": "Context and source-region behavior are implemented; T33 retains representative browser viewport screenshots"
+    },
+    "AI-STP-021": {
+      "status": "partial",
+      "remaining": "Transparent displaced outline is implemented; T33 adds visual regression evidence"
+    },
+    "AI-STP-022": {
+      "status": "partial",
+      "remaining": "Native labeled zoom controls are implemented; T33 adds complete keyboard and focus-order E2E"
+    },
+    "AI-STP-023": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1/H2 readability and consequence review"
+    },
+    "AI-STP-024": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1 direct-correction usability review"
+    },
+    "AI-STP-025": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1 threshold-intent confirmation"
+    },
+    "AI-STP-026": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1 recovery UX review"
+    },
+    "AI-STP-027": {
+      "status": "partial",
+      "remaining": "In-session exact-item retry is verified; T06 adds process/reload checkpoint resume"
+    },
+    "AI-STP-028": {
+      "status": "partial",
+      "remaining": "Resolved items cannot recur on the child transcription; T06 and T12 add explicit new-evidence staleness reopening"
+    }
+  },
+  "auditFindings": {
+    "F020": "machine fixed+verified: failed correction retains exact edits and rationale inline, re-enables retry, and preserves the review modal",
+    "F024": "partial: executable DOM recovery and existing score-review E2E replace source-only recovery claims; full browser flow remains T33",
+    "F034": "partial: critical uncertainty blocks and clears correctly; symbolic-import derivation remains T12 and T32",
+    "F035": "partial: correction failures preserve completed OMR and review state; downstream OMR fault matrix remains T06 and T32",
+    "F046": "machine fixed+verified: one threshold-policy batch records run/backend identity, threshold, scope, accepted event mappings, minimum confidence, and nonaccepted reasons without synthetic individual corrections"
+  },
+  "summary": {
+    "testsPassed": 929,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 42,
+    "reviewRecovery": {
+      "failedSaveAttempts": 1,
+      "successfulRetryAttempts": 1,
+      "editAndRationalePreserved": true,
+      "stableCorrectionId": true,
+      "serverRetryIdempotent": true,
+      "resolvedReviewItemsAfterCorrection": 0
+    }
+  },
+  "commands": [
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    {
+      "command": "npx vitest run src/guided-start-review-recovery.test.ts src/guided-start.test.ts src/server/lib/omr.test.ts src/server/lib/transcription-service.test.ts src/server/lib/transcription-route.test.ts src/lib/music-domain.test.ts",
+      "result": "pass: 42 passed"
+    },
+    { "command": "npm test", "result": "pass: 929 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/05-recoverable-score-review.md",
+      "sha256": "f017f5e806a1395f1b19d8c42f998bcb83652c551d2db1621eb40eb6e1ac2fec"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "8222af5f9355e6ae7490e34ab8bfe5bae0bb331836cb3f5bfb2c24d9e1dd21c3"
+    },
+    {
+      "path": "src/guided-start-review-recovery.test.ts",
+      "sha256": "369fa26cb4cd596fca617544276d807aeba2cd2b5b0a518213c0459ad2753c9d"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "7e97569849a22d946e98f4a2ead9d357e0049ca945f1a5760f19b9aebe2db731"
+    },
+    {
+      "path": "src/server/lib/omr.ts",
+      "sha256": "83e42b2af0688f734b7e57d9a616f6ee645f996eeb53e8d08c766f721eb2c023"
+    },
+    {
+      "path": "src/server/lib/omr.test.ts",
+      "sha256": "2bc58b99c06230c0d915ff799b43166f8ec5069cde0cb7edd6ec2a8183c88b75"
+    },
+    {
+      "path": "src/server/lib/transcription-service.ts",
+      "sha256": "57c5ebc2cbc9099446d3acaa891a6493ac4aeda447ef95512c2dc0ef3702eb22"
+    },
+    {
+      "path": "src/server/lib/transcription-service.test.ts",
+      "sha256": "2c2120c1ba45cfdf5ba3a0440a7f3b64a81187bb942cc319fd88485e1f5682f5"
+    },
+    {
+      "path": "test/e2e/score-anchored-review-tracer.test.ts",
+      "sha256": "ee142c1de90c3895e8838f9e96f27c4b0f8c486ec9e3dd9869aa6c6ad5f61dd2"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Recoverable Score-Anchored Review
 
-Status: ready-for-agent
+Status: complete
 
 Type: AFK
 
@@ -12,10 +12,14 @@ Make optical and symbolic uncertainty review legible, consequence-aware, recover
 
 ## Acceptance criteria
 
-- [ ] Review provides context, zoom, non-obscuring markers, alternatives, evidence, and direct correction.
-- [ ] OCR threshold and batch acceptance provenance appear only when applicable.
-- [ ] Failed corrections remain inline and retryable without wedging or restarting the workflow.
-- [ ] Resolved uncertainties do not reappear without new evidence.
+- [x] Review provides context, zoom, non-obscuring markers, alternatives, evidence, and direct correction.
+- [x] OCR threshold and batch acceptance provenance appear only when applicable.
+- [x] Failed corrections remain inline and retryable without wedging or restarting the workflow.
+- [x] Resolved uncertainties do not reappear without new evidence.
+
+## Verification
+
+See `../evidence/T05/verification.json`.
 
 ## Blocked by
 

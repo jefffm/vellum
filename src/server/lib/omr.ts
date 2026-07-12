@@ -295,10 +295,11 @@ export class OmrService {
       };
       this.store.saveOmrRun(workspaceId, completed);
 
-      const { recognizedScore: thresholdedScore, corrections } = applyConfidenceAcceptance(
+      const { recognizedScore: thresholdedScore, acceptanceBatch } = applyConfidenceAcceptance(
         result.recognizedScore,
         options.autoAcceptConfidence,
-        completedAt
+        completedAt,
+        completed
       );
       const recognizedScore = classifyCriticalUncertainties(
         thresholdedScore,
@@ -316,7 +317,7 @@ export class OmrService {
           ? "needs_review"
           : "reviewed",
         ...recognizedScore,
-        ...(corrections.length ? { corrections } : {}),
+        ...(acceptanceBatch ? { acceptanceBatches: [acceptanceBatch] } : {}),
         createdAt: completedAt,
       };
       this.store.saveScoreTranscription(workspaceId, transcription);
@@ -357,12 +358,13 @@ export class OmrService {
 function applyConfidenceAcceptance(
   recognizedScore: RecognizedScore,
   threshold: number | undefined,
-  createdAt: string
+  createdAt: string,
+  run: OmrRun
 ): {
   recognizedScore: RecognizedScore;
-  corrections: NonNullable<ScoreTranscription["corrections"]>;
+  acceptanceBatch?: NonNullable<ScoreTranscription["acceptanceBatches"]>[number];
 } {
-  if (threshold === undefined) return { recognizedScore, corrections: [] };
+  if (threshold === undefined) return { recognizedScore };
   const accepted = new Set<string>();
   for (const uncertainty of recognizedScore.uncertainties) {
     if (
@@ -391,15 +393,56 @@ function applyConfidenceAcceptance(
         accepted.has(uncertainty.id) ? { ...uncertainty, resolved: true } : uncertainty
       ),
     },
-    corrections: recognizedScore.uncertainties
-      .filter((uncertainty) => accepted.has(uncertainty.id))
-      .map((uncertainty) => ({
-        uncertaintyId: uncertainty.id,
-        eventIds: uncertainty.eventIds,
-        rationale: `Automatically accepted from native OCR evidence at or above ${Math.round(threshold * 100)}% confidence.`,
-        createdAt,
-      })),
+    acceptanceBatch: {
+      id: `acceptance.${run.id.slice("omr.".length)}`,
+      policy: "ocr_confidence_threshold",
+      threshold,
+      scope: "noncritical_pitch_recognition",
+      omrRunId: run.id,
+      backendId: run.backend.id,
+      backendVersion: run.backend.version,
+      accepted: recognizedScore.uncertainties
+        .filter((uncertainty) => accepted.has(uncertainty.id))
+        .map((uncertainty) => ({
+          uncertaintyId: uncertainty.id,
+          eventIds: uncertainty.eventIds,
+          minimumConfidence: Math.min(
+            ...uncertainty.eventIds.map((id) => {
+              const event = recognizedScore.events.find((candidate) => candidate.id === id);
+              return event?.type === "note" && event.confidence !== undefined
+                ? event.confidence
+                : 0;
+            })
+          ),
+        })),
+      notAccepted: recognizedScore.uncertainties
+        .filter((uncertainty) => !accepted.has(uncertainty.id) && !uncertainty.resolved)
+        .map((uncertainty) => ({
+          uncertaintyId: uncertainty.id,
+          eventIds: uncertainty.eventIds,
+          reason: confidenceRejectionReason(recognizedScore, uncertainty, threshold),
+        })),
+      createdAt,
+    },
   };
+}
+
+function confidenceRejectionReason(
+  score: RecognizedScore,
+  uncertainty: RecognizedScore["uncertainties"][number],
+  threshold: number
+): "critical" | "below_threshold" | "missing_confidence" | "not_pitch_recognition" {
+  if (uncertainty.critical) return "critical";
+  if (uncertainty.category !== "pitch_recognition") return "not_pitch_recognition";
+  const events = uncertainty.eventIds.map((id) => score.events.find((event) => event.id === id));
+  if (events.some((event) => event?.type !== "note" || event.confidence === undefined))
+    return "missing_confidence";
+  return events.some(
+    (event) =>
+      event?.type === "note" && event.confidence !== undefined && event.confidence < threshold
+  )
+    ? "below_threshold"
+    : "missing_confidence";
 }
 
 export function classifyCriticalUncertainties(

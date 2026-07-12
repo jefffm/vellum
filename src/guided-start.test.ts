@@ -307,6 +307,7 @@ describe("Guided Start output choices", () => {
     expect(markup).toContain("Source facsimile");
     expect(markup).toContain("data-review-source-image");
     expect(markup).toContain("data-review-source-highlight");
+    expect(markup).toContain("data-review-acceptance hidden");
     expect(markup).toContain("Recognized notation");
     expect(markup).toContain("Cancel this run");
     expect(markup).toContain("data-model-action-recovery");

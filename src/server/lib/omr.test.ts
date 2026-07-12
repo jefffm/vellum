@@ -197,12 +197,23 @@ describe("OMR pipeline", () => {
       critical: true,
       resolved: true,
     });
-    expect(result.scoreTranscription.corrections).toContainEqual(
+    expect(result.scoreTranscription.corrections).toBeUndefined();
+    expect(result.scoreTranscription.acceptanceBatches).toEqual([
       expect.objectContaining({
-        uncertaintyId: "uncertainty.soprano-opening",
-        rationale: expect.stringContaining("70%"),
-      })
-    );
+        policy: "ocr_confidence_threshold",
+        threshold: 0.7,
+        omrRunId: result.omrRun.id,
+        backendId: "fixture",
+        backendVersion: "1",
+        accepted: [
+          expect.objectContaining({
+            uncertaintyId: "uncertainty.soprano-opening",
+            eventIds: [opening.id],
+            minimumConfidence: 0.72,
+          }),
+        ],
+      }),
+    ]);
   });
 
   it("never auto-accepts recognition already marked structurally critical", async () => {
@@ -246,6 +257,12 @@ describe("OMR pipeline", () => {
     expect(result.scoreTranscription.status).toBe("needs_review");
     expect(result.scoreTranscription.uncertainties[0]?.resolved).toBe(false);
     expect(result.scoreTranscription.corrections).toBeUndefined();
+    expect(result.scoreTranscription.acceptanceBatches?.[0]?.notAccepted).toContainEqual(
+      expect.objectContaining({
+        uncertaintyId: "uncertainty.abnormal-opening",
+        reason: "critical",
+      })
+    );
   });
 
   it("drives review from production-derived Audiveris native evidence", async () => {

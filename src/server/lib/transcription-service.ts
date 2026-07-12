@@ -38,6 +38,7 @@ export type ScoreAnchoredReview = {
   sourceArtifactId: string;
   sourceFilename: string;
   sourceContentUrl: string;
+  acceptanceBatches: NonNullable<ScoreTranscription["acceptanceBatches"]>;
   items: ScoreAnchoredReviewItem[];
 };
 
@@ -97,6 +98,7 @@ export class TranscriptionService {
       sourceArtifactId: source.id,
       sourceFilename: source.filename,
       sourceContentUrl: `/api/workspaces/${workspaceId}/sources/${source.id}/content`,
+      acceptanceBatches: transcription.acceptanceBatches ?? [],
       items,
     };
   }
@@ -106,6 +108,10 @@ export class TranscriptionService {
     transcriptionId: string,
     correction: TranscriptionCorrection
   ): TranscriptionCorrectionResult {
+    if (correction.correctionId) {
+      const existing = this.findCompletedCorrection(workspaceId, correction.correctionId);
+      if (existing) return existing;
+    }
     const current = this.store.getScoreTranscription(workspaceId, transcriptionId);
     const uncertainty = current.uncertainties.find(
       (candidate) => candidate.id === correction.uncertaintyId
@@ -172,6 +178,7 @@ export class TranscriptionService {
       corrections: [
         ...(current.corrections ?? []),
         {
+          ...(correction.correctionId ? { correctionId: correction.correctionId } : {}),
           uncertaintyId: correction.uncertaintyId,
           eventIds: correction.eventEdits.map((edit) => edit.eventId),
           rationale: correction.rationale,
@@ -251,6 +258,40 @@ export class TranscriptionService {
       normalizedScore: normalized,
       analysisRecord,
       staleDerivationIds: staleDerivations.map((record) => record.id),
+    };
+  }
+
+  private findCompletedCorrection(
+    workspaceId: string,
+    correctionId: string
+  ): TranscriptionCorrectionResult | undefined {
+    const workspace = this.store.get(workspaceId);
+    const scoreTranscription = workspace.scoreTranscriptionIds
+      .map((id) => this.store.getScoreTranscription(workspaceId, id))
+      .find((candidate) =>
+        candidate.corrections?.some((record) => record.correctionId === correctionId)
+      );
+    if (!scoreTranscription) return undefined;
+    const normalizedScore = workspace.normalizedScoreIds
+      .map((id) => this.store.getNormalizedScore(workspaceId, id))
+      .find((candidate) => candidate.scoreTranscriptionId === scoreTranscription.id);
+    const analysisRecord = normalizedScore
+      ? workspace.analysisRecordIds
+          .map((id) => this.store.getAnalysisRecord(workspaceId, id))
+          .filter((candidate) => candidate.normalizedScoreId === normalizedScore.id)
+          .sort((left, right) => right.version - left.version)[0]
+      : undefined;
+    if (!normalizedScore || !analysisRecord) {
+      throw new ApiRouteError(
+        `Completed correction ${correctionId} has incomplete persisted descendants`,
+        500
+      );
+    }
+    return {
+      scoreTranscription,
+      normalizedScore,
+      analysisRecord,
+      staleDerivationIds: [],
     };
   }
 }

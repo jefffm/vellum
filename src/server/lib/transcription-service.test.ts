@@ -123,6 +123,31 @@ describe("TranscriptionService", () => {
         .events.find((event) => event.id === "event.soprano.1")
     ).toMatchObject({ type: "note", pitch: "F#4", confidence: 0.5 });
     expect(result.normalizedScore.scoreTranscriptionId).toBe(result.scoreTranscription.id);
+    expect(service.review(workspaceId, result.scoreTranscription.id).items).toEqual([]);
+  });
+
+  it("returns the persisted correction result when an idempotent browser retry arrives", () => {
+    const ids = [
+      "22222222-2222-4222-8222-222222222222",
+      "33333333-3333-4333-8333-333333333333",
+      "44444444-4444-4444-8444-444444444444",
+    ];
+    const service = new TranscriptionService({ store, createId: () => ids.shift()! });
+    const correction = {
+      correctionId: "correction.55555555-5555-4555-8555-555555555555",
+      uncertaintyId: "uncertainty.opening",
+      eventEdits: [{ eventId: "event.soprano.1", pitch: "E4" }],
+      rationale: "Confirmed against the source facsimile.",
+    };
+
+    const first = service.correct(workspaceId, transcriptionId, correction);
+    const retried = service.correct(workspaceId, transcriptionId, correction);
+
+    expect(retried.scoreTranscription.id).toBe(first.scoreTranscription.id);
+    expect(retried.normalizedScore.id).toBe(first.normalizedScore.id);
+    expect(retried.analysisRecord.id).toBe(first.analysisRecord.id);
+    expect(store.get(workspaceId).scoreTranscriptionIds).toHaveLength(2);
+    expect(retried.scoreTranscription.corrections?.[0]?.correctionId).toBe(correction.correctionId);
   });
 
   it("builds a persisted review model anchored to the immutable source", () => {

@@ -59,6 +59,55 @@
       "tracerId": "T03",
       "artifact": ".scratch/arrangement-intelligence/evidence/T03/verification.json"
     },
+    "AI-STP-020": {
+      "status": "partial",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json"
+    },
+    "AI-STP-021": {
+      "status": "partial",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json"
+    },
+    "AI-STP-022": {
+      "status": "partial",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json"
+    },
+    "AI-STP-023": {
+      "status": "machine_verified",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-STP-024": {
+      "status": "machine_verified",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-STP-025": {
+      "status": "machine_verified",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-STP-026": {
+      "status": "machine_verified",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json",
+      "humanEvidence": "pending"
+    },
+    "AI-STP-027": {
+      "status": "partial",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json"
+    },
+    "AI-STP-028": {
+      "status": "partial",
+      "tracerId": "T05",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T05/verification.json"
+    },
     "AI-WPL-005": {
       "status": "machine_verified",
       "tracerId": "T04",

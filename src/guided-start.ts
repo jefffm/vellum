@@ -8,6 +8,7 @@ import type {
   ArrangementEvent,
   ArrangementScore,
   ScoreEvent,
+  ScoreTranscription,
   TargetConfiguration,
   TranscriptionCorrection,
   TranscriptionUncertainty,
@@ -1139,6 +1140,7 @@ type ScoreAnchoredReview = {
   sourceArtifactId: string;
   sourceFilename: string;
   sourceContentUrl: string;
+  acceptanceBatches: NonNullable<ScoreTranscription["acceptanceBatches"]>;
   items: Array<{
     uncertainty: TranscriptionUncertainty;
     events: ScoreEvent[];
@@ -2559,7 +2561,7 @@ export function isolateArtifactFrame(frame: HTMLIFrameElement): void {
   frame.setAttribute("referrerpolicy", "no-referrer");
 }
 
-async function resolveCriticalUncertainties(
+export async function resolveCriticalUncertainties(
   dialog: HTMLDialogElement,
   workspaceId: string,
   initialTranscriptionId: string,
@@ -2578,20 +2580,38 @@ async function resolveCriticalUncertainties(
       return { transcriptionId, normalizedScoreId };
     }
 
-    const correction = await presentScoreAnchoredReview(dialog, review, item);
-    const result = await api<CorrectionResult>(
-      `/api/workspaces/${workspaceId}/transcriptions/${transcriptionId}/corrections`,
-      { method: "POST", body: JSON.stringify(correction) }
-    );
-    transcriptionId = result.scoreTranscription.id;
-    normalizedScoreId = result.normalizedScore.id;
+    let pendingCorrection: TranscriptionCorrection | undefined;
+    let correctionFailure: string | undefined;
+    while (true) {
+      const correction = await presentScoreAnchoredReview(
+        dialog,
+        review,
+        item,
+        pendingCorrection,
+        correctionFailure
+      );
+      try {
+        const result = await api<CorrectionResult>(
+          `/api/workspaces/${workspaceId}/transcriptions/${transcriptionId}/corrections`,
+          { method: "POST", body: JSON.stringify(correction) }
+        );
+        transcriptionId = result.scoreTranscription.id;
+        normalizedScoreId = result.normalizedScore.id;
+        break;
+      } catch (error) {
+        pendingCorrection = correction;
+        correctionFailure = `${error instanceof Error ? error.message : "The correction could not be saved."} Your edits are still here; retry when ready.`;
+      }
+    }
   }
 }
 
-function presentScoreAnchoredReview(
+export function presentScoreAnchoredReview(
   dialog: HTMLDialogElement,
   review: ScoreAnchoredReview,
-  item: ScoreAnchoredReview["items"][number]
+  item: ScoreAnchoredReview["items"][number],
+  pendingCorrection?: TranscriptionCorrection,
+  correctionFailure?: string
 ): Promise<TranscriptionCorrection> {
   const panel = dialog.querySelector<HTMLElement>("[data-score-review]")!;
   const source = panel.querySelector<HTMLIFrameElement>("[data-review-source]")!;
@@ -2605,6 +2625,7 @@ function presentScoreAnchoredReview(
   const heading = panel.querySelector<HTMLElement>("[data-review-heading]")!;
   const message = panel.querySelector<HTMLElement>("[data-review-message]")!;
   const location = panel.querySelector<HTMLElement>("[data-review-location]")!;
+  const acceptance = panel.querySelector<HTMLElement>("[data-review-acceptance]")!;
   const editors = panel.querySelector<HTMLElement>("[data-review-editors]")!;
   const suggestions = panel.querySelector<HTMLElement>("[data-review-suggestions]")!;
   const rationale = panel.querySelector<HTMLInputElement>("[data-review-rationale]")!;
@@ -2669,8 +2690,21 @@ function presentScoreAnchoredReview(
   location.textContent = region
     ? `Source page ${region.page}, region x ${region.x}, y ${region.y}, ${region.width} × ${region.height}`
     : "The recognition backend did not supply a precise source region.";
-  rationale.value = "Confirmed against the source facsimile in Score-Anchored Review.";
-  error.textContent = "";
+  acceptance.hidden = review.acceptanceBatches.length === 0;
+  acceptance.textContent = review.acceptanceBatches
+    .map(
+      (batch) =>
+        `OCR policy · ${Math.round(batch.threshold * 100)}% threshold · ${batch.accepted.length} accepted · ${batch.notAccepted.length} retained for review · ${batch.backendId} ${batch.backendVersion} · ${batch.omrRunId}`
+    )
+    .join("; ");
+  rationale.value =
+    pendingCorrection?.rationale ??
+    "Confirmed against the source facsimile in Score-Anchored Review.";
+  error.textContent = correctionFailure ?? "";
+  apply.disabled = false;
+  apply.textContent = correctionFailure
+    ? "Retry correction and continue"
+    : "Apply correction and continue";
   editors.replaceChildren();
   suggestions.replaceChildren();
 
@@ -2683,7 +2717,8 @@ function presentScoreAnchoredReview(
     label.textContent = `Recognized pitch · ${event.id}${event.confidence !== undefined ? ` · confidence ${(event.confidence * 100).toFixed(1)}%` : " · confidence unavailable"}`;
     const input = document.createElement("input");
     input.type = "text";
-    input.value = event.pitch;
+    input.value =
+      pendingCorrection?.eventEdits.find((edit) => edit.eventId === event.id)?.pitch ?? event.pitch;
     input.pattern = "[A-G](?:#|b)?-?\\d+";
     input.dataset.reviewEventId = event.id;
     label.append(input);
@@ -2704,7 +2739,10 @@ function presentScoreAnchoredReview(
         option.textContent = role[0]!.toUpperCase() + role.slice(1);
         voice.append(option);
       }
-      voice.value = recommendedVoices.get(event.id) ?? "soprano";
+      voice.value =
+        pendingCorrection?.eventEdits.find((edit) => edit.eventId === event.id)?.partRole ??
+        recommendedVoices.get(event.id) ??
+        "soprano";
       voiceLabel.append(voice);
       editors.append(voiceLabel);
     }
@@ -2761,7 +2799,11 @@ function presentScoreAnchoredReview(
       }
       apply.onclick = null;
       cancel.onclick = null;
+      apply.disabled = true;
+      apply.textContent = "Saving correction…";
       resolve({
+        correctionId:
+          pendingCorrection?.correctionId ?? `correction.${globalThis.crypto.randomUUID()}`,
         uncertaintyId: item.uncertainty.id,
         eventEdits: inputs.map((input) => {
           const voice = editors.querySelector<HTMLSelectElement>(
@@ -3152,7 +3194,7 @@ export function guidedStartMarkup(): string {
       <fieldset><legend>3. Relationship to the source</legend><label>Preservation Policy <select name="preservationPolicy"><option value="faithful_reduction" selected>Faithful Reduction — preserve the Principal Voice exactly</option><option value="idiomatic_adaptation">Idiomatic Adaptation — preserve recognizable phrases, contour, and cadences</option><option value="free_paraphrase">Free Paraphrase — use the source as thematic material</option></select></label><p>Faithful Reduction is the historical-source default. The full Transformation Report remains available under every policy.</p></fieldset>
       <label>Anything else? <span>(optional)</span><textarea name="instruction" rows="3" placeholder="For example: keep the texture full but prioritize easy fingering"></textarea></label>
       <section class="score-anchored-review" data-score-review hidden>
-        <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div>
+        <div class="score-review-heading"><div><p>Critical uncertainty</p><h2 data-review-heading>Review transcription</h2></div><span data-review-location></span></div><p data-review-acceptance hidden></p>
         <p data-review-message></p>
         <div class="score-review-grid">
           <div><div class="source-review-toolbar"><strong>Source facsimile</strong><span><button type="button" data-review-zoom-out aria-label="Zoom out source">−</button><button type="button" data-review-zoom-reset><span data-review-zoom-value>100%</span></button><button type="button" data-review-zoom-in aria-label="Zoom in source">+</button></span></div><div class="source-page-frame"><div class="source-page-canvas" data-review-source-canvas><img data-review-source-image hidden><span data-review-source-highlight hidden aria-label="Uncertain recognized symbol"></span></div><iframe data-review-source sandbox="" referrerpolicy="no-referrer"></iframe></div></div>

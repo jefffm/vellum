@@ -595,6 +595,7 @@ export type TranscriptionUncertainty = Static<typeof TranscriptionUncertaintySch
 
 export const TranscriptionCorrectionRecordSchema = Type.Object(
   {
+    correctionId: Type.Optional(IdSchema),
     uncertaintyId: IdSchema,
     eventIds: Type.Array(IdSchema, { minItems: 1 }),
     rationale: Type.String({ minLength: 1 }),
@@ -602,6 +603,47 @@ export const TranscriptionCorrectionRecordSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+
+export const TranscriptionAcceptanceBatchSchema = Type.Object(
+  {
+    id: IdSchema,
+    policy: Type.Literal("ocr_confidence_threshold"),
+    threshold: Type.Number({ minimum: 0, maximum: 1 }),
+    scope: Type.Literal("noncritical_pitch_recognition"),
+    omrRunId: IdSchema,
+    backendId: Type.String({ minLength: 1 }),
+    backendVersion: Type.String({ minLength: 1 }),
+    accepted: Type.Array(
+      Type.Object(
+        {
+          uncertaintyId: IdSchema,
+          eventIds: Type.Array(IdSchema, { minItems: 1 }),
+          minimumConfidence: Type.Number({ minimum: 0, maximum: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    notAccepted: Type.Array(
+      Type.Object(
+        {
+          uncertaintyId: IdSchema,
+          eventIds: Type.Array(IdSchema),
+          reason: Type.Union([
+            Type.Literal("critical"),
+            Type.Literal("below_threshold"),
+            Type.Literal("missing_confidence"),
+            Type.Literal("not_pitch_recognition"),
+          ]),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type TranscriptionAcceptanceBatch = Static<typeof TranscriptionAcceptanceBatchSchema>;
 
 export const ScoreTranscriptionSchema = Type.Object(
   {
@@ -651,6 +693,7 @@ export const ScoreTranscriptionSchema = Type.Object(
     events: Type.Array(ScoreEventSchema, { minItems: 1 }),
     uncertainties: Type.Array(TranscriptionUncertaintySchema),
     corrections: Type.Optional(Type.Array(TranscriptionCorrectionRecordSchema)),
+    acceptanceBatches: Type.Optional(Type.Array(TranscriptionAcceptanceBatchSchema)),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }
@@ -697,6 +740,7 @@ export const TranscriptionEventEditSchema = Type.Object(
 
 export const TranscriptionCorrectionSchema = Type.Object(
   {
+    correctionId: Type.Optional(IdSchema),
     uncertaintyId: IdSchema,
     eventEdits: Type.Array(TranscriptionEventEditSchema, { minItems: 1 }),
     rationale: Type.String({ minLength: 1 }),
