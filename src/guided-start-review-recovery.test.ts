@@ -70,9 +70,10 @@ describe("Score-Anchored Review correction recovery", () => {
               data: {
                 scoreTranscription: {
                   id: "transcription.2222222222222222",
+                  version: 2,
                   status: "reviewed",
                 },
-                normalizedScore: { id: "score.2222222222222222" },
+                normalizedScore: { id: "score.2222222222222222", version: 2 },
               },
             }),
             { status: 200, headers: { "content-type": "application/json" } }
@@ -116,7 +117,9 @@ describe("Score-Anchored Review correction recovery", () => {
 
     await expect(completion).resolves.toEqual({
       transcriptionId: "transcription.2222222222222222",
+      transcriptionVersion: 2,
       normalizedScoreId: "score.2222222222222222",
+      normalizedScoreVersion: 2,
     });
     expect(saves).toBe(2);
     expect(saveBodies[0]?.correctionId).toMatch(/^correction\./);

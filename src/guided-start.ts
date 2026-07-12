@@ -7,6 +7,7 @@ import {
 import type {
   ArrangementEvent,
   ArrangementScore,
+  GuidedWorkflow,
   ScoreEvent,
   ScoreTranscription,
   TargetConfiguration,
@@ -1149,9 +1150,285 @@ type ScoreAnchoredReview = {
 };
 
 type CorrectionResult = {
-  scoreTranscription: { id: string; status: ScoreAnchoredReview["status"] };
-  normalizedScore: { id: string };
+  scoreTranscription: { id: string; version: number; status: ScoreAnchoredReview["status"] };
+  normalizedScore: { id: string; version: number };
 };
+
+async function checkpointGuidedWorkflow(
+  workflow: GuidedWorkflow,
+  update: Record<string, unknown>
+): Promise<GuidedWorkflow> {
+  return await api<GuidedWorkflow>(
+    `/api/workspaces/${workflow.workspaceId}/guided-workflows/${workflow.id}`,
+    { method: "PATCH", body: JSON.stringify(update) }
+  );
+}
+
+async function continueGuidedWorkflow(
+  dialog: HTMLDialogElement,
+  initial: GuidedWorkflow,
+  targetConfigurations: TargetConfiguration[],
+  onComplete: GuidedStartOptions["onComplete"]
+): Promise<GuidedWorkflow> {
+  const status = dialog.querySelector<HTMLElement>("[data-guided-status]")!;
+  let workflow = initial;
+  if (!workflow.normalizedScoreId) {
+    workflow = await checkpointGuidedWorkflow(workflow, { stage: "recognizing" });
+    status.textContent = workflow.optical
+      ? "Reading the score with optical music recognition…"
+      : "Parsing and normalizing the musical source…";
+    const recognized = await api<{
+      omrRun?: { id: string };
+      scoreTranscription: {
+        id: string;
+        version: number;
+        status: ScoreAnchoredReview["status"];
+      };
+      normalizedScore: { id: string; version: number };
+    }>(
+      workflow.optical
+        ? `/api/workspaces/${workflow.workspaceId}/omr-runs`
+        : `/api/workspaces/${workflow.workspaceId}/sources/${workflow.sourceArtifactId}/import`,
+      {
+        method: "POST",
+        body: JSON.stringify(
+          workflow.optical
+            ? {
+                sourceArtifactId: workflow.sourceArtifactId,
+                backend: "audiveris",
+                autoAcceptConfidence: workflow.ocrAutoAcceptConfidence,
+              }
+            : {}
+        ),
+      }
+    );
+    workflow = await checkpointGuidedWorkflow(workflow, {
+      stage:
+        workflow.optical && recognized.scoreTranscription.status === "needs_review"
+          ? "transcription_review"
+          : "target_search",
+      ...(recognized.omrRun ? { omrRunId: recognized.omrRun.id } : {}),
+      scoreTranscriptionId: recognized.scoreTranscription.id,
+      scoreTranscriptionVersion: recognized.scoreTranscription.version,
+      normalizedScoreId: recognized.normalizedScore.id,
+      normalizedScoreVersion: recognized.normalizedScore.version,
+    });
+  }
+  if (
+    workflow.optical &&
+    workflow.stage === "transcription_review" &&
+    workflow.scoreTranscriptionId &&
+    workflow.scoreTranscriptionVersion &&
+    workflow.normalizedScoreId &&
+    workflow.normalizedScoreVersion
+  ) {
+    const reviewed = await resolveCriticalUncertainties(
+      dialog,
+      workflow.workspaceId,
+      workflow.scoreTranscriptionId,
+      workflow.normalizedScoreId,
+      workflow.scoreTranscriptionVersion,
+      workflow.normalizedScoreVersion
+    );
+    workflow = await checkpointGuidedWorkflow(workflow, {
+      stage: "target_search",
+      scoreTranscriptionId: reviewed.transcriptionId,
+      scoreTranscriptionVersion: reviewed.transcriptionVersion,
+      normalizedScoreId: reviewed.normalizedScoreId,
+      normalizedScoreVersion: reviewed.normalizedScoreVersion,
+    });
+  }
+  return await runGuidedWorkflowTargets(dialog, workflow, targetConfigurations, onComplete);
+}
+
+async function runGuidedWorkflowTargets(
+  dialog: HTMLDialogElement,
+  initial: GuidedWorkflow,
+  targetConfigurations: TargetConfiguration[],
+  onComplete: GuidedStartOptions["onComplete"]
+): Promise<GuidedWorkflow> {
+  const status = dialog.querySelector<HTMLElement>("[data-guided-status]")!;
+  let workflow = initial;
+  const deliverables: GuidedDeliverable[] = [];
+  for (const target of targetConfigurations) {
+    const progress = workflow.targets.find(
+      (candidate) => candidate.targetConfigurationId === target.id
+    );
+    if (progress?.status === "complete") continue;
+    workflow = await checkpointGuidedWorkflow(workflow, {
+      ...(workflow.stage === "source_saved" ||
+      workflow.stage === "recognizing" ||
+      workflow.stage === "transcription_review" ||
+      workflow.stage === "analysis_review"
+        ? { stage: "target_search" }
+        : {}),
+      targets: [
+        {
+          targetConfigurationId: target.id,
+          status: "searching",
+          deliverableIds: [],
+        },
+      ],
+    });
+    status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
+    const arranged = await arrangeWithAnalysisReview<{
+      analysis: GuidedDeliverable["analysis"] & { version: number };
+      arrangementSearch: { id: string };
+      candidates: GuidedDeliverable["candidates"];
+      arrangementScore: {
+        id: string;
+        version: number;
+        parentArrangementScoreId?: string;
+        branchId?: string;
+        editorialCommitmentIds?: string[];
+        arrangementFamilyId: string;
+        targetConfiguration: TargetConfiguration;
+        preservationPolicy: ArrangementScore["preservationPolicy"];
+        events: ArrangementEvent[];
+        transformationReport: GuidedDeliverable["transformationReport"];
+        preservationAudit: GuidedDeliverable["preservationAudit"];
+        continuoDisposition?: GuidedDeliverable["continuoDisposition"];
+      };
+    }>(dialog, workflow.workspaceId, `/api/workspaces/${workflow.workspaceId}/arrangements`, {
+      method: "POST",
+      body: JSON.stringify({
+        normalizedScoreId: workflow.normalizedScoreId,
+        targetConfigurationId: target.id,
+        preservationPolicy: workflow.preservationPolicy,
+      }),
+    });
+    workflow = await checkpointGuidedWorkflow(workflow, {
+      stage: "projection",
+      analysisRecordId: arranged.analysis.id,
+      analysisRecordVersion: arranged.analysis.version,
+      targets: [
+        {
+          targetConfigurationId: target.id,
+          status: "projecting",
+          arrangementSearchId: arranged.arrangementSearch.id,
+          arrangementScoreId: arranged.arrangementScore.id,
+          arrangementScoreVersion: arranged.arrangementScore.version,
+          deliverableIds: [],
+        },
+      ],
+    });
+    status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
+    const [compiled, preview] = await Promise.all([
+      api<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
+        `/api/workspaces/${workflow.workspaceId}/arrangements/${arranged.arrangementScore.id}/compile`,
+        { method: "POST" }
+      ),
+      api<AudioPreview & { deliverable: GuidedDeliverable["deliverables"][number] }>(
+        `/api/workspaces/${workflow.workspaceId}/arrangements/${arranged.arrangementScore.id}/audio-preview`
+      ),
+    ]);
+    const persisted = [...compiled.deliverables, preview.deliverable];
+    workflow = await checkpointGuidedWorkflow(workflow, {
+      targets: [
+        {
+          targetConfigurationId: target.id,
+          status: "complete",
+          arrangementSearchId: arranged.arrangementSearch.id,
+          arrangementScoreId: arranged.arrangementScore.id,
+          arrangementScoreVersion: arranged.arrangementScore.version,
+          deliverableIds: persisted.map((item) => item.id),
+        },
+      ],
+    });
+    deliverables.push({
+      workspaceId: workflow.workspaceId,
+      arrangementScoreId: arranged.arrangementScore.id,
+      arrangementScoreVersion: arranged.arrangementScore.version,
+      parentArrangementScoreId: arranged.arrangementScore.parentArrangementScoreId,
+      branchId: arranged.arrangementScore.branchId,
+      editorialCommitmentIds: arranged.arrangementScore.editorialCommitmentIds ?? [],
+      arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
+      arrangementSearchId: arranged.arrangementSearch.id,
+      targetConfigurationId: target.id,
+      targetConfiguration: arranged.arrangementScore.targetConfiguration,
+      preservationPolicy: arranged.arrangementScore.preservationPolicy,
+      label: targetLabel(target.id),
+      arrangementEvents: arranged.arrangementScore.events,
+      analysis: arranged.analysis,
+      transformationReport: arranged.arrangementScore.transformationReport,
+      preservationAudit: arranged.arrangementScore.preservationAudit,
+      continuoDisposition: arranged.arrangementScore.continuoDisposition,
+      compiled,
+      preview,
+      deliverables: persisted,
+      candidates: arranged.candidates,
+    });
+  }
+  workflow = await checkpointGuidedWorkflow(workflow, { stage: "complete" });
+  if (deliverables.length) {
+    const completedWorkspace = await api<{
+      brief: { personalDefaultApplications?: GuidedDeliverable["personalDefaultApplications"] };
+    }>(`/api/workspaces/${workflow.workspaceId}`);
+    for (const deliverable of deliverables)
+      deliverable.personalDefaultApplications =
+        completedWorkspace.brief.personalDefaultApplications;
+    onComplete(deliverables);
+  } else {
+    const selected = workflow.targets.find((target) => target.arrangementScoreId);
+    if (selected?.arrangementScoreId) {
+      document.dispatchEvent(
+        new CustomEvent("vellum-open-arrangement-version", {
+          detail: {
+            workspaceId: workflow.workspaceId,
+            arrangementScoreId: selected.arrangementScoreId,
+          },
+        })
+      );
+    }
+  }
+  return workflow;
+}
+
+export async function refreshGuidedWorkflowRecovery(
+  dialog: HTMLDialogElement,
+  workspaceId: string,
+  onComplete: GuidedStartOptions["onComplete"]
+): Promise<void> {
+  const panel = dialog.querySelector<HTMLElement>("[data-guided-workflow-recovery]")!;
+  const message = panel.querySelector<HTMLElement>("[data-guided-workflow-message]")!;
+  const resume = panel.querySelector<HTMLButtonElement>("[data-guided-workflow-resume]")!;
+  const restart = panel.querySelector<HTMLButtonElement>("[data-guided-workflow-restart]")!;
+  const result = await api<{ workflow?: GuidedWorkflow }>(
+    `/api/workspaces/${workspaceId}/guided-workflows/active`
+  );
+  const workflow = result.workflow;
+  if (!workflow || workflow.status !== "interrupted") {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  message.textContent = `Stopped at ${workflow.stage.replaceAll("_", " ")} (${workflow.failureCode ?? "workflow_interrupted"}). Completed outputs are retained.`;
+  const targetConfigurations = (
+    await api<{ brief: { targetConfigurations: TargetConfiguration[] } }>(
+      `/api/workspaces/${workspaceId}`
+    )
+  ).brief.targetConfigurations;
+  const run = async (action: "resume" | "restart") => {
+    resume.disabled = true;
+    restart.disabled = true;
+    try {
+      const next = await api<GuidedWorkflow>(
+        `/api/workspaces/${workspaceId}/guided-workflows/${workflow.id}/${action}`,
+        { method: "POST" }
+      );
+      panel.hidden = true;
+      await continueGuidedWorkflow(dialog, next, targetConfigurations, onComplete);
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : "Recovery failed.";
+      panel.hidden = false;
+    } finally {
+      resume.disabled = false;
+      restart.disabled = false;
+    }
+  };
+  resume.onclick = () => void run("resume");
+  restart.onclick = () => void run("restart");
+}
 
 export function installGuidedStart(options: GuidedStartOptions): void {
   const linkedWorkspace = new URL(window.location.href).searchParams.get("workspace");
@@ -1189,7 +1466,10 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   });
   launcher.addEventListener("click", () => {
     dialog.showModal();
-    if (activeWorkspaceId) void refreshModelActionRecovery(dialog, activeWorkspaceId);
+    if (activeWorkspaceId) {
+      void refreshModelActionRecovery(dialog, activeWorkspaceId);
+      void refreshGuidedWorkflowRecovery(dialog, activeWorkspaceId, options.onComplete);
+    }
   });
   for (const skip of dialog.querySelectorAll<HTMLElement>("[data-guided-skip]")) {
     skip.addEventListener("click", () => dialog.close());
@@ -1209,6 +1489,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
     const file = form.querySelector<HTMLInputElement>('input[type="file"]')?.files?.[0];
     if (!file || !status || !submit) return;
     submit.disabled = true;
+    let activeWorkflow: GuidedWorkflow | undefined;
     try {
       delete status.dataset.error;
       status.textContent = "Saving a local workspace…";
@@ -1254,116 +1535,47 @@ export function installGuidedStart(options: GuidedStartOptions): void {
         body: file,
       });
       const optical = isOpticalSource(file);
-      status.textContent = optical
-        ? "Reading the score with optical music recognition…"
-        : "Parsing and normalizing the musical source…";
-      const recognized = await api<{
-        scoreTranscription: { id: string; status: ScoreAnchoredReview["status"] };
-        normalizedScore: { id: string };
-      }>(
-        optical
-          ? `/api/workspaces/${workspace.id}/omr-runs`
-          : `/api/workspaces/${workspace.id}/sources/${source.id}/import`,
+      const workflow = await api<GuidedWorkflow>(
+        `/api/workspaces/${workspace.id}/guided-workflows`,
         {
           method: "POST",
-          body: JSON.stringify(
-            optical
-              ? {
-                  sourceArtifactId: source.id,
-                  backend: "audiveris",
-                  autoAcceptConfidence: ocrAutoAcceptConfidence / 100,
-                }
-              : {}
-          ),
+          body: JSON.stringify({
+            sourceArtifactId: source.id,
+            optical,
+            ...(optical ? { ocrAutoAcceptConfidence: ocrAutoAcceptConfidence / 100 } : {}),
+            preservationPolicy,
+          }),
         }
       );
-      const reviewed = optical
-        ? await resolveCriticalUncertainties(
-            dialog,
-            workspace.id,
-            recognized.scoreTranscription.id,
-            recognized.normalizedScore.id
-          )
-        : { normalizedScoreId: recognized.normalizedScore.id };
-      const deliverables: GuidedDeliverable[] = [];
-      for (const target of targetConfigurations) {
-        status.textContent = `Searching and auditing the ${targetLabel(target.id)} reduction…`;
-        const arranged = await arrangeWithAnalysisReview<{
-          analysis: GuidedDeliverable["analysis"];
-          arrangementSearch: { id: string };
-          candidates: GuidedDeliverable["candidates"];
-          arrangementScore: {
-            id: string;
-            version: number;
-            parentArrangementScoreId?: string;
-            branchId?: string;
-            editorialCommitmentIds?: string[];
-            arrangementFamilyId: string;
-            targetConfiguration: TargetConfiguration;
-            preservationPolicy: ArrangementScore["preservationPolicy"];
-            events: ArrangementEvent[];
-            transformationReport: GuidedDeliverable["transformationReport"];
-            preservationAudit: GuidedDeliverable["preservationAudit"];
-            continuoDisposition?: GuidedDeliverable["continuoDisposition"];
-          };
-        }>(dialog, workspace.id, `/api/workspaces/${workspace.id}/arrangements`, {
-          method: "POST",
-          body: JSON.stringify({
-            normalizedScoreId: reviewed.normalizedScoreId,
-            targetConfigurationId: target.id,
-            preservationPolicy: preservationPolicy as ArrangementScore["preservationPolicy"],
-          }),
-        });
-        status.textContent = `Engraving ${targetLabel(target.id)} and preparing literal playback…`;
-        const [compiled, preview] = await Promise.all([
-          api<CompileResult & { deliverables: GuidedDeliverable["deliverables"] }>(
-            `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/compile`,
-            { method: "POST" }
-          ),
-          api<AudioPreview & { deliverable: GuidedDeliverable["deliverables"][number] }>(
-            `/api/workspaces/${workspace.id}/arrangements/${arranged.arrangementScore.id}/audio-preview`
-          ),
-        ]);
-        deliverables.push({
-          workspaceId: workspace.id,
-          arrangementScoreId: arranged.arrangementScore.id,
-          arrangementScoreVersion: arranged.arrangementScore.version,
-          parentArrangementScoreId: arranged.arrangementScore.parentArrangementScoreId,
-          branchId: arranged.arrangementScore.branchId,
-          editorialCommitmentIds: arranged.arrangementScore.editorialCommitmentIds ?? [],
-          arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
-          arrangementSearchId: arranged.arrangementSearch.id,
-          targetConfigurationId: target.id,
-          targetConfiguration: arranged.arrangementScore.targetConfiguration,
-          preservationPolicy: arranged.arrangementScore.preservationPolicy,
-          label: targetLabel(target.id),
-          arrangementEvents: arranged.arrangementScore.events,
-          analysis: arranged.analysis,
-          transformationReport: arranged.arrangementScore.transformationReport,
-          preservationAudit: arranged.arrangementScore.preservationAudit,
-          continuoDisposition: arranged.arrangementScore.continuoDisposition,
-          compiled,
-          preview,
-          deliverables: [...compiled.deliverables, preview.deliverable],
-          candidates: arranged.candidates,
-        });
-      }
-      const completedWorkspace = await api<{
-        brief: { personalDefaultApplications?: GuidedDeliverable["personalDefaultApplications"] };
-      }>(`/api/workspaces/${workspace.id}`);
-      for (const deliverable of deliverables) {
-        deliverable.personalDefaultApplications =
-          completedWorkspace.brief.personalDefaultApplications;
-      }
-      options.onComplete(deliverables);
+      activeWorkflow = workflow;
+      activeWorkflow = await continueGuidedWorkflow(
+        dialog,
+        workflow,
+        targetConfigurations,
+        options.onComplete
+      );
       status.textContent =
         "Arrangement ready. The source, analysis, candidates, audit, and deliverables are saved locally.";
       window.setTimeout(() => dialog.close(), 900);
     } catch (error) {
+      if (activeWorkflow && activeWorkflow.status !== "complete") {
+        const code = error instanceof VellumApiError ? error.code : "workflow_interrupted";
+        try {
+          activeWorkflow = await api<GuidedWorkflow>(
+            `/api/workspaces/${activeWorkflow.workspaceId}/guided-workflows/${activeWorkflow.id}/interrupt`,
+            { method: "POST", body: JSON.stringify({ code }) }
+          );
+        } catch {
+          // Preserve the original failure; recovery discovery will query persisted state.
+        }
+      }
       status.textContent =
         error instanceof Error ? error.message : "The arrangement could not be started.";
       status.dataset.error = "true";
-      if (activeWorkspaceId) await refreshModelActionRecovery(dialog, activeWorkspaceId);
+      if (activeWorkspaceId) {
+        await refreshModelActionRecovery(dialog, activeWorkspaceId);
+        await refreshGuidedWorkflowRecovery(dialog, activeWorkspaceId, options.onComplete);
+      }
     } finally {
       submit.disabled = false;
     }
@@ -2565,10 +2777,19 @@ export async function resolveCriticalUncertainties(
   dialog: HTMLDialogElement,
   workspaceId: string,
   initialTranscriptionId: string,
-  initialNormalizedScoreId: string
-): Promise<{ transcriptionId: string; normalizedScoreId: string }> {
+  initialNormalizedScoreId: string,
+  initialTranscriptionVersion = 1,
+  initialNormalizedScoreVersion = 1
+): Promise<{
+  transcriptionId: string;
+  transcriptionVersion: number;
+  normalizedScoreId: string;
+  normalizedScoreVersion: number;
+}> {
   let transcriptionId = initialTranscriptionId;
   let normalizedScoreId = initialNormalizedScoreId;
+  let transcriptionVersion = initialTranscriptionVersion;
+  let normalizedScoreVersion = initialNormalizedScoreVersion;
 
   while (true) {
     const review = await api<ScoreAnchoredReview>(
@@ -2577,7 +2798,12 @@ export async function resolveCriticalUncertainties(
     const item = review.items[0];
     if (!item) {
       hideScoreAnchoredReview(dialog);
-      return { transcriptionId, normalizedScoreId };
+      return {
+        transcriptionId,
+        transcriptionVersion,
+        normalizedScoreId,
+        normalizedScoreVersion,
+      };
     }
 
     let pendingCorrection: TranscriptionCorrection | undefined;
@@ -2596,7 +2822,9 @@ export async function resolveCriticalUncertainties(
           { method: "POST", body: JSON.stringify(correction) }
         );
         transcriptionId = result.scoreTranscription.id;
+        transcriptionVersion = result.scoreTranscription.version;
         normalizedScoreId = result.normalizedScore.id;
+        normalizedScoreVersion = result.normalizedScore.version;
         break;
       } catch (error) {
         pendingCorrection = correction;
@@ -3187,6 +3415,7 @@ export function guidedStartMarkup(): string {
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
       <section class="provider-connection"><div><strong>ChatGPT connection</strong><span data-provider-status>Checking…</span></div><button type="button" data-provider-connect>Connect ChatGPT</button><button type="button" data-provider-disconnect hidden>Log out</button><div data-provider-prompt hidden><label><span data-provider-prompt-message></span><input type="url" data-provider-prompt-input autocomplete="off" disabled></label><button type="button" data-provider-prompt-submit>Finish connection</button><button type="button" data-provider-prompt-cancel>Cancel login</button></div></section>
       <section class="model-action-recovery" data-model-action-recovery hidden><strong>Interrupted model work</strong><p>Nothing has been committed from these incomplete attempts. Review the retained boundary and choose how to continue.</p><div data-model-action-items></div></section>
+      <section class="guided-workflow-recovery" data-guided-workflow-recovery hidden><strong>Resume Guided Start</strong><p data-guided-workflow-message></p><div><button type="button" data-guided-workflow-resume>Resume retained work</button><button type="button" data-guided-workflow-restart>Restart from source</button></div></section>
       <label>1. Upload musical source<input type="file" accept=".pdf,.png,.jpg,.jpeg,.musicxml,.xml,.mxl,.ly,.abc,.mei,.mscz,application/pdf,image/*" required><small>PDF and images use Audiveris review; MusicXML, restricted LilyPond, ABC, MEI, and MSCZ are parsed through their disclosed adapters.</small></label>
       <label>Title<input name="title" placeholder="Taken from the filename if blank"></label>
       <label data-ocr-threshold-field hidden>OCR auto-accept confidence <span data-ocr-threshold-value>80%</span><input type="range" name="ocrAutoAcceptConfidence" min="50" max="100" step="1" value="80"><small>Automatically accept OCR notes at or above this confidence. Lower this to 70% to accept a 72% note; voice identity and structurally abnormal readings still require review.</small></label>

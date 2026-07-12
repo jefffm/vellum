@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T06",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T12:55:00Z",
+  "requirements": {
+    "AI-STP-027": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1 recovery usability and T33 real-browser fault matrix"
+    },
+    "AI-STP-028": {
+      "status": "partial",
+      "remaining": "Resolved records and completed sibling checkpoints cannot recur; T12 adds explicit new-evidence staleness reopening"
+    },
+    "AI-WPL-024": {
+      "status": "partial",
+      "remaining": "Correction, provider, reload, and sibling recovery are executable; T28/T33 add validation/rendering browser fault coverage"
+    }
+  },
+  "auditFindings": {
+    "F017": "machine fixed+verified: Guided Start persists a monotonic stage machine with exact canonical versions and explicit Resume or Restart",
+    "F018": "machine fixed+verified: target checkpoints merge independently and completed siblings are immutable",
+    "F020": "machine fixed+verified: review resumes from the retained transcription and normalized-score versions after interruption",
+    "F024": "partial: DOM recovery executes on reload and coexists with provider recovery; T33 retains full real-browser fault injection",
+    "F035": "partial: completed recognition identities survive later workflow interruption; T12/T32 retain the downstream OMR evidence fault matrix",
+    "F036": "partial: workflow failure codes are structured and language-independent; cross-phase correlated logging remains T32"
+  },
+  "summary": {
+    "testsPassed": 932,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 7,
+    "workflowRecovery": {
+      "persistedStages": 7,
+      "exactVersionKinds": [
+        "score_transcription",
+        "normalized_score",
+        "analysis_record",
+        "arrangement_score"
+      ],
+      "explicitActions": ["resume", "restart"],
+      "completedSiblingImmutable": true,
+      "englishErrorInference": false
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    {
+      "command": "npx vitest run src/lib/music-domain.test.ts src/server/lib/guided-workflow-service.test.ts src/guided-start-workflow-recovery.test.ts src/guided-start-review-recovery.test.ts",
+      "result": "pass: 7 passed"
+    },
+    { "command": "npm test", "result": "pass: 932 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/06-resumable-guided-start.md",
+      "sha256": "ce8b7d0033062ede2ef0714b5c23e7cdcd5691c770ddf99b43de7de4b7d545df"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "63ea0ce9166084df45415d2b48af1aeebe7648cccdd9023468a78abecc61cb3f"
+    },
+    {
+      "path": "src/guided-start-workflow-recovery.test.ts",
+      "sha256": "22cc5fd2c64d7363cdceca7a6fd447c6b7398b3708dfb004b3bb56db1ce38b1a"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "e7cab5f5efab2585a0510ba44021c783a476f7f5e73520e82890499fac9639a4"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-service.ts",
+      "sha256": "a70ba71e9181377601500b67a554cf0374f2fd6220b8fb25ff383e602843f4fc"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-service.test.ts",
+      "sha256": "21cafe1ea790fb73c30b7a1b2323e71eb03ff4e369ae97a4a73a893bd4f9b716"
+    }
+  ]
+}

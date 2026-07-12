@@ -43,6 +43,14 @@ import {
 } from "./lib/arrangement-search-route.js";
 import { createAnalyzeRoute, createChordifyRoute, createLintRoute } from "./lib/theory-route.js";
 import { createValidateRoute } from "./lib/validate-route.js";
+import {
+  createGuidedWorkflowActiveRoute,
+  createGuidedWorkflowCheckpointRoute,
+  createGuidedWorkflowCreateRoute,
+  createGuidedWorkflowInterruptRoute,
+  createGuidedWorkflowRestartRoute,
+  createGuidedWorkflowResumeRoute,
+} from "./lib/guided-workflow-route.js";
 import { createTemplateGetRoute, createTemplateListRoute } from "./lib/template-route.js";
 import {
   createArrangementCreateRoute,
@@ -311,6 +319,24 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createSourceImportRoute()
   );
   router.post("/workspaces/:workspaceId/omr-runs", createOmrRunRoute());
+  router.post("/workspaces/:workspaceId/guided-workflows", createGuidedWorkflowCreateRoute());
+  router.get("/workspaces/:workspaceId/guided-workflows/active", createGuidedWorkflowActiveRoute());
+  router.patch(
+    "/workspaces/:workspaceId/guided-workflows/:workflowId",
+    createGuidedWorkflowCheckpointRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/guided-workflows/:workflowId/interrupt",
+    createGuidedWorkflowInterruptRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/guided-workflows/:workflowId/resume",
+    createGuidedWorkflowResumeRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/guided-workflows/:workflowId/restart",
+    createGuidedWorkflowRestartRoute()
+  );
   router.get(
     "/workspaces/:workspaceId/omr-runs/:omrRunId/artifacts/:filename",
     createOmrArtifactContentRoute()

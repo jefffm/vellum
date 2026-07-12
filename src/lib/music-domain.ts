@@ -133,6 +133,7 @@ export const ArrangementWorkspaceSchema = Type.Object(
     analysisRecordIds: Type.Array(IdSchema),
     arrangementScoreIds: Type.Array(IdSchema),
     modelActionIds: Type.Array(IdSchema),
+    guidedWorkflowIds: Type.Array(IdSchema),
     arrangementBranchIds: Type.Array(IdSchema),
     arrangementSearchIds: Type.Array(IdSchema),
     arrangementCandidateIds: Type.Array(IdSchema),
@@ -151,6 +152,70 @@ export const ArrangementWorkspaceSchema = Type.Object(
 );
 
 export type ArrangementWorkspace = Static<typeof ArrangementWorkspaceSchema>;
+
+export const GuidedWorkflowTargetSchema = Type.Object(
+  {
+    targetConfigurationId: IdSchema,
+    status: Type.Union([
+      Type.Literal("pending"),
+      Type.Literal("searching"),
+      Type.Literal("projecting"),
+      Type.Literal("complete"),
+      Type.Literal("failed"),
+    ]),
+    arrangementSearchId: Type.Optional(IdSchema),
+    arrangementScoreId: Type.Optional(IdSchema),
+    arrangementScoreVersion: Type.Optional(Type.Integer({ minimum: 1 })),
+    deliverableIds: Type.Array(IdSchema),
+    errorCode: Type.Optional(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false }
+);
+
+export const GuidedWorkflowSchema = Type.Object(
+  {
+    id: IdSchema,
+    workspaceId: IdSchema,
+    status: Type.Union([
+      Type.Literal("active"),
+      Type.Literal("interrupted"),
+      Type.Literal("complete"),
+      Type.Literal("cancelled"),
+    ]),
+    stage: Type.Union([
+      Type.Literal("source_saved"),
+      Type.Literal("recognizing"),
+      Type.Literal("transcription_review"),
+      Type.Literal("analysis_review"),
+      Type.Literal("target_search"),
+      Type.Literal("projection"),
+      Type.Literal("complete"),
+    ]),
+    sourceArtifactId: IdSchema,
+    optical: Type.Boolean(),
+    ocrAutoAcceptConfidence: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
+    preservationPolicy: Type.Union([
+      Type.Literal("faithful_reduction"),
+      Type.Literal("idiomatic_adaptation"),
+      Type.Literal("free_paraphrase"),
+    ]),
+    omrRunId: Type.Optional(IdSchema),
+    scoreTranscriptionId: Type.Optional(IdSchema),
+    scoreTranscriptionVersion: Type.Optional(Type.Integer({ minimum: 1 })),
+    normalizedScoreId: Type.Optional(IdSchema),
+    normalizedScoreVersion: Type.Optional(Type.Integer({ minimum: 1 })),
+    analysisRecordId: Type.Optional(IdSchema),
+    analysisRecordVersion: Type.Optional(Type.Integer({ minimum: 1 })),
+    targets: Type.Array(GuidedWorkflowTargetSchema, { minItems: 1 }),
+    resumeCount: Type.Integer({ minimum: 0 }),
+    failureCode: Type.Optional(Type.String({ minLength: 1 })),
+    createdAt: IsoDateSchema,
+    updatedAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export type GuidedWorkflow = Static<typeof GuidedWorkflowSchema>;
 
 export const CreateWorkspaceSchema = Type.Object(
   {

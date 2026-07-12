@@ -1,6 +1,6 @@
 # Resumable Guided Start checkpoints
 
-Status: ready-for-agent
+Status: complete
 
 Type: AFK
 
@@ -12,10 +12,14 @@ Persist the exact Guided Start stage and canonical record identities so interrup
 
 ## Acceptance criteria
 
-- [ ] Workflow stages and target-specific progress are persisted with exact versions.
-- [ ] Resume and Restart are explicit and never infer state from English errors.
-- [ ] Failed sibling targets retry independently without replacing completed siblings.
-- [ ] Browser recovery tests cover review, provider interruption, reload, and partial completion.
+- [x] Workflow stages and target-specific progress are persisted with exact versions.
+- [x] Resume and Restart are explicit and never infer state from English errors.
+- [x] Failed sibling targets retry independently without replacing completed siblings.
+- [x] Browser recovery tests cover review, provider interruption, reload, and partial completion.
+
+## Verification
+
+See `../evidence/T06/verification.json`.
 
 ## Blocked by
 

@@ -27,6 +27,7 @@ import {
   PolicyExceptionSchema,
   PerformanceInterpretationSchema,
   ModelActionSchema,
+  GuidedWorkflowSchema,
   NormalizedScoreSchema,
   OmrRunSchema,
   ScoreTranscriptionSchema,
@@ -49,6 +50,7 @@ import type {
   PolicyException,
   PerformanceInterpretation,
   ModelAction,
+  GuidedWorkflow,
   ModelActionInputVersion,
   NormalizedScore,
   OmrRun,
@@ -91,6 +93,7 @@ export class WorkspaceStore {
       analysisRecordIds: [],
       arrangementScoreIds: [],
       modelActionIds: [],
+      guidedWorkflowIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
       arrangementCandidateIds: [],
@@ -177,6 +180,7 @@ export class WorkspaceStore {
       ...parsed,
       schemaVersion: 6,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
+      guidedWorkflowIds: Array.isArray(parsed.guidedWorkflowIds) ? parsed.guidedWorkflowIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
         ? parsed.arrangementBranchIds
         : [],
@@ -209,6 +213,7 @@ export class WorkspaceStore {
     if (
       parsed.schemaVersion !== 6 ||
       !Array.isArray(parsed.modelActionIds) ||
+      !Array.isArray(parsed.guidedWorkflowIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
       !Array.isArray(parsed.arrangementSearchIds) ||
       !Array.isArray(parsed.arrangementCandidateIds) ||
@@ -774,6 +779,33 @@ export class WorkspaceStore {
   listModelActions(workspaceId: string): ModelAction[] {
     const workspace = this.get(workspaceId);
     return workspace.modelActionIds.map((id) => this.getModelAction(workspaceId, id));
+  }
+
+  saveGuidedWorkflow(workspaceId: string, workflow: GuidedWorkflow): GuidedWorkflow {
+    const workspace = this.get(workspaceId);
+    const decoded = Value.Decode(GuidedWorkflowSchema, workflow);
+    if (decoded.workspaceId !== workspaceId) {
+      throw new ApiRouteError("Guided workflow workspace identity mismatch", 400);
+    }
+    this.writeRecord(workspaceId, "guided-workflows", decoded.id, decoded);
+    this.linkRecord(workspace, "guidedWorkflowIds", decoded.id);
+    return decoded;
+  }
+
+  getGuidedWorkflow(workspaceId: string, workflowId: string): GuidedWorkflow {
+    return this.readRecord(
+      workspaceId,
+      "guided-workflows",
+      workflowId,
+      "workflow",
+      GuidedWorkflowSchema
+    );
+  }
+
+  listGuidedWorkflows(workspaceId: string): GuidedWorkflow[] {
+    return this.get(workspaceId).guidedWorkflowIds.map((id) =>
+      this.getGuidedWorkflow(workspaceId, id)
+    );
   }
 
   resolveCurrentInputVersions(
