@@ -453,6 +453,23 @@ describe("Greensleeves faithful arrangement service", () => {
       exactLute.contentDigest
     );
     expect(
+      luteResult.candidates.every(
+        (candidate) =>
+          candidate.phraseSearchEvidence?.arrangementPlanId === luteResult.arrangementPlan.id &&
+          candidate.phraseSearchEvidence.performanceBriefId === luteResult.performanceBrief.id &&
+          candidate.phraseSearchEvidence.instrumentInstanceDigest === exactLute.contentDigest &&
+          candidate.phraseSearchEvidence.luteTechniqueEvidence?.voiceLineage === "represented" &&
+          candidate.phraseSearchEvidence.luteTechniqueEvidence.styleBrise.status === "not_applied"
+      )
+    ).toBe(true);
+    expect(
+      luteResult.candidates.some((candidate) =>
+        candidate.phraseSearchEvidence?.transitions.some(
+          (transition) => (transition.rightHandBassAccessCount ?? 0) > 0
+        )
+      )
+    ).toBe(true);
+    expect(
       luteResult.performanceBrief.arrangementBriefSnapshot.targetConfigurations
     ).toContainEqual(
       expect.objectContaining({ id: "target.baroque-lute", instrumentInstance: exactLute })

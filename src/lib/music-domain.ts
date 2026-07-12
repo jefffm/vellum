@@ -1778,18 +1778,61 @@ export const ArrangementCandidateSchema = Type.Object(
             ),
             { minItems: 1 }
           ),
-          bassCapability: Type.Object(
-            {
-              status: Type.Union([
-                Type.Literal("bourdon_available"),
-                Type.Literal("reentrant_limited"),
-                Type.Literal("unknown"),
-              ]),
-              lowestSoundingPitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
-              bourdonCourses: Type.Array(Type.Integer({ minimum: 1 })),
-              rationale: Type.String({ minLength: 1 }),
-            },
-            { additionalProperties: false }
+          bassCapability: Type.Optional(
+            Type.Object(
+              {
+                status: Type.Union([
+                  Type.Literal("bourdon_available"),
+                  Type.Literal("reentrant_limited"),
+                  Type.Literal("unknown"),
+                ]),
+                lowestSoundingPitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
+                bourdonCourses: Type.Array(Type.Integer({ minimum: 1 })),
+                rationale: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
+          luteTechniqueEvidence: Type.Optional(
+            Type.Object(
+              {
+                stoppedCourseCount: Type.Integer({ minimum: 1 }),
+                diapasonCount: Type.Integer({ minimum: 1 }),
+                rightHandBassAccess: Type.Union([
+                  Type.Literal("represented"),
+                  Type.Literal("unknown"),
+                ]),
+                bassPreparation: Type.Union([Type.Literal("represented"), Type.Literal("unknown")]),
+                resonance: Type.Union([Type.Literal("represented"), Type.Literal("unknown")]),
+                damping: Type.Union([Type.Literal("represented"), Type.Literal("unknown")]),
+                sustain: Type.Union([Type.Literal("represented"), Type.Literal("unknown")]),
+                voiceLineage: Type.Literal("represented"),
+                styleBrise: Type.Object(
+                  {
+                    status: Type.Union([Type.Literal("applied"), Type.Literal("not_applied")]),
+                    planDecisionIds: Type.Array(IdSchema),
+                    historicalClaimIds: Type.Array(IdSchema),
+                    rationale: Type.String({ minLength: 1 }),
+                  },
+                  { additionalProperties: false }
+                ),
+              },
+              { additionalProperties: false }
+            )
+          ),
+          referenceComparison: Type.Optional(
+            Type.Object(
+              {
+                reference: Type.Literal("event_local_first_fit"),
+                selectedTotalMotion: Type.Number({ minimum: 0 }),
+                referenceTotalMotion: Type.Number({ minimum: 0 }),
+                selectedMaximumHandShift: Type.Number({ minimum: 0 }),
+                referenceMaximumHandShift: Type.Number({ minimum: 0 }),
+                selectedDiapasonPreparations: Type.Integer({ minimum: 0 }),
+                referenceDiapasonPreparations: Type.Integer({ minimum: 0 }),
+              },
+              { additionalProperties: false }
+            )
           ),
           transitions: Type.Array(
             Type.Object(
@@ -1824,6 +1867,13 @@ export const ArrangementCandidateSchema = Type.Object(
                 barreChanged: Type.Boolean(),
                 technique: Type.String({ minLength: 1 }),
                 violentCrossNeckJump: Type.Boolean(),
+                stoppedCourseFretDelta: Type.Optional(Type.Integer({ minimum: 0 })),
+                diapasonCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
+                preparedBassCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
+                resonatingBassCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
+                dampingRequiredCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
+                rightHandBassAccessCount: Type.Optional(Type.Integer({ minimum: 0 })),
+                styleBriseApplied: Type.Optional(Type.Boolean()),
               },
               { additionalProperties: false }
             )

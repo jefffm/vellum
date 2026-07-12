@@ -112,19 +112,19 @@ export function arrangeFaithfulPluckedString(
     const built: {
       events: ArrangementEvent[];
       phraseSearchEvidence?: PhraseSearchEvidence;
-    } =
-      model.exactInstance()?.profileId === "baroque-guitar-5"
-        ? buildBaroqueGuitarPhraseCandidate(
-            score,
-            principalEvents,
-            model,
-            plan.semitones,
-            strategy,
-            options
-          )
-        : {
-            events: buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy),
-          };
+    } = ["baroque-guitar-5", "baroque-lute-13"].includes(model.exactInstance()?.profileId ?? "")
+      ? buildHistoricalPluckedPhraseCandidate(
+          score,
+          analysis,
+          principalEvents,
+          model,
+          plan.semitones,
+          strategy,
+          options
+        )
+      : {
+          events: buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy),
+        };
     const events = built.events;
     const audit = applyPreservationPolicy(
       auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones),
@@ -463,8 +463,9 @@ function chooseTranspositionPlan(
   };
 }
 
-function buildBaroqueGuitarPhraseCandidate(
+function buildHistoricalPluckedPhraseCandidate(
   score: NormalizedScore,
+  analysis: AnalysisRecord,
   principalEvents: Array<
     Extract<ScoreEvent, { type: "note" }> | Extract<ScoreEvent, { type: "rest" }>
   >,
@@ -474,8 +475,8 @@ function buildBaroqueGuitarPhraseCandidate(
   options: ArrangementOptions
 ): { events: ArrangementEvent[]; phraseSearchEvidence: PhraseSearchEvidence } {
   const instance = model.exactInstance();
-  if (!instance || instance.profileId !== "baroque-guitar-5") {
-    throw new Error("Phrase search requires an exact baroque-guitar Instrument Instance");
+  if (!instance || !["baroque-guitar-5", "baroque-lute-13"].includes(instance.profileId)) {
+    throw new Error("Historical phrase search requires an exact supported Instrument Instance");
   }
   const limits = options.phraseSearch ?? {
     frontierWidth: 32,
@@ -484,7 +485,11 @@ function buildBaroqueGuitarPhraseCandidate(
   if (limits.frontierWidth < 1 || limits.maximumExpandedStates < 1) {
     throw new Error("Phrase-search limits must be positive integers");
   }
-  const technique = selectBaroqueGuitarTechnique(options.performanceBrief, instance);
+  const baroqueGuitar = instance.profileId === "baroque-guitar-5";
+  const technique = baroqueGuitar
+    ? selectBaroqueGuitarTechnique(options.performanceBrief, instance)
+    : "right_hand_thumb";
+  const styleBrise = styleBriseAuthorization(options.arrangementPlan, analysis);
   const effectiveFrontierWidth = Math.min(limits.frontierWidth, 8);
   let expandedStates = 0;
   let frontier: PhraseState[] = [
@@ -566,9 +571,11 @@ function buildBaroqueGuitarPhraseCandidate(
           principalPosition,
           positions,
           handPosition,
-          technique
+          technique,
+          instance.profileId,
+          styleBrise.status === "applied"
         );
-        if (transition.violentCrossNeckJump) continue;
+        if (baroqueGuitar && transition.violentCrossNeckJump) continue;
         const occupiedFingers = positions.flatMap((position) =>
           position.leftHandFinger
             ? [{ finger: position.leftHandFinger, fret: position.fret, course: position.course }]
@@ -624,6 +631,12 @@ function buildBaroqueGuitarPhraseCandidate(
     (left, right) =>
       left.cost - right.cost || phraseStateKey(left).localeCompare(phraseStateKey(right))
   )[0]!;
+  const referenceComparison = baroqueGuitar
+    ? undefined
+    : compareWithEventLocalFirstFit(
+        selected.events,
+        buildCandidateEvents(score, principalEvents, model, semitones, strategy)
+      );
   return {
     events: selected.events,
     phraseSearchEvidence: {
@@ -635,38 +648,109 @@ function buildBaroqueGuitarPhraseCandidate(
       expandedStates,
       maximumExpandedStates: limits.maximumExpandedStates,
       frontierWidth: effectiveFrontierWidth,
-      stateDimensions: [
-        "left_hand_fingers",
-        "barre_frets",
-        "hand_position",
-        "held_notes",
-        "occupied_courses",
-        "exact_stringing",
-        "applicable_technique",
-      ],
+      stateDimensions: baroqueGuitar
+        ? [
+            "left_hand_fingers",
+            "barre_frets",
+            "hand_position",
+            "held_notes",
+            "occupied_courses",
+            "exact_stringing",
+            "applicable_technique",
+          ]
+        : [
+            "left_hand_stopped_courses",
+            "right_hand_diapason_access",
+            "prepared_bass_courses",
+            "resonating_bass_courses",
+            "damping_requirements",
+            "held_notes",
+            "voice_lineage",
+            "exact_bass_tuning",
+            "style_brise_authorization",
+          ],
       techniqueApplicability: instance.techniqueApplicability.map((claim) => ({
         technique: claim.technique,
         status: claim.status,
         evidenceIds: claim.evidenceIds,
       })),
-      bassCapability: {
-        status: instance.courses.some((course) =>
-          course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
-        )
-          ? "bourdon_available"
-          : "reentrant_limited",
-        lowestSoundingPitch: model.soundingRange().lowest,
-        bourdonCourses: instance.courses
-          .filter((course) =>
-            course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
-          )
-          .map((course) => course.course),
-        rationale:
-          "Bass claims derive from the exact constituent-string set; re-entrant courses are not treated as a complete low foundation.",
-      },
+      ...(baroqueGuitar
+        ? {
+            bassCapability: {
+              status: instance.courses.some((course) =>
+                course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
+              )
+                ? ("bourdon_available" as const)
+                : ("reentrant_limited" as const),
+              lowestSoundingPitch: model.soundingRange().lowest,
+              bourdonCourses: instance.courses
+                .filter((course) =>
+                  course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
+                )
+                .map((course) => course.course),
+              rationale:
+                "Bass claims derive from the exact constituent-string set; re-entrant courses are not treated as a complete low foundation.",
+            },
+          }
+        : {
+            luteTechniqueEvidence: {
+              stoppedCourseCount: instance.courses.filter((course) => course.stopped).length,
+              diapasonCount: instance.courses.filter((course) => !course.stopped).length,
+              rightHandBassAccess: "represented" as const,
+              bassPreparation: "represented" as const,
+              resonance: "represented" as const,
+              damping: "represented" as const,
+              sustain: "represented" as const,
+              voiceLineage: "represented" as const,
+              styleBrise,
+            },
+          }),
+      ...(referenceComparison ? { referenceComparison } : {}),
       transitions: selected.transitions,
     },
   };
+}
+
+function compareWithEventLocalFirstFit(
+  selected: ArrangementEvent[],
+  reference: ArrangementEvent[]
+): NonNullable<PhraseSearchEvidence["referenceComparison"]> {
+  const selectedSummary = physicalMotionSummary(selected);
+  const referenceSummary = physicalMotionSummary(reference);
+  return {
+    reference: "event_local_first_fit",
+    selectedTotalMotion: selectedSummary.totalMotion,
+    referenceTotalMotion: referenceSummary.totalMotion,
+    selectedMaximumHandShift: selectedSummary.maximumHandShift,
+    referenceMaximumHandShift: referenceSummary.maximumHandShift,
+    selectedDiapasonPreparations: selectedSummary.diapasonPreparations,
+    referenceDiapasonPreparations: referenceSummary.diapasonPreparations,
+  };
+}
+
+function physicalMotionSummary(events: ArrangementEvent[]): {
+  totalMotion: number;
+  maximumHandShift: number;
+  diapasonPreparations: number;
+} {
+  let totalMotion = 0;
+  let maximumHandShift = 0;
+  let diapasonPreparations = 0;
+  let previous: ArrangementPosition[] = [];
+  for (const event of events) {
+    if (event.type === "rest") continue;
+    const priorHand = positionCentroid(previous);
+    const nextHand = positionCentroid(event.positions);
+    const handShift = Math.abs(priorHand - nextHand);
+    maximumHandShift = Math.max(maximumHandShift, handShift);
+    totalMotion += transitionCost(event.positions, previous) + handShift;
+    const previousCourses = new Set(previous.map((position) => position.course));
+    diapasonPreparations += event.positions.filter(
+      (position) => position.quality === "diapason" && !previousCourses.has(position.course)
+    ).length;
+    previous = event.positions;
+  }
+  return { totalMotion, maximumHandShift, diapasonPreparations };
 }
 
 function annotatePhraseFingering(
@@ -699,7 +783,9 @@ function buildPhraseTransition(
   principalTo: ArrangementPosition,
   positions: ArrangementPosition[],
   handPositionTo: number,
-  technique: string
+  technique: string,
+  profileId: string,
+  styleBriseApplied: boolean
 ): PhraseSearchEvidence["transitions"][number] {
   const previousCourses = new Set(state.occupiedCourses);
   const nextCourses = new Set(positions.map((position) => position.course));
@@ -709,6 +795,21 @@ function buildPhraseTransition(
   const courseDisplacement = state.principalPosition
     ? Math.abs(state.principalPosition.course - principalTo.course)
     : 0;
+  const diapasonCourses = positions
+    .filter((position) => position.quality === "diapason")
+    .map((position) => position.course)
+    .sort((left, right) => left - right);
+  const priorDiapasons = state.positions
+    .filter((position) => position.quality === "diapason")
+    .map((position) => position.course);
+  const stoppedCourseFretDelta = positions
+    .filter((position) => position.quality !== "diapason")
+    .reduce((maximum, position) => {
+      const prior = state.positions.find(
+        (candidate) => candidate.course === position.course && candidate.quality !== "diapason"
+      );
+      return Math.max(maximum, prior ? Math.abs(prior.fret - position.fret) : position.fret);
+    }, 0);
   return {
     fromEventId: state.events.at(-1)?.id,
     toEventId,
@@ -737,6 +838,19 @@ function buildPhraseTransition(
     violentCrossNeckJump: state.principalPosition
       ? isViolentCrossNeckJump(state.principalPosition, principalTo)
       : false,
+    ...(profileId === "baroque-lute-13"
+      ? {
+          stoppedCourseFretDelta,
+          diapasonCourses,
+          preparedBassCourses: diapasonCourses.filter(
+            (course) => !state.occupiedCourses.includes(course)
+          ),
+          resonatingBassCourses: priorDiapasons.filter((course) => nextCourses.has(course)),
+          dampingRequiredCourses: priorDiapasons.filter((course) => !nextCourses.has(course)),
+          rightHandBassAccessCount: diapasonCourses.length,
+          styleBriseApplied,
+        }
+      : {}),
   };
 }
 
@@ -823,6 +937,50 @@ function selectBaroqueGuitarTechnique(
     return "punteado";
   }
   return "technique_unspecified";
+}
+
+export function styleBriseAuthorization(
+  plan: ArrangementPlan | undefined,
+  analysis: AnalysisRecord
+): NonNullable<PhraseSearchEvidence["luteTechniqueEvidence"]>["styleBrise"] {
+  const planDecisions = (plan?.decisions ?? []).filter((decision) =>
+    `${decision.dimension} ${decision.selectedValue}`.toLowerCase().match(/style[_ -]?bris/)
+  );
+  const historicalClaims = analysis.claims.filter(
+    (claim) =>
+      `${claim.kind} ${claim.statement}`.toLowerCase().match(/style[_ -]?bris/) &&
+      claim.evidence?.some((evidence) => evidence.kind === "historical_profile")
+  );
+  const supportedPairs = planDecisions.flatMap((decision) =>
+    historicalClaims
+      .filter((claim) => styleContextsOverlap(decision, claim))
+      .map((claim) => ({ decisionId: decision.id, claimId: claim.id }))
+  );
+  const planDecisionIds = [...new Set(supportedPairs.map((pair) => pair.decisionId))];
+  const historicalClaimIds = [...new Set(supportedPairs.map((pair) => pair.claimId))];
+  const applied = planDecisionIds.length > 0 && historicalClaimIds.length > 0;
+  return {
+    status: applied ? "applied" : "not_applied",
+    planDecisionIds,
+    historicalClaimIds,
+    rationale: applied
+      ? "Style brisé is authorized by both an exact Plan Decision and historical-profile evidence for this scope."
+      : "Style brisé is not applied without both an exact Plan Decision and historical-profile evidence for this scope.",
+  };
+}
+
+function styleContextsOverlap(
+  decision: ArrangementPlan["decisions"][number],
+  claim: AnalysisRecord["claims"][number]
+): boolean {
+  if (!claim.scope) return true;
+  const decisionEvents = new Set(decision.scope.eventIds);
+  const decisionMeasures = new Set(decision.scope.measureIds);
+  if (decisionEvents.size === 0 && decisionMeasures.size === 0) return true;
+  return (
+    claim.scope.eventIds.some((id) => decisionEvents.has(id)) ||
+    claim.scope.measureIds.some((id) => decisionMeasures.has(id))
+  );
 }
 
 function buildCandidateEvents(

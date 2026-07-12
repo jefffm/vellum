@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T24",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T21:26:20Z",
+  "requirements": {
+    "AI-ICC-015": {
+      "status": "partial",
+      "remaining": "T25 completes sustain and damping state for classical guitar"
+    },
+    "AI-ICC-016": {
+      "status": "machine_verified",
+      "remaining": "target-player authority remains unknown"
+    },
+    "AI-ICC-022": {
+      "status": "partial",
+      "remaining": "T25 completes the third priority target adapter"
+    },
+    "AI-ICC-040": {
+      "status": "machine_verified_for_baroque_lute",
+      "remaining": "T26 adds differential omitted-history verification"
+    },
+    "AI-ICC-064": {
+      "status": "machine_verified",
+      "remaining": "T42 adds target-player evidence"
+    },
+    "AI-ICC-065": {
+      "status": "machine_verified",
+      "remaining": "T42 adds historical, notation, and target-player review"
+    },
+    "AI-DEL-031": {
+      "status": "partial",
+      "remaining": "T25 completes phrase realization for classical guitar"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1017,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Lute phrase state separates stopped-course left-hand work from right-hand diapason access",
+      "Transitions record bass preparation, continuing resonance, damping requirements, sustain, and source voice lineage",
+      "Exact Plan, Performance Brief, Instrument Instance, and Bass Tuning identities survive candidate persistence",
+      "Style brise requires both a scoped Plan Decision and overlapping historical-profile Analysis Claim",
+      "Missing Plan, missing history, and scope mismatch leave style brise explicitly not applied",
+      "Greensleeves economical phrase search has strictly lower modeled total motion than event-local first fit",
+      "Principal Voice preservation, diapason use, French tablature, exact course signs, and canonical playback remain intact",
+      "Real LilyPond tests retain course-10 ///a and D2 without duplicate playback"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.3736849c-ecca-4a52-84af-bff4c64beb3a",
+      "cardId": "evaluation-card.d6f36883-fbf7-49b2-ba00-512894613c35",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalPhysicalAndOwnerAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1017 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t24-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "0ee5e4cb5013a5b68cca0f4f671573bad24871cf8734cf55fdc7f3dccf5a547e"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/24-baroque-lute-phrase-search.md",
+      "sha256": "02c4ccfaa62472ca5c3da65d6504e13e775db76cea2ab8d266a0eef752e59f04"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "cf9d9ec5a73a9b89ecaac6c86de10bb75fc97e656083b703e906ffbf8ad30d07"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.ts",
+      "sha256": "9a69ab7c5603e6050b629fb0f45ccbbff67dc007e4e553dbd0ea90427fc2bf35"
+    },
+    {
+      "path": "src/lib/baroque-lute-arranger.test.ts",
+      "sha256": "2c6a91ced29b899d15171e960024c95915cd1321ddf24f992efcca6faa37dd0a"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "cb2629bbe29fd37b5a5a1c529b79182aaad0f72ebf555fb3bb69c61d6e1f54b4"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "9541174df3c20f665fbbcb8ff75ea567484edbc748d2333a2f4ad828898d545b"
+    }
+  ]
+}
