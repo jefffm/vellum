@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import {
   arrangeFaithfulPluckedString,
   auditFaithfulPrincipalVoice,
+  PhraseSearchExhaustedError,
 } from "../../lib/baroque-guitar-arranger.js";
 import { InstrumentModel } from "../../lib/instrument-model.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
@@ -576,10 +577,16 @@ export class ArrangementService {
           createdAt: timestamp,
           targetConfiguration,
           preservationPolicy: input.preservationPolicy,
+          arrangementPlan: planning.arrangementPlan,
+          performanceBrief: planning.performanceBrief,
+          phraseSearch: {
+            frontierWidth: searchProtocol.attemptConfiguration.width,
+            maximumExpandedStates: searchProtocol.attemptConfiguration.maximumExpandedStates,
+          },
         });
       }
     } catch (error) {
-      this.store.saveArrangementSearch(workspaceId, {
+      const exhaustedSearch = this.store.saveArrangementSearch(workspaceId, {
         ...arrangementSearch,
         status: "failed",
         outcome: {
@@ -594,6 +601,13 @@ export class ArrangementService {
         completedAt: timestamp,
       });
       if (error instanceof ApiRouteError) throw error;
+      if (error instanceof PhraseSearchExhaustedError) {
+        throw new ApiRouteError(error.message, 409, "search_exhausted", {
+          arrangementSearch: exhaustedSearch,
+          expandedStates: error.expandedStates,
+          maximumExpandedStates: error.maximumExpandedStates,
+        });
+      }
       const specialistDecisions = planning.arrangementPlan.decisions.filter((decision) =>
         ["creative_design", "continuo_realization", "imitative_voice_distribution"].includes(
           decision.dimension

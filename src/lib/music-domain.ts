@@ -1751,6 +1751,87 @@ export const ArrangementCandidateSchema = Type.Object(
       },
       { additionalProperties: false }
     ),
+    phraseSearchEvidence: Type.Optional(
+      Type.Object(
+        {
+          schemaVersion: Type.Integer({ minimum: 1 }),
+          arrangementPlanId: Type.Optional(IdSchema),
+          performanceBriefId: Type.Optional(IdSchema),
+          instrumentInstanceDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+          completeness: Type.Literal("bounded"),
+          expandedStates: Type.Integer({ minimum: 0 }),
+          maximumExpandedStates: Type.Integer({ minimum: 1 }),
+          frontierWidth: Type.Integer({ minimum: 1 }),
+          stateDimensions: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+          techniqueApplicability: Type.Array(
+            Type.Object(
+              {
+                technique: Type.String({ minLength: 1 }),
+                status: Type.Union([
+                  Type.Literal("applicable"),
+                  Type.Literal("not_applicable"),
+                  Type.Literal("unknown"),
+                ]),
+                evidenceIds: Type.Array(IdSchema, { minItems: 1 }),
+              },
+              { additionalProperties: false }
+            ),
+            { minItems: 1 }
+          ),
+          bassCapability: Type.Object(
+            {
+              status: Type.Union([
+                Type.Literal("bourdon_available"),
+                Type.Literal("reentrant_limited"),
+                Type.Literal("unknown"),
+              ]),
+              lowestSoundingPitch: Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }),
+              bourdonCourses: Type.Array(Type.Integer({ minimum: 1 })),
+              rationale: Type.String({ minLength: 1 }),
+            },
+            { additionalProperties: false }
+          ),
+          transitions: Type.Array(
+            Type.Object(
+              {
+                fromEventId: Type.Optional(IdSchema),
+                toEventId: IdSchema,
+                principalFrom: Type.Optional(
+                  Type.Object(
+                    {
+                      course: Type.Integer({ minimum: 1 }),
+                      fret: Type.Integer({ minimum: 0 }),
+                    },
+                    { additionalProperties: false }
+                  )
+                ),
+                principalTo: Type.Object(
+                  {
+                    course: Type.Integer({ minimum: 1 }),
+                    fret: Type.Integer({ minimum: 0 }),
+                  },
+                  { additionalProperties: false }
+                ),
+                fretDisplacement: Type.Integer({ minimum: 0 }),
+                courseDisplacement: Type.Integer({ minimum: 0 }),
+                handPositionFrom: Type.Optional(Type.Number({ minimum: 0 })),
+                handPositionTo: Type.Number({ minimum: 0 }),
+                handPositionDelta: Type.Number({ minimum: 0 }),
+                retainedCourses: Type.Array(Type.Integer({ minimum: 1 })),
+                introducedCourses: Type.Array(Type.Integer({ minimum: 1 })),
+                releasedCourses: Type.Array(Type.Integer({ minimum: 1 })),
+                heldPitchCount: Type.Integer({ minimum: 0 }),
+                barreChanged: Type.Boolean(),
+                technique: Type.String({ minLength: 1 }),
+                violentCrossNeckJump: Type.Boolean(),
+              },
+              { additionalProperties: false }
+            )
+          ),
+        },
+        { additionalProperties: false }
+      )
+    ),
     arrangementSearchId: Type.Optional(IdSchema),
     derivationChoices: Type.Optional(
       Type.Array(

@@ -171,6 +171,26 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(result.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
       exactGuitar.contentDigest
     );
+    expect(
+      result.candidates.every(
+        (candidate) =>
+          candidate.phraseSearchEvidence?.arrangementPlanId === result.arrangementPlan.id &&
+          candidate.phraseSearchEvidence.performanceBriefId === result.performanceBrief.id &&
+          candidate.phraseSearchEvidence.instrumentInstanceDigest === exactGuitar.contentDigest &&
+          candidate.phraseSearchEvidence.completeness === "bounded" &&
+          candidate.phraseSearchEvidence.transitions.every(
+            (transition) => !transition.violentCrossNeckJump
+          )
+      )
+    ).toBe(true);
+    expect(result.candidates[0]!.phraseSearchEvidence!.techniqueApplicability).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ technique: "rasgueado", status: "applicable" }),
+        expect.objectContaining({ technique: "punteado", status: "applicable" }),
+        expect.objectContaining({ technique: "campanella", status: "applicable" }),
+        expect.objectContaining({ technique: "damping", status: "applicable" }),
+      ])
+    );
     expect(result.performanceBrief.arrangementBriefSnapshot.targetConfigurations).toContainEqual(
       expect.objectContaining({
         id: "target.baroque-guitar",

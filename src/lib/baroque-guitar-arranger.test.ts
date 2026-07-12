@@ -9,6 +9,8 @@ import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
 import {
   arrangeFaithfulBaroqueGuitar,
   auditFaithfulPrincipalVoice,
+  isViolentCrossNeckJump,
+  PhraseSearchExhaustedError,
 } from "./baroque-guitar-arranger.js";
 import { noteToMidi, transposeNote } from "./pitch.js";
 import { arrangeCreativeParaphrase } from "./creative-arranger.js";
@@ -212,6 +214,87 @@ describe("faithful baroque-guitar arrangement search", () => {
       Math.max(...shifts.map((shift) => shift.handShift)),
       JSON.stringify(shifts)
     ).toBeLessThan(5);
+    const evidence = result.candidates.find(
+      (candidate) => candidate.id === result.selected.selectedCandidateId
+    )!.phraseSearchEvidence!;
+    expect(evidence).toMatchObject({
+      schemaVersion: 1,
+      completeness: "bounded",
+      instrumentInstanceDigest: fixture.model.exactInstance()!.contentDigest,
+      bassCapability: {
+        status: "reentrant_limited",
+        lowestSoundingPitch: "G3",
+        bourdonCourses: [],
+      },
+      stateDimensions: expect.arrayContaining([
+        "left_hand_fingers",
+        "barre_frets",
+        "hand_position",
+        "held_notes",
+        "occupied_courses",
+        "exact_stringing",
+        "applicable_technique",
+      ]),
+    });
+    expect(evidence.expandedStates).toBeGreaterThan(0);
+    expect(evidence.transitions).toHaveLength(
+      result.selected.events.filter((event) => event.type !== "rest").length
+    );
+    expect(evidence.transitions.every((transition) => !transition.violentCrossNeckJump)).toBe(true);
+    expect(
+      evidence.transitions.every(
+        (transition) =>
+          Number.isFinite(transition.fretDisplacement) &&
+          Number.isFinite(transition.courseDisplacement) &&
+          Number.isFinite(transition.handPositionDelta) &&
+          Array.isArray(transition.retainedCourses) &&
+          typeof transition.barreChanged === "boolean"
+      )
+    ).toBe(true);
+  });
+
+  it("rejects the observed sixth-fret fifth-course to first-fret second-course jump", () => {
+    expect(isViolentCrossNeckJump({ course: 5, fret: 6 }, { course: 2, fret: 1 })).toBe(true);
+    expect(isViolentCrossNeckJump({ course: 5, fret: 6 }, { course: 4, fret: 2 })).toBe(false);
+  });
+
+  it("reports bounded exhaustion without claiming musical impossibility", () => {
+    expect(() =>
+      arrangeFaithfulBaroqueGuitar(fixture.score, fixture.analysis, fixture.model, {
+        arrangementId: "arrangement.greensleeves-bounded-exhaustion",
+        createdAt: "2026-07-10T14:00:00.000Z",
+        targetConfiguration: {
+          id: "target.baroque-guitar",
+          instrumentId: "baroque-guitar-5",
+          role: "solo",
+          stringing: "french",
+          instrumentInstance: fixture.model.exactInstance(),
+          notationLayouts: ["french-letter-tablature"],
+          deliverables: ["pdf", "audio-preview"],
+        },
+        phraseSearch: { frontierWidth: 1, maximumExpandedStates: 1 },
+      })
+    ).toThrowError(PhraseSearchExhaustedError);
+    try {
+      arrangeFaithfulBaroqueGuitar(fixture.score, fixture.analysis, fixture.model, {
+        arrangementId: "arrangement.greensleeves-bounded-message",
+        createdAt: "2026-07-10T14:00:00.000Z",
+        targetConfiguration: {
+          id: "target.baroque-guitar",
+          instrumentId: "baroque-guitar-5",
+          role: "solo",
+          stringing: "french",
+          instrumentInstance: fixture.model.exactInstance(),
+          notationLayouts: ["french-letter-tablature"],
+          deliverables: ["pdf", "audio-preview"],
+        },
+        phraseSearch: { frontierWidth: 1, maximumExpandedStates: 1 },
+      });
+    } catch (error) {
+      expect(error).toBeInstanceOf(PhraseSearchExhaustedError);
+      expect((error as Error).message).toMatch(/exhausted/i);
+      expect((error as Error).message).toMatch(/no impossibility claim/i);
+    }
   });
 
   it("fails the audit if one protected melody event is dropped", () => {

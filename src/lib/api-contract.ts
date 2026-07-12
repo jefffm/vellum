@@ -11,6 +11,7 @@ export const apiErrorCodes = [
   "service_unavailable",
   "analysis_review_required",
   "score_review_required",
+  "search_exhausted",
   "plan_conflict",
   "internal_error",
 ] as const;

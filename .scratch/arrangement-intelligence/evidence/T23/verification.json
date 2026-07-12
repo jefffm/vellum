@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T23",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T21:15:44Z",
+  "requirements": {
+    "AI-ICC-022": {
+      "status": "partial",
+      "remaining": "T24 and T25 add target-specific lute and classical-guitar search state"
+    },
+    "AI-ICC-040": {
+      "status": "machine_verified_for_baroque_guitar",
+      "remaining": "T26 adds differential omitted-history tests and cross-adapter verification"
+    },
+    "AI-ICC-060": {
+      "status": "machine_verified",
+      "remaining": "historical and player suitability authority remains unknown"
+    },
+    "AI-ICC-061": {
+      "status": "machine_verified",
+      "remaining": "T41 adds player/listener recognition evidence"
+    },
+    "AI-ICC-062": {
+      "status": "machine_verified",
+      "remaining": "T41 adds exact physical playtest evidence"
+    },
+    "AI-ICC-072": {
+      "status": "partial",
+      "remaining": "T25/T29 add distinct outcomes for differing tempo, proficiency, and reliability context"
+    },
+    "AI-DEL-031": {
+      "status": "partial",
+      "remaining": "T24 and T25 complete phrase realization for the other two priority targets"
+    },
+    "AI-DEL-041": {
+      "status": "partial",
+      "remaining": "T24 through T26 complete cross-target outcome and replay coverage"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1016,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Bounded deterministic beam search carries finger occupation, barre, hand position, held notes, courses, exact stringing, and applicable technique across the complete Principal Voice",
+      "Persisted candidates bind exact Arrangement Plan, Performance Brief, and Instrument Instance identities",
+      "Transitions retain observable course, fret, hand, held-note, course-set, barre, and technique features in addition to derived path cost",
+      "The named course-5 fret-6 to course-2 fret-1 Greensleeves counterexample is rejected",
+      "Complete Greensleeves pitch, rhythm, order, contour, cadence, and top-line preservation audits pass",
+      "Rasgueado, punteado, campanella, barre, damping, and re-entrant bass limitation remain separate evidence",
+      "A one-state budget produces typed search exhaustion with explicit no-impossibility wording",
+      "Service persistence preserves bounded evidence and does not convert exhaustion into a false infeasibility Plan Conflict",
+      "Real Greensleeves tablature, PDF, SVG, MIDI, and Audio Preview compile from the phrase-selected canonical score"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.423c300c-fca4-405a-a8d8-ff997b110a00",
+      "cardId": "evaluation-card.b99c8d01-c97e-45c1-b947-43410586c5b2",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalPhysicalAndOwnerAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1016 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t23-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "d690121f1c53f84963ab9b285a6dd40d698982116aa46a3e50151f4bf786c3e1"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/23-baroque-guitar-phrase-search.md",
+      "sha256": "16dea92347ea2b08d03c3b18f12ffec8a2a2bee507ecd16c41c5b8df9e6b710d"
+    },
+    {
+      "path": "src/lib/api-contract.ts",
+      "sha256": "1a4b003a87fee3c45c793a921cbb5322a21b1b2ef7e8ff41e2f8c16229f37a41"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "b826258cdecf0455029591db414eea9649bebb34542b6fedda558f4cab6846e7"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.ts",
+      "sha256": "71cefef400a42386c8f3a99512d2bb1cfa7d827eabc46c82de342cbaf52436b2"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.test.ts",
+      "sha256": "47f878d26a291cb0d04e9d2291028f2945bfd0c5e1e6e441be9da4324745d558"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "66688166932957ff992066293051f559ca2653cb88287ed988cf42cb21385681"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "1330181090869b134b392764f3394c95249f4393255ca4cdf4de41253cba39af"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "60a37232f865b6cc5a7a07e967390cd19855e77ac7d05a486ab2cad930d713a0"
+    }
+  ]
+}

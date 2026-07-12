@@ -3,9 +3,11 @@ import type {
   AnalysisRecord,
   ArrangementCandidate,
   ArrangementEvent,
+  ArrangementPlan,
   ArrangementPosition,
   ArrangementScore,
   NormalizedScore,
+  PerformanceBrief,
   PreservationAudit,
   Rational,
   ScoreEvent,
@@ -21,6 +23,12 @@ type ArrangementOptions = {
   createdAt: string;
   targetConfiguration: TargetConfiguration;
   preservationPolicy?: PreservationPolicy;
+  arrangementPlan?: ArrangementPlan;
+  performanceBrief?: PerformanceBrief;
+  phraseSearch?: {
+    frontierWidth: number;
+    maximumExpandedStates: number;
+  };
 };
 
 export type ArrangementSearchResult = {
@@ -36,6 +44,40 @@ type VoicingChoice = {
   averageFret: number;
   openStringCount: number;
 };
+
+type PhraseSearchEvidence = NonNullable<ArrangementCandidate["phraseSearchEvidence"]>;
+
+type PhraseState = {
+  events: ArrangementEvent[];
+  positions: ArrangementPosition[];
+  principalPosition?: ArrangementPosition;
+  handPosition?: number;
+  occupiedFingers: Array<{ finger: number; fret: number; course: number }>;
+  barreFrets: number[];
+  heldNotes: string[];
+  occupiedCourses: number[];
+  technique: string;
+  transitions: PhraseSearchEvidence["transitions"];
+  cost: number;
+};
+
+export class PhraseSearchExhaustedError extends Error {
+  constructor(
+    message: string,
+    readonly expandedStates: number,
+    readonly maximumExpandedStates: number
+  ) {
+    super(message);
+    this.name = "PhraseSearchExhaustedError";
+  }
+}
+
+export function isViolentCrossNeckJump(
+  from: Pick<ArrangementPosition, "course" | "fret">,
+  to: Pick<ArrangementPosition, "course" | "fret">
+): boolean {
+  return Math.abs(from.fret - to.fret) >= 5 && Math.abs(from.course - to.course) >= 3;
+}
 
 export function arrangeFaithfulPluckedString(
   score: NormalizedScore,
@@ -67,7 +109,23 @@ export function arrangeFaithfulPluckedString(
   const plan = chooseTranspositionPlan(score, principalEvents, model);
   const strategies = ["source-coverage", "economical-fingering"] as const;
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
-    const events = buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy);
+    const built: {
+      events: ArrangementEvent[];
+      phraseSearchEvidence?: PhraseSearchEvidence;
+    } =
+      model.exactInstance()?.profileId === "baroque-guitar-5"
+        ? buildBaroqueGuitarPhraseCandidate(
+            score,
+            principalEvents,
+            model,
+            plan.semitones,
+            strategy,
+            options
+          )
+        : {
+            events: buildCandidateEvents(score, principalEvents, model, plan.semitones, strategy),
+          };
+    const events = built.events;
     const audit = applyPreservationPolicy(
       auditFaithfulPrincipalVoice(score, analysis, events, plan.semitones),
       options.preservationPolicy ?? "faithful_reduction"
@@ -80,6 +138,7 @@ export function arrangeFaithfulPluckedString(
       events,
       audit,
       metrics,
+      ...(built.phraseSearchEvidence ? { phraseSearchEvidence: built.phraseSearchEvidence } : {}),
     };
   });
   const survivors = candidates.filter((candidate) => candidate.status === "survived");
@@ -402,6 +461,368 @@ function chooseTranspositionPlan(
         ? "The source key fits the complete Principal Voice on the target instrument."
         : `Uniformly transpose ${semitones} semitones so every Principal Voice event is playable while preserving intervals and rhythm.`,
   };
+}
+
+function buildBaroqueGuitarPhraseCandidate(
+  score: NormalizedScore,
+  principalEvents: Array<
+    Extract<ScoreEvent, { type: "note" }> | Extract<ScoreEvent, { type: "rest" }>
+  >,
+  model: InstrumentModel,
+  semitones: number,
+  strategy: "source-coverage" | "economical-fingering",
+  options: ArrangementOptions
+): { events: ArrangementEvent[]; phraseSearchEvidence: PhraseSearchEvidence } {
+  const instance = model.exactInstance();
+  if (!instance || instance.profileId !== "baroque-guitar-5") {
+    throw new Error("Phrase search requires an exact baroque-guitar Instrument Instance");
+  }
+  const limits = options.phraseSearch ?? {
+    frontierWidth: 32,
+    maximumExpandedStates: 10_000,
+  };
+  if (limits.frontierWidth < 1 || limits.maximumExpandedStates < 1) {
+    throw new Error("Phrase-search limits must be positive integers");
+  }
+  const technique = selectBaroqueGuitarTechnique(options.performanceBrief, instance);
+  const effectiveFrontierWidth = Math.min(limits.frontierWidth, 8);
+  let expandedStates = 0;
+  let frontier: PhraseState[] = [
+    {
+      events: [],
+      positions: [],
+      occupiedFingers: [],
+      barreFrets: [],
+      heldNotes: [],
+      occupiedCourses: [],
+      technique,
+      transitions: [],
+      cost: 0,
+    },
+  ];
+
+  for (const [index, sourceEvent] of principalEvents.entries()) {
+    const eventId = `arrangement-event.${strategy}.${index + 1}`;
+    if (sourceEvent.type === "rest") {
+      frontier = frontier.map((state) => ({
+        ...state,
+        events: [
+          ...state.events,
+          {
+            id: eventId,
+            type: "rest",
+            measureId: sourceEvent.measureId,
+            onset: sourceEvent.onset,
+            duration: sourceEvent.duration,
+            pitches: [],
+            positions: [],
+            sourceEventIds: [sourceEvent.id],
+          },
+        ],
+        heldNotes: [],
+      }));
+      continue;
+    }
+
+    const melodyPitch = transposeNote(sourceEvent.pitch, semitones);
+    const sourceHarmony = sourceEventsAt(score, sourceEvent.measureId, sourceEvent.onset);
+    const choices = enumerateVoicings(melodyPitch, sourceHarmony, model, semitones)
+      .sort((left, right) =>
+        strategy === "source-coverage"
+          ? right.sourcePitchClassCoverage - left.sourcePitchClassCoverage ||
+            right.openStringCount - left.openStringCount ||
+            left.averageFret - right.averageFret
+          : left.averageFret - right.averageFret ||
+            right.sourcePitchClassCoverage - left.sourcePitchClassCoverage ||
+            right.openStringCount - left.openStringCount
+      )
+      .slice(0, 12);
+    const successors: PhraseState[] = [];
+    for (const state of frontier) {
+      for (const choice of choices) {
+        expandedStates += 1;
+        if (expandedStates > limits.maximumExpandedStates) {
+          throw new PhraseSearchExhaustedError(
+            `Bounded phrase search exhausted after ${limits.maximumExpandedStates} expanded states; no impossibility claim is made`,
+            expandedStates,
+            limits.maximumExpandedStates
+          );
+        }
+        const positions = annotatePhraseFingering(
+          choice.positions,
+          eventId,
+          sourceEvent.tie === "start" ? `arrangement-event.${strategy}.${index + 2}` : undefined
+        );
+        const principalPosition = positions.find((position) =>
+          model
+            .soundingPitches(position.course, position.fret)
+            .some((pitch) => noteToMidi(pitch) === noteToMidi(melodyPitch))
+        );
+        if (!principalPosition) continue;
+        const handPosition = positionCentroid(positions);
+        const transition = buildPhraseTransition(
+          state,
+          eventId,
+          principalPosition,
+          positions,
+          handPosition,
+          technique
+        );
+        if (transition.violentCrossNeckJump) continue;
+        const occupiedFingers = positions.flatMap((position) =>
+          position.leftHandFinger
+            ? [{ finger: position.leftHandFinger, fret: position.fret, course: position.course }]
+            : []
+        );
+        if (!fingerOccupationIsPossible(occupiedFingers)) continue;
+        const arranged: ArrangementEvent = {
+          id: eventId,
+          type: choice.pitches.length > 1 ? "chord" : "note",
+          measureId: sourceEvent.measureId,
+          onset: sourceEvent.onset,
+          duration: sourceEvent.duration,
+          pitches: choice.pitches,
+          positions,
+          sourceEventIds: Array.from(new Set([sourceEvent.id, ...choice.sourceEventIds])),
+          principalVoiceSourceEventId: sourceEvent.id,
+        };
+        successors.push({
+          events: [...state.events, arranged],
+          positions,
+          principalPosition,
+          handPosition,
+          occupiedFingers,
+          barreFrets: Array.from(
+            new Set(
+              positions.filter((position) => position.barreId).map((position) => position.fret)
+            )
+          ),
+          heldNotes: sourceEvent.tie === "start" ? choice.pitches : [],
+          occupiedCourses: positions.map((position) => position.course),
+          technique,
+          transitions: [...state.transitions, transition],
+          cost: state.cost + phraseChoiceCost(choice, transition, strategy),
+        });
+      }
+    }
+    if (successors.length === 0) {
+      throw new PhraseSearchExhaustedError(
+        `Bounded phrase search found no surviving state at Principal Voice event ${sourceEvent.id}; no impossibility claim is made`,
+        expandedStates,
+        limits.maximumExpandedStates
+      );
+    }
+    frontier = deduplicatePhraseStates(successors)
+      .sort(
+        (left, right) =>
+          left.cost - right.cost || phraseStateKey(left).localeCompare(phraseStateKey(right))
+      )
+      .slice(0, effectiveFrontierWidth);
+  }
+
+  const selected = frontier.sort(
+    (left, right) =>
+      left.cost - right.cost || phraseStateKey(left).localeCompare(phraseStateKey(right))
+  )[0]!;
+  return {
+    events: selected.events,
+    phraseSearchEvidence: {
+      schemaVersion: 1,
+      arrangementPlanId: options.arrangementPlan?.id,
+      performanceBriefId: options.performanceBrief?.id,
+      instrumentInstanceDigest: instance.contentDigest,
+      completeness: "bounded",
+      expandedStates,
+      maximumExpandedStates: limits.maximumExpandedStates,
+      frontierWidth: effectiveFrontierWidth,
+      stateDimensions: [
+        "left_hand_fingers",
+        "barre_frets",
+        "hand_position",
+        "held_notes",
+        "occupied_courses",
+        "exact_stringing",
+        "applicable_technique",
+      ],
+      techniqueApplicability: instance.techniqueApplicability.map((claim) => ({
+        technique: claim.technique,
+        status: claim.status,
+        evidenceIds: claim.evidenceIds,
+      })),
+      bassCapability: {
+        status: instance.courses.some((course) =>
+          course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
+        )
+          ? "bourdon_available"
+          : "reentrant_limited",
+        lowestSoundingPitch: model.soundingRange().lowest,
+        bourdonCourses: instance.courses
+          .filter((course) =>
+            course.strings.some((string) => noteToMidi(string.openPitch) < noteToMidi("G3"))
+          )
+          .map((course) => course.course),
+        rationale:
+          "Bass claims derive from the exact constituent-string set; re-entrant courses are not treated as a complete low foundation.",
+      },
+      transitions: selected.transitions,
+    },
+  };
+}
+
+function annotatePhraseFingering(
+  positions: ArrangementPosition[],
+  eventId: string,
+  sustainThroughEventId: string | undefined
+): ArrangementPosition[] {
+  const fretted = positions.filter((position) => position.fret > 0);
+  const handPosition = fretted.length ? Math.min(...fretted.map((position) => position.fret)) : 1;
+  const fretCounts = new Map<number, number>();
+  for (const position of fretted) {
+    fretCounts.set(position.fret, (fretCounts.get(position.fret) ?? 0) + 1);
+  }
+  return positions.map((position) => {
+    if (position.fret === 0) return position;
+    const barred = (fretCounts.get(position.fret) ?? 0) > 1;
+    return {
+      ...position,
+      leftHandFinger: barred ? 1 : Math.max(1, Math.min(4, position.fret - handPosition + 1)),
+      handPosition,
+      ...(barred ? { barreId: `barre.${eventId}.${position.fret}` } : {}),
+      ...(sustainThroughEventId ? { sustainThroughEventId } : {}),
+    };
+  });
+}
+
+function buildPhraseTransition(
+  state: PhraseState,
+  toEventId: string,
+  principalTo: ArrangementPosition,
+  positions: ArrangementPosition[],
+  handPositionTo: number,
+  technique: string
+): PhraseSearchEvidence["transitions"][number] {
+  const previousCourses = new Set(state.occupiedCourses);
+  const nextCourses = new Set(positions.map((position) => position.course));
+  const fretDisplacement = state.principalPosition
+    ? Math.abs(state.principalPosition.fret - principalTo.fret)
+    : principalTo.fret;
+  const courseDisplacement = state.principalPosition
+    ? Math.abs(state.principalPosition.course - principalTo.course)
+    : 0;
+  return {
+    fromEventId: state.events.at(-1)?.id,
+    toEventId,
+    principalFrom: state.principalPosition
+      ? { course: state.principalPosition.course, fret: state.principalPosition.fret }
+      : undefined,
+    principalTo: { course: principalTo.course, fret: principalTo.fret },
+    fretDisplacement,
+    courseDisplacement,
+    handPositionFrom: state.handPosition,
+    handPositionTo,
+    handPositionDelta:
+      state.handPosition === undefined
+        ? handPositionTo
+        : Math.abs(state.handPosition - handPositionTo),
+    retainedCourses: [...nextCourses].filter((course) => previousCourses.has(course)).sort(),
+    introducedCourses: [...nextCourses].filter((course) => !previousCourses.has(course)).sort(),
+    releasedCourses: [...previousCourses].filter((course) => !nextCourses.has(course)).sort(),
+    heldPitchCount: state.heldNotes.length,
+    barreChanged:
+      state.barreFrets.join(",") !==
+      Array.from(
+        new Set(positions.filter((position) => position.barreId).map((position) => position.fret))
+      ).join(","),
+    technique,
+    violentCrossNeckJump: state.principalPosition
+      ? isViolentCrossNeckJump(state.principalPosition, principalTo)
+      : false,
+  };
+}
+
+function phraseChoiceCost(
+  choice: VoicingChoice,
+  transition: PhraseSearchEvidence["transitions"][number],
+  strategy: "source-coverage" | "economical-fingering"
+): number {
+  const movement =
+    transition.fretDisplacement +
+    transition.courseDisplacement * 0.75 +
+    transition.handPositionDelta * 1.5 +
+    (transition.barreChanged ? 0.5 : 0);
+  return strategy === "source-coverage"
+    ? movement + (1 - choice.sourcePitchClassCoverage) * 12 - choice.openStringCount * 0.25
+    : movement +
+        choice.averageFret * 0.2 +
+        (1 - choice.sourcePitchClassCoverage) * 0.5 +
+        choice.positions.length * 0.75;
+}
+
+function positionCentroid(positions: ArrangementPosition[]): number {
+  const fretted = positions.filter((position) => position.fret > 0);
+  return fretted.length === 0
+    ? 0
+    : fretted.reduce((sum, position) => sum + position.fret, 0) / fretted.length;
+}
+
+function fingerOccupationIsPossible(
+  occupied: Array<{ finger: number; fret: number; course: number }>
+): boolean {
+  const fretByFinger = new Map<number, number>();
+  for (const item of occupied) {
+    const fret = fretByFinger.get(item.finger);
+    if (fret !== undefined && fret !== item.fret) return false;
+    fretByFinger.set(item.finger, item.fret);
+  }
+  return true;
+}
+
+function deduplicatePhraseStates(states: PhraseState[]): PhraseState[] {
+  const byKey = new Map<string, PhraseState>();
+  for (const state of states) {
+    const key = phraseStateKey(state);
+    const prior = byKey.get(key);
+    if (!prior || state.cost < prior.cost) byKey.set(key, state);
+  }
+  return [...byKey.values()];
+}
+
+function phraseStateKey(state: PhraseState): string {
+  return [
+    state.positions
+      .map((position) => `${position.course}:${position.fret}`)
+      .sort()
+      .join("|"),
+    state.occupiedFingers
+      .map((item) => `${item.finger}:${item.fret}:${item.course}`)
+      .sort()
+      .join("|"),
+    state.barreFrets.join(","),
+    state.heldNotes.join(","),
+    state.technique,
+  ].join(";");
+}
+
+function selectBaroqueGuitarTechnique(
+  brief: PerformanceBrief | undefined,
+  instance: NonNullable<ReturnType<InstrumentModel["exactInstance"]>>
+): string {
+  const allowed =
+    brief?.techniqueContext.status === "specified" ? brief.techniqueContext.allowed : [];
+  const avoided =
+    brief?.techniqueContext.status === "specified" ? brief.techniqueContext.avoided : [];
+  const applicable = instance.techniqueApplicability.filter(
+    (claim) => claim.status === "applicable"
+  );
+  const preferred = allowed.find(
+    (technique) =>
+      !avoided.includes(technique) && applicable.some((claim) => claim.technique === technique)
+  );
+  if (preferred) return preferred;
+  if (!avoided.includes("punteado") && applicable.some((claim) => claim.technique === "punteado")) {
+    return "punteado";
+  }
+  return "technique_unspecified";
 }
 
 function buildCandidateEvents(

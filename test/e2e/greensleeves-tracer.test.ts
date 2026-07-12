@@ -107,6 +107,27 @@ describe("Greensleeves PDF tracer bullet", () => {
       targetConfigurationId: "target.baroque-guitar",
     });
     expect(arranged.arrangementScore.preservationAudit.status).toBe("pass");
+    expect(
+      arranged.candidates.every(
+        (candidate) =>
+          candidate.phraseSearchEvidence?.arrangementPlanId === arranged.arrangementPlan.id &&
+          candidate.phraseSearchEvidence.performanceBriefId === arranged.performanceBrief.id &&
+          candidate.phraseSearchEvidence.completeness === "bounded" &&
+          candidate.phraseSearchEvidence.transitions.every(
+            (transition) => !transition.violentCrossNeckJump
+          )
+      )
+    ).toBe(true);
+    expect(
+      arranged.candidates
+        .flatMap((candidate) => candidate.phraseSearchEvidence?.transitions ?? [])
+        .every(
+          (transition) =>
+            Number.isFinite(transition.fretDisplacement) &&
+            Number.isFinite(transition.courseDisplacement) &&
+            Number.isFinite(transition.handPositionDelta)
+        )
+    ).toBe(true);
     const luteArranged = new ArrangementService({ store }).createFaithfulReduction(workspace.id, {
       normalizedScoreId: omr.normalizedScore.id,
       targetConfigurationId: "target.baroque-lute",
