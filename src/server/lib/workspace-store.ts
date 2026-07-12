@@ -536,6 +536,7 @@ export class WorkspaceStore {
       );
     }
     const decoded = Value.Decode(ScoreTranscriptionSchema, transcription);
+    validateRhythmicReferences(decoded);
     this.writeImmutableRecord(workspaceId, "transcriptions", decoded.id, decoded);
     this.linkRecord(workspace, "scoreTranscriptionIds", decoded.id);
     return decoded;
@@ -560,6 +561,7 @@ export class WorkspaceStore {
       );
     }
     const decoded = Value.Decode(NormalizedScoreSchema, score);
+    validateRhythmicReferences(decoded);
     this.writeImmutableRecord(workspaceId, "normalized-scores", decoded.id, decoded);
     this.linkRecord(workspace, "normalizedScoreIds", decoded.id);
     return decoded;
@@ -1689,6 +1691,36 @@ function latestVersion(
   }
   const { sha256: _obsoleteHash, ...identity } = original;
   return { ...identity, recordId: latest.id, version: latest.version };
+}
+
+function validateRhythmicReferences(
+  score: Pick<ScoreTranscription, "measures" | "events" | "performedForm" | "notationIssues">
+): void {
+  const measureIds = new Set(score.measures.map((measure) => measure.id));
+  const eventIds = new Set(score.events.map((event) => event.id));
+  const occurrenceIds = new Set<string>();
+  for (const occurrence of score.performedForm?.measureOccurrences ?? []) {
+    if (!measureIds.has(occurrence.measureId)) {
+      throw new ApiRouteError(
+        `Performed Form occurrence ${occurrence.id} references missing measure ${occurrence.measureId}`,
+        400
+      );
+    }
+    if (occurrenceIds.has(occurrence.id)) {
+      throw new ApiRouteError(`Duplicate Performed Form occurrence: ${occurrence.id}`, 400);
+    }
+    occurrenceIds.add(occurrence.id);
+  }
+  for (const issue of score.notationIssues ?? []) {
+    const missingMeasure = issue.measureIds.find((id) => !measureIds.has(id));
+    const missingEvent = issue.eventIds.find((id) => !eventIds.has(id));
+    if (missingMeasure || missingEvent) {
+      throw new ApiRouteError(
+        `Notation issue ${issue.id} has invalid scope: ${missingMeasure ?? missingEvent}`,
+        400
+      );
+    }
+  }
 }
 
 function writeJsonAtomic(filePath: string, value: unknown): void {

@@ -20,6 +20,13 @@ const OrnamentSchema = Type.Union([
 const EventIdentityProperties = {
   event_id: Type.Optional(Type.String({ minLength: 1 })),
   measure_id: Type.Optional(Type.String({ minLength: 1 })),
+  tuplet_start: Type.Optional(
+    Type.Object({
+      actual_notes: Type.Integer({ minimum: 2 }),
+      normal_notes: Type.Integer({ minimum: 1 }),
+    })
+  ),
+  tuplet_end: Type.Optional(Type.Boolean()),
 };
 
 export const PositionNoteSchema = Type.Object({

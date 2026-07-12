@@ -214,6 +214,8 @@ export class TranscriptionService {
       parts: next.parts,
       measures: next.measures,
       events: next.events,
+      performedForm: next.performedForm,
+      notationIssues: next.notationIssues,
       createdAt: timestamp,
     };
     this.store.saveNormalizedScore(workspaceId, normalized);

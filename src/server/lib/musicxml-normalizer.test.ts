@@ -49,6 +49,86 @@ describe("MusicXML normalizer", () => {
     );
   });
 
+  it("preserves tuplets, double dots, ties, repeats, endings, and performed occurrences", async () => {
+    const source = Buffer.from(`<?xml version="1.0"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1"><attributes><divisions>12</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <barline location="left"><repeat direction="forward"/></barline>
+      <note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>eighth</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><notations><tuplet type="start"/></notations></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>eighth</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification></note>
+      <note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice><type>eighth</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><notations><tuplet type="stop"/></notations></note>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>42</duration><voice>1</voice><type>half</type><dot/><dot/><tie type="start"/></note>
+    </measure>
+    <measure number="2"><barline location="left"><ending number="1" type="start"/></barline>
+      <note><pitch><step>F</step><octave>4</octave></pitch><duration>6</duration><voice>1</voice><type>eighth</type><tie type="stop"/></note>
+      <barline location="right"><ending number="1" type="stop"/><repeat direction="backward"/></barline>
+    </measure>
+    <measure number="3"><barline location="left"><ending number="2" type="start"/></barline>
+      <note><pitch><step>G</step><octave>4</octave></pitch><duration>12</duration><voice>1</voice><type>quarter</type></note>
+      <barline location="right"><ending number="2" type="discontinue"/></barline>
+    </measure>
+  </part>
+</score-partwise>`);
+
+    const score = await normalizeMusicXml(source, "rhythm.musicxml");
+    const notes = score.events.filter((event) => event.type === "note");
+    expect(notes.slice(0, 3).map((event) => event.rhythmicNotation?.tuplet?.boundary)).toEqual([
+      "start",
+      "continue",
+      "stop",
+    ]);
+    expect(notes[3]).toMatchObject({
+      duration: { numerator: 7, denominator: 2 },
+      tie: "start",
+      rhythmicNotation: { writtenDuration: { numerator: 7, denominator: 2 }, dots: 2 },
+    });
+    expect(score.performedForm?.measureOccurrences.map((item) => item.measureId)).toEqual([
+      "measure.0",
+      "measure.1",
+      "measure.0",
+      "measure.2",
+    ]);
+    expect(score.performedForm?.measureOccurrences[1]).toMatchObject({ ending: 1 });
+    expect(score.performedForm?.measureOccurrences[3]).toMatchObject({ ending: 2 });
+  });
+
+  it("reports unsupported notation at precise source scope", async () => {
+    const source = Buffer.from(`<?xml version="1.0"?><score-partwise version="4.0">
+      <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>
+      <part id="P1"><measure number="1"><note><grace/><pitch><step>C</step><octave>4</octave></pitch><voice>1</voice><type>eighth</type></note>
+      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type></note></measure></part>
+    </score-partwise>`);
+    const score = await normalizeMusicXml(source, "unsupported.musicxml");
+    expect(score.notationIssues).toEqual([
+      expect.objectContaining({
+        severity: "error",
+        code: "unsupported_grace_note",
+        measureIds: ["measure.0"],
+      }),
+    ]);
+  });
+
+  it("derives da-capo navigation and Fine into performed form", async () => {
+    const measure = (number: number, direction = "") => `<measure number="${number}">${direction}
+      <note><pitch><step>${number === 1 ? "C" : number === 2 ? "D" : "E"}</step><octave>4</octave></pitch><duration>1</duration><voice>1</voice><type>quarter</type></note></measure>`;
+    const source = Buffer.from(`<?xml version="1.0"?><score-partwise version="4.0">
+      <part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list><part id="P1">
+      ${measure(1)}${measure(2, '<direction><sound fine="yes"/></direction>')}${measure(3, '<direction><sound dacapo="yes"/></direction>')}
+      </part></score-partwise>`);
+    const score = await normalizeMusicXml(source, "dacapo.musicxml");
+    expect(score.performedForm?.measureOccurrences.map((item) => item.measureId)).toEqual([
+      "measure.0",
+      "measure.1",
+      "measure.2",
+      "measure.0",
+      "measure.1",
+    ]);
+    expect(score.performedForm?.measureOccurrences.at(-1)).toMatchObject({ jump: "fine" });
+    expect(score.performedForm?.traversalDecisions).toContain("Da capo after measure 3.");
+  });
+
   it("correlates genuine Audiveris native chord/head evidence to reviewable score events", async () => {
     const musicXml = Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0">

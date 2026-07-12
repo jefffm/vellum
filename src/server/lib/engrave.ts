@@ -74,7 +74,7 @@ export type ValidationDetail = {
 
 // === Duration validation ===
 
-const DURATION_PATTERN = /^(1|2|4|8|16|32|64)(\.{0,2})$/;
+const DURATION_PATTERN = /^(1|2|4|8|16|32|64|128|256)(\.{0,3})(?:\*[1-9]\d*\/[1-9]\d*)?$/;
 
 function isValidDuration(duration: string): boolean {
   return DURATION_PATTERN.test(duration);
@@ -493,9 +493,28 @@ function resolveEvent(
   model: InstrumentModel,
   indicators: LyIndicator[]
 ): LyLeaf {
+  const rhythmicIndicators: LyIndicator[] = [
+    ...(event.tuplet_start
+      ? [
+          {
+            kind: "literal" as const,
+            text: `\\tuplet ${event.tuplet_start.actual_notes}/${event.tuplet_start.normal_notes} {`,
+            site: "before" as const,
+          },
+        ]
+      : []),
+    ...(event.tuplet_end ? [{ kind: "literal" as const, text: "}", site: "after" as const }] : []),
+  ];
+  indicators = [
+    ...rhythmicIndicators.filter((item) => item.kind === "literal" && item.site === "before"),
+    ...indicators,
+  ];
+  const closingIndicators = rhythmicIndicators.filter(
+    (item) => item.kind === "literal" && item.site === "after"
+  );
   if (event.type === "note") {
     const afterIndicators = noteIndicators(event);
-    const allIndicators = [...indicators, ...afterIndicators];
+    const allIndicators = [...indicators, ...afterIndicators, ...closingIndicators];
 
     if (event.input === "position") {
       const pitch = model.soundingPitch(event.course, event.fret);
@@ -525,7 +544,11 @@ function resolveEvent(
     const afterIndicators: LyIndicator[] = [];
     if (event.tie) afterIndicators.push({ kind: "tie" });
 
-    return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
+    return lyChord(pitches, event.duration, [
+      ...indicators,
+      ...afterIndicators,
+      ...closingIndicators,
+    ]);
   }
 
   if (event.type === "alfabeto" || event.type === "alfabeto_chord") {
@@ -553,12 +576,16 @@ function resolveEvent(
 
     if (event.tie) afterIndicators.push({ kind: "tie" });
 
-    return lyChord(pitches, event.duration, [...indicators, ...afterIndicators]);
+    return lyChord(pitches, event.duration, [
+      ...indicators,
+      ...afterIndicators,
+      ...closingIndicators,
+    ]);
   }
 
   // Rest
   const rest = event as RestEvent;
-  return lyRest(rest.duration, rest.spacer ?? false, [...indicators]);
+  return lyRest(rest.duration, rest.spacer ?? false, [...indicators, ...closingIndicators]);
 }
 
 type AnyAlfabetoEvent = AlfabetoEvent | AlfabetoChordEvent;

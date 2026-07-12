@@ -151,6 +151,8 @@ export class SourceImportService {
       parts: recognized.parts,
       measures: recognized.measures,
       events: recognized.events,
+      performedForm: recognized.performedForm,
+      notationIssues: recognized.notationIssues,
       uncertainties: recognized.uncertainties,
       ingestion: { method, sourceFormat: source.kind, diagnostics },
       createdAt: timestamp,
@@ -166,6 +168,8 @@ export class SourceImportService {
       parts: transcription.parts,
       measures: transcription.measures,
       events: transcription.events,
+      performedForm: transcription.performedForm,
+      notationIssues: transcription.notationIssues,
       createdAt: timestamp,
     };
     this.store.saveNormalizedScore(workspaceId, normalizedScore);

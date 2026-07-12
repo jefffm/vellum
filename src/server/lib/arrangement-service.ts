@@ -31,6 +31,10 @@ import { loadProfile } from "../profiles.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { OwnerStore } from "./owner-store.js";
 import { SourceTruthService } from "./source-truth-service.js";
+import {
+  assertRhythmicSourceSupported,
+  UnsupportedRhythmicNotationError,
+} from "../../lib/rhythmic-semantics.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
@@ -129,6 +133,14 @@ export class ArrangementService {
       }
     }
     const score = this.store.getNormalizedScore(workspaceId, input.normalizedScoreId);
+    try {
+      assertRhythmicSourceSupported(score);
+    } catch (error) {
+      if (error instanceof UnsupportedRhythmicNotationError) {
+        throw new ApiRouteError(error.message, 422, "unprocessable_content");
+      }
+      throw error;
+    }
     const transcription = this.store.getScoreTranscription(workspaceId, score.scoreTranscriptionId);
     const timestamp = this.now().toISOString();
     const analysis =

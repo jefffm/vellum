@@ -34,6 +34,200 @@ def fraction_json(value: Fraction) -> dict[str, int]:
     return {"numerator": value.numerator, "denominator": value.denominator}
 
 
+NOTE_TYPE_QUARTERS = {
+    "maxima": Fraction(32), "long": Fraction(16), "breve": Fraction(8),
+    "whole": Fraction(4), "half": Fraction(2), "quarter": Fraction(1),
+    "eighth": Fraction(1, 2), "16th": Fraction(1, 4), "32nd": Fraction(1, 8),
+    "64th": Fraction(1, 16), "128th": Fraction(1, 32), "256th": Fraction(1, 64),
+}
+
+
+def written_rhythm(note, event_id: str, tuplet_state: dict[str, tuple[str, int, int]]) -> dict[str, object] | None:
+    note_type = child_text(note, "type")
+    if not note_type or note_type not in NOTE_TYPE_QUARTERS:
+        return None
+    dots = len(children(note, "dot"))
+    written = NOTE_TYPE_QUARTERS[note_type]
+    addition = written
+    for _ in range(dots):
+        addition /= 2
+        written += addition
+    notation: dict[str, object] = {"writtenDuration": fraction_json(written), "dots": dots}
+    modification = child(note, "time-modification")
+    if modification is None:
+        return notation
+    actual = int(child_text(modification, "actual-notes", "0") or "0")
+    normal = int(child_text(modification, "normal-notes", "0") or "0")
+    if actual < 2 or normal < 1:
+        return notation
+    voice = child_text(note, "voice", "1") or "1"
+    marks = []
+    notations = child(note, "notations")
+    if notations is not None:
+        marks = [item.attrib.get("type") for item in children(notations, "tuplet")]
+    starts = "start" in marks
+    stops = "stop" in marks
+    if starts or voice not in tuplet_state:
+        group_id = f"tuplet.{event_id.removeprefix('event.')}"
+        tuplet_state[voice] = (group_id, actual, normal)
+    group_id, _, _ = tuplet_state[voice]
+    boundary = "start_stop" if starts and stops else "start" if starts else "stop" if stops else "continue"
+    notation["tuplet"] = {
+        "groupId": group_id,
+        "actualNotes": actual,
+        "normalNotes": normal,
+        "boundary": boundary,
+    }
+    if stops:
+        tuplet_state.pop(voice, None)
+    return notation
+
+
+def performed_form(root, measure_count: int) -> dict[str, object]:
+    first_part = children(root, "part")[0] if children(root, "part") else None
+    measures = children(first_part, "measure") if first_part is not None else []
+    repeat_start = 0
+    repeated: set[int] = set()
+    iteration = 1
+    cursor = 0
+    occurrences: list[dict[str, object]] = []
+    decisions: list[str] = []
+    ending_by_measure: dict[int, set[int]] = {}
+    active_endings: set[int] = set()
+    for index, measure in enumerate(measures):
+        for barline in children(measure, "barline"):
+            ending = child(barline, "ending")
+            if ending is not None and ending.attrib.get("type") == "start":
+                active_endings = {
+                    int(value.strip())
+                    for value in ending.attrib.get("number", "").replace("-", ",").split(",")
+                    if value.strip().isdigit()
+                }
+        if active_endings:
+            ending_by_measure[index] = set(active_endings)
+        for barline in children(measure, "barline"):
+            ending = child(barline, "ending")
+            if ending is not None and ending.attrib.get("type") in {"stop", "discontinue"}:
+                active_endings = set()
+    steps = 0
+    while cursor < min(measure_count, len(measures)) and steps < max(1, measure_count * 4):
+        steps += 1
+        measure = measures[cursor]
+        for barline in children(measure, "barline"):
+            repeat = child(barline, "repeat")
+            if repeat is not None and repeat.attrib.get("direction") == "forward":
+                repeat_start = cursor
+        endings = ending_by_measure.get(cursor, set())
+        include_measure = not endings or iteration in endings
+        occurrence: dict[str, object] = {
+            "id": f"occurrence.measure-{cursor}.{len(occurrences) + 1}",
+            "measureId": f"measure.{cursor}",
+            "iteration": len([item for item in occurrences if item["measureId"] == f"measure.{cursor}"]) + 1,
+        }
+        if iteration > 1:
+            occurrence["repeatIteration"] = iteration
+        if endings:
+            occurrence["ending"] = iteration
+        if include_measure:
+            occurrences.append(occurrence)
+        backward = False
+        for barline in children(measure, "barline"):
+            repeat = child(barline, "repeat")
+            if repeat is not None and repeat.attrib.get("direction") == "backward":
+                backward = True
+        if backward and cursor not in repeated:
+            repeated.add(cursor)
+            decisions.append(f"Repeat measures {repeat_start + 1}-{cursor + 1} once.")
+            cursor = repeat_start
+            iteration = 2
+            continue
+        cursor += 1
+    if not decisions:
+        decisions.append("Play written measures once in score order.")
+    navigation = []
+    for index, measure in enumerate(measures):
+        for direction in children(measure, "direction"):
+            sound = child(direction, "sound")
+            if sound is not None and sound.attrib.get("dacapo") == "yes":
+                navigation.append(("da_capo", index))
+    if navigation:
+        _, source_index = navigation[0]
+        decisions.append(f"Da capo after measure {source_index + 1}.")
+        fine_index = None
+        for index, measure in enumerate(measures):
+            if any(
+                child(direction, "sound") is not None
+                and child(direction, "sound").attrib.get("fine") == "yes"
+                for direction in children(measure, "direction")
+            ):
+                fine_index = index
+                break
+        for index in range(0, (fine_index if fine_index is not None else source_index) + 1):
+            occurrences.append({
+                "id": f"occurrence.measure-{index}.{len(occurrences) + 1}",
+                "measureId": f"measure.{index}",
+                "iteration": len([item for item in occurrences if item["measureId"] == f"measure.{index}"]) + 1,
+                "jump": "fine" if index == fine_index else "da_capo" if index == 0 else None,
+            })
+        for occurrence in occurrences:
+            if occurrence.get("jump") is None:
+                occurrence.pop("jump", None)
+    else:
+        sounds_by_measure: dict[int, list[object]] = {}
+        for index, measure in enumerate(measures):
+            sounds_by_measure[index] = [
+                child(direction, "sound")
+                for direction in children(measure, "direction")
+                if child(direction, "sound") is not None
+            ]
+        ds_source = next(
+            (
+                index
+                for index, sounds in sounds_by_measure.items()
+                if any(sound.attrib.get("dalsegno") for sound in sounds)
+            ),
+            None,
+        )
+        if ds_source is not None:
+            ds_label = next(sound.attrib["dalsegno"] for sound in sounds_by_measure[ds_source] if sound.attrib.get("dalsegno"))
+            segno_index = next(
+                (index for index, sounds in sounds_by_measure.items() if any(sound.attrib.get("segno") == ds_label for sound in sounds)),
+                0,
+            )
+            coda_label = next(
+                (sound.attrib["tocoda"] for sounds in sounds_by_measure.values() for sound in sounds if sound.attrib.get("tocoda")),
+                None,
+            )
+            coda_index = next(
+                (index for index, sounds in sounds_by_measure.items() if coda_label and any(sound.attrib.get("coda") == coda_label for sound in sounds)),
+                None,
+            )
+            decisions.append(f"Dal segno after measure {ds_source + 1} to measure {segno_index + 1}.")
+            index = segno_index
+            jumped_to_coda = False
+            while index < len(measures):
+                jump = "dal_segno" if index == segno_index else None
+                sounds = sounds_by_measure[index]
+                if coda_index is not None and not jumped_to_coda and any(sound.attrib.get("tocoda") == coda_label for sound in sounds):
+                    index = coda_index
+                    jumped_to_coda = True
+                    jump = "to_coda"
+                    sounds = sounds_by_measure[index]
+                occurrence = {
+                    "id": f"occurrence.measure-{index}.{len(occurrences) + 1}",
+                    "measureId": f"measure.{index}",
+                    "iteration": len([item for item in occurrences if item["measureId"] == f"measure.{index}"]) + 1,
+                }
+                if jump:
+                    occurrence["jump"] = jump
+                occurrences.append(occurrence)
+                if any(sound.attrib.get("fine") == "yes" for sound in sounds):
+                    occurrence["jump"] = "fine"
+                    break
+                index += 1
+    return {"id": "performed-form.imported", "measureOccurrences": occurrences, "traversalDecisions": decisions}
+
+
 def slug(value: str) -> str:
     normalized = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return normalized or "part"
@@ -276,6 +470,7 @@ def normalize(
     score_key = None
     evidence_offsets: dict[tuple[int, str], int] = defaultdict(int)
     evidence_stats = {"mapped": 0, "unmapped": 0, "unused": 0}
+    notation_issues: list[dict[str, object]] = []
 
     for part_index, part in enumerate(children(root, "part"), start=1):
         xml_part_id = part.attrib.get("id", f"P{part_index}")
@@ -283,6 +478,7 @@ def normalize(
         divisions = 1
         event_counts: dict[str, int] = {}
         figure_count = 0
+        tuplet_state: dict[str, tuple[str, int, int]] = {}
 
         for measure_index, measure in enumerate(children(part, "measure")):
             cursor = Fraction(0)
@@ -344,7 +540,19 @@ def normalize(
                         }
                     )
                     continue
-                if name != "note" or child(item, "grace") is not None:
+                if name != "note":
+                    continue
+
+                if child(item, "grace") is not None:
+                    issue_number = len(notation_issues) + 1
+                    notation_issues.append({
+                        "id": f"notation-issue.grace.{issue_number}",
+                        "severity": "error",
+                        "code": "unsupported_grace_note",
+                        "message": "Grace-note timing is not yet supported and must be resolved before arrangement.",
+                        "measureIds": [f"measure.{measure_index}"],
+                        "eventIds": [],
+                    })
                     continue
 
                 duration_text = child_text(item, "duration")
@@ -375,6 +583,9 @@ def normalize(
                     "onset": fraction_json(onset),
                     "duration": fraction_json(duration),
                 }
+                rhythmic_notation = written_rhythm(item, event_id, tuplet_state)
+                if rhythmic_notation is not None:
+                    event["rhythmicNotation"] = rhythmic_notation
                 if event["type"] == "note":
                     event["pitch"] = pitch_text(item)
                 if native_queues is not None:
@@ -428,6 +639,8 @@ def normalize(
         "measures": measures,
         "events": raw_events,
         "uncertainties": [],
+        "performedForm": performed_form(root, len(measures)),
+        "notationIssues": notation_issues,
     }
     uncertainties: list[dict[str, object]] = []
     for event in raw_events:

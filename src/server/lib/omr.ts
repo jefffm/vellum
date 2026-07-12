@@ -401,6 +401,8 @@ export class OmrService {
         parts: transcription.parts,
         measures: transcription.measures,
         events: transcription.events,
+        performedForm: transcription.performedForm,
+        notationIssues: transcription.notationIssues,
         createdAt: completedAt,
       };
       this.store.saveNormalizedScore(workspaceId, normalizedScore);

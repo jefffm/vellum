@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T13",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T14:47:00Z",
+  "requirements": {
+    "M01": {
+      "status": "machine_verified",
+      "remaining": "Later migration tracers retain the compatibility boundary for older persisted scores"
+    },
+    "M09": {
+      "status": "partial",
+      "remaining": "Semantic LilyPond assertions pass for tuplets, dots, and ties; T33 and target corpus tracers add focused visual review"
+    },
+    "M10": {
+      "status": "machine_verified",
+      "remaining": "T33 expands mutation coverage for every playback and traversal field"
+    },
+    "M12": {
+      "status": "partial",
+      "remaining": "Scoped unsupported-notation and canonical timing counterexamples pass; T33-T35 expand the mutation corpus"
+    }
+  },
+  "auditFindings": {
+    "F039": "partial: common rational durations, tuplets, double dots, ties, pickup-compatible measures, repeats, endings, and navigation now survive import through engraving/playback; later target and browser tracers add PDF/playhead visual coverage"
+  },
+  "summary": {
+    "fullSuitePassed": 959,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "MusicXML fixtures preserve triplet written/performed duration, double dots, cross-event ties, repeats, numbered endings, Da Capo, and Fine",
+      "Arrangement engraving emits balanced tuplet syntax, exact dotted duration, ties, and stable score-event identities",
+      "Audio Preview uses the same canonical Arrangement Events and imported Performed Form occurrences with exact rational timing",
+      "Unsupported grace timing blocks before planning with exact measure and event scope",
+      "Persistence rejects missing Performed Form and notation-issue references and duplicate occurrence identities"
+    ],
+    "evaluation": {
+      "invocation": "npm run --silent eval:fast -- --output /tmp/vellum-t13-eval",
+      "manifestId": "evaluation-manifest.42e3854bcf14e04c23ffd94b",
+      "runId": "evaluation-run.8e10784a-4c7a-4653-aeda-2c7693adf0be",
+      "cardId": "evaluation-card.7d4db4ad-0052-454c-b37b-1defed63d4be",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "playbackAndPerformedForm": "not_evaluated_in_fast_suite"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 959 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/lib/rhythmic-semantics.test.ts src/lib/arrangement-engrave.test.ts src/server/lib/musicxml-normalizer.test.ts src/server/lib/arrangement-service.test.ts src/server/lib/workspace-store.test.ts",
+      "result": "pass: 22 passed before navigation fixture; final focused rhythmic set passed 14 tests"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t13-eval",
+      "result": "pass: existing hard gates pass; missing playback/notation evaluation remains explicitly unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/13-general-rhythmic-path.md",
+      "sha256": "fd9e475e1fca97e9e1cb938eacc0329a47b3a3881f1c89dcf5482b2c62a82692"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "ffd8e0882303c412c8aba91b2e30d747a9a7544221c2f8c7b37c5a9c36b5b439"
+    },
+    {
+      "path": "src/lib/rhythmic-semantics.ts",
+      "sha256": "00c71cd2fccbc3911b9949869304970fa5f0bacd6aca3473e4bff1005a9cd079"
+    },
+    {
+      "path": "src/lib/rhythmic-semantics.test.ts",
+      "sha256": "ab78553bdeee1a9932abcb9184abadf4f9081d8ba655f01d57a637b512abe902"
+    },
+    {
+      "path": "src/server/musicxml_normalize.py",
+      "sha256": "f118919e2502bb336f99df2722384c6a7bf67cc3a3c599032556ecbfa40d7831"
+    },
+    {
+      "path": "src/server/lib/musicxml-normalizer.test.ts",
+      "sha256": "a41835c4da9add0aade8d7302bbf61ecaf5aa760e2048661ce44ac75fc4b364c"
+    },
+    {
+      "path": "src/lib/arrangement-engrave.ts",
+      "sha256": "eb65af9d4e3e3ffa916ffc804ebb7c21036dc2eb5b8bece808e46224f0f4dee2"
+    },
+    {
+      "path": "src/lib/arrangement-engrave.test.ts",
+      "sha256": "c6fc1ce4090d91f2e84ec38e939dbcbbd5825bf3dc673cd9d7e85f3448793d82"
+    },
+    {
+      "path": "src/lib/engrave-schema.ts",
+      "sha256": "0a048f218a5b02798d6f70527c76e9fc9ad1aa663bc006088163d35bb7443a17"
+    },
+    {
+      "path": "src/server/lib/engrave.ts",
+      "sha256": "0542d7e7a5416c557836a5b7350266443890839676161d523b74b16522a8a4c6"
+    },
+    {
+      "path": "src/lib/audio-preview.ts",
+      "sha256": "6a4d14408d1e8b775368263092ba3be6a4ae3a6a6c674d037f9e17d42eb252d5"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "798e6200025bf1ab4d471f9a0e911bad3313f2ebd267224454a6f8924f56f615"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "f1187cc84d37762557c4035498f06ed8d48be9f2e2e647ee516740fda3915cec"
+    },
+    {
+      "path": "src/server/lib/source-import-service.ts",
+      "sha256": "90182fc0980a591d9b0261021767dbd02a14aa021139e6744950a693e3d645e8"
+    },
+    {
+      "path": "src/server/lib/omr.ts",
+      "sha256": "74b5b672482b7aaa89198d7df95770c699db765aae24f13cd6a308f7bde68b02"
+    },
+    {
+      "path": "src/server/lib/transcription-service.ts",
+      "sha256": "e67dd2165239cc931043cc765b4671ae5db783f938720e7d687b16ff13161147"
+    }
+  ]
+}

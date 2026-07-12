@@ -780,6 +780,31 @@ const ScoreEventBaseProperties = {
   duration: RationalSchema,
   confidence: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })),
   sourceRegion: Type.Optional(SourceRegionSchema),
+  rhythmicNotation: Type.Optional(
+    Type.Object(
+      {
+        writtenDuration: RationalSchema,
+        dots: Type.Integer({ minimum: 0, maximum: 3 }),
+        tuplet: Type.Optional(
+          Type.Object(
+            {
+              groupId: IdSchema,
+              actualNotes: Type.Integer({ minimum: 2 }),
+              normalNotes: Type.Integer({ minimum: 1 }),
+              boundary: Type.Union([
+                Type.Literal("start"),
+                Type.Literal("continue"),
+                Type.Literal("stop"),
+                Type.Literal("start_stop"),
+              ]),
+            },
+            { additionalProperties: false }
+          )
+        ),
+      },
+      { additionalProperties: false }
+    )
+  ),
 };
 
 export const NoteEventSchema = Type.Object(
@@ -847,6 +872,19 @@ export const ScoreEventSchema = Type.Union([
 ]);
 
 export type ScoreEvent = Static<typeof ScoreEventSchema>;
+
+export const NotationIssueSchema = Type.Object(
+  {
+    id: IdSchema,
+    severity: Type.Union([Type.Literal("warning"), Type.Literal("error")]),
+    code: Type.String({ minLength: 1 }),
+    message: Type.String({ minLength: 1 }),
+    measureIds: Type.Array(IdSchema, { minItems: 1 }),
+    eventIds: Type.Array(IdSchema),
+  },
+  { additionalProperties: false }
+);
+export type NotationIssue = Static<typeof NotationIssueSchema>;
 
 export const TranscriptionUncertaintySchema = Type.Object(
   {
@@ -916,6 +954,34 @@ export const TranscriptionAcceptanceBatchSchema = Type.Object(
 
 export type TranscriptionAcceptanceBatch = Static<typeof TranscriptionAcceptanceBatchSchema>;
 
+export const PerformedMeasureOccurrenceSchema = Type.Object(
+  {
+    id: IdSchema,
+    measureId: IdSchema,
+    iteration: Type.Integer({ minimum: 1 }),
+    repeatIteration: Type.Optional(Type.Integer({ minimum: 1 })),
+    ending: Type.Optional(Type.Integer({ minimum: 1 })),
+    jump: Type.Optional(
+      Type.Union([
+        Type.Literal("da_capo"),
+        Type.Literal("dal_segno"),
+        Type.Literal("to_coda"),
+        Type.Literal("fine"),
+      ])
+    ),
+  },
+  { additionalProperties: false }
+);
+
+export const PerformedFormSchema = Type.Object(
+  {
+    id: IdSchema,
+    measureOccurrences: Type.Array(PerformedMeasureOccurrenceSchema, { minItems: 1 }),
+    traversalDecisions: Type.Array(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false }
+);
+
 export const ScoreTranscriptionSchema = Type.Object(
   {
     id: IdSchema,
@@ -962,6 +1028,8 @@ export const ScoreTranscriptionSchema = Type.Object(
     parts: Type.Array(ScorePartSchema, { minItems: 1 }),
     measures: Type.Array(ScoreMeasureSchema, { minItems: 1 }),
     events: Type.Array(ScoreEventSchema, { minItems: 1 }),
+    performedForm: Type.Optional(PerformedFormSchema),
+    notationIssues: Type.Optional(Type.Array(NotationIssueSchema)),
     uncertainties: Type.Array(TranscriptionUncertaintySchema),
     corrections: Type.Optional(Type.Array(TranscriptionCorrectionRecordSchema)),
     acceptanceBatches: Type.Optional(Type.Array(TranscriptionAcceptanceBatchSchema)),
@@ -980,6 +1048,8 @@ export const RecognizedScoreSchema = Type.Object(
     parts: Type.Array(ScorePartSchema, { minItems: 1 }),
     measures: Type.Array(ScoreMeasureSchema, { minItems: 1 }),
     events: Type.Array(ScoreEventSchema, { minItems: 1 }),
+    performedForm: Type.Optional(PerformedFormSchema),
+    notationIssues: Type.Optional(Type.Array(NotationIssueSchema)),
     uncertainties: Type.Array(TranscriptionUncertaintySchema),
   },
   { additionalProperties: false }
@@ -1021,34 +1091,6 @@ export const TranscriptionCorrectionSchema = Type.Object(
 
 export type TranscriptionCorrection = Static<typeof TranscriptionCorrectionSchema>;
 
-export const PerformedMeasureOccurrenceSchema = Type.Object(
-  {
-    id: IdSchema,
-    measureId: IdSchema,
-    iteration: Type.Integer({ minimum: 1 }),
-    repeatIteration: Type.Optional(Type.Integer({ minimum: 1 })),
-    ending: Type.Optional(Type.Integer({ minimum: 1 })),
-    jump: Type.Optional(
-      Type.Union([
-        Type.Literal("da_capo"),
-        Type.Literal("dal_segno"),
-        Type.Literal("to_coda"),
-        Type.Literal("fine"),
-      ])
-    ),
-  },
-  { additionalProperties: false }
-);
-
-export const PerformedFormSchema = Type.Object(
-  {
-    id: IdSchema,
-    measureOccurrences: Type.Array(PerformedMeasureOccurrenceSchema, { minItems: 1 }),
-    traversalDecisions: Type.Array(Type.String({ minLength: 1 })),
-  },
-  { additionalProperties: false }
-);
-
 export const NormalizedScoreSchema = Type.Object(
   {
     id: IdSchema,
@@ -1061,6 +1103,7 @@ export const NormalizedScoreSchema = Type.Object(
     measures: Type.Array(ScoreMeasureSchema, { minItems: 1 }),
     events: Type.Array(ScoreEventSchema, { minItems: 1 }),
     performedForm: Type.Optional(PerformedFormSchema),
+    notationIssues: Type.Optional(Type.Array(NotationIssueSchema)),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }
