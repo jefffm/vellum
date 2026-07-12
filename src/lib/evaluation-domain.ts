@@ -177,6 +177,7 @@ export const EvaluationScopeSchema = Type.Object(
   },
   { additionalProperties: false }
 );
+export type EvaluationScope = Static<typeof EvaluationScopeSchema>;
 
 export const AbsoluteDimensionResultSchema = Type.Object(
   {
@@ -336,3 +337,161 @@ export const EvaluationCardSchema = Type.Object(
   { additionalProperties: false }
 );
 export type EvaluationCard = Static<typeof EvaluationCardSchema>;
+
+export const KnownDefectSchema = Type.Object(
+  {
+    id: Id,
+    dimensionId: Id,
+    scope: EvaluationScopeSchema,
+    description: Type.String({ minLength: 1 }),
+    evidenceRefs: Type.Array(DigestedRefSchema),
+    acceptedTradeoff: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+export type KnownDefect = Static<typeof KnownDefectSchema>;
+
+export const ReviewerIdentitySchema = Type.Object(
+  {
+    id: Id,
+    role: Type.String({ minLength: 1 }),
+    displayName: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const EvaluationBaselineSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    suiteRef: DigestedRefSchema,
+    evaluationRunId: Id,
+    manifestId: Id,
+    comparisonScope: EvaluationScopeSchema,
+    knownDefects: Type.Array(KnownDefectSchema),
+    promotedBy: ReviewerIdentitySchema,
+    rationale: Type.String({ minLength: 1 }),
+    promotedAt: IsoDate,
+    supersedesBaselineId: Type.Optional(Id),
+  },
+  { additionalProperties: false }
+);
+export type EvaluationBaseline = Static<typeof EvaluationBaselineSchema>;
+
+export const CompatibilitySchema = Type.Object(
+  {
+    status: Type.Union([
+      Type.Literal("compatible"),
+      Type.Literal("migrated"),
+      Type.Literal("changed_semantics"),
+      Type.Literal("incomparable"),
+    ]),
+    rationale: Type.String({ minLength: 1 }),
+    migrationRef: Type.Optional(DigestedRefSchema),
+  },
+  { additionalProperties: false }
+);
+export type Compatibility = Static<typeof CompatibilitySchema>;
+
+export const CaseAlignmentSchema = Type.Object(
+  {
+    baselineCaseRef: DigestedRefSchema,
+    proposedCaseRef: Type.Optional(DigestedRefSchema),
+    compatibility: CompatibilitySchema,
+  },
+  { additionalProperties: false }
+);
+export type CaseAlignment = Static<typeof CaseAlignmentSchema>;
+
+export const DimensionDeltaSchema = Type.Object(
+  {
+    dimensionId: Id,
+    comparability: Type.Union([
+      Type.Literal("comparable"),
+      Type.Literal("changed_semantics"),
+      Type.Literal("incomparable"),
+    ]),
+    direction: Type.Union([
+      Type.Literal("improved"),
+      Type.Literal("regressed"),
+      Type.Literal("unchanged"),
+      Type.Literal("mixed"),
+      Type.Literal("unknown"),
+    ]),
+    materiality: Type.Union([
+      Type.Literal("material"),
+      Type.Literal("immaterial"),
+      Type.Literal("undetermined"),
+    ]),
+    evidenceRefs: Type.Array(DigestedRefSchema),
+    rationale: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false }
+);
+export type DimensionDelta = Static<typeof DimensionDeltaSchema>;
+
+export const EvaluationComparisonSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    baselineId: Id,
+    proposedRunId: Id,
+    baselineManifestId: Id,
+    proposedManifestId: Id,
+    suiteCompatibility: CompatibilitySchema,
+    caseAlignment: Type.Array(CaseAlignmentSchema, { minItems: 1 }),
+    evaluatorCompatibility: CompatibilitySchema,
+    dimensionDeltas: Type.Array(DimensionDeltaSchema, { minItems: 1 }),
+    classifications: Type.Array(
+      Type.Union([
+        Type.Literal("hard_regression"),
+        Type.Literal("measured_regression"),
+        Type.Literal("human_judgment_delta"),
+        Type.Literal("improvement"),
+        Type.Literal("intentional_difference"),
+        Type.Literal("evaluator_change"),
+        Type.Literal("unknown_change"),
+        Type.Literal("incomparable"),
+      ]),
+      { minItems: 1 }
+    ),
+    attributions: Type.Array(
+      Type.Union([
+        Type.Literal("product_code"),
+        Type.Literal("changed_inputs"),
+        Type.Literal("evaluator_semantics"),
+        Type.Literal("intentional_design"),
+        Type.Literal("incompatibility"),
+        Type.Literal("unknown"),
+      ]),
+      { minItems: 1 }
+    ),
+    reviewStatus: Type.Union([
+      Type.Literal("unreviewed"),
+      Type.Literal("accepted"),
+      Type.Literal("changes_requested"),
+    ]),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type EvaluationComparison = Static<typeof EvaluationComparisonSchema>;
+
+export const EvaluationReportSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    comparisonId: Id,
+    baselineId: Id,
+    proposedRunId: Id,
+    cardRefs: Type.Array(DigestedRefSchema, { minItems: 1 }),
+    musicalScopes: Type.Array(EvaluationScopeSchema, { minItems: 1 }),
+    artifactRefs: Type.Array(DigestedRefSchema),
+    reviewNeeds: Type.Array(Type.String({ minLength: 1 })),
+    sanitizedMarkup: Type.String({ minLength: 1 }),
+    sanitizerPolicyVersion: Type.String({ minLength: 1 }),
+    generatedAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type EvaluationReport = Static<typeof EvaluationReportSchema>;

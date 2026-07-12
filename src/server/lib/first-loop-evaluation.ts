@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Value } from "@sinclair/typebox/value";
+import type { AnalysisRecord, ArrangementScore } from "../../lib/music-domain.js";
 import type {
   AbsoluteDimensionResult,
   DigestedRef,
@@ -18,8 +19,23 @@ import { digestValue, EvaluationHarness, type EvaluationRegistry } from "./evalu
 import { EvaluationStore } from "./evaluation-store.js";
 import { SourceImportService } from "./source-import-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import type { ComparisonPolicy } from "./evaluation-comparison.js";
 
 export const FIRST_LOOP_SUITE_REF = { id: "suite.first-loop-fast", version: 1 } as const;
+export const FIRST_LOOP_COMPARISON_POLICY: ComparisonPolicy = {
+  id: "policy.first-loop-comparison",
+  version: 1,
+  noise: "none",
+  hardGatesCompensable: false,
+  minimumEvidenceRefs: 1,
+  unknownHandling: "undetermined",
+  mixedResultHandling: "mixed",
+  gateEligibleDimensions: [
+    "source_authority",
+    "preservation_and_transformation",
+    "arrangement_plan_realization",
+  ],
+};
 
 export function createFirstLoopRegistry(projectRoot = process.cwd()): EvaluationRegistry {
   const sourcePath = path.join(projectRoot, "test/fixtures/greensleeves/greensleeves-satb.ly");
@@ -71,8 +87,11 @@ export function createFirstLoopRegistry(projectRoot = process.cwd()): Evaluation
       requirePreservationAudit: true,
     }),
     definition("mutation.principal-voice-omission", "mutation", {
-      status: "declared_for_t11",
       operation: "omit_principal_voice_event",
+      expectedDimensionId: "preservation_and_transformation",
+      expectedOutcome: "fail",
+      expectedPresentation: "hard_gate",
+      sensitivityClaim: "this mutation and scope only",
     }),
     definition("evaluator.first-loop", "evaluator", {
       implementation: "narrow-evaluation-card",
@@ -87,8 +106,12 @@ export function createFirstLoopRegistry(projectRoot = process.cwd()): Evaluation
       stringing: "french",
     }),
     definition("policy.first-loop-comparison", "comparison_policy", {
-      hardGatesCompensable: false,
-      comparativeDirectionsExcludedFromAbsoluteResults: true,
+      noise: FIRST_LOOP_COMPARISON_POLICY.noise,
+      hardGatesCompensable: FIRST_LOOP_COMPARISON_POLICY.hardGatesCompensable,
+      minimumEvidenceRefs: FIRST_LOOP_COMPARISON_POLICY.minimumEvidenceRefs,
+      unknownHandling: FIRST_LOOP_COMPARISON_POLICY.unknownHandling,
+      mixedResultHandling: FIRST_LOOP_COMPARISON_POLICY.mixedResultHandling,
+      gateEligibleDimensions: FIRST_LOOP_COMPARISON_POLICY.gateEligibleDimensions,
     }),
     definition("profile.first-loop-report", "report_profile", {
       overallGrade: false,
@@ -137,6 +160,7 @@ export async function runFirstLoopEvaluation(options: {
   projectRoot?: string;
   now?: () => Date;
   createId?: () => string;
+  mutationId?: "mutation.principal-voice-omission";
 }): Promise<{
   manifestId: string;
   manifestDigest: string;
@@ -201,15 +225,22 @@ export async function runFirstLoopEvaluation(options: {
             performanceBrief,
           }
         );
-        const narrowCard = buildNarrowEvaluationCard({
-          score: arranged.arrangementScore,
-          planning: {
-            sourceTruthAssessment: arranged.sourceTruthAssessment,
-            performanceBrief: arranged.performanceBrief,
-            arrangementPlan: arranged.arrangementPlan,
-          },
-          deliverableIds: [],
-        });
+        const evaluatedScore = options.mutationId
+          ? applyPrincipalVoiceOmission(arranged.arrangementScore, imported.analysisRecord)
+          : arranged.arrangementScore;
+        const narrowCard = evaluatePrincipalVoiceCoverage(
+          buildNarrowEvaluationCard({
+            score: evaluatedScore,
+            planning: {
+              sourceTruthAssessment: arranged.sourceTruthAssessment,
+              performanceBrief: arranged.performanceBrief,
+              arrangementPlan: arranged.arrangementPlan,
+            },
+            deliverableIds: [],
+          }),
+          evaluatedScore,
+          imported.analysisRecord
+        );
         const evaluatorRef = manifest.evaluators[0]!;
         const generated = [
           imported.scoreTranscription,
@@ -219,7 +250,7 @@ export async function runFirstLoopEvaluation(options: {
           arranged.performanceBrief,
           arranged.arrangementPlan,
           arranged.arrangementSearch,
-          arranged.arrangementScore,
+          evaluatedScore,
         ];
         return {
           generatedRecordRefs: generated.map(recordRef),
@@ -325,5 +356,67 @@ function absoluteResult(
         evidenceRefs,
       },
     ],
+  };
+}
+
+function applyPrincipalVoiceOmission(
+  score: ArrangementScore,
+  analysis: AnalysisRecord
+): ArrangementScore {
+  const target = analysis.preservationTargets.find(
+    (candidate) => candidate.kind === "principal_voice"
+  );
+  const sourceEventId = target?.eventIds?.[0];
+  if (!target || !sourceEventId) {
+    throw new Error("The Principal Voice omission mutation requires an event-bearing target");
+  }
+  const omitted = score.events.find((event) => event.principalVoiceSourceEventId === sourceEventId);
+  if (!omitted)
+    throw new Error(`No arrangement event realizes Principal Voice event ${sourceEventId}`);
+  return {
+    ...score,
+    id: `${score.id}.mutation.principal-voice-omission`,
+    parentArrangementScoreId: score.id,
+    events: score.events.filter((event) => event.id !== omitted.id),
+    transformationReport: [
+      ...score.transformationReport.filter((entry) => entry.sourceEventId !== sourceEventId),
+      {
+        id: "mutation-report.principal-voice-omission",
+        entryType: "event",
+        sourceEventId,
+        preservationTargetIds: [target.id],
+        arrangementEventIds: [],
+        classification: "omitted",
+        rationale: "Evaluation mutation deliberately omits one Principal Voice event.",
+      },
+    ],
+  };
+}
+
+function evaluatePrincipalVoiceCoverage(
+  card: ReturnType<typeof buildNarrowEvaluationCard>,
+  score: ArrangementScore,
+  analysis: AnalysisRecord
+): ReturnType<typeof buildNarrowEvaluationCard> {
+  const target = analysis.preservationTargets.find(
+    (candidate) => candidate.kind === "principal_voice"
+  );
+  if (!target?.eventIds) return card;
+  const represented = new Set(score.events.flatMap((event) => event.sourceEventIds));
+  const missing = target.eventIds.filter((eventId) => !represented.has(eventId));
+  if (missing.length === 0) return card;
+  return {
+    ...card,
+    hardGateStatus: "fail",
+    dimensions: card.dimensions.map((dimension) =>
+      dimension.id === "preservation_and_transformation"
+        ? {
+            ...dimension,
+            status: "fail",
+            evidenceIds: [target.id, ...missing],
+            rationale: `Principal Voice coverage failed for ${missing.length} required source event(s).`,
+          }
+        : dimension
+    ),
   };
 }

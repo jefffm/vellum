@@ -5,11 +5,17 @@ import type { TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import {
   EvaluationCardSchema,
+  EvaluationBaselineSchema,
   EvaluationCaseRunSchema,
+  EvaluationComparisonSchema,
+  EvaluationReportSchema,
   EvaluationRunSchema,
   ResolvedEvaluationManifestSchema,
   type EvaluationCard,
+  type EvaluationBaseline,
   type EvaluationCaseRun,
+  type EvaluationComparison,
+  type EvaluationReport,
   type EvaluationRun,
   type ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
@@ -82,6 +88,46 @@ export class EvaluationStore {
 
   getCard(id: string): EvaluationCard {
     return this.read("cards", id, EvaluationCardSchema);
+  }
+
+  getCardForCaseRun(caseRunId: string): EvaluationCard | undefined {
+    const directory = path.join(this.rootDirectory, "cards");
+    try {
+      const matches = readdirSync(directory)
+        .filter((name) => name.endsWith(".json"))
+        .map((name) => this.getCard(name.slice(0, -5)))
+        .filter((card) => card.caseRunId === caseRunId);
+      if (matches.length > 1)
+        throw new Error(`Multiple Evaluation Cards for Case Run ${caseRunId}`);
+      return matches[0];
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+      throw error;
+    }
+  }
+
+  saveBaseline(value: EvaluationBaseline): EvaluationBaseline {
+    return this.write("baselines", value.id, EvaluationBaselineSchema, value);
+  }
+
+  getBaseline(id: string): EvaluationBaseline {
+    return this.read("baselines", id, EvaluationBaselineSchema);
+  }
+
+  saveComparison(value: EvaluationComparison): EvaluationComparison {
+    return this.write("comparisons", value.id, EvaluationComparisonSchema, value);
+  }
+
+  getComparison(id: string): EvaluationComparison {
+    return this.read("comparisons", id, EvaluationComparisonSchema);
+  }
+
+  saveReport(value: EvaluationReport): EvaluationReport {
+    return this.write("reports", value.id, EvaluationReportSchema, value);
+  }
+
+  getReport(id: string): EvaluationReport {
+    return this.read("reports", id, EvaluationReportSchema);
   }
 
   private write<T>(directory: string, id: string, schema: TSchema, value: T): T {

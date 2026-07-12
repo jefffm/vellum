@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T11",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T13:43:00Z",
+  "requirements": {
+    "M11": {
+      "status": "machine_verified",
+      "remaining": "T29-T34 add human comparison protocols, external evidence, retention, CI selection, and promotion policy"
+    },
+    "M12": {
+      "status": "partial",
+      "remaining": "Principal Voice omission sensitivity is verified; T33-T35 expand the corpus across the remaining declared mutation families and targets"
+    },
+    "M14": {
+      "status": "machine_verified",
+      "remaining": "T33 adds hostile SVG and rendered-report coverage beyond the hostile HTML fixture"
+    }
+  },
+  "auditFindings": {
+    "F016": "partial: comparisons expose separate absolute dimensions and policy-governed deltas without an overall score; proxy selection metrics remain for later search tracers",
+    "F028": "partial: immutable evaluation records reject divergent identity collisions and reports bind exact digests; broader Deliverable collision races remain for T33-T34",
+    "F043": "partial: hostile report markup is inert through escaping plus the isolated evaluation-report sanitizer; browser report sinks and hostile generated SVG remain for T33"
+  },
+  "summary": {
+    "fullSuitePassed": 950,
+    "fullSuiteSkipped": 1,
+    "focusedTestsPassed": 12,
+    "command": {
+      "invocation": "npm run --silent eval:compare -- --output /tmp/vellum-t11-eval-final",
+      "baselineId": "evaluation-baseline.704d1b7d-3b2a-4d93-8f55-6afe8d57cb18",
+      "baselineRunId": "evaluation-run.56571c2e-0716-4c48-b94e-5886c837aeab",
+      "proposedRunId": "evaluation-run.929ce745-dd72-4449-aa4a-6591a7ec6634",
+      "comparisonId": "evaluation-comparison.1d566183-a131-4330-b1f8-2b70e4bbf91a",
+      "reportId": "evaluation-report.9e19cc67-a213-4828-8493-14832ef315dd",
+      "mutationDetected": true,
+      "principalDelta": {
+        "comparability": "comparable",
+        "direction": "regressed",
+        "materiality": "material"
+      },
+      "classifications": ["hard_regression", "unknown_change", "intentional_difference"]
+    },
+    "baselineKnownDefects": [
+      "mechanical_and_technique_evidence",
+      "historical_and_analytical_evidence",
+      "engraving_and_notation",
+      "playback_and_performed_form",
+      "workflow_and_recovery",
+      "human_and_physical_evidence",
+      "explicit_owner_usefulness"
+    ]
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 950 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/evaluation-comparison.test.ts src/server/lib/evaluation-harness.test.ts test/verify-arrangement-intelligence.test.ts",
+      "result": "pass: 12 passed"
+    },
+    {
+      "command": "npm run --silent eval:compare -- --output /tmp/vellum-t11-eval-final",
+      "result": "pass: exact baseline and mutated Run compared; Principal Voice omission detected as a material hard regression; sanitized report persisted"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/11-baseline-mutation-report.md",
+      "sha256": "46c58bd5c83274e1171693c0d7b903cd691a68828803e0d74e1a8e6c99c9c86b"
+    },
+    {
+      "path": "package.json",
+      "sha256": "c1172cb80749496c17e847a6bdaf4dacc103f07d6002e9bba95e0287069f6ba7"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "552b5e203bcde4d8a2a2d206ce1bc0ca0fe471199b9e787dfe632a9169a58523"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "sha256": "0175d3353e409879c4688b339ae4ba4215906f2271e819606865deef25d7be4b"
+    },
+    {
+      "path": "src/server/lib/evaluation-comparison.ts",
+      "sha256": "a0120394b834d1d68d503979cebb3a435c29796ddce7a745523faf6610de0d43"
+    },
+    {
+      "path": "src/server/lib/evaluation-comparison.test.ts",
+      "sha256": "14b4a3985ae2cff3bf3c696c5eeb17e5288460799570af1f45ee99c652873620"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "sha256": "bbbfaf15ad45bd06613a7c914cbf9a8a154d9a080f6b2350717d02d96c089cec"
+    },
+    {
+      "path": "src/server/evaluation-comparison-cli.ts",
+      "sha256": "019c1f16cfd315d54f82e26697d224f5a9530a566103385658185a5aa8ac9258"
+    }
+  ]
+}
