@@ -19,6 +19,7 @@ import { specializeArrangementPlan } from "../../lib/specialist-planning.js";
 import type {
   ArrangementCandidate,
   ArrangementEvent,
+  ArrangementPlan,
   ArrangementScore,
   ArrangementSearch,
   AnalysisRecord,
@@ -28,6 +29,11 @@ import type {
   PreservationAudit,
   TargetConfiguration,
 } from "../../lib/music-domain.js";
+import type {
+  ConstraintSpecification,
+  SearchAttemptConfiguration,
+  SearchExecutionIdentity,
+} from "../../lib/constraint-search.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
@@ -359,6 +365,13 @@ export class ArrangementService {
       notationClarity: 0.1,
       softPreferences: 0.1,
     };
+    const searchProtocol = buildSearchProtocol({
+      analysis,
+      plan: planning.arrangementPlan,
+      targetConfiguration,
+      performanceBriefId: planning.performanceBrief.id,
+      preservationPolicy,
+    });
     let arrangementSearch = this.store.saveArrangementSearch(workspaceId, {
       id: searchId,
       normalizedScoreId: score.id,
@@ -370,6 +383,7 @@ export class ArrangementService {
       preservationPolicy,
       status: "running",
       candidateIds: [],
+      ...searchProtocol,
       rankingWeights,
       createdAt: timestamp,
     });
@@ -434,6 +448,15 @@ export class ArrangementService {
       this.store.saveArrangementSearch(workspaceId, {
         ...arrangementSearch,
         status: "failed",
+        outcome: {
+          kind: "search_exhausted",
+          executionIdentity: arrangementSearch.executionIdentity,
+          diagnosticEvidenceIds: [planning.arrangementPlan.id],
+          reason:
+            error instanceof Error
+              ? `The current adapter could not realize the Plan: ${error.message}`
+              : "The current adapter could not realize the Plan within its modeled search",
+        },
         completedAt: timestamp,
       });
       if (error instanceof ApiRouteError) throw error;
@@ -518,6 +541,13 @@ export class ArrangementService {
           ...arrangementSearch,
           status: "failed",
           candidateIds: candidates.map((candidate) => candidate.id),
+          outcome: {
+            kind: "search_exhausted",
+            executionIdentity: arrangementSearch.executionIdentity,
+            diagnosticEvidenceIds: [planning.arrangementPlan.id],
+            reason:
+              "Generated candidates violate the selected Preservation Policy; no impossibility claim is made",
+          },
           completedAt: timestamp,
         });
         throw new ApiRouteError(
@@ -555,6 +585,13 @@ export class ArrangementService {
       candidateIds: candidates.map((candidate) => candidate.id),
       selectedCandidateId: selectedCandidate.id,
       selectedArrangementScoreId: arrangementScore.id,
+      outcome: {
+        kind: "candidate_found",
+        executionIdentity: arrangementSearch.executionIdentity,
+        diagnosticEvidenceIds: [arrangementScore.id],
+        candidateIds: candidates.map((candidate) => candidate.id),
+        selectedCandidateId: selectedCandidate.id,
+      },
       completedAt: timestamp,
     });
     return {
@@ -1037,6 +1074,139 @@ function stableFamilyId(scoreId: string, analysisId: string, brief: object): str
     .update(JSON.stringify({ scoreId, analysisId, brief }))
     .digest("hex")
     .slice(0, 24)}`;
+}
+
+function buildSearchProtocol(input: {
+  analysis: AnalysisRecord;
+  plan: ArrangementPlan;
+  targetConfiguration: TargetConfiguration;
+  performanceBriefId: string;
+  preservationPolicy: PreservationPolicy;
+}): {
+  constraintSpecifications: ConstraintSpecification[];
+  attemptConfiguration: SearchAttemptConfiguration;
+  executionIdentity: SearchExecutionIdentity;
+} {
+  const compilerIdentity = componentIdentity("compiler.arrangement-constraints", "1.0.0", {
+    protocol: "serializable-constraint-specification",
+    schemaVersion: 1,
+  });
+  const evaluator = componentIdentity("evaluator.preservation-target", "1.0.0", {
+    modeledProperties: input.analysis.preservationTargets.map((target) => target.kind),
+  });
+  const constraintSpecifications = input.analysis.preservationTargets.map(
+    (target, index): ConstraintSpecification => ({
+      id: `constraint.${target.id}`,
+      schemaVersion: 1,
+      evaluatorId: evaluator.id,
+      evaluatorVersion: evaluator.version,
+      scope: {
+        kind:
+          target.kind === "voice" || target.kind === "principal_voice"
+            ? "voice"
+            : target.kind === "relationship"
+              ? "passage"
+              : "whole_target",
+        targetConfigurationId: input.targetConfiguration.id,
+        subjectIds: target.eventIds.length
+          ? target.eventIds
+          : target.partId
+            ? [target.partId]
+            : [target.id],
+      },
+      parameters: {
+        preservationTargetKind: target.kind,
+        relationshipType: target.relationshipType ?? null,
+        requiredEventIds: target.eventIds,
+        requiredEventGroups: target.eventGroups ?? [],
+      },
+      provenance: {
+        kind: "preservation_target",
+        sourceRecordId: target.id,
+        evidenceIds: [input.analysis.id],
+        observationDigest: digestJson(target),
+      },
+      enforcement: {
+        rejection:
+          input.preservationPolicy === "free_paraphrase" && target.kind !== "principal_voice"
+            ? "retain_with_penalty"
+            : "reject",
+        comparisonPriority: index,
+        exceptionPolicy: "policy_exception_required",
+        confirmationPolicy: "none",
+        rationale: `${target.rationale} Enforcement is compiled under ${input.preservationPolicy}.`,
+        evaluationPhase: "both",
+      },
+      applicability: {
+        status: "applicable",
+        rationale: `The Analysis declares ${target.id} for this target search.`,
+        requiredCapabilityIds:
+          target.kind === "continuo_foundation"
+            ? ["capability.bass-disposition"]
+            : ["capability.polyphonic-voice-duration"],
+      },
+      compilerIdentity,
+    })
+  );
+  const attemptConfiguration: SearchAttemptConfiguration = {
+    schemaVersion: 1,
+    seed: 0,
+    width: 32,
+    maximumExpandedStates: 10_000,
+    maximumCandidates: 8,
+    pruningPolicy: "adapter-safe-dominance-only",
+    resourcePolicy: {
+      timeoutMilliseconds: 30_000,
+      diagnosticFrontierLimit: 64,
+      rejectionEvidenceLimit: 256,
+    },
+  };
+  const adapter = componentIdentity(
+    `adapter.${input.targetConfiguration.instrumentId}.${input.plan.kind}`,
+    "1.0.0",
+    {
+      instrumentProfileId: input.targetConfiguration.instrumentId,
+      planKind: input.plan.kind,
+      specialistIntent: input.plan.specialistIntent.kind,
+    }
+  );
+  const identityWithoutDigest = {
+    adapter,
+    compiler: compilerIdentity,
+    evaluators: [evaluator],
+    arrangementPlanId: input.plan.id,
+    performanceBriefId: input.performanceBriefId,
+    targetConfigurationId: input.targetConfiguration.id,
+    constraintDigests: constraintSpecifications.map(digestJson),
+    attemptConfigurationDigest: digestJson(attemptConfiguration),
+  };
+  return {
+    constraintSpecifications,
+    attemptConfiguration,
+    executionIdentity: {
+      digest: digestJson(identityWithoutDigest),
+      ...identityWithoutDigest,
+    },
+  };
+}
+
+function componentIdentity(id: string, version: string, definition: unknown) {
+  return { id, version, digest: digestJson({ id, version, definition }) };
+}
+
+function digestJson(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function clamp(value: number): number {

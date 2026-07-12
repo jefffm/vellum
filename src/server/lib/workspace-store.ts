@@ -920,6 +920,45 @@ export class WorkspaceStore {
       throw new ApiRouteError("Arrangement Search and Performance Brief targets do not match", 400);
     }
     if (
+      search.executionIdentity.performanceBriefId !== search.performanceBriefId ||
+      search.executionIdentity.targetConfigurationId !== search.targetConfiguration.id ||
+      !workspace.arrangementPlanIds.includes(search.executionIdentity.arrangementPlanId)
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Search execution identity must pin its exact Plan, Performance Brief, and target",
+        400
+      );
+    }
+    if (
+      search.executionIdentity.constraintDigests.length !== search.constraintSpecifications.length
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Search execution identity must pin every Constraint Specification",
+        400
+      );
+    }
+    if (
+      search.outcome &&
+      search.outcome.executionIdentity.digest !== search.executionIdentity.digest
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Search Outcome must retain the exact execution identity",
+        400
+      );
+    }
+    if (search.status === "running" && search.outcome) {
+      throw new ApiRouteError("A running Arrangement Search cannot have a terminal Outcome", 400);
+    }
+    if (search.status !== "running" && !search.outcome) {
+      throw new ApiRouteError("A terminal Arrangement Search requires an honest Outcome", 400);
+    }
+    if (search.status === "completed" && search.outcome?.kind !== "candidate_found") {
+      throw new ApiRouteError("A completed Arrangement Search requires candidate_found", 400);
+    }
+    if (search.status === "failed" && search.outcome?.kind === "candidate_found") {
+      throw new ApiRouteError("A failed Arrangement Search cannot report candidate_found", 400);
+    }
+    if (
       search.status === "completed" &&
       (search.candidateIds.length === 0 ||
         !search.selectedCandidateId ||

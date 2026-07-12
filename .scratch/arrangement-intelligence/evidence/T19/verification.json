@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T19",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T20:01:00Z",
+  "requirements": {
+    "AI-ICC-022": {
+      "status": "partial",
+      "remaining": "T23-T25 implement domain-specific adapter states"
+    },
+    "AI-ICC-024": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-025": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-026": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-027": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-028": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-029": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-030": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-031": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-032": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-033": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-034": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-035": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-036": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-037": {
+      "status": "partial",
+      "remaining": "T26 verifies completeness claims by differential replay"
+    },
+    "AI-ICC-038": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-039": {
+      "status": "partial",
+      "remaining": "T23-T25 provide and enforce concrete applicability declarations"
+    },
+    "AI-ICC-040": {
+      "status": "partial",
+      "remaining": "T23-T26 prove concrete adapter state sufficiency"
+    },
+    "AI-ICC-041": { "status": "partial", "remaining": "T26 runs deterministic replay" },
+    "AI-ICC-042": {
+      "status": "partial",
+      "remaining": "T26 proves concrete equivalence and dominance"
+    },
+    "AI-ICC-043": {
+      "status": "partial",
+      "remaining": "T26 executes incremental pruning and candidate construction"
+    },
+    "AI-ICC-044": {
+      "status": "partial",
+      "remaining": "T26 executes cancellation and compatible resume"
+    },
+    "AI-ICC-045": {
+      "status": "partial",
+      "remaining": "T26 substantiates adapter completeness claims"
+    },
+    "AI-ICC-046": {
+      "status": "partial",
+      "remaining": "T26 exercises bounded diagnostic retention"
+    },
+    "AI-ICC-072": {
+      "status": "partial",
+      "remaining": "T23-T25 consume Performance Brief semantics in target evaluators"
+    },
+    "AI-DEL-011": {
+      "status": "machine_verified",
+      "remaining": "physical evidence remains explicitly unknown where applicable"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 999,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Constraint Specifications are versioned JSON data with explicit scope, provenance, enforcement, applicability, and compiler identity",
+      "Evaluator conclusions separate completeness, evidence basis, authority, presentation, and exact modeled property",
+      "All six honest Search Outcomes are a closed discriminated union",
+      "Impossible wording requires exhaustively_infeasible plus a same-execution completeness certificate",
+      "Checkpoints and completeness certificates reject execution-identity mismatch",
+      "Search Adapter state is generic and adapter-owned rather than a universal musical state",
+      "Arrangement Search persists compiled Preservation Target constraints and exact Plan, Brief, target, adapter, evaluator, compiler, attempt, and constraint identities",
+      "Greensleeves, creative, continuo, and imitative paths retain distinct musical behavior under the common protocol"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.3622814c-b9cb-42b7-a9df-cb7484e37620",
+      "cardId": "evaluation-card.f85b36b9-a490-4ec6-b456-7b21fd78eb0b",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "humanAndPhysicalEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 999 passed, 1 skipped" },
+    {
+      "command": "focused constraint, arrangement, creative, continuo, and imitative tests",
+      "result": "pass"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t19-eval-final",
+      "result": "pass: hard gates pass and unmeasured human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "bc8e36bfab1100bdeec9c1ebedd6f0a1607d14dfffb70e96e37aff5138099c00"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/19-constraint-search-protocol.md",
+      "sha256": "baaffc4c2f4aa7d21721a2a31c7d579349f58627428af210f2540f9adcd352c7"
+    },
+    {
+      "path": "src/lib/constraint-search.ts",
+      "sha256": "eadb7bee41e1b285ca432c5a73279add53fc980b2266dca84bfd93a37ce4af67"
+    },
+    {
+      "path": "src/lib/constraint-search.test.ts",
+      "sha256": "833c1f82f006e9e4c73d85a3c523053b8c410d03f1d07e1ec6b912ea8127f8cf"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "e71aa447924974b925be10e85d5a2d692b90a4773486fd18eaaa6e08eeb5f9dd"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "27d57ccc0b764d409a7a101c1a6d5912f61c75361dc6dc1758a28c12ab5607bd"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "120566d95cdc44cbe47a525d6fdfdf547d1ef570c0b9fc2ef497f3454cb4d9de"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "e5c14d1f12598e607a4710be9e023b06c9ef4cd1c974e659a06539392c9dbbba"
+    }
+  ]
+}

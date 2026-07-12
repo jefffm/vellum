@@ -1,4 +1,10 @@
 import { Static, Type } from "@sinclair/typebox";
+import {
+  ConstraintSpecificationSchema,
+  SearchAttemptConfigurationSchema,
+  SearchExecutionIdentitySchema,
+  SearchOutcomeSchema,
+} from "./constraint-search.js";
 
 const IdSchema = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 const IsoDateSchema = Type.String({
@@ -1795,6 +1801,10 @@ export const ArrangementSearchSchema = Type.Object(
       Type.Literal("free_paraphrase"),
     ]),
     branchId: Type.Optional(IdSchema),
+    constraintSpecifications: Type.Array(ConstraintSpecificationSchema, { minItems: 1 }),
+    attemptConfiguration: SearchAttemptConfigurationSchema,
+    executionIdentity: SearchExecutionIdentitySchema,
+    outcome: Type.Optional(SearchOutcomeSchema),
     status: Type.Union([
       Type.Literal("running"),
       Type.Literal("completed"),

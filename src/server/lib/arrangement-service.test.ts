@@ -151,6 +151,22 @@ describe("Greensleeves faithful arrangement service", () => {
       candidateIds: result.candidates.map((candidate) => candidate.id),
       selectedCandidateId: result.arrangementScore.selectedCandidateId,
     });
+    expect(result.arrangementSearch.constraintSpecifications).not.toHaveLength(0);
+    expect(result.arrangementSearch.executionIdentity).toMatchObject({
+      arrangementPlanId: result.arrangementPlan.id,
+      performanceBriefId: result.performanceBrief.id,
+      targetConfigurationId: "target.baroque-guitar",
+      constraintDigests: result.arrangementSearch.constraintSpecifications.map(() =>
+        expect.stringMatching(/^[a-f0-9]{64}$/)
+      ),
+    });
+    expect(result.arrangementSearch.outcome).toEqual({
+      kind: "candidate_found",
+      executionIdentity: result.arrangementSearch.executionIdentity,
+      diagnosticEvidenceIds: [result.arrangementScore.id],
+      candidateIds: result.candidates.map((candidate) => candidate.id),
+      selectedCandidateId: result.arrangementScore.selectedCandidateId,
+    });
     expect(
       result.candidates.every(
         (candidate) => candidate.arrangementSearchId === result.arrangementSearch.id
@@ -189,6 +205,18 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(reloadedStore.getArrangementSearch(workspace.id, result.arrangementSearch.id)).toEqual(
       result.arrangementSearch
     );
+    expect(() =>
+      reloadedStore.saveArrangementSearch(workspace.id, {
+        ...result.arrangementSearch,
+        outcome: {
+          ...result.arrangementSearch.outcome!,
+          executionIdentity: {
+            ...result.arrangementSearch.executionIdentity,
+            digest: "f".repeat(64),
+          },
+        },
+      })
+    ).toThrow(/exact execution identity/);
     expect(reloadedStore.getArrangementCandidate(workspace.id, result.candidates[0]!.id)).toEqual(
       result.candidates[0]
     );
