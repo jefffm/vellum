@@ -19,7 +19,10 @@ const WorkspaceParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
 });
 const WorkspaceRenameSchema = Type.Object(
-  { title: Type.String({ minLength: 1 }) },
+  {
+    title: Type.String({ minLength: 1 }),
+    expectedRevision: Type.Optional(Type.Integer({ minimum: 1 })),
+  },
   { additionalProperties: false }
 );
 const WorkspaceRemoveSchema = Type.Object(
@@ -112,7 +115,8 @@ export function createWorkspaceRenameRoute(store = new WorkspaceStore()): Reques
       ...Value.Decode(WorkspaceParamsSchema, request.params),
       ...Value.Decode(WorkspaceRenameSchema, body),
     }),
-    handler: async ({ workspaceId, title }) => store.rename(workspaceId, title),
+    handler: async ({ workspaceId, title, expectedRevision }) =>
+      store.rename(workspaceId, title, expectedRevision),
   });
 }
 

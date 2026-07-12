@@ -70,6 +70,7 @@ import {
 } from "./lib/workspace-route.js";
 import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
 import { createSourceImportRoute } from "./lib/source-import-route.js";
+import { WorkspaceStore } from "./lib/workspace-store.js";
 import {
   createTranscriptionCorrectionRoute,
   createTranscriptionReviewRoute,
@@ -528,6 +529,7 @@ export function startServer(
   options: StartServerOptions = {}
 ): Server {
   const security = validateRuntimeSecurity(options.security ?? resolveRuntimeSecurity());
+  new WorkspaceStore({ recoverOnStart: true });
   const app = createApp({ security });
   const server = createServer(app);
 

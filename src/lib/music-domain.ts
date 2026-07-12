@@ -123,6 +123,7 @@ export const ArrangementBriefSchema = Type.Object(
 export const ArrangementWorkspaceSchema = Type.Object(
   {
     schemaVersion: Type.Integer({ minimum: 6 }),
+    revision: Type.Integer({ minimum: 1 }),
     id: IdSchema,
     title: Type.String({ minLength: 1 }),
     brief: ArrangementBriefSchema,

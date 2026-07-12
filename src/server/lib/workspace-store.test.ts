@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
@@ -48,14 +48,94 @@ describe("WorkspaceStore", () => {
 
   it("renames locally and requires exact confirmation before recursive removal", () => {
     const workspace = store.create({ title: "Draft title" });
-    expect(store.rename(workspace.id, "Greensleeves family")).toMatchObject({
+    const renamed = store.rename(workspace.id, "Greensleeves family", workspace.revision);
+    expect(renamed).toMatchObject({
       id: workspace.id,
       title: "Greensleeves family",
+      revision: workspace.revision + 1,
     });
+    expect(() => store.rename(workspace.id, "Lost update", workspace.revision)).toThrow(
+      /revision conflict/i
+    );
     expect(() => store.remove(workspace.id, "Greensleeves family")).toThrow(/exact workspace id/i);
     expect(store.get(workspace.id).title).toBe("Greensleeves family");
     store.remove(workspace.id, workspace.id);
     expect(store.list()).toEqual([]);
+  });
+
+  it("recovers valid orphan records and quarantines invalid records on startup", () => {
+    const workspace = store.create({ title: "Recover me" });
+    const records = path.join(rootDirectory, workspace.id, "records", "guided-workflows");
+    mkdirSync(records, { recursive: true });
+    const workflowId = "workflow.1111111111111111";
+    writeFileSync(
+      path.join(records, `${workflowId}.json`),
+      JSON.stringify({
+        id: workflowId,
+        workspaceId: workspace.id,
+        status: "interrupted",
+        stage: "source_saved",
+        sourceArtifactId: "source.1111111111111111",
+        optical: true,
+        preservationPolicy: "faithful_reduction",
+        targets: [
+          {
+            targetConfigurationId: "target.1111111111111111",
+            status: "pending",
+            deliverableIds: [],
+          },
+        ],
+        resumeCount: 0,
+        failureCode: "process_exit",
+        createdAt: "2026-07-10T12:00:00.000Z",
+        updatedAt: "2026-07-10T12:00:00.000Z",
+      })
+    );
+    writeFileSync(path.join(records, "workflow.2222222222222222.json"), "{broken");
+    writeFileSync(path.join(rootDirectory, workspace.id, ".workspace.lock"), "99999999");
+    const recovering = new WorkspaceStore({ rootDirectory, recoverOnStart: false });
+
+    const report = recovering.recoverWorkspace(workspace.id);
+
+    expect(report.linkedRecordIds).toEqual([workflowId]);
+    expect(report.staleLockRemoved).toBe(true);
+    expect(report.quarantinedPaths).toEqual([
+      ".recovery/quarantine/records/guided-workflows/workflow.2222222222222222.json",
+    ]);
+    expect(recovering.get(workspace.id).guidedWorkflowIds).toEqual([workflowId]);
+  });
+
+  it("checks immutable Deliverable metadata before writing or replacing bytes", () => {
+    const workspace = store.create({ title: "Artifacts" });
+    vi.spyOn(store, "getArrangementScore").mockReturnValue({ version: 1 } as never);
+    const content = Buffer.from("immutable artifact");
+    const id = "deliverable.1111111111111111";
+    const deliverable = {
+      id,
+      arrangementScoreId: "arrangement.1111111111111111",
+      arrangementScoreVersion: 1,
+      notationLayout: "standard-notation",
+      kind: "pdf" as const,
+      mimeType: "application/pdf",
+      sha256: createHash("sha256").update(content).digest("hex"),
+      byteLength: content.byteLength,
+      storedPath: `records/deliverable-artifacts/${id}/artifact.pdf`,
+      createdAt: "2026-07-10T12:00:00.000Z",
+    };
+    store.saveDeliverable(workspace.id, deliverable, content);
+    const conflictingContent = Buffer.from("different immutable artifact");
+    expect(() =>
+      store.saveDeliverable(
+        workspace.id,
+        {
+          ...deliverable,
+          sha256: createHash("sha256").update(conflictingContent).digest("hex"),
+          byteLength: conflictingContent.byteLength,
+        },
+        conflictingContent
+      )
+    ).toThrow(/metadata conflicts/i);
+    expect(store.readDeliverableContent(workspace.id, id)).toEqual(content);
   });
 
   it("migrates pre-Model-Action workspace manifests without losing existing links", () => {
@@ -81,6 +161,7 @@ describe("WorkspaceStore", () => {
 
     expect(store.get(id)).toMatchObject({
       schemaVersion: 6,
+      revision: 1,
       sourceArtifactIds: ["source.1111111111111111"],
       modelActionIds: [],
       arrangementBranchIds: [],
@@ -97,6 +178,7 @@ describe("WorkspaceStore", () => {
     });
     expect(JSON.parse(readFileSync(path.join(directory, "workspace.json"), "utf8"))).toMatchObject({
       schemaVersion: 6,
+      revision: 1,
       modelActionIds: [],
       arrangementBranchIds: [],
       arrangementSearchIds: [],
@@ -251,6 +333,17 @@ describe("WorkspaceStore", () => {
       id: "score.2222222222222222",
       version: 2,
     });
+    const unrelatedTranscription = store.saveScoreTranscription(workspace.id, {
+      ...transcription,
+      id: "transcription.9999999999999999",
+      version: 99,
+    });
+    const unrelatedScore = store.saveNormalizedScore(workspace.id, {
+      ...normalized,
+      id: "score.9999999999999999",
+      scoreTranscriptionId: unrelatedTranscription.id,
+      version: 99,
+    });
 
     expect(store.getOmrRun(workspace.id, omrRun.id)).toEqual(omrRun);
     expect(store.getScoreTranscription(workspace.id, transcription.id)).toEqual(transcription);
@@ -265,10 +358,44 @@ describe("WorkspaceStore", () => {
         { recordType: "normalized_score", recordId: normalized.id, version: 1 },
       ])
     ).toEqual([{ recordType: "normalized_score", recordId: normalizedV2.id, version: 2 }]);
+    const branchA = store.saveScoreTranscription(workspace.id, {
+      ...transcription,
+      id: "transcription.3333333333333333",
+      parentId: transcription.id,
+      version: 2,
+    });
+    const branchB = store.saveScoreTranscription(workspace.id, {
+      ...transcription,
+      id: "transcription.4444444444444444",
+      parentId: transcription.id,
+      version: 2,
+    });
+    store.saveNormalizedScore(workspace.id, {
+      ...normalized,
+      id: "score.3333333333333333",
+      scoreTranscriptionId: branchA.id,
+      version: 2,
+    });
+    store.saveNormalizedScore(workspace.id, {
+      ...normalized,
+      id: "score.4444444444444444",
+      scoreTranscriptionId: branchB.id,
+      version: 2,
+    });
+    expect(() =>
+      store.resolveCurrentInputVersions(workspace.id, [
+        { recordType: "normalized_score", recordId: normalized.id, version: 1 },
+      ])
+    ).toThrow(/ambiguous correction lineage/i);
+    expect(unrelatedScore.version).toBe(99);
     expect(store.get(workspace.id)).toMatchObject({
       omrRunIds: [omrRun.id],
-      scoreTranscriptionIds: [transcription.id],
-      normalizedScoreIds: [normalized.id, normalizedV2.id],
+      scoreTranscriptionIds: [transcription.id, unrelatedTranscription.id, branchA.id, branchB.id],
+      normalizedScoreIds: expect.arrayContaining([
+        normalized.id,
+        normalizedV2.id,
+        unrelatedScore.id,
+      ]),
       analysisRecordIds: [analysis.id],
     });
 

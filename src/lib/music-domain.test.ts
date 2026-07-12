@@ -22,6 +22,7 @@ describe("music domain contracts", () => {
   it("validates a versioned arrangement workspace", () => {
     const workspace = {
       schemaVersion: 6,
+      revision: 1,
       id: "workspace.test",
       title: "Greensleeves",
       brief: {

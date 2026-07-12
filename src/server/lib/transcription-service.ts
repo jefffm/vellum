@@ -192,7 +192,7 @@ export class TranscriptionService {
     const normalized: NormalizedScore = {
       id: `score.${this.createId()}`,
       scoreTranscriptionId: next.id,
-      version: 1,
+      version: next.version,
       title: next.title,
       key: next.key,
       timeSignature: next.timeSignature,

@@ -3,11 +3,14 @@ import type { TSchema } from "@sinclair/typebox";
 import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
+  closeSync,
   mkdirSync,
+  openSync,
   readdirSync,
   readFileSync,
   rmSync,
   renameSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -64,7 +67,36 @@ type WorkspaceStoreOptions = {
   rootDirectory?: string;
   now?: () => Date;
   createId?: () => string;
+  recoverOnStart?: boolean;
 };
+
+export type WorkspaceRecoveryReport = {
+  workspaceId: string;
+  linkedRecordIds: string[];
+  quarantinedPaths: string[];
+  staleLockRemoved: boolean;
+};
+
+const recoverableRecordCollections = [
+  ["omr-runs", "omrRunIds", OmrRunSchema],
+  ["transcriptions", "scoreTranscriptionIds", ScoreTranscriptionSchema],
+  ["normalized-scores", "normalizedScoreIds", NormalizedScoreSchema],
+  ["analysis-records", "analysisRecordIds", AnalysisRecordSchema],
+  ["arrangement-scores", "arrangementScoreIds", ArrangementScoreSchema],
+  ["model-actions", "modelActionIds", ModelActionSchema],
+  ["guided-workflows", "guidedWorkflowIds", GuidedWorkflowSchema],
+  ["arrangement-branches", "arrangementBranchIds", ArrangementBranchSchema],
+  ["arrangement-searches", "arrangementSearchIds", ArrangementSearchSchema],
+  ["arrangement-candidates", "arrangementCandidateIds", ArrangementCandidateSchema],
+  ["arrangement-families", "arrangementFamilyIds", ArrangementFamilySchema],
+  ["deliverables", "deliverableIds", DeliverableSchema],
+  ["stale-derivations", "staleDerivationIds", StaleDerivationSchema],
+  ["editorial-commitments", "editorialCommitmentIds", EditorialCommitmentSchema],
+  ["family-commitments", "familyCommitmentIds", FamilyCommitmentSchema],
+  ["commitment-conflicts", "commitmentConflictIds", CommitmentConflictSchema],
+  ["policy-exceptions", "policyExceptionIds", PolicyExceptionSchema],
+  ["performance-interpretations", "performanceInterpretationIds", PerformanceInterpretationSchema],
+] as const;
 
 export class WorkspaceStore {
   readonly rootDirectory: string;
@@ -75,6 +107,7 @@ export class WorkspaceStore {
     this.rootDirectory = options.rootDirectory ?? workspaceRootDirectory();
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
+    if (options.recoverOnStart === true) this.recoverAllWorkspaces();
   }
 
   create(input: CreateWorkspace): ArrangementWorkspace {
@@ -83,6 +116,7 @@ export class WorkspaceStore {
     const timestamp = this.now().toISOString();
     const workspace: ArrangementWorkspace = {
       schemaVersion: 6,
+      revision: 1,
       id,
       title: input.title,
       brief: input.brief ?? { targetConfigurations: [] },
@@ -128,28 +162,72 @@ export class WorkspaceStore {
       );
   }
 
+  recoverWorkspace(workspaceId: string): WorkspaceRecoveryReport {
+    const staleLockRemoved = this.removeStaleWorkspaceLock(workspaceId);
+    let workspace = this.get(workspaceId);
+    const linkedRecordIds: string[] = [];
+    const quarantinedPaths: string[] = [];
+    for (const [category, collection, schema] of recoverableRecordCollections) {
+      const directory = path.join(this.workspaceDirectory(workspaceId), "records", category);
+      if (!existsSync(directory)) continue;
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+        const recordPath = path.join(directory, entry.name);
+        let record: { id: string };
+        try {
+          record = Value.Decode(schema, JSON.parse(readFileSync(recordPath, "utf8"))) as {
+            id: string;
+          };
+          if (category === "deliverables") {
+            this.assertRecoverableDeliverable(workspaceId, record as Deliverable);
+          }
+        } catch {
+          quarantinedPaths.push(this.quarantineRecoveryPath(workspaceId, recordPath));
+          continue;
+        }
+        const ids = workspace[collection] as string[];
+        if (!ids.includes(record.id)) {
+          workspace = this.linkWorkspaceRecord(workspaceId, collection, record.id);
+          linkedRecordIds.push(record.id);
+        }
+      }
+    }
+    const report = { workspaceId, linkedRecordIds, quarantinedPaths, staleLockRemoved };
+    writeJsonAtomic(
+      path.join(this.workspaceDirectory(workspaceId), ".recovery", "last-report.json"),
+      report
+    );
+    return report;
+  }
+
+  private recoverAllWorkspaces(): void {
+    if (!existsSync(this.rootDirectory)) return;
+    for (const entry of readdirSync(this.rootDirectory, { withFileTypes: true })) {
+      if (!entry.isDirectory() || !entry.name.startsWith("workspace.")) continue;
+      try {
+        this.recoverWorkspace(entry.name);
+      } catch {
+        // A damaged workspace remains isolated; opening it will return its precise validation error.
+      }
+    }
+  }
+
   updateBrief(workspaceId: string, brief: ArrangementWorkspace["brief"]): ArrangementWorkspace {
-    const workspace = this.get(workspaceId);
-    const updated = Value.Decode(ArrangementWorkspaceSchema, {
+    return this.mutateWorkspace(workspaceId, undefined, (workspace) => ({
       ...workspace,
       brief,
       updatedAt: this.now().toISOString(),
-    });
-    this.writeWorkspace(updated);
-    return updated;
+    }));
   }
 
-  rename(workspaceId: string, title: string): ArrangementWorkspace {
-    const workspace = this.get(workspaceId);
+  rename(workspaceId: string, title: string, expectedRevision?: number): ArrangementWorkspace {
     const trimmed = title.trim();
     if (!trimmed) throw new ApiRouteError("Workspace title cannot be empty", 400);
-    const updated = Value.Decode(ArrangementWorkspaceSchema, {
+    return this.mutateWorkspace(workspaceId, expectedRevision, (workspace) => ({
       ...workspace,
       title: trimmed,
       updatedAt: this.now().toISOString(),
-    });
-    this.writeWorkspace(updated);
-    return updated;
+    }));
   }
 
   remove(workspaceId: string, confirmation: string): void {
@@ -179,6 +257,10 @@ export class WorkspaceStore {
     const migrated = {
       ...parsed,
       schemaVersion: 6,
+      revision:
+        typeof parsed.revision === "number" && Number.isInteger(parsed.revision)
+          ? parsed.revision
+          : 1,
       modelActionIds: Array.isArray(parsed.modelActionIds) ? parsed.modelActionIds : [],
       guidedWorkflowIds: Array.isArray(parsed.guidedWorkflowIds) ? parsed.guidedWorkflowIds : [],
       arrangementBranchIds: Array.isArray(parsed.arrangementBranchIds)
@@ -212,6 +294,7 @@ export class WorkspaceStore {
     const workspace = Value.Decode(ArrangementWorkspaceSchema, migrated);
     if (
       parsed.schemaVersion !== 6 ||
+      typeof parsed.revision !== "number" ||
       !Array.isArray(parsed.modelActionIds) ||
       !Array.isArray(parsed.guidedWorkflowIds) ||
       !Array.isArray(parsed.arrangementBranchIds) ||
@@ -557,14 +640,47 @@ export class WorkspaceStore {
     if (arrangement.version !== deliverable.arrangementScoreVersion) {
       throw new ApiRouteError("Deliverable Arrangement Score version is inconsistent", 400);
     }
+    const decoded = Value.Decode(DeliverableSchema, deliverable);
+    const requiredPrefix = path.posix.join("records", "deliverable-artifacts", decoded.id);
+    if (
+      decoded.storedPath !== requiredPrefix &&
+      !decoded.storedPath.startsWith(`${requiredPrefix}/`)
+    ) {
+      throw new ApiRouteError("Deliverable path does not match its immutable identity", 400);
+    }
     const sha256 = createHash("sha256").update(content).digest("hex");
     if (sha256 !== deliverable.sha256 || content.byteLength !== deliverable.byteLength) {
       throw new ApiRouteError("Deliverable content hash or length is inconsistent", 400);
     }
-    const decoded = Value.Decode(DeliverableSchema, deliverable);
-    const artifactPath = path.join(this.workspaceDirectory(workspaceId), decoded.storedPath);
+    const metadataPath = path.join(
+      this.workspaceDirectory(workspaceId),
+      "records",
+      "deliverables",
+      `${decoded.id}.json`
+    );
+    const artifactPath = this.resolveStoredWorkspacePath(workspaceId, decoded.storedPath);
+    if (existsSync(metadataPath)) {
+      const existing = Value.Decode(
+        DeliverableSchema,
+        JSON.parse(readFileSync(metadataPath, "utf8"))
+      );
+      if (JSON.stringify(existing) !== JSON.stringify(decoded)) {
+        throw new ApiRouteError(`Immutable Deliverable metadata conflicts: ${decoded.id}`, 409);
+      }
+      this.assertRecoverableDeliverable(workspaceId, existing);
+      this.linkRecord(workspace, "deliverableIds", existing.id);
+      return existing;
+    }
+    if (existsSync(artifactPath)) {
+      throw new ApiRouteError(`Uncommitted Deliverable bytes already exist: ${decoded.id}`, 409);
+    }
     writeFileAtomic(artifactPath, content);
-    this.writeImmutableRecord(workspaceId, "deliverables", decoded.id, decoded);
+    try {
+      this.writeImmutableRecord(workspaceId, "deliverables", decoded.id, decoded);
+    } catch (error) {
+      rmSync(artifactPath, { force: true });
+      throw error;
+    }
     this.linkRecord(workspace, "deliverableIds", decoded.id);
     return decoded;
   }
@@ -815,51 +931,48 @@ export class WorkspaceStore {
     const workspace = this.get(workspaceId);
     return originals.map((original) => {
       if (original.recordId.startsWith("transcription.")) {
-        const sourceId = this.getScoreTranscription(
-          workspaceId,
-          original.recordId
-        ).sourceArtifactId;
+        this.getScoreTranscription(workspaceId, original.recordId);
         return latestVersion(
           workspace.scoreTranscriptionIds
             .map((id) => this.getScoreTranscription(workspaceId, id))
-            .filter((record) => record.sourceArtifactId === sourceId),
+            .filter((record) =>
+              this.isTranscriptionDescendant(workspaceId, record.id, original.recordId)
+            ),
           original
         );
       }
       if (original.recordId.startsWith("score.")) {
-        const sourceId = this.getScoreTranscription(
+        const originalTranscriptionId = this.getNormalizedScore(
           workspaceId,
-          this.getNormalizedScore(workspaceId, original.recordId).scoreTranscriptionId
-        ).sourceArtifactId;
+          original.recordId
+        ).scoreTranscriptionId;
         return latestVersion(
           workspace.normalizedScoreIds
             .map((id) => this.getNormalizedScore(workspaceId, id))
-            .filter(
-              (record) =>
-                this.getScoreTranscription(workspaceId, record.scoreTranscriptionId)
-                  .sourceArtifactId === sourceId
+            .filter((record) =>
+              this.isTranscriptionDescendant(
+                workspaceId,
+                record.scoreTranscriptionId,
+                originalTranscriptionId
+              )
             ),
           original
         );
       }
       if (original.recordId.startsWith("analysis.")) {
-        const sourceId = this.getScoreTranscription(
+        const originalTranscriptionId = this.getNormalizedScore(
           workspaceId,
-          this.getNormalizedScore(
-            workspaceId,
-            this.getAnalysisRecord(workspaceId, original.recordId).normalizedScoreId
-          ).scoreTranscriptionId
-        ).sourceArtifactId;
+          this.getAnalysisRecord(workspaceId, original.recordId).normalizedScoreId
+        ).scoreTranscriptionId;
         return latestVersion(
           workspace.analysisRecordIds
             .map((id) => this.getAnalysisRecord(workspaceId, id))
-            .filter(
-              (record) =>
-                this.getScoreTranscription(
-                  workspaceId,
-                  this.getNormalizedScore(workspaceId, record.normalizedScoreId)
-                    .scoreTranscriptionId
-                ).sourceArtifactId === sourceId
+            .filter((record) =>
+              this.isTranscriptionDescendant(
+                workspaceId,
+                this.getNormalizedScore(workspaceId, record.normalizedScoreId).scoreTranscriptionId,
+                originalTranscriptionId
+              )
             ),
           original
         );
@@ -889,6 +1002,26 @@ export class WorkspaceStore {
       return;
     }
     throw new ApiRouteError(`Unsupported canonical Model Action result: ${reference}`, 400);
+  }
+
+  private isTranscriptionDescendant(
+    workspaceId: string,
+    candidateId: string,
+    ancestorId: string
+  ): boolean {
+    const visited = new Set<string>();
+    let current: ScoreTranscription | undefined = this.getScoreTranscription(
+      workspaceId,
+      candidateId
+    );
+    while (current && !visited.has(current.id)) {
+      if (current.id === ancestorId) return true;
+      visited.add(current.id);
+      current = current.parentId
+        ? this.getScoreTranscription(workspaceId, current.parentId)
+        : undefined;
+    }
+    return false;
   }
 
   saveArrangementBranch(workspaceId: string, branch: ArrangementBranch): ArrangementBranch {
@@ -936,9 +1069,7 @@ export class WorkspaceStore {
 
   private linkSourceArtifact(workspace: ArrangementWorkspace, sourceArtifactId: string): void {
     if (!workspace.sourceArtifactIds.includes(sourceArtifactId)) {
-      workspace.sourceArtifactIds.push(sourceArtifactId);
-      workspace.updatedAt = this.now().toISOString();
-      this.writeWorkspace(workspace);
+      this.linkWorkspaceRecord(workspace.id, "sourceArtifactIds", sourceArtifactId);
     }
   }
 
@@ -976,9 +1107,7 @@ export class WorkspaceStore {
     }
     const ids = values as string[];
     if (!ids.includes(id)) {
-      ids.push(id);
-      workspace.updatedAt = this.now().toISOString();
-      this.writeWorkspace(workspace);
+      this.linkWorkspaceRecord(workspace.id, collection, id);
     }
   }
 
@@ -1032,8 +1161,142 @@ export class WorkspaceStore {
   }
 
   private writeWorkspace(workspace: ArrangementWorkspace): void {
-    Value.Decode(ArrangementWorkspaceSchema, workspace);
-    writeJsonAtomic(this.workspaceManifestPath(workspace.id), workspace);
+    const decoded = Value.Decode(ArrangementWorkspaceSchema, workspace);
+    writeJsonAtomic(this.workspaceManifestPath(workspace.id), decoded);
+  }
+
+  private linkWorkspaceRecord<K extends keyof ArrangementWorkspace>(
+    workspaceId: string,
+    collection: K,
+    id: string
+  ): ArrangementWorkspace {
+    return this.mutateWorkspace(workspaceId, undefined, (workspace) => {
+      const values = workspace[collection];
+      if (!Array.isArray(values)) {
+        throw new ApiRouteError(
+          `Workspace field is not a record collection: ${String(collection)}`,
+          500
+        );
+      }
+      if (!(values as string[]).includes(id)) (values as string[]).push(id);
+      return { ...workspace, updatedAt: this.now().toISOString() };
+    });
+  }
+
+  private mutateWorkspace(
+    workspaceId: string,
+    expectedRevision: number | undefined,
+    mutate: (workspace: ArrangementWorkspace) => ArrangementWorkspace
+  ): ArrangementWorkspace {
+    const release = this.acquireWorkspaceLock(workspaceId);
+    try {
+      const manifestPath = this.workspaceManifestPath(workspaceId);
+      if (!existsSync(manifestPath)) {
+        throw new ApiRouteError(`Arrangement workspace not found: ${workspaceId}`, 404);
+      }
+      const current = Value.Decode(
+        ArrangementWorkspaceSchema,
+        JSON.parse(readFileSync(manifestPath, "utf8"))
+      );
+      if (expectedRevision !== undefined && current.revision !== expectedRevision) {
+        throw new ApiRouteError(
+          `Workspace revision conflict: expected ${expectedRevision}, current ${current.revision}`,
+          409
+        );
+      }
+      const updated = Value.Decode(ArrangementWorkspaceSchema, {
+        ...mutate(structuredClone(current)),
+        revision: current.revision + 1,
+      });
+      writeJsonAtomic(manifestPath, updated);
+      return updated;
+    } finally {
+      release();
+    }
+  }
+
+  private acquireWorkspaceLock(workspaceId: string): () => void {
+    const lockPath = path.join(this.workspaceDirectory(workspaceId), ".workspace.lock");
+    let descriptor: number;
+    try {
+      descriptor = openSync(lockPath, "wx", 0o600);
+    } catch {
+      if (!this.removeStaleWorkspaceLock(workspaceId)) {
+        throw new ApiRouteError("Workspace mutation is already in progress", 409);
+      }
+      try {
+        descriptor = openSync(lockPath, "wx", 0o600);
+      } catch {
+        throw new ApiRouteError("Workspace mutation is already in progress", 409);
+      }
+    }
+    try {
+      writeFileSync(descriptor, String(process.pid));
+    } catch (error) {
+      closeSync(descriptor);
+      rmSync(lockPath, { force: true });
+      throw error;
+    }
+    return () => {
+      closeSync(descriptor);
+      rmSync(lockPath, { force: true });
+    };
+  }
+
+  private removeStaleWorkspaceLock(workspaceId: string): boolean {
+    const lockPath = path.join(this.workspaceDirectory(workspaceId), ".workspace.lock");
+    if (!existsSync(lockPath)) return false;
+    const owner = Number(readFileSync(lockPath, "utf8"));
+    if (Number.isInteger(owner) && owner > 0) {
+      try {
+        process.kill(owner, 0);
+        return false;
+      } catch {
+        rmSync(lockPath, { force: true });
+        return true;
+      }
+    }
+    if (Date.now() - statSync(lockPath).mtimeMs < 30_000) return false;
+    rmSync(lockPath, { force: true });
+    return true;
+  }
+
+  private assertRecoverableDeliverable(workspaceId: string, deliverable: Deliverable): void {
+    const arrangement = this.getArrangementScore(workspaceId, deliverable.arrangementScoreId);
+    if (arrangement.version !== deliverable.arrangementScoreVersion) {
+      throw new ApiRouteError(`Deliverable lineage does not match: ${deliverable.id}`, 500);
+    }
+    const artifactPath = this.resolveStoredWorkspacePath(workspaceId, deliverable.storedPath);
+    if (!existsSync(artifactPath)) {
+      throw new ApiRouteError(`Deliverable bytes are missing: ${deliverable.id}`, 500);
+    }
+    const content = readFileSync(artifactPath);
+    const sha256 = createHash("sha256").update(content).digest("hex");
+    if (content.byteLength !== deliverable.byteLength || sha256 !== deliverable.sha256) {
+      throw new ApiRouteError(`Deliverable bytes do not match metadata: ${deliverable.id}`, 500);
+    }
+  }
+
+  private quarantineRecoveryPath(workspaceId: string, sourcePath: string): string {
+    const relative = path.relative(this.workspaceDirectory(workspaceId), sourcePath);
+    const quarantinePath = path.join(
+      this.workspaceDirectory(workspaceId),
+      ".recovery",
+      "quarantine",
+      relative
+    );
+    mkdirSync(path.dirname(quarantinePath), { recursive: true });
+    renameSync(sourcePath, quarantinePath);
+    return path.relative(this.workspaceDirectory(workspaceId), quarantinePath);
+  }
+
+  private resolveStoredWorkspacePath(workspaceId: string, storedPath: string): string {
+    const workspaceDirectory = path.resolve(this.workspaceDirectory(workspaceId));
+    const resolved = path.resolve(workspaceDirectory, storedPath);
+    if (!resolved.startsWith(`${workspaceDirectory}${path.sep}`)) {
+      throw new ApiRouteError("Stored workspace path escapes its workspace", 400);
+    }
+    return resolved;
   }
 
   private workspaceManifestPath(workspaceId: string): string {
@@ -1119,8 +1382,20 @@ function latestVersion(
   records: Array<{ id: string; version: number }>,
   original: ModelActionInputVersion
 ): ModelActionInputVersion {
-  const latest = records.sort((left, right) => right.version - left.version)[0];
+  const latest = [...records].sort(
+    (left, right) => right.version - left.version || left.id.localeCompare(right.id)
+  )[0];
   if (!latest) return original;
+  const tied = records.filter((record) => record.version === latest.version);
+  if (tied.length > 1) {
+    throw new ApiRouteError(
+      `Ambiguous correction lineage at version ${latest.version}: ${tied
+        .map((record) => record.id)
+        .sort()
+        .join(", ")}`,
+      409
+    );
+  }
   const { sha256: _obsoleteHash, ...identity } = original;
   return { ...identity, recordId: latest.id, version: latest.version };
 }

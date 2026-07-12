@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T07",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T12:13:00Z",
+  "requirements": {
+    "M13": {
+      "status": "partial",
+      "remaining": "T10/T26/T33-T34 extend the persistence matrix to Evaluation, Search, retention, and browser-visible fault injection"
+    }
+  },
+  "auditFindings": {
+    "F026": "machine fixed+verified: workspace manifests carry monotonic revisions; lock-serialized link mutation preserves independent updates and explicit expected revisions return typed conflicts",
+    "F027": "machine fixed+verified: startup scans valid record schemas, relinks orphan evidence, quarantines invalid records, repairs dead-owner locks, and retains a recovery report",
+    "F028": "machine fixed+verified: Deliverable identity, metadata, lineage, path, hash, and length are checked before collision paths can replace bytes",
+    "F029": "machine fixed+verified: corrected Normalized Score versions follow transcription versions; retry resolution walks exact parent lineage, excludes same-source sibling roots, and rejects ambiguous forks"
+  },
+  "summary": {
+    "testsPassed": 934,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 26,
+    "storageRecovery": {
+      "revisionConflictStatus": 409,
+      "manifestLockOwnerRecorded": true,
+      "staleLockRecovery": true,
+      "orphanReconciliation": true,
+      "invalidRecordQuarantine": true,
+      "recoveryReportRetained": true,
+      "deliverableCollisionPreservesBytes": true,
+      "ambiguousLineageRejected": true
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    {
+      "command": "npx vitest run src/server/lib/workspace-store.test.ts src/server/lib/transcription-service.test.ts src/server/lib/model-action-service.test.ts src/server/lib/workspace-route.test.ts src/lib/music-domain.test.ts",
+      "result": "pass: 26 passed"
+    },
+    { "command": "npm test", "result": "pass: 934 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/07-workspace-mutation-recovery.md",
+      "sha256": "71db5d2c6316399c5fc09ffd4f0e5237eea393e9572f2dd230f25bc4d897ca77"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "1e1afcec4162b7c496abec490308baef15f4cf72794ceccdaf4929cac0b83c8d"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "8c5a93aac3116df1ea9911c19ec6ebd2fda558fba4ae6b6e65bf1bc44e81ef91"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "d51f3a49b7a103b7b28be4eb621810355645fed70889b79e787d87e4cb804e22"
+    },
+    {
+      "path": "src/server/lib/workspace-store.test.ts",
+      "sha256": "e43c60047c0e919a6ca4f5383ae4a3aca8287b4dd844272cf8278c8b41ec2100"
+    },
+    {
+      "path": "src/server/lib/transcription-service.ts",
+      "sha256": "0478fbf513f9be0407d7b913e94794b3f151c7c5d39b573f8d3db7314ecd1c0d"
+    }
+  ]
+}
