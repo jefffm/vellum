@@ -1,4 +1,5 @@
 import type { TabPosition } from "../../types.js";
+import type { InstrumentInstanceConfiguration } from "../instrument-instance.js";
 
 /**
  * Supported alfabeto chart identifiers.
@@ -50,6 +51,7 @@ export interface AlfabetoLookupParams {
   readonly maxFret?: number;
   /** Include barré variants (default: true) */
   readonly includeBarreVariants?: boolean;
+  readonly instrumentInstance?: InstrumentInstanceConfiguration;
 }
 
 /**
@@ -62,6 +64,7 @@ export interface AlfabetoMatch {
   readonly source: "standard" | "barre" | "superset";
   readonly barreAt?: number;
   readonly baseShape?: string;
+  readonly physicalSoundingPitches?: readonly string[];
 }
 
 /**
@@ -70,4 +73,5 @@ export interface AlfabetoMatch {
 export interface AlfabetoLookupResult {
   readonly matches: AlfabetoMatch[];
   readonly chartId: ChartId;
+  readonly instrumentInstanceDigest?: string;
 }

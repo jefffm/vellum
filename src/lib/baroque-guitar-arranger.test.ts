@@ -12,6 +12,9 @@ import {
 } from "./baroque-guitar-arranger.js";
 import { noteToMidi, transposeNote } from "./pitch.js";
 import { arrangeCreativeParaphrase } from "./creative-arranger.js";
+import { createBaroqueGuitarInstance } from "./instrument-instance.js";
+import { arrangementToEngraveParams } from "./arrangement-engrave.js";
+import { engrave } from "../server/lib/engrave.js";
 
 describe("faithful baroque-guitar arrangement search", () => {
   const fixture = buildFixture();
@@ -115,6 +118,50 @@ describe("faithful baroque-guitar arrangement search", () => {
         (entry) => entry.entryType === "event" && entry.classification === "transposed"
       ).length
     ).toBe(protectedEvents.length);
+  });
+
+  it("projects the same source through exact stringing-dependent arrangement, playback, and engraving", () => {
+    const sourceSnapshot = structuredClone(fixture.score);
+    const arrange = (stringing: "french" | "italian") => {
+      const instrumentInstance = createBaroqueGuitarInstance(stringing);
+      return arrangeFaithfulBaroqueGuitar(
+        fixture.score,
+        fixture.analysis,
+        InstrumentModel.fromProfile(loadBrowserProfile("baroque-guitar-5"), instrumentInstance),
+        {
+          arrangementId: `arrangement.greensleeves-${stringing}`,
+          createdAt: "2026-07-12T20:10:00.000Z",
+          targetConfiguration: {
+            id: `target.baroque-guitar-${stringing}`,
+            instrumentId: "baroque-guitar-5",
+            role: "solo",
+            stringing,
+            instrumentInstance,
+            notationLayouts: ["french-letter-tablature"],
+            deliverables: ["pdf", "audio-preview"],
+          },
+        }
+      ).selected;
+    };
+    const french = arrange("french");
+    const italian = arrange("italian");
+    expect(fixture.score).toEqual(sourceSnapshot);
+    expect(french.targetConfiguration.instrumentInstance?.contentDigest).not.toBe(
+      italian.targetConfiguration.instrumentInstance?.contentDigest
+    );
+    expect(french.events).not.toEqual(italian.events);
+    const frenchPreview = buildAudioPreview(french, fixture.score);
+    const italianPreview = buildAudioPreview(italian, fixture.score);
+    expect(frenchPreview.instrumentInstanceDigest).toBe(
+      french.targetConfiguration.instrumentInstance?.contentDigest
+    );
+    expect(italianPreview.instrumentInstanceDigest).toBe(
+      italian.targetConfiguration.instrumentInstance?.contentDigest
+    );
+    expect(frenchPreview.events).not.toEqual(italianPreview.events);
+    expect(engrave(arrangementToEngraveParams(french, fixture.score)).source).not.toBe(
+      engrave(arrangementToEngraveParams(italian, fixture.score)).source
+    );
   });
 
   it("keeps the Greensleeves Principal Voice in a continuous playable hand position", () => {
@@ -269,6 +316,9 @@ function buildFixture() {
     id: "analysis.greensleeves",
     createdAt: "2026-07-10T13:00:00.000Z",
   });
-  const model = InstrumentModel.fromProfile(loadBrowserProfile("baroque-guitar-5"));
+  const model = InstrumentModel.fromProfile(
+    loadBrowserProfile("baroque-guitar-5"),
+    createBaroqueGuitarInstance("french")
+  );
   return { score, analysis, model };
 }

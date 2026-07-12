@@ -220,12 +220,23 @@ describe("Greensleeves PDF tracer bullet", () => {
       protectedPrincipalEvents.length
     );
     expect(
-      new Set(
-        audioPreview.events.map(
-          (event) => `${event.arrangementEventId}:${event.midi}:${event.part}`
-        )
-      ).size
-    ).toBe(audioPreview.events.length);
+      audioPreview.events
+        .filter((event) => event.constituentStringId)
+        .every((event) => /^string\.c\d+\.s\d+$/.test(event.constituentStringId!))
+    ).toBe(true);
+    expect(
+      audioPreview.events.some(
+        (event, index, events) =>
+          event.constituentStringId &&
+          events.some(
+            (other, otherIndex) =>
+              otherIndex !== index &&
+              other.arrangementEventId === event.arrangementEventId &&
+              other.midi === event.midi &&
+              other.constituentStringId !== event.constituentStringId
+          )
+      )
+    ).toBe(true);
     expect(
       audioPreview.events
         .filter((event) => event.part === "principal-voice")

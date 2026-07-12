@@ -34,6 +34,12 @@ import type {
   SearchAttemptConfiguration,
   SearchExecutionIdentity,
 } from "../../lib/constraint-search.js";
+import {
+  createBaroqueGuitarInstance,
+  assertInstrumentInstanceIdentity,
+  type BaroqueGuitarStringing,
+  type InstrumentInstanceConfiguration,
+} from "../../lib/instrument-instance.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
 import { ApiRouteError } from "./create-route.js";
 import { loadProfile } from "../profiles.js";
@@ -49,7 +55,10 @@ type ArrangementServiceOptions = {
   store: WorkspaceStore;
   now?: () => Date;
   createId?: () => string;
-  loadInstrument?: (instrumentId: string) => InstrumentModel;
+  loadInstrument?: (
+    instrumentId: string,
+    instance?: InstrumentInstanceConfiguration
+  ) => InstrumentModel;
   ownerStore?: OwnerStore;
 };
 
@@ -97,7 +106,10 @@ export class ArrangementService {
   private readonly store: WorkspaceStore;
   private readonly now: () => Date;
   private readonly createId: () => string;
-  private readonly loadInstrument: (instrumentId: string) => InstrumentModel;
+  private readonly loadInstrument: (
+    instrumentId: string,
+    instance?: InstrumentInstanceConfiguration
+  ) => InstrumentModel;
   private readonly ownerStore?: OwnerStore;
 
   constructor(options: ArrangementServiceOptions) {
@@ -107,7 +119,8 @@ export class ArrangementService {
     this.ownerStore = options.ownerStore;
     this.loadInstrument =
       options.loadInstrument ??
-      ((instrumentId) => InstrumentModel.fromProfile(loadProfile(instrumentId)));
+      ((instrumentId, instance) =>
+        InstrumentModel.fromProfile(loadProfile(instrumentId), instance));
   }
 
   createFaithfulReduction(
@@ -139,6 +152,42 @@ export class ArrangementService {
             ),
             ...resolved.applications,
           ],
+        });
+      }
+    }
+    if (targetConfiguration.instrumentId === "baroque-guitar-5") {
+      const stringing = targetConfiguration.stringing ?? "french";
+      if (!isBaroqueGuitarStringing(stringing)) {
+        throw new ApiRouteError(`Unsupported baroque-guitar stringing: ${stringing}`, 400);
+      }
+      const exactInstance = createBaroqueGuitarInstance(stringing);
+      if (
+        targetConfiguration.instrumentInstance &&
+        targetConfiguration.instrumentInstance.contentDigest !== exactInstance.contentDigest
+      ) {
+        throw new ApiRouteError(
+          "Target stringing and exact Instrument Instance configuration do not match",
+          409
+        );
+      }
+      if (targetConfiguration.instrumentInstance) {
+        try {
+          assertInstrumentInstanceIdentity(targetConfiguration.instrumentInstance);
+        } catch (error) {
+          throw new ApiRouteError((error as Error).message, 409);
+        }
+      }
+      if (!targetConfiguration.instrumentInstance) {
+        targetConfiguration = {
+          ...targetConfiguration,
+          stringing,
+          instrumentInstance: exactInstance,
+        };
+        workspace = this.store.updateBrief(workspaceId, {
+          ...workspace.brief,
+          targetConfigurations: workspace.brief.targetConfigurations.map((target) =>
+            target.id === targetConfiguration!.id ? targetConfiguration! : target
+          ),
         });
       }
     }
@@ -333,8 +382,7 @@ export class ArrangementService {
       }
       this.store.saveArrangementPlan(workspaceId, planning.arrangementPlan);
     }
-    const familyId =
-      input.arrangementFamilyId ?? stableFamilyId(score.id, analysis.id, workspace.brief);
+    const familyId = input.arrangementFamilyId ?? stableFamilyId(score.id, analysis.id);
     const currentWorkspace = this.store.get(workspaceId);
     if (!currentWorkspace.arrangementFamilyIds.includes(familyId)) {
       this.store.saveArrangementFamily(workspaceId, {
@@ -390,7 +438,10 @@ export class ArrangementService {
     let generated;
     try {
       if (planning.arrangementPlan.kind === "creative_arrangement") {
-        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        const instrument = this.loadInstrument(
+          targetConfiguration.instrumentId,
+          targetConfiguration.instrumentInstance
+        );
         generated = arrangeCreativeParaphrase(score, analysis, instrument, {
           arrangementId,
           createdAt: timestamp,
@@ -405,7 +456,10 @@ export class ArrangementService {
         const targetInstrument =
           targetConfiguration.instrumentId === "piano"
             ? undefined
-            : this.loadInstrument(targetConfiguration.instrumentId);
+            : this.loadInstrument(
+                targetConfiguration.instrumentId,
+                targetConfiguration.instrumentInstance
+              );
         generated = arrangeContinuo(score, analysis, {
           arrangementId,
           createdAt: timestamp,
@@ -418,7 +472,10 @@ export class ArrangementService {
               : undefined,
         });
       } else if (analysis.texture === "imitative-polyphony") {
-        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        const instrument = this.loadInstrument(
+          targetConfiguration.instrumentId,
+          targetConfiguration.instrumentInstance
+        );
         generated = arrangeImitativeIntabulation(score, analysis, instrument, {
           arrangementId,
           createdAt: timestamp,
@@ -430,7 +487,10 @@ export class ArrangementService {
               : undefined,
         });
       } else {
-        const instrument = this.loadInstrument(targetConfiguration.instrumentId);
+        const instrument = this.loadInstrument(
+          targetConfiguration.instrumentId,
+          targetConfiguration.instrumentInstance
+        );
         if (
           targetConfiguration.tuningId &&
           targetConfiguration.instrumentId === "baroque-lute-13"
@@ -836,7 +896,10 @@ export class ArrangementService {
     const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
     const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
     const analysis = this.store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
-    const model = this.loadInstrument(arrangement.targetConfiguration.instrumentId);
+    const model = this.loadInstrument(
+      arrangement.targetConfiguration.instrumentId,
+      arrangement.targetConfiguration.instrumentInstance
+    );
     if (
       arrangement.targetConfiguration.tuningId &&
       arrangement.targetConfiguration.instrumentId === "baroque-lute-13"
@@ -1069,9 +1132,9 @@ function stableCandidateId(searchId: string, strategy: string): string {
   return `candidate.${createHash("sha256").update(`${searchId}:${strategy}`).digest("hex").slice(0, 24)}`;
 }
 
-function stableFamilyId(scoreId: string, analysisId: string, brief: object): string {
+function stableFamilyId(scoreId: string, analysisId: string): string {
   return `family.${createHash("sha256")
-    .update(JSON.stringify({ scoreId, analysisId, brief }))
+    .update(JSON.stringify({ scoreId, analysisId }))
     .digest("hex")
     .slice(0, 24)}`;
 }
@@ -1094,60 +1157,104 @@ function buildSearchProtocol(input: {
   const evaluator = componentIdentity("evaluator.preservation-target", "1.0.0", {
     modeledProperties: input.analysis.preservationTargets.map((target) => target.kind),
   });
-  const constraintSpecifications = input.analysis.preservationTargets.map(
-    (target, index): ConstraintSpecification => ({
-      id: `constraint.${target.id}`,
+  const constraintSpecifications: ConstraintSpecification[] =
+    input.analysis.preservationTargets.map(
+      (target, index): ConstraintSpecification => ({
+        id: `constraint.${target.id}`,
+        schemaVersion: 1,
+        evaluatorId: evaluator.id,
+        evaluatorVersion: evaluator.version,
+        scope: {
+          kind:
+            target.kind === "voice" || target.kind === "principal_voice"
+              ? "voice"
+              : target.kind === "relationship"
+                ? "passage"
+                : "whole_target",
+          targetConfigurationId: input.targetConfiguration.id,
+          subjectIds: target.eventIds.length
+            ? target.eventIds
+            : target.partId
+              ? [target.partId]
+              : [target.id],
+        },
+        parameters: {
+          preservationTargetKind: target.kind,
+          relationshipType: target.relationshipType ?? null,
+          requiredEventIds: target.eventIds,
+          requiredEventGroups: target.eventGroups ?? [],
+        },
+        provenance: {
+          kind: "preservation_target",
+          sourceRecordId: target.id,
+          evidenceIds: [input.analysis.id],
+          observationDigest: digestJson(target),
+        },
+        enforcement: {
+          rejection:
+            input.preservationPolicy === "free_paraphrase" && target.kind !== "principal_voice"
+              ? "retain_with_penalty"
+              : "reject",
+          comparisonPriority: index,
+          exceptionPolicy: "policy_exception_required",
+          confirmationPolicy: "none",
+          rationale: `${target.rationale} Enforcement is compiled under ${input.preservationPolicy}.`,
+          evaluationPhase: "both",
+        },
+        applicability: {
+          status: "applicable",
+          rationale: `The Analysis declares ${target.id} for this target search.`,
+          requiredCapabilityIds:
+            target.kind === "continuo_foundation"
+              ? ["capability.bass-disposition"]
+              : ["capability.polyphonic-voice-duration"],
+        },
+        compilerIdentity,
+      })
+    );
+  const mechanicalEvaluator = componentIdentity("evaluator.instrument-instance", "1.0.0", {
+    modeledProperties: ["course construction", "sounding set", "stopped behavior"],
+  });
+  if (input.targetConfiguration.instrumentInstance) {
+    const instance = input.targetConfiguration.instrumentInstance;
+    constraintSpecifications.push({
+      id: `constraint.${instance.id}`,
       schemaVersion: 1,
-      evaluatorId: evaluator.id,
-      evaluatorVersion: evaluator.version,
+      evaluatorId: mechanicalEvaluator.id,
+      evaluatorVersion: mechanicalEvaluator.version,
       scope: {
-        kind:
-          target.kind === "voice" || target.kind === "principal_voice"
-            ? "voice"
-            : target.kind === "relationship"
-              ? "passage"
-              : "whole_target",
+        kind: "whole_target",
         targetConfigurationId: input.targetConfiguration.id,
-        subjectIds: target.eventIds.length
-          ? target.eventIds
-          : target.partId
-            ? [target.partId]
-            : [target.id],
+        subjectIds: instance.courses.map((course) => `course.${course.course}`),
       },
       parameters: {
-        preservationTargetKind: target.kind,
-        relationshipType: target.relationshipType ?? null,
-        requiredEventIds: target.eventIds,
-        requiredEventGroups: target.eventGroups ?? [],
+        instrumentInstanceDigest: instance.contentDigest,
+        courses: instance.courses,
+        techniqueApplicability: instance.techniqueApplicability,
       },
       provenance: {
-        kind: "preservation_target",
-        sourceRecordId: target.id,
-        evidenceIds: [input.analysis.id],
-        observationDigest: digestJson(target),
+        kind: "instrument_mechanics",
+        sourceRecordId: instance.id,
+        evidenceIds: [instance.id],
+        observationDigest: instance.contentDigest,
       },
       enforcement: {
-        rejection:
-          input.preservationPolicy === "free_paraphrase" && target.kind !== "principal_voice"
-            ? "retain_with_penalty"
-            : "reject",
-        comparisonPriority: index,
-        exceptionPolicy: "policy_exception_required",
+        rejection: "reject",
+        comparisonPriority: 0,
+        exceptionPolicy: "forbidden",
         confirmationPolicy: "none",
-        rationale: `${target.rationale} Enforcement is compiled under ${input.preservationPolicy}.`,
+        rationale:
+          "Generated positions and sounding sets must match the exact Instrument Instance.",
         evaluationPhase: "both",
       },
       applicability: {
         status: "applicable",
-        rationale: `The Analysis declares ${target.id} for this target search.`,
-        requiredCapabilityIds:
-          target.kind === "continuo_foundation"
-            ? ["capability.bass-disposition"]
-            : ["capability.polyphonic-voice-duration"],
+        rationale: "The target carries an exact Instrument Instance configuration.",
+        requiredCapabilityIds: ["capability.multi-string-course-sounding"],
       },
       compilerIdentity,
-    })
-  );
+    });
+  }
   const attemptConfiguration: SearchAttemptConfiguration = {
     schemaVersion: 1,
     seed: 0,
@@ -1173,10 +1280,13 @@ function buildSearchProtocol(input: {
   const identityWithoutDigest = {
     adapter,
     compiler: compilerIdentity,
-    evaluators: [evaluator],
+    evaluators: input.targetConfiguration.instrumentInstance
+      ? [evaluator, mechanicalEvaluator]
+      : [evaluator],
     arrangementPlanId: input.plan.id,
     performanceBriefId: input.performanceBriefId,
     targetConfigurationId: input.targetConfiguration.id,
+    instrumentInstanceDigest: input.targetConfiguration.instrumentInstance?.contentDigest,
     constraintDigests: constraintSpecifications.map(digestJson),
     attemptConfigurationDigest: digestJson(attemptConfiguration),
   };
@@ -1192,6 +1302,10 @@ function buildSearchProtocol(input: {
 
 function componentIdentity(id: string, version: string, definition: unknown) {
   return { id, version, digest: digestJson({ id, version, definition }) };
+}
+
+function isBaroqueGuitarStringing(value: string): value is BaroqueGuitarStringing {
+  return value === "french" || value === "italian" || value === "mixed";
 }
 
 function digestJson(value: unknown): string {

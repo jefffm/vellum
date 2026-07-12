@@ -5,6 +5,7 @@ import type {
   Rational,
 } from "./music-domain.js";
 import { noteToMidi } from "./pitch.js";
+import { soundingPitches as instrumentSoundingPitches } from "./instrument-instance.js";
 
 export type PlaybackPart =
   | "full"
@@ -23,6 +24,7 @@ export type PlaybackEvent = {
   transformationEntryIds: string[];
   auditTargetIds: string[];
   instrumentId?: string;
+  constituentStringId?: string;
   part: Exclude<PlaybackPart, "full">;
   midi: number;
   startSeconds: number;
@@ -31,6 +33,7 @@ export type PlaybackEvent = {
 
 export type AudioPreview = {
   tempo: number;
+  instrumentInstanceDigest?: string;
   durationSeconds: number;
   synthesis: "basic-oscillator";
   mode: "literal" | "interpreted";
@@ -99,12 +102,29 @@ export function buildAudioPreview(
       (candidate) => candidate.measureId === occurrence.measureId
     )) {
       if (event.type === "rest") continue;
-      const pitches = event.pitches.map((pitch) => ({ pitch, midi: noteToMidi(pitch) }));
+      const exactInstance = arrangement.targetConfiguration?.instrumentInstance;
+      const usesTargetInstance =
+        exactInstance && (!event.instrumentId || event.instrumentId === exactInstance.profileId);
+      const playbackPitches = usesTargetInstance
+        ? event.positions.flatMap((position) =>
+            instrumentSoundingPitches(exactInstance!, position.course, position.fret)
+          )
+        : event.pitches;
+      const pitches = playbackPitches.map((pitch) => ({ pitch, midi: noteToMidi(pitch) }));
+      const constituentStringIds = usesTargetInstance
+        ? event.positions.flatMap((position) =>
+            exactInstance!.courses
+              .find((course) => course.course === position.course)!
+              .strings.map((string) => string.id)
+          )
+        : [];
       const principalMidi = event.principalVoiceSourceEventId
         ? Math.max(...pitches.map(({ midi }) => midi))
         : undefined;
+      const principalPitchIndex =
+        principalMidi === undefined ? -1 : pitches.findIndex(({ midi }) => midi === principalMidi);
       for (const [{ midi }, pitchIndex] of pitches.map((pitch, index) => [pitch, index] as const)) {
-        const part = playbackPart(event, midi, principalMidi);
+        const part = playbackPart(event, pitchIndex === principalPitchIndex);
         const transformationEntries = (arrangement.transformationReport ?? []).filter((entry) =>
           entry.arrangementEventIds.includes(event.id)
         );
@@ -123,6 +143,9 @@ export function buildAudioPreview(
               (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
           ),
           instrumentId: event.instrumentId,
+          ...(constituentStringIds[pitchIndex]
+            ? { constituentStringId: constituentStringIds[pitchIndex] }
+            : {}),
           part,
           midi,
           startSeconds: occurrence.startSeconds + rationalValue(event.onset) * secondsPerQuarter,
@@ -133,6 +156,12 @@ export function buildAudioPreview(
   }
   return {
     tempo,
+    ...(arrangement.targetConfiguration?.instrumentInstance
+      ? {
+          instrumentInstanceDigest:
+            arrangement.targetConfiguration.instrumentInstance.contentDigest,
+        }
+      : {}),
     durationSeconds: elapsedQuarters * secondsPerQuarter,
     synthesis: "basic-oscillator",
     mode: "literal",
@@ -252,14 +281,13 @@ export function skipRepeatedOccurrences(preview: AudioPreview): AudioPreview {
 
 function playbackPart(
   event: ArrangementScore["events"][number],
-  midi: number,
-  principalMidi: number | undefined
+  isPrincipalPitch: boolean
 ): Exclude<PlaybackPart, "full"> {
   if (event.role === "principal_voice") return "principal-voice";
   if (event.role === "continuo_foundation") return "continuo-foundation";
   if (event.role === "realization") return "realization";
   if (event.role === "source_voice" && event.voiceId) return `voice:${event.voiceId}`;
-  return midi === principalMidi ? "principal-voice" : "accompaniment";
+  return isPrincipalPitch ? "principal-voice" : "accompaniment";
 }
 
 function playbackParts(events: PlaybackEvent[], score: NormalizedScore): AudioPreview["parts"] {

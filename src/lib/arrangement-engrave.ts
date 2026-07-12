@@ -51,6 +51,8 @@ export function arrangementToEngraveParams(
       arrangement.targetConfiguration.instrumentId === "baroque-lute-13"
         ? arrangement.targetConfiguration.tuningId
         : undefined,
+    instrument_instance_digest: arrangement.targetConfiguration.instrumentInstance?.contentDigest,
+    stringing: arrangement.targetConfiguration.instrumentInstance?.tuningState.variant,
     bars,
   };
 }

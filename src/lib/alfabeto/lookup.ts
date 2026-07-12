@@ -6,6 +6,7 @@ import {
   shapePitchClasses,
   shapeToPositions,
 } from "./barre-transpose.js";
+import { soundingPitches } from "../instrument-instance.js";
 
 /**
  * Parse a chord name string into MIDI pitch classes (0–11).
@@ -133,7 +134,11 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
   }
 
   if (!targetPitchClasses || targetPitchClasses.size === 0) {
-    return { matches: [], chartId };
+    return {
+      matches: [],
+      chartId,
+      instrumentInstanceDigest: params.instrumentInstance?.contentDigest,
+    };
   }
 
   const standardMatches: AlfabetoMatch[] = [];
@@ -196,8 +201,17 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
   lowBarreMatches.sort(sortByPosition);
   highBarreMatches.sort(sortByPosition);
 
+  const matches = [...standardMatches, ...supersetMatches, ...lowBarreMatches, ...highBarreMatches];
   return {
-    matches: [...standardMatches, ...supersetMatches, ...lowBarreMatches, ...highBarreMatches],
+    matches: params.instrumentInstance
+      ? matches.map((match) => ({
+          ...match,
+          physicalSoundingPitches: match.positions.flatMap((position) =>
+            soundingPitches(params.instrumentInstance!, position.course, position.fret)
+          ),
+        }))
+      : matches,
     chartId,
+    instrumentInstanceDigest: params.instrumentInstance?.contentDigest,
   };
 }

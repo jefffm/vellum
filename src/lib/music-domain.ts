@@ -5,6 +5,7 @@ import {
   SearchExecutionIdentitySchema,
   SearchOutcomeSchema,
 } from "./constraint-search.js";
+import { InstrumentInstanceConfigurationSchema } from "./instrument-instance.js";
 
 const IdSchema = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 const IsoDateSchema = Type.String({
@@ -87,6 +88,7 @@ export const TargetConfigurationSchema = Type.Object(
     ]),
     tuningId: Type.Optional(Type.String({ minLength: 1 })),
     stringing: Type.Optional(Type.String({ minLength: 1 })),
+    instrumentInstance: Type.Optional(InstrumentInstanceConfigurationSchema),
     realizationProfileId: Type.Optional(Type.String({ minLength: 1 })),
     continuoTreatment: Type.Optional(
       Type.Union([

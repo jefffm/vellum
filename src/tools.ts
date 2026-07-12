@@ -4,6 +4,7 @@ import {
   type AlfabetoLookupParams as AlfabetoLookupLibraryParams,
   type AlfabetoLookupResult,
 } from "./lib/alfabeto/index.js";
+import { createBaroqueGuitarInstance } from "./lib/instrument-instance.js";
 import { InstrumentModel } from "./lib/instrument-model.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
@@ -148,6 +149,9 @@ function normalizeAlfabetoLookupParams(
     chartId: params.chart_id ?? params.chartId,
     maxFret: params.max_fret ?? params.maxFret,
     includeBarreVariants: params.include_barre ?? params.includeBarreVariants,
+    instrumentInstance: params.stringing
+      ? createBaroqueGuitarInstance(params.stringing)
+      : undefined,
   };
 }
 
@@ -169,6 +173,9 @@ function formatAlfabetoLookup(result: AlfabetoLookupResult, chordName?: string):
       .map((position) => `course ${position.course} fret ${position.fret}`)
       .join(", ");
     lines.push(`${index + 1}. ${match.letter} — ${match.chord} (${source}): ${positions}`);
+    if (match.physicalSoundingPitches) {
+      lines.push(`   exact sounding set: ${match.physicalSoundingPitches.join(" + ")}`);
+    }
   }
 
   if (result.matches.length > 8) {

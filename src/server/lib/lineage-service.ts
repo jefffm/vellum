@@ -543,7 +543,8 @@ export class LineageService {
     const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
     const analysis = this.store.getAnalysisRecord(workspaceId, original.analysisRecordId);
     const model = InstrumentModel.fromProfile(
-      loadProfile(original.targetConfiguration.instrumentId)
+      loadProfile(original.targetConfiguration.instrumentId),
+      original.targetConfiguration.instrumentInstance
     );
     validateEditedEvents(model, editedEvents);
     const faithfulAudit =
@@ -629,7 +630,8 @@ export class LineageService {
     const source = this.store.getNormalizedScore(workspaceId, search.normalizedScoreId);
     const analysis = this.store.getAnalysisRecord(workspaceId, original.analysisRecordId);
     const model = InstrumentModel.fromProfile(
-      loadProfile(original.targetConfiguration.instrumentId)
+      loadProfile(original.targetConfiguration.instrumentId),
+      original.targetConfiguration.instrumentInstance
     );
     const findings = collectInstrumentFindings(model, editedEvents);
     if (!findings.some((finding) => finding.severity === "hard")) {
@@ -908,18 +910,18 @@ function collectInstrumentFindings(
             : [],
         });
       }
-      const soundingPitches = event.positions.map((position) =>
+      const positionPitches = event.positions.map((position) =>
         model.soundingPitch(position.course, position.fret)
       );
       const declaredPositions = event.positions.map((position) => position.pitch);
-      if (JSON.stringify(soundingPitches) !== JSON.stringify(declaredPositions)) {
+      if (JSON.stringify(positionPitches) !== JSON.stringify(declaredPositions)) {
         findings.push({
           id: `validation.instrument.${event.id}.position_pitch`,
           eventIds: [event.id],
           severity: "hard",
           category: "instrument",
           code: "instrument.position_pitch_mismatch",
-          message: `Course/fret positions sound ${soundingPitches.join(" + ")}, not ${declaredPositions.join(" + ")}.`,
+          message: `Course/fret positions use notation pitches ${positionPitches.join(" + ")}, not ${declaredPositions.join(" + ")}.`,
           repairs: [
             {
               label: "Use the pitches sounded by these positions",
@@ -930,17 +932,28 @@ function collectInstrumentFindings(
                   patch: {
                     positions: event.positions.map((position, index) => ({
                       ...position,
-                      pitch: soundingPitches[index]!,
+                      pitch: positionPitches[index]!,
                     })),
                   },
                 },
-                { eventId: event.id, patch: { pitches: soundingPitches } },
+                {
+                  eventId: event.id,
+                  patch: {
+                    pitches: event.positions.flatMap((position) =>
+                      model.soundingPitches(position.course, position.fret)
+                    ),
+                  },
+                },
               ],
             },
           ],
         });
       } else if (
-        event.pitches.slice().sort().join("|") !== soundingPitches.slice().sort().join("|")
+        event.pitches.slice().sort().join("|") !==
+        event.positions
+          .flatMap((position) => model.soundingPitches(position.course, position.fret))
+          .sort()
+          .join("|")
       ) {
         const voicing = model.voicingsForChord(event.pitches)[0];
         findings.push({
@@ -949,7 +962,7 @@ function collectInstrumentFindings(
           severity: "hard",
           category: "instrument",
           code: "instrument.pitch_fingering_disagreement",
-          message: `Event pitches ${event.pitches.join(" + ")} disagree with fingering pitches ${soundingPitches.join(" + ")}.`,
+          message: `Event pitches ${event.pitches.join(" + ")} disagree with the exact course-string sounding set.`,
           repairs: voicing
             ? [
                 {
@@ -1013,7 +1026,7 @@ function validateEditedEvents(model: InstrumentModel, events: ArrangementEvent[]
     }
     const eventPitches = event.pitches.slice().sort().join("|");
     const positionPitches = event.positions
-      .map((position) => position.pitch)
+      .flatMap((position) => model.soundingPitches(position.course, position.fret))
       .sort()
       .join("|");
     if (eventPitches !== positionPitches) {

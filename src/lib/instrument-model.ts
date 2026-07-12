@@ -1,5 +1,10 @@
 import type { InstrumentProfile, TabPosition, TuningEntry, Violation, Voicing } from "../types.js";
 import { noteToMidi, parsePitch, transposeNote } from "./pitch.js";
+import {
+  instrumentInstanceRange,
+  soundingPitches as instanceSoundingPitches,
+  type InstrumentInstanceConfiguration,
+} from "./instrument-instance.js";
 
 export type PlayabilityResult = {
   ok: boolean;
@@ -9,13 +14,37 @@ export type PlayabilityResult = {
 export class InstrumentModel {
   private currentDiapasonScheme?: string;
 
-  constructor(private readonly profile: InstrumentProfile) {
+  constructor(
+    private readonly profile: InstrumentProfile,
+    private readonly instance?: InstrumentInstanceConfiguration
+  ) {
     this.currentDiapasonScheme = this.defaultDiapasonScheme();
   }
 
   positionsForPitch(pitch: string): TabPosition[] {
     const targetMidi = noteToMidi(pitch);
     const positions: TabPosition[] = [];
+
+    if (this.instance) {
+      for (const course of this.instance.courses) {
+        const frets = new Set(
+          course.strings.flatMap((string) => {
+            const fret = targetMidi - noteToMidi(string.openPitch);
+            if (fret < 0 || fret > this.maxFrets()) return [];
+            if (fret > 0 && (!course.stopped || !string.fretsWithCourse)) return [];
+            return [fret];
+          })
+        );
+        for (const fret of frets) {
+          positions.push({
+            course: course.course,
+            fret,
+            quality: course.stopped ? qualityForFret(fret) : "diapason",
+          });
+        }
+      }
+      return positions.sort((a, b) => a.course - b.course || a.fret - b.fret);
+    }
 
     for (const tuning of this.tuningEntries()) {
       const course = this.courseFromTuning(tuning);
@@ -43,6 +72,7 @@ export class InstrumentModel {
 
   isFretted(course: number): boolean {
     this.assertValidCourse(course);
+    if (this.instance) return this.instance.courses.find((item) => item.course === course)!.stopped;
     return course <= this.frettedCourseCount();
   }
 
@@ -69,7 +99,20 @@ export class InstrumentModel {
       throw new Error(`Fret ${fret} exceeds maximum fret ${this.maxFrets()}`);
     }
 
-    return transposeNote(this.openPitchForCourse(course), fret);
+    return this.soundingPitches(course, fret)[0]!;
+  }
+
+  soundingPitches(course: number, fret: number): string[] {
+    this.assertValidCourse(course);
+    if (fret < 0 || !Number.isInteger(fret)) throw new Error(`Invalid fret: ${fret}`);
+    if (fret > this.maxFrets()) {
+      throw new Error(`Fret ${fret} exceeds maximum fret ${this.maxFrets()}`);
+    }
+    if (this.instance) return instanceSoundingPitches(this.instance, course, fret);
+    if (this.isDiapason(course) && fret !== 0) {
+      throw new Error(`Course ${course} is a diapason and cannot be fretted`);
+    }
+    return [transposeNote(this.openPitchForCourse(course), fret)];
   }
 
   maxStretch(): number {
@@ -89,10 +132,12 @@ export class InstrumentModel {
   }
 
   courseCount(): number {
+    if (this.instance) return this.instance.courses.length;
     return this.profile.courses ?? this.tuningEntries().length;
   }
 
   soundingRange(): { lowest: string; highest: string } {
+    if (this.instance) return instrumentInstanceRange(this.instance, this.maxFrets());
     const pitches = this.tuningEntries().flatMap((entry) => {
       const course = this.courseFromTuning(entry);
       const open = this.openPitchForCourse(course);
@@ -228,8 +273,11 @@ export class InstrumentModel {
     return { ok: violations.length === 0, violations };
   }
 
-  static fromProfile(profile: InstrumentProfile): InstrumentModel {
-    return new InstrumentModel(profile);
+  static fromProfile(
+    profile: InstrumentProfile,
+    instance?: InstrumentInstanceConfiguration
+  ): InstrumentModel {
+    return new InstrumentModel(profile, instance);
   }
 
   static async load(id: string): Promise<InstrumentModel> {
@@ -262,6 +310,9 @@ export class InstrumentModel {
   }
 
   private openPitchForCourse(course: number): string {
+    if (this.instance) {
+      return this.instance.courses.find((item) => item.course === course)!.strings[0]!.openPitch;
+    }
     return this.diapasonPitches().get(course) ?? this.tuningForCourse(course).note;
   }
 

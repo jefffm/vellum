@@ -15,17 +15,17 @@ stringing:
   variants:
     french:
       course5: "a/a unison"
-      course4: "d/d' octave"
+      course4: "d'/d' unison"
       origin: "de Visee, Campion"
       description: "Fully re-entrant, maximum campanella, no bass below G3."
     italian:
-      course5: "A/a bourdon+octave"
-      course4: "d/d' octave"
+      course5: "A/a bourdon+octave (A2/A3)"
+      course4: "d/d' bourdon+octave (D3/D4)"
       origin: "Foscarini, Corbetta"
       description: "Bourdons on lower courses provide bass foundation for continuo."
     mixed:
       course5: "a/a unison"
-      course4: "d/d' octave"
+      course4: "d/d' bourdon+octave (D3/D4)"
       origin: "Modern compromise"
       description: "Partial bass color with re-entrant upper-course behavior."
 constraints:

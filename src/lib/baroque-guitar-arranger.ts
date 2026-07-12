@@ -388,7 +388,9 @@ function chooseTranspositionPlan(
   );
   const preferredIntervals = [0, -5, 5, -7, 7, -2, -3];
   const semitones = preferredIntervals.find((interval) =>
-    notes.every((event) => model.positionsForPitch(transposeNote(event.pitch, interval)).length > 0)
+    notes.every(
+      (event) => principalPositions(model, transposeNote(event.pitch, interval)).length > 0
+    )
   );
   if (semitones === undefined) {
     throw new Error(
@@ -473,7 +475,7 @@ function enumerateVoicings(
   semitones: number
 ): VoicingChoice[] {
   const melodyMidi = noteToMidi(melodyPitch);
-  const melodyPositions = model.positionsForPitch(melodyPitch);
+  const melodyPositions = principalPositions(model, melodyPitch);
   const sourceByPitchClass = new Map<number, Extract<ScoreEvent, { type: "note" }>[]>();
   for (const event of sourceEvents) {
     const transposed = transposeNote(event.pitch, semitones);
@@ -506,10 +508,21 @@ function enumerateVoicings(
   ): void {
     if (optionIndex >= options.length || positions.length >= 4) {
       if (!model.isPlayable(positions).ok) return;
-      const allPitches = [melodyPitch, ...pitches];
-      if (allPitches.some((pitch) => noteToMidi(pitch) > melodyMidi)) return;
+      const soundedPitches = positions.flatMap((position) =>
+        model.soundingPitches(position.course, position.fret)
+      );
+      if (!soundedPitches.some((pitch) => noteToMidi(pitch) === melodyMidi)) return;
+      let melodySpellingRetained = false;
+      const physicalPitches = soundedPitches.map((pitch) => {
+        if (!melodySpellingRetained && noteToMidi(pitch) === melodyMidi) {
+          melodySpellingRetained = true;
+          return melodyPitch;
+        }
+        return pitch;
+      });
+      if (physicalPitches.some((pitch) => noteToMidi(pitch) > melodyMidi)) return;
       results.push({
-        pitches: allPitches,
+        pitches: physicalPitches,
         positions,
         sourceEventIds: sourceIds,
         sourcePitchClassCoverage:
@@ -537,6 +550,14 @@ function enumerateVoicings(
   }
 
   return deduplicateVoicings(results);
+}
+
+function principalPositions(model: InstrumentModel, pitch: string) {
+  const midi = noteToMidi(pitch);
+  return model.positionsForPitch(pitch).filter((position) => {
+    const sounded = model.soundingPitches(position.course, position.fret).map(noteToMidi);
+    return sounded.includes(midi) && Math.max(...sounded) <= midi;
+  });
 }
 
 function playablePitchClassPositions(

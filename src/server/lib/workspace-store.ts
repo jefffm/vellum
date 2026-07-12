@@ -16,6 +16,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
+import { assertInstrumentInstanceIdentity } from "../../lib/instrument-instance.js";
 import {
   AnalysisRecordSchema,
   ArrangementFamilySchema,
@@ -828,7 +829,9 @@ export class WorkspaceStore {
     if (
       candidate.arrangementSearchId !== search.id ||
       search.analysisRecordId !== arrangement.analysisRecordId ||
-      search.targetConfiguration.id !== arrangement.targetConfiguration.id
+      search.targetConfiguration.id !== arrangement.targetConfiguration.id ||
+      search.targetConfiguration.instrumentInstance?.contentDigest !==
+        arrangement.targetConfiguration.instrumentInstance?.contentDigest
     ) {
       throw new ApiRouteError(
         "Arrangement Score search, candidate, analysis, or target lineage is inconsistent",
@@ -919,9 +922,31 @@ export class WorkspaceStore {
     if (performanceBrief.targetConfigurationId !== search.targetConfiguration.id) {
       throw new ApiRouteError("Arrangement Search and Performance Brief targets do not match", 400);
     }
+    const briefTarget = performanceBrief.arrangementBriefSnapshot.targetConfigurations.find(
+      (target) => target.id === search.targetConfiguration.id
+    );
+    if (
+      !briefTarget ||
+      briefTarget.instrumentInstance?.contentDigest !==
+        search.targetConfiguration.instrumentInstance?.contentDigest
+    ) {
+      throw new ApiRouteError(
+        "Arrangement Search and Performance Brief cite different Instrument Instances",
+        400
+      );
+    }
+    if (search.targetConfiguration.instrumentInstance) {
+      try {
+        assertInstrumentInstanceIdentity(search.targetConfiguration.instrumentInstance);
+      } catch (error) {
+        throw new ApiRouteError((error as Error).message, 400);
+      }
+    }
     if (
       search.executionIdentity.performanceBriefId !== search.performanceBriefId ||
       search.executionIdentity.targetConfigurationId !== search.targetConfiguration.id ||
+      search.executionIdentity.instrumentInstanceDigest !==
+        search.targetConfiguration.instrumentInstance?.contentDigest ||
       !workspace.arrangementPlanIds.includes(search.executionIdentity.arrangementPlanId)
     ) {
       throw new ApiRouteError(

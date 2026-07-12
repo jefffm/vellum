@@ -37,6 +37,7 @@ export const SearchExecutionIdentitySchema = Type.Object(
     arrangementPlanId: Id,
     performanceBriefId: Id,
     targetConfigurationId: Id,
+    instrumentInstanceDigest: Type.Optional(Digest),
     constraintDigests: Type.Array(Digest),
     attemptConfigurationDigest: Digest,
   },

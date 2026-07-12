@@ -160,6 +160,24 @@ describe("Greensleeves faithful arrangement service", () => {
         expect.stringMatching(/^[a-f0-9]{64}$/)
       ),
     });
+    const exactGuitar = result.arrangementSearch.targetConfiguration.instrumentInstance!;
+    expect(exactGuitar).toMatchObject({
+      id: expect.stringMatching(/^instrument-instance\./),
+      profileId: "baroque-guitar-5",
+      tuningState: { variant: "french" },
+      contentDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+    expect(exactGuitar.courses.map((course) => course.strings.length)).toEqual([1, 2, 2, 2, 2]);
+    expect(result.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
+      exactGuitar.contentDigest
+    );
+    expect(result.performanceBrief.arrangementBriefSnapshot.targetConfigurations).toContainEqual(
+      expect.objectContaining({
+        id: "target.baroque-guitar",
+        instrumentInstance: exactGuitar,
+      })
+    );
+    expect(result.arrangementScore.targetConfiguration.instrumentInstance).toEqual(exactGuitar);
     expect(result.arrangementSearch.outcome).toEqual({
       kind: "candidate_found",
       executionIdentity: result.arrangementSearch.executionIdentity,
@@ -373,6 +391,18 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(store.getArrangementScore(workspace.id, result.arrangementScore.id)).toEqual(
       result.arrangementScore
     );
+    expect(() =>
+      store.saveArrangementScore(workspace.id, {
+        ...result.arrangementScore,
+        targetConfiguration: {
+          ...result.arrangementScore.targetConfiguration,
+          instrumentInstance: {
+            ...result.arrangementScore.targetConfiguration.instrumentInstance!,
+            contentDigest: "f".repeat(64),
+          },
+        },
+      })
+    ).toThrow(/target lineage is inconsistent/);
     expect(store.get(workspace.id).arrangementScoreIds).toEqual([result.arrangementScore.id]);
 
     const luteResult = service.createFaithfulReduction(workspace.id, {

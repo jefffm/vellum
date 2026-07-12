@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T20",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T20:30:10Z",
+  "requirements": {
+    "AI-STP-040": {
+      "status": "partial",
+      "remaining": "T21-T22 complete ownership for the other priority targets"
+    },
+    "AI-ICC-001": { "status": "partial", "remaining": "T21-T22 migrate lute and classical guitar" },
+    "AI-ICC-002": {
+      "status": "partial",
+      "remaining": "T21-T22 prove the generic contract on both remaining targets"
+    },
+    "AI-ICC-003": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-004": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-005": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-006": {
+      "status": "partial",
+      "remaining": "T21 adds exact lute paired and single courses"
+    },
+    "AI-ICC-008": {
+      "status": "partial",
+      "remaining": "T21-T22 add cross-target independence mutations"
+    },
+    "AI-ICC-009": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-010": {
+      "status": "partial",
+      "remaining": "T29 adds dimension-specific stale evidence propagation"
+    },
+    "AI-ICC-011": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-013": {
+      "status": "partial",
+      "remaining": "T21-T22 complete monotonic and diapason cases"
+    },
+    "AI-ICC-017": {
+      "status": "partial",
+      "remaining": "T23 evaluates historical vocabulary applicability in phrase search"
+    },
+    "AI-ICC-058": {
+      "status": "machine_verified",
+      "remaining": "specialist and player authority remains unknown"
+    },
+    "AI-ICC-059": {
+      "status": "machine_verified",
+      "remaining": "specialist and player authority remains unknown"
+    },
+    "AI-ICC-060": {
+      "status": "partial",
+      "remaining": "T23 supplies passage-specific technique evaluators"
+    },
+    "AI-DEL-029": {
+      "status": "partial",
+      "remaining": "T21-T22 complete multi-string target parity"
+    },
+    "AI-DEL-040": {
+      "status": "partial",
+      "remaining": "T21-T25 migrate all exact targets and phrase searches"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1006,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Canonical browser/server SHA-256 identity changes under scale, tuning, setup, and course-construction mutations",
+      "The single first course and doubled unison, octave, and bourdon courses retain independent string identities",
+      "French, Italian, and mixed stringing produce different complete sounding sets and ranges",
+      "Principal-voice feasibility includes every constituent string and rejects hidden octave-above sounding",
+      "Alfabeto shape identity remains stable while exact physical sounding sets vary by stringing",
+      "Unchanged Greensleeves source produces distinct French and Italian arrangements, playback, and engraving",
+      "Audio Preview identifies each constituent string while retaining one semantic Principal Voice occurrence",
+      "Separate continuo bass bypasses guitar-instance projection and remains independently audible",
+      "Brief, Search, execution identity, constraints, Score, engraving, playback, edit validation, and persistence retain exact instance lineage"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.e25bdc74-b362-4a2e-837a-8374d5085c85",
+      "cardId": "evaluation-card.32377984-619f-46ed-a8bb-cf8b0269c9aa",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalAndPhysicalAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1006 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t20-eval-final",
+      "result": "pass: hard gates pass and unmeasured human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "6cbf2ecc158192569a4a0d71d8406800fc2f284430b99487bebbf785836884b3"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/20-exact-baroque-guitar.md",
+      "sha256": "348080e160e4e575971a5b3b0672aece247d1156f597aaaa8b66fe375e84fa51"
+    },
+    {
+      "path": "src/lib/instrument-instance.ts",
+      "sha256": "2f96042ae14fc77b011b27a2a4fbc120f9d55f18301a57894a328ffaf444aa9d"
+    },
+    {
+      "path": "src/lib/instrument-instance.test.ts",
+      "sha256": "7b872aaed5b154a00d6c69f052d42e10eae652cab9483c035aafab7acd36e062"
+    },
+    {
+      "path": "src/lib/instrument-model.ts",
+      "sha256": "c165a702177a0ec5b32c5cecd5da75e87e446ee02ab59bc646275595b748f8f6"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.ts",
+      "sha256": "fa05f9a38f53eaabad480bc2eb616995f8ad4ffb4bdfc3ba3e581de92557e4c0"
+    },
+    {
+      "path": "src/lib/baroque-guitar-arranger.test.ts",
+      "sha256": "e387201cab13dac38f3e3ee9083d0b8af7cb857ce8a3d1fb84f9ed161f76b272"
+    },
+    {
+      "path": "src/lib/audio-preview.ts",
+      "sha256": "206254442759be50da05eb0cbcd5cd79cc80337ce44199da646ab96e45770215"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "0bf8973de7980a640933cf6d20004d3aab5dbea505adab5b89fc8f6adc1057a3"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "420f442ab01b19d0e8171992c7e5c1df9bce1ea8dca775cc2959604152a085ab"
+    },
+    {
+      "path": "src/server/lib/lineage-service.ts",
+      "sha256": "0461e540ad65c6287f801c5b03126a9e31f34aa84a2708af284464be1e1937bd"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "51842574d66c257317562aeece312d4c29ca2a61a7d8c5f2626c41f81bc87b5d"
+    }
+  ]
+}

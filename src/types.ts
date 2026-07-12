@@ -361,6 +361,9 @@ export const AlfabetoLookupParamsSchema = Type.Object({
   chart_id: Type.Optional(AlfabetoChartIdSchema),
   max_fret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
   include_barre: Type.Optional(Type.Boolean()),
+  stringing: Type.Optional(
+    Type.Union([Type.Literal("french"), Type.Literal("italian"), Type.Literal("mixed")])
+  ),
   // Backward-compatible camelCase aliases for existing callers. Prefer snake_case
   // at external tool boundaries.
   chordName: Type.Optional(Type.String({ minLength: 1 })),

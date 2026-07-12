@@ -782,6 +782,9 @@ function buildLyFile(
 
   if (params.title) header.title = params.title;
   if (params.composer) header.composer = params.composer;
+  if (params.instrument_instance_digest) {
+    header.subtitle = `${params.stringing ?? "exact"} stringing · instrument instance ${params.instrument_instance_digest.slice(0, 12)}`;
+  }
 
   const diapasonTuning = params.diapason_scheme
     ? lilyPondDiapasonTuning(model.diapasonPitches())
