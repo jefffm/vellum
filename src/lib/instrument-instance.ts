@@ -34,6 +34,8 @@ export const TechniqueApplicabilitySchema = Type.Object(
       Type.Literal("campanella"),
       Type.Literal("barre"),
       Type.Literal("damping"),
+      Type.Literal("right_hand_thumb"),
+      Type.Literal("resonance"),
     ]),
     status: Type.Union([
       Type.Literal("applicable"),
@@ -143,6 +145,106 @@ export function createBaroqueGuitarInstance(
         evidenceIds: ["profile.baroque-guitar-5"],
         rationale: `${technique} is mechanically available but requires separate musical and ergonomic evaluation.`,
       })),
+    ],
+  };
+  const contentDigest = digestInstrumentInstance(withoutIdentity);
+  return Value.Decode(InstrumentInstanceConfigurationSchema, {
+    id: `instrument-instance.${contentDigest.slice(0, 24)}`,
+    ...withoutIdentity,
+    contentDigest,
+  });
+}
+
+export type BaroqueLuteBassTuning = "d_minor" | "a_minor" | "g_minor" | "d_major" | "e_minor";
+
+const BAROQUE_LUTE_DIAPASONS: Record<BaroqueLuteBassTuning, readonly string[]> = {
+  d_minor: ["G2", "F2", "Eb2", "D2", "C2", "Bb1", "A1"],
+  a_minor: ["G2", "F2", "E2", "D2", "C2", "B1", "A1"],
+  g_minor: ["G2", "F2", "Eb2", "D2", "C2", "Bb1", "A1"],
+  d_major: ["G2", "F#2", "E2", "D2", "C#2", "B1", "A1"],
+  e_minor: ["G2", "F#2", "E2", "D2", "C2", "B1", "A1"],
+};
+
+const LUTE_NOTATION_IDENTITIES = [
+  "course-1",
+  "course-2",
+  "course-3",
+  "course-4",
+  "course-5",
+  "course-6",
+  "a",
+  "/a",
+  "//a",
+  "///a",
+  "4",
+  "/4",
+  "//4",
+] as const;
+
+export function createBaroqueLuteInstance(
+  bassTuning: BaroqueLuteBassTuning = "d_minor",
+  overrides: { scaleLengthMm?: number; referencePitchHz?: number } = {}
+): InstrumentInstanceConfiguration {
+  const stoppedPitches = ["F4", "D4", "A3", "F3", "D3", "A2"];
+  const pitches = [...stoppedPitches, ...BAROQUE_LUTE_DIAPASONS[bassTuning]];
+  const withoutIdentity = {
+    profileId: "baroque-lute-13",
+    profileVersion: "2.0.0",
+    scaleLength: { value: overrides.scaleLengthMm ?? 680, unit: "mm" as const },
+    physicalSetup: {
+      frets: 8,
+      courseCount: 13,
+      stoppedCourseCount: 6,
+      diapasonCount: 7,
+      bassTuning,
+    },
+    courses: pitches.map((openPitch, courseIndex) => {
+      const course = courseIndex + 1;
+      const stopped = course <= 6;
+      const stringCount = course === 1 || !stopped ? 1 : 2;
+      return {
+        course,
+        stopped,
+        strings: Array.from({ length: stringCount }, (_, stringIndex) => ({
+          id: `string.c${course}.s${stringIndex + 1}`,
+          openPitch,
+          fretsWithCourse: stopped,
+        })),
+        notationIdentity: LUTE_NOTATION_IDENTITIES[courseIndex]!,
+      };
+    }),
+    tuningState: {
+      id: `tuning.baroque-lute.${bassTuning}`,
+      variant: bassTuning,
+      referencePitchHz: overrides.referencePitchHz ?? 415,
+    },
+    notationConfiguration: {
+      system: "french-letter",
+      courseOrder: "highest_first" as const,
+      notationIdentityByCourse: [...LUTE_NOTATION_IDENTITIES],
+    },
+    techniqueApplicability: [
+      {
+        technique: "punteado" as const,
+        status: "applicable" as const,
+        evidenceIds: ["profile.baroque-lute-13"],
+        rationale:
+          "Individually plucked stopped courses and diapasons are mechanically applicable.",
+      },
+      {
+        technique: "rasgueado" as const,
+        status: "not_applicable" as const,
+        evidenceIds: ["profile.baroque-lute-13"],
+        rationale: "Baroque-guitar rasgueado is not a default lute technique capability.",
+      },
+      ...(["campanella", "barre", "damping", "right_hand_thumb", "resonance"] as const).map(
+        (technique) => ({
+          technique,
+          status: "applicable" as const,
+          evidenceIds: ["profile.baroque-lute-13"],
+          rationale: `${technique} is mechanically available but requires passage-specific evaluation.`,
+        })
+      ),
     ],
   };
   const contentDigest = digestInstrumentInstance(withoutIdentity);

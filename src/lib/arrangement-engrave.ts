@@ -52,7 +52,14 @@ export function arrangementToEngraveParams(
         ? arrangement.targetConfiguration.tuningId
         : undefined,
     instrument_instance_digest: arrangement.targetConfiguration.instrumentInstance?.contentDigest,
-    stringing: arrangement.targetConfiguration.instrumentInstance?.tuningState.variant,
+    stringing:
+      arrangement.targetConfiguration.instrumentId === "baroque-guitar-5"
+        ? arrangement.targetConfiguration.instrumentInstance?.tuningState.variant
+        : undefined,
+    instrument_configuration:
+      arrangement.targetConfiguration.instrumentId !== "baroque-guitar-5"
+        ? arrangement.targetConfiguration.instrumentInstance?.tuningState.variant
+        : undefined,
     bars,
   };
 }

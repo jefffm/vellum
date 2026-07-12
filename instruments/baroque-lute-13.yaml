@@ -33,5 +33,5 @@ constraints:
   - "Right-hand thumb-under technique for bass runs"
 range:
   lowest: "A1"
-  highest: "C5"
+  highest: "Db5"
 notation: "french-letter"

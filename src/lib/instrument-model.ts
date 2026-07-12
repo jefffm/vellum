@@ -203,6 +203,18 @@ export class InstrumentModel {
   }
 
   diapasonPitches(scheme?: string): Map<number, string> {
+    if (this.instance) {
+      if (scheme && scheme !== this.instance.tuningState.variant) {
+        throw new Error(
+          `Exact Instrument Instance uses ${this.instance.tuningState.variant}, not ${scheme}`
+        );
+      }
+      return new Map(
+        this.instance.courses
+          .filter((course) => !course.stopped)
+          .map((course) => [course.course, course.strings[0]!.openPitch])
+      );
+    }
     const selectedScheme = scheme ?? this.currentDiapasonScheme;
     const courses = this.diapasonCourses();
     const result = new Map<number, string>();
@@ -227,6 +239,14 @@ export class InstrumentModel {
   }
 
   setDiapasonScheme(key: string): void {
+    if (this.instance) {
+      if (key !== this.instance.tuningState.variant) {
+        throw new Error(
+          `Exact Instrument Instance uses ${this.instance.tuningState.variant}; create a new instance for ${key}`
+        );
+      }
+      return;
+    }
     if (!this.profile.diapason_schemes?.[key]) {
       throw new Error(`Unknown diapason scheme: ${key}`);
     }

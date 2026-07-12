@@ -417,6 +417,26 @@ describe("Greensleeves faithful arrangement service", () => {
       targetConfiguration: { instrumentId: "baroque-lute-13", tuningId: "d_minor" },
       preservationAudit: { status: "pass" },
     });
+    const exactLute = luteResult.arrangementScore.targetConfiguration.instrumentInstance!;
+    expect(exactLute).toMatchObject({
+      profileId: "baroque-lute-13",
+      tuningState: { variant: "d_minor" },
+      contentDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+    expect(exactLute.courses[9]).toMatchObject({
+      course: 10,
+      stopped: false,
+      notationIdentity: "///a",
+      strings: [{ openPitch: "D2", fretsWithCourse: false }],
+    });
+    expect(luteResult.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
+      exactLute.contentDigest
+    );
+    expect(
+      luteResult.performanceBrief.arrangementBriefSnapshot.targetConfigurations
+    ).toContainEqual(
+      expect.objectContaining({ id: "target.baroque-lute", instrumentInstance: exactLute })
+    );
 
     const classicalResult = service.createFaithfulReduction(workspace.id, {
       normalizedScoreId: omr.normalizedScore.id,

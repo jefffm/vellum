@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T21",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T20:41:00Z",
+  "requirements": {
+    "AI-ICC-006": {
+      "status": "machine_verified",
+      "remaining": "historical/player review remains unknown"
+    },
+    "AI-ICC-007": {
+      "status": "machine_verified",
+      "remaining": "historical/player review remains unknown"
+    },
+    "AI-ICC-012": { "status": "machine_verified", "remaining": "none" },
+    "AI-ICC-015": {
+      "status": "partial",
+      "remaining": "T24 adds phrase-state sustain, resonance, and damping evaluation"
+    },
+    "AI-ICC-016": {
+      "status": "partial",
+      "remaining": "T24 adds right-hand technique-family evaluators"
+    },
+    "AI-ICC-063": {
+      "status": "machine_verified",
+      "remaining": "specialist/player authority remains unknown"
+    },
+    "AI-ICC-064": {
+      "status": "partial",
+      "remaining": "T24 separates right-hand access and preparation from left-hand metrics"
+    },
+    "AI-ICC-065": {
+      "status": "partial",
+      "remaining": "T24 adds contextual style-brise applicability"
+    },
+    "AI-ICC-066": {
+      "status": "machine_verified",
+      "remaining": "T42 adds target-player and notation review"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1011,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "One chanterelle, five paired stopped courses, and seven single unstopped diapasons retain distinct physical semantics",
+      "Unstopped courses reject frets while stopped pairs sound both stable constituent strings",
+      "Five Bass Tuning configurations change exact content identity and sounding pitches without changing French course signs",
+      "Default and D-major course 10 retain ///a and D2",
+      "Exact InstrumentModel instances cannot be retuned in place",
+      "Brief, Search constraints and execution identity, Score, engraving, playback, edit validation, and persistence share one exact digest",
+      "Real LilyPond/MIDI tests verify all seven diapason signs and non-duplicated single diapason playback",
+      "Greensleeves preserves one semantic Principal Voice while paired stopped strings remain independently audible"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.421e546d-15de-40da-8bab-09fa4e4204e4",
+      "cardId": "evaluation-card.2038f053-3d68-457c-817f-a4367da67623",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalAndPhysicalAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1011 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t21-eval-final",
+      "result": "pass: hard gates pass and human claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "aee3e6c0ef5fd049fa37d28e49279ff7bcded0cd20922bd1443c2d030495e7cb"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/21-exact-baroque-lute.md",
+      "sha256": "2274e3ac651169709dab71f9425957ac93538fdee196d4c9b5b015a55635e103"
+    },
+    {
+      "path": "instruments/baroque-lute-13.yaml",
+      "sha256": "8082d113119d2d5a45ff2e2e3db56f28dcebe200f38e2adaf18bdaa8e424a951"
+    },
+    {
+      "path": "src/lib/instrument-instance.ts",
+      "sha256": "d7e55872b992ed0ec9d2d281879c9e3f86b376a4616879317e9a6c618bde993f"
+    },
+    {
+      "path": "src/lib/baroque-lute-instance.test.ts",
+      "sha256": "4ebdbbbbe5cdb9dc6407f750db4d43e3f737f4c6bdb89af85a01f6e11672dad2"
+    },
+    {
+      "path": "src/lib/instrument-model.ts",
+      "sha256": "16b14658e7488c13dd11645c6df9b6b7a3cb8a3ad8b7e7eae27b82a1d4387856"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "sha256": "69391742af5857aaba3cdf4a5727c86168a16d8db3a3ed5ab0b432c7f75fa131"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "e1ef84ce2ad18dbfe2f67bd0a947d764db1d621615c15ae1a645b9958419d4da"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "8eacb71bee10e8a76d3442cc6773186f27d5ccb2fbc8b7674b548c812482f495"
+    },
+    {
+      "path": "test/e2e/lute-diapason-tracer.test.ts",
+      "sha256": "861004fe98938f55509008f913e75a8d704a27cdab06d296d55f9ea7f0b9a612"
+    }
+  ]
+}

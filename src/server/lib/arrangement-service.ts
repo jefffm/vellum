@@ -36,8 +36,10 @@ import type {
 } from "../../lib/constraint-search.js";
 import {
   createBaroqueGuitarInstance,
+  createBaroqueLuteInstance,
   assertInstrumentInstanceIdentity,
   type BaroqueGuitarStringing,
+  type BaroqueLuteBassTuning,
   type InstrumentInstanceConfiguration,
 } from "../../lib/instrument-instance.js";
 import type { PreservationPolicy } from "../../lib/preservation-policy.js";
@@ -181,6 +183,41 @@ export class ArrangementService {
         targetConfiguration = {
           ...targetConfiguration,
           stringing,
+          instrumentInstance: exactInstance,
+        };
+        workspace = this.store.updateBrief(workspaceId, {
+          ...workspace.brief,
+          targetConfigurations: workspace.brief.targetConfigurations.map((target) =>
+            target.id === targetConfiguration!.id ? targetConfiguration! : target
+          ),
+        });
+      }
+    }
+    if (targetConfiguration.instrumentId === "baroque-lute-13") {
+      const bassTuning = targetConfiguration.tuningId ?? "d_minor";
+      if (!isBaroqueLuteBassTuning(bassTuning)) {
+        throw new ApiRouteError(`Unsupported baroque-lute bass tuning: ${bassTuning}`, 400);
+      }
+      const exactInstance = createBaroqueLuteInstance(bassTuning);
+      if (
+        targetConfiguration.instrumentInstance &&
+        targetConfiguration.instrumentInstance.contentDigest !== exactInstance.contentDigest
+      ) {
+        throw new ApiRouteError(
+          "Target bass tuning and exact Instrument Instance configuration do not match",
+          409
+        );
+      }
+      if (targetConfiguration.instrumentInstance) {
+        try {
+          assertInstrumentInstanceIdentity(targetConfiguration.instrumentInstance);
+        } catch (error) {
+          throw new ApiRouteError((error as Error).message, 409);
+        }
+      } else {
+        targetConfiguration = {
+          ...targetConfiguration,
+          tuningId: bassTuning,
           instrumentInstance: exactInstance,
         };
         workspace = this.store.updateBrief(workspaceId, {
@@ -493,7 +530,8 @@ export class ArrangementService {
         );
         if (
           targetConfiguration.tuningId &&
-          targetConfiguration.instrumentId === "baroque-lute-13"
+          targetConfiguration.instrumentId === "baroque-lute-13" &&
+          !targetConfiguration.instrumentInstance
         ) {
           instrument.setDiapasonScheme(targetConfiguration.tuningId);
         }
@@ -902,7 +940,8 @@ export class ArrangementService {
     );
     if (
       arrangement.targetConfiguration.tuningId &&
-      arrangement.targetConfiguration.instrumentId === "baroque-lute-13"
+      arrangement.targetConfiguration.instrumentId === "baroque-lute-13" &&
+      !arrangement.targetConfiguration.instrumentInstance
     ) {
       model.setDiapasonScheme(arrangement.targetConfiguration.tuningId);
     }
@@ -1306,6 +1345,10 @@ function componentIdentity(id: string, version: string, definition: unknown) {
 
 function isBaroqueGuitarStringing(value: string): value is BaroqueGuitarStringing {
   return value === "french" || value === "italian" || value === "mixed";
+}
+
+function isBaroqueLuteBassTuning(value: string): value is BaroqueLuteBassTuning {
+  return ["d_minor", "a_minor", "g_minor", "d_major", "e_minor"].includes(value);
 }
 
 function digestJson(value: unknown): string {

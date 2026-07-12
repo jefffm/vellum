@@ -212,6 +212,7 @@ export const EngraveParamsSchema = Type.Object({
   diapason_scheme: Type.Optional(Type.String()),
   instrument_instance_digest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })),
   stringing: Type.Optional(Type.String({ minLength: 1 })),
+  instrument_configuration: Type.Optional(Type.String({ minLength: 1 })),
 
   bars: Type.Array(EngraveBarSchema, { minItems: 1 }),
 

@@ -6,6 +6,10 @@ import type { EngraveParams } from "../../src/lib/engrave-schema.js";
 import { compileLilyPond } from "../../src/server/lib/compile-route.js";
 import { engrave } from "../../src/server/lib/engrave.js";
 import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
+import {
+  createBaroqueLuteInstance,
+  type BaroqueLuteBassTuning,
+} from "../../src/lib/instrument-instance.js";
 
 let lilypondAvailable = false;
 
@@ -111,7 +115,8 @@ describe("13-course lute diapason engraving tracer", () => {
   }, 90_000);
 });
 
-function diapasonSequence(diapasonScheme: string): EngraveParams {
+function diapasonSequence(diapasonScheme: BaroqueLuteBassTuning): EngraveParams {
+  const instance = createBaroqueLuteInstance(diapasonScheme);
   return {
     instrument: "baroque-lute-13",
     template: "french-tab",
@@ -119,6 +124,8 @@ function diapasonSequence(diapasonScheme: string): EngraveParams {
     time: "4/4",
     tempo: 60,
     diapason_scheme: diapasonScheme,
+    instrument_configuration: diapasonScheme,
+    instrument_instance_digest: instance.contentDigest,
     bars: [
       {
         events: [{ type: "note", input: "position", course: 10, fret: 0, duration: "1" }],

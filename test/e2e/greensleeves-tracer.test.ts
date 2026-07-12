@@ -117,6 +117,17 @@ describe("Greensleeves PDF tracer bullet", () => {
       transpositionPlan: { sourceKey: "G major", targetKey: "D major", semitones: -5 },
       preservationAudit: { status: "pass", findings: [] },
     });
+    const luteInstance = luteArranged.arrangementScore.targetConfiguration.instrumentInstance!;
+    expect(luteInstance).toMatchObject({
+      profileId: "baroque-lute-13",
+      tuningState: { variant: "d_minor" },
+      courses: expect.arrayContaining([
+        expect.objectContaining({ course: 10, notationIdentity: "///a", stopped: false }),
+      ]),
+    });
+    expect(luteArranged.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
+      luteInstance.contentDigest
+    );
     const classicalArranged = new ArrangementService({ store }).createFaithfulReduction(
       workspace.id,
       {
@@ -201,6 +212,7 @@ describe("Greensleeves PDF tracer bullet", () => {
       )
     );
     expect(luteEngraving.source).toContain('\include "instruments/baroque-lute-13.ily"');
+    expect(luteEngraving.source).toContain(luteInstance.contentDigest.slice(0, 12));
     expect(luteEngraving.source).toContain(
       "additionalBassStrings = \\stringTuning <a,, bes,, c, d, ees, f, g,>"
     );
@@ -248,6 +260,12 @@ describe("Greensleeves PDF tracer bullet", () => {
         )
     ).toBe(true);
     const luteAudioPreview = buildAudioPreview(luteArranged.arrangementScore, omr.normalizedScore);
+    expect(luteAudioPreview.instrumentInstanceDigest).toBe(luteInstance.contentDigest);
+    expect(
+      luteAudioPreview.events
+        .filter((event) => event.constituentStringId)
+        .every((event) => /^string\.c\d+\.s\d+$/.test(event.constituentStringId!))
+    ).toBe(true);
     expect(
       luteAudioPreview.events.filter((event) => event.part === "principal-voice")
     ).toHaveLength(protectedPrincipalEvents.length);
