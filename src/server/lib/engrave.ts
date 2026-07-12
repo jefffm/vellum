@@ -507,6 +507,15 @@ function resolveEvent(
   ];
   indicators = [
     ...rhythmicIndicators.filter((item) => item.kind === "literal" && item.site === "before"),
+    ...(event.stem_direction
+      ? [
+          {
+            kind: "literal" as const,
+            text: event.stem_direction === "up" ? "\\stemUp" : "\\stemDown",
+            site: "before" as const,
+          },
+        ]
+      : []),
     ...indicators,
   ];
   const closingIndicators = rhythmicIndicators.filter(

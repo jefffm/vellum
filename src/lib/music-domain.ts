@@ -1622,6 +1622,11 @@ export const ArrangementPositionSchema = Type.Object(
       Type.Literal("high_fret"),
       Type.Literal("diapason"),
     ]),
+    leftHandFinger: Type.Optional(Type.Integer({ minimum: 1, maximum: 4 })),
+    handPosition: Type.Optional(Type.Integer({ minimum: 1, maximum: 19 })),
+    barreId: Type.Optional(IdSchema),
+    guideFromPreviousEventId: Type.Optional(IdSchema),
+    sustainThroughEventId: Type.Optional(IdSchema),
   },
   { additionalProperties: false }
 );
@@ -1650,6 +1655,21 @@ export const ArrangementEventSchema = Type.Object(
     ),
     voiceId: Type.Optional(IdSchema),
     instrumentId: Type.Optional(Type.String({ minLength: 1 })),
+    notationSemantics: Type.Optional(
+      Type.Object(
+        {
+          voiceId: IdSchema,
+          voiceLayer: Type.Integer({ minimum: 1, maximum: 4 }),
+          stemDirection: Type.Union([Type.Literal("up"), Type.Literal("down")]),
+          writtenPitches: Type.Array(Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" })),
+          soundingPitches: Type.Array(Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" })),
+          writtenToSoundingSemitones: Type.Integer({ minimum: -24, maximum: 24 }),
+          duration: RationalSchema,
+          tie: Type.Union([Type.Literal("none"), Type.Literal("start"), Type.Literal("stop")]),
+        },
+        { additionalProperties: false }
+      )
+    ),
   },
   { additionalProperties: false }
 );

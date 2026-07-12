@@ -36,6 +36,7 @@ export const TechniqueApplicabilitySchema = Type.Object(
       Type.Literal("damping"),
       Type.Literal("right_hand_thumb"),
       Type.Literal("resonance"),
+      Type.Literal("right_hand_fingering"),
     ]),
     status: Type.Union([
       Type.Literal("applicable"),
@@ -245,6 +246,90 @@ export function createBaroqueLuteInstance(
           rationale: `${technique} is mechanically available but requires passage-specific evaluation.`,
         })
       ),
+    ],
+  };
+  const contentDigest = digestInstrumentInstance(withoutIdentity);
+  return Value.Decode(InstrumentInstanceConfigurationSchema, {
+    id: `instrument-instance.${contentDigest.slice(0, 24)}`,
+    ...withoutIdentity,
+    contentDigest,
+  });
+}
+
+export function createClassicalGuitarInstance(
+  overrides: {
+    scaleLengthMm?: number;
+    referencePitchHz?: number;
+    actionTrebleMm?: number;
+    actionBassMm?: number;
+  } = {}
+): InstrumentInstanceConfiguration {
+  const pitches = ["E4", "B3", "G3", "D3", "A2", "E2"];
+  const withoutIdentity = {
+    profileId: "classical-guitar-6",
+    profileVersion: "2.0.0",
+    scaleLength: { value: overrides.scaleLengthMm ?? 650, unit: "mm" as const },
+    physicalSetup: {
+      frets: 19,
+      stringCount: 6,
+      actionTrebleMm: overrides.actionTrebleMm ?? 3,
+      actionBassMm: overrides.actionBassMm ?? 4,
+    },
+    courses: pitches.map((openPitch, index) => ({
+      course: index + 1,
+      stopped: true,
+      strings: [
+        {
+          id: `string.${index + 1}`,
+          openPitch,
+          fretsWithCourse: true,
+        },
+      ],
+      notationIdentity: `string-${index + 1}`,
+    })),
+    tuningState: {
+      id: "tuning.classical-guitar.standard",
+      variant: "standard",
+      referencePitchHz: overrides.referencePitchHz ?? 440,
+    },
+    notationConfiguration: {
+      system: "standard-notation",
+      courseOrder: "highest_first" as const,
+      notationIdentityByCourse: [
+        "string-1",
+        "string-2",
+        "string-3",
+        "string-4",
+        "string-5",
+        "string-6",
+      ],
+    },
+    techniqueApplicability: [
+      {
+        technique: "punteado" as const,
+        status: "applicable" as const,
+        evidenceIds: ["profile.classical-guitar-6"],
+        rationale: "Individually plucked single-string technique is mechanically applicable.",
+      },
+      {
+        technique: "rasgueado" as const,
+        status: "not_applicable" as const,
+        evidenceIds: ["profile.classical-guitar-6"],
+        rationale:
+          "Historical five-course rasgueado is not the default classical-guitar technique model.",
+      },
+      ...(["barre", "damping", "resonance"] as const).map((technique) => ({
+        technique,
+        status: "applicable" as const,
+        evidenceIds: ["profile.classical-guitar-6"],
+        rationale: `${technique} is mechanically modeled but still requires passage and player evidence.`,
+      })),
+      {
+        technique: "right_hand_fingering" as const,
+        status: "unknown" as const,
+        evidenceIds: ["profile.classical-guitar-6"],
+        rationale: "No right-hand fingering has been generated or evaluated for this instance.",
+      },
     ],
   };
   const contentDigest = digestInstrumentInstance(withoutIdentity);

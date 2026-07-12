@@ -20,6 +20,7 @@ const OrnamentSchema = Type.Union([
 const EventIdentityProperties = {
   event_id: Type.Optional(Type.String({ minLength: 1 })),
   measure_id: Type.Optional(Type.String({ minLength: 1 })),
+  stem_direction: Type.Optional(Type.Union([Type.Literal("up"), Type.Literal("down")])),
   tuplet_start: Type.Optional(
     Type.Object({
       actual_notes: Type.Integer({ minimum: 2 }),

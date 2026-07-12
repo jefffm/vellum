@@ -456,6 +456,45 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(classicalResult.arrangementPlan.performanceBriefId).toBe(
       classicalResult.performanceBrief.id
     );
+    const exactClassicalGuitar =
+      classicalResult.arrangementScore.targetConfiguration.instrumentInstance!;
+    expect(exactClassicalGuitar).toMatchObject({
+      profileId: "classical-guitar-6",
+      scaleLength: { value: 650, unit: "mm" },
+      tuningState: { variant: "standard" },
+      contentDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+    expect(exactClassicalGuitar.courses).toHaveLength(6);
+    expect(exactClassicalGuitar.courses.every((course) => course.strings.length === 1)).toBe(true);
+    expect(classicalResult.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
+      exactClassicalGuitar.contentDigest
+    );
+    expect(
+      classicalResult.performanceBrief.arrangementBriefSnapshot.targetConfigurations
+    ).toContainEqual(
+      expect.objectContaining({
+        id: "target.classical-guitar",
+        instrumentInstance: exactClassicalGuitar,
+      })
+    );
+    expect(
+      classicalResult.arrangementScore.events
+        .flatMap((event) => event.positions)
+        .filter((position) => position.fret > 0)
+        .every((position) => position.leftHandFinger && position.handPosition)
+    ).toBe(true);
+    expect(
+      classicalResult.arrangementScore.events
+        .filter((event) => event.type !== "rest")
+        .every(
+          (event) =>
+            event.notationSemantics &&
+            event.notationSemantics.soundingPitches.join("|") === event.pitches.join("|")
+        )
+    ).toBe(true);
+    expect(store.getArrangementScore(workspace.id, classicalResult.arrangementScore.id)).toEqual(
+      classicalResult.arrangementScore
+    );
     expect(
       new Set([
         result.performanceBrief.id,

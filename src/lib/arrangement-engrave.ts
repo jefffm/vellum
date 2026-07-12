@@ -92,6 +92,9 @@ function toEngraveEvent(
     event.sourceEventIds.includes(candidate.id)
   );
   const notation = sourceEvent?.rhythmicNotation;
+  if (standardNotation && event.notationSemantics) {
+    assertCanonicalNotationSemantics(event);
+  }
   const duration = rationalToLilyDuration(notation?.writtenDuration ?? event.duration);
   const boundary = notation?.tuplet?.boundary;
   const identity = {
@@ -108,8 +111,14 @@ function toEngraveEvent(
     ...(notation?.tuplet && (boundary === "stop" || boundary === "start_stop")
       ? { tuplet_end: true }
       : {}),
+    ...(standardNotation && event.notationSemantics
+      ? { stem_direction: event.notationSemantics.stemDirection }
+      : {}),
   };
-  const tie = sourceEvent?.type === "note" && sourceEvent.tie === "start" ? { tie: true } : {};
+  const tieStarts = event.notationSemantics
+    ? event.notationSemantics.tie === "start"
+    : sourceEvent?.type === "note" && sourceEvent.tie === "start";
+  const tie = tieStarts ? { tie: true } : {};
   if (event.type === "rest") return { type: "rest", duration, ...identity };
   if (standardNotation) {
     if (event.type === "note" || event.pitches.length === 1) {
@@ -156,6 +165,31 @@ function toEngraveEvent(
     ...identity,
     ...tie,
   };
+}
+
+function assertCanonicalNotationSemantics(event: ArrangementEvent): void {
+  const notation = event.notationSemantics!;
+  if (
+    JSON.stringify(notation.soundingPitches) !== JSON.stringify(event.pitches) ||
+    compareRational(notation.duration, event.duration) !== 0
+  ) {
+    throw new Error(`Standard-notation semantics disagree with canonical event ${event.id}`);
+  }
+  if (
+    notation.writtenToSoundingSemitones !== -12 ||
+    notation.writtenPitches.length !== notation.soundingPitches.length ||
+    notation.writtenPitches.some(
+      (pitch, index) => pitch !== transposePitch(notation.soundingPitches[index]!, 12)
+    )
+  ) {
+    throw new Error(`Classical-guitar written/sounding octave is inconsistent at ${event.id}`);
+  }
+}
+
+function transposePitch(pitch: string, semitones: number): string {
+  const match = pitch.match(/^([A-G](?:#|b)?)(-?\d+)$/);
+  if (!match || semitones % 12 !== 0) throw new Error(`Unsupported notation pitch: ${pitch}`);
+  return `${match[1]}${Number(match[2]) + semitones / 12}`;
 }
 
 function addRational(left: Rational, right: Rational): Rational {

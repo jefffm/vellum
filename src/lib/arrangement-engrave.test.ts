@@ -12,6 +12,7 @@ import { buildAudioPreview } from "./audio-preview.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
 import { engrave } from "../server/lib/engrave.js";
+import { createClassicalGuitarInstance } from "./instrument-instance.js";
 
 describe("Arrangement Score engraving projection", () => {
   it("keeps LilyPond course order aligned with the baroque-guitar model", () => {
@@ -170,6 +171,16 @@ describe("Arrangement Score engraving projection", () => {
         positions: [],
         sourceEventIds: [event.id],
         role: "principal_voice" as const,
+        notationSemantics: {
+          voiceId: event.partId,
+          voiceLayer: 1,
+          stemDirection: "up" as const,
+          writtenPitches: [event.pitch.replace(/(-?\d+)$/, (octave) => String(Number(octave) + 1))],
+          soundingPitches: [event.pitch],
+          writtenToSoundingSemitones: -12,
+          duration: event.duration,
+          tie: ("tie" in event ? event.tie : undefined) ?? ("none" as const),
+        },
       })),
       transformationReport: [],
       preservationAudit: { status: "pass" as const, targetIds: [], findings: [] },
@@ -180,6 +191,7 @@ describe("Arrangement Score engraving projection", () => {
     expect(result.source).toContain("\\tuplet 3/2 {");
     expect(result.source).toContain("e'8 }");
     expect(result.source).toContain("f'2..~");
+    expect(result.source).toContain("\\stemUp");
     const preview = buildAudioPreview(arrangement, score, 60);
     expect(preview.performedForm.measureOccurrences.map((item) => item.id)).toEqual([
       "occurrence.measure-0.1",
@@ -213,10 +225,11 @@ describe("Arrangement Score engraving projection", () => {
       id: "analysis.greensleeves-classical",
       createdAt: "2026-07-10T13:00:00.000Z",
     });
+    const instrumentInstance = createClassicalGuitarInstance();
     const arrangement = arrangeFaithfulPluckedString(
       score,
       analysis,
-      InstrumentModel.fromProfile(loadBrowserProfile("classical-guitar-6")),
+      InstrumentModel.fromProfile(loadBrowserProfile("classical-guitar-6"), instrumentInstance),
       {
         arrangementId: "arrangement.greensleeves-classical",
         createdAt: "2026-07-10T14:00:00.000Z",
@@ -225,6 +238,7 @@ describe("Arrangement Score engraving projection", () => {
           instrumentId: "classical-guitar-6",
           role: "solo",
           tuningId: "standard",
+          instrumentInstance,
           notationLayouts: ["standard-notation"],
           deliverables: ["pdf", "audio-preview"],
         },
@@ -247,6 +261,7 @@ describe("Arrangement Score engraving projection", () => {
 
     const result = engrave(params);
     expect(result.source).toContain('\\clef "treble_8"');
+    expect(result.source).toContain("\\stemUp");
     expect(result.source).toContain("fis'8");
     expect(result.source).toContain("dis'16");
     expect(result.source).not.toContain("\\new TabStaff");

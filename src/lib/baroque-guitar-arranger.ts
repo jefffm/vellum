@@ -3,6 +3,7 @@ import type {
   AnalysisRecord,
   ArrangementCandidate,
   ArrangementEvent,
+  ArrangementPosition,
   ArrangementScore,
   NormalizedScore,
   PreservationAudit,
@@ -29,12 +30,7 @@ export type ArrangementSearchResult = {
 
 type VoicingChoice = {
   pitches: string[];
-  positions: {
-    course: number;
-    fret: number;
-    pitch: string;
-    quality: "open" | "low_fret" | "high_fret" | "diapason";
-  }[];
+  positions: ArrangementPosition[];
   sourceEventIds: string[];
   sourcePitchClassCoverage: number;
   averageFret: number;
@@ -419,6 +415,7 @@ function buildCandidateEvents(
 ): ArrangementEvent[] {
   const result: ArrangementEvent[] = [];
   let previousPositions: VoicingChoice["positions"] = [];
+  let previousSoundingEventId: string | undefined;
 
   for (const [index, sourceEvent] of principalEvents.entries()) {
     if (sourceEvent.type === "rest") {
@@ -433,12 +430,17 @@ function buildCandidateEvents(
         sourceEventIds: [sourceEvent.id],
       });
       previousPositions = [];
+      previousSoundingEventId = undefined;
       continue;
     }
 
     const melodyPitch = transposeNote(sourceEvent.pitch, semitones);
     const soundingSourceEvents = sourceEventsAt(score, sourceEvent.measureId, sourceEvent.onset);
-    const choices = enumerateVoicings(melodyPitch, soundingSourceEvents, model, semitones);
+    const enumerated = enumerateVoicings(melodyPitch, soundingSourceEvents, model, semitones);
+    const choices =
+      model.exactInstance()?.profileId === "classical-guitar-6"
+        ? enumerated.filter(classicalGuitarFingeringFeasible)
+        : enumerated;
     const ranked = choices.sort((left, right) =>
       strategy === "source-coverage"
         ? right.sourcePitchClassCoverage - left.sourcePitchClassCoverage ||
@@ -450,22 +452,100 @@ function buildCandidateEvents(
     );
     const choice = ranked[0];
     if (!choice) throw new Error(`No playable voicing for Principal Voice event ${sourceEvent.id}`);
+    const eventId = `arrangement-event.${strategy}.${index + 1}`;
+    const positions =
+      model.exactInstance()?.profileId === "classical-guitar-6"
+        ? annotateClassicalGuitarFingering(
+            choice.positions,
+            previousPositions,
+            eventId,
+            previousSoundingEventId,
+            sourceEvent.tie === "start" ? `arrangement-event.${strategy}.${index + 2}` : undefined
+          )
+        : choice.positions;
     const arranged: ArrangementEvent = {
-      id: `arrangement-event.${strategy}.${index + 1}`,
+      id: eventId,
       type: choice.pitches.length > 1 ? "chord" : "note",
       measureId: sourceEvent.measureId,
       onset: sourceEvent.onset,
       duration: sourceEvent.duration,
       pitches: choice.pitches,
-      positions: choice.positions,
+      positions,
       sourceEventIds: Array.from(new Set([sourceEvent.id, ...choice.sourceEventIds])),
       principalVoiceSourceEventId: sourceEvent.id,
+      ...(model.exactInstance()?.profileId === "classical-guitar-6"
+        ? {
+            notationSemantics: {
+              voiceId: sourceEvent.partId,
+              voiceLayer: 1,
+              stemDirection: "up" as const,
+              writtenPitches: choice.pitches.map(raiseWrittenOctave),
+              soundingPitches: choice.pitches,
+              writtenToSoundingSemitones: -12,
+              duration: sourceEvent.duration,
+              tie: sourceEvent.tie ?? ("none" as const),
+            },
+          }
+        : {}),
     };
     result.push(arranged);
-    previousPositions = choice.positions;
+    previousPositions = positions;
+    previousSoundingEventId = eventId;
   }
 
   return result;
+}
+
+function annotateClassicalGuitarFingering(
+  positions: ArrangementPosition[],
+  previous: ArrangementPosition[],
+  eventId: string,
+  previousEventId: string | undefined,
+  sustainThroughEventId: string | undefined
+): ArrangementPosition[] {
+  const fretted = positions.filter((position) => position.fret > 0);
+  const handPosition = fretted.length ? Math.min(...fretted.map((position) => position.fret)) : 1;
+  const fretCounts = new Map<number, number>();
+  for (const position of fretted) {
+    fretCounts.set(position.fret, (fretCounts.get(position.fret) ?? 0) + 1);
+  }
+  return positions.map((position) => {
+    if (position.fret === 0) {
+      return sustainThroughEventId ? { ...position, sustainThroughEventId } : position;
+    }
+    const barred = (fretCounts.get(position.fret) ?? 0) > 1;
+    const leftHandFinger = barred ? 1 : Math.max(1, Math.min(4, position.fret - handPosition + 1));
+    const prior = previous.find(
+      (candidate) =>
+        candidate.course === position.course && candidate.leftHandFinger === leftHandFinger
+    );
+    return {
+      ...position,
+      leftHandFinger,
+      handPosition,
+      ...(barred ? { barreId: `barre.${eventId}.${position.fret}` } : {}),
+      ...(prior && previousEventId ? { guideFromPreviousEventId: previousEventId } : {}),
+      ...(sustainThroughEventId ? { sustainThroughEventId } : {}),
+    };
+  });
+}
+
+function classicalGuitarFingeringFeasible(choice: VoicingChoice): boolean {
+  const annotated = annotateClassicalGuitarFingering(
+    choice.positions,
+    [],
+    "event.feasibility",
+    undefined,
+    undefined
+  );
+  const occupied = new Map<number, number>();
+  for (const position of annotated) {
+    if (!position.leftHandFinger) continue;
+    const priorFret = occupied.get(position.leftHandFinger);
+    if (priorFret !== undefined && priorFret !== position.fret) return false;
+    occupied.set(position.leftHandFinger, position.fret);
+  }
+  return true;
 }
 
 function enumerateVoicings(
@@ -640,4 +720,10 @@ function transposeKey(key: string | undefined, semitones: number): string | unde
   if (!match) return key;
   const tonic = transposeNote(`${match[1]}4`, semitones).replace(/-?\d+$/, "");
   return `${tonic} ${match[2]}`;
+}
+
+function raiseWrittenOctave(pitch: string): string {
+  const match = pitch.match(/^([A-G](?:#|b)?)(-?\d+)$/);
+  if (!match) throw new Error(`Invalid canonical pitch spelling: ${pitch}`);
+  return `${match[1]}${Number(match[2]) + 1}`;
 }

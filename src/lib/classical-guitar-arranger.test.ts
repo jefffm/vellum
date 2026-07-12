@@ -7,6 +7,10 @@ import { InstrumentModel } from "./instrument-model.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { noteToMidi, transposeNote } from "./pitch.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
+import { createClassicalGuitarInstance } from "./instrument-instance.js";
+import { arrangementToEngraveParams } from "./arrangement-engrave.js";
+import { engrave } from "../server/lib/engrave.js";
+import { buildAudioPreview } from "./audio-preview.js";
 
 describe("faithful classical-guitar arrangement search", () => {
   it("creates an independently audited standard-notation Greensleeves sibling", () => {
@@ -28,7 +32,11 @@ describe("faithful classical-guitar arrangement search", () => {
       id: "analysis.greensleeves",
       createdAt: "2026-07-10T13:00:00.000Z",
     });
-    const model = InstrumentModel.fromProfile(loadBrowserProfile("classical-guitar-6"));
+    const instrumentInstance = createClassicalGuitarInstance();
+    const model = InstrumentModel.fromProfile(
+      loadBrowserProfile("classical-guitar-6"),
+      instrumentInstance
+    );
     const result = arrangeFaithfulPluckedString(score, analysis, model, {
       arrangementId: "arrangement.greensleeves-classical-guitar",
       createdAt: "2026-07-10T14:00:00.000Z",
@@ -37,6 +45,7 @@ describe("faithful classical-guitar arrangement search", () => {
         instrumentId: "classical-guitar-6",
         role: "solo",
         tuningId: "standard",
+        instrumentInstance,
         notationLayouts: ["standard-notation"],
         deliverables: ["pdf", "audio-preview"],
       },
@@ -53,6 +62,10 @@ describe("faithful classical-guitar arrangement search", () => {
       instrumentId: "classical-guitar-6",
       tuningId: "standard",
       notationLayouts: ["standard-notation"],
+      instrumentInstance: expect.objectContaining({
+        profileId: "classical-guitar-6",
+        contentDigest: instrumentInstance.contentDigest,
+      }),
     });
 
     const protectedIds = new Set(
@@ -71,6 +84,56 @@ describe("faithful classical-guitar arrangement search", () => {
       expect(Math.max(...arranged.pitches.map(noteToMidi))).toBe(noteToMidi(expected));
       expect(model.isPlayable(arranged.positions).ok).toBe(true);
       expect(arranged.positions.every((position) => position.quality !== "diapason")).toBe(true);
+      expect(arranged.notationSemantics).toMatchObject({
+        voiceId: source.partId,
+        voiceLayer: 1,
+        stemDirection: "up",
+        soundingPitches: arranged.pitches,
+        writtenToSoundingSemitones: -12,
+        duration: source.duration,
+        tie: source.tie ?? "none",
+      });
+      expect(arranged.notationSemantics!.writtenPitches).toEqual(
+        arranged.pitches.map((pitch) =>
+          pitch.replace(/(-?\d+)$/, (octave) => String(Number(octave) + 1))
+        )
+      );
     }
+    const hiddenFrettedPositions = result.selected.events.flatMap((event) =>
+      event.positions.filter((position) => position.fret > 0)
+    );
+    expect(hiddenFrettedPositions.length).toBeGreaterThan(0);
+    expect(
+      hiddenFrettedPositions.every((position) => position.leftHandFinger && position.handPosition)
+    ).toBe(true);
+    expect(hiddenFrettedPositions.some((position) => position.guideFromPreviousEventId)).toBe(true);
+
+    const params = arrangementToEngraveParams(result.selected, score);
+    expect(params.template).toBe("solo-staff");
+    expect(
+      params.bars
+        .flatMap((bar) => bar.events)
+        .filter((event) => event.type !== "rest")
+        .every(
+          (event) =>
+            (event.type === "note" && event.input === "pitch") ||
+            (event.type === "chord" &&
+              event.positions.every((position) => position.input === "pitch"))
+        )
+    ).toBe(true);
+    const sourceOutput = engrave(params).source;
+    expect(sourceOutput).toContain('\\clef "treble_8"');
+    expect(sourceOutput).toContain("\\stemUp");
+    expect(sourceOutput).not.toContain("\\new TabStaff");
+    expect(sourceOutput).not.toContain("stringNumberOrientations");
+
+    const preview = buildAudioPreview(result.selected, score);
+    expect(preview.instrumentInstanceDigest).toBe(instrumentInstance.contentDigest);
+    expect(preview.events).toHaveLength(
+      result.selected.events.reduce(
+        (count, event) => count + (event.type === "rest" ? 0 : event.pitches.length),
+        0
+      )
+    );
   });
 });

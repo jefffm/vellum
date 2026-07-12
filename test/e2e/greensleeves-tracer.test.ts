@@ -145,6 +145,40 @@ describe("Greensleeves PDF tracer bullet", () => {
       transpositionPlan: { sourceKey: "G major", targetKey: "G major", semitones: 0 },
       preservationAudit: { status: "pass", findings: [] },
     });
+    const classicalInstance =
+      classicalArranged.arrangementScore.targetConfiguration.instrumentInstance!;
+    expect(classicalInstance).toMatchObject({
+      profileId: "classical-guitar-6",
+      scaleLength: { value: 650, unit: "mm" },
+      physicalSetup: { frets: 19, stringCount: 6 },
+      tuningState: { variant: "standard", referencePitchHz: 440 },
+    });
+    expect(classicalInstance.courses.map((course) => course.strings[0]!.openPitch)).toEqual([
+      "E4",
+      "B3",
+      "G3",
+      "D3",
+      "A2",
+      "E2",
+    ]);
+    expect(classicalArranged.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
+      classicalInstance.contentDigest
+    );
+    expect(
+      classicalArranged.arrangementScore.events
+        .flatMap((event) => event.positions)
+        .filter((position) => position.fret > 0)
+        .every((position) => position.leftHandFinger && position.handPosition)
+    ).toBe(true);
+    expect(
+      classicalArranged.arrangementScore.events
+        .filter((event) => event.type !== "rest")
+        .every(
+          (event) =>
+            event.notationSemantics?.soundingPitches.join("|") === event.pitches.join("|") &&
+            event.notationSemantics.writtenToSoundingSemitones === -12
+        )
+    ).toBe(true);
 
     const engraving = engrave(
       arrangementToEngraveParams(arranged.arrangementScore, omr.normalizedScore)
@@ -203,8 +237,12 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(classicalEngraving.source).toContain('\\include "instruments/classical-guitar-6.ily"');
     expect(classicalEngraving.source).toContain("\\new Staff");
     expect(classicalEngraving.source).toContain('\\clef "treble_8"');
+    expect(classicalEngraving.source).toContain("\\stemUp");
+    expect(classicalEngraving.source).toContain(classicalInstance.contentDigest.slice(0, 12));
     expect(classicalEngraving.source).not.toContain("\\new TabStaff");
     expect(classicalEngraving.source).not.toContain("tablatureFormat");
+    expect(classicalEngraving.source).not.toContain("leftHandFinger");
+    expect(classicalEngraving.source).not.toContain("handPosition");
     expect(midiNoteOns(Buffer.from(classicalCompiled.midi!, "base64"))).toHaveLength(
       classicalArranged.arrangementScore.events.reduce(
         (total, event) => total + (event.type === "rest" ? 0 : event.pitches.length),
@@ -272,6 +310,13 @@ describe("Greensleeves PDF tracer bullet", () => {
     const classicalAudioPreview = buildAudioPreview(
       classicalArranged.arrangementScore,
       omr.normalizedScore
+    );
+    expect(classicalAudioPreview.instrumentInstanceDigest).toBe(classicalInstance.contentDigest);
+    expect(classicalAudioPreview.events).toHaveLength(
+      classicalArranged.arrangementScore.events.reduce(
+        (total, event) => total + (event.type === "rest" ? 0 : event.pitches.length),
+        0
+      )
     );
     expect(
       classicalAudioPreview.events.filter((event) => event.part === "principal-voice")

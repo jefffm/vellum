@@ -21,6 +21,10 @@ export class InstrumentModel {
     this.currentDiapasonScheme = this.defaultDiapasonScheme();
   }
 
+  exactInstance(): InstrumentInstanceConfiguration | undefined {
+    return this.instance;
+  }
+
   positionsForPitch(pitch: string): TabPosition[] {
     const targetMidi = noteToMidi(pitch);
     const positions: TabPosition[] = [];

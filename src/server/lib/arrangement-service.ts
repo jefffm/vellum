@@ -37,6 +37,7 @@ import type {
 import {
   createBaroqueGuitarInstance,
   createBaroqueLuteInstance,
+  createClassicalGuitarInstance,
   assertInstrumentInstanceIdentity,
   type BaroqueGuitarStringing,
   type BaroqueLuteBassTuning,
@@ -218,6 +219,41 @@ export class ArrangementService {
         targetConfiguration = {
           ...targetConfiguration,
           tuningId: bassTuning,
+          instrumentInstance: exactInstance,
+        };
+        workspace = this.store.updateBrief(workspaceId, {
+          ...workspace.brief,
+          targetConfigurations: workspace.brief.targetConfigurations.map((target) =>
+            target.id === targetConfiguration!.id ? targetConfiguration! : target
+          ),
+        });
+      }
+    }
+    if (targetConfiguration.instrumentId === "classical-guitar-6") {
+      const tuning = targetConfiguration.tuningId ?? "standard";
+      if (tuning !== "standard") {
+        throw new ApiRouteError(`Unsupported classical-guitar tuning: ${tuning}`, 400);
+      }
+      const exactInstance = createClassicalGuitarInstance();
+      if (
+        targetConfiguration.instrumentInstance &&
+        targetConfiguration.instrumentInstance.contentDigest !== exactInstance.contentDigest
+      ) {
+        throw new ApiRouteError(
+          "Target tuning and exact Instrument Instance configuration do not match",
+          409
+        );
+      }
+      if (targetConfiguration.instrumentInstance) {
+        try {
+          assertInstrumentInstanceIdentity(targetConfiguration.instrumentInstance);
+        } catch (error) {
+          throw new ApiRouteError((error as Error).message, 409);
+        }
+      } else {
+        targetConfiguration = {
+          ...targetConfiguration,
+          tuningId: tuning,
           instrumentInstance: exactInstance,
         };
         workspace = this.store.updateBrief(workspaceId, {
