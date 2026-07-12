@@ -202,20 +202,89 @@ export function audiverisCommand(): string {
   return process.platform === "darwin" && existsSync(macApp) ? macApp : "audiveris";
 }
 
-async function extractAudiverisPageImages(nativeOmr: Buffer): Promise<OmrBackendArtifact[]> {
-  const zip = await JSZip.loadAsync(nativeOmr);
-  const pages = Object.values(zip.files)
+type OmrArchiveLimits = {
+  maxArchiveBytes: number;
+  maxEntries: number;
+  maxPages: number;
+  maxEntryBytes: number;
+  maxExpandedBytes: number;
+};
+
+const DEFAULT_OMR_ARCHIVE_LIMITS: OmrArchiveLimits = {
+  maxArchiveBytes: 64 * 1024 * 1024,
+  maxEntries: 2_048,
+  maxPages: 512,
+  maxEntryBytes: 16 * 1024 * 1024,
+  maxExpandedBytes: 128 * 1024 * 1024,
+};
+
+export async function extractAudiverisPageImages(
+  nativeOmr: Buffer,
+  limits: OmrArchiveLimits = DEFAULT_OMR_ARCHIVE_LIMITS
+): Promise<OmrBackendArtifact[]> {
+  if (nativeOmr.byteLength > limits.maxArchiveBytes) {
+    throw omrArchiveLimit("compressed archive bytes", nativeOmr.byteLength, limits.maxArchiveBytes);
+  }
+  let zip: JSZip;
+  try {
+    zip = await JSZip.loadAsync(nativeOmr);
+  } catch {
+    throw new ApiRouteError("OMR archive is malformed and cannot be inspected safely", 422);
+  }
+  const entries = Object.values(zip.files);
+  if (entries.length > limits.maxEntries) {
+    throw omrArchiveLimit("entry count", entries.length, limits.maxEntries);
+  }
+  let expandedBytes = 0;
+  for (const entry of entries) {
+    const originalName = entry.unsafeOriginalName ?? entry.name;
+    if (
+      path.posix.isAbsolute(originalName) ||
+      originalName.split("/").some((segment) => segment === "..")
+    ) {
+      throw new ApiRouteError("OMR archive contains an unsafe member path", 422);
+    }
+    const entryBytes = omrEntryUncompressedBytes(entry);
+    if (entryBytes > limits.maxEntryBytes) {
+      throw omrArchiveLimit(`entry ${entry.name} bytes`, entryBytes, limits.maxEntryBytes);
+    }
+    expandedBytes += entryBytes;
+    if (expandedBytes > limits.maxExpandedBytes) {
+      throw omrArchiveLimit("expanded archive bytes", expandedBytes, limits.maxExpandedBytes);
+    }
+  }
+  const pages = entries
     .filter((entry) => !entry.dir && /^sheet#\d+\/BINARY\.png$/i.test(entry.name))
     .sort((left, right) => left.name.localeCompare(right.name, undefined, { numeric: true }));
-  return await Promise.all(
-    pages.map(async (entry) => {
-      const page = Number(entry.name.match(/^sheet#(\d+)/i)?.[1]);
-      return {
-        filename: `audiveris-page-${page}.png`,
-        category: "native" as const,
-        content: await entry.async("nodebuffer"),
-      };
-    })
+  if (pages.length > limits.maxPages) {
+    throw omrArchiveLimit("page image count", pages.length, limits.maxPages);
+  }
+  const artifacts: OmrBackendArtifact[] = [];
+  for (const entry of pages) {
+    const page = Number(entry.name.match(/^sheet#(\d+)/i)?.[1]);
+    artifacts.push({
+      filename: `audiveris-page-${page}.png`,
+      category: "native",
+      content: await entry.async("nodebuffer"),
+    });
+  }
+  return artifacts;
+}
+
+function omrEntryUncompressedBytes(entry: JSZip.JSZipObject): number {
+  if (entry.dir) return 0;
+  const value = (entry as unknown as { _data?: { uncompressedSize?: number } })._data
+    ?.uncompressedSize;
+  if (!Number.isSafeInteger(value) || value! < 0) {
+    throw new ApiRouteError(`OMR archive member size is unavailable: ${entry.name}`, 422);
+  }
+  return value!;
+}
+
+function omrArchiveLimit(label: string, actual: number, limit: number): ApiRouteError {
+  return new ApiRouteError(
+    `OMR archive resource limit exceeded: ${label} ${actual}, limit ${limit}`,
+    413
   );
 }
 

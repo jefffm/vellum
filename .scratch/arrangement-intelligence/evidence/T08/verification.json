@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T08",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T12:31:00Z",
+  "requirements": {
+    "M04": {
+      "status": "partial",
+      "remaining": "T12/T32 extend bounded source fault injection across all semantic import adapters"
+    },
+    "M13": {
+      "status": "partial",
+      "remaining": "T10/T32-T34 extend resource and persistence budgets to Evaluation runs, retention, and CI impact selection"
+    }
+  },
+  "auditFindings": {
+    "F030": "machine fixed+verified: source bodies spool to mode-0600 temporary files, hash incrementally, enforce a 32 MiB declared and streamed limit, clean up, and create no canonical artifact on overflow",
+    "F031": "machine fixed+verified: subprocess input, emitted bytes, retained tails, duration, concurrency, scanned entries, output file count, per-file bytes, and aggregate bytes are bounded with typed evidence and cleanup",
+    "F032": "machine fixed+verified: OMR archives enforce compressed, entry-count, member, aggregate-expanded, page-count, malformed-path, and malformed-archive limits before page expansion",
+    "F033": "machine fixed+verified: the pinned lockfile advisory inventory records exposure and resolution; npm audit reports zero known vulnerabilities",
+    "F036": "partial: limit failures carry typed resource and byte-budget details; cross-phase correlation remains T32",
+    "F047": "machine fixed+verified: the existing pinned LilyPond sandbox now also inherits global subprocess emission, file, duration, and concurrency budgets"
+  },
+  "summary": {
+    "testsPassed": 941,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 63,
+    "limits": {
+      "sourceUploadBytes": 33554432,
+      "subprocessConcurrency": 4,
+      "subprocessEmittedBytes": 16777216,
+      "subprocessRetainedBytesPerStream": 4194304,
+      "subprocessOutputFiles": 64,
+      "subprocessOutputFileBytes": 33554432,
+      "subprocessOutputTotalBytes": 67108864,
+      "omrArchiveBytes": 67108864,
+      "omrArchiveEntries": 2048,
+      "omrArchiveEntryBytes": 16777216,
+      "omrArchiveExpandedBytes": 134217728,
+      "omrArchivePages": 512
+    },
+    "dependencyAudit": {
+      "before": { "critical": 1, "high": 6, "moderate": 8, "total": 15 },
+      "after": { "critical": 0, "high": 0, "moderate": 0, "total": 0 }
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm audit --audit-level=low", "result": "pass: 0 vulnerabilities" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    {
+      "command": "npx vitest run src/server/lib/subprocess.test.ts src/server/lib/omr.test.ts src/server/lib/workspace-route.test.ts src/server/lib/workspace-store.test.ts src/server/index.test.ts",
+      "result": "pass: 63 passed"
+    },
+    { "command": "npm test", "result": "pass: 941 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/08-bounded-ingestion-tools.md",
+      "sha256": "c3f5a47c831df58402970dc52f075d89f699caa079e8d28588df4cd2cce5c0d7"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "12e9bb20fc31b91de7ce4221759be9c16c0910788978676e24990ca000ce5ee2"
+    },
+    {
+      "path": "docs/security/dependency-advisory-inventory-2026-07-12.md",
+      "sha256": "29639e76ebf19c4b165dc1ca792eb79700296848402a12bf859e72e7cb503581"
+    },
+    {
+      "path": "src/server/lib/workspace-route.ts",
+      "sha256": "81d081db686885e0f7de51ce5f4fcf3a26442620e97b781e7b9f5a37e425483d"
+    },
+    {
+      "path": "src/server/lib/subprocess.ts",
+      "sha256": "0d5f2e915b6cccd1e90f5401bf6cd042a8f54270b2f7abb21328b0b143604603"
+    },
+    {
+      "path": "src/server/lib/omr.ts",
+      "sha256": "47df09ddfadb00ccfa38c01455d4631a1519ea883a4679e78007939bd577b207"
+    }
+  ]
+}

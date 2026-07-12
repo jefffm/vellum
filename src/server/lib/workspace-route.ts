@@ -1,14 +1,21 @@
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
-import { CreateWorkspaceSchema, UploadSourceArtifactSchema } from "../../lib/music-domain.js";
+import { createHash } from "node:crypto";
+import { createWriteStream } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { CreateWorkspaceSchema } from "../../lib/music-domain.js";
 import type {
   ArrangementWorkspace,
   CreateWorkspace,
   SourceArtifact,
   UploadSourceArtifact,
 } from "../../lib/music-domain.js";
-import { createApiRoute } from "./create-route.js";
+import { ApiRouteError, createApiRoute } from "./create-route.js";
 import {
   setSourceArtifactResponseHeaders,
   validateSourceArtifactForServing,
@@ -37,7 +44,6 @@ const SourceParamsSchema = Type.Object({
 
 type WorkspaceParams = { workspaceId: string };
 type SourceParams = WorkspaceParams & { sourceArtifactId: string };
-type SourceUploadInput = WorkspaceParams & UploadSourceArtifact;
 
 export function createWorkspaceListRoute(store = new WorkspaceStore()): RequestHandler {
   return createApiRoute<undefined, ArrangementWorkspace[]>({
@@ -140,28 +146,65 @@ export function createWorkspaceCreateRoute(store = new WorkspaceStore()): Reques
   });
 }
 
-export function createSourceUploadRoute(store = new WorkspaceStore()): RequestHandler {
-  return createApiRoute<SourceUploadInput, SourceArtifact>({
-    validate: (body, request) => {
-      const upload = Buffer.isBuffer(body)
-        ? {
-            filename: decodeFilename(request.header("X-Source-Filename")),
-            mimeType: request.header("Content-Type")?.split(";", 1)[0] ?? "application/pdf",
-            contentBase64: body.toString("base64"),
-            provenance: {
-              license:
-                request.header("X-Source-License") ??
-                "User supplied; rights not asserted by Vellum",
-            },
+export function createSourceUploadRoute(
+  store = new WorkspaceStore(),
+  options: { maxBytes?: number } = {}
+): RequestHandler {
+  const maxBytes = options.maxBytes ?? 32 * 1024 * 1024;
+  return async (request, response, next) => {
+    let spoolDirectory: string | undefined;
+    try {
+      const { workspaceId } = Value.Decode(WorkspaceParamsSchema, request.params);
+      const declaredLength = Number(request.header("content-length"));
+      if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+        throw new ApiRouteError(
+          `Source upload exceeds byte limit ${maxBytes}`,
+          413,
+          "request_too_large",
+          { limitBytes: maxBytes }
+        );
+      }
+      spoolDirectory = await mkdtemp(path.join(tmpdir(), "vellum-source-upload-"));
+      const spoolPath = path.join(spoolDirectory, "source.upload");
+      const hash = createHash("sha256");
+      let byteLength = 0;
+      const meter = new Transform({
+        transform(chunk: Buffer, _encoding, callback) {
+          byteLength += chunk.byteLength;
+          if (byteLength > maxBytes) {
+            callback(
+              new ApiRouteError(
+                `Source upload exceeds byte limit ${maxBytes}`,
+                413,
+                "request_too_large",
+                { limitBytes: maxBytes }
+              )
+            );
+            return;
           }
-        : Value.Decode(UploadSourceArtifactSchema, body);
-      return {
-        ...Value.Decode(WorkspaceParamsSchema, request.params),
-        ...upload,
-      };
-    },
-    handler: async ({ workspaceId, ...input }) => store.addSourceArtifact(workspaceId, input),
-  });
+          hash.update(chunk);
+          callback(null, chunk);
+        },
+      });
+      await pipeline(request, meter, createWriteStream(spoolPath, { mode: 0o600 }));
+      const artifact = store.addSourceArtifactFromSpool(workspaceId, {
+        filename: decodeFilename(request.header("X-Source-Filename")),
+        mimeType: request.header("Content-Type")?.split(";", 1)[0] ?? "application/pdf",
+        provenance: {
+          license:
+            request.header("X-Source-License") ?? "User supplied; rights not asserted by Vellum",
+        },
+        spoolPath,
+        sha256: hash.digest("hex"),
+        byteLength,
+      });
+      response.status(200).json({ ok: true, data: artifact });
+    } catch (error) {
+      next(error);
+    } finally {
+      if (spoolDirectory) await rm(spoolDirectory, { recursive: true, force: true });
+    }
+  };
 }
 
 function decodeFilename(value: string | undefined): string {

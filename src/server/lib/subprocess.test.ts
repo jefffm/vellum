@@ -1,6 +1,6 @@
 import { access } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { runSubprocess, SubprocessError } from "./subprocess.js";
+import { runSubprocess, SubprocessError, SubprocessLimitError } from "./subprocess.js";
 import type { SubprocessConfig } from "./subprocess.js";
 
 type SubprocessCase = {
@@ -111,6 +111,79 @@ describe("SubprocessRunner", () => {
     expect(result.stdout).toContain("truncated");
     expect(result.stdout.endsWith("TAIL")).toBe(true);
     expect(result.stderr.endsWith("END")).toBe(true);
+  });
+
+  it("terminates a child that exceeds its emitted-output budget", async () => {
+    await expect(
+      runSubprocess({
+        command: process.execPath,
+        args: ["-e", "for(let i=0;i<100;i++)process.stdout.write('x'.repeat(4096))"],
+        maxCaptureBytes: 512,
+        maxEmittedBytes: 8_192,
+      })
+    ).rejects.toMatchObject({
+      status: 413,
+      code: "request_too_large",
+      details: {
+        resource: "subprocess",
+        limitBytes: 8_192,
+        stdoutTail: expect.any(String),
+        stderrTail: expect.stringContaining("subprocess_resource_limit"),
+      },
+    });
+  });
+
+  it("rejects generated file count and byte budgets before reading output", async () => {
+    await expect(
+      runSubprocess({
+        command: process.execPath,
+        args: [
+          "-e",
+          "const f=require('fs');f.writeFileSync('a.out','a');f.writeFileSync('b.out','b')",
+        ],
+        outputGlobs: ["*.out"],
+        maxOutputFiles: 1,
+      })
+    ).rejects.toBeInstanceOf(SubprocessLimitError);
+    await expect(
+      runSubprocess({
+        command: process.execPath,
+        args: ["-e", "require('fs').writeFileSync('large.out','x'.repeat(1024))"],
+        outputGlobs: ["*.out"],
+        maxOutputFileBytes: 128,
+      })
+    ).rejects.toBeInstanceOf(SubprocessLimitError);
+  });
+
+  it("rejects input traversal and input byte overflow inside the disposable tree", async () => {
+    await expect(
+      runSubprocess({
+        command: "true",
+        args: [],
+        inputFile: { name: "../escape", content: "no" },
+      })
+    ).rejects.toBeInstanceOf(SubprocessLimitError);
+    await expect(
+      runSubprocess({
+        command: "true",
+        args: [],
+        inputFile: { name: "large.bin", content: Buffer.alloc(256) },
+        maxInputBytes: 128,
+      })
+    ).rejects.toBeInstanceOf(SubprocessLimitError);
+  });
+
+  it("bounds global subprocess concurrency", async () => {
+    const started = Date.now();
+    await Promise.all(
+      Array.from({ length: 8 }, () =>
+        runSubprocess({
+          command: process.execPath,
+          args: ["-e", "setTimeout(()=>{},150)"],
+        })
+      )
+    );
+    expect(Date.now() - started).toBeGreaterThanOrEqual(250);
   });
 
   it("cleans up temporary directories after successful runs", async () => {

@@ -4,10 +4,12 @@ import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
   closeSync,
+  copyFileSync,
   mkdirSync,
   openSync,
   readdirSync,
   readFileSync,
+  readSync,
   rmSync,
   renameSync,
   statSync,
@@ -350,6 +352,56 @@ export class WorkspaceStore {
       createdAt: this.now().toISOString(),
     };
 
+    writeJsonAtomic(metadataPath, artifact);
+    this.linkSourceArtifact(workspace, id);
+    return artifact;
+  }
+
+  addSourceArtifactFromSpool(
+    workspaceId: string,
+    input: Omit<UploadSourceArtifact, "contentBase64"> & {
+      spoolPath: string;
+      sha256: string;
+      byteLength: number;
+    }
+  ): SourceArtifact {
+    const workspace = this.get(workspaceId);
+    validateSourceFile(input.mimeType, input.spoolPath, input.byteLength);
+    if (!/^[a-f0-9]{64}$/.test(input.sha256)) {
+      throw new ApiRouteError("Source spool hash is invalid", 400);
+    }
+    const id = `source.${input.sha256.slice(0, 24)}`;
+    const sourceDirectory = path.join(this.workspaceDirectory(workspaceId), "sources", id);
+    const safeFilename = safeSourceFilename(input.filename);
+    const storedPath = path.posix.join("sources", id, safeFilename);
+    const metadataPath = path.join(sourceDirectory, "source.json");
+    if (existsSync(metadataPath)) {
+      const existing = Value.Decode(
+        SourceArtifactSchema,
+        JSON.parse(readFileSync(metadataPath, "utf8"))
+      );
+      if (existing.sha256 !== input.sha256 || existing.byteLength !== input.byteLength) {
+        throw new ApiRouteError("Source identity collides with different bytes", 409);
+      }
+      this.linkSourceArtifact(workspace, existing.id);
+      return existing;
+    }
+    mkdirSync(sourceDirectory, { recursive: true });
+    const artifactPath = path.join(sourceDirectory, safeFilename);
+    const pendingPath = `${artifactPath}.${process.pid}.${randomUUID()}.tmp`;
+    copyFileSync(input.spoolPath, pendingPath);
+    renameSync(pendingPath, artifactPath);
+    const artifact: SourceArtifact = {
+      id,
+      kind: sourceKind(input.mimeType),
+      filename: safeFilename,
+      mimeType: input.mimeType,
+      sha256: input.sha256,
+      byteLength: input.byteLength,
+      storedPath,
+      provenance: input.provenance,
+      createdAt: this.now().toISOString(),
+    };
     writeJsonAtomic(metadataPath, artifact);
     this.linkSourceArtifact(workspace, id);
     return artifact;
@@ -1346,6 +1398,24 @@ function validateSourceContent(mimeType: string, content: Buffer): void {
 
   if (!supportedMimeTypes.has(mimeType)) {
     throw new ApiRouteError(`Unsupported source MIME type: ${mimeType}`, 400);
+  }
+}
+
+function validateSourceFile(mimeType: string, filePath: string, byteLength: number): void {
+  if (byteLength <= 0) throw new ApiRouteError("Source upload is empty", 400);
+  if (!supportedMimeTypes.has(mimeType)) {
+    throw new ApiRouteError(`Unsupported source MIME type: ${mimeType}`, 400);
+  }
+  if (mimeType !== "application/pdf") return;
+  const descriptor = openSync(filePath, "r");
+  try {
+    const signature = Buffer.alloc(5);
+    const bytesRead = readSync(descriptor, signature, 0, signature.length, 0);
+    if (bytesRead !== 5 || !signature.equals(Buffer.from("%PDF-"))) {
+      throw new ApiRouteError("Uploaded PDF does not have a valid PDF signature", 400);
+    }
+  } finally {
+    closeSync(descriptor);
   }
 }
 

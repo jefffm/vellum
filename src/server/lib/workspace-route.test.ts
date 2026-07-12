@@ -1,8 +1,9 @@
 import express from "express";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createServer, type Server } from "node:http";
+import { createServer, request as httpRequest, type Server } from "node:http";
 import type { ErrorRequestHandler } from "express";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ApiResponse } from "../../lib/api-contract.js";
@@ -39,8 +40,7 @@ describe("workspace API routes", () => {
     app.delete("/api/workspaces/:workspaceId", createWorkspaceRemoveRoute(store));
     app.post(
       "/api/workspaces/:workspaceId/sources",
-      express.raw({ type: "application/pdf", limit: "128mb" }),
-      createSourceUploadRoute(store)
+      createSourceUploadRoute(store, { maxBytes: 64 * 1024 })
     );
     app.get(
       "/api/workspaces/:workspaceId/sources/:sourceArtifactId/content",
@@ -107,6 +107,7 @@ describe("workspace API routes", () => {
     expect(uploadResponse.status).toBe(200);
     expect(uploadJson.ok).toBe(true);
     if (!uploadJson.ok) return;
+    expect(uploadJson.data.sha256).toBe(createHash("sha256").update(pdf).digest("hex"));
 
     const contentResponse = await fetch(
       `${serverUrl()}/api/workspaces/${workspaceJson.data.id}/sources/${uploadJson.data.id}/content`
@@ -127,6 +128,48 @@ describe("workspace API routes", () => {
     const getJson = (await getResponse.json()) as ApiEnvelope<{ sourceArtifactIds: string[] }>;
     expect(getJson.ok).toBe(true);
     if (getJson.ok) expect(getJson.data.sourceArtifactIds).toEqual([uploadJson.data.id]);
+  });
+
+  it("rejects an oversized streamed source without creating a canonical artifact", async () => {
+    const workspaceResponse = await post("/api/workspaces", { title: "Bounded upload" });
+    const workspaceJson = (await workspaceResponse.json()) as ApiEnvelope<{ id: string }>;
+    if (!workspaceJson.ok) throw new Error("workspace setup failed");
+    const oversized = Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(70 * 1024)]);
+
+    const response = await fetch(`${serverUrl()}/api/workspaces/${workspaceJson.data.id}/sources`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/pdf",
+        "X-Source-Filename": "oversized.pdf",
+      },
+      body: oversized,
+    });
+
+    expect(response.status).toBe(413);
+    expect(store.get(workspaceJson.data.id).sourceArtifactIds).toEqual([]);
+
+    const chunkedStatus = await new Promise<number>((resolve, reject) => {
+      const request = httpRequest(
+        `${serverUrl()}/api/workspaces/${workspaceJson.data.id}/sources`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/pdf",
+            "X-Source-Filename": "chunked-oversized.pdf",
+            "Transfer-Encoding": "chunked",
+          },
+        },
+        (incoming) => {
+          incoming.resume();
+          incoming.on("end", () => resolve(incoming.statusCode ?? 0));
+        }
+      );
+      request.on("error", reject);
+      request.write(Buffer.concat([Buffer.from("%PDF-"), Buffer.alloc(40 * 1024)]));
+      request.end(Buffer.alloc(40 * 1024));
+    });
+    expect(chunkedStatus).toBe(413);
+    expect(store.get(workspaceJson.data.id).sourceArtifactIds).toEqual([]);
   });
 
   it("serves XML-like source material as a byte-identical attachment", async () => {

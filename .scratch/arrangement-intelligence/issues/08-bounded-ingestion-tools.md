@@ -1,6 +1,6 @@
 # Bounded ingestion and tool execution
 
-Status: ready-for-agent
+Status: complete
 
 Type: AFK
 
@@ -12,10 +12,14 @@ Bound memory, archive, subprocess, artifact, and diagnostic resources throughout
 
 ## Acceptance criteria
 
-- [ ] Uploads stream or spool with incremental hashing and declared limits.
-- [ ] Subprocess output, logs, generated files, and concurrency are bounded.
-- [ ] OMR archive entry count and expanded sizes are bounded safely.
-- [ ] Limit failures preserve canonical input and return typed actionable evidence.
+- [x] Uploads stream or spool with incremental hashing and declared limits.
+- [x] Subprocess output, logs, generated files, and concurrency are bounded.
+- [x] OMR archive entry count and expanded sizes are bounded safely.
+- [x] Limit failures preserve canonical input and return typed actionable evidence.
+
+## Verification
+
+See `../evidence/T08/verification.json`.
 
 ## Blocked by
 

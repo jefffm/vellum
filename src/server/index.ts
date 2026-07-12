@@ -289,28 +289,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     "/workspaces/:workspaceId/model-actions/:modelActionId/cancel",
     createModelActionCancelRoute()
   );
-  router.post(
-    "/workspaces/:workspaceId/sources",
-    express.raw({
-      type: [
-        "application/pdf",
-        "image/png",
-        "image/jpeg",
-        "application/vnd.recordare.musicxml+xml",
-        "application/xml",
-        "text/xml",
-        "text/x-lilypond",
-        "text/vnd.abc",
-        "application/mei+xml",
-        "application/vnd.musescore.mscz",
-        "application/vnd.vellum.lead-sheet+json",
-        "application/vnd.vellum.tablature+json",
-        "text/plain",
-      ],
-      limit: "128mb",
-    }),
-    createSourceUploadRoute()
-  );
+  router.post("/workspaces/:workspaceId/sources", createSourceUploadRoute());
   router.get(
     "/workspaces/:workspaceId/sources/:sourceArtifactId/content",
     createSourceContentRoute()
@@ -499,7 +478,18 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use(requestContext);
   app.use(normalizeApiErrorResponses);
   app.use("/api", createApiBoundary(security));
-  app.use(express.json({ limit: "4mb" }));
+  app.use(
+    express.json({
+      limit: "4mb",
+      type: (request) => {
+        const requestPath = request.url?.split("?", 1)[0] ?? "";
+        return (
+          !/^\/api\/workspaces\/[^/]+\/sources$/.test(requestPath) &&
+          /^application\/json(?:;|$)/i.test(String(request.headers["content-type"] ?? ""))
+        );
+      },
+    })
+  );
 
   app.get("/health", (_request, response) => {
     const body: HealthResponse = {

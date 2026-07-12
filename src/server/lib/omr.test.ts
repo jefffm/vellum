@@ -5,12 +5,54 @@ import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
 import type { RecognizedScore } from "../../lib/music-domain.js";
-import { AudiverisBackend, OmrService, audiverisCommand } from "./omr.js";
+import {
+  AudiverisBackend,
+  OmrService,
+  audiverisCommand,
+  extractAudiverisPageImages,
+} from "./omr.js";
 import type { OmrBackend, OmrBackendResult } from "./omr.js";
 import { SubprocessError } from "./subprocess.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { ApiRouteError } from "./create-route.js";
 
 describe("OMR pipeline", () => {
+  it("bounds native OMR archive entries, expansion, pages, and unsafe paths", async () => {
+    const pageHeavy = new JSZip();
+    pageHeavy.file("sheet#1/BINARY.png", Buffer.from("one"));
+    pageHeavy.file("sheet#2/BINARY.png", Buffer.from("two"));
+    const pageArchive = await pageHeavy.generateAsync({ type: "nodebuffer" });
+    await expect(
+      extractAudiverisPageImages(pageArchive, {
+        maxArchiveBytes: 10_000,
+        maxEntries: 10,
+        maxPages: 1,
+        maxEntryBytes: 100,
+        maxExpandedBytes: 100,
+      })
+    ).rejects.toMatchObject({ status: 413 });
+
+    const oversized = new JSZip();
+    oversized.file("sheet#1/BINARY.png", Buffer.alloc(32));
+    await expect(
+      extractAudiverisPageImages(await oversized.generateAsync({ type: "nodebuffer" }), {
+        maxArchiveBytes: 10_000,
+        maxEntries: 10,
+        maxPages: 10,
+        maxEntryBytes: 16,
+        maxExpandedBytes: 100,
+      })
+    ).rejects.toMatchObject({ status: 413 });
+
+    const unsafe = new JSZip();
+    unsafe.file("../sheet#1/BINARY.png", Buffer.from("bad"));
+    await expect(
+      extractAudiverisPageImages(await unsafe.generateAsync({ type: "nodebuffer" }))
+    ).rejects.toMatchObject({ status: 422 });
+    await expect(extractAudiverisPageImages(Buffer.from("not a zip"))).rejects.toMatchObject({
+      status: 422,
+    });
+  });
   it("discovers an installed macOS Audiveris application", () => {
     if (process.platform === "darwin") {
       expect(audiverisCommand()).toMatch(/Audiveris\.app\/Contents\/MacOS\/Audiveris$|audiveris$/);
@@ -153,6 +195,34 @@ describe("OMR pipeline", () => {
       region: { page: 1 },
     });
     expect(result.scoreTranscription.uncertainties[0]!.message).toContain("Preservation Target");
+  });
+
+  it("retains canonical input and typed failed-run evidence after a resource limit", async () => {
+    const backend: OmrBackend = {
+      id: "bounded-fixture",
+      recognize: async () => {
+        throw new ApiRouteError("OMR archive resource limit exceeded", 413, "request_too_large", {
+          resource: "omr_archive",
+        });
+      },
+    };
+
+    await expect(
+      new OmrService({ store }).recognize(workspaceId, sourceArtifactId, backend)
+    ).rejects.toMatchObject({ status: 413, code: "request_too_large" });
+    const workspace = store.get(workspaceId);
+    expect(workspace.sourceArtifactIds).toContain(sourceArtifactId);
+    expect(workspace.scoreTranscriptionIds).toEqual([]);
+    expect(workspace.normalizedScoreIds).toEqual([]);
+    expect(store.getOmrRun(workspaceId, workspace.omrRunIds[0]!)).toMatchObject({
+      status: "failed",
+      diagnostics: [
+        expect.objectContaining({
+          code: "omr.failed",
+          message: expect.stringContaining("resource limit"),
+        }),
+      ],
+    });
   });
 
   it("auto-accepts ordinary pitch recognition at the configured confidence threshold", async () => {
