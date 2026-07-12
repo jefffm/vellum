@@ -219,6 +219,74 @@ export class LineageService {
     return records;
   }
 
+  markPlanDependentsStale(
+    workspaceId: string,
+    priorPlanId: string,
+    currentPlanId: string,
+    reason: string
+  ): StaleDerivation[] {
+    const workspace = this.store.get(workspaceId);
+    const prior = this.store.getArrangementPlan(workspaceId, priorPlanId);
+    const current = this.store.getArrangementPlan(workspaceId, currentPlanId);
+    const records: StaleDerivation[] = [];
+    const scores = workspace.arrangementScoreIds
+      .map((id) => this.store.getArrangementScore(workspaceId, id))
+      .filter((score) => score.arrangementPlanId === prior.id);
+    const searchIds = new Set(scores.flatMap((score) => score.arrangementSearchId ?? []));
+    for (const searchId of searchIds) {
+      const search = this.store.getArrangementSearch(workspaceId, searchId);
+      records.push(
+        this.saveStale(
+          workspaceId,
+          "arrangement_search",
+          search.id,
+          reason,
+          [{ recordType: "arrangement_plan", recordId: prior.id, version: prior.version }],
+          [{ recordType: "arrangement_plan", recordId: current.id, version: current.version }]
+        )
+      );
+      for (const candidateId of search.candidateIds) {
+        records.push(
+          this.saveStale(
+            workspaceId,
+            "arrangement_candidate",
+            candidateId,
+            reason,
+            [{ recordType: "arrangement_plan", recordId: prior.id, version: prior.version }],
+            [{ recordType: "arrangement_plan", recordId: current.id, version: current.version }]
+          )
+        );
+      }
+    }
+    for (const score of scores) {
+      records.push(
+        this.saveStale(
+          workspaceId,
+          "arrangement_score",
+          score.id,
+          reason,
+          [{ recordType: "arrangement_plan", recordId: prior.id, version: prior.version }],
+          [{ recordType: "arrangement_plan", recordId: current.id, version: current.version }]
+        )
+      );
+      for (const deliverableId of workspace.deliverableIds) {
+        const deliverable = this.store.getDeliverable(workspaceId, deliverableId);
+        if (deliverable.arrangementScoreId !== score.id) continue;
+        records.push(
+          this.saveStale(
+            workspaceId,
+            "deliverable",
+            deliverable.id,
+            reason,
+            [{ recordType: "arrangement_score", recordId: score.id, version: score.version ?? 1 }],
+            [{ recordType: "arrangement_plan", recordId: current.id, version: current.version }]
+          )
+        );
+      }
+    }
+    return records;
+  }
+
   createEditorialCommitment(
     workspaceId: string,
     input: Omit<EditorialCommitment, "id" | "status" | "createdAt">

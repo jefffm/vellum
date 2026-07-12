@@ -1243,9 +1243,74 @@ export class WorkspaceStore {
       truth.analysisRecordVersion !== decoded.analysisRecordVersion ||
       normalized.version !== decoded.normalizedScoreVersion ||
       analysis.version !== decoded.analysisRecordVersion ||
-      brief.targetConfigurationId !== decoded.targetConfigurationId
+      brief.targetConfigurationId !== decoded.targetConfigurationId ||
+      brief.arrangementBriefRevision !== decoded.arrangementBriefRevision ||
+      brief.arrangementBriefDigest !== decoded.arrangementBriefDigest ||
+      (truth.performanceBriefId && truth.performanceBriefId !== brief.id)
     ) {
       throw new ApiRouteError("Arrangement Plan lineage versions do not match", 400);
+    }
+    const passageIds = new Set((analysis.passages ?? []).map((passage) => passage.id));
+    if (
+      decoded.planningScope.passageIds.some((id) => !passageIds.has(id)) ||
+      decoded.sectionalIntent.some((intent) => !passageIds.has(intent.passageId)) ||
+      decoded.decisions.some(
+        (decision) =>
+          decision.scope.passageIds.some((id) => !passageIds.has(id)) ||
+          decision.targetConfigurationIds.some((id) => id !== decoded.targetConfigurationId)
+      )
+    ) {
+      throw new ApiRouteError("Arrangement Plan scope does not resolve against its Analysis", 400);
+    }
+    const requiresConfirmation = decoded.decisions.some(
+      (decision) =>
+        decision.confirmation.requirement === "owner" && decision.confirmation.status === "proposed"
+    );
+    if (
+      (requiresConfirmation && decoded.status !== "confirmation_required") ||
+      (!requiresConfirmation && decoded.status === "confirmation_required")
+    ) {
+      throw new ApiRouteError("Arrangement Plan confirmation status is inconsistent", 400);
+    }
+    if (decoded.transpositionPlan.status === "unresolved") {
+      if (decoded.status !== "blocked_by_unresolved_transposition") {
+        throw new ApiRouteError("Unresolved transposition must block realization", 400);
+      }
+    } else if (decoded.status === "blocked_by_unresolved_transposition") {
+      throw new ApiRouteError("Resolved transposition cannot leave the Plan blocked", 400);
+    }
+    if (
+      decoded.kind === "minimal_projection" &&
+      (decoded.transpositionPlan.status !== "resolved" ||
+        decoded.transpositionPlan.semitones !== 0 ||
+        decoded.sectionalIntent.some((intent) => intent.density !== "retain") ||
+        decoded.materialDisposition.some((item) => item.disposition !== "retained") ||
+        decoded.decisions.some(
+          (decision) =>
+            decision.alternatives.length > 0 || decision.policyConsequence.requiresPolicyException
+        ))
+    ) {
+      throw new ApiRouteError(
+        "Minimal projection may only retain and project source structure",
+        400
+      );
+    }
+    if (
+      decoded.kind === "sectional_reduction" &&
+      !decoded.sectionalIntent.some((intent) => intent.density === "reduce") &&
+      !decoded.materialDisposition.some((item) =>
+        ["implied", "redistributed", "transformed", "omitted"].includes(item.disposition)
+      )
+    ) {
+      throw new ApiRouteError("Sectional reduction must declare an actual reduction", 400);
+    }
+    if (decoded.supersedesPlanId) {
+      const prior = this.getArrangementPlan(workspaceId, decoded.supersedesPlanId);
+      if (decoded.version !== prior.version + 1) {
+        throw new ApiRouteError("Corrected Arrangement Plan version is not sequential", 400);
+      }
+    } else if (decoded.version !== 1) {
+      throw new ApiRouteError("Initial Arrangement Plan must be version 1", 400);
     }
     this.writeImmutableRecord(workspaceId, "arrangement-plans", decoded.id, decoded);
     this.linkWorkspaceRecord(workspaceId, "arrangementPlanIds", decoded.id);

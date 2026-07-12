@@ -35,6 +35,7 @@ import { transposeTool } from "./transpose.js";
 import {
   installAudioPreviewControls,
   installAnalysisSummary,
+  installArrangementPlanSummary,
   installAuditSummary,
   installCandidateComparisonControls,
   installDeliverableSummary,
@@ -577,6 +578,7 @@ function renderGuidedDeliverables(
     installVersionNavigator(panel, deliverable, versionParent);
     installAnalysisSummary(panel, deliverable);
     installAuditSummary(panel, deliverable);
+    installArrangementPlanSummary(panel, deliverable);
     installPersonalDefaultSummary(panel, deliverable);
     void installPerformanceInterpretationControls(panel, deliverable);
     installDeliverableSummary(panel, deliverable);

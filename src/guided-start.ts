@@ -6,6 +6,7 @@ import {
 } from "./lib/audio-preview.js";
 import type {
   ArrangementEvent,
+  ArrangementPlan,
   ArrangementScore,
   GuidedWorkflow,
   PerformanceBriefInput,
@@ -41,6 +42,7 @@ export type GuidedDeliverable = {
   editorialCommitmentIds: string[];
   arrangementFamilyId: string;
   arrangementSearchId: string;
+  arrangementPlan?: ArrangementPlan;
   targetConfigurationId: string;
   targetConfiguration: TargetConfiguration;
   preservationPolicy: ArrangementScore["preservationPolicy"];
@@ -127,7 +129,7 @@ export function installPersonalDefaultSummary(
   deliverable: GuidedDeliverable
 ): void {
   const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
-  if (!header) return;
+  if (!header || !deliverable.arrangementPlan) return;
   header.querySelector(".personal-default-summary")?.remove();
   const applications = (deliverable.personalDefaultApplications ?? []).filter(
     (item) => item.targetConfigurationId === deliverable.targetConfigurationId
@@ -1276,6 +1278,7 @@ async function runGuidedWorkflowTargets(
     const arranged = await arrangeWithAnalysisReview<{
       analysis: GuidedDeliverable["analysis"] & { version: number };
       arrangementSearch: { id: string };
+      arrangementPlan: ArrangementPlan;
       candidates: GuidedDeliverable["candidates"];
       arrangementScore: {
         id: string;
@@ -1355,6 +1358,7 @@ async function runGuidedWorkflowTargets(
       editorialCommitmentIds: arranged.arrangementScore.editorialCommitmentIds ?? [],
       arrangementFamilyId: arranged.arrangementScore.arrangementFamilyId,
       arrangementSearchId: arranged.arrangementSearch.id,
+      arrangementPlan: arranged.arrangementPlan,
       targetConfigurationId: target.id,
       targetConfiguration: arranged.arrangementScore.targetConfiguration,
       preservationPolicy: arranged.arrangementScore.preservationPolicy,
@@ -2640,6 +2644,90 @@ export function installAuditSummary(panel: HTMLElement, deliverable: GuidedDeliv
   }
   if (!details.contains(summary)) details.append(summary);
   details.append(list);
+  header.append(details);
+}
+
+export function installArrangementPlanSummary(
+  panel: HTMLElement,
+  deliverable: GuidedDeliverable
+): void {
+  const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
+  const plan = deliverable.arrangementPlan;
+  if (!header || !plan) return;
+  header.querySelector(".arrangement-plan-summary")?.remove();
+  const details = document.createElement("details");
+  details.className = "arrangement-plan-summary";
+  details.dataset.planId = plan.id;
+  const summary = document.createElement("summary");
+  const confirmations = plan.decisions.filter(
+    (decision) =>
+      decision.confirmation.requirement === "owner" && decision.confirmation.status === "proposed"
+  );
+  summary.textContent = `Arrangement Plan · ${plan.kind.replaceAll("_", " ")} · ${confirmations.length ? `${confirmations.length} consequential choices` : "ready without questions"}`;
+  const scope = document.createElement("p");
+  scope.textContent = `${plan.sectionalIntent.length} passage intentions; transposition ${plan.transpositionPlan.status === "resolved" ? `${plan.transpositionPlan.semitones} semitones` : "unresolved"}.`;
+  const list = document.createElement("ul");
+  for (const decision of plan.decisions) {
+    const item = document.createElement("li");
+    item.textContent = `${decision.dimension.replaceAll("_", " ")}: ${decision.selectedValue.replaceAll("_", " ")}. ${decision.rationale}`;
+    if (
+      decision.confirmation.requirement === "owner" &&
+      decision.confirmation.status === "proposed"
+    ) {
+      const confirm = document.createElement("button");
+      confirm.type = "button";
+      confirm.textContent = "Confirm consequential choice";
+      confirm.addEventListener("click", async () => {
+        confirm.disabled = true;
+        const decisions = plan.decisions.map((candidate) =>
+          candidate.id === decision.id
+            ? {
+                ...candidate,
+                confirmation: {
+                  requirement: "owner" as const,
+                  status: "confirmed" as const,
+                  confirmedAt: new Date().toISOString(),
+                },
+              }
+            : candidate
+        );
+        try {
+          const result = await api<{ plan: ArrangementPlan }>(
+            `/api/workspaces/${deliverable.workspaceId}/arrangement-plans/${plan.id}/corrections`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                reason: `Owner confirmed Plan Decision ${decision.id}`,
+                correction: {
+                  kind: plan.kind,
+                  planningScope: plan.planningScope,
+                  transpositionPlan: plan.transpositionPlan,
+                  sectionalIntent: plan.sectionalIntent,
+                  materialDisposition: plan.materialDisposition,
+                  decisions,
+                  status: decisions.some(
+                    (candidate) =>
+                      candidate.confirmation.requirement === "owner" &&
+                      candidate.confirmation.status === "proposed"
+                  )
+                    ? "confirmation_required"
+                    : "ready",
+                },
+              }),
+            }
+          );
+          deliverable.arrangementPlan = result.plan;
+          installArrangementPlanSummary(panel, deliverable);
+        } catch (error) {
+          confirm.disabled = false;
+          confirm.title = error instanceof Error ? error.message : "Confirmation failed";
+        }
+      });
+      item.append(" ", confirm);
+    }
+    list.append(item);
+  }
+  details.append(summary, scope, list);
   header.append(details);
 }
 

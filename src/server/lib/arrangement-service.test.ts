@@ -16,6 +16,7 @@ import type { OmrBackend } from "./omr.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { ApiRouteError } from "./create-route.js";
 import { LineageService } from "./lineage-service.js";
+import { ArrangementPlanService } from "./arrangement-plan-service.js";
 import {
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
@@ -229,10 +230,35 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(result.arrangementSearch.performanceBriefId).toBe(result.performanceBrief.id);
     expect(result.arrangementPlan).toMatchObject({
       kind: "minimal_projection",
-      status: "applicable_without_consequential_choice",
+      status: "ready",
       targetConfigurationId: "target.baroque-guitar",
       performanceBriefId: result.performanceBrief.id,
     });
+    expect(result.arrangementPlan).toMatchObject({
+      arrangementBriefRevision: result.performanceBrief.arrangementBriefRevision,
+      arrangementBriefDigest: result.performanceBrief.arrangementBriefDigest,
+      transpositionPlan: { status: "resolved", semitones: 0 },
+    });
+    expect(result.arrangementPlan.sectionalIntent).toHaveLength(
+      store.getAnalysisRecord(workspace.id, result.analysisRecordId).passages?.length ?? 0
+    );
+    expect(
+      result.arrangementPlan.materialDisposition.every((item) => item.disposition === "retained")
+    ).toBe(true);
+    expect(result.arrangementPlan.decisions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          alternatives: [],
+          ambiguity: { status: "none" },
+          confidence: 1,
+          confirmation: { requirement: "not_required", status: "not_required" },
+          policyConsequence: {
+            preservationPolicy: "faithful_reduction",
+            requiresPolicyException: false,
+          },
+        }),
+      ])
+    );
     expect(result.arrangementScore.arrangementPlanId).toBe(result.arrangementPlan.id);
     expect(result.arrangementScore.realizedPlanDecisionIds).toEqual(
       result.arrangementPlan.decisions.map((decision) => decision.id)
@@ -885,5 +911,67 @@ describe("Greensleeves faithful arrangement service", () => {
       blockingUncertaintyIds: ["uncertainty.principal-pitch"],
       stability: { stable: false },
     });
+
+    const priorScore = structuredClone(result.arrangementScore);
+    const corrected = new ArrangementPlanService({
+      store,
+      createId: () => "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      now: () => new Date("2026-07-12T18:00:00.000Z"),
+    }).correct(
+      workspace.id,
+      result.arrangementPlan.id,
+      {
+        kind: "sectional_reduction",
+        planningScope: result.arrangementPlan.planningScope,
+        transpositionPlan: result.arrangementPlan.transpositionPlan,
+        sectionalIntent: result.arrangementPlan.sectionalIntent.map((intent, index) =>
+          index === 0 ? { ...intent, density: "reduce" as const } : intent
+        ),
+        materialDisposition: result.arrangementPlan.materialDisposition.map((item, index) =>
+          index === 0 ? { ...item, disposition: "implied" as const } : item
+        ),
+        decisions: result.arrangementPlan.decisions.map((decision, index) =>
+          index === 0
+            ? {
+                ...decision,
+                rationale: `${decision.rationale} Reduce the opening density.`,
+                alternatives: [
+                  {
+                    value: "retain_source_structure",
+                    consequence: "Keeps the full source density.",
+                    viable: true,
+                  },
+                ],
+                ambiguity: {
+                  status: "material" as const,
+                  description: "Either density is musically viable.",
+                },
+                confirmation: { requirement: "owner" as const, status: "proposed" as const },
+              }
+            : decision
+        ),
+        status: "confirmation_required",
+      },
+      "Owner corrected the Arrangement Plan"
+    );
+    expect(corrected.plan).toMatchObject({
+      version: 2,
+      supersedesPlanId: result.arrangementPlan.id,
+      kind: "sectional_reduction",
+      status: "confirmation_required",
+    });
+    expect(store.getArrangementPlan(workspace.id, result.arrangementPlan.id)).toEqual(
+      result.arrangementPlan
+    );
+    expect(store.getArrangementScore(workspace.id, result.arrangementScore.id)).toEqual(priorScore);
+    expect(
+      corrected.staleDerivationIds
+        .map((id) => store.getStaleDerivation(workspace.id, id))
+        .some(
+          (record) =>
+            record.recordType === "arrangement_search" &&
+            record.recordId === result.arrangementSearch.id
+        )
+    ).toBe(true);
   });
 });

@@ -417,12 +417,72 @@ export type PerformanceBrief = Static<typeof PerformanceBriefSchema>;
 export const PlanDecisionSchema = Type.Object(
   {
     id: IdSchema,
+    scope: Type.Object(
+      {
+        kind: Type.Union([
+          Type.Literal("whole_score"),
+          Type.Literal("section"),
+          Type.Literal("passage"),
+        ]),
+        sectionIds: Type.Array(IdSchema),
+        passageIds: Type.Array(IdSchema),
+        measureIds: Type.Array(IdSchema),
+        eventIds: Type.Array(IdSchema),
+      },
+      { additionalProperties: false }
+    ),
     dimension: Type.String({ minLength: 1 }),
     selectedValue: Type.String({ minLength: 1 }),
     rationale: Type.String({ minLength: 1 }),
-    evidenceIds: Type.Array(IdSchema),
+    evidenceIds: Type.Array(IdSchema, { minItems: 1 }),
+    alternatives: Type.Array(
+      Type.Object(
+        {
+          value: Type.String({ minLength: 1 }),
+          consequence: Type.String({ minLength: 1 }),
+          viable: Type.Boolean(),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    ambiguity: Type.Union([
+      Type.Object({ status: Type.Literal("none") }, { additionalProperties: false }),
+      Type.Object(
+        { status: Type.Literal("material"), description: Type.String({ minLength: 1 }) },
+        { additionalProperties: false }
+      ),
+    ]),
     targetConfigurationIds: Type.Array(IdSchema, { minItems: 1 }),
-    confirmationStatus: Type.Literal("not_required_for_literal_projection"),
+    portability: Type.Union([Type.Literal("target_portable"), Type.Literal("target_local")]),
+    policyConsequence: Type.Object(
+      {
+        preservationPolicy: Type.Union([
+          Type.Literal("faithful_reduction"),
+          Type.Literal("idiomatic_adaptation"),
+          Type.Literal("free_paraphrase"),
+        ]),
+        expectedCompromise: Type.Optional(Type.String({ minLength: 1 })),
+        requiresPolicyException: Type.Boolean(),
+      },
+      { additionalProperties: false }
+    ),
+    confirmation: Type.Union([
+      Type.Object(
+        { requirement: Type.Literal("not_required"), status: Type.Literal("not_required") },
+        { additionalProperties: false }
+      ),
+      Type.Object(
+        {
+          requirement: Type.Literal("owner"),
+          status: Type.Union([Type.Literal("proposed"), Type.Literal("confirmed")]),
+          confirmedAt: Type.Optional(IsoDateSchema),
+        },
+        { additionalProperties: false }
+      ),
+    ]),
+    downstreamConstraintIds: Type.Array(IdSchema),
+    downstreamStrategyIds: Type.Array(IdSchema),
   },
   { additionalProperties: false }
 );
@@ -432,12 +492,15 @@ export const ArrangementPlanSchema = Type.Object(
   {
     id: IdSchema,
     version: Type.Integer({ minimum: 1 }),
-    kind: Type.Literal("minimal_projection"),
+    supersedesPlanId: Type.Optional(IdSchema),
+    kind: Type.Union([Type.Literal("minimal_projection"), Type.Literal("sectional_reduction")]),
     sourceTruthAssessmentId: IdSchema,
     normalizedScoreId: IdSchema,
     normalizedScoreVersion: Type.Integer({ minimum: 1 }),
     analysisRecordId: IdSchema,
     analysisRecordVersion: Type.Integer({ minimum: 1 }),
+    arrangementBriefRevision: Type.Integer({ minimum: 1 }),
+    arrangementBriefDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
     performanceBriefId: IdSchema,
     targetConfigurationId: IdSchema,
     preservationPolicy: Type.Union([
@@ -445,8 +508,71 @@ export const ArrangementPlanSchema = Type.Object(
       Type.Literal("idiomatic_adaptation"),
       Type.Literal("free_paraphrase"),
     ]),
+    planningScope: Type.Object(
+      {
+        sectionIds: Type.Array(IdSchema),
+        passageIds: Type.Array(IdSchema, { minItems: 1 }),
+        declaredOverlapPassageIds: Type.Array(IdSchema),
+      },
+      { additionalProperties: false }
+    ),
+    transpositionPlan: Type.Union([
+      Type.Object(
+        { status: Type.Literal("resolved"), semitones: Type.Integer(), rationale: Type.String() },
+        { additionalProperties: false }
+      ),
+      Type.Object(
+        {
+          status: Type.Literal("unresolved"),
+          alternatives: Type.Array(Type.Integer(), { minItems: 2 }),
+        },
+        { additionalProperties: false }
+      ),
+    ]),
+    sectionalIntent: Type.Array(
+      Type.Object(
+        {
+          passageId: IdSchema,
+          texture: Type.String({ minLength: 1 }),
+          density: Type.Union([
+            Type.Literal("retain"),
+            Type.Literal("reduce"),
+            Type.Literal("expand"),
+          ]),
+          voiceDisposition: Type.String({ minLength: 1 }),
+          bassDisposition: Type.String({ minLength: 1 }),
+          contrapuntalDisposition: Type.String({ minLength: 1 }),
+          harmonicPriority: Type.String({ minLength: 1 }),
+          formalFunctionTreatment: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    materialDisposition: Type.Array(
+      Type.Object(
+        {
+          sourceObjectIds: Type.Array(IdSchema, { minItems: 1 }),
+          disposition: Type.Union([
+            Type.Literal("retained"),
+            Type.Literal("implied"),
+            Type.Literal("redistributed"),
+            Type.Literal("transformed"),
+            Type.Literal("omitted"),
+            Type.Literal("generated"),
+          ]),
+          rationale: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
     decisions: Type.Array(PlanDecisionSchema, { minItems: 1 }),
-    status: Type.Literal("applicable_without_consequential_choice"),
+    status: Type.Union([
+      Type.Literal("ready"),
+      Type.Literal("confirmation_required"),
+      Type.Literal("blocked_by_unresolved_transposition"),
+    ]),
     createdAt: IsoDateSchema,
   },
   { additionalProperties: false }

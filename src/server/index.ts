@@ -85,6 +85,10 @@ import {
 } from "./lib/arrangement-deliverable-route.js";
 import { createAnalysisCorrectionRoute, createAnalysisGetRoute } from "./lib/analysis-route.js";
 import {
+  createArrangementPlanCorrectionRoute,
+  createArrangementPlanGetRoute,
+} from "./lib/arrangement-plan-route.js";
+import {
   createArrangementFamilyGetRoute,
   createDeliverableContentRoute,
   createDeliverableGetRoute,
@@ -266,6 +270,11 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/workspaces/:workspaceId/analyses/:analysisRecordId/claims/:claimId/corrections",
     createAnalysisCorrectionRoute()
+  );
+  router.get("/workspaces/:workspaceId/arrangement-plans/:planId", createArrangementPlanGetRoute());
+  router.post(
+    "/workspaces/:workspaceId/arrangement-plans/:planId/corrections",
+    createArrangementPlanCorrectionRoute()
   );
   router.get("/workspaces/:workspaceId/model-actions", createModelActionListRoute());
   router.post("/workspaces/:workspaceId/model-actions", createModelActionCreateRoute());

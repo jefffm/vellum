@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T16",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T19:03:42Z",
+  "requirements": {
+    "AI-PROD-022": { "status": "machine_verified", "remaining": "none" },
+    "AI-PROD-023": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-042": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-043": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-054": {
+      "status": "machine_verified",
+      "remaining": "T18 adds later proportional kinds"
+    },
+    "AI-STP-055": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-056": {
+      "status": "partial",
+      "remaining": "T18 adds automatic sectional planning and plan-realization evaluation"
+    },
+    "AI-STP-067": { "status": "machine_verified", "remaining": "none" },
+    "AI-STP-068": {
+      "status": "partial",
+      "remaining": "Later lifecycle tracers broaden supersession across every upstream owner"
+    },
+    "AI-STP-072": { "status": "machine_verified", "remaining": "none" }
+  },
+  "summary": {
+    "fullSuitePassed": 972,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Minimal projection pins exact source, Analysis, Arrangement Brief, Performance Brief, target, and policy lineage",
+      "Sectional intent and material disposition encode passage texture, density, voices, bass, counterpoint, harmony, and formal treatment",
+      "Plan Decisions retain scope, evidence, alternatives, confidence, ambiguity, portability, policy consequence, confirmation, and downstream identities",
+      "Semantic validation prevents literal plans from hiding reductions, alternatives, transposition, or policy exceptions",
+      "Plan correction creates immutable sequential versions and stales dependent searches without mutating prior scores",
+      "The default artifact UI is concise for literal work and exposes controls only for consequential Owner confirmations"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.8460bbe51d7b4b0c7aabea0f",
+      "runId": "evaluation-run.ee9a356d-7112-41e2-9f28-83eef5eaea61",
+      "cardId": "evaluation-card.7e3acb2c-ac49-4294-baec-63cacf98df36",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "specialistAndHumanEvidence": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 972 passed, 1 skipped" },
+    {
+      "command": "focused plan domain, persistence, lifecycle, arrangement, and UI tests",
+      "result": "pass: 13 passed"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t16-eval",
+      "result": "pass: hard gates pass and unmeasured claims remain unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/16-proportional-plans.md",
+      "sha256": "4d2a704a4be75ade6612257a624f782d638ff3c0661cc3da6ea43d52f5064d98"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "fd26cf09d5a9dab71a434a42decbf137c4f29a3b9ad2767c2e05f76b639aa1aa"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "1ea606c04f8a7bea0a3a5e752eff042cc5544ba39a36eba1d6cbc1a3334b6013"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "fff3eaa5ea801eeb46363c70cd7a88cf07922cab5c8c662e52a270d4d0e36eea"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "c25ddb836e470eea7b95b0741765c24e10006952334a74519fcb178663b4feb5"
+    },
+    {
+      "path": "src/server/lib/lineage-service.ts",
+      "sha256": "e2f9aab11070d3ee67f0ca70d929e2c76632f2f1bc7faf99498bef040eebf682"
+    },
+    {
+      "path": "src/server/lib/arrangement-plan-service.ts",
+      "sha256": "aa44b8e90e46b7c3cf0290888ffee24e1bfe3766046a8eb930fbbc160c2cb383"
+    },
+    {
+      "path": "src/server/lib/arrangement-plan-route.ts",
+      "sha256": "39c6e0e8948f343c31ff8a9849f0a57eacc8b30a6e0a93b4e900f8ce90ba00d7"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "e551db6b5e89f653bdfb4d6541d0d2d80772600e645269f581a5e63cdc6ab907"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "495e8d1997a2d2143461e2ea81973e27e3d975dc7b6a4f644983283815537a69"
+    },
+    {
+      "path": "src/guided-start.ts",
+      "sha256": "23bdaefb0d5f66e08a23f352fb0165c3ddb94ab92873fdb922a68893ac4861e0"
+    },
+    {
+      "path": "src/guided-start-arrangement-plan.test.ts",
+      "sha256": "8e3bab9b58e2337823be114f57e2b35421277517eec658b41539cbb4b5ac9c04"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "377a06b853cf8f06bddf5149a1e73502ef1124ab48a57c35039f6d306bccbd02"
+    }
+  ]
+}

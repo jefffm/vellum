@@ -135,33 +135,98 @@ export function buildNarrowPlanningRecords(input: {
     input.analysis.id,
     ...input.analysis.preservationTargets.map((target) => target.id),
   ];
+  const passages = input.analysis.passages ?? [
+    {
+      id: `passage.${input.analysis.id}.whole-score`,
+      measureIds: [],
+      eventIds: input.analysis.preservationTargets.flatMap((target) => target.eventIds),
+      texture: input.analysis.texture,
+      contrapuntalTechniques: input.analysis.contrapuntalTechniques ?? [],
+      claimIds: [],
+      boundaries: { startReason: "legacy analysis start", endReason: "legacy analysis end" },
+      roles: [],
+      phrases: [],
+      cadences: [],
+    },
+  ];
   const decisions = [
     {
       id: `decision.${input.createId()}`,
+      scope: {
+        kind: "whole_score" as const,
+        sectionIds: [],
+        passageIds: passages.map((passage) => passage.id),
+        measureIds: [],
+        eventIds: [],
+      },
       dimension: "musical_structure",
       selectedValue: "retain_source_structure",
       rationale: "A minimal projection does not redesign form, rhythm, or voice order.",
       evidenceIds,
+      alternatives: [],
+      confidence: 1,
+      ambiguity: { status: "none" as const },
       targetConfigurationIds: [input.target.id],
-      confirmationStatus: "not_required_for_literal_projection" as const,
+      portability: "target_portable" as const,
+      policyConsequence: {
+        preservationPolicy: input.preservationPolicy,
+        requiresPolicyException: false,
+      },
+      confirmation: { requirement: "not_required" as const, status: "not_required" as const },
+      downstreamConstraintIds: [],
+      downstreamStrategyIds: [],
     },
     {
       id: `decision.${input.createId()}`,
+      scope: {
+        kind: "whole_score" as const,
+        sectionIds: [],
+        passageIds: passages.map((passage) => passage.id),
+        measureIds: [],
+        eventIds: [],
+      },
       dimension: "preservation",
       selectedValue: input.preservationPolicy,
       rationale: "The selected Preservation Policy governs every projected event and relationship.",
       evidenceIds,
+      alternatives: [],
+      confidence: 1,
+      ambiguity: { status: "none" as const },
       targetConfigurationIds: [input.target.id],
-      confirmationStatus: "not_required_for_literal_projection" as const,
+      portability: "target_portable" as const,
+      policyConsequence: {
+        preservationPolicy: input.preservationPolicy,
+        requiresPolicyException: false,
+      },
+      confirmation: { requirement: "not_required" as const, status: "not_required" as const },
+      downstreamConstraintIds: [],
+      downstreamStrategyIds: [],
     },
     {
       id: `decision.${input.createId()}`,
+      scope: {
+        kind: "whole_score" as const,
+        sectionIds: [],
+        passageIds: passages.map((passage) => passage.id),
+        measureIds: [],
+        eventIds: [],
+      },
       dimension: "notation_projection",
       selectedValue: input.target.notationLayouts.join(","),
       rationale: "Notation is projected into the explicitly selected target layout.",
       evidenceIds: [input.target.id],
+      alternatives: [],
+      confidence: 1,
+      ambiguity: { status: "none" as const },
       targetConfigurationIds: [input.target.id],
-      confirmationStatus: "not_required_for_literal_projection" as const,
+      portability: "target_local" as const,
+      policyConsequence: {
+        preservationPolicy: input.preservationPolicy,
+        requiresPolicyException: false,
+      },
+      confirmation: { requirement: "not_required" as const, status: "not_required" as const },
+      downstreamConstraintIds: [],
+      downstreamStrategyIds: [],
     },
   ];
   const arrangementPlan: ArrangementPlan = {
@@ -173,11 +238,45 @@ export function buildNarrowPlanningRecords(input: {
     normalizedScoreVersion: input.normalizedScoreVersion,
     analysisRecordId: input.analysis.id,
     analysisRecordVersion: input.analysis.version,
+    arrangementBriefRevision: input.workspaceRevision,
+    arrangementBriefDigest: input.arrangementBriefDigest,
     performanceBriefId: performanceBrief.id,
     targetConfigurationId: input.target.id,
     preservationPolicy: input.preservationPolicy,
+    planningScope: {
+      sectionIds: [],
+      passageIds: passages.map((passage) => passage.id),
+      declaredOverlapPassageIds: [],
+    },
+    transpositionPlan: {
+      status: "resolved",
+      semitones: 0,
+      rationale:
+        "Minimal projection preserves source pitch unless target realization reports a conflict.",
+    },
+    sectionalIntent: passages.map((passage) => ({
+      passageId: passage.id,
+      texture: passage.texture,
+      density: "retain" as const,
+      voiceDisposition: "retain analyzed voice roles and continuity",
+      bassDisposition: passage.roles.some((role) => role.role === "continuo_foundation")
+        ? "retain Continuo Foundation identity"
+        : "retain analyzed bass function",
+      contrapuntalDisposition: passage.contrapuntalTechniques.length
+        ? `retain ${passage.contrapuntalTechniques.join(", ")}`
+        : "retain analyzed relationships",
+      harmonicPriority: "retain sonority, inversion, cadence, and tendency-tone evidence",
+      formalFunctionTreatment: passage.cadences.length
+        ? `preserve ${passage.cadences.map((cadence) => cadence.kind).join(", ")}`
+        : "preserve source formal function",
+    })),
+    materialDisposition: input.analysis.preservationTargets.map((target) => ({
+      sourceObjectIds: target.eventIds.length ? target.eventIds : [target.id],
+      disposition: "retained" as const,
+      rationale: `Minimal projection retains Preservation Target ${target.id}.`,
+    })),
     decisions,
-    status: "applicable_without_consequential_choice",
+    status: "ready",
     createdAt: input.createdAt,
   };
   return { sourceTruthAssessment, performanceBrief, arrangementPlan };
