@@ -47,16 +47,10 @@ Multiple targets from one brief form an explicit Arrangement Family while remain
 ```bash
 nix develop
 npm install
-npm run server:build
-npm run server
+npm run dev:all
 ```
 
-In another shell:
-
-```bash
-nix develop
-npm run dev
-```
+This one supervised command builds and watches the API, restarts it after changes, waits for an exact browser/API schema match, then starts Vite. If any child fails, all children shut down together. `VELLUM_DEV_API_PORT` and `VELLUM_DEV_WEB_PORT` override the loopback development ports.
 
 Then open the Vite URL and use Vellum's first-run **Connect ChatGPT** flow. API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `VELLUM_LLM_API_KEY`) remain fallback configuration for providers that need them. Vellum owns its credentials and does not import Pi or Codex login files.
 

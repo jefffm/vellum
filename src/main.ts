@@ -50,6 +50,8 @@ import {
 } from "./guided-start.js";
 import { vellumStreamProxy } from "./lib/vellum-stream-proxy.js";
 import { renderCompilePreview } from "./artifact-preview.js";
+import { isCompatibleRuntimeHealth, VELLUM_API_SCHEMA_VERSION } from "./lib/runtime-contract.js";
+import { completeArtifactHandoff } from "./lib/artifact-handoff.js";
 
 export { renderCompilePreview } from "./artifact-preview.js";
 
@@ -289,6 +291,12 @@ function installCompileArtifactPreview(agent: Agent): void {
 }
 
 export async function main(): Promise<void> {
+  try {
+    await assertCompatibleRuntime();
+  } catch (error) {
+    renderRuntimeContractFailure(error);
+    return;
+  }
   initializeAppStorage();
   registerRenderers();
 
@@ -325,8 +333,38 @@ export async function main(): Promise<void> {
   installGuidedStart({
     onComplete: (deliverables) => {
       const panel = document.querySelector<HTMLElement>("#artifacts-panel");
-      if (panel) renderGuidedDeliverables(panel, deliverables);
+      if (panel) openCompletedDeliverables(panel, deliverables);
     },
+  });
+}
+
+export async function assertCompatibleRuntime(request: typeof fetch = fetch): Promise<void> {
+  const response = await request("/health", { cache: "no-store" });
+  const health: unknown = await response.json();
+  if (!response.ok || !isCompatibleRuntimeHealth(health)) {
+    throw new Error(
+      `The browser and local API schemas do not match (browser ${VELLUM_API_SCHEMA_VERSION}). Restart Vellum with npm run dev:all.`
+    );
+  }
+}
+
+function renderRuntimeContractFailure(error: unknown): void {
+  const panel = document.querySelector<HTMLElement>("#artifacts-panel") ?? document.body;
+  const failure = document.createElement("section");
+  failure.className = "guided-start-error runtime-contract-error";
+  failure.setAttribute("role", "alert");
+  failure.textContent = error instanceof Error ? error.message : "The local API is incompatible.";
+  panel.replaceChildren(failure);
+}
+
+export function openCompletedDeliverables(
+  panel: HTMLElement,
+  deliverables: GuidedDeliverable[]
+): void {
+  completeArtifactHandoff({
+    panel,
+    selected: deliverables[0],
+    render: () => renderGuidedDeliverables(panel, deliverables),
   });
 }
 
@@ -512,6 +550,9 @@ function renderGuidedDeliverables(
 ): void {
   const render = (deliverable: GuidedDeliverable) => {
     if (!renderCompilePreview(panel, deliverable.compiled)) return;
+    panel.dataset.workspaceId = deliverable.workspaceId;
+    panel.dataset.arrangementId = deliverable.arrangementScoreId;
+    panel.dataset.arrangementVersion = String(deliverable.arrangementScoreVersion);
     const header = panel.querySelector<HTMLElement>(".artifact-preview-header");
     if (header && deliverables.length > 1) {
       const label = document.createElement("label");

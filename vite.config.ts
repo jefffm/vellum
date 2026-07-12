@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import { VELLUM_BROWSER_SECURITY_HEADERS } from "./src/lib/content-security-policy.js";
 
+const apiPort = Number(process.env.VELLUM_DEV_API_PORT ?? 3000);
+const apiTarget = `http://127.0.0.1:${apiPort}`;
+
 export default defineConfig({
   build: {
     outDir: "dist",
@@ -14,11 +17,11 @@ export default defineConfig({
     headers: VELLUM_BROWSER_SECURITY_HEADERS,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:3000",
+        target: apiTarget,
         changeOrigin: true,
       },
       "/health": {
-        target: "http://127.0.0.1:3000",
+        target: apiTarget,
         changeOrigin: true,
       },
     },

@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import type { InstrumentProfile } from "../types.js";
 import { VELLUM_BROWSER_SECURITY_HEADERS } from "../lib/content-security-policy.js";
+import { VELLUM_API_SCHEMA_VERSION, type RuntimeHealth } from "../lib/runtime-contract.js";
 import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
@@ -122,10 +123,7 @@ import {
   validateRuntimeSecurity,
 } from "./lib/api-boundary.js";
 
-type HealthResponse = {
-  status: "ok";
-  version: string;
-};
+type HealthResponse = RuntimeHealth;
 
 type InstrumentSummary = {
   id: string;
@@ -138,6 +136,7 @@ type InstrumentSummary = {
 const InstrumentParamsSchema = Type.Object({ id: Type.String({ minLength: 1 }) });
 
 const packageVersion = process.env.npm_package_version ?? "0.1.0";
+const runtimeInstanceId = `runtime.${process.pid}.${Date.now()}`;
 
 const notFound: RequestHandler = (request, response) => {
   sendApiFailure(response, {
@@ -476,7 +475,12 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use(express.json({ limit: "4mb" }));
 
   app.get("/health", (_request, response) => {
-    const body: HealthResponse = { status: "ok", version: packageVersion };
+    const body: HealthResponse = {
+      status: "ok",
+      version: packageVersion,
+      apiSchemaVersion: VELLUM_API_SCHEMA_VERSION,
+      runtimeInstanceId,
+    };
     response.json(body);
   });
 

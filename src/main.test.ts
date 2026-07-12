@@ -2,12 +2,30 @@ import { describe, expect, it, vi } from "vitest";
 
 import { loadAllBrowserProfiles } from "./lib/browser-profiles.js";
 import { buildSystemPrompt } from "./prompts.js";
+import { VELLUM_API_SCHEMA_VERSION } from "./lib/runtime-contract.js";
 
 function installBrowserUiStubs(): void {
   vi.stubGlobal("DOMMatrix", class DOMMatrix {});
 }
 
 describe("browser entry wiring", () => {
+  it("rejects a stale API schema instead of silently starting", async () => {
+    installBrowserUiStubs();
+    const { assertCompatibleRuntime } = await import("./main.js");
+    const request = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            status: "ok",
+            version: "0.1.0",
+            apiSchemaVersion: "stale",
+            runtimeInstanceId: "runtime.old",
+          })
+        )
+    );
+    await expect(assertCompatibleRuntime(request)).rejects.toThrow("schemas do not match");
+    expect(VELLUM_API_SCHEMA_VERSION).not.toBe("stale");
+  });
   it("loads browser profiles and builds a non-empty system prompt", () => {
     const prompt = buildSystemPrompt(loadAllBrowserProfiles());
 

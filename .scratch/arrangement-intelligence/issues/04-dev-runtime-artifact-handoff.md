@@ -1,6 +1,6 @@
 # Coordinated development runtime and completed-artifact handoff
 
-Status: ready-for-agent
+Status: complete
 
 Type: AFK
 
@@ -12,10 +12,14 @@ Provide one coordinated development lifecycle and prove that a completed Guided 
 
 ## Acceptance criteria
 
-- [ ] One command watches and restarts the API, starts the browser client after readiness, and shuts both down cleanly.
-- [ ] A stale compiled API cannot silently serve a newer client schema.
-- [ ] Completed multi-target work opens the selected artifact rather than an empty panel.
-- [ ] A real-browser test covers startup, completion, artifact display, and reload.
+- [x] One command watches and restarts the API, starts the browser client after readiness, and shuts both down cleanly.
+- [x] A stale compiled API cannot silently serve a newer client schema.
+- [x] Completed multi-target work opens the selected artifact rather than an empty panel.
+- [x] A real-browser test covers startup, completion, artifact display, and reload.
+
+## Verification
+
+See `../evidence/T04/verification.json`.
 
 ## Blocked by
 

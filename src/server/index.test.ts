@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ApiResponse } from "../lib/api-contract.js";
 import { createApp, startServer } from "./index.js";
+import { VELLUM_API_SCHEMA_VERSION } from "../lib/runtime-contract.js";
 
 type ApiEnvelope<T> = ApiResponse<T>;
 
@@ -49,6 +50,11 @@ describe("server API endpoints", () => {
     expect(response.headers.get("content-security-policy")).toContain("object-src 'none'");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    await expect(response.json()).resolves.toMatchObject({
+      status: "ok",
+      apiSchemaVersion: VELLUM_API_SCHEMA_VERSION,
+      runtimeInstanceId: expect.stringMatching(/^runtime\./),
+    });
   });
 
   it("allows only the exact configured browser origin and emits a strict preflight", async () => {

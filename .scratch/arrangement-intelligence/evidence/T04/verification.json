@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T04",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T11:21:00Z",
+  "requirements": {
+    "AI-DEL-004": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1 developer-workflow smoke review at the deferred human gate"
+    },
+    "AI-WPL-005": {
+      "status": "machine_verified",
+      "humanEvidence": "pending H1/H5 usefulness and notation review"
+    },
+    "AI-DEL-025": {
+      "status": "partial",
+      "remaining": "Automatic handoff and exact reload identity are browser-verified; T09 adds first-tracer versioned adoption"
+    }
+  },
+  "auditFindings": {
+    "F024": "partial: real-browser startup and artifact/reload behavior recorded; full PDF/OCR review workflow remains T05, T06, and T33",
+    "F040": "partial: one supervised browser entry path is documented; source-format capability communication remains T12, T17, and T39",
+    "F041": "machine fixed+verified: completion is fail-visible, selected identity enters the URL, and exact artifact/version survives browser reload",
+    "F042": "machine fixed+verified: dev:all coordinates build/watch/restart/readiness/shutdown and exact schema compatibility prevents silent stale API use",
+    "F044": "partial continuation: browser startup now uses typed schema compatibility rather than parsing a stale response"
+  },
+  "summary": {
+    "testsPassed": 927,
+    "testsSkipped": 1,
+    "focusedTestsPassed": 43,
+    "browser": {
+      "surface": "Codex in-app Chromium browser",
+      "startupUrl": "http://127.0.0.1:5412/",
+      "reloadWorkspaceId": "workspace.26e047cb-f73c-4909-954a-a3d555f7a7b5",
+      "reloadArrangementId": "arrangement.3291f3c6-a793-4000-b44e-392c4c3659a4",
+      "reloadArrangementVersion": 1,
+      "observed": [
+        "schema-compatible app startup",
+        "visible Score preview and PDF availability",
+        "literal Audio Preview controls",
+        "Preservation Audit and provenance summaries",
+        "candidate selector",
+        "exact workspace, arrangement, and version data attributes after reload"
+      ]
+    },
+    "supervisor": {
+      "apiPort": 3313,
+      "webPort": 5413,
+      "initialWatchRestartBeforeBrowser": false,
+      "proxiedHealthMatchedDirectHealth": true,
+      "cleanShutdownVerified": true
+    }
+  },
+  "commands": [
+    {
+      "command": "VELLUM_DEV_API_PORT=3313 VELLUM_DEV_WEB_PORT=5413 npm run dev:all",
+      "result": "pass"
+    },
+    {
+      "command": "curl direct and Vite-proxied /health",
+      "result": "pass: identical schema and runtime instance"
+    },
+    {
+      "command": "Codex in-app browser startup and exact arrangement reload protocol",
+      "result": "pass"
+    },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    {
+      "command": "npx vitest run src/lib/runtime-contract.test.ts src/lib/artifact-handoff.test.ts src/server/index.test.ts src/main.test.ts test/lib/test-infra.test.ts",
+      "result": "pass: 43 passed"
+    },
+    { "command": "npm test", "result": "pass: 927 passed, 1 skipped" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/04-dev-runtime-artifact-handoff.md",
+      "sha256": "f48106faab68a40f26972aa861fd11e967ffca5edcb21a5c86863a3b75912b75"
+    },
+    {
+      "path": "scripts/dev-all.mjs",
+      "sha256": "cc17bc6944085be7a4360e9d57dfce3026733a7abe11d74291da89e368992129"
+    },
+    {
+      "path": "src/lib/runtime-contract.ts",
+      "sha256": "294426ab406b3c7776afae9780a59cc315ad1ef4614cbe50f7ad392687cc33ef"
+    },
+    {
+      "path": "src/lib/runtime-contract.test.ts",
+      "sha256": "2b37de6443d08d8f5ec868304cd61374a1f80fa3272e0ea28126f4f496d498f8"
+    },
+    {
+      "path": "src/lib/artifact-handoff.ts",
+      "sha256": "7ebee682cb098be558eed4f79b7defb9cfef90f1cefdad527d95da1be653b0c7"
+    },
+    {
+      "path": "src/lib/artifact-handoff.test.ts",
+      "sha256": "2a87bd3987b7ad8b6e4da4a62183283c8ff21c4a7ab47c0d0a29d16f6b66a656"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "a3972a562077b467eeb9ebd0fff8b1ff54691e9855987fb10dcfad1e87818e7f"
+    },
+    {
+      "path": "src/server/index.ts",
+      "sha256": "8617972917cf5e5ce2ca5f4ea9478bc7b8df97becc1e7be5b9f5e955447706b5"
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "860941be71220b672e1f83b1012dd170589323369c26276f265db4ea24924174"
+    },
+    {
+      "path": "README.md",
+      "sha256": "3d4c451a7daf546fa5abddb4d11139fa9cb7d4064175ec5260c294fa4296b799"
+    }
+  ]
+}

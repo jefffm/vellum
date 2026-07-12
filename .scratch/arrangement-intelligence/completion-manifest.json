@@ -22,6 +22,12 @@
       "artifact": ".scratch/arrangement-intelligence/evidence/T02/verification.json",
       "humanEvidence": "pending"
     },
+    "AI-DEL-004": {
+      "status": "machine_verified",
+      "tracerId": "T04",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T04/verification.json",
+      "humanEvidence": "pending"
+    },
     "AI-DEL-002": {
       "status": "machine_verified",
       "tracerId": "T03",
@@ -32,6 +38,11 @@
       "status": "partial",
       "tracerId": "T03",
       "artifact": ".scratch/arrangement-intelligence/evidence/T03/verification.json"
+    },
+    "AI-DEL-025": {
+      "status": "partial",
+      "tracerId": "T04",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T04/verification.json"
     },
     "AI-DEL-072": {
       "status": "partial",
@@ -47,6 +58,12 @@
       "status": "partial",
       "tracerId": "T03",
       "artifact": ".scratch/arrangement-intelligence/evidence/T03/verification.json"
+    },
+    "AI-WPL-005": {
+      "status": "machine_verified",
+      "tracerId": "T04",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T04/verification.json",
+      "humanEvidence": "pending"
     }
   },
   "findingClosures": {},
