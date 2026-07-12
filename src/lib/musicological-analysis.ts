@@ -298,9 +298,11 @@ function completeAnalysis(
           kind: "score_observation" as const,
           sourceIds: claim.subjectIds,
           explanation:
-            claim.basis === "observation"
-              ? "The claim is directly supported by labeled or symbolic score data."
-              : "The claim is inferred from register, timing, interval, rhythm, and voice-role evidence in the score.",
+            claim.kind === "principal_voice" && principal
+              ? principal.evidence
+              : claim.basis === "observation"
+                ? "The claim is directly supported by labeled or symbolic score data."
+                : "The claim is inferred from register, timing, interval, rhythm, and voice-role evidence in the score.",
         },
       ],
       alternatives,
@@ -317,6 +319,8 @@ function completeAnalysis(
       critical: true,
       question: "Which source part carries the musical identity that must remain prominent?",
       alternativeIds: principalClaim.alternatives.map((alternative) => alternative.id),
+      affectedEventIds: principalClaim.scope?.eventIds ?? [],
+      consequenceDimensions: ["voice", "identity", "recognizable_identity"],
     });
   }
   if (record.validationProfileId === "continuo.italian-baroque") {
@@ -329,6 +333,8 @@ function completeAnalysis(
         critical: false,
         question: "Could a different regional continuo practice materially change the realization?",
         alternativeIds: [profileAlternative.id],
+        affectedEventIds: profileClaim.scope?.eventIds ?? [],
+        consequenceDimensions: ["figure", "texture_technique_profile"],
       });
     }
   }
@@ -383,8 +389,18 @@ function passageAnalyses(
   }
   return grouped.map((group, index) => {
     const eventIds = group.flatMap((item) => item.events.map((event) => event.id));
+    const pitchedEvents = group
+      .flatMap((item) => item.events)
+      .filter((event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note");
+    const activePartIds = [...new Set(pitchedEvents.map((event) => event.partId))];
+    const finalMeasure = group.at(-1)!.measure;
+    const goalEvents = activePartIds.flatMap((partId) => {
+      const notes = pitchedEvents.filter((event) => event.partId === partId);
+      return notes.length ? [notes.at(-1)!.id] : [];
+    });
+    const passageId = `passage.${record.id.slice("analysis.".length)}.${index + 1}`;
     return {
-      id: `passage.${record.id.slice("analysis.".length)}.${index + 1}`,
+      id: passageId,
       measureIds: group.map((item) => item.measure.id),
       eventIds,
       texture: group[0]!.texture,
@@ -392,8 +408,81 @@ function passageAnalyses(
       claimIds: claims
         .filter((claim) => claim.scope?.eventIds.some((id) => eventIds.includes(id)))
         .map((claim) => claim.id),
+      boundaries: {
+        startReason:
+          index === 0
+            ? "Beginning of the notated work."
+            : "Texture or contrapuntal-technique profile changes here.",
+        endReason:
+          index === grouped.length - 1
+            ? "End of the notated work."
+            : "The following measure changes texture or contrapuntal technique.",
+      },
+      roles: activePartIds.map((partId) => ({
+        partId,
+        role: passageRole(score, record, partId),
+        evidenceEventIds: pitchedEvents
+          .filter((event) => event.partId === partId)
+          .map((event) => event.id),
+      })),
+      phrases: passagePhrases(group, passageId, activePartIds),
+      cadences:
+        goalEvents.length && index === grouped.length - 1
+          ? [
+              {
+                id: `${passageId}.cadence`,
+                kind: "final_goal" as const,
+                measureId: finalMeasure.id,
+                goalEventIds: goalEvents,
+                confidence: 0.95,
+              },
+            ]
+          : [],
     };
   });
+}
+
+function passagePhrases(
+  group: Array<{
+    events: ScoreEvent[];
+  }>,
+  passageId: string,
+  partIds: string[]
+): NonNullable<AnalysisRecord["passages"]>[number]["phrases"] {
+  let phraseIndex = 0;
+  return partIds.flatMap((partId) => {
+    const phrases: string[][] = [];
+    let current: string[] = [];
+    for (const event of group
+      .flatMap((item) => item.events)
+      .filter((item) => item.partId === partId)) {
+      if (event.type === "rest") {
+        if (current.length) phrases.push(current);
+        current = [];
+      } else if (event.type === "note") {
+        current.push(event.id);
+      }
+    }
+    if (current.length) phrases.push(current);
+    return phrases.map((eventIds) => ({
+      id: `${passageId}.phrase.${++phraseIndex}`,
+      partId,
+      eventIds,
+    }));
+  });
+}
+
+function passageRole(
+  score: NormalizedScore,
+  record: AnalysisRecord,
+  partId: string
+): "principal_voice" | "continuo_foundation" | "bass" | "imitative_voice" | "accompaniment" {
+  if (record.texture === "imitative-polyphony") return "imitative_voice";
+  if (record.principalVoicePartId === partId) return "principal_voice";
+  const part = score.parts.find((candidate) => candidate.id === partId)!;
+  if (part.role === "continuo_foundation") return "continuo_foundation";
+  if (part.role === "bass") return "bass";
+  return "accompaniment";
 }
 
 function analysisProfiles(
@@ -481,38 +570,60 @@ function analysisSummary(
 
 function detectImitativeTexture(score: NormalizedScore): ImitationEvidence | undefined {
   if (score.parts.length < 3) return undefined;
-  const entries = score.parts.map((part) => {
-    const notes = score.events.filter(
-      (event): event is Extract<ScoreEvent, { type: "note" }> =>
-        event.partId === part.id && event.type === "note"
-    );
-    return {
-      part,
-      notes: notes.slice(0, 4),
-      start: notes[0] ? absoluteOnset(score, notes[0]) : Number.POSITIVE_INFINITY,
-    };
+  const windows = score.parts.flatMap((part) => {
+    const notes = score.events
+      .filter(
+        (event): event is Extract<ScoreEvent, { type: "note" }> =>
+          event.partId === part.id && event.type === "note"
+      )
+      .sort((left, right) => absoluteOnset(score, left) - absoluteOnset(score, right));
+    return notes.slice(0, -3).map((_, index) => {
+      const subject = notes.slice(index, index + 4);
+      const shape = subjectShape(subject);
+      return {
+        part,
+        notes: subject,
+        start: absoluteOnset(score, subject[0]!),
+        shape,
+        key: `${shape.intervals.join(",")}|${shape.durations.join(",")}`,
+      };
+    });
   });
-  if (entries.some((entry) => entry.notes.length < 4)) return undefined;
-  const shape = subjectShape(entries[0]!.notes);
-  if (
-    entries.some((entry) => {
-      const candidate = subjectShape(entry.notes);
-      return (
-        candidate.intervals.join(",") !== shape.intervals.join(",") ||
-        candidate.durations.join(",") !== shape.durations.join(",")
-      );
-    })
-  ) {
-    return undefined;
-  }
-  const ordered = entries.slice().sort((left, right) => left.start - right.start);
+  const candidateKeys = [...new Set(windows.map((window) => window.key))].sort();
+  const candidates = candidateKeys.flatMap((key) => {
+    const matching = windows.filter((window) => window.key === key);
+    if (!score.parts.every((part) => matching.some((window) => window.part.id === part.id)))
+      return [];
+    const selected = score.parts.map(
+      (part) =>
+        matching
+          .filter((window) => window.part.id === part.id)
+          .sort((a, b) => a.start - b.start)[0]!
+    );
+    return [
+      {
+        entries: selected,
+        span:
+          Math.max(...selected.map((entry) => entry.start)) -
+          Math.min(...selected.map((entry) => entry.start)),
+      },
+    ];
+  });
+  const best = candidates.sort(
+    (left, right) =>
+      left.span - right.span ||
+      Math.min(...left.entries.map((entry) => entry.start)) -
+        Math.min(...right.entries.map((entry) => entry.start))
+  )[0];
+  if (!best) return undefined;
+  const ordered = best.entries.slice().sort((left, right) => left.start - right.start);
   if (ordered.some((entry, index) => index > 0 && entry.start <= ordered[index - 1]!.start)) {
     return undefined;
   }
   return {
     entries: ordered,
-    intervalShape: shape.intervals,
-    durationShape: shape.durations,
+    intervalShape: ordered[0]!.shape.intervals,
+    durationShape: ordered[0]!.shape.durations,
   };
 }
 
@@ -542,6 +653,7 @@ type PrincipalSelection = {
   reason: string;
   basis: "observation" | "inference";
   confidence: number;
+  evidence: string;
 };
 
 function selectPrincipalVoice(score: NormalizedScore): PrincipalSelection {
@@ -552,6 +664,7 @@ function selectPrincipalVoice(score: NormalizedScore): PrincipalSelection {
       reason: "the source explicitly assigns the Principal Voice role",
       basis: "observation",
       confidence: 1,
+      evidence: `Part ${explicit.id} carries the explicit principal_voice source role; all ${noteCount(score, explicit.id)} pitched events support the assignment.`,
     };
   }
 
@@ -564,6 +677,7 @@ function selectPrincipalVoice(score: NormalizedScore): PrincipalSelection {
       reason: "the labeled soprano presents the tune in this four-part setting",
       basis: "observation",
       confidence: 0.99,
+      evidence: `The source labels ${soprano.name} as soprano; its ${noteCount(score, soprano.id)} pitched events form the upper labeled line across the score.`,
     };
   }
 
@@ -579,10 +693,16 @@ function selectPrincipalVoice(score: NormalizedScore): PrincipalSelection {
 
   return {
     part: ranked[0]!.part,
-    reason: "it has the highest median register among the available unlabeled voices",
+    reason:
+      "it has the strongest upper-line register evidence among the available unlabeled voices",
     basis: "inference",
     confidence: ranked.length === 1 ? 0.8 : 0.65,
+    evidence: `Compared every unlabeled pitched part. ${ranked[0]!.part.name} has median MIDI ${ranked[0]!.median} across ${noteCount(score, ranked[0]!.part.id)} notes; alternatives are retained because register alone does not establish melodic identity.`,
   };
+}
+
+function noteCount(score: NormalizedScore, partId: string): number {
+  return score.events.filter((event) => event.partId === partId && event.type === "note").length;
 }
 
 function medianMidi(events: ScoreEvent[], partId: string): number | undefined {

@@ -195,25 +195,27 @@ function deriveConsequences(
     };
   });
   const analysisConsequences = (analysis.ambiguities ?? []).flatMap((ambiguity) =>
-    (ambiguity.sourceUncertaintyIds ?? []).map((uncertaintyId) => {
-      const events = (ambiguity.affectedEventIds ?? []).flatMap((id) => {
-        const event = eventById.get(id);
-        return event ? [event] : [];
-      });
-      return {
-        uncertaintyId,
-        discoveredBy: "analysis" as const,
-        dimensions: ambiguity.consequenceDimensions ?? (["relationship"] as const),
-        affectedPartIds: unique(events.map((event) => event.partId)),
-        affectedMeasureIds: unique(events.map((event) => event.measureId)),
-        affectedEventIds: ambiguity.affectedEventIds ?? [],
-        affectedTargetConfigurationIds: ambiguity.affectedTargetConfigurationIds ?? [],
-        critical: ambiguity.critical,
-        material: true,
-        unresolved: ambiguity.resolution === undefined,
-        rationale: ambiguity.question,
-      };
-    })
+    (ambiguity.sourceUncertaintyIds?.length ? ambiguity.sourceUncertaintyIds : [ambiguity.id]).map(
+      (uncertaintyId) => {
+        const events = (ambiguity.affectedEventIds ?? []).flatMap((id) => {
+          const event = eventById.get(id);
+          return event ? [event] : [];
+        });
+        return {
+          uncertaintyId,
+          discoveredBy: "analysis" as const,
+          dimensions: ambiguity.consequenceDimensions ?? (["relationship"] as const),
+          affectedPartIds: unique(events.map((event) => event.partId)),
+          affectedMeasureIds: unique(events.map((event) => event.measureId)),
+          affectedEventIds: ambiguity.affectedEventIds ?? [],
+          affectedTargetConfigurationIds: ambiguity.affectedTargetConfigurationIds ?? [],
+          critical: ambiguity.critical,
+          material: true,
+          unresolved: ambiguity.resolution === undefined,
+          rationale: ambiguity.question,
+        };
+      }
+    )
   );
   return [...transcriptionConsequences, ...analysisConsequences];
 }

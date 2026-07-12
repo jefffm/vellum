@@ -711,6 +711,16 @@ describe("Greensleeves faithful arrangement service", () => {
     };
     expect(correctionEnvelope.ok).toBe(true);
     const correctedAnalysis = correctionEnvelope.data;
+    expect(
+      correctedAnalysis.passages
+        ?.flatMap((passage) => passage.roles)
+        .find((role) => role.partId === "part.alto")
+    ).toMatchObject({ role: "principal_voice" });
+    expect(
+      correctedAnalysis.passages
+        ?.flatMap((passage) => passage.roles)
+        .find((role) => role.partId === "part.soprano")
+    ).toMatchObject({ role: "accompaniment" });
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve()))
     );

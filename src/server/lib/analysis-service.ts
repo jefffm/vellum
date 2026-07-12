@@ -138,13 +138,25 @@ export class AnalysisService {
         claim.kind === "texture" && correction.semanticValue
           ? correction.semanticValue
           : previous.texture,
-      passages:
-        claim.kind === "texture" && correction.semanticValue
-          ? previous.passages?.map((passage) => ({
-              ...passage,
-              texture: correction.semanticValue!,
-            }))
-          : previous.passages,
+      passages: previous.passages?.map((passage) => ({
+        ...passage,
+        ...(claim.kind === "texture" && correction.semanticValue
+          ? { texture: correction.semanticValue }
+          : {}),
+        ...(claim.kind === "principal_voice"
+          ? {
+              roles: passage.roles.map((role) => ({
+                ...role,
+                role:
+                  role.partId === principalVoicePartId
+                    ? ("principal_voice" as const)
+                    : role.role === "principal_voice"
+                      ? ("accompaniment" as const)
+                      : role.role,
+              })),
+            }
+          : {}),
+      })),
       summary: `${previous.summary ?? "Musicological analysis updated."} Owner correction: ${correction.statement}`,
       claims: [...previous.claims, correctedClaim],
       preservationTargets,

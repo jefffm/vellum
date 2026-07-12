@@ -45,6 +45,17 @@ describe("musicological analysis", () => {
         expect.objectContaining({ texture: "homophonic-four-part", measureIds: expect.any(Array) }),
       ])
     );
+    expect(analysis.passages?.[0]).toMatchObject({
+      boundaries: { startReason: expect.any(String), endReason: expect.any(String) },
+      roles: expect.arrayContaining([
+        expect.objectContaining({ partId: "part.soprano", role: "principal_voice" }),
+        expect.objectContaining({ partId: "part.bass", role: "bass" }),
+      ]),
+      phrases: expect.arrayContaining([
+        expect.objectContaining({ partId: "part.soprano", eventIds: expect.any(Array) }),
+      ]),
+      cadences: [expect.objectContaining({ kind: "final_goal", goalEventIds: expect.any(Array) })],
+    });
     expect(
       analysis.claims.every(
         (claim) => claim.scope && claim.evidence?.[0]?.kind === "score_observation"
@@ -98,6 +109,7 @@ describe("musicological analysis", () => {
     });
     expect(analysis.principalVoicePartId).toBe("part.high");
     expect(analysis.claims[0]?.basis).toBe("inference");
+    expect(analysis.claims[0]?.evidence?.[0]?.explanation).toMatch(/median MIDI.*alternatives/i);
     expect(analysis.claims[0]?.alternatives).toEqual([
       expect.objectContaining({ statement: expect.stringMatching(/Part 1/) }),
     ]);
@@ -284,8 +296,76 @@ describe("imitative counterpoint analysis", () => {
         contrapuntalTechniques: ["imitation"],
       }),
     ]);
+    expect(analysis.passages?.[0]?.roles.every((role) => role.role === "imitative_voice")).toBe(
+      true
+    );
     expect(analysis.profiles).toEqual([
       expect.objectContaining({ id: "counterpoint.renaissance-imitative", status: "selected" }),
     ]);
   });
+
+  it("finds delayed interval-rhythm entries after unrelated opening notes", () => {
+    const parts = ["one", "two", "three"].map((name) => ({
+      id: `part.${name}`,
+      name,
+      role: "other" as const,
+    }));
+    const measures = Array.from({ length: 8 }, (_, index) => ({
+      id: `measure.${index}`,
+      index,
+      displayNumber: `${index + 1}`,
+      duration: { numerator: 4, denominator: 1 },
+    }));
+    const subject = [0, 2, 4, 7];
+    const events = parts.flatMap((part, partIndex) => {
+      const startMeasure = partIndex * 2 + 1;
+      return [
+        {
+          id: `event.${part.id}.prelude`,
+          type: "note" as const,
+          partId: part.id,
+          measureId: "measure.0",
+          onset: { numerator: partIndex, denominator: 1 },
+          duration: { numerator: 1, denominator: 2 },
+          pitch: ["C4", "F3", "A2"][partIndex]!,
+        },
+        ...subject.map((offset, noteIndex) => ({
+          id: `event.${part.id}.subject.${noteIndex + 1}`,
+          type: "note" as const,
+          partId: part.id,
+          measureId: `measure.${startMeasure}`,
+          onset: { numerator: noteIndex, denominator: 1 },
+          duration: { numerator: 1, denominator: 1 },
+          pitch: midiPitch(60 - partIndex * 5 + offset),
+        })),
+      ];
+    });
+    const analysis = analyzeMusicologicalScore(
+      {
+        id: "score.delayed-imitation",
+        scoreTranscriptionId: "transcription.delayed-imitation",
+        version: 1,
+        parts,
+        measures,
+        events,
+        createdAt: "2026-07-12T15:00:00.000Z",
+      },
+      { id: "analysis.delayed-imitation", createdAt: "2026-07-12T15:01:00.000Z" }
+    );
+
+    expect(analysis.texture).toBe("imitative-polyphony");
+    expect(
+      analysis.preservationTargets.find((target) => target.id.endsWith("ordered-entries"))
+        ?.eventGroups
+    ).toEqual([
+      expect.arrayContaining(["event.part.one.subject.1"]),
+      expect.arrayContaining(["event.part.two.subject.1"]),
+      expect.arrayContaining(["event.part.three.subject.1"]),
+    ]);
+  });
 });
+
+function midiPitch(midi: number): string {
+  const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  return `${names[midi % 12]}${Math.floor(midi / 12) - 1}`;
+}

@@ -184,6 +184,49 @@ describe("purpose-scoped Source Truth convergence", () => {
     });
   });
 
+  it("treats intrinsic Analysis ambiguity as deterministic Source Truth uncertainty", () => {
+    const fixture = createFixture({ critical: false, resolved: true });
+    const ambiguous: AnalysisRecord = {
+      ...fixture.analysis,
+      id: "analysis.3333333333333333",
+      version: 2,
+      ambiguities: [
+        {
+          id: "ambiguity.intrinsic-principal",
+          claimId: fixture.analysis.claims[0]!.id,
+          critical: true,
+          question: "Which unlabeled line carries the Principal Voice?",
+          alternativeIds: ["alternative.upper", "alternative.inner"],
+          affectedEventIds: ["event.soprano.1"],
+          consequenceDimensions: ["voice", "identity", "recognizable_identity"],
+        },
+      ],
+    };
+    fixture.store.saveAnalysisRecord(fixture.workspaceId, ambiguous);
+    const assessment = new SourceTruthService({
+      store: fixture.store,
+      now: () => new Date("2026-07-12T15:00:00.000Z"),
+      createId: sequenceId(),
+    }).assess(fixture.workspaceId, {
+      ...fixture.assessmentInput,
+      analysisRecordId: ambiguous.id,
+    });
+
+    expect(assessment).toMatchObject({
+      outcome: "review_required",
+      consideredUncertaintyIds: expect.arrayContaining(["ambiguity.intrinsic-principal"]),
+      blockingUncertaintyIds: ["ambiguity.intrinsic-principal"],
+      stability: { stable: false },
+      consequences: expect.arrayContaining([
+        expect.objectContaining({
+          uncertaintyId: "ambiguity.intrinsic-principal",
+          discoveredBy: "analysis",
+          affectedEventIds: ["event.soprano.1"],
+        }),
+      ]),
+    });
+  });
+
   it("correction creates a superseding assessment and stales every exact dependent kind", () => {
     const fixture = createFixture({ critical: false, resolved: false });
     const arranged = new ArrangementService({

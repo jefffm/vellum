@@ -1207,6 +1207,51 @@ export const PassageAnalysisSchema = Type.Object(
     texture: Type.String({ minLength: 1 }),
     contrapuntalTechniques: Type.Array(Type.String({ minLength: 1 })),
     claimIds: Type.Array(IdSchema),
+    boundaries: Type.Object(
+      {
+        startReason: Type.String({ minLength: 1 }),
+        endReason: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    roles: Type.Array(
+      Type.Object(
+        {
+          partId: IdSchema,
+          role: Type.Union([
+            Type.Literal("principal_voice"),
+            Type.Literal("continuo_foundation"),
+            Type.Literal("bass"),
+            Type.Literal("imitative_voice"),
+            Type.Literal("accompaniment"),
+          ]),
+          evidenceEventIds: Type.Array(IdSchema, { minItems: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    phrases: Type.Array(
+      Type.Object(
+        {
+          id: IdSchema,
+          partId: IdSchema,
+          eventIds: Type.Array(IdSchema, { minItems: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    cadences: Type.Array(
+      Type.Object(
+        {
+          id: IdSchema,
+          kind: Type.Union([Type.Literal("sectional_goal"), Type.Literal("final_goal")]),
+          measureId: IdSchema,
+          goalEventIds: Type.Array(IdSchema, { minItems: 1 }),
+          confidence: Type.Number({ minimum: 0, maximum: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
   },
   { additionalProperties: false }
 );

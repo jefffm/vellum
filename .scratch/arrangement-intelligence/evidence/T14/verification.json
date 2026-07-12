@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T14",
+  "result": "pass",
+  "verifiedAt": "2026-07-12T16:51:00Z",
+  "requirements": {
+    "M01": {
+      "status": "machine_verified",
+      "remaining": "T16 completes the Analysis versus Plan ownership boundary"
+    },
+    "M04": {
+      "status": "partial",
+      "remaining": "Passage, principal identity, imitation, continuo profile, and intrinsic ambiguity cases pass; later corpus tracers broaden styles"
+    },
+    "M05": {
+      "status": "partial",
+      "remaining": "Structured passage and correction evidence passes; T16 and T18 consume it in proportional plans"
+    },
+    "M12": {
+      "status": "partial",
+      "remaining": "Delayed-entry and intrinsic-ambiguity counterexamples pass; T33-T35 add the complete mutation corpus"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 961,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Passage records contain scoped boundaries, texture, roles, rest-delimited phrases, cadential goals, techniques, and Claims",
+      "Principal Voice inference retains measured evidence and material alternatives",
+      "Delayed transposition-invariant imitation entries are found after unrelated opening notes",
+      "Intrinsic Analysis ambiguity becomes a stable blocking Source Truth consequence",
+      "Owner correction updates immutable Claims, Preservation Targets, passage roles, and ambiguity resolution"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.42e3854bcf14e04c23ffd94b",
+      "runId": "evaluation-run.3a48c2d1-9d0c-4bce-9c34-c0be1604f786",
+      "cardId": "evaluation-card.1a65d640-b3b4-4f7f-a03d-aae24fa0edf1",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "historicalAndAnalyticalEvidence": "partial_observation_only"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 961 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/arrangement-service.test.ts src/lib/musicological-analysis.test.ts src/server/lib/source-truth-service.test.ts",
+      "result": "pass: 11 passed"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t14-eval",
+      "result": "pass: hard gates pass and specialist review remains explicitly unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/issues/14-passage-analysis.md",
+      "sha256": "7993f6055b4ce514b1e02d6064c66f96497c95399e66de01d2ee57c30b98c1d0"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "257af48db14a6ea6b68f56386e2556ce7724c8cd89ce7e18a5a824ae1b84f0c7"
+    },
+    {
+      "path": "src/lib/music-domain.ts",
+      "sha256": "88fb39ed231bf8f8b42704f2c7c0a5c9627d6905d00f75499515f630b91f4f64"
+    },
+    {
+      "path": "src/lib/musicological-analysis.ts",
+      "sha256": "c940b2ee360a952f2f63c158dcd2611711422d9f9fc978e4096f2858b384288b"
+    },
+    {
+      "path": "src/lib/musicological-analysis.test.ts",
+      "sha256": "a55a0fdf50297d17b56d5e40f8a86ebb62d22bf027ccbd490f806fa991b1bf31"
+    },
+    {
+      "path": "src/server/lib/source-truth-service.ts",
+      "sha256": "d5db74893fa2a88a234e66b054b52341bf3b738486d60207b2da03e9ea9d2539"
+    },
+    {
+      "path": "src/server/lib/source-truth-service.test.ts",
+      "sha256": "df62323325fb9b12cde7a9806271de3b08e6aaa384ce7aaa0bcc708b7d612034"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "sha256": "7dd0145fde8dfae03099ec4b72c755de51f7ab7de68c9ca634a92227297788e5"
+    },
+    {
+      "path": "src/server/lib/analysis-service.ts",
+      "sha256": "69a389b85f6666dce1506e77ffd4d8c32519f23bfff68fd1024d28be223772c5"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "c9114e76f3aa28f0aff1829e435a8b9c440360b63564fa819b47a5906d08b6ed"
+    }
+  ]
+}

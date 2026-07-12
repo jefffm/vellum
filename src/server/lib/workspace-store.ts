@@ -1075,7 +1075,10 @@ export class WorkspaceStore {
     ) {
       throw new ApiRouteError("Source Truth Assessment claim authorization is inconsistent", 400);
     }
-    const uncertaintyIds = new Set(transcription.uncertainties.map((item) => item.id));
+    const uncertaintyIds = new Set([
+      ...transcription.uncertainties.map((item) => item.id),
+      ...(analysis.ambiguities ?? []).map((item) => item.id),
+    ]);
     if (
       [
         ...decoded.consideredUncertaintyIds,
