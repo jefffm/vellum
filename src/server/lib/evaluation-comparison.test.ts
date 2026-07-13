@@ -10,6 +10,7 @@ import {
 } from "./evaluation-comparison.js";
 import { digestValue } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
+import { EvaluationPromotionService } from "./evaluation-promotion.js";
 import { FIRST_LOOP_COMPARISON_POLICY, runFirstLoopEvaluation } from "./first-loop-evaluation.js";
 
 const roots: string[] = [];
@@ -117,6 +118,42 @@ describe("Evaluation baseline, mutation comparison, and report", () => {
       ])
     );
     expect(store.getBaseline(baseline.id)).toEqual(baseline);
+    expect(store.getPromotionReview(baseline.promotionReviewId)).toMatchObject({
+      evaluationRunId: clean.runId,
+      changeClassification: "product",
+      status: "promotable",
+      promoter: baseline.promotedBy,
+      rationale: baseline.rationale,
+    });
+    const blockedReview = new EvaluationPromotionService(store, { createId, now }).review({
+      evaluationRunId: clean.runId,
+      changeClassification: "evaluator",
+      mandatoryDeterministicSuites: [{ id: "suite.first-loop", status: "failed" }],
+      hardRegressions: [
+        {
+          id: "regression.hard",
+          status: "authorized_rejection",
+          rationale: "A rejection without its granting authority must not permit promotion.",
+        },
+      ],
+      materialDeltaIds: ["delta.material"],
+      reviewedMaterialDeltaIds: [],
+      requiredHumanEvidenceIds: ["human.required"],
+      completedHumanEvidenceRefs: [],
+      disclosedUnknownDimensionIds: baseline.knownDefects.map(({ dimensionId }) => dimensionId),
+      promoter: baseline.promotedBy,
+      rationale: "Evaluator change remains blocked until material and human review complete.",
+    });
+    expect(blockedReview).toMatchObject({
+      changeClassification: "evaluator",
+      status: "blocked",
+      blockers: expect.arrayContaining([
+        expect.stringMatching(/mandatory deterministic suite/i),
+        expect.stringMatching(/rejection authority/i),
+        expect.stringMatching(/material measured delta/i),
+        expect.stringMatching(/human evidence/i),
+      ]),
+    });
 
     const replacement = service.promoteBaseline({
       evaluationRunId: clean.runId,

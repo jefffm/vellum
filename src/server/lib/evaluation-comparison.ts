@@ -15,6 +15,7 @@ import type {
 } from "../../lib/evaluation-domain.js";
 import { digestValue } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
+import { EvaluationPromotionService } from "./evaluation-promotion.js";
 import { createNodeGeneratedArtifactSecurity } from "./generated-artifact-security-node.js";
 
 export type ComparisonPolicy = {
@@ -51,6 +52,9 @@ export class EvaluationComparisonService {
     promotedBy: EvaluationBaseline["promotedBy"];
     rationale: string;
     supersedesBaselineId?: string;
+    changeClassification?: "product" | "evaluator";
+    requiredHumanEvidenceIds?: string[];
+    completedHumanEvidenceRefs?: DigestedRef[];
   }): EvaluationBaseline {
     const run = this.options.store.getRun(input.evaluationRunId);
     if (run.executionStatus !== "completed") {
@@ -78,11 +82,38 @@ export class EvaluationComparisonService {
     }
     if (input.supersedesBaselineId) this.options.store.getBaseline(input.supersedesBaselineId);
     const createId = this.options.createId ?? randomUUID;
+    const cards = this.cardsForRun(run.id);
+    const promotionReview = new EvaluationPromotionService(this.options.store, {
+      now: this.options.now,
+      createId,
+    }).review({
+      evaluationRunId: run.id,
+      changeClassification: input.changeClassification ?? "product",
+      mandatoryDeterministicSuites: [{ id: manifest.suiteRef.id, status: "completed" }],
+      hardRegressions: cards
+        .filter((card) => card.hardGateStatus === "fail")
+        .map((card) => ({
+          id: card.id,
+          status: "unresolved" as const,
+          rationale: "A failed hard gate cannot be accepted as an ordinary known defect.",
+        })),
+      materialDeltaIds: [],
+      reviewedMaterialDeltaIds: [],
+      requiredHumanEvidenceIds: input.requiredHumanEvidenceIds ?? [],
+      completedHumanEvidenceRefs: input.completedHumanEvidenceRefs ?? [],
+      disclosedUnknownDimensionIds: [...disclosedDimensions],
+      promoter: input.promotedBy,
+      rationale: input.rationale,
+    });
+    if (promotionReview.status !== "promotable") {
+      throw new Error(`Baseline promotion is blocked: ${promotionReview.blockers.join(" ")}`);
+    }
     return this.options.store.saveBaseline({
       id: `evaluation-baseline.${createId()}`,
       version: 1,
       suiteRef: manifest.suiteRef,
       evaluationRunId: run.id,
+      promotionReviewId: promotionReview.id,
       manifestId: manifest.id,
       comparisonScope: input.comparisonScope,
       knownDefects: input.knownDefects,

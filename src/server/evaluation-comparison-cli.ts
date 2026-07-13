@@ -9,39 +9,45 @@ import {
 
 async function main(): Promise<void> {
   const output = path.resolve(argumentValue("--output") ?? ".vellum/evaluations");
-  const clean = await runFirstLoopEvaluation({ evaluationRoot: output });
+  const requestedBaselineId = argumentValue("--baseline");
+  const store = new EvaluationStore({ rootDirectory: output });
+  const service = new EvaluationComparisonService({ store });
+  const clean = requestedBaselineId
+    ? undefined
+    : await runFirstLoopEvaluation({ evaluationRoot: output });
+  const baseline = requestedBaselineId
+    ? store.getBaseline(requestedBaselineId)
+    : service.promoteBaseline({
+        evaluationRunId: clean!.runId,
+        comparisonScope: { kind: "case", ids: ["case.greensleeves-first-loop"] },
+        knownDefects: clean!.cards.flatMap((card) =>
+          card.dimensions
+            .filter(
+              (dimension) =>
+                dimension.absoluteOutcome === "unknown" || dimension.completeness !== "complete"
+            )
+            .map((dimension) => ({
+              id: `known-defect.first-loop.${dimension.dimensionId}`,
+              dimensionId: dimension.dimensionId,
+              scope: dimension.scope,
+              description:
+                dimension.observations[0]?.message ?? "Evaluation evidence is incomplete.",
+              evidenceRefs: [{ id: card.id, version: 1, digest: digestValue(card) }],
+              acceptedTradeoff:
+                "This development baseline retains the disclosed gap without presenting the dimension as passing.",
+            }))
+        ),
+        promotedBy: {
+          id: "reviewer.repository-fixture-author",
+          role: "baseline_reviewer",
+          displayName: "Repository fixture author",
+        },
+        rationale:
+          "Pin the first-loop development output, including disclosed unknowns, to verify mutation sensitivity.",
+      });
   const mutated = await runFirstLoopEvaluation({
     evaluationRoot: output,
     mutationId: "mutation.principal-voice-omission",
-  });
-  const store = new EvaluationStore({ rootDirectory: output });
-  const service = new EvaluationComparisonService({ store });
-  const baseline = service.promoteBaseline({
-    evaluationRunId: clean.runId,
-    comparisonScope: { kind: "case", ids: ["case.greensleeves-first-loop"] },
-    knownDefects: clean.cards.flatMap((card) =>
-      card.dimensions
-        .filter(
-          (dimension) =>
-            dimension.absoluteOutcome === "unknown" || dimension.completeness !== "complete"
-        )
-        .map((dimension) => ({
-          id: `known-defect.first-loop.${dimension.dimensionId}`,
-          dimensionId: dimension.dimensionId,
-          scope: dimension.scope,
-          description: dimension.observations[0]?.message ?? "Evaluation evidence is incomplete.",
-          evidenceRefs: [{ id: card.id, version: 1, digest: digestValue(card) }],
-          acceptedTradeoff:
-            "This development baseline retains the disclosed gap without presenting the dimension as passing.",
-        }))
-    ),
-    promotedBy: {
-      id: "reviewer.repository-fixture-author",
-      role: "baseline_reviewer",
-      displayName: "Repository fixture author",
-    },
-    rationale:
-      "Pin the first-loop development output, including disclosed unknowns, to verify mutation sensitivity.",
   });
   const comparison = service.compare({
     baselineId: baseline.id,
@@ -62,7 +68,7 @@ async function main(): Promise<void> {
       ok: mutationDetected,
       output,
       baselineId: baseline.id,
-      baselineRunId: clean.runId,
+      baselineRunId: baseline.evaluationRunId,
       proposedRunId: mutated.runId,
       comparisonId: comparison.id,
       reportId: report.id,
@@ -77,7 +83,10 @@ async function main(): Promise<void> {
 
 function argumentValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
-  return index >= 0 ? process.argv[index + 1] : undefined;
+  if (index < 0) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value`);
+  return value;
 }
 
 main().catch((error: unknown) => {

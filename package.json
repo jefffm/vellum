@@ -19,10 +19,12 @@
     "spec:arrangement-intelligence:complete": "node scripts/verify-arrangement-intelligence.mjs --complete",
     "sandbox:lilypond:verify": "node scripts/verify-lilypond-sandbox.mjs",
     "eval:fast": "npm run server:build --silent && node dist-server/server/evaluation-cli.js",
+    "eval:golden": "npm run server:build --silent && node dist-server/server/golden-evaluation-cli.js",
     "eval:omr": "npm run server:build --silent && node dist-server/server/external-evaluation-cli.js --kind omr",
     "eval:model": "npm run server:build --silent && node dist-server/server/external-evaluation-cli.js --kind model",
     "eval:render": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind render",
     "eval:playback": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind playback",
+    "eval:report": "npm run server:build --silent && node dist-server/server/evaluation-report-cli.js",
     "eval:compare": "npm run server:build --silent && node dist-server/server/evaluation-comparison-cli.js"
   },
   "dependencies": {

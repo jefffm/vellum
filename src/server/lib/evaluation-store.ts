@@ -19,6 +19,7 @@ import {
   EvaluatorRevisionSchema,
   ExternalEvaluationEvidenceSchema,
   ModelJudgeActionSchema,
+  EvaluationPromotionReviewSchema,
   ResolvedEvaluationManifestSchema,
   type EvaluationCard,
   type EvaluationBaseline,
@@ -35,6 +36,7 @@ import {
   type EvaluatorRevision,
   type ExternalEvaluationEvidence,
   type ModelJudgeAction,
+  type EvaluationPromotionReview,
   type ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
 
@@ -268,12 +270,33 @@ export class EvaluationStore {
     return this.read("external-evidence", id, ExternalEvaluationEvidenceSchema);
   }
 
+  listExternalEvaluationEvidence(): ExternalEvaluationEvidence[] {
+    const directory = path.join(this.rootDirectory, "external-evidence");
+    try {
+      return readdirSync(directory)
+        .filter((name) => name.endsWith(".json"))
+        .map((name) => this.getExternalEvaluationEvidence(name.slice(0, -5)))
+        .sort((left, right) => left.observedAt.localeCompare(right.observedAt));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw error;
+    }
+  }
+
   saveModelJudgeAction(value: ModelJudgeAction): ModelJudgeAction {
     return this.write("model-judge-actions", value.id, ModelJudgeActionSchema, value);
   }
 
   getModelJudgeAction(id: string): ModelJudgeAction {
     return this.read("model-judge-actions", id, ModelJudgeActionSchema);
+  }
+
+  savePromotionReview(value: EvaluationPromotionReview): EvaluationPromotionReview {
+    return this.write("promotion-reviews", value.id, EvaluationPromotionReviewSchema, value);
+  }
+
+  getPromotionReview(id: string): EvaluationPromotionReview {
+    return this.read("promotion-reviews", id, EvaluationPromotionReviewSchema);
   }
 
   saveReport(value: EvaluationReport): EvaluationReport {

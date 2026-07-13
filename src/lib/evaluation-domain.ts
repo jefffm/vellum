@@ -908,12 +908,58 @@ export const ReviewerIdentitySchema = Type.Object(
   { additionalProperties: false }
 );
 
+export const EvaluationPromotionReviewSchema = Type.Object(
+  {
+    id: Id,
+    evaluationRunId: Id,
+    changeClassification: Type.Union([Type.Literal("product"), Type.Literal("evaluator")]),
+    mandatoryDeterministicSuites: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          status: Type.Union([Type.Literal("completed"), Type.Literal("failed")]),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    hardRegressions: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          status: Type.Union([
+            Type.Literal("resolved"),
+            Type.Literal("authorized_rejection"),
+            Type.Literal("unresolved"),
+          ]),
+          authority: Type.Optional(Type.String({ minLength: 1 })),
+          rationale: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    materialDeltaIds: Type.Array(Id),
+    reviewedMaterialDeltaIds: Type.Array(Id),
+    requiredHumanEvidenceIds: Type.Array(Id),
+    completedHumanEvidenceRefs: Type.Array(DigestedRefSchema),
+    disclosedUnknownDimensionIds: Type.Array(Id),
+    promoter: ReviewerIdentitySchema,
+    rationale: Type.String({ minLength: 1 }),
+    status: Type.Union([Type.Literal("promotable"), Type.Literal("blocked")]),
+    blockers: Type.Array(Type.String({ minLength: 1 })),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type EvaluationPromotionReview = Static<typeof EvaluationPromotionReviewSchema>;
+
 export const EvaluationBaselineSchema = Type.Object(
   {
     id: Id,
     version: Version,
     suiteRef: DigestedRefSchema,
     evaluationRunId: Id,
+    promotionReviewId: Id,
     manifestId: Id,
     comparisonScope: EvaluationScopeSchema,
     knownDefects: Type.Array(KnownDefectSchema),
