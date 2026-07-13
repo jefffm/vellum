@@ -18,9 +18,9 @@ The reading order is:
 
 Earlier specifications, proposals, audits, blunder hunts, and execution plans are preserved under [docs/archive/specifications/2026-07-13](./docs/archive/specifications/2026-07-13/README.md). They are design history, not a backlog and not an alternative source of current requirements.
 
-### Architectural decision gate
+### Architectural decision
 
-[ADR 0022](./docs/adr/0022-govern-reviewed-knowledge-library.md) is proposed alongside this revision. It must be accepted before Slice 1 writes new canonical Reviewed Knowledge Library records. Until then, accepted ADRs 0002 and 0015 remain authoritative, and no tracer may resolve a conflict by silently treating this specification as an accepted architectural decision.
+[ADR 0022](./docs/adr/0022-govern-reviewed-knowledge-library.md) is accepted and governs the Reviewed Knowledge Library architecture defined here. ADRs 0002 and 0015 remain compatible authorities for project-local corrections, Personal Defaults, Owner references, and the historical-practice lane.
 
 ## Product outcome
 
@@ -1509,7 +1509,7 @@ Implementation proceeds through production-path tracer bullets. Each tracer begi
 ### Slice 0 — Specification and baseline guard
 
 - Make this document the sole current specification.
-- Review and accept, revise, or reject proposed ADR 0022 before canonical knowledge-schema implementation.
+- Enforce accepted ADR 0022 before canonical knowledge-schema implementation.
 - Freeze earlier documents as history.
 - Correct active domain and README claims that overstate historical authority or prototype playability.
 - Verify that the completed prototype evidence remains intact.

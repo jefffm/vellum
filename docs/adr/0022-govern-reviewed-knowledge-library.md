@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed — must be accepted before Instrument Intelligence writes new canonical knowledge records.
+Accepted — Owner approved on 2026-07-13.
 
 ## Context
 
@@ -10,7 +10,7 @@ ADRs 0002 and 0015 separate project state, Personal Defaults, Owner references, 
 
 Treating all of that as historical knowledge would collapse authority lanes. Treating release review as a mutable field would break content addressing and replay. Recording only the packs selected by a resolver would make manifest completeness unverifiable.
 
-## Proposed decision
+## Decision
 
 Vellum will retain the Historical Knowledge Base as the historical-practice authority lane inside a broader local-first Reviewed Knowledge Library.
 
@@ -28,7 +28,7 @@ Existing Arrangement Searches and Historical Knowledge records remain immutable 
 
 ## Relationship to existing decisions
 
-This proposal extends rather than erases ADRs 0002 and 0015: workspace corrections still remain project-local, Personal Defaults remain soft Owner authority, and only reviewed source-backed historical claims enter the Historical Knowledge Base. ADRs 0019 through 0021 continue to govern search, evaluation, and reviewed learning.
+This decision extends rather than erases ADRs 0002 and 0015: workspace corrections still remain project-local, Personal Defaults remain soft Owner authority, and only reviewed source-backed historical claims enter the Historical Knowledge Base. ADRs 0019 through 0021 continue to govern search, evaluation, and reviewed learning.
 
 ## Consequences
 

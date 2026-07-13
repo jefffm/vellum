@@ -105,6 +105,9 @@ for (const phrase of [
 ]) {
   if (!spec.includes(phrase)) fail("SPEC.md lacks required contract marker: " + phrase);
 }
+if (spec.includes("proposed ADR 0022") || spec.includes("must be accepted before Slice 1")) {
+  fail("SPEC.md still treats accepted ADR 0022 as proposed");
+}
 
 const agents = readFileSync(path.join(root, "AGENTS.md"), "utf8");
 for (const phrase of [
@@ -156,6 +159,14 @@ for (const term of [
   "Arrangement Plan",
 ]) {
   if (!context.includes("**" + term + "**")) fail("CONTEXT.md lacks current domain term: " + term);
+}
+
+const adr0022 = readFileSync(
+  path.join(root, "docs/adr/0022-govern-reviewed-knowledge-library.md"),
+  "utf8"
+);
+if (!adr0022.includes("Accepted — Owner approved on 2026-07-13.")) {
+  fail("ADR 0022 acceptance is not recorded");
 }
 
 const currentClaims = [
