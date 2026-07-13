@@ -6,6 +6,8 @@ import type { EvaluationCard, EvaluationDefinition } from "../../lib/evaluation-
 import { arrangementToEngraveParams } from "../../lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
 import { buildNarrowEvaluationCard } from "../../lib/narrow-intelligence.js";
+import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
+import type { HumanReviewerRole, ReviewRequest } from "../../lib/review-attestation.js";
 import type { TargetConfiguration } from "../../lib/music-domain.js";
 import { ArrangementService, type CreateFaithfulArrangementResult } from "./arrangement-service.js";
 import { compileLilyPond } from "./compile-route.js";
@@ -151,6 +153,7 @@ export async function runThreeTargetParityEvaluation(options: {
     physicalEvidence: "awaiting_human";
     specialistEvidence: "awaiting_human";
     reviewArtifacts: Array<{ kind: string; path: string; sha256: string }>;
+    reviewRequestPath?: string;
   }>;
 }> {
   const projectRoot = options.projectRoot ?? process.cwd();
@@ -236,6 +239,7 @@ export async function runThreeTargetParityEvaluation(options: {
         physicalEvidence: "awaiting_human",
         specialistEvidence: "awaiting_human",
         reviewArtifacts: item.reviewArtifacts,
+        ...(item.reviewRequestPath ? { reviewRequestPath: item.reviewRequestPath } : {}),
       })),
     };
   } finally {
@@ -301,6 +305,18 @@ async function realizeTargets(input: {
           audioPreview: Buffer.from(JSON.stringify(preview, null, 2)),
         })
       : [];
+    const reviewRequestPath =
+      input.reviewArtifactRoot && reviewArtifacts.length > 0
+        ? exportReviewRequest({
+            root: input.reviewArtifactRoot,
+            tracerId: tracerIdFor(target.instrumentId),
+            sourceDigest: createHash("sha256").update(sourceBytes).digest("hex"),
+            arrangementScore: arranged.arrangementScore,
+            performanceBrief: arranged.performanceBrief,
+            reviewArtifacts,
+            createdAt: input.now().toISOString(),
+          })
+        : undefined;
     const deliverables = [
       persistDeliverable(input.workspaceStore, workspace.id, arranged.arrangementScore, {
         kind: "lilypond",
@@ -372,6 +388,7 @@ async function realizeTargets(input: {
       deliverables,
       dimensions,
       reviewArtifacts,
+      reviewRequestPath,
       generatedRecords: [
         imported.scoreTranscription,
         imported.normalizedScore,
@@ -385,6 +402,174 @@ async function realizeTargets(input: {
     });
   }
   return results;
+}
+
+function exportReviewRequest(input: {
+  root: string;
+  tracerId: "T41" | "T42" | "T43";
+  sourceDigest: string;
+  arrangementScore: CreateFaithfulArrangementResult["arrangementScore"];
+  performanceBrief: CreateFaithfulArrangementResult["performanceBrief"];
+  reviewArtifacts: Array<{ kind: string; path: string; sha256: string }>;
+  createdAt: string;
+}): string {
+  const instrumentInstance = input.arrangementScore.targetConfiguration.instrumentInstance;
+  if (!instrumentInstance) throw new Error("Review export requires an exact Instrument Instance");
+  const profileId = input.arrangementScore.targetConfiguration.instrumentId;
+  const policy = reviewPolicy(profileId);
+  const request: ReviewRequest = {
+    schemaVersion: 1,
+    id: `review-request.${input.tracerId}.${profileId}`,
+    tracerId: input.tracerId,
+    protocol: {
+      id: "T40.review",
+      version: 1,
+      digest: createHash("sha256").update("T40.review.v1").digest("hex"),
+    },
+    sourceDigest: input.sourceDigest,
+    arrangementScoreRef: {
+      id: input.arrangementScore.id,
+      version: input.arrangementScore.version ?? 1,
+      digest: digestValue(input.arrangementScore),
+    },
+    performanceBriefRef: {
+      id: input.performanceBrief.id,
+      digest: digestValue(input.performanceBrief),
+    },
+    instrument: {
+      profileId,
+      instanceDigest: digestInstrumentInstance(instrumentInstance),
+      modeledDescription: policy.modeledDescription,
+    },
+    artifacts: input.reviewArtifacts.map(({ kind, path: artifactPath, sha256 }) => ({
+      kind:
+        kind === "audioPreview"
+          ? "audio_preview"
+          : (kind as ReviewRequest["artifacts"][number]["kind"]),
+      relativePath: path.basename(artifactPath),
+      sha256,
+    })),
+    requiredRoles: policy.requiredRoles,
+    requiredDimensions: policy.requiredDimensions,
+    roleAssignments: policy.roleAssignments,
+    staleWhen: [
+      "source digest changes",
+      "Arrangement or Performance Brief changes",
+      "Instrument Instance or actual physical setup changes",
+      "arrangement or review artifact bytes change",
+      "review protocol or evaluator semantics change",
+      "Preservation Policy changes",
+    ],
+    createdAt: input.createdAt,
+  };
+  const filePath = path.join(input.root, profileId, "review-request.json");
+  writeFileSync(filePath, `${JSON.stringify(request, null, 2)}\n`);
+  return filePath;
+}
+
+function tracerIdFor(instrumentId: string): "T41" | "T42" | "T43" {
+  if (instrumentId === "baroque-guitar-5") return "T41";
+  if (instrumentId === "baroque-lute-13") return "T42";
+  if (instrumentId === "classical-guitar-6") return "T43";
+  throw new Error(`No physical-review tracer for ${instrumentId}`);
+}
+
+function reviewPolicy(profileId: string): {
+  modeledDescription: string;
+  requiredRoles: HumanReviewerRole[];
+  requiredDimensions: string[];
+  roleAssignments: ReviewRequest["roleAssignments"];
+} {
+  if (profileId === "baroque-guitar-5") {
+    return {
+      modeledDescription:
+        "Five-course baroque guitar with French stringing and French letter tablature",
+      requiredRoles: [
+        "target_player",
+        "historical_specialist",
+        "engraving_editor",
+        "owner",
+        "baseline_reviewer",
+      ],
+      requiredDimensions: [
+        "physical_playability",
+        "recognition",
+        "historical_practice",
+        "notation",
+        "owner_usefulness",
+        "baseline_tradeoff",
+      ],
+      roleAssignments: roleAssignments({
+        physical_playability: ["target_player"],
+        recognition: ["target_player", "owner"],
+        historical_practice: ["historical_specialist"],
+        notation: ["engraving_editor"],
+        owner_usefulness: ["owner"],
+        baseline_tradeoff: ["baseline_reviewer", "owner"],
+      }),
+    };
+  }
+  if (profileId === "baroque-lute-13") {
+    return {
+      modeledDescription:
+        "Thirteen-course baroque lute in default D-minor Bass Tuning with French letter tablature",
+      requiredRoles: [
+        "target_player",
+        "historical_specialist",
+        "engraving_editor",
+        "owner",
+        "baseline_reviewer",
+      ],
+      requiredDimensions: [
+        "stopped_course_and_diapason_playability",
+        "right_hand_feasibility",
+        "recognition",
+        "historical_practice",
+        "notation",
+        "owner_usefulness",
+        "baseline_tradeoff",
+      ],
+      roleAssignments: roleAssignments({
+        stopped_course_and_diapason_playability: ["target_player"],
+        right_hand_feasibility: ["target_player"],
+        recognition: ["target_player", "owner"],
+        historical_practice: ["historical_specialist"],
+        notation: ["engraving_editor"],
+        owner_usefulness: ["owner"],
+        baseline_tradeoff: ["baseline_reviewer", "owner"],
+      }),
+    };
+  }
+  return {
+    modeledDescription:
+      "Six-string classical guitar in standard EADGBE tuning with standard notation",
+    requiredRoles: ["target_player", "engraving_editor", "owner", "baseline_reviewer"],
+    requiredDimensions: [
+      "position_and_sustain_playability",
+      "polyphonic_clarity",
+      "recognition",
+      "notation",
+      "owner_usefulness",
+      "baseline_tradeoff",
+    ],
+    roleAssignments: roleAssignments({
+      position_and_sustain_playability: ["target_player"],
+      polyphonic_clarity: ["target_player", "owner"],
+      recognition: ["target_player", "owner"],
+      notation: ["engraving_editor"],
+      owner_usefulness: ["owner"],
+      baseline_tradeoff: ["baseline_reviewer", "owner"],
+    }),
+  };
+}
+
+function roleAssignments(
+  assignments: Record<string, HumanReviewerRole[]>
+): ReviewRequest["roleAssignments"] {
+  return Object.entries(assignments).map(([dimension, authorizedRoles]) => ({
+    dimension,
+    authorizedRoles,
+  }));
 }
 
 function exportReviewArtifacts(

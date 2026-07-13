@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "id": "review-request.T41.baroque-guitar-5",
+  "tracerId": "T41",
+  "protocol": {
+    "id": "T40.review",
+    "version": 1,
+    "digest": "19d88dcdba54f634fd89b5a36b6953d81a206c99a41807b0b72d6e3840fbbcff"
+  },
+  "sourceDigest": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+  "arrangementScoreRef": {
+    "id": "arrangement.34e4b01b-d841-4668-9080-4aeb20f3ceee",
+    "version": 1,
+    "digest": "6d71d37fccd6a61d55e636eb29fd39e83d118ebff52901f56ad39550f3e88765"
+  },
+  "performanceBriefRef": {
+    "id": "performance.d00f37f44db95b1e1efdd15a",
+    "digest": "1a92e073541e7511b9aa3a15a907f64960a78940153f2101e5f7111199a22d13"
+  },
+  "instrument": {
+    "profileId": "baroque-guitar-5",
+    "instanceDigest": "81a2422ddc2b9b8009467a70f757c5af15db80f753f2244e9d3c8334819df065",
+    "modeledDescription": "Five-course baroque guitar with French stringing and French letter tablature"
+  },
+  "artifacts": [
+    {
+      "kind": "lilypond",
+      "relativePath": "lilypond.ly",
+      "sha256": "29f7b79dac557791131aec7841280cc370cb390c04aec18087ebf48bc4d06b6c"
+    },
+    {
+      "kind": "svg",
+      "relativePath": "svg.svg",
+      "sha256": "bfa1d7cf11752724f6e8a0e9d425d5a75b1ffa207a36a76e60e7361d68c60c3b"
+    },
+    {
+      "kind": "pdf",
+      "relativePath": "pdf.pdf",
+      "sha256": "61a0788cbc5e88e88ff72b1b13bcccb2357f69b96a6deaa98dd639108a8e4f6f"
+    },
+    {
+      "kind": "midi",
+      "relativePath": "midi.midi",
+      "sha256": "5eb3a15e56285326fe9c132ac0c2b839f2fcbe8f377b1217101623adccc534c9"
+    },
+    {
+      "kind": "audio_preview",
+      "relativePath": "audioPreview.json",
+      "sha256": "259f1666dfcae6a8861144dd22c3aec95f846037b050b4ddcd33739153850f39"
+    }
+  ],
+  "requiredRoles": [
+    "target_player",
+    "historical_specialist",
+    "engraving_editor",
+    "owner",
+    "baseline_reviewer"
+  ],
+  "requiredDimensions": [
+    "physical_playability",
+    "recognition",
+    "historical_practice",
+    "notation",
+    "owner_usefulness",
+    "baseline_tradeoff"
+  ],
+  "roleAssignments": [
+    { "dimension": "physical_playability", "authorizedRoles": ["target_player"] },
+    { "dimension": "recognition", "authorizedRoles": ["target_player", "owner"] },
+    { "dimension": "historical_practice", "authorizedRoles": ["historical_specialist"] },
+    { "dimension": "notation", "authorizedRoles": ["engraving_editor"] },
+    { "dimension": "owner_usefulness", "authorizedRoles": ["owner"] },
+    { "dimension": "baseline_tradeoff", "authorizedRoles": ["baseline_reviewer", "owner"] }
+  ],
+  "staleWhen": [
+    "source digest changes",
+    "Arrangement or Performance Brief changes",
+    "Instrument Instance or actual physical setup changes",
+    "arrangement or review artifact bytes change",
+    "review protocol or evaluator semantics change",
+    "Preservation Policy changes"
+  ],
+  "createdAt": "2026-07-13T03:07:45.373Z"
+}

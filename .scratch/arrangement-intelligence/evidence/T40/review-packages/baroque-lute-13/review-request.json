@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "review-request.T42.baroque-lute-13",
+  "tracerId": "T42",
+  "protocol": {
+    "id": "T40.review",
+    "version": 1,
+    "digest": "19d88dcdba54f634fd89b5a36b6953d81a206c99a41807b0b72d6e3840fbbcff"
+  },
+  "sourceDigest": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+  "arrangementScoreRef": {
+    "id": "arrangement.4e12370c-8b19-4ffb-a3aa-aff703557e6c",
+    "version": 1,
+    "digest": "8a9a121c4f7daee241cf01ec3ae6c78afd7a6117015e45023c2ce6707fa51f90"
+  },
+  "performanceBriefRef": {
+    "id": "performance.4078c480b2dd96858b68ef6b",
+    "digest": "2c8542f92fbc6751c7ed5ad5cb48541cc9c7203cbfad7a2c630e072d812aaafa"
+  },
+  "instrument": {
+    "profileId": "baroque-lute-13",
+    "instanceDigest": "1f8a5c487c23df3693a0c25d493a4f6efa116ab4f42e7690fc57efe54d9b3f29",
+    "modeledDescription": "Thirteen-course baroque lute in default D-minor Bass Tuning with French letter tablature"
+  },
+  "artifacts": [
+    {
+      "kind": "lilypond",
+      "relativePath": "lilypond.ly",
+      "sha256": "f4ec937e024d2363ce0721339c3400bcc684fb52313c92d7c9bbe0110814ca57"
+    },
+    {
+      "kind": "svg",
+      "relativePath": "svg.svg",
+      "sha256": "13db67d7322062f31737971b55a7fbbc5ba3f08ecb6601999ec2abc96f304c19"
+    },
+    {
+      "kind": "pdf",
+      "relativePath": "pdf.pdf",
+      "sha256": "de2e7f11bc05c5a1078f97d7492b48c7afebd6760cade8acfd497c8752020b8f"
+    },
+    {
+      "kind": "midi",
+      "relativePath": "midi.midi",
+      "sha256": "a4d777a435a1d863b44a93cb45cd16b00bd5e65e8cb22c10ed70dce7a2bc84c1"
+    },
+    {
+      "kind": "audio_preview",
+      "relativePath": "audioPreview.json",
+      "sha256": "ad16112d795add274be36f4794a03b216d806181870ac16cb74cc98d87b67ad1"
+    }
+  ],
+  "requiredRoles": [
+    "target_player",
+    "historical_specialist",
+    "engraving_editor",
+    "owner",
+    "baseline_reviewer"
+  ],
+  "requiredDimensions": [
+    "stopped_course_and_diapason_playability",
+    "right_hand_feasibility",
+    "recognition",
+    "historical_practice",
+    "notation",
+    "owner_usefulness",
+    "baseline_tradeoff"
+  ],
+  "roleAssignments": [
+    { "dimension": "stopped_course_and_diapason_playability", "authorizedRoles": ["target_player"] },
+    { "dimension": "right_hand_feasibility", "authorizedRoles": ["target_player"] },
+    { "dimension": "recognition", "authorizedRoles": ["target_player", "owner"] },
+    { "dimension": "historical_practice", "authorizedRoles": ["historical_specialist"] },
+    { "dimension": "notation", "authorizedRoles": ["engraving_editor"] },
+    { "dimension": "owner_usefulness", "authorizedRoles": ["owner"] },
+    { "dimension": "baseline_tradeoff", "authorizedRoles": ["baseline_reviewer", "owner"] }
+  ],
+  "staleWhen": [
+    "source digest changes",
+    "Arrangement or Performance Brief changes",
+    "Instrument Instance or actual physical setup changes",
+    "arrangement or review artifact bytes change",
+    "review protocol or evaluator semantics change",
+    "Preservation Policy changes"
+  ],
+  "createdAt": "2026-07-13T03:07:47.557Z"
+}

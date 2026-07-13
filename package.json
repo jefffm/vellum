@@ -27,7 +27,8 @@
     "eval:render": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind render",
     "eval:playback": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind playback",
     "eval:report": "npm run server:build --silent && node dist-server/server/evaluation-report-cli.js",
-    "eval:compare": "npm run server:build --silent && node dist-server/server/evaluation-comparison-cli.js"
+    "eval:compare": "npm run server:build --silent && node dist-server/server/evaluation-comparison-cli.js",
+    "review:validate": "npm run server:build --silent && node dist-server/server/review-attestation-cli.js"
   },
   "dependencies": {
     "@mariozechner/pi-agent-core": "^0.73.1",

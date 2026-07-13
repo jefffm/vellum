@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "id": "review-request.T43.classical-guitar-6",
+  "tracerId": "T43",
+  "protocol": {
+    "id": "T40.review",
+    "version": 1,
+    "digest": "19d88dcdba54f634fd89b5a36b6953d81a206c99a41807b0b72d6e3840fbbcff"
+  },
+  "sourceDigest": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+  "arrangementScoreRef": {
+    "id": "arrangement.de641ba1-688b-4db6-a496-7f0fc713f643",
+    "version": 1,
+    "digest": "1cf6eafbd073383001d53e09aa391b360f6b119abca135051d8fdba75457c4a6"
+  },
+  "performanceBriefRef": {
+    "id": "performance.62433ddd917ab2927443d4e1",
+    "digest": "24b170a8875bade8906e67129c7bdda267e15aaca1c33a791e88c0760171b499"
+  },
+  "instrument": {
+    "profileId": "classical-guitar-6",
+    "instanceDigest": "6dc00c8f43cc4c426c4678f4dfb144b75fb106089549439f86bfb0e0022edc82",
+    "modeledDescription": "Six-string classical guitar in standard EADGBE tuning with standard notation"
+  },
+  "artifacts": [
+    {
+      "kind": "lilypond",
+      "relativePath": "lilypond.ly",
+      "sha256": "a920729fb043baa3c70c0efd992cf15201847e5b37b76f9adedcaf6192efdeea"
+    },
+    {
+      "kind": "svg",
+      "relativePath": "svg.svg",
+      "sha256": "bde5f4291ae6c24bbe79684a3cbf82fd526c7d46f402cc2d010221ef6915029e"
+    },
+    {
+      "kind": "pdf",
+      "relativePath": "pdf.pdf",
+      "sha256": "dc9c8b3291be9cc407cbde291fa587e32f71843d21cc21f28ea619af367db0a0"
+    },
+    {
+      "kind": "midi",
+      "relativePath": "midi.midi",
+      "sha256": "80e3e70b164aa83bcf1a611b25418d03720ccd8b36a71d5a3e7367783bacd1c7"
+    },
+    {
+      "kind": "audio_preview",
+      "relativePath": "audioPreview.json",
+      "sha256": "159de92ad4825026a32e4da0e7e30565e6f22e2a2b78a526cb37707324529ad3"
+    }
+  ],
+  "requiredRoles": [
+    "target_player",
+    "engraving_editor",
+    "owner",
+    "baseline_reviewer"
+  ],
+  "requiredDimensions": [
+    "position_and_sustain_playability",
+    "polyphonic_clarity",
+    "recognition",
+    "notation",
+    "owner_usefulness",
+    "baseline_tradeoff"
+  ],
+  "roleAssignments": [
+    { "dimension": "position_and_sustain_playability", "authorizedRoles": ["target_player"] },
+    { "dimension": "polyphonic_clarity", "authorizedRoles": ["target_player", "owner"] },
+    { "dimension": "recognition", "authorizedRoles": ["target_player", "owner"] },
+    { "dimension": "notation", "authorizedRoles": ["engraving_editor"] },
+    { "dimension": "owner_usefulness", "authorizedRoles": ["owner"] },
+    { "dimension": "baseline_tradeoff", "authorizedRoles": ["baseline_reviewer", "owner"] }
+  ],
+  "staleWhen": [
+    "source digest changes",
+    "Arrangement or Performance Brief changes",
+    "Instrument Instance or actual physical setup changes",
+    "arrangement or review artifact bytes change",
+    "review protocol or evaluator semantics change",
+    "Preservation Policy changes"
+  ],
+  "createdAt": "2026-07-13T03:07:50.593Z"
+}

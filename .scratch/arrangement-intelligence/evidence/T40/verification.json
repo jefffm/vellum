@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tracerId": "T40",
   "result": "pass",
-  "verifiedAt": "2026-07-13T03:03:00Z",
+  "verifiedAt": "2026-07-13T03:10:00Z",
   "requirements": {
     "AI-PROD-031": { "status": "machine_verified", "remaining": "none" },
     "AI-PROD-037": { "status": "machine_verified", "remaining": "none" },
@@ -29,7 +29,7 @@
     "AI-DEL-066": { "status": "machine_verified", "remaining": "none" }
   },
   "summary": {
-    "fullSuitePassed": 1061,
+    "fullSuitePassed": 1064,
     "fullSuiteSkipped": 1,
     "requirementsAudited": 447,
     "machineRequirementGaps": 0,
@@ -40,13 +40,14 @@
     "realBrowserGate": "pass in headless Google Chrome",
     "reviewPackages": 3,
     "pinnedReviewArtifacts": 15,
+    "validatedReviewRequests": 3,
     "reviewProtocolVersion": "T40.review.v1",
     "adrs": "proposed_pending_T44_owner_acceptance"
   },
   "evaluationRuns": {
     "fast": "evaluation-run.5ba52419-bc3b-4b18-a8b2-073854498c62",
     "golden": "evaluation-run.b2f371d8-1b14-461a-81b0-fd089d59db69",
-    "parityReviewPackage": "evaluation-run.41d3ca64-07d2-4be5-90e8-7a27ced1de29",
+    "parityReviewPackage": "evaluation-run.12f7c522-22a6-463b-9dae-c1ff7a0a95b2",
     "comparison": "evaluation-comparison.6a2b701a-624e-498d-9498-32efd3e56e88"
   },
   "commands": [
@@ -54,7 +55,7 @@
     { "command": "npm run typecheck", "result": "pass" },
     { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
     { "command": "npm run server:build", "result": "pass" },
-    { "command": "npm test", "result": "pass: 1061 passed, 1 skipped" },
+    { "command": "npm test", "result": "pass: 1064 passed, 1 skipped" },
     {
       "command": "npm run test:browser",
       "result": "pass: real Chrome source-to-artifact workflow"
@@ -67,6 +68,10 @@
     {
       "command": "node scripts/pre-hitl-audit.mjs",
       "result": "pass: zero machine gaps and zero unmapped findings"
+    },
+    {
+      "command": "npm run review:validate -- --request <request> [--attestation <record>...]",
+      "result": "pass: fail-closed request, artifact, role, dimension, physical, historical, limitation, and staleness validation"
     },
     {
       "command": "node scripts/verify-arrangement-intelligence.mjs",
@@ -85,11 +90,11 @@
     },
     {
       "path": ".scratch/arrangement-intelligence/evidence/T40/REVIEW_PROTOCOLS.md",
-      "sha256": "b5cb313cabbd016c2b8340a7dc93a343034b41493b369aa3924db6c84ce13601"
+      "sha256": "6859bd550b73ca9c6a88c65baa595b98cdc51756dea6f335a82c8a3ded6c8f93"
     },
     {
       "path": "package.json",
-      "sha256": "a45e98918cbb597b486129480bf442a904b08811bc845dedb917ae504eb53196"
+      "sha256": "3ede45c66864f52fcb079aff3601a1670f9ce4f143220dfb739fff39ff65e78d"
     },
     {
       "path": "package-lock.json",
@@ -113,7 +118,7 @@
     },
     {
       "path": "test/pre-hitl-review-package.test.ts",
-      "sha256": "e3d04a4ce66aafaf5625ac230fd445478e04132c3c18f9daff947731cad54c9a"
+      "sha256": "08a8daa0a5bf325896d01b59d2428bfb5503fd9b2856a8c94c67216f6958ecbf"
     },
     {
       "path": "src/lib/constraint-search.ts",
@@ -129,11 +134,31 @@
     },
     {
       "path": "src/server/lib/three-target-parity.ts",
-      "sha256": "adf0a739bb8bc938ca0dddb2d4bc332cade83a10cdbea8d073372d4d0e9b845d"
+      "sha256": "dedf9627e9255d6b4a538fce90d69dd4d744fd73687d8f19e8e9b18d25536c41"
     },
     {
       "path": "src/server/three-target-parity-cli.ts",
       "sha256": "9a3b3d7b30bb3fd44c3e29c32522d2ec43d08dbeae31eaa7c821f5b8d65154b3"
+    },
+    {
+      "path": "src/lib/review-attestation.ts",
+      "sha256": "889a1a608594fae4c8cf3fc521cdc071c91b04fd97493989bf11ec89351de653"
+    },
+    {
+      "path": "src/server/review-attestation-cli.ts",
+      "sha256": "36bc56713902063175ef1a8332d6896f78d48d28373d58a8d8b52b4e8361f5c5"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T40/review-packages/baroque-guitar-5/review-request.json",
+      "sha256": "28fd5de34f7287d8ea77bf31c22e8c93dbe13c9f4d42d69bc05bf472de9b6057"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T40/review-packages/baroque-lute-13/review-request.json",
+      "sha256": "a69fa0a0be6784e30896d895d12372c86e7ce96b2962fd917efff9e5ce8b8493"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T40/review-packages/classical-guitar-6/review-request.json",
+      "sha256": "21e1ddd9d4bd7837fa3551f04e3a171aa7fc198817ea524b781ce3073c8bdba7"
     }
   ]
 }

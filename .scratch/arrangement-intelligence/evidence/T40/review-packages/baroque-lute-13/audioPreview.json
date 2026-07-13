@@ -160,11 +160,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -186,11 +186,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -216,11 +216,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -246,11 +246,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -276,11 +276,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -306,11 +306,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -332,11 +332,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -358,11 +358,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -388,11 +388,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -418,11 +418,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c5.s1",
       "part": "accompaniment",
@@ -448,11 +448,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c5.s2",
       "part": "accompaniment",
@@ -474,11 +474,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -500,11 +500,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -526,11 +526,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -552,11 +552,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -578,11 +578,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -604,11 +604,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -630,11 +630,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -656,11 +656,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -684,11 +684,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -712,11 +712,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -740,11 +740,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -768,11 +768,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -798,11 +798,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -828,11 +828,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -858,11 +858,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -888,11 +888,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -918,11 +918,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c12.s1",
       "part": "accompaniment",
@@ -946,11 +946,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -974,11 +974,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1002,11 +1002,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -1030,11 +1030,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -1056,11 +1056,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1082,11 +1082,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1108,11 +1108,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1134,11 +1134,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1160,11 +1160,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1186,11 +1186,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1212,11 +1212,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1238,11 +1238,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1268,11 +1268,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1298,11 +1298,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1328,11 +1328,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -1358,11 +1358,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -1384,11 +1384,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -1410,11 +1410,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -1436,11 +1436,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1462,11 +1462,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1492,11 +1492,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -1522,11 +1522,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -1552,11 +1552,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -1582,11 +1582,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1608,11 +1608,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -1634,11 +1634,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -1664,11 +1664,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -1694,11 +1694,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c5.s1",
       "part": "accompaniment",
@@ -1724,11 +1724,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c5.s2",
       "part": "accompaniment",
@@ -1750,11 +1750,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -1776,11 +1776,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -1802,11 +1802,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -1828,11 +1828,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -1854,11 +1854,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1880,11 +1880,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -1906,11 +1906,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -1932,11 +1932,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -1960,11 +1960,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -1988,11 +1988,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2016,11 +2016,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -2044,11 +2044,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2072,11 +2072,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2100,11 +2100,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2128,11 +2128,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -2156,11 +2156,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2184,11 +2184,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2212,11 +2212,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2240,11 +2240,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -2268,11 +2268,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2294,11 +2294,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2320,11 +2320,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2346,11 +2346,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2372,11 +2372,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2398,11 +2398,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2424,11 +2424,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2450,11 +2450,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -2476,11 +2476,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2502,11 +2502,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2528,11 +2528,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2554,11 +2554,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2580,11 +2580,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2606,11 +2606,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -2632,11 +2632,11 @@
         "transformation.relationship.3"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-1"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2662,11 +2662,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -2692,11 +2692,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -2722,11 +2722,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2750,11 +2750,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -2778,11 +2778,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -2806,11 +2806,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -2836,11 +2836,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -2866,11 +2866,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -2896,11 +2896,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -2926,11 +2926,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "accompaniment",
@@ -2956,11 +2956,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -2988,11 +2988,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -3020,11 +3020,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "accompaniment",
@@ -3052,11 +3052,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -3084,11 +3084,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -3116,11 +3116,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3146,11 +3146,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -3176,11 +3176,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -3206,11 +3206,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -3236,11 +3236,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3262,11 +3262,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3288,11 +3288,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3314,11 +3314,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -3340,11 +3340,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -3368,11 +3368,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3396,11 +3396,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3424,11 +3424,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -3452,11 +3452,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -3482,11 +3482,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3512,11 +3512,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3542,11 +3542,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -3572,11 +3572,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -3602,11 +3602,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c12.s1",
       "part": "accompaniment",
@@ -3630,11 +3630,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3658,11 +3658,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3686,11 +3686,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -3714,11 +3714,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -3740,11 +3740,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3766,11 +3766,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3792,11 +3792,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3818,11 +3818,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3844,11 +3844,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3870,11 +3870,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3896,11 +3896,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3922,11 +3922,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -3952,11 +3952,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -3982,11 +3982,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4012,11 +4012,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -4042,11 +4042,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4072,11 +4072,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -4102,11 +4102,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4132,11 +4132,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -4162,11 +4162,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4188,11 +4188,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -4214,11 +4214,11 @@
         "transformation.relationship.4"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-2"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4244,11 +4244,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -4274,11 +4274,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -4304,11 +4304,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4332,11 +4332,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -4360,11 +4360,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -4388,11 +4388,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4418,11 +4418,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -4448,11 +4448,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -4478,11 +4478,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4508,11 +4508,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "accompaniment",
@@ -4538,11 +4538,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -4570,11 +4570,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c1.s1",
       "part": "principal-voice",
@@ -4602,11 +4602,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "accompaniment",
@@ -4634,11 +4634,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -4666,11 +4666,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -4698,11 +4698,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4728,11 +4728,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s1",
       "part": "principal-voice",
@@ -4758,11 +4758,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c2.s2",
       "part": "accompaniment",
@@ -4788,11 +4788,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "accompaniment",
@@ -4818,11 +4818,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4844,11 +4844,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -4870,11 +4870,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -4896,11 +4896,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -4922,11 +4922,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -4952,11 +4952,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -4982,11 +4982,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5012,11 +5012,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -5042,11 +5042,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -5072,11 +5072,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5102,11 +5102,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5132,11 +5132,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -5162,11 +5162,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -5192,11 +5192,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c12.s1",
       "part": "accompaniment",
@@ -5220,11 +5220,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5248,11 +5248,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5276,11 +5276,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "accompaniment",
@@ -5304,11 +5304,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -5330,11 +5330,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5356,11 +5356,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5382,11 +5382,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5408,11 +5408,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5434,11 +5434,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5460,11 +5460,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5486,11 +5486,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s1",
       "part": "principal-voice",
@@ -5512,11 +5512,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c4.s2",
       "part": "accompaniment",
@@ -5538,11 +5538,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5564,11 +5564,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5590,11 +5590,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5616,11 +5616,11 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",
@@ -5643,13 +5643,13 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.cadential-goal",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.cadential-goal",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s1",
       "part": "principal-voice",
@@ -5672,13 +5672,13 @@
         "transformation.relationship.5"
       ],
       "auditTargetIds": [
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
-        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-voice",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.cadential-goal",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.principal-sequence",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.cadential-goal",
+        "target.f49b1937-975c-4ba6-82fd-c143ca58e50b.phrase-3"
       ],
       "constituentStringId": "string.c3.s2",
       "part": "accompaniment",

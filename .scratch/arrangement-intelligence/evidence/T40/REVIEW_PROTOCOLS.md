@@ -31,3 +31,14 @@ Shared Performance Brief: study use; intermediate performer and difficulty; prac
 ## Attestation record
 
 Each scoped attestation must record: tracer and target; exact artifact paths and SHA-256 values; Arrangement/Performance Brief; modeled and actual instrument; protocol version (`T40.review.v1`); reviewer role and qualification; result (`accept`, `reject`, or `accept_with_limitations`); confidence; observations with score anchors; rationale; date; and stale dependencies. Rejection or limitation creates correction work and a new artifact version; it must never be overwritten by baseline promotion.
+
+Each target directory contains a machine-generated `review-request.json` binding these requirements to the exact current Arrangement Score, Performance Brief, Instrument Instance, and five artifact digests. Completed attestations are separate JSON records; no empty or synthetic attestation is shipped. Validate a set with:
+
+```sh
+npm run review:validate -- \
+  --request .scratch/arrangement-intelligence/evidence/T40/review-packages/<instrument>/review-request.json \
+  --attestation <role-one.json> \
+  --attestation <role-two.json>
+```
+
+The command exits nonzero for missing required roles, stale request identity, changed artifact bytes, unauthorized roles, target-player evidence without a declared physical instrument, historical judgments without documentary evidence, qualified acceptance without limitations, rejection, or omitted staleness dependencies. A successful validation establishes coverage of the declared roles only; T41–T43 still require the corresponding records to be reviewed and committed, and T44 retains final Owner authority.
