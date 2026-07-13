@@ -1182,7 +1182,7 @@ If lead part, repeats, or lyric alignment are ambiguous, ask one focused questio
 - Retune course 10 and prove the sound changes while its `///a` sign remains tied
   to course identity.
 - Verify the full default course 7–13 sign sequence: `a`, `/a`, `//a`, `///a`, `4`,
-  `/4`, `//4`.
+  `5`, `6`.
 
 ## Resolved Design Decisions
 

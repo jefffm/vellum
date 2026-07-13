@@ -26,6 +26,15 @@ describe("exact thirteen-course baroque-lute Instrument Instances", () => {
 
   it("renders course 10 as ///a and sounds D2 in the default instance", () => {
     const instance = createBaroqueLuteInstance("d_minor");
+    expect(instance.courses.slice(6).map((course) => course.notationIdentity)).toEqual([
+      "a",
+      "/a",
+      "//a",
+      "///a",
+      "4",
+      "5",
+      "6",
+    ]);
     expect(instance.courses[9]).toMatchObject({
       course: 10,
       stopped: false,

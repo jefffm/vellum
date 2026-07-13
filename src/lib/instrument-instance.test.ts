@@ -8,6 +8,7 @@ import {
   createBaroqueGuitarInstance,
   canonicalInstrumentInstanceJson,
   assertInstrumentInstanceIdentity,
+  digestInstrumentInstance,
   instrumentInstanceRange,
   soundingPitches,
 } from "./instrument-instance.js";
@@ -41,6 +42,7 @@ describe("exact five-course baroque-guitar Instrument Instances", () => {
     expect(base.contentDigest).toBe(
       createHash("sha256").update(canonicalInstrumentInstanceJson(content)).digest("hex")
     );
+    expect(digestInstrumentInstance(base)).toBe(base.contentDigest);
     expect(createBaroqueGuitarInstance("french")).toEqual(base);
     expect(createBaroqueGuitarInstance("mixed").contentDigest).not.toBe(base.contentDigest);
     expect(createBaroqueGuitarInstance("french", { scaleLengthMm: 700 }).contentDigest).not.toBe(

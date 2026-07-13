@@ -5,12 +5,12 @@
 <tspan>Greensleeves</tspan>
 </text>
 </g>
-<g transform="translate(28.8852, 15.5573)">
+<g transform="translate(29.1584, 15.5573)">
 <text font-family="serif" font-weight="bold" font-size="2.4697" text-anchor="start" fill="currentColor">
-<tspan>d_minor configuration · instrument instance 97b4d2fe93a7</tspan>
+<tspan>d_minor configuration · instrument instance 6f0f5a42a756</tspan>
 </text>
 </g>
-<g transform="translate(26.0825, 20.0203)">
+<g transform="translate(26.0869, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
 <g transform="translate(110.7757, 29.0203)">
@@ -37,58 +37,58 @@
 <g transform="translate(110.7757, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(92.9030, 29.0203)">
+<g transform="translate(92.8790, 29.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(92.9030, 20.0203)">
+<g transform="translate(92.8790, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(79.4647, 29.0203)">
+<g transform="translate(79.4213, 29.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(79.4647, 20.0203)">
+<g transform="translate(79.4213, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(61.7239, 29.0203)">
+<g transform="translate(61.6566, 29.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(61.7239, 20.0203)">
+<g transform="translate(61.6566, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(43.9553, 29.0203)">
+<g transform="translate(43.9836, 29.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(43.9553, 20.0203)">
+<g transform="translate(43.9836, 20.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(26.0825, 29.0203)">
+<g transform="translate(26.0869, 29.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(102.6396, 16.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1195 -0.2000 6.1195 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(102.6274, 16.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1273 -0.2000 6.1273 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(105.4713, 17.6403)">
+<g transform="translate(105.4647, 17.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(71.3713, 16.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1195 -0.2000 6.1195 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(71.3156, 16.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1273 -0.2000 6.1273 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(74.1603, 17.6403)">
+<g transform="translate(74.1103, 17.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(27.1495, 20.0203)">
+<g transform="translate(27.1547, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.2" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(27.1495, 26.7703)">
+<g transform="translate(27.1547, 26.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(27.2383, 27.1671)">
+<g transform="translate(27.2435, 27.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -98,11 +98,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.2" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(27.1495, 28.2703)">
+<g transform="translate(27.1547, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(27.2895, 28.6671)">
+<g transform="translate(27.2947, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -112,59 +112,59 @@
 <g transform="translate(24.1109, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(28.3887, 20.0203)">
+<g transform="translate(28.3939, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(53.5280, 16.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.0768 -0.2000 6.0768 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(53.5680, 16.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.0846 -0.2000 6.0846 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(56.3170, 17.6403)">
+<g transform="translate(56.3626, 17.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(31.4341, 20.0203)">
+<g transform="translate(31.4458, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.3" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(31.4341, 26.7703)">
+<g transform="translate(31.4458, 26.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(31.5741, 27.1671)">
+<g transform="translate(31.5858, 27.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(32.6733, 20.0203)">
+<g transform="translate(32.6850, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(32.7383, 16.6853)">
+<g transform="translate(32.7500, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
-<g transform="translate(35.8192, 16.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1195 -0.2000 6.1195 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(35.8353, 16.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.1273 -0.2000 6.1273 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(38.6509, 17.6403)">
+<g transform="translate(38.6726, 17.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(34.6450, 20.0203)">
+<g transform="translate(34.6611, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.4" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(34.6450, 25.2703)">
+<g transform="translate(34.6611, 25.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(34.6996, 25.6671)">
+<g transform="translate(34.7157, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -174,80 +174,80 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.4" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(34.6450, 31.2703)">
+<g transform="translate(34.6611, 31.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(34.7338, 31.6671)">
+<g transform="translate(34.7499, 31.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(36.3992, 20.0203)">
+<g transform="translate(36.4153, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(35.8842, 20.0203)">
+<g transform="translate(35.9003, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(38.5117, 20.0203)">
+<g transform="translate(38.5334, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.5" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(38.5117, 25.2703)">
+<g transform="translate(38.5334, 25.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(38.6517, 25.6671)">
+<g transform="translate(38.6734, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(39.7509, 20.0203)">
+<g transform="translate(39.7726, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(40.6745, 20.0203)">
+<g transform="translate(40.6984, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.6" data-measure-id="measure.1">
 
 <g>
-<g transform="translate(40.6745, 25.2703)">
+<g transform="translate(40.6984, 25.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(40.7291, 25.6671)">
+<g transform="translate(40.7530, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(41.9137, 20.0203)">
+<g transform="translate(41.9376, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(45.0090, 20.0203)">
+<g transform="translate(45.0380, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.7" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(45.0090, 26.7703)">
+<g transform="translate(45.0380, 26.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(45.1490, 27.1671)">
+<g transform="translate(45.1780, 27.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -257,72 +257,72 @@
 <g transform="translate(17.6717, 29.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M267 -425c0 -9 -1 -27 -43 -27c-41 0 -84 28 -84 75c0 82 118 130 234 130c54 0 217 -8 217 -103c0 -43 -36 -88 -71 -110c58 -11 102 -36 102 -91c0 -85 -90 -158 -179 -158c-73 0 -111 51 -111 60c0 12 16 25 28 25c13 0 17 -25 54 -25c44 0 95 41 95 93 c0 46 -49 63 -100 63h-1c-6 0 -8 8 -8 16c0 11 5 24 18 24c36 0 69 39 69 78c0 32 -22 64 -80 75c-11 -62 -31 -173 -40 -220c-20 -102 -84 -202 -159 -202c-6 0 -11 1 -17 2c-29 6 -83 53 -83 60c0 11 12 26 24 26c16 0 34 -37 72 -37c65 0 89 99 89 195v8 c0 35 9 109 18 163c-49 -16 -70 -47 -70 -71c0 -32 26 -25 26 -49zM546 257c0 -8 -18 -361 -18 -365c0 -10 0 -30 21 -30c18 0 47 20 55 20c5 0 9 -8 9 -17c0 -8 -3 -16 -12 -19c-30 -9 -57 -34 -87 -34c-32 0 -45 29 -53 58c-16 61 -26 125 -31 191 c-27 -35 -56 -68 -87 -101c12 -21 35 -33 64 -33c7 0 11 1 12 1c5 0 8 -7 8 -15c0 -7 -1 -29 -58 -29c-24 0 -51 7 -68 33c-66 -62 -123 -105 -173 -105h-3c-31 1 -50 21 -75 32c-3 1 -5 5 -5 9c0 11 11 28 25 28c13 0 31 -20 57 -20c71 0 243 202 305 390c9 27 33 37 57 37 c29 0 57 -15 57 -31zM288 540c0 -8 0 -24 -42 -24c-51 0 -92 41 -92 87c0 56 60 117 233 117c46 0 120 -41 171 -41c69 0 108 44 119 44s23 -11 23 -19c0 -2 -56 -75 -149 -75c-14 0 -30 2 -45 6c-9 -59 -26 -151 -35 -193c-22 -96 -88 -185 -163 -185c-6 0 -12 1 -19 2 c-36 8 -67 43 -96 62c-3 2 -4 5 -4 9c0 11 12 26 23 26c17 0 43 -48 82 -48c56 0 82 77 85 150c2 45 13 150 22 208c-12 3 -23 5 -32 5c-80 0 -113 -40 -113 -73c0 -39 32 -31 32 -58z" fill="currentColor"/>
 </g>
-<g transform="translate(46.2482, 20.0203)">
+<g transform="translate(46.2772, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(49.1429, 20.0203)">
+<g transform="translate(49.1785, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.8" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(49.1429, 28.2703)">
+<g transform="translate(49.1785, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(49.2829, 28.6671)">
+<g transform="translate(49.3185, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(50.3821, 20.0203)">
+<g transform="translate(50.4177, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(50.4471, 16.6853)">
+<g transform="translate(50.4827, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(52.3538, 20.0203)">
+<g transform="translate(52.3938, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.9" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(52.3538, 29.7703)">
+<g transform="translate(52.3938, 29.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(52.4938, 30.1671)">
+<g transform="translate(52.5338, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(54.1080, 20.0203)">
+<g transform="translate(54.1480, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(53.5930, 20.0203)">
+<g transform="translate(53.6330, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(56.1778, 20.0203)">
+<g transform="translate(56.2234, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.10" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(56.1778, 28.2703)">
+<g transform="translate(56.2234, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(56.3178, 28.6671)">
+<g transform="translate(56.3634, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -332,33 +332,33 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.10" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(56.1778, 29.7703)">
+<g transform="translate(56.2234, 29.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(56.3178, 30.1671)">
+<g transform="translate(56.3634, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(57.4170, 20.0203)">
+<g transform="translate(57.4626, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(58.3406, 20.0203)">
+<g transform="translate(58.3884, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.11" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(58.3406, 28.2703)">
+<g transform="translate(58.3884, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(58.4806, 28.6671)">
+<g transform="translate(58.5284, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -368,11 +368,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.11" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(58.3406, 29.7703)">
+<g transform="translate(58.3884, 29.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(58.4806, 30.1671)">
+<g transform="translate(58.5284, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -382,22 +382,22 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.11" data-measure-id="measure.2">
 
 <g>
-<g transform="translate(58.3406, 34.2703)">
-<rect x="-0.1502" y="-1.1825" width="1.3657" height="1.2090" ry="0.0000" fill="currentColor"/>
+<g transform="translate(58.3884, 34.2703)">
+<rect x="0.0888" y="-1.1561" width="0.8877" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(58.1904, 34.2703)">
+<g transform="translate(58.4772, 34.2703)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
-<tspan>/4</tspan>
+<tspan>5</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(59.5798, 20.0203)">
+<g transform="translate(59.6276, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(62.7784, 20.0203)">
+<g transform="translate(62.7119, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
@@ -418,11 +418,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.12" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(62.7784, 28.2703)">
+<g transform="translate(62.7119, 28.2703)">
 <rect x="0.2424" y="-0.7857" width="0.5804" height="1.1825" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(63.0208, 28.6671)">
+<g transform="translate(62.9543, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>f</tspan>
 </text>
@@ -432,11 +432,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.12" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(62.7784, 29.7703)">
+<g transform="translate(62.7119, 29.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(62.8331, 30.1671)">
+<g transform="translate(62.7665, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -448,22 +448,22 @@
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
-<g transform="translate(64.0176, 20.0203)">
+<g transform="translate(63.9511, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(66.9862, 20.0203)">
+<g transform="translate(66.9262, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.13" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(66.9862, 28.2703)">
+<g transform="translate(66.9262, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.1262, 28.6671)">
+<g transform="translate(67.0662, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -473,91 +473,91 @@
 <g transform="translate(24.1759, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
-<g transform="translate(68.2904, 16.6853)">
+<g transform="translate(68.2304, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(70.1971, 20.0203)">
+<g transform="translate(70.1414, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.14" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(70.1971, 28.2703)">
+<g transform="translate(70.1414, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(70.3371, 28.6671)">
+<g transform="translate(70.2814, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(71.9513, 20.0203)">
+<g transform="translate(71.8956, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(71.4363, 20.0203)">
+<g transform="translate(71.3806, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(74.0211, 20.0203)">
+<g transform="translate(73.9711, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.15" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(74.0211, 28.2703)">
+<g transform="translate(73.9711, 28.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(74.0757, 28.6671)">
+<g transform="translate(74.0257, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(75.2603, 20.0203)">
+<g transform="translate(75.2103, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(76.2266, 20.0203)">
+<g transform="translate(76.1788, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.16" data-measure-id="measure.3">
 
 <g>
-<g transform="translate(76.2266, 28.2703)">
+<g transform="translate(76.1788, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(76.3665, 28.6671)">
+<g transform="translate(76.3187, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(77.4658, 20.0203)">
+<g transform="translate(77.4180, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(80.5184, 20.0203)">
+<g transform="translate(80.4757, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.17" data-measure-id="measure.4">
 
 <g>
-<g transform="translate(80.5184, 28.2703)">
+<g transform="translate(80.4757, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(80.6583, 28.6671)">
+<g transform="translate(80.6157, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -567,81 +567,81 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.17" data-measure-id="measure.4">
 
 <g>
-<g transform="translate(80.5184, 29.7703)">
+<g transform="translate(80.4757, 29.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(80.5730, 30.1671)">
+<g transform="translate(80.5303, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(82.2726, 20.0203)">
+<g transform="translate(82.2299, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(81.7576, 20.0203)">
+<g transform="translate(81.7149, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(85.3904, 20.0203)">
+<g transform="translate(85.3556, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.18" data-measure-id="measure.4">
 
 <g>
-<g transform="translate(85.3904, 29.7703)">
+<g transform="translate(85.3556, 29.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(85.4450, 30.1671)">
+<g transform="translate(85.4102, 30.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(86.6296, 20.0203)">
+<g transform="translate(86.5948, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(89.6921, 20.0203)">
+<g transform="translate(89.6638, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.19" data-measure-id="measure.4">
 
 <g>
-<g transform="translate(89.6921, 28.2703)">
+<g transform="translate(89.6638, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(89.8321, 28.6671)">
+<g transform="translate(89.8038, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(90.9313, 20.0203)">
+<g transform="translate(90.9030, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(90.9963, 16.6853)">
+<g transform="translate(90.9680, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
-<g transform="translate(108.7341, 20.0203)">
+<g transform="translate(108.7297, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.24" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(107.4949, 25.2703)">
+<g transform="translate(107.4905, 25.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(107.5495, 25.6671)">
+<g transform="translate(107.5452, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -649,18 +649,18 @@
 
 </g>
 
-<g transform="translate(93.9699, 20.0203)">
+<g transform="translate(93.9468, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.20" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(93.9699, 26.7703)">
+<g transform="translate(93.9468, 26.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(94.0587, 27.1671)">
+<g transform="translate(94.0356, 27.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -670,11 +670,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.20" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(93.9699, 28.2703)">
+<g transform="translate(93.9468, 28.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(94.1099, 28.6671)">
+<g transform="translate(94.0868, 28.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -684,52 +684,52 @@
 <g transform="translate(17.0117, 26.4203)">
 <rect x="0.0000" y="-6.4000" width="0.1600" height="12.8000" ry="0.0500" fill="currentColor"/>
 </g>
-<g transform="translate(95.2091, 20.0203)">
+<g transform="translate(95.1860, 20.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(107.4949, 20.0203)">
+<g transform="translate(107.4905, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 
-<g transform="translate(98.2545, 20.0203)">
+<g transform="translate(98.2379, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.21" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(98.2545, 26.7703)">
+<g transform="translate(98.2379, 26.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(98.3945, 27.1671)">
+<g transform="translate(98.3779, 27.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(99.4937, 20.0203)">
+<g transform="translate(99.4771, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(99.5587, 16.6853)">
+<g transform="translate(99.5421, 16.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(101.4654, 20.0203)">
+<g transform="translate(101.4532, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.22" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(101.4654, 25.2703)">
+<g transform="translate(101.4532, 25.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(101.5200, 25.6671)">
+<g transform="translate(101.5078, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -739,49 +739,49 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.22" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(101.4654, 31.2703)">
+<g transform="translate(101.4532, 31.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(101.5542, 31.6671)">
+<g transform="translate(101.5420, 31.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(103.2196, 20.0203)">
+<g transform="translate(103.2074, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(102.7046, 20.0203)">
+<g transform="translate(102.6924, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(105.3321, 20.0203)">
+<g transform="translate(105.3255, 20.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.23" data-measure-id="measure.5">
 
 <g>
-<g transform="translate(105.3321, 25.2703)">
+<g transform="translate(105.3255, 25.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(105.4721, 25.6671)">
+<g transform="translate(105.4655, 25.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(106.5713, 20.0203)">
+<g transform="translate(106.5647, 20.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(68.2254, 20.0203)">
+<g transform="translate(68.1654, 20.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(29.4358, 41.0203)">
+<g transform="translate(29.4560, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
 <g transform="translate(110.7757, 50.0203)">
@@ -808,37 +808,37 @@
 <g transform="translate(110.7757, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(93.4996, 50.0203)">
+<g transform="translate(93.4786, 50.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(93.4996, 41.0203)">
+<g transform="translate(93.4786, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(76.0571, 50.0203)">
+<g transform="translate(76.1347, 50.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(76.0571, 41.0203)">
+<g transform="translate(76.1347, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(61.2255, 50.0203)">
+<g transform="translate(61.2850, 50.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(61.2255, 41.0203)">
+<g transform="translate(61.2850, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(48.5003, 50.0203)">
+<g transform="translate(48.5426, 50.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(48.5003, 41.0203)">
+<g transform="translate(48.5426, 41.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(29.4358, 50.0203)">
+<g transform="translate(29.4560, 50.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(102.9197, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9671 -0.2000 5.9671 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(102.9090, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9740 -0.2000 5.9740 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(105.5988, 38.6403)">
+<g transform="translate(105.5930, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
@@ -863,87 +863,87 @@
 <g transform="translate(14.5550, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(85.5411, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9244 -0.2000 5.9244 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(85.6290, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9313 -0.2000 5.9313 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(88.2202, 38.6403)">
+<g transform="translate(88.3130, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(17.3223, 41.0203)">
+<g transform="translate(17.3280, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.26" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(17.3223, 49.2703)">
+<g transform="translate(17.3280, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(17.4623, 49.6671)">
+<g transform="translate(17.4680, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(18.5615, 41.0203)">
+<g transform="translate(18.5672, 41.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(18.6265, 37.6853)">
+<g transform="translate(18.6322, 37.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
-<g transform="translate(68.1583, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9671 -0.2000 5.9671 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(68.2253, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9740 -0.2000 5.9740 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(70.8375, 38.6403)">
+<g transform="translate(70.9093, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(20.4482, 41.0203)">
+<g transform="translate(20.4578, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.27" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(20.4482, 50.7703)">
+<g transform="translate(20.4578, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(20.5882, 51.1671)">
+<g transform="translate(20.5977, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(22.2024, 41.0203)">
+<g transform="translate(22.2120, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(21.6874, 41.0203)">
+<g transform="translate(21.6970, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(40.5589, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.0098 -0.2000 6.0098 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(40.5905, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.0166 -0.2000 6.0166 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(43.2806, 38.6403)">
+<g transform="translate(43.3172, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(24.1623, 41.0203)">
+<g transform="translate(24.1768, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.28" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(24.1623, 49.2703)">
+<g transform="translate(24.1768, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(24.3023, 49.6671)">
+<g transform="translate(24.3168, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -953,39 +953,39 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.28" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(24.1623, 50.7703)">
+<g transform="translate(24.1768, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(24.3023, 51.1671)">
+<g transform="translate(24.3168, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(25.4015, 41.0203)">
+<g transform="translate(25.4160, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(31.6497, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8732 -0.2000 5.8732 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(31.6707, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8801 -0.2000 5.8801 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(34.2776, 38.6403)">
+<g transform="translate(34.3035, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(26.2826, 41.0203)">
+<g transform="translate(26.2990, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.29" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(26.2826, 49.2703)">
+<g transform="translate(26.2990, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(26.4226, 49.6671)">
+<g transform="translate(26.4390, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -995,39 +995,39 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.29" data-measure-id="measure.6">
 
 <g>
-<g transform="translate(26.2826, 50.7703)">
+<g transform="translate(26.2990, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(26.4226, 51.1671)">
+<g transform="translate(26.4390, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(27.5218, 41.0203)">
+<g transform="translate(27.5382, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(21.6224, 37.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9244 -0.2000 5.9244 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(21.6320, 37.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9313 -0.2000 5.9313 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(24.3015, 38.6403)">
+<g transform="translate(24.3160, 38.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(30.4755, 41.0203)">
+<g transform="translate(30.4965, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.30" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(30.4755, 49.2703)">
+<g transform="translate(30.4965, 49.2703)">
 <rect x="0.2424" y="-0.7857" width="0.5804" height="1.1825" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(30.7180, 49.6671)">
+<g transform="translate(30.7389, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>f</tspan>
 </text>
@@ -1037,149 +1037,149 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.30" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(30.4755, 50.7703)">
+<g transform="translate(30.4965, 50.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(30.5302, 51.1671)">
+<g transform="translate(30.5511, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(32.2297, 41.0203)">
+<g transform="translate(32.2507, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(31.7147, 41.0203)">
+<g transform="translate(31.7357, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(34.1384, 41.0203)">
+<g transform="translate(34.1643, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.31" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(34.1384, 49.2703)">
+<g transform="translate(34.1643, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(34.2784, 49.6671)">
+<g transform="translate(34.3043, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(35.3776, 41.0203)">
+<g transform="translate(35.4035, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(36.2588, 41.0203)">
+<g transform="translate(36.2865, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.32" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(36.2588, 49.2703)">
+<g transform="translate(36.2865, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(36.3987, 49.6671)">
+<g transform="translate(36.4265, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(37.4980, 41.0203)">
+<g transform="translate(37.5257, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(39.3847, 41.0203)">
+<g transform="translate(39.4163, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.33" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(39.3847, 49.2703)">
+<g transform="translate(39.4163, 49.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(39.4393, 49.6671)">
+<g transform="translate(39.4709, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(41.1389, 41.0203)">
+<g transform="translate(41.1705, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(40.6239, 41.0203)">
+<g transform="translate(40.6555, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(43.1414, 41.0203)">
+<g transform="translate(43.1780, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.34" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(43.1414, 50.7703)">
+<g transform="translate(43.1780, 50.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(43.1961, 51.1671)">
+<g transform="translate(43.2326, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>d</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(44.3806, 41.0203)">
+<g transform="translate(44.4172, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(45.3044, 41.0203)">
+<g transform="translate(45.3429, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.35" data-measure-id="measure.7">
 
 <g>
-<g transform="translate(45.3044, 49.2703)">
+<g transform="translate(45.3429, 49.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(45.3591, 49.6671)">
+<g transform="translate(45.3975, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(46.5436, 41.0203)">
+<g transform="translate(46.5821, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(49.5527, 41.0203)">
+<g transform="translate(49.5957, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.36" data-measure-id="measure.8">
 
 <g>
-<g transform="translate(49.5527, 49.2703)">
+<g transform="translate(49.5957, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(49.6927, 49.6671)">
+<g transform="translate(49.7357, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1191,36 +1191,36 @@
 <tspan>6</tspan>
 </text>
 </g>
-<g transform="translate(51.3069, 41.0203)">
+<g transform="translate(51.3499, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(50.7919, 41.0203)">
+<g transform="translate(50.8349, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(54.2724, 41.0203)">
+<g transform="translate(54.3222, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.37" data-measure-id="measure.8">
 
 <g>
-<g transform="translate(54.2724, 49.2703)">
+<g transform="translate(54.3222, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(54.4124, 49.6671)">
+<g transform="translate(54.4622, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(55.5116, 41.0203)">
+<g transform="translate(55.5614, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(62.2645, 41.0203)">
+<g transform="translate(62.3245, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
@@ -1230,11 +1230,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.39" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(62.2645, 46.2703)">
+<g transform="translate(62.3245, 46.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(62.4044, 46.6671)">
+<g transform="translate(62.4645, 46.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -1244,36 +1244,36 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.39" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(62.2645, 50.7703)">
+<g transform="translate(62.3245, 50.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(62.3191, 51.1671)">
+<g transform="translate(62.3792, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(64.0187, 41.0203)">
+<g transform="translate(64.0787, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(63.5037, 41.0203)">
+<g transform="translate(63.5637, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(66.9841, 41.0203)">
+<g transform="translate(67.0511, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.40" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(66.9841, 46.2703)">
+<g transform="translate(67.0511, 46.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.1241, 46.6671)">
+<g transform="translate(67.1911, 46.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -1283,36 +1283,36 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.40" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(66.9841, 50.7703)">
+<g transform="translate(67.0511, 50.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.0388, 51.1671)">
+<g transform="translate(67.1057, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(68.7383, 41.0203)">
+<g transform="translate(68.8053, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(68.2233, 41.0203)">
+<g transform="translate(68.2903, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(70.6983, 41.0203)">
+<g transform="translate(70.7701, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.41" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(70.6983, 46.2703)">
+<g transform="translate(70.7701, 46.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(70.7529, 46.6671)">
+<g transform="translate(70.8248, 46.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>d</tspan>
 </text>
@@ -1322,11 +1322,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.41" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(70.6983, 49.2703)">
+<g transform="translate(70.7701, 49.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(70.7870, 49.6671)">
+<g transform="translate(70.8589, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -1336,33 +1336,33 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.41" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(70.6983, 47.7703)">
+<g transform="translate(70.7701, 47.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(70.7870, 48.1671)">
+<g transform="translate(70.8589, 48.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(71.9375, 41.0203)">
+<g transform="translate(72.0093, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(72.8612, 41.0203)">
+<g transform="translate(72.9350, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.42" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(72.8612, 46.2703)">
+<g transform="translate(72.9350, 46.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(72.9159, 46.6671)">
+<g transform="translate(72.9897, 46.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -1372,11 +1372,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.42" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(72.8612, 47.7703)">
+<g transform="translate(72.9350, 47.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(72.9500, 48.1671)">
+<g transform="translate(73.0238, 48.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -1386,33 +1386,33 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.42" data-measure-id="measure.9">
 
 <g>
-<g transform="translate(72.8612, 49.2703)">
+<g transform="translate(72.9350, 49.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(72.9500, 49.6671)">
+<g transform="translate(73.0238, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(74.1004, 41.0203)">
+<g transform="translate(74.1742, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(77.1095, 41.0203)">
+<g transform="translate(77.1878, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.43" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(77.1095, 47.7703)">
+<g transform="translate(77.1878, 47.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(77.2495, 48.1671)">
+<g transform="translate(77.3278, 48.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1422,86 +1422,86 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.43" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(77.1095, 49.2703)">
+<g transform="translate(77.1878, 49.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(77.1983, 49.6671)">
+<g transform="translate(77.2766, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(78.3487, 41.0203)">
+<g transform="translate(78.4270, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(81.2410, 41.0203)">
+<g transform="translate(81.3250, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.44" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(81.2410, 49.2703)">
+<g transform="translate(81.3250, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(81.3810, 49.6671)">
+<g transform="translate(81.4650, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(82.4802, 41.0203)">
+<g transform="translate(82.5642, 41.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(82.5452, 37.6853)">
+<g transform="translate(82.6292, 37.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(84.3669, 41.0203)">
+<g transform="translate(84.4548, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.45" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(84.3669, 50.7703)">
+<g transform="translate(84.4548, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(84.5069, 51.1671)">
+<g transform="translate(84.5947, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(86.1211, 41.0203)">
+<g transform="translate(86.2090, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(85.6061, 41.0203)">
+<g transform="translate(85.6940, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(108.8618, 41.0203)">
+<g transform="translate(108.8580, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(88.0810, 41.0203)">
+<g transform="translate(88.1738, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.46" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(88.0810, 49.2703)">
+<g transform="translate(88.1738, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(88.2210, 49.6671)">
+<g transform="translate(88.3138, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1511,28 +1511,28 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.46" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(88.0810, 50.7703)">
+<g transform="translate(88.1738, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(88.2210, 51.1671)">
+<g transform="translate(88.3138, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(89.3202, 41.0203)">
+<g transform="translate(89.4130, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.52" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(107.6226, 49.2703)">
+<g transform="translate(107.6188, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(107.7626, 49.6671)">
+<g transform="translate(107.7587, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1540,18 +1540,18 @@
 
 </g>
 
-<g transform="translate(90.2013, 41.0203)">
+<g transform="translate(90.2960, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.47" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(90.2013, 49.2703)">
+<g transform="translate(90.2960, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(90.3413, 49.6671)">
+<g transform="translate(90.4360, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -1561,11 +1561,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.47" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(90.2013, 50.7703)">
+<g transform="translate(90.2960, 50.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(90.3413, 51.1671)">
+<g transform="translate(90.4360, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1575,38 +1575,38 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.47" data-measure-id="measure.10">
 
 <g>
-<g transform="translate(90.2013, 55.2703)">
-<rect x="-0.1502" y="-1.1825" width="1.3657" height="1.2090" ry="0.0000" fill="currentColor"/>
+<g transform="translate(90.2960, 55.2703)">
+<rect x="0.0888" y="-1.1561" width="0.8877" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(90.0511, 55.2703)">
+<g transform="translate(90.3848, 55.2703)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
-<tspan>/4</tspan>
+<tspan>5</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(91.4405, 41.0203)">
+<g transform="translate(91.5352, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(107.6226, 41.0203)">
+<g transform="translate(107.6188, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 
-<g transform="translate(94.5393, 41.0203)">
+<g transform="translate(94.5191, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.48" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(94.5393, 49.2703)">
+<g transform="translate(94.5191, 49.2703)">
 <rect x="0.2424" y="-0.7857" width="0.5804" height="1.1825" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(94.7818, 49.6671)">
+<g transform="translate(94.7615, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>f</tspan>
 </text>
@@ -1616,11 +1616,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.48" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(94.5393, 50.7703)">
+<g transform="translate(94.5191, 50.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(94.5940, 51.1671)">
+<g transform="translate(94.5737, 51.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -1630,82 +1630,82 @@
 <g transform="translate(8.4758, 47.4203)">
 <rect x="0.0000" y="-6.4000" width="0.1600" height="12.8000" ry="0.0500" fill="currentColor"/>
 </g>
-<g transform="translate(95.7785, 41.0203)">
+<g transform="translate(95.7583, 41.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(98.6196, 41.0203)">
+<g transform="translate(98.6051, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.49" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(98.6196, 49.2703)">
+<g transform="translate(98.6051, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(98.7596, 49.6671)">
+<g transform="translate(98.7451, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(99.8588, 41.0203)">
+<g transform="translate(99.8443, 41.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(99.9238, 37.6853)">
+<g transform="translate(99.9093, 37.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(101.7455, 41.0203)">
+<g transform="translate(101.7348, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.50" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(101.7455, 49.2703)">
+<g transform="translate(101.7348, 49.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(101.8855, 49.6671)">
+<g transform="translate(101.8748, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(103.4997, 41.0203)">
+<g transform="translate(103.4890, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(102.9847, 41.0203)">
+<g transform="translate(102.9740, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(105.4596, 41.0203)">
+<g transform="translate(105.4538, 41.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.51" data-measure-id="measure.11">
 
 <g>
-<g transform="translate(105.4596, 49.2703)">
+<g transform="translate(105.4538, 49.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(105.5142, 49.6671)">
+<g transform="translate(105.5085, 49.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(106.6988, 41.0203)">
+<g transform="translate(106.6930, 41.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(31.4364, 62.0203)">
+<g transform="translate(31.4598, 62.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
 <g transform="translate(110.7757, 71.0203)">
@@ -1732,31 +1732,31 @@
 <g transform="translate(110.7757, 62.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(94.7029, 71.0203)">
+<g transform="translate(94.6819, 71.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(94.7029, 62.0203)">
+<g transform="translate(94.6819, 62.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(71.3268, 71.0203)">
+<g transform="translate(71.2788, 71.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(71.3268, 62.0203)">
+<g transform="translate(71.2788, 62.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(49.7889, 71.0203)">
+<g transform="translate(49.8346, 71.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(49.7889, 62.0203)">
+<g transform="translate(49.8346, 62.0203)">
 <rect x="0.0000" y="-0.9500" width="0.1900" height="1.9000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(31.4364, 71.0203)">
+<g transform="translate(31.4598, 71.0203)">
 <rect x="0.0000" y="-3.7500" width="0.1900" height="7.5000" ry="0.0000" fill="currentColor"/>
 </g>
-<g transform="translate(84.6731, 58.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.3503 -0.2000 7.3503 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(84.6390, 58.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.3587 -0.2000 7.3587 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(88.3615, 59.6403)">
+<g transform="translate(88.3334, 59.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
@@ -1795,25 +1795,25 @@
 <g transform="translate(14.5977, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(73.6756, 58.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2138 -0.2000 7.2138 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(73.6284, 58.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2221 -0.2000 7.2221 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(77.2701, 59.6403)">
+<g transform="translate(77.2290, 59.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(18.6118, 62.0203)">
+<g transform="translate(18.6188, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.54" data-measure-id="measure.12">
 
 <g>
-<g transform="translate(18.6118, 70.2703)">
+<g transform="translate(18.6188, 70.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(18.6664, 70.6671)">
+<g transform="translate(18.6734, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -1823,70 +1823,70 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.54" data-measure-id="measure.12">
 
 <g>
-<g transform="translate(18.6118, 71.7703)">
+<g transform="translate(18.6188, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(18.6664, 72.1671)">
+<g transform="translate(18.6734, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(19.8510, 62.0203)">
+<g transform="translate(19.8580, 62.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(19.9160, 58.6853)">
+<g transform="translate(19.9230, 58.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
-<g transform="translate(61.2799, 58.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2650 -0.2000 7.2650 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(61.3383, 58.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2734 -0.2000 7.2734 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(64.9256, 59.6403)">
+<g transform="translate(64.9900, 59.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(22.5282, 62.0203)">
+<g transform="translate(22.5399, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.55" data-measure-id="measure.12">
 
 <g>
-<g transform="translate(22.5282, 71.7703)">
+<g transform="translate(22.5399, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(22.5828, 72.1671)">
+<g transform="translate(22.5946, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(23.7674, 62.0203)">
+<g transform="translate(23.7791, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(39.8444, 58.8303)">
-<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2650 -0.2000 7.2650 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+<g transform="translate(39.8771, 58.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.2734 -0.2000 7.2734 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
-<g transform="translate(43.4901, 59.6403)">
+<g transform="translate(43.5288, 59.6403)">
 <polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
 </g>
 
-<g transform="translate(32.6099, 62.0203)">
+<g transform="translate(32.6343, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.57" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(32.6099, 67.2703)">
+<g transform="translate(32.6343, 67.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(32.7499, 67.6671)">
+<g transform="translate(32.7742, 67.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -1896,11 +1896,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.57" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(32.6099, 71.7703)">
+<g transform="translate(32.6343, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(32.6646, 72.1671)">
+<g transform="translate(32.6889, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -1912,25 +1912,25 @@
 <tspan>12</tspan>
 </text>
 </g>
-<g transform="translate(34.3641, 62.0203)">
+<g transform="translate(34.3885, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(33.8491, 62.0203)">
+<g transform="translate(33.8735, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(38.6702, 62.0203)">
+<g transform="translate(38.7029, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.58" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(38.6702, 67.2703)">
+<g transform="translate(38.7029, 67.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(38.8102, 67.6671)">
+<g transform="translate(38.8429, 67.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -1940,36 +1940,36 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.58" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(38.6702, 71.7703)">
+<g transform="translate(38.7029, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(38.7248, 72.1671)">
+<g transform="translate(38.7575, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(40.4244, 62.0203)">
+<g transform="translate(40.4571, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(39.9094, 62.0203)">
+<g transform="translate(39.9421, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(43.3509, 62.0203)">
+<g transform="translate(43.3896, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.59" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(43.3509, 67.2703)">
+<g transform="translate(43.3896, 67.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(43.4909, 67.6671)">
+<g transform="translate(43.5296, 67.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -1979,11 +1979,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.59" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(43.3509, 70.2703)">
+<g transform="translate(43.3896, 70.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(43.4397, 70.6671)">
+<g transform="translate(43.4784, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -1993,33 +1993,33 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.59" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(43.3509, 68.7703)">
+<g transform="translate(43.3896, 68.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(43.4397, 69.1671)">
+<g transform="translate(43.4784, 69.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(44.5901, 62.0203)">
+<g transform="translate(44.6288, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(45.8451, 62.0203)">
+<g transform="translate(45.8862, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.60" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(45.8451, 67.2703)">
+<g transform="translate(45.8862, 67.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(45.8998, 67.6671)">
+<g transform="translate(45.9409, 67.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
@@ -2029,11 +2029,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.60" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(45.8451, 68.7703)">
+<g transform="translate(45.8862, 68.7703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(45.9339, 69.1671)">
+<g transform="translate(45.9750, 69.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
@@ -2043,22 +2043,22 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.60" data-measure-id="measure.13">
 
 <g>
-<g transform="translate(45.8451, 70.2703)">
+<g transform="translate(45.8862, 70.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(45.9339, 70.6671)">
+<g transform="translate(45.9750, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(47.0843, 62.0203)">
+<g transform="translate(47.1254, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(50.9787, 62.0203)">
+<g transform="translate(51.0253, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
@@ -2068,11 +2068,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.61" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(50.9787, 68.7703)">
+<g transform="translate(51.0253, 68.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(51.1186, 69.1671)">
+<g transform="translate(51.1653, 69.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -2082,83 +2082,83 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.61" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(50.9787, 70.2703)">
+<g transform="translate(51.0253, 70.2703)">
 <rect x="0.0888" y="-0.4242" width="0.8877" height="0.8321" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(51.0674, 70.6671)">
+<g transform="translate(51.1141, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>a</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(52.2179, 62.0203)">
+<g transform="translate(52.2645, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(56.2319, 62.0203)">
+<g transform="translate(56.2856, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.62" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(56.2319, 70.2703)">
+<g transform="translate(56.2856, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(56.3719, 70.6671)">
+<g transform="translate(56.4256, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(57.4711, 62.0203)">
+<g transform="translate(57.5248, 62.0203)">
 <rect x="-0.0650" y="-3.3750" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(57.5361, 58.6853)">
+<g transform="translate(57.5898, 58.6853)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
 </g>
 
-<g transform="translate(60.1057, 62.0203)">
+<g transform="translate(60.1641, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.63" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(60.1057, 71.7703)">
+<g transform="translate(60.1641, 71.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(60.2457, 72.1671)">
+<g transform="translate(60.3040, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(61.8599, 62.0203)">
+<g transform="translate(61.9183, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(61.3449, 62.0203)">
+<g transform="translate(61.4033, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(64.7864, 62.0203)">
+<g transform="translate(64.8508, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.64" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(64.7864, 70.2703)">
+<g transform="translate(64.8508, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(64.9264, 70.6671)">
+<g transform="translate(64.9908, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -2168,11 +2168,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.64" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(64.7864, 71.7703)">
+<g transform="translate(64.8508, 71.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(64.9264, 72.1671)">
+<g transform="translate(64.9908, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -2180,18 +2180,18 @@
 
 </g>
 
-<g transform="translate(67.2806, 62.0203)">
+<g transform="translate(67.3474, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.65" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(67.2806, 70.2703)">
+<g transform="translate(67.3474, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.4206, 70.6671)">
+<g transform="translate(67.4874, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
@@ -2201,11 +2201,11 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.65" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(67.2806, 71.7703)">
+<g transform="translate(67.3474, 71.7703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.4206, 72.1671)">
+<g transform="translate(67.4874, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -2215,33 +2215,33 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.65" data-measure-id="measure.14">
 
 <g>
-<g transform="translate(67.2806, 76.2703)">
-<rect x="-0.1502" y="-1.1825" width="1.3657" height="1.2090" ry="0.0000" fill="currentColor"/>
+<g transform="translate(67.3474, 76.2703)">
+<rect x="0.0888" y="-1.1561" width="0.8877" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(67.1304, 76.2703)">
+<g transform="translate(67.4362, 76.2703)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
-<tspan>/4</tspan>
+<tspan>5</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(68.5198, 62.0203)">
+<g transform="translate(68.5866, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(72.5014, 62.0203)">
+<g transform="translate(72.4542, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.66" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(72.5014, 70.2703)">
+<g transform="translate(72.4542, 70.2703)">
 <rect x="0.2424" y="-0.7857" width="0.5804" height="1.1825" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(72.7438, 70.6671)">
+<g transform="translate(72.6966, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>f</tspan>
 </text>
@@ -2251,149 +2251,149 @@
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.66" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(72.5014, 71.7703)">
+<g transform="translate(72.4542, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(72.5560, 72.1671)">
+<g transform="translate(72.5088, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(74.2556, 62.0203)">
+<g transform="translate(74.2084, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(73.7406, 62.0203)">
+<g transform="translate(73.6934, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(77.1309, 62.0203)">
+<g transform="translate(77.0898, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.67" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(77.1309, 70.2703)">
+<g transform="translate(77.0898, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(77.2708, 70.6671)">
+<g transform="translate(77.2297, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>e</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(78.3701, 62.0203)">
+<g transform="translate(78.3290, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(79.6251, 62.0203)">
+<g transform="translate(79.5863, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.68" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(79.6251, 70.2703)">
+<g transform="translate(79.5863, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(79.7651, 70.6671)">
+<g transform="translate(79.7263, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(80.8643, 62.0203)">
+<g transform="translate(80.8255, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(83.4989, 62.0203)">
+<g transform="translate(83.4648, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.69" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(83.4989, 70.2703)">
+<g transform="translate(83.4648, 70.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(83.5535, 70.6671)">
+<g transform="translate(83.5194, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(85.2531, 62.0203)">
+<g transform="translate(85.2190, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(84.7381, 62.0203)">
+<g transform="translate(84.7040, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(88.2223, 62.0203)">
+<g transform="translate(88.1942, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.70" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(88.2223, 71.7703)">
+<g transform="translate(88.1942, 71.7703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(88.2769, 72.1671)">
+<g transform="translate(88.2489, 72.1671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>d</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(89.4615, 62.0203)">
+<g transform="translate(89.4334, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(90.7592, 62.0203)">
+<g transform="translate(90.7335, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.71" data-measure-id="measure.15">
 
 <g>
-<g transform="translate(90.7592, 70.2703)">
+<g transform="translate(90.7335, 70.2703)">
 <rect x="0.0546" y="-0.7593" width="0.9560" height="1.1800" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(90.8138, 70.6671)">
+<g transform="translate(90.7881, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>b</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(91.9984, 62.0203)">
+<g transform="translate(91.9727, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(95.8927, 62.0203)">
+<g transform="translate(95.8726, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.72" data-measure-id="measure.16">
 
 <g>
-<g transform="translate(95.8927, 70.2703)">
+<g transform="translate(95.8726, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(96.0327, 70.6671)">
+<g transform="translate(96.0126, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
@@ -2403,35 +2403,35 @@
 <g transform="translate(8.4758, 68.4203)">
 <rect x="0.0000" y="-6.4000" width="0.1600" height="12.8000" ry="0.0500" fill="currentColor"/>
 </g>
-<g transform="translate(97.6469, 62.0203)">
+<g transform="translate(97.6268, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
 </g>
-<g transform="translate(97.1319, 62.0203)">
+<g transform="translate(97.1118, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
 
-<g transform="translate(101.9529, 62.0203)">
+<g transform="translate(101.9412, 62.0203)">
 <path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
 </g>
 
 <g class="vellum-score-event" data-arrangement-event-id="arrangement-event.economical-fingering.73" data-measure-id="measure.16">
 
 <g>
-<g transform="translate(101.9529, 70.2703)">
+<g transform="translate(101.9412, 70.2703)">
 <rect x="0.1400" y="-0.4242" width="0.7853" height="0.8449" ry="0.0000" fill="currentColor"/>
 </g>
 </g>
-<g transform="translate(102.0929, 70.6671)">
+<g transform="translate(102.0812, 70.6671)">
 <text font-family="serif" font-weight="bold" font-size="1.7459" text-anchor="start" fill="currentColor">
 <tspan>c</tspan>
 </text>
 </g>
 
 </g>
-<g transform="translate(103.1921, 62.0203)">
+<g transform="translate(103.1804, 62.0203)">
 <rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
 </g>
-<g transform="translate(66.0256, 62.0203)">
+<g transform="translate(66.0900, 62.0203)">
 <rect x="-0.0650" y="-3.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
 </g>
 <g transform="translate(52.1198, 162.8440)">

@@ -1729,7 +1729,7 @@ The test checks all of the following independently:
    course-identity sign remains `///a`.
 
 A companion fixture verifies the complete default sign sequence `a`, `/a`, `//a`,
-`///a`, `4`, `/4`, and `//4` for courses 7–13.
+`///a`, `4`, `5`, and `6` for courses 7–13.
 
 ### Provider Connection Acceptance
 

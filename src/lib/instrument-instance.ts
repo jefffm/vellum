@@ -178,8 +178,8 @@ const LUTE_NOTATION_IDENTITIES = [
   "//a",
   "///a",
   "4",
-  "/4",
-  "//4",
+  "5",
+  "6",
 ] as const;
 
 export function createBaroqueLuteInstance(
@@ -349,9 +349,17 @@ export function assertInstrumentInstanceIdentity(instance: InstrumentInstanceCon
 }
 
 export function digestInstrumentInstance(
-  value: Omit<InstrumentInstanceConfiguration, "id" | "contentDigest">
+  value:
+    | InstrumentInstanceConfiguration
+    | Omit<InstrumentInstanceConfiguration, "id" | "contentDigest">
 ): string {
-  return sha256(canonicalInstrumentInstanceJson(value));
+  const {
+    id: _id,
+    contentDigest: _contentDigest,
+    ...content
+  } = value as Partial<Pick<InstrumentInstanceConfiguration, "id" | "contentDigest">> &
+    Omit<InstrumentInstanceConfiguration, "id" | "contentDigest">;
+  return sha256(canonicalInstrumentInstanceJson(content));
 }
 
 export function soundingPitches(

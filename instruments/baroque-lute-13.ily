@@ -11,7 +11,7 @@ luteStringTunings = \stringTuning <a, d f a d' f'>
 luteDiapasons = \stringTuning <a,, bes,, c, d, ees, f, g,>
 
 #(define lute-diapason-labels
-   #("a" "/a" "//a" "///a" "4" "/4" "//4"))
+   #("a" "/a" "//a" "///a" "4" "5" "6"))
 
 #(define (historical-lute-tablature-format context string-number fret-number)
    (if (and (> string-number 6) (<= string-number 13))

@@ -301,7 +301,7 @@ An open bass course outside the lute's six stopped courses.
 _Avoid_: Bass string when course function matters
 
 **Diapason Sign**:
-The below-staff sign that identifies which Diapason sounds, using the historical default sequence `a`, `/a`, `//a`, `///a`, `4`, `/4`, `//4` for courses 7–13.
+The below-staff sign that identifies which Diapason sounds, using the historical default sequence `a`, `/a`, `//a`, `///a`, `4`, `5`, `6` for courses 7–13.
 _Avoid_: Fret letter, because a Diapason is not stopped at a fret
 
 **13-Course Baroque Lute**:
@@ -549,7 +549,7 @@ _Avoid_: French tab
 - A dedicated **Golden Engraving Fixture** verifies that open course 10 on the default 13-course D-minor baroque lute renders as `///a` below the French tablature staff and sounds D2
 - The fixture checks the structured course assignment, generated LilyPond semantics, rendered glyph and placement, MIDI pitch, and absence of duplicate playback; non-empty SVG output is insufficient
 - The diapason sign remains `///a` when a Bass Tuning changes course 10's pitch, proving that course identity and sounding pitch are independent
-- A companion sequence verifies the historical default signs `a`, `/a`, `//a`, `///a`, `4`, `/4`, and `//4` for courses 7 through 13
+- A companion sequence verifies the historical default signs `a`, `/a`, `//a`, `///a`, `4`, `5`, and `6` for courses 7 through 13
 - Golden fixtures include reviewed canonical musical data so OMR backend drift can be distinguished from arrangement-engine regressions
 - An **Arrangement Brief** selects one or more **Notation Layouts** independently from one or more **Deliverables**
 - A **Notation Layout** may produce multiple **Deliverables**

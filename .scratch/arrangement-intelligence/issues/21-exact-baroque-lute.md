@@ -22,7 +22,7 @@ Represent exact stopped courses, diapasons, tuning schemes, notation identity, a
 - The shared Instrument Instance model now supplies a content-addressed thirteen-course D-minor lute with one chanterelle, paired stopped courses 2–6, and seven single unstopped diapasons.
 - Every constituent string has stable identity, pitch, and fretting behavior. Unstopped courses reject nonzero frets; stopped pairs sound both strings.
 - D-minor, A-minor, G-minor, D-major, and E-minor Bass Tuning configurations create distinct immutable instances. Retuning changes diapason pitches and digest without changing course/notation identity.
-- French notation identities are explicit per course: `a`, `/a`, `//a`, `///a`, `4`, `/4`, and `//4` for courses 7–13. Course 10 is `///a` and D2 in the default and D-major fixtures.
+- French notation identities are explicit per course: `a`, `/a`, `//a`, `///a`, `4`, `5`, and `6` for courses 7–13. Course 10 is `///a` and D2 in the default and D-major fixtures.
 - The exact instance is generated before Performance Brief and Plan creation, then retained by Brief snapshot, Search constraints and execution identity, selected Score, edit validation, engraving, Audio Preview, and persistence checks.
 - Audio Preview projects stopped pairs to their constituent strings, preserves a single semantic Principal Voice occurrence, and identifies each acoustic string. Diapasons remain single sounding events.
 - The legacy profile's declared upper range was corrected from C5 to Db5 because an eight-fret F4 chanterelle reaches Db5.

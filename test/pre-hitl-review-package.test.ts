@@ -18,11 +18,11 @@ const expected: Record<string, Record<string, string>> = {
     "svg.svg": "bfa1d7cf11752724f6e8a0e9d425d5a75b1ffa207a36a76e60e7361d68c60c3b",
   },
   "baroque-lute-13": {
-    "audioPreview.json": "ad16112d795add274be36f4794a03b216d806181870ac16cb74cc98d87b67ad1",
-    "lilypond.ly": "f4ec937e024d2363ce0721339c3400bcc684fb52313c92d7c9bbe0110814ca57",
+    "audioPreview.json": "43e0662f94dbf7fbe579dcfbd41bc89887457ddd4967c3d11499c673ddc89fc2",
+    "lilypond.ly": "e62627a349244c297616fe9038678233e87d66435c095f4b2075982b81517af4",
     "midi.midi": "a4d777a435a1d863b44a93cb45cd16b00bd5e65e8cb22c10ed70dce7a2bc84c1",
-    "pdf.pdf": "de2e7f11bc05c5a1078f97d7492b48c7afebd6760cade8acfd497c8752020b8f",
-    "svg.svg": "13db67d7322062f31737971b55a7fbbc5ba3f08ecb6601999ec2abc96f304c19",
+    "pdf.pdf": "bfb3065747263ed151c988442e54f8fc2956aed7c903691e1d0cc61d7538b9d0",
+    "svg.svg": "91f1d17cb0b1630e6b7c5e33b3c39a6423aa89b485bda401547f063160096e6a",
   },
   "classical-guitar-6": {
     "audioPreview.json": "159de92ad4825026a32e4da0e7e30565e6f22e2a2b78a526cb37707324529ad3",
@@ -53,6 +53,10 @@ describe("pre-HITL review package", () => {
       expect(Value.Check(ReviewRequestSchema, request)).toBe(true);
       expect(decodeReviewRequest(request)).toEqual(request);
       expect(request.instrument.profileId).toBe(instrument);
+      const audioPreview = JSON.parse(
+        readFileSync(path.join(root, instrument, "audioPreview.json"), "utf8")
+      ) as { instrumentInstanceDigest?: string };
+      expect(request.instrument.instanceDigest).toBe(audioPreview.instrumentInstanceDigest);
       expect(request.artifacts.map(({ sha256 }) => sha256).sort()).toEqual(
         Object.values(files).sort()
       );

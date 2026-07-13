@@ -345,12 +345,12 @@ For a 13-course baroque lute (Vellum's `baroque-lute-13`), extending the pattern
 | 9      | Eb2             | `//a`  |
 | 10     | D2              | `///a` |
 | 11     | C2              | `4`    |
-| 12     | Bb1             | `/4`   |
-| 13     | A1              | `//4`  |
+| 12     | Bb1             | `5`    |
+| 13     | A1              | `6`    |
 
-For the 14-course theorbo, add `///4` for course 14 (or `5` depending on regional
-convention). This mapping should live in the instrument profile data, not hard-coded
-in the template strategy.
+Further bass-course labels and regional variants remain instrument-profile data;
+they must not be inferred by prepending additional slashes to `4` or hard-coded in
+the template strategy.
 
 **Instrument profile extension (YAML):**
 
@@ -362,8 +362,8 @@ diapason_labels:
   9: "//a"
   10: "///a"
   11: "4"
-  12: "/4"
-  13: "//4"
+  12: "5"
+  13: "6"
 ```
 
 ### Encoding diapason events
