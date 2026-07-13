@@ -1098,7 +1098,7 @@ chat-panel > div > div:has(agent-interface) {
   color: #202124;
 }
 
-.playback-active {
+.playback-active:not(.vellum-score-event) {
   color: #202124 !important;
   background: #fff1cf;
   outline: 2px solid #9a6a16;
