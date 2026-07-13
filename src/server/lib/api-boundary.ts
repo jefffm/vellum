@@ -14,6 +14,8 @@ const ALLOWED_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIO
 const ALLOWED_HEADERS = new Set([
   "authorization",
   "content-type",
+  "x-reference-citation",
+  "x-reference-title",
   "x-source-filename",
   "x-source-license",
 ]);

@@ -65,13 +65,15 @@ describe("server API endpoints", () => {
       headers: {
         Origin: "http://127.0.0.1:5173",
         "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "content-type,x-source-filename",
+        "Access-Control-Request-Headers":
+          "content-type,x-source-filename,x-reference-title,x-reference-citation",
       },
     });
     expect(response.status).toBe(204);
     expect(response.headers.get("access-control-allow-origin")).toBe("http://127.0.0.1:5173");
     expect(response.headers.get("vary")).toContain("Origin");
     expect(response.headers.get("access-control-allow-credentials")).toBeNull();
+    expect(response.headers.get("access-control-allow-headers")).toContain("x-reference-title");
     expect(response.headers.get("access-control-allow-headers")).not.toContain("*");
   });
 

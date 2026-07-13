@@ -48,6 +48,7 @@ export const OwnerReferenceSchema = Type.Object({
   citation: Type.String({ minLength: 1 }),
   mimeType: Type.String({ minLength: 1 }),
   sha256: Type.String({ pattern: "^[a-f0-9]{64}$" }),
+  byteLength: Type.Optional(Type.Integer({ minimum: 1 })),
   storedPath: Type.String({ minLength: 1 }),
   createdAt: DateTime,
 });

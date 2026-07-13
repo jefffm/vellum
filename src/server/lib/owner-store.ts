@@ -1,6 +1,14 @@
 import { Value } from "@sinclair/typebox/value";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import {
   HistoricalPracticeClaimSchema,
@@ -199,6 +207,42 @@ export class OwnerStore {
       citation: input.citation,
       mimeType: input.mimeType,
       sha256,
+      byteLength: content.byteLength,
+      storedPath,
+      createdAt: this.now().toISOString(),
+    });
+  }
+
+  addReferenceFromSpool(input: {
+    title: string;
+    citation: string;
+    mimeType: string;
+    spoolPath: string;
+    sha256: string;
+    byteLength: number;
+  }): OwnerReference {
+    if (!input.byteLength) throw new ApiRouteError("Owner Reference content is empty", 400);
+    if (!/^[a-f0-9]{64}$/.test(input.sha256)) {
+      throw new ApiRouteError("Owner Reference digest is invalid", 400);
+    }
+    const id = `reference.${input.sha256.slice(0, 24)}`;
+    const storedPath = path.join("references", id, "content");
+    const destination = path.join(this.rootDirectory, storedPath);
+    const temporary = `${destination}.${randomUUID()}.tmp`;
+    mkdirSync(path.dirname(destination), { recursive: true });
+    try {
+      copyFileSync(input.spoolPath, temporary);
+      renameSync(temporary, destination);
+    } finally {
+      rmSync(temporary, { force: true });
+    }
+    return this.save<OwnerReference>("references", "referenceIds", OwnerReferenceSchema, {
+      id,
+      title: input.title,
+      citation: input.citation,
+      mimeType: input.mimeType,
+      sha256: input.sha256,
+      byteLength: input.byteLength,
       storedPath,
       createdAt: this.now().toISOString(),
     });
