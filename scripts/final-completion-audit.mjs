@@ -230,7 +230,7 @@ function writeCloseout(verifiedCommit, suiteResults, smoke) {
   ];
   const browserSuite = {
     command:
-      "in-app browser Greensleeves PDF upload, OCR review, output, engraving, and playback smoke",
+      "Chrome browser Greensleeves PDF upload, OCR review, output, engraving, and playback smoke",
     result: "pass",
     artifact: relative(browserSmokePath),
     recordedAt: smoke.recordedAt,
