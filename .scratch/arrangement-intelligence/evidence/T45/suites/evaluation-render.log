@@ -1,0 +1,10 @@
+$ npm run eval:render
+startedAt=2026-07-13T13:48:43.268Z
+exitCode=0
+
+
+> vellum@0.1.0 eval:render
+> npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind render
+
+{"ok":true,"command":"eval:render","semantic":{"status":"pass","comparedEventIds":["fixture.event.1"],"findings":[]},"visual":{"status":"pass","regions":[{"id":"fixture.region.principal-voice","changedFraction":0,"tolerance":0.01,"status":"pass"}],"wholePageComparison":"supplementary"}}
+

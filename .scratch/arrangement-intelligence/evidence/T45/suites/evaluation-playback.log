@@ -1,0 +1,10 @@
+$ npm run eval:playback
+startedAt=2026-07-13T13:48:47.643Z
+exitCode=0
+
+
+> vellum@0.1.0 eval:playback
+> npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind playback
+
+{"ok":true,"command":"eval:playback","canonical":{"status":"pass","comparedOccurrenceIds":["fixture.playback.1"],"comparedParts":["principal-voice"],"findings":[],"waveformCompared":false}}
+

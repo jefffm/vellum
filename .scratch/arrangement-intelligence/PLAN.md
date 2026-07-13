@@ -1,6 +1,6 @@
 # Arrangement Intelligence execution plan
 
-Status: closing
+Status: complete
 
 ## Outcome
 

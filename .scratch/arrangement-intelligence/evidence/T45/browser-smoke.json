@@ -1,0 +1,29 @@
+{
+  "result": "pass",
+  "source": "test/fixtures/greensleeves/greensleeves-satb.pdf",
+  "surface": "user Chrome browser",
+  "recordedAt": "2026-07-13T13:25:49Z",
+  "verifiedCommit": "be72cae512e35af9d151641c64c6b457fa032bd9",
+  "workspaceId": "workspace.0160161f-e4c7-4125-b2c9-99f3a2e38fc8",
+  "assertions": [
+    "Guided Start accepted a real PDF upload and disclosed the OCR confidence threshold only after the optical source was selected.",
+    "At the default 80% threshold, Audiveris retained all 236 recognized notes for Score-Anchored Review.",
+    "After cancellation, changing the visible threshold to 70% and choosing Restart from source created a new OMR run at the 70% policy instead of reusing the stale 80% policy.",
+    "The recommended Principal Voice decision advanced the workflow without returning to OCR review.",
+    "The baroque-guitar and 13-course-lute targets completed with retained PDF, SVG, LilyPond, MIDI, and playback-mapping deliverables.",
+    "The completed baroque-guitar and lute arrangements reopened from persisted workspace URLs and displayed PDF available, preservation audit pass, and literal Audio Preview controls.",
+    "Baroque-guitar playback advanced from 0:00 to a concrete occurrence marker and visibly followed the engraved score with highlighted notes and a red play-position line.",
+    "A target-search failure was durably recoverable: reopening Guided Start showed Stopped at projection (search_exhausted) and retained the two completed outputs.",
+    "The live saved lute SVG rendered its French tablature letters as legible black text on the white score rather than black knockout squares.",
+    "New arrangement, Projects, and Knowledge & defaults rendered together in the left chat-column action bar without overlapping the score preview."
+  ],
+  "knownLimitations": [
+    "The classical-guitar sibling exhausted the current 10000-state bounded phrase search and did not produce a deliverable in this run. This is an accepted prototype limitation covered by the arrangement-intelligence-followup target-voice and cross-target acceptance slices."
+  ],
+  "artifacts": {
+    "baroqueGuitarArrangementId": "arrangement.d0cb50ad-cc49-4f71-b271-9cd21396a6fd",
+    "baroqueLuteArrangementId": "arrangement.2f5481a3-5263-470d-b15c-63aa2c368c88",
+    "initialOmrRunId": "omr.c52b5fe2-73af-4aaf-b753-ad573cf0b59f",
+    "restartedOmrRunId": "omr.b7a909f2-4bb4-41e7-ba67-c485f8f49c9a"
+  }
+}

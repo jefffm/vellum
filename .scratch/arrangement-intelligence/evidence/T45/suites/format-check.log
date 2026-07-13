@@ -1,0 +1,11 @@
+$ npm run format:check
+startedAt=2026-07-13T13:43:11.091Z
+exitCode=0
+
+
+> vellum@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+

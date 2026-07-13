@@ -1,0 +1,11 @@
+$ npm run spec:verify
+startedAt=2026-07-13T13:48:18.988Z
+exitCode=0
+
+
+> vellum@0.1.0 spec:verify
+> node scripts/verify-spec-reconciliation.mjs && node scripts/verify-arrangement-intelligence.mjs
+
+Specification reconciliation verified (15 evidence families).
+Arrangement Intelligence plan verified (447 requirements, 47 findings, 45 tracers).
+

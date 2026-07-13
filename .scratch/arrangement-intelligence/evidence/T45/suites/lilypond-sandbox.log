@@ -1,0 +1,10 @@
+$ npm run sandbox:lilypond:verify
+startedAt=2026-07-13T13:48:19.581Z
+exitCode=0
+
+
+> vellum@0.1.0 sandbox:lilypond:verify
+> node scripts/verify-lilypond-sandbox.mjs
+
+LilyPond sandbox ready: GNU LilyPond 2.26.0 (running Guile 3.0)
+

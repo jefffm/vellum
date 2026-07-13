@@ -1,0 +1,10 @@
+$ npm run eval:omr
+startedAt=2026-07-13T13:48:52.488Z
+exitCode=0
+
+
+> vellum@0.1.0 eval:omr
+> npm run server:build --silent && node dist-server/server/external-evaluation-cli.js --kind omr
+
+{"ok":true,"command":"eval:omr","evidence":{"id":"external-evidence.d8133c7e341c072c0b9703fd","kind":"omr","mode":"recorded_contract","reproducibility":"deterministic_recorded_fixture","provider":"Audiveris","modelOrBackend":"5.5.3-recorded","fixtureOrRequestDigest":"d8133c7e341c072c0b9703fd2c5f31020b1987fa0477e16a45aa00874eb9528f","compatibility":{"productVersion":"0.1.0","adapterVersion":"omr-contract-v1","compatible":true,"limitations":["This retained fixture proves the adapter contract only, not current Audiveris quality."]},"observedAt":"2026-01-01T00:00:00.000Z","result":{"evidenceClass":"contract_only","symbolErrorRate":0,"voiceAssignmentAccuracy":1,"currentQualityClaim":"not_established"}}}
+

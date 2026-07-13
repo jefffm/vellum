@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T45",
+  "result": "pass",
+  "acceptanceScope": "owner_accepted_prototype_baseline",
+  "verifiedCommit": "be72cae512e35af9d151641c64c6b457fa032bd9",
+  "verifiedAt": "2026-07-13T13:49:07.313Z",
+  "summary": {
+    "requirements": 447,
+    "ownerWaivedHumanRequirements": 369,
+    "auditFindings": 47,
+    "automatedSuites": 16,
+    "realBrowserPdfSmoke": "pass",
+    "roleScopedAttestations": "waived_not_passed"
+  },
+  "commands": [
+    {
+      "command": "npm run format:check",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/format-check.log"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/typecheck.log"
+    },
+    {
+      "command": "npm run build",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/web-build.log"
+    },
+    {
+      "command": "npm run server:build",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/server-build.log"
+    },
+    {
+      "command": "npm test",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/full-test.log"
+    },
+    {
+      "command": "npm run test:browser",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/real-browser.log"
+    },
+    {
+      "command": "npm run spec:verify",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/specification.log"
+    },
+    {
+      "command": "npm run sandbox:lilypond:verify",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/lilypond-sandbox.log"
+    },
+    {
+      "command": "npm run eval:fast",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-fast.log"
+    },
+    {
+      "command": "npm run eval:golden",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-golden.log"
+    },
+    {
+      "command": "npm run eval:parity",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-parity.log"
+    },
+    {
+      "command": "npm run eval:render",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-render.log"
+    },
+    {
+      "command": "npm run eval:playback",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-playback.log"
+    },
+    {
+      "command": "npm run eval:omr",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-omr.log"
+    },
+    {
+      "command": "npm run eval:model",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-model.log"
+    },
+    {
+      "command": "npm run eval:compare",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-comparison.log"
+    },
+    {
+      "command": "Chrome browser Greensleeves PDF upload, OCR review, output, engraving, and playback smoke",
+      "result": "pass",
+      "artifact": ".scratch/arrangement-intelligence/evidence/T45/browser-smoke.json"
+    }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T44/OWNER_SCOPE_DECISION.md",
+      "sha256": "2b30e56730f37deefe5540342a7f4d1648f2f1bd9c9ac5fa04ae9efaf8fe93c4"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T40/verification.json",
+      "sha256": "2d08572a0b4cb909ac466258d55c4fc13e577cf1491bca4497490d9693e029ae"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/browser-smoke.json",
+      "sha256": "c3ed2a80b5ab31837c995face5ec37a240e2627ea344b48e21ab0fa44d7b0569"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/format-check.log",
+      "sha256": "80dd44bfe280292ac0ff5b214d55f261050735831a3593ffb72dfbfa08918008"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/typecheck.log",
+      "sha256": "4b9e75b5a133aa89363e1e63f68c2962fc719e0e771ea15c9e8ce8a4833b826a"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/web-build.log",
+      "sha256": "68cd71e4531dee276fd968445fe0783ee460a21ce95b6fbbee2b09cfc28d7cf3"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/server-build.log",
+      "sha256": "6e66a8eb868d00832bb131f75c11b405bd46c4f9386c3161b49891fd5e6f55fe"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/full-test.log",
+      "sha256": "eb816f996c95d3ea701d6015b134c8e3ccb54cecd48f49f77b54391c5257571e"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/real-browser.log",
+      "sha256": "725e08a4ef6bfc642e63da803b109107b2599b860690a4a0d83fff42c82dff12"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/specification.log",
+      "sha256": "724e5be1c75da068eb5d6139871b55136a971f3e35bd0e1edcd16b310b8fb2d7"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/lilypond-sandbox.log",
+      "sha256": "11b38204f2652331bf1601d8b4e08f31a4eb8b215fcf112d3e243badc0e8c19f"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-fast.log",
+      "sha256": "cad5236597732db9e328fb878b9ec59f55c4100eeff1169b96021a736a24c0e5"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-golden.log",
+      "sha256": "a2f68cb84e9216dc0388d150c843edfc937c7e3d46ef9679115e07a352f20eeb"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-parity.log",
+      "sha256": "c5cfeb23e2cc945005a90754677fe188c0cbdd8e714b7a3c00673d69abd59aef"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-render.log",
+      "sha256": "56a9855fa0be08d807e9ce8be8eb6701422c079a97f4e85147a1ce2c791a395a"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-playback.log",
+      "sha256": "d5adb6dad76285676a509b476c1f38e248788369c160126b3ffff07c33062e70"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-omr.log",
+      "sha256": "c2a77c9cdf593a69c36f83fd2ef8e4f2b2db1e60cadd846eb756df220ce0ff7f"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-model.log",
+      "sha256": "8572df0e2afa6cd1393cc62395b1ec7cc4964e26035004b95f68f4227ee2ab4b"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/evidence/T45/suites/evaluation-comparison.log",
+      "sha256": "f326be756fd53668c79f81b85cdd16cb8e5e99ecaba4e4b1e6f81a7f27972d10"
+    }
+  ]
+}

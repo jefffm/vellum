@@ -1,0 +1,39 @@
+$ npm run test:browser
+startedAt=2026-07-13T13:47:16.026Z
+exitCode=0
+
+
+> vellum@0.1.0 test:browser
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+  ✓  1 test/browser/guided-workflow.spec.ts:4:1 › tablature preview remains legible and global navigation stays out of the score (1.1s)
+  ✓  2 test/browser/guided-workflow.spec.ts:25:1 › source upload reaches reviewed completion and opens the exact artifact (39.2s)
+
+  2 passed (1.0m)
+
+[WebServer] (node:31423) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:31489) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:31499) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:31518) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+(node:31521) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 9:47:30 AM [vite] (client) warning: 
+[WebServer] /Users/jeff/ws/vellum/src/lib/instrument-model.ts
+[WebServer] 236|    static async load(id) {
+[WebServer] 237|      const serverProfilesModule = "../server/profiles.js";
+[WebServer] 238|      const { loadProfile } = await import(serverProfilesModule);
+[WebServer]    |                                           ^^^^^^^^^^^^^^^^^^^^
+[WebServer] 239|      return new InstrumentModel(loadProfile(id));
+[WebServer] 240|    }
+[WebServer] The above dynamic import cannot be analyzed by Vite.
+[WebServer] See https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations for supported dynamic import formats. If this is intended to be left as-is, you can use the /* @vite-ignore */ comment inside the import() call to suppress this warning.
+[WebServer] 
+[WebServer]   Plugin: vite:import-analysis
+[WebServer]   File: /Users/jeff/ws/vellum/src/lib/instrument-model.ts

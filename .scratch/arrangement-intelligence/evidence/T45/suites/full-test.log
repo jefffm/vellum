@@ -1,0 +1,539 @@
+$ npm test
+startedAt=2026-07-13T13:43:36.477Z
+exitCode=0
+
+
+> vellum@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /Users/jeff/ws/vellum
+
+stdout | test/e2e/bwv996.test.ts > BWV 996 Bourrée compilation > compiles BWV 996 Bourrée opening to SVG without errors
+{"event":"api_request","correlationId":"eb7d9798-1c82-4fd0-a6e5-f519fdcfac18","method":"POST","path":"/compile","status":200,"durationMs":4409}
+
+stdout | test/e2e/bwv996.test.ts > BWV 996 Bourrée compilation > SVG output contains tab notation text elements
+{"event":"api_request","correlationId":"fe108d36-46c4-463f-bb82-20afe9f4ec45","method":"POST","path":"/compile","status":200,"durationMs":1934}
+
+ ✓ test/templates.test.ts (18 tests) 13129ms
+   ✓ template compilation > compiles continuo.ly without LilyPond errors  2050ms
+   ✓ template compilation > compiles french-tab.ly without LilyPond errors  1568ms
+   ✓ template compilation > compiles grand-staff.ly without LilyPond errors  3062ms
+   ✓ template compilation > compiles satb.ly without LilyPond errors  2176ms
+   ✓ template compilation > compiles solo-tab.ly without LilyPond errors  651ms
+   ✓ template compilation > compiles tab-and-staff.ly without LilyPond errors  1078ms
+   ✓ template compilation > compiles voice-and-piano.ly without LilyPond errors  1479ms
+   ✓ template compilation > compiles voice-and-tab.ly without LilyPond errors  1022ms
+stdout | test/e2e/bwv996.test.ts > BWV 996 Bourrée compilation > compiles with format 'both' to produce SVG and MIDI
+{"event":"api_request","correlationId":"3b86ba8f-0cfe-458a-b863-08bc371cf3c9","method":"POST","path":"/compile","status":200,"durationMs":3731}
+
+ ✓ test/fixtures.test.ts (20 tests) 15778ms
+   ✓ fixture files > baroque-guitar-transition-study.ly compiles with LilyPond  2502ms
+   ✓ fixture files > bwv996-bourree-opening.ly compiles with LilyPond  3626ms
+   ✓ fixture files > classical-guitar-polyphony.ly compiles with LilyPond  2725ms
+   ✓ fixture files > d-minor-scale-lute.ly compiles with LilyPond  884ms
+   ✓ fixture files > diapason-test.ly compiles with LilyPond  1394ms
+   ✓ fixture files > flow-my-tears-opening.ly compiles with LilyPond  1221ms
+   ✓ fixture files > polyphonic-lute.ly compiles with LilyPond  1515ms
+   ✓ fixture files > simple-guitar.ly compiles with LilyPond  1798ms
+stdout | test/e2e/bwv996.test.ts > BWV 996 Bourrée compilation > produces at least 1 bar of music
+{"event":"api_request","correlationId":"ca5a994f-63ee-46e6-aa39-f3744088bcd7","method":"POST","path":"/compile","status":200,"durationMs":2223}
+
+ ✓ test/e2e/bwv996.test.ts (4 tests) 12609ms
+   ✓ BWV 996 Bourrée compilation > compiles BWV 996 Bourrée opening to SVG without errors  4555ms
+   ✓ BWV 996 Bourrée compilation > SVG output contains tab notation text elements  1962ms
+   ✓ BWV 996 Bourrée compilation > compiles with format 'both' to produce SVG and MIDI  3763ms
+   ✓ BWV 996 Bourrée compilation > produces at least 1 bar of music  2260ms
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > compiles a simple D minor scale to SVG with French letters
+{"event":"api_request","correlationId":"67324cfa-2313-416d-b464-5efc744e9163","method":"POST","path":"/compile","status":200,"durationMs":2026}
+
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > renders a polyphonic passage with both voices
+{"event":"api_request","correlationId":"0fb7080e-2c2d-440d-bfdc-b061222b7103","method":"POST","path":"/compile","status":200,"durationMs":1514}
+
+stdout | test/e2e/flow-my-tears.test.ts > Flow My Tears compilation > compiles Flow My Tears opening to SVG without errors
+{"event":"api_request","correlationId":"6e34df0d-bd03-4dbb-96ad-04cff87bfcd6","method":"POST","path":"/compile","status":200,"durationMs":1291}
+
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > compiles diapason bass notes without errors
+{"event":"api_request","correlationId":"abfac26b-0db5-4dfc-8b40-0c408210ede4","method":"POST","path":"/compile","status":200,"durationMs":1449}
+
+stdout | test/e2e/flow-my-tears.test.ts > Flow My Tears compilation > reports voice and bar metadata
+{"event":"api_request","correlationId":"7c51e56f-cd62-4066-9ac7-88b66d6ab278","method":"POST","path":"/compile","status":200,"durationMs":1158}
+
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > compiles the BWV 996 Bourree opening as valid French tab
+{"event":"api_request","correlationId":"c8fb222d-88f9-47c2-be13-63066696136c","method":"POST","path":"/compile","status":200,"durationMs":1643}
+
+stdout | test/e2e/flow-my-tears.test.ts > Flow My Tears compilation > compiles with format 'both' to produce SVG and MIDI
+{"event":"api_request","correlationId":"b69141c5-055b-42ed-8ded-eeed117f107e","method":"POST","path":"/compile","status":200,"durationMs":1728}
+
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > returns structured errors and no SVG for invalid source
+{"event":"api_request","correlationId":"c22a7c89-9cdd-4b1c-aa18-f27fbb316746","method":"POST","path":"/compile","status":200,"durationMs":758}
+
+ ✓ src/server/lib/three-target-parity.test.ts (1 test) 23084ms
+   ✓ initial three-target parity candidate > shares source truth and family planning while independently searching and projecting  23083ms
+stdout | test/e2e/flow-my-tears.test.ts > Flow My Tears compilation > SVG output contains text elements for tab notation
+{"event":"api_request","correlationId":"54bcc17e-d5d4-41b1-8577-66f7b08439f5","method":"POST","path":"/compile","status":200,"durationMs":1098}
+
+ ✓ test/e2e/flow-my-tears.test.ts (4 tests) 5480ms
+   ✓ Flow My Tears compilation > compiles Flow My Tears opening to SVG without errors  1352ms
+   ✓ Flow My Tears compilation > reports voice and bar metadata  1178ms
+   ✓ Flow My Tears compilation > compiles with format 'both' to produce SVG and MIDI  1808ms
+   ✓ Flow My Tears compilation > SVG output contains text elements for tab notation  1102ms
+stdout | test/e2e/french-tab.test.ts > French tab compile pipeline > returns MIDI output when requested
+{"event":"api_request","correlationId":"e61e1381-2654-40bb-8943-7975020c8288","method":"POST","path":"/compile","status":200,"durationMs":1742}
+
+ ✓ test/e2e/french-tab.test.ts (6 tests) 9352ms
+   ✓ French tab compile pipeline > compiles a simple D minor scale to SVG with French letters  2130ms
+   ✓ French tab compile pipeline > renders a polyphonic passage with both voices  1529ms
+   ✓ French tab compile pipeline > compiles diapason bass notes without errors  1469ms
+   ✓ French tab compile pipeline > compiles the BWV 996 Bourree opening as valid French tab  1648ms
+   ✓ French tab compile pipeline > returns structured errors and no SVG for invalid source  765ms
+   ✓ French tab compile pipeline > returns MIDI output when requested  1754ms
+ ✓ test/e2e/continuo-tracer.test.ts (1 test) 8621ms
+   ✓ soprano plus Figured Bass Continuo Realization tracer > imports, analyzes, realizes, audits, engraves, and previews semantic parts  8609ms
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"bd16ad96-61a8-4962-96f3-fde91f44f8ab","method":"GET","path":"/api/workspaces/:workspaceId/arrangement-searches/:searchId","status":200,"durationMs":4}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"5165a9e1-6f7f-4bae-878e-8282b269a337","method":"GET","path":"/api/workspaces/:workspaceId/arrangement-searches/:searchId/candidates/:candidateId/audio-preview","status":200,"durationMs":15}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"f5d5ab2a-0e82-442b-84c4-3c2df3b9d642","method":"GET","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/readiness","status":200,"durationMs":11}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"6cc86681-e1b2-4594-8f94-2de1474ad111","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests","status":200,"durationMs":41}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"a238a659-ffc2-493b-96f7-4752c017a58f","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests","status":200,"durationMs":55}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"9a8bb1fd-1103-4238-9281-ab1afd7d3102","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests","status":200,"durationMs":57}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"d29e9648-7402-402a-9f07-52d1823da859","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/owner-playtests","status":200,"durationMs":48}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"ad1c2386-c033-49a4-b28a-c1eb922a5816","method":"GET","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/readiness","status":200,"durationMs":11}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"b05b48eb-c870-4281-9bf8-14eee2d6fdbd","method":"GET","path":"/api/workspaces/:workspaceId/navigation","status":200,"durationMs":20}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"cb9542c7-7b95-4afe-add0-87beb645de56","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations","status":200,"durationMs":6}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"b71f6f91-ca5e-46b4-bf82-ae6f243e8acb","method":"POST","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations","status":200,"durationMs":20}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"47fc5ae4-59af-49ec-a35c-a44e652efcad","method":"GET","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations","status":200,"durationMs":6}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"4b09a23b-e001-450f-8379-3764106e4ba8","method":"GET","path":"/api/workspaces/:workspaceId/arrangements/:arrangementId/performance-interpretations/:interpretationId/audio-preview","status":200,"durationMs":15}
+
+stdout | src/server/lib/arrangement-service.test.ts > Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement
+{"event":"api_request","correlationId":"9e562b3b-30a7-4a4c-91af-5dcf4b51ed1b","method":"POST","path":"/api/workspaces/:workspaceId/analyses/:analysisRecordId/claims/:claimId/corrections","status":200,"durationMs":6}
+
+ ✓ src/server/lib/arrangement-service.test.ts (1 test) 2974ms
+   ✓ Greensleeves faithful arrangement service > runs uploaded PDF truth through analysis, search, audit, and durable arrangement  2973ms
+ ✓ src/server/lib/continuo-evaluation.test.ts (1 test) 2624ms
+   ✓ contextual continuo shared evaluation loop > evaluates complete, separate-bass, and honest-reduction Plans without flattening state  2623ms
+ ✓ test/e2e/score-anchored-review-tracer.test.ts (1 test) 4633ms
+   ✓ Score-Anchored Review tracer > corrects a critical PDF uncertainty immutably and resumes arrangement  4558ms
+ ✓ test/e2e/lute-diapason-tracer.test.ts (3 tests) 4481ms
+   ✓ 13-course lute diapason engraving tracer > renders course 10 as ///a below the staff and sounds one D2  1511ms
+   ✓ 13-course lute diapason engraving tracer > keeps the course-10 sign and pitch under the D-major bass tuning  1433ms
+   ✓ 13-course lute diapason engraving tracer > renders the historical signs for courses 7 through 13 without duplicate playback  1486ms
+ ✓ test/e2e/imitative-counterpoint-tracer.test.ts (1 test) 2033ms
+   ✓ three-voice imitative counterpoint tracer > preserves ordered entries and voice lineages in a Renaissance-lute intabulation  2024ms
+ ✓ src/server/lib/imitative-evaluation.test.ts (1 test) 1976ms
+   ✓ imitative intabulation shared evaluation loop > ranks complete assignments and protects domain-specific voice relationships  1975ms
+stdout | test/e2e/tool-chain.test.ts > tool chain pipeline > generates LilyPond source from tabulated positions and compiles it to SVG
+{"event":"api_request","correlationId":"0ce5b5c6-f872-4aca-83f5-5bc6924327f9","method":"POST","path":"/compile","status":200,"durationMs":953}
+
+ ✓ test/e2e/tool-chain.test.ts (5 tests) 1047ms
+   ✓ tool chain pipeline > generates LilyPond source from tabulated positions and compiles it to SVG  1008ms
+stdout | src/server/index.test.ts > server API endpoints > blocks hostile workspace mutation without side effects but permits browser and local clients
+{"event":"api_request","correlationId":"57556b8a-5627-4db5-92b2-e3f095f7d3c5","method":"POST","path":"/workspaces","status":200,"durationMs":1}
+
+stdout | src/server/index.test.ts > server API endpoints > blocks hostile workspace mutation without side effects but permits browser and local clients
+{"event":"api_request","correlationId":"d3a95fe1-fe66-4f8f-b10d-f94eff936aba","method":"POST","path":"/workspaces","status":200,"durationMs":0}
+
+stdout | src/server/index.test.ts > server API endpoints > lists instrument summaries
+{"event":"api_request","correlationId":"ba48caca-75ef-4453-8645-c3783ea15b46","method":"GET","path":"/instruments","status":200,"durationMs":6}
+
+stdout | src/server/index.test.ts > server API endpoints > returns a full instrument profile
+{"event":"api_request","correlationId":"51b26534-0132-49ca-8a00-c7bd9b1be2d6","method":"GET","path":"/instruments/:id","status":200,"durationMs":1}
+
+stdout | src/server/index.test.ts > server API endpoints > returns 404 for missing profiles
+{"event":"api_request","correlationId":"547ee838-f149-4936-a440-bf996be5db5b","method":"GET","path":"/instruments/:id","status":404,"durationMs":1}
+
+stdout | src/server/index.test.ts > server API endpoints > registers the /api/engrave POST route
+{"event":"api_request","correlationId":"2a760cde-a5fd-47b2-aba4-5cd91adee35a","method":"POST","path":"/engrave","status":400,"durationMs":1}
+
+stdout | src/server/index.test.ts > server API endpoints > registers the /api/chordify POST route
+{"event":"api_request","correlationId":"23a4df93-56cc-494c-8aaf-6f611a7eefbd","method":"POST","path":"/chordify","status":400,"durationMs":0}
+
+stdout | src/server/index.test.ts > server API endpoints > registers the /api/analyze POST route
+{"event":"api_request","correlationId":"93a33b33-1093-40bd-8a2b-b3e86e5fae01","method":"POST","path":"/analyze","status":400,"durationMs":0}
+
+stdout | src/server/index.test.ts > server API endpoints > registers the /api/lint POST route
+{"event":"api_request","correlationId":"df35835d-8542-40a0-80f2-82eb838b10f7","method":"POST","path":"/lint","status":400,"durationMs":1}
+
+ ✓ src/server/index.test.ts (25 tests) 1519ms
+   ✓ server API endpoints > binds the actual default listener to numeric loopback  1288ms
+ ✓ test/e2e/agent-conversation.test.ts (9 tests) 1238ms
+   ✓ agent conversation (mocked) > agent has 12 tools with correct names  1206ms
+ ✓ src/server/lib/subprocess.test.ts (14 tests) 1337ms
+   ✓ SubprocessRunner > bounds global subprocess concurrency  572ms
+ ✓ src/server/lib/evaluation-comparison.test.ts (4 tests) 1434ms
+   ✓ Evaluation baseline, mutation comparison, and report > retains known defects and detects a Principal Voice omission without hiding unknowns  1098ms
+   ✓ Evaluation baseline, mutation comparison, and report > rejects unresolved runs and a policy that is not pinned by the proposed manifest  332ms
+ ✓ src/lib/baroque-guitar-arranger.test.ts (8 tests) 1729ms
+   ✓ faithful baroque-guitar arrangement search > produces materially distinct creative candidate families only under free paraphrase  468ms
+   ✓ faithful baroque-guitar arrangement search > projects the same source through exact stringing-dependent arrangement, playback, and engraving  558ms
+ ✓ src/main.test.ts (5 tests) 887ms
+   ✓ browser entry wiring > rejects a stale API schema instead of silently starting  871ms
+ ✓ src/server/lib/musicxml-normalizer.test.ts (8 tests) 864ms
+ ✓ src/lib/arrangement-engrave.test.ts (5 tests) 956ms
+   ✓ Arrangement Score engraving projection > projects classical guitar from audited pitches into one correctly spelled staff  796ms
+ ✓ test/e2e/creative-plan-tracer.test.ts (1 test) 998ms
+   ✓ creative proportional Plan tracer > turns explicit free paraphrase into confirmed creative design and distinct candidates  997ms
+ ✓ src/server/lib/source-truth-service.test.ts (4 tests) 1029ms
+   ✓ purpose-scoped Source Truth convergence > correction creates a superseding assessment and stales every exact dependent kind  773ms
+ ✓ src/server/lib/evaluation-harness.test.ts (6 tests) 464ms
+   ✓ versioned Evaluation Harness > runs the first source-and-brief loop into a separate persistent Run and Card  407ms
+ ✓ src/lib/classical-guitar-arranger.test.ts (1 test) 1167ms
+   ✓ faithful classical-guitar arrangement search > creates an independently audited standard-notation Greensleeves sibling  1165ms
+ ✓ src/lib/baroque-lute-arranger.test.ts (2 tests) 535ms
+   ✓ faithful 13-course baroque-lute arrangement search > creates an independently audited Greensleeves sibling in accord ordinaire  534ms
+ ✓ src/server/lib/evaluation-operations.test.ts (4 tests) 625ms
+   ✓ evaluation retention and CI impact > reports external evidence compatibility and clock-derived staleness separately  388ms
+ ✓ src/server/lib/workspace-store.test.ts (8 tests) 239ms
+ ✓ src/server/lib/provider-connection.test.ts (7 tests) 474ms
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > creates a guided-start workspace and uploads the golden PDF
+{"event":"api_request","correlationId":"5a68ad0e-ccb3-45c7-851a-acd914f21256","method":"POST","path":"/api/workspaces","status":200,"durationMs":4}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > creates a guided-start workspace and uploads the golden PDF
+{"event":"api_request","correlationId":"a1be69ca-78d9-4158-aa7e-9efc82acc52c","method":"GET","path":"/api/workspaces/:workspaceId","status":200,"durationMs":0}
+
+ ✓ src/server/lib/source-import-service.test.ts (7 tests) 251ms
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > rejects an oversized streamed source without creating a canonical artifact
+{"event":"api_request","correlationId":"36ed5269-add2-4f73-9153-3f29fab1dea2","method":"POST","path":"/api/workspaces","status":200,"durationMs":1}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > rejects malformed workspace ids before reading storage
+{"event":"api_request","correlationId":"79b79921-8116-46f9-9e4c-f0ab259e57d0","method":"GET","path":"/api/workspaces/:workspaceId","status":400,"durationMs":1}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > navigates, renames, and safely removes a local workspace
+{"event":"api_request","correlationId":"af541cde-f7cb-45c3-baf1-af8b31deb825","method":"POST","path":"/api/workspaces","status":200,"durationMs":2}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > navigates, renames, and safely removes a local workspace
+{"event":"api_request","correlationId":"7bf40502-e18e-496c-b238-cdb0db9a4117","method":"GET","path":"/api/workspaces/:workspaceId/navigation","status":200,"durationMs":1}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > navigates, renames, and safely removes a local workspace
+{"event":"api_request","correlationId":"a6a8194c-7ad3-4b61-8512-11d82469681b","method":"PATCH","path":"/api/workspaces/:workspaceId","status":200,"durationMs":4}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > navigates, renames, and safely removes a local workspace
+{"event":"api_request","correlationId":"22e80fe6-a270-428b-959e-1eb7d7555df1","method":"DELETE","path":"/api/workspaces/:workspaceId","status":400,"durationMs":1}
+
+stdout | src/server/lib/workspace-route.test.ts > workspace API routes > navigates, renames, and safely removes a local workspace
+{"event":"api_request","correlationId":"03329cd2-7238-4fd9-b362-65f673ca845e","method":"DELETE","path":"/api/workspaces/:workspaceId","status":200,"durationMs":0}
+
+ ✓ src/server/lib/workspace-route.test.ts (6 tests) 406ms
+   ✓ workspace API routes > creates a guided-start workspace and uploads the golden PDF  321ms
+ ✓ src/server/lib/omr.test.ts (10 tests) 331ms
+ ✓ src/lib/generated-artifact-security.test.ts (20 tests) 451ms
+ ✓ src/lib/imitative-arranger.test.ts (1 test) 115ms
+ ✓ src/server/lib/engrave.test.ts (70 tests) 71ms
+ ✓ src/server/lib/generated-artifact-security-node.test.ts (3 tests) 237ms
+ ✓ src/server/lib/transcription-service.test.ts (5 tests) 168ms
+stdout | src/server/lib/compile-route.test.ts > createCompileRoute > returns SVG artifacts from LilyPond
+{"event":"api_request","correlationId":"8a77e75c-58fe-4737-94dd-f8336dc096b4","method":"POST","path":"/api/compile","status":200,"durationMs":46}
+
+stdout | src/server/lib/compile-route.test.ts > createCompileRoute > sanitizes active LilyPond SVG output before returning it
+{"event":"api_request","correlationId":"ebc4f713-abe5-446f-a990-913691f49b5b","method":"POST","path":"/api/compile","status":200,"durationMs":14}
+
+stdout | src/server/lib/compile-route.test.ts > createCompileRoute > returns base64 PDFs
+{"event":"api_request","correlationId":"1f5083e9-166b-49ba-9434-4dce0ad2bf73","method":"POST","path":"/api/compile","status":200,"durationMs":0}
+
+stdout | src/server/lib/compile-route.test.ts > createCompileRoute > returns structured errors on LilyPond failure
+{"event":"api_request","correlationId":"24f82186-5620-4177-afca-e95e2d4ba7de","method":"POST","path":"/api/compile","status":200,"durationMs":1}
+
+stdout | src/server/lib/compile-route.test.ts > createCompileRoute > returns structured environment errors when LilyPond cannot be spawned
+{"event":"api_request","correlationId":"7b0c11c6-70a2-4ea7-9a69-7445cfc9b5e3","method":"POST","path":"/api/compile","status":200,"durationMs":4}
+
+ ✓ src/server/lib/compile-route.test.ts (17 tests) 169ms
+ ✓ src/server/lib/external-evaluation.test.ts (4 tests) 133ms
+ ✓ src/server/lib/create-route.test.ts (8 tests) 162ms
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > creates an arrangement
+{"event":"api_request","correlationId":"22c47aa0-9c60-455a-bdd7-adaa2ae40c81","method":"POST","path":"/api/arrangements","status":200,"durationMs":7}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > gets a created arrangement by id
+{"event":"api_request","correlationId":"3de98bbc-2d54-4411-92b2-19dfc6b81947","method":"POST","path":"/api/arrangements","status":200,"durationMs":0}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > gets a created arrangement by id
+{"event":"api_request","correlationId":"a4bcc894-b149-4046-8073-947ba620e6b9","method":"GET","path":"/api/arrangements/:id","status":200,"durationMs":1}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > lists created arrangement summaries without lySource
+{"event":"api_request","correlationId":"98fe3e40-6877-4aea-8a14-b7126dcd0caf","method":"POST","path":"/api/arrangements","status":200,"durationMs":2}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > lists created arrangement summaries without lySource
+{"event":"api_request","correlationId":"b3081dd6-f5dd-484e-b6de-c04b4e2b7cc9","method":"POST","path":"/api/arrangements","status":200,"durationMs":1}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > lists created arrangement summaries without lySource
+{"event":"api_request","correlationId":"b9c7550b-247c-4546-8887-3d6425ec29eb","method":"GET","path":"/api/arrangements","status":200,"durationMs":16}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > labels pre-boundary flat files noncanonical when reading them
+{"event":"api_request","correlationId":"a85be1af-c857-4d1b-851a-c8b57b8718b5","method":"GET","path":"/api/arrangements/:id","status":200,"durationMs":1}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > returns 404 for a missing arrangement id
+{"event":"api_request","correlationId":"399e3b5c-f37f-4461-998c-ca005518af25","method":"GET","path":"/api/arrangements/:id","status":404,"durationMs":1}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > deletes an existing arrangement
+{"event":"api_request","correlationId":"56aa18b7-fbf9-42b8-9d79-0e537f45ba98","method":"POST","path":"/api/arrangements","status":200,"durationMs":2}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > deletes an existing arrangement
+{"event":"api_request","correlationId":"c30f9bea-de7f-45db-a9ae-6d285139811e","method":"DELETE","path":"/api/arrangements/:id","status":200,"durationMs":1}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > deletes an existing arrangement
+{"event":"api_request","correlationId":"e99f5f0b-6f77-4f53-af2f-833034cf2ad9","method":"GET","path":"/api/arrangements/:id","status":404,"durationMs":0}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > rejects invalid create bodies: 'missing title'
+{"event":"api_request","correlationId":"a380e11c-683c-41f1-b321-52d1dfc41d84","method":"POST","path":"/api/arrangements","status":400,"durationMs":0}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > rejects invalid create bodies: 'missing lySource'
+{"event":"api_request","correlationId":"df40fc6b-dfcc-4472-b47c-b02d1ceccdfa","method":"POST","path":"/api/arrangements","status":400,"durationMs":0}
+
+stdout | src/server/lib/arrangement-route.test.ts > arrangement API routes > rejects non-UUID ids
+{"event":"api_request","correlationId":"f477c5e4-5e87-44a4-9bf7-b369e28a50e3","method":"GET","path":"/api/arrangements/:id","status":400,"durationMs":0}
+
+ ✓ src/server/lib/arrangement-route.test.ts (9 tests) 190ms
+ ✓ test/e2e/hymnal-conversion.test.ts (4 tests) 121ms
+stdout | test/lib/test-infra.test.ts > TestServer > post sends JSON and parses the response
+{"event":"api_request","correlationId":"4bd8c7eb-4131-45bd-9010-258fcd229906","method":"POST","path":"/arrangements","status":200,"durationMs":1}
+
+ ✓ test/lib/test-infra.test.ts (10 tests) 75ms
+stdout | src/server/lib/transcription-route.test.ts > Score-Anchored Review routes > reads the persisted source anchor and posts a versioned correction
+{"event":"api_request","correlationId":"0fec6c57-9d0b-4c8b-bdc5-40b8b3571abc","method":"GET","path":"/api/workspaces/:workspaceId/transcriptions/:transcriptionId/review","status":200,"durationMs":10}
+
+stdout | src/server/lib/transcription-route.test.ts > Score-Anchored Review routes > reads the persisted source anchor and posts a versioned correction
+{"event":"api_request","correlationId":"cc6571b2-00e0-4eb7-9dd6-9766935fb962","method":"POST","path":"/api/workspaces/:workspaceId/transcriptions/:transcriptionId/corrections","status":200,"durationMs":28}
+
+ ✓ src/server/lib/transcription-route.test.ts (1 test) 124ms
+stdout | src/server/lib/template-route.test.ts > template API routes > lists all templates
+{"event":"api_request","correlationId":"4943c76e-0263-406c-b015-207b4051692b","method":"GET","path":"/templates","status":200,"durationMs":20}
+
+ ✓ src/server/lib/template-route.test.ts (4 tests) 88ms
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > returns valid: true for clean source
+{"event":"api_request","correlationId":"4dfe58d9-aeb0-4f1f-9d8b-e823999203bc","method":"POST","path":"/api/validate","status":200,"durationMs":3}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > returns valid: false for syntax errors
+{"event":"api_request","correlationId":"572b65c7-39da-47f3-8ebc-93204dc059ec","method":"POST","path":"/api/validate","status":200,"durationMs":0}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > returns valid: false for barcheck failures
+{"event":"api_request","correlationId":"cd1f418c-0710-47c3-8901-f257ddad5c06","method":"POST","path":"/api/validate","status":200,"durationMs":1}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > returns 400 for empty source
+{"event":"api_request","correlationId":"f0e490f1-e907-4d60-bee1-212b6cca4e4e","method":"POST","path":"/api/validate","status":400,"durationMs":3}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > returns generic error on non-zero exit with no parseable errors
+{"event":"api_request","correlationId":"40d1556b-28f1-40b0-96fc-2162e0902a47","method":"POST","path":"/api/validate","status":200,"durationMs":0}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > passes -dno-print-pages flag to runner
+{"event":"api_request","correlationId":"bdbc3850-29c7-4759-b7d6-5c1d1f52715c","method":"POST","path":"/api/validate","status":200,"durationMs":2}
+
+stdout | src/server/lib/validate-route.test.ts > createValidateRoute > uses empty outputGlobs (no file generation)
+{"event":"api_request","correlationId":"e9091678-641b-4af8-97b1-01a77337fb90","method":"POST","path":"/api/validate","status":200,"durationMs":1}
+
+ ✓ src/server/lib/validate-route.test.ts (7 tests) 102ms
+stdout | src/server/lib/theory-route.test.ts > theory routes > returns chord analyses from /api/chordify
+{"event":"api_request","correlationId":"f0a9365b-2c92-46f7-875b-0787aec44531","method":"POST","path":"/api/chordify","status":200,"durationMs":3}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > returns normalized analysis from /api/analyze
+{"event":"api_request","correlationId":"741f4ea8-d029-439e-9974-9d9b0a87e937","method":"POST","path":"/api/analyze","status":200,"durationMs":0}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > returns lint violations from /api/lint
+{"event":"api_request","correlationId":"bf7d45b3-e951-4a55-a112-bc89d7936619","method":"POST","path":"/api/lint","status":200,"durationMs":0}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > returns 400 for an empty request body
+{"event":"api_request","correlationId":"ba24a53f-d869-4621-bb5a-38630fcdca67","method":"POST","path":"/api/analyze","status":400,"durationMs":1}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > maps theory.py failures without exposing raw internal diagnostics
+{"event":"api_request","correlationId":"b7152b2e-6358-4b56-8430-38618b5507f2","method":"POST","path":"/api/analyze","status":500,"durationMs":1}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > maps empty stdin errors to 400
+{"event":"api_request","correlationId":"f88e7fb7-4305-4f02-a704-1a18dc998dbc","method":"POST","path":"/api/analyze","status":400,"durationMs":1}
+
+stdout | src/server/lib/theory-route.test.ts > theory routes > maps subprocess timeouts to 500
+{"event":"api_request","correlationId":"3a97ddaa-3674-4582-9d2e-72d3cdbdc45d","method":"POST","path":"/api/lint","status":500,"durationMs":0}
+
+ ✓ src/server/lib/theory-route.test.ts (7 tests) 97ms
+ ✓ src/server/lib/stream-route.test.ts (11 tests) 109ms
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns engraved LilyPond source for valid params
+{"event":"api_request","correlationId":"1fa27b29-08c4-421b-8654-1f6df99773bf","method":"POST","path":"/api/engrave","status":200,"durationMs":8}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 200 for template solo-staff
+{"event":"api_request","correlationId":"b12975e4-7362-4de2-a5be-2c631986d8af","method":"POST","path":"/api/engrave","status":200,"durationMs":1}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 200 for template solo-tab
+{"event":"api_request","correlationId":"7f458cfc-ddf5-401a-9ff4-148241b5ef5f","method":"POST","path":"/api/engrave","status":200,"durationMs":1}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 200 for template french-tab
+{"event":"api_request","correlationId":"479f308a-b4b9-4369-86aa-9f102d44d7f9","method":"POST","path":"/api/engrave","status":200,"durationMs":5}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 200 for template tab-and-staff
+{"event":"api_request","correlationId":"b0bacbc8-9478-449a-9ad8-f72d5e1d0385","method":"POST","path":"/api/engrave","status":200,"durationMs":0}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 200 for template voice-and-tab
+{"event":"api_request","correlationId":"8897415a-5bcc-4adf-852d-3218d217e1e8","method":"POST","path":"/api/engrave","status":200,"durationMs":1}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns a validation error for invalid request bodies
+{"event":"api_request","correlationId":"8ebc57b4-93b7-43ff-8f6a-adba4651825b","method":"POST","path":"/api/engrave","status":400,"durationMs":0}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 400 for valid JSON missing only instrument
+{"event":"api_request","correlationId":"1a6b8360-3f18-4f46-a9e2-50bc02436cee","method":"POST","path":"/api/engrave","status":400,"durationMs":0}
+
+stdout | src/server/lib/engrave-route.test.ts > createEngraveRoute > returns 400 for semantic engrave errors
+{"event":"api_request","correlationId":"b1cbc92b-a56b-4dc1-bdaa-0ed02782849a","method":"POST","path":"/api/engrave","status":400,"durationMs":0}
+
+ ✓ src/server/lib/engrave-route.test.ts (10 tests) 109ms
+ ✓ src/server/lib/family-deliverable-route.test.ts (4 tests) 66ms
+ ✓ test/e2e/music21-integration.test.ts (7 tests) 88ms
+stdout | src/server/lib/omr-route.test.ts > OMR route > runs PDF recognition through the configured backend
+{"event":"api_request","correlationId":"25dacc3c-8bfb-4b4f-90b7-f4d62999debb","method":"POST","path":"/api/workspaces/:workspaceId/omr-runs","status":200,"durationMs":12}
+
+ ✓ src/server/lib/omr-route.test.ts (1 test) 87ms
+ ✓ test/verify-arrangement-intelligence.test.ts (5 tests) 81ms
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"c0aa0bdb-7494-4d0a-88ab-8147bd6a0c23","method":"POST","path":"/api/workspaces/:workspaceId/model-actions","status":200,"durationMs":6}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"cbf0f297-248d-4f99-b30a-19ca39a7905f","method":"PATCH","path":"/api/workspaces/:workspaceId/model-actions/:modelActionId","status":200,"durationMs":3}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"cc3b67df-abdd-4f2e-9ca2-bffa0e97a94c","method":"POST","path":"/api/workspaces/:workspaceId/model-actions/:modelActionId/interrupt","status":200,"durationMs":3}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"e4a2f7b9-8385-45e6-bb6c-55d593f1640b","method":"POST","path":"/api/workspaces/:workspaceId/model-actions/:modelActionId/retry","status":200,"durationMs":5}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"7934e8ef-e4ce-4044-ac07-9087a3652fbd","method":"POST","path":"/api/workspaces/:workspaceId/model-actions/:modelActionId/cancel","status":200,"durationMs":4}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"c6793383-9cbc-4a94-8980-54462aabb9b8","method":"GET","path":"/api/workspaces/:workspaceId/model-actions/:modelActionId","status":200,"durationMs":2}
+
+stdout | src/server/lib/model-action-route.test.ts > Model Action routes > exposes durable interruption, retry, inspection, and cancellation
+{"event":"api_request","correlationId":"098dbfd9-8b3d-462f-bb6e-a88159723716","method":"GET","path":"/api/workspaces/:workspaceId/model-actions","status":200,"durationMs":1}
+
+ ✓ src/server/lib/model-action-route.test.ts (1 test) 106ms
+ ✓ src/server/lib/model-action-service.test.ts (5 tests) 46ms
+ ✓ src/server/lib/reviewed-learning.test.ts (1 test) 104ms
+ ✓ src/lib/baroque-lute-instance.test.ts (5 tests) 34ms
+ ✓ src/server/lib/arrangement-deliverable-route.security.test.ts (2 tests) 121ms
+ ✓ src/server/lib/owner-store.test.ts (4 tests) 50ms
+ ✓ test/e2e/music21-pipeline.test.ts (5 tests) 100ms
+ ✓ src/server/lib/provider-contract.test.ts (1 test) 47ms
+ ✓ src/lib/continuo-arranger.test.ts (6 tests) 49ms
+ ✓ src/lib/review-attestation.test.ts (3 tests) 25ms
+ ✓ src/server/lib/engrave.integration.test.ts (35 tests) 45ms
+ ✓ test/pre-hitl-audit.test.ts (1 test) 22ms
+ ✓ src/lib/instrument-instance.test.ts (6 tests) 40ms
+ ✓ src/lib/instrument-model.test.ts (14 tests) 19ms
+ ✓ test/e2e/source-import-tracer.test.ts (1 test) 19ms
+ ✓ src/server/lib/alfabeto-engrave.integration.test.ts (9 tests) 18ms
+ ✓ src/lib/musicological-analysis.test.ts (6 tests) 17ms
+ ✓ src/lib/classical-guitar-instance.test.ts (3 tests) 31ms
+ ✓ src/fretboard.test.ts (17 tests) 12ms
+ ✓ src/tools.test.ts (12 tests) 30ms
+ ✓ src/lib/constraint-search.test.ts (13 tests) 57ms
+ ✓ src/server/lib/golden-corpus.test.ts (6 tests) 17ms
+ ✓ src/server/lib/human-comparison.test.ts (1 test) 15ms
+ ✓ test/pre-hitl-review-package.test.ts (1 test) 18ms
+ ✓ src/lib/profiles.test.ts (22 tests) 12ms
+ ✓ src/diapasons.test.ts (14 tests) 10ms
+ ✓ src/prompts.test.ts (8 tests) 13ms
+ ✓ src/server/lib/api-boundary.test.ts (16 tests) 8ms
+ ✓ src/transpose.test.ts (8 tests) 11ms
+ ✓ src/lib/alfabeto/__tests__/charts.test.ts (13 tests) 7ms
+ ✓ src/lib/create-server-tool.test.ts (5 tests) 7ms
+ ✓ src/server/lib/provider-credential-store.test.ts (3 tests) 11ms
+ ✓ src/guided-start.test.ts (27 tests) 9ms
+ ✓ src/lib/pitch.test.ts (32 tests) 7ms
+ ✓ src/lib/ly-tree.test.ts (47 tests) 9ms
+ ✓ src/lib/instrument-registry.test.ts (23 tests) 4ms
+ ✓ src/server-tools.test.ts (9 tests) 7ms
+ ✓ src/lib/alfabeto/__tests__/lookup.test.ts (21 tests) 7ms
+ ✓ src/server/lib/template-strategies.test.ts (12 tests) 7ms
+ ✓ src/lib/owner-intent.test.ts (10 tests) 6ms
+ ✓ src/lib/vellum-stream-proxy.test.ts (2 tests) 6ms
+ ✓ src/lib/performance-brief.test.ts (5 tests) 4ms
+ ✓ src/lib/music-utils.test.ts (19 tests) 7ms
+ ✓ src/lib/alfabeto/__tests__/pitch-validation.test.ts (37 tests) 5ms
+ ✓ src/lib/audio-preview.test.ts (4 tests) 4ms
+ ✓ src/lib/candidate-comparison.test.ts (8 tests) 4ms
+ ✓ src/server/lib/knowledge-pack-loader.test.ts (1 test) 4ms
+ ✓ src/server/lib/guided-workflow-service.test.ts (1 test) 5ms
+ ✓ src/lib/restricted-lilypond.test.ts (2 tests) 5ms
+ ✓ src/server/lib/render-playback-evaluation.test.ts (3 tests) 5ms
+ ✓ src/server/lib/deliverable-service.test.ts (1 test) 3ms
+ ✓ src/server/lib/architecture-boundary.test.ts (3 tests) 4ms
+ ✓ src/theory.test.ts (8 tests) 6ms
+ ✓ src/lib/engrave-schema.test.ts (33 tests) 4ms
+ ✓ src/lib/compile-retry-guard.test.ts (7 tests) 4ms
+ ✓ src/types.test.ts (15 tests) 3ms
+ ✓ src/lib/debug-export.test.ts (4 tests) 5ms
+ ✓ src/lib/music-domain.test.ts (3 tests) 5ms
+ ✓ src/lib/api-contract.test.ts (3 tests) 3ms
+ ✓ src/server/lib/policy-exception-audit.test.ts (2 tests) 2ms
+ ✓ src/lib/transformation-report.test.ts (1 test) 3ms
+ ✓ src/lib/preservation-policy.test.ts (3 tests) 2ms
+ ✓ src/lib/tool-helpers.test.ts (7 tests) 3ms
+ ✓ src/lib/alfabeto/__tests__/barre-transpose.test.ts (10 tests) 4ms
+ ✓ src/server/lib/evaluation-command-contract.test.ts (1 test) 2ms
+ ✓ src/lib/content-security-policy.test.ts (2 tests) 2ms
+ ✓ src/lib/rhythmic-semantics.test.ts (1 test) 4ms
+ ✓ src/lib/runtime-contract.test.ts (1 test) 1ms
+ ↓ src/server/lib/provider-connection.real-smoke.test.ts (1 test | 1 skipped)
+ ✓ src/artifact-preview.test.ts (8 tests) 91ms
+ ✓ src/guided-start-workflow-recovery.test.ts (4 tests) 153ms
+ ✓ src/guided-start-review-recovery.test.ts (1 test) 161ms
+ ✓ src/renderers.test.ts (10 tests) 654ms
+   ✓ tool renderers > registerRenderers can be called and registers all custom renderers  584ms
+ ✓ src/guided-start-security.test.ts (4 tests) 74ms
+ ✓ src/guided-start-evaluation-card.test.ts (1 test) 16ms
+ ✓ src/guided-start-owner-intent.test.ts (3 tests) 22ms
+ ✓ src/guided-start-arrangement-plan.test.ts (1 test) 16ms
+ ✓ src/lib/artifact-handoff.test.ts (2 tests) 9ms
+ ✓ src/server/lib/omr.real-smoke.test.ts (1 test) 57067ms
+   ✓ installed Audiveris smoke > retains native evidence and score-anchored uncertainty from a real public-domain PDF  57066ms
+ ✓ src/server/lib/podman-lilypond-runner.test.ts (6 tests) 56303ms
+   ✓ PodmanLilyPondRunner policy > retries a transient Podman machine startup without masking durable failures  590ms
+   ✓ PodmanLilyPondRunner isolation > compiles ordinary notation inside the pinned sandbox  32404ms
+   ✓ PodmanLilyPondRunner isolation > cannot read or overwrite a host sentinel and does not inherit secrets  23275ms
+ ✓ test/e2e/greensleeves-tracer.test.ts (1 test) 215077ms
+   ✓ Greensleeves PDF tracer bullet > uploads, recognizes, analyzes, arranges, audits, engraves, and compiles  213561ms
+
+ Test Files  134 passed | 1 skipped (135)
+      Tests  1066 passed | 1 skipped (1067)
+   Start at  09:43:37
+   Duration  218.42s (transform 4.70s, setup 0ms, collect 55.38s, tests 458.07s, environment 4.64s, prepare 8.85s)
+
+
+stderr | test/e2e/agent-conversation.test.ts > agent conversation (mocked) > agent has 12 tools with correct names
+Warning: Please use the `legacy` build in Node.js environments.
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+
+stderr | src/main.test.ts > browser entry wiring > rejects a stale API schema instead of silently starting
+Warning: Please use the `legacy` build in Node.js environments.
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+
+stderr | src/server/lib/theory-route.test.ts > theory routes > maps theory.py failures without exposing raw internal diagnostics
+{"event":"api_error","correlationId":"b7152b2e-6358-4b56-8430-38618b5507f2","method":"POST","path":"/api/analyze","status":500,"code":"internal_error","error":"malformed MusicXML"}
+
+stderr | src/server/lib/theory-route.test.ts > theory routes > maps subprocess timeouts to 500
+{"event":"api_error","correlationId":"3a97ddaa-3674-4582-9d2e-72d3cdbdc45d","method":"POST","path":"/api/lint","status":500,"code":"internal_error","error":"Timed out after 1ms\nProcess killed with SIGTERM"}
+
+stderr | src/renderers.test.ts
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+
+stderr | src/renderers.test.ts > tool renderers > registerRenderers can be called and registers all custom renderers
+Warning: Please use the `legacy` build in Node.js environments.
+
