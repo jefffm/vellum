@@ -336,7 +336,7 @@ export async function runFirstLoopEvaluation(options: {
           generatedRecordRefs: generated.map(recordRef),
           deliverableRefs: [],
           dimensionResults: narrowCard.dimensions.map((dimension) =>
-            absoluteResult(dimension, evaluatorRef, evaluationCase.id)
+            narrowDimensionToAbsoluteResult(dimension, evaluatorRef, evaluationCase.id)
           ),
         };
       } finally {
@@ -385,7 +385,7 @@ function recordRef(record: { id: string; version?: number }): DigestedRef {
   return { id: record.id, version: record.version ?? 1, digest: digestValue(record) };
 }
 
-function absoluteResult(
+export function narrowDimensionToAbsoluteResult(
   dimension: ReturnType<typeof buildNarrowEvaluationCard>["dimensions"][number],
   evaluatorRef: DigestedRef,
   caseId: string

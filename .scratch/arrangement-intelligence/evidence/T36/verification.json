@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T36",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T01:36:06Z",
+  "requirements": {
+    "AI-PROD-001": {
+      "status": "partial",
+      "remaining": "T44 human verification and reviewed calibration"
+    },
+    "AI-PROD-007": {
+      "status": "machine_verified",
+      "remaining": "T41-T43 target-specific human evidence"
+    },
+    "AI-PROD-008": { "status": "machine_verified", "remaining": "none" },
+    "AI-PROD-040": { "status": "machine_verified", "remaining": "late human dimensions" },
+    "AI-PROD-041": { "status": "partial", "remaining": "late failed-usefulness evidence" },
+    "AI-WPL-004": { "status": "machine_verified", "remaining": "late target-player outcomes" },
+    "AI-DEL-035": { "status": "partial", "remaining": "T41-T43 Playtests and H5 review" },
+    "AI-DEL-038": { "status": "machine_verified", "remaining": "late H2 review" },
+    "AI-DEL-039": {
+      "status": "machine_verified",
+      "remaining": "late Owner and target-player review"
+    },
+    "AI-DEL-041": { "status": "machine_verified", "remaining": "none" },
+    "AI-DEL-042": {
+      "status": "machine_verified",
+      "remaining": "late visual, audible, and physical review"
+    },
+    "AI-DEL-045": { "status": "machine_verified", "remaining": "late promotion review" },
+    "AI-DEL-046": { "status": "machine_verified", "remaining": "late musical and physical review" },
+    "AI-DEL-053": { "status": "machine_verified", "remaining": "late H2/H1 review" },
+    "AI-DEL-054": { "status": "machine_verified", "remaining": "late target-player review" },
+    "AI-DEL-055": {
+      "status": "machine_verified",
+      "remaining": "late specialist and engraving review"
+    },
+    "AI-DEL-056": { "status": "machine_verified", "remaining": "late human and Owner evidence" },
+    "AI-DEL-057": { "status": "machine_verified", "remaining": "final T40/T45 audits" }
+  },
+  "summary": {
+    "fullSuitePassed": 1049,
+    "fullSuiteSkipped": 1,
+    "parityRun": {
+      "manifestId": "evaluation-manifest.171d8893096e291dd1fb9c71",
+      "runId": "evaluation-run.55093f96-0032-4e84-9273-05178a5b0fce",
+      "targets": 3,
+      "cards": 3,
+      "independentSearches": 3,
+      "candidatesPerTarget": 2,
+      "deliverablesPerTarget": 5,
+      "hardGates": "pass",
+      "acceptance": "incomplete_pending_human"
+    },
+    "targetLayouts": {
+      "baroque-guitar-5": "french-letter-tablature",
+      "baroque-lute-13": "french-letter-tablature",
+      "classical-guitar-6": "standard-notation"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1049 passed, 1 skipped" },
+    {
+      "command": "node dist-server/server/three-target-parity-cli.js --output /tmp/vellum-t36-parity",
+      "result": "pass: three targets and no hard failures"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "8f48f4050ccc6899853355bc5a425c80c5a9352470295dd6aeaff43c2cfe1e75"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/36-three-target-parity-candidate.md",
+      "sha256": "7fa72b1b83fa9446938819aa0d5c347a595eb29c75956ad35a8648daf8868b57"
+    },
+    {
+      "path": "package.json",
+      "sha256": "b00160dcc891276b00cd61be65807af6710b3f7ec00b19ec05c3613a3ce640d3"
+    },
+    {
+      "path": "src/server/three-target-parity-cli.ts",
+      "sha256": "cfab5efa03095861acd0e6fd0dd9a9273382280cb4c8d217776da91b14f4b81b"
+    },
+    {
+      "path": "src/server/lib/three-target-parity.ts",
+      "sha256": "207d216078486fae218be3da47e642afed9970ef8e3508647f6d4c1b89370f5c"
+    },
+    {
+      "path": "src/server/lib/three-target-parity.test.ts",
+      "sha256": "7ef42d6fdb2bf0c187e7676dc48fc37f0d38e3f8e136bb5d77ef5a53d94004cf"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "sha256": "dc8a3356d9ff8268d8b5e5cd4f5e1297c4e52a8a0debd457d5f82bce9940dab2"
+    }
+  ]
+}
