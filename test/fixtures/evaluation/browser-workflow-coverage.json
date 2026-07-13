@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "scenarios": [
+    { "id": "review", "testFile": "src/guided-start-review-recovery.test.ts" },
+    { "id": "artifact_handoff", "testFile": "src/lib/artifact-handoff.test.ts" },
+    { "id": "selection", "testFile": "src/guided-start-security.test.ts" },
+    { "id": "editing", "testFile": "src/server/lib/arrangement-service.test.ts" },
+    { "id": "adoption", "testFile": "src/server/lib/arrangement-service.test.ts" },
+    { "id": "reload", "testFile": "src/guided-start-workflow-recovery.test.ts" },
+    { "id": "stale_responses", "testFile": "src/server/lib/arrangement-service.test.ts" }
+  ]
+}

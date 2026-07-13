@@ -557,6 +557,98 @@ export const StochasticEvaluationAggregateSchema = Type.Object(
 );
 export type StochasticEvaluationAggregate = Static<typeof StochasticEvaluationAggregateSchema>;
 
+export const SemanticNotationEvaluationSchema = Type.Object(
+  {
+    status: Type.Union([Type.Literal("pass"), Type.Literal("fail")]),
+    comparedEventIds: Type.Array(Id),
+    findings: Type.Array(
+      Type.Object(
+        {
+          code: Type.String({ minLength: 1 }),
+          eventId: Id,
+          message: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+  },
+  { additionalProperties: false }
+);
+export type SemanticNotationEvaluation = Static<typeof SemanticNotationEvaluationSchema>;
+
+export const FocusedVisualEvaluationSchema = Type.Object(
+  {
+    status: Type.Union([
+      Type.Literal("pass"),
+      Type.Literal("review_required"),
+      Type.Literal("fail"),
+    ]),
+    regions: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          changedFraction: Type.Number({ minimum: 0, maximum: 1 }),
+          tolerance: Type.Number({ minimum: 0, maximum: 1 }),
+          status: Type.Union([Type.Literal("pass"), Type.Literal("review_required")]),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    wholePageComparison: Type.Literal("supplementary"),
+  },
+  { additionalProperties: false }
+);
+export type FocusedVisualEvaluation = Static<typeof FocusedVisualEvaluationSchema>;
+
+export const CanonicalPlaybackEvaluationSchema = Type.Object(
+  {
+    status: Type.Union([Type.Literal("pass"), Type.Literal("fail")]),
+    comparedOccurrenceIds: Type.Array(Id),
+    comparedParts: Type.Array(Type.String({ minLength: 1 })),
+    findings: Type.Array(
+      Type.Object(
+        {
+          code: Type.String({ minLength: 1 }),
+          occurrenceId: Id,
+          message: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    waveformCompared: Type.Literal(false),
+  },
+  { additionalProperties: false }
+);
+export type CanonicalPlaybackEvaluation = Static<typeof CanonicalPlaybackEvaluationSchema>;
+
+export const MutationManifestSchema = Type.Object(
+  {
+    version: Version,
+    universalCompletenessClaim: Type.Literal(false),
+    mutations: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          category: Type.String({ minLength: 1 }),
+          evaluatorId: Id,
+          expectedFindingCode: Type.String({ minLength: 1 }),
+          expectedScope: Type.String({ minLength: 1 }),
+          permittedPresentation: Type.Union([
+            Type.Literal("hard_gate"),
+            Type.Literal("measured_evidence"),
+            Type.Literal("observation_only"),
+          ]),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+  },
+  { additionalProperties: false }
+);
+export type MutationManifest = Static<typeof MutationManifestSchema>;
+
 export const EvaluationDefinitionSchema = Type.Object(
   {
     id: Id,

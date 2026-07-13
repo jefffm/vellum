@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "universalCompletenessClaim": false,
+  "mutations": [
+    {
+      "id": "mutation.principal-voice",
+      "category": "principal_voice",
+      "evaluatorId": "evaluator.preservation",
+      "expectedFindingCode": "preservation.principal_voice",
+      "expectedScope": "passage",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.cadence",
+      "category": "cadence",
+      "evaluatorId": "evaluator.preservation",
+      "expectedFindingCode": "preservation.cadence",
+      "expectedScope": "cadence",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.continuo-foundation",
+      "category": "continuo_foundation",
+      "evaluatorId": "evaluator.continuo",
+      "expectedFindingCode": "continuo.foundation",
+      "expectedScope": "part",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.figures",
+      "category": "figures",
+      "evaluatorId": "evaluator.continuo",
+      "expectedFindingCode": "continuo.figure",
+      "expectedScope": "event",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.imitation",
+      "category": "imitation",
+      "evaluatorId": "evaluator.counterpoint",
+      "expectedFindingCode": "counterpoint.imitation",
+      "expectedScope": "relationship",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.positions",
+      "category": "positions",
+      "evaluatorId": "evaluator.mechanics",
+      "expectedFindingCode": "instrument.position",
+      "expectedScope": "event",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.stringing",
+      "category": "stringing",
+      "evaluatorId": "evaluator.mechanics",
+      "expectedFindingCode": "instrument.stringing",
+      "expectedScope": "target",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.lute-course",
+      "category": "lute_course_identity",
+      "evaluatorId": "evaluator.notation",
+      "expectedFindingCode": "notation.lute_course",
+      "expectedScope": "event",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.classical-duration",
+      "category": "classical_duration",
+      "evaluatorId": "evaluator.notation",
+      "expectedFindingCode": "notation.duration_changed",
+      "expectedScope": "event",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.plan",
+      "category": "plan_decisions",
+      "evaluatorId": "evaluator.plan",
+      "expectedFindingCode": "plan.decision_missing",
+      "expectedScope": "decision",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.playback-duplicate",
+      "category": "playback_duplication",
+      "evaluatorId": "evaluator.playback",
+      "expectedFindingCode": "playback.display_staff_duplication",
+      "expectedScope": "occurrence",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.repeats",
+      "category": "repeats",
+      "evaluatorId": "evaluator.playback",
+      "expectedFindingCode": "playback.repeat_decision_changed",
+      "expectedScope": "performed_form",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.handoff",
+      "category": "artifact_handoff",
+      "evaluatorId": "evaluator.workflow",
+      "expectedFindingCode": "workflow.artifact_handoff",
+      "expectedScope": "browser",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.stale",
+      "category": "staleness",
+      "evaluatorId": "evaluator.lineage",
+      "expectedFindingCode": "lineage.stale",
+      "expectedScope": "record",
+      "permittedPresentation": "hard_gate"
+    },
+    {
+      "id": "mutation.search-truth",
+      "category": "search_truthfulness",
+      "evaluatorId": "evaluator.search",
+      "expectedFindingCode": "search.false_infeasibility",
+      "expectedScope": "search",
+      "permittedPresentation": "hard_gate"
+    }
+  ]
+}

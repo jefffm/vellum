@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T33",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T00:45:44Z",
+  "requirements": {
+    "AI-EVAL-046": { "status": "machine_verified", "remaining": "late notation-semantics review" },
+    "AI-EVAL-063": { "status": "machine_verified", "remaining": "T35 licensed corpus breadth" },
+    "AI-EVAL-064": {
+      "status": "machine_verified",
+      "remaining": "late evaluator/expectation approval"
+    },
+    "AI-EVAL-065": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-066": {
+      "status": "machine_verified",
+      "remaining": "late H5 visual tolerance approval"
+    },
+    "AI-EVAL-067": { "status": "machine_verified", "remaining": "late H5 visual review" },
+    "AI-EVAL-068": {
+      "status": "machine_verified",
+      "remaining": "late audible-quality review remains separate"
+    },
+    "AI-EVAL-084": { "status": "partial", "remaining": "T34 report and T35 golden commands" }
+  },
+  "summary": {
+    "fullSuitePassed": 1033,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Semantic notation, focused visual, and canonical playback are independent typed result records",
+      "Semantic pitch/duration/role/notation mutations fail even when visual comparison is acceptable",
+      "Focused visual regions use explicit tolerances and whole-page pixels remain supplementary",
+      "Playback compares canonical identity, pitch, onset, duration, semantic part, occurrence, repeat iteration, and traversal without waveform comparison",
+      "Repeat, duration, part, occurrence, and display-staff duplication mutations produce independent scoped findings",
+      "Mutation Manifest covers every named defect family and authoritative evaluator while structurally denying universal completeness",
+      "Browser coverage links review, handoff, selection, editing, adoption, reload, and stale-response scenarios to executable suites",
+      "eval:render and eval:playback emit passing machine-readable contract results"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.4ce3638af3799729fcd7b56d",
+      "runId": "evaluation-run.c235e4d8-ffaf-426b-a74b-0b1bf1918b2c",
+      "cardId": "evaluation-card.bbe3d69d-a698-4505-8c82-6c61d010797a",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "visualAndAudibleHumanQuality": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1033 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:render",
+      "result": "pass: independent semantic and focused-visual records"
+    },
+    {
+      "command": "npm run --silent eval:playback",
+      "result": "pass: canonical event comparison without waveform"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t33-eval-final",
+      "result": "pass: hard gates pass and human visual/audible quality remains unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "4601f019598924f70f952e0d5562dc0f389891293d8753ac00f43d71e8768357"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/33-render-playback-mutations.md",
+      "sha256": "e39ab549b3803b84470b71ca38c7d38b90d27a4070d65426f1118d7b506f843e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9b9720d5f6f581189a0babbdfa60ada35e83c0126e490111a09b419857088901"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "c89b8473a3ecd02dff49524999b6c2dd9a2ebf43c16cc2e659b2f4286c2911f7"
+    },
+    {
+      "path": "src/server/lib/render-playback-evaluation.ts",
+      "sha256": "8b874d2e03a3cbbb79a790a6645fdec86be634a5bc2c24d0ffcc761aea0bacb7"
+    },
+    {
+      "path": "src/server/lib/render-playback-evaluation.test.ts",
+      "sha256": "90459b12ed9f05a63671fd671d291ed317d5d5082cc6fafd4fcc26aa1dfe2907"
+    },
+    {
+      "path": "src/server/render-playback-evaluation-cli.ts",
+      "sha256": "2ba4cc2898d260afdf27f7efe93a00f8842bb72128b0c3e334b2367441d29f09"
+    },
+    {
+      "path": "test/fixtures/evaluation/mutation-manifest.json",
+      "sha256": "8d765b3885b1f7f23919eabab060cd0b4051f468930318af9da546443c628adc"
+    },
+    {
+      "path": "test/fixtures/evaluation/browser-workflow-coverage.json",
+      "sha256": "5d93c2eb05e232fb4b6897a826a6c70d5a28264ff35b3c1d0deb73ea25997c3e"
+    }
+  ]
+}

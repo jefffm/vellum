@@ -21,6 +21,8 @@
     "eval:fast": "npm run server:build --silent && node dist-server/server/evaluation-cli.js",
     "eval:omr": "npm run server:build --silent && node dist-server/server/external-evaluation-cli.js --kind omr",
     "eval:model": "npm run server:build --silent && node dist-server/server/external-evaluation-cli.js --kind model",
+    "eval:render": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind render",
+    "eval:playback": "npm run server:build --silent && node dist-server/server/render-playback-evaluation-cli.js --kind playback",
     "eval:compare": "npm run server:build --silent && node dist-server/server/evaluation-comparison-cli.js"
   },
   "dependencies": {
