@@ -1,6 +1,6 @@
 # Thirteen-course-lute physical review and baseline approval
 
-Status: ready-for-human
+Status: wontfix
 
 Type: HITL
 
@@ -27,4 +27,8 @@ Physically and musically review the exact thirteen-course-lute result and accept
 - Exact LilyPond, SVG, PDF, MIDI, and Audio Preview bytes are digest-bound by the request.
 - Required scoped roles: target player, historical specialist, engraving editor, Owner, and baseline reviewer.
 - The request requires stopped-course/diapason, right-hand, recognition, historical, notation, usefulness, and baseline-tradeoff evidence against the modeled thirteen-course D-minor setup.
-- No human attestation has been created or inferred. This tracer remains `ready-for-human`.
+- No human attestation has been created or inferred.
+
+## Owner disposition
+
+On 2026-07-13 the Owner waived formal role-scoped attestation for this prototype wave and accepted the current artifact only as a prototype baseline with known limitations. Physical playability, historical idiom, notation quality, and independent baseline approval remain unevaluated rather than passed. Scale-length-aware reach, a 690 mm exact Owner Instrument Instance, and the rejected measure-3 `f/b` span are carried into the follow-up wave.

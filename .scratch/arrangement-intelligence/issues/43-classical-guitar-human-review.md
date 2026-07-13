@@ -1,6 +1,6 @@
 # Classical-guitar physical review and baseline approval
 
-Status: ready-for-human
+Status: wontfix
 
 Type: HITL
 
@@ -27,4 +27,8 @@ Physically and musically review the exact classical-guitar result and accept or 
 - Exact LilyPond, SVG, PDF, MIDI, and Audio Preview bytes are digest-bound by the request.
 - Required scoped roles: target player, engraving editor, Owner, and baseline reviewer.
 - The request requires position/sustain, polyphonic clarity, recognition, notation, usefulness, and baseline-tradeoff evidence against the modeled standard EADGBE setup.
-- No human attestation has been created or inferred. This tracer remains `ready-for-human`.
+- No human attestation has been created or inferred.
+
+## Owner disposition
+
+On 2026-07-13 the Owner waived formal role-scoped attestation for this prototype wave and accepted the current artifact only as a prototype baseline with known limitations. Position/sustain playability, polyphonic clarity, notation quality, and independent baseline approval remain unevaluated rather than passed. The observed discontinuous four-note bass and the missing target-voice planning model are carried into the follow-up wave.

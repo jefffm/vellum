@@ -19,7 +19,7 @@ Prepare focused accepted-decision documents from implemented evidence and remove
 
 ## Delivered
 
-- Six focused ADRs document Source Truth convergence, versioned Brief/Plan lineage, exact Instrument Instances, serializable bounded search, versioned evaluation/promotion, and reviewed Playtest learning. Each remains explicitly Proposed until the T44 Owner architecture gate.
+- Six focused ADRs document Source Truth convergence, versioned Brief/Plan lineage, exact Instrument Instances, serializable bounded search, versioned evaluation/promotion, and reviewed Playtest learning. The Owner accepted them as the prototype architecture baseline at T44 on 2026-07-13.
 - A canonical-ownership and migration inventory names one owner for every decision/evidence family and lists every intentionally retained legacy surface.
 - The flat `/api/arrangements` store now labels new and pre-boundary records `noncanonical_legacy_projection` and requires real workspace import before canonical use. No migration fabricates source provenance, review authority, Analysis, Plan, Search, audit, or lineage.
 - CONTEXT and the model system prompt describe the actual workspace pipeline, three priority target families, contextual continuo, imitative intabulation, and the noncanonical compatibility boundary.
@@ -33,7 +33,7 @@ Prepare focused accepted-decision documents from implemented evidence and remove
 
 ## Honest limits
 
-- This tracer prepares and verifies Proposed decisions. It does not self-authorize H9/H10 Owner acceptance; T44 owns that gate.
+- This tracer prepared and verified the decisions without self-authorizing H9/H10 Owner acceptance; the later T44 Owner decision accepted the prototype architecture baseline while waiving the remaining role-scoped attestations for this wave.
 - The flat compatibility store is quarantined rather than automatically converted. A canonical import needs the real source and reviewed decisions, which cannot be reconstructed honestly from generated LilyPond alone.
 - Stateless compile/engrave tools remain supported for projection and diagnostics, but their success is not Arrangement Readiness.
 

@@ -1,10 +1,12 @@
 # Arrangement Intelligence execution plan
 
-Status: in-progress
+Status: closing
 
 ## Outcome
 
-Implement and verify the complete modular specification under `docs/proposals/arrangement-intelligence/`, disposition every `TECH_DEBT_AUDIT.md` finding F001–F047, achieve three-target parity, validate the shared architecture through continuo and imitative domains, and retain exact machine and human evidence for every completion claim.
+Implement and verify the modular specification under `docs/proposals/arrangement-intelligence/`, disposition every `TECH_DEBT_AUDIT.md` finding F001–F047, achieve an initial three-target prototype baseline, validate the shared architecture through continuo and imitative domains, and retain exact evidence for every claim actually made.
+
+On 2026-07-13 the Owner accepted the implemented work as a prototype baseline with known limitations and explicitly waived the remaining role-scoped T41–T43 attestations for this wave. This scope decision does not convert missing target-player, historical-specialist, engraving-editor, or baseline-reviewer evidence into passes. Those dimensions remain unevaluated and move with the observed defects into the follow-up wave.
 
 ## Goal judge
 
@@ -13,11 +15,11 @@ The active goal is complete only when:
 - every normative specification clause has a stable requirement ID and current evidence;
 - every F001–F047 finding is fixed and verified, disproven, superseded by an accepted decision, or explicitly accepted by the Owner;
 - every required AFK tracer is committed and pushed;
-- every mandatory HITL attestation is current and accepted;
+- every mandatory HITL attestation is current and accepted, or the Owner has explicitly waived it for this prototype wave without converting the missing evidence into a pass;
 - all required evaluation suites and repository quality gates pass at the final commit;
 - three-target parity and cross-domain validation pass;
-- focused ADRs are accepted; and
-- no mandatory evidence remains failed, unknown, incompatible, awaiting, or stale.
+- focused ADRs are accepted for continued prototype use; and
+- no machine evidence required for this prototype baseline remains failed, incompatible, awaiting, or stale; waived human dimensions remain explicitly unknown.
 
 The requirement ledger and audit traceability matrix are authoritative. Existing tests or `spec:verify` alone cannot establish completeness.
 
@@ -108,9 +110,9 @@ The requirement ledger and audit traceability matrix are authoritative. Existing
 12. Concrete continuo and imitative cross-domain validation
 13. Final product, ADR, and audit closure
 
-## Mandatory human evidence
+## Human evidence boundary
 
-Human attestations identify exact artifact, fixture, implementation, instrument, protocol, reviewer role, result, confidence, rationale, date, and staleness dependencies.
+The full product-acceptance target remains the role-scoped evidence below. The Owner waived collection for the current prototype closeout; none may be reported as passed without a conforming attestation. Future production-readiness or baseline-promotion claims must restore these gates.
 
 - Owner policy decisions
 - Fixture licensing approval

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed — implemented evidence exists; Owner acceptance is deferred to T44.
+Accepted — Owner accepted the prototype architecture baseline at T44 on 2026-07-13.
 
 ## Context
 
