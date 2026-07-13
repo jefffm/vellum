@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -7,6 +9,10 @@ import {
 } from "../scripts/verify-arrangement-intelligence.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+
+function sha256(filename: string): string {
+  return createHash("sha256").update(readFileSync(filename)).digest("hex");
+}
 
 function currentState() {
   return loadArrangementIntelligenceState(root);
@@ -61,5 +67,51 @@ describe("Arrangement Intelligence completion verifier", () => {
     expect(errors.some((error: string) => error.includes("missing mandatory human evidence"))).toBe(
       true
     );
+  });
+
+  it("accepts an explicit Owner waiver only for a human-scoped requirement", () => {
+    const state = currentState();
+    const humanRequirement = state.requirements.find(
+      ({ humanEvidence }: { humanEvidence: string }) => !humanEvidence.startsWith("H0")
+    );
+    const machineRequirement = state.requirements.find(
+      ({ humanEvidence }: { humanEvidence: string }) => humanEvidence.startsWith("H0")
+    );
+    const automated = [
+      {
+        command: "node scripts/pre-hitl-audit.mjs",
+        result: "pass",
+        artifact: ".scratch/arrangement-intelligence/evidence/T40/verification.json",
+        recordedAt: "2026-07-13T00:00:00Z",
+        dependencies: [
+          {
+            path: "package.json",
+            sha256: sha256(path.join(root, "package.json")),
+          },
+        ],
+      },
+    ];
+    const record = {
+      status: "owner_waived",
+      requirementDigest: humanRequirement.digest,
+      implementationCommit: "0".repeat(40),
+      verificationCommit: "1".repeat(40),
+      automated,
+      human: [],
+    };
+
+    expect(
+      validateRequirementEvidence(root, humanRequirement, record, {
+        path: ".scratch/arrangement-intelligence/evidence/T44/OWNER_SCOPE_DECISION.md",
+      })
+    ).toEqual([]);
+    expect(
+      validateRequirementEvidence(
+        root,
+        machineRequirement,
+        { ...record, requirementDigest: machineRequirement.digest },
+        { path: ".scratch/arrangement-intelligence/evidence/T44/OWNER_SCOPE_DECISION.md" }
+      )
+    ).toContain(`${machineRequirement.id} cannot waive a machine-only requirement`);
   });
 });

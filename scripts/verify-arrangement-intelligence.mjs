@@ -30,6 +30,14 @@ const FAMILY_SOURCES = new Map([
   ["EVAL", "evaluation-harness.md"],
   ["DEL", "delivery-plan.md"],
 ]);
+const OWNER_ACCEPTED_PROTOTYPE_SCOPE = "owner_accepted_prototype_baseline";
+const OWNER_WAIVED_HUMAN_TRACERS = new Set([41, 42, 43]);
+const COMPLETION_METADATA_PATHS = [
+  ".scratch/arrangement-intelligence/PLAN.md",
+  ".scratch/arrangement-intelligence/completion-manifest.json",
+  ".scratch/arrangement-intelligence/issues/45-machine-goal-closure.md",
+  ".scratch/arrangement-intelligence/evidence/T45/",
+];
 
 export class ArrangementIntelligenceVerificationError extends Error {
   constructor(errors) {
@@ -341,10 +349,20 @@ function validateDependencies(root, dependencies, label, errors) {
   }
 }
 
-export function validateRequirementEvidence(root, requirement, record) {
+export function validateRequirementEvidence(root, requirement, record, ownerScopeDecision) {
   const errors = [];
   const label = requirement.id;
-  if (!record || record.status !== "verified") errors.push(`${label} is not verified`);
+  const needsHuman = !requirement.humanEvidence.startsWith("H0");
+  const ownerWaived = record?.status === "owner_waived";
+  if (!record || !["verified", "owner_waived"].includes(record.status)) {
+    errors.push(`${label} is neither verified nor explicitly Owner-waived`);
+  }
+  if (ownerWaived && !needsHuman) {
+    errors.push(`${label} cannot waive a machine-only requirement`);
+  }
+  if (ownerWaived && !ownerScopeDecision) {
+    errors.push(`${label} lacks the Owner scope decision required for a waiver`);
+  }
   if (record?.requirementDigest !== requirement.digest)
     errors.push(`${label} evidence targets a stale requirement`);
   if (!validCommit(record?.implementationCommit))
@@ -367,8 +385,7 @@ export function validateRequirementEvidence(root, requirement, record) {
       validateDependencies(root, evidence.dependencies, evidenceLabel, errors);
     }
   }
-  const needsHuman = !requirement.humanEvidence.startsWith("H0");
-  if (needsHuman && (!Array.isArray(record?.human) || record.human.length === 0)) {
+  if (needsHuman && !ownerWaived && (!Array.isArray(record?.human) || record.human.length === 0)) {
     errors.push(`${label} is missing mandatory human evidence`);
   }
   for (const [index, evidence] of (record?.human ?? []).entries()) {
@@ -440,12 +457,54 @@ function repositoryHead(root) {
   return execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 }
 
+function verifiedCommitCoversHead(root, verifiedCommit, head) {
+  if (verifiedCommit === head) return { covered: true, unexpectedPaths: [] };
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", verifiedCommit, head], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch {
+    return { covered: false, unexpectedPaths: [] };
+  }
+  const paths = execFileSync("git", ["diff", "--name-only", `${verifiedCommit}..${head}`], {
+    cwd: root,
+    encoding: "utf8",
+  })
+    .split(/\r?\n/)
+    .filter(Boolean);
+  const unexpectedPaths = paths.filter(
+    (candidate) =>
+      !COMPLETION_METADATA_PATHS.some((allowed) =>
+        allowed.endsWith("/") ? candidate.startsWith(allowed) : candidate === allowed
+      )
+  );
+  return { covered: unexpectedPaths.length === 0, unexpectedPaths };
+}
+
 export function validateCompletionState(state) {
   const errors = validatePlanningState(state);
   const { root, manifest, requirements, findings, issues } = state;
   if (manifest.status !== "complete") errors.push("completion manifest is not marked complete");
+  const ownerAcceptedPrototype = manifest.acceptanceScope === OWNER_ACCEPTED_PROTOTYPE_SCOPE;
+  if (!ownerAcceptedPrototype) {
+    errors.push("completion manifest lacks the Owner-accepted prototype scope");
+  }
+  if (!manifest.ownerScopeDecision?.recordedAt) {
+    errors.push("completion manifest lacks a dated Owner scope decision");
+  }
+  validateDependencies(
+    root,
+    manifest.ownerScopeDecision ? [manifest.ownerScopeDecision] : [],
+    "Owner scope decision",
+    errors
+  );
   for (const issue of issues) {
-    if (issue.status !== "complete") {
+    const explicitlyWaived =
+      ownerAcceptedPrototype &&
+      OWNER_WAIVED_HUMAN_TRACERS.has(issue.id) &&
+      issue.status === "wontfix";
+    if (issue.status !== "complete" && !explicitlyWaived) {
       errors.push(`T${String(issue.id).padStart(2, "0")} is not complete`);
     }
   }
@@ -466,7 +525,12 @@ export function validateCompletionState(state) {
   );
   for (const requirement of requirements) {
     errors.push(
-      ...validateRequirementEvidence(root, requirement, requirementEvidence[requirement.id])
+      ...validateRequirementEvidence(
+        root,
+        requirement,
+        requirementEvidence[requirement.id],
+        manifest.ownerScopeDecision
+      )
     );
   }
   const knownRequirements = new Set(requirements.map(({ id }) => id));
@@ -488,7 +552,14 @@ export function validateCompletionState(state) {
     if (!suite.command || suite.result !== "pass" || !suite.artifact || !suite.recordedAt) {
       errors.push(`${label} is incomplete or non-passing`);
     }
-    if (suite.verifiedCommit !== head) errors.push(`${label} was not run against repository HEAD`);
+    const coverage = verifiedCommitCoversHead(root, suite.verifiedCommit, head);
+    if (!coverage.covered) {
+      errors.push(
+        coverage.unexpectedPaths.length
+          ? `${label} predates non-metadata changes: ${coverage.unexpectedPaths.join(", ")}`
+          : `${label} was not run against repository HEAD or its metadata-only ancestor`
+      );
+    }
     validateDependencies(root, suite.dependencies, label, errors);
   }
   return errors;

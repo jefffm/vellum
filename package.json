@@ -18,6 +18,7 @@
     "spec:verify": "node scripts/verify-spec-reconciliation.mjs && node scripts/verify-arrangement-intelligence.mjs",
     "spec:arrangement-intelligence": "node scripts/verify-arrangement-intelligence.mjs",
     "spec:arrangement-intelligence:complete": "node scripts/verify-arrangement-intelligence.mjs --complete",
+    "spec:arrangement-intelligence:close": "node scripts/final-completion-audit.mjs",
     "sandbox:lilypond:verify": "node scripts/verify-lilypond-sandbox.mjs",
     "eval:fast": "npm run server:build --silent && node dist-server/server/evaluation-cli.js",
     "eval:golden": "npm run server:build --silent && node dist-server/server/golden-evaluation-cli.js",
