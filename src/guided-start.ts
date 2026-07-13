@@ -1826,6 +1826,16 @@ export async function refreshGuidedWorkflowRecovery(
   restart.onclick = () => void run("restart");
 }
 
+function globalLauncherBar(): HTMLElement {
+  const existing = document.querySelector<HTMLElement>("#vellum-launcher-bar");
+  if (existing) return existing;
+  const bar = document.createElement("nav");
+  bar.id = "vellum-launcher-bar";
+  bar.setAttribute("aria-label", "Vellum actions");
+  document.body.append(bar);
+  return bar;
+}
+
 export function installGuidedStart(options: GuidedStartOptions): void {
   const linkedWorkspace = new URL(window.location.href).searchParams.get("workspace");
   let activeWorkspaceId =
@@ -1839,7 +1849,7 @@ export function installGuidedStart(options: GuidedStartOptions): void {
   launcher.id = "guided-start-launcher";
   launcher.type = "button";
   launcher.textContent = "New arrangement";
-  document.body.append(launcher);
+  globalLauncherBar().append(launcher);
   installWorkspaceNavigator();
   installOwnerKnowledgeWorkbench();
 
@@ -2127,7 +2137,8 @@ export function installWorkspaceNavigator(): HTMLDialogElement {
   close.textContent = "Close";
   close.addEventListener("click", () => dialog.close());
   dialog.append(heading, explanation, status, content, close);
-  document.body.append(launcher, dialog);
+  globalLauncherBar().append(launcher);
+  document.body.append(dialog);
 
   const refresh = async () => {
     status.textContent = "Loading local projects…";
@@ -2336,7 +2347,8 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
   close.textContent = "Close";
   close.addEventListener("click", () => dialog.close());
   dialog.append(heading, intro, status, content, close);
-  document.body.append(launcher, dialog);
+  globalLauncherBar().append(launcher);
+  document.body.append(dialog);
 
   const mutate = async (url: string, method = "POST", body?: unknown) => {
     await api(url, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
