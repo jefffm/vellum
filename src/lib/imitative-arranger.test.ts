@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadBrowserProfile } from "./browser-profiles.js";
-import { arrangeImitativeIntabulation, auditImitative } from "./imitative-arranger.js";
+import {
+  arrangeImitativeIntabulation,
+  auditImitative,
+  rankImitativeAssignments,
+} from "./imitative-arranger.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
@@ -28,6 +32,14 @@ describe("three-voice imitative intabulation search", () => {
       createdAt: "2026-07-10T13:00:00.000Z",
     });
     const model = InstrumentModel.fromProfile(loadBrowserProfile("renaissance-lute-6"));
+    const lowFretAssignments = rankImitativeAssignments(score, model, "low-fret-polyphony");
+    const continuityAssignments = rankImitativeAssignments(score, model, "voice-continuity");
+    expect(lowFretAssignments.completeAssignmentCount).toBeGreaterThan(1);
+    expect(continuityAssignments.completeAssignmentCount).toBeGreaterThan(1);
+    expect(lowFretAssignments.selected.size).toBe(
+      score.events.filter(({ type }) => type === "note").length
+    );
+    expect(continuityAssignments.selected.size).toBe(lowFretAssignments.selected.size);
     const result = arrangeImitativeIntabulation(score, analysis, model, {
       arrangementId: "arrangement.imitation",
       createdAt: "2026-07-10T14:00:00.000Z",

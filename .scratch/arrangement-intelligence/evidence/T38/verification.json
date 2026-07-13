@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T38",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T02:23:48Z",
+  "requirements": {
+    "AI-STP-059": {
+      "status": "machine_verified",
+      "remaining": "late historical, physical, and specialist review"
+    },
+    "AI-DEL-036": { "status": "machine_verified", "remaining": "late human evidence" },
+    "AI-DEL-050": { "status": "machine_verified", "remaining": "T39 ADR review" }
+  },
+  "summary": {
+    "fullSuitePassed": 1052,
+    "fullSuiteSkipped": 1,
+    "candidateStrategies": ["low-fret-polyphony", "voice-continuity"],
+    "completeAssignmentPolicy": "rank up to 128 retained complete assignments per strategy",
+    "protectedState": [
+      "ordered subject entries",
+      "subject interval-rhythm shapes",
+      "source voice continuity",
+      "cadential goals"
+    ],
+    "projections": 5,
+    "hardGates": "pass",
+    "humanEvidence": "explicitly_unknown"
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1052 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/lib/imitative-arranger.test.ts src/server/lib/imitative-evaluation.test.ts test/e2e/imitative-counterpoint-tracer.test.ts src/server/lib/evaluation-harness.test.ts",
+      "result": "pass: 9 tests"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "0cd00fb876f146ac64412475b70713f6cc58b41d191e08038c71610254608664"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/38-imitative-loop.md",
+      "sha256": "7630ca3286b148f139b18d8ec0162888702388b731fb4ec4e0a98ec97c925d6c"
+    },
+    {
+      "path": "src/lib/imitative-arranger.ts",
+      "sha256": "e53d644e087b20e6b6a8a8e73b656ec33b153e7c19d2f215240dae32331f745e"
+    },
+    {
+      "path": "src/lib/imitative-arranger.test.ts",
+      "sha256": "97c7a9e4154819e3274d3a6ef41b16d81514ea7bff6a509cab83640595d47767"
+    },
+    {
+      "path": "src/server/lib/imitative-evaluation.ts",
+      "sha256": "76b93b3c9ae8dc57a199e4fa9df7dcca1ed4266284bd9214268d293e4fcfb82d"
+    },
+    {
+      "path": "src/server/lib/imitative-evaluation.test.ts",
+      "sha256": "591dbce62ca80fbdbec842d98bdca284727afe2882431f6b29c52d15dadc8b5c"
+    }
+  ]
+}

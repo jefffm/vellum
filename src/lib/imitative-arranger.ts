@@ -44,7 +44,7 @@ export function arrangeImitativeIntabulation(
   }
   const strategies = options.allowedStrategies ?? ["low-fret-polyphony", "voice-continuity"];
   const candidates: ArrangementCandidate[] = strategies.map((strategy) => {
-    const assignments = assignCourses(score, model, strategy);
+    const assignments = rankImitativeAssignments(score, model, strategy).selected;
     const events = projectEvents(score, assignments);
     const audit = applyPreservationPolicy(
       auditImitative(score, analysis, events, model),
@@ -100,11 +100,16 @@ export function arrangeImitativeIntabulation(
   };
 }
 
-function assignCourses(
+export function rankImitativeAssignments(
   score: NormalizedScore,
   model: InstrumentModel,
-  strategy: "low-fret-polyphony" | "voice-continuity"
-): Map<string, ArrangementPosition> {
+  strategy: "low-fret-polyphony" | "voice-continuity",
+  maximumCompleteAssignments = 128
+): {
+  selected: Map<string, ArrangementPosition>;
+  completeAssignmentCount: number;
+  truncated: boolean;
+} {
   const notes = score.events
     .filter((event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note")
     .map((source) => ({
@@ -117,9 +122,16 @@ function assignCourses(
         left.start - right.start || left.source.partId.localeCompare(right.source.partId)
     );
   const assigned: AssignedNote[] = [];
+  const completeAssignments: AssignedNote[][] = [];
 
-  function search(index: number): boolean {
-    if (index >= notes.length) return true;
+  function search(index: number): void {
+    if (completeAssignments.length >= maximumCompleteAssignments) return;
+    if (index >= notes.length) {
+      completeAssignments.push(
+        assigned.map((item) => ({ ...item, position: { ...item.position } }))
+      );
+      return;
+    }
     const note = notes[index]!;
     const previous = assigned
       .filter((candidate) => candidate.source.partId === note.source.partId)
@@ -143,16 +155,58 @@ function assignCourses(
       if (!model.isPlayable([...simultaneous.map((candidate) => candidate.position), position]).ok)
         continue;
       assigned.push({ ...note, position });
-      if (search(index + 1)) return true;
+      search(index + 1);
       assigned.pop();
     }
-    return false;
   }
 
-  if (!search(0)) {
+  search(0);
+  if (completeAssignments.length === 0) {
     throw new Error("No collision-free six-course assignment preserves all imitative voices");
   }
-  return new Map(assigned.map((assignment) => [assignment.source.id, assignment.position]));
+  completeAssignments.sort((left, right) => compareCompleteAssignments(left, right, strategy));
+  const selected = completeAssignments[0]!;
+  return {
+    selected: new Map(selected.map((assignment) => [assignment.source.id, assignment.position])),
+    completeAssignmentCount: completeAssignments.length,
+    truncated: completeAssignments.length >= maximumCompleteAssignments,
+  };
+}
+
+function compareCompleteAssignments(
+  left: AssignedNote[],
+  right: AssignedNote[],
+  strategy: "low-fret-polyphony" | "voice-continuity"
+): number {
+  const lowFretCost = (items: AssignedNote[]) =>
+    items.reduce((sum, item) => sum + item.position.fret, 0);
+  const openCount = (items: AssignedNote[]) =>
+    items.filter((item) => item.position.fret === 0).length;
+  const continuityCost = (items: AssignedNote[]) => {
+    const byVoice = new Map<string, AssignedNote[]>();
+    for (const item of items) {
+      const voice = byVoice.get(item.source.partId) ?? [];
+      voice.push(item);
+      byVoice.set(item.source.partId, voice);
+    }
+    return [...byVoice.values()].reduce((total, voice) => {
+      voice.sort((a, b) => a.start - b.start);
+      return (
+        total +
+        voice.slice(1).reduce((sum, item, index) => {
+          const prior = voice[index]!;
+          return (
+            sum +
+            Number(item.position.course !== prior.position.course) * 4 +
+            Math.abs(item.position.fret - prior.position.fret)
+          );
+        }, 0)
+      );
+    }, 0);
+  };
+  return strategy === "voice-continuity"
+    ? continuityCost(left) - continuityCost(right) || lowFretCost(left) - lowFretCost(right)
+    : lowFretCost(left) - lowFretCost(right) || openCount(right) - openCount(left);
 }
 
 function projectEvents(
