@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T35",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T01:21:21Z",
+  "requirements": {
+    "AI-PROD-018": { "status": "machine_verified", "remaining": "late H2/H5 boundary review" },
+    "AI-WPL-071": {
+      "status": "machine_verified",
+      "remaining": "late privacy review for any real export"
+    },
+    "AI-WPL-072": {
+      "status": "machine_verified",
+      "remaining": "late rights review for any real export"
+    },
+    "AI-EVAL-051": { "status": "machine_verified", "remaining": "late musical boundary review" },
+    "AI-EVAL-052": {
+      "status": "machine_verified",
+      "remaining": "late authored expectation review"
+    },
+    "AI-EVAL-053": {
+      "status": "machine_verified",
+      "remaining": "late specialist review where applicable"
+    },
+    "AI-EVAL-054": {
+      "status": "machine_verified",
+      "remaining": "late target-player and engraving review"
+    },
+    "AI-EVAL-056": { "status": "machine_verified", "remaining": "late musical equivalence review" },
+    "AI-EVAL-057": {
+      "status": "machine_verified",
+      "remaining": "late fixed-glyph editorial review if introduced"
+    },
+    "AI-EVAL-058": { "status": "machine_verified", "remaining": "late reference evidence review" },
+    "AI-EVAL-062": {
+      "status": "machine_verified",
+      "remaining": "late privacy and rights review for any real export"
+    },
+    "AI-DEL-034": { "status": "machine_verified", "remaining": "T36 generated parity run" },
+    "AI-DEL-047": { "status": "machine_verified", "remaining": "T42 human lute evidence" },
+    "AI-DEL-048": {
+      "status": "machine_verified",
+      "remaining": "T43 human classical-guitar evidence"
+    },
+    "AI-DEL-049": { "status": "machine_verified", "remaining": "T41 human baroque-guitar evidence" }
+  },
+  "summary": {
+    "fullSuitePassed": 1048,
+    "fullSuiteSkipped": 1,
+    "corpus": {
+      "id": "dataset.three-target-golden",
+      "version": 1,
+      "role": "held_out",
+      "cases": 4,
+      "targets": ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"],
+      "acceptableAlternativesPassed": 8,
+      "mutationsDetected": 8,
+      "privateWorkspaceExports": 0
+    },
+    "goldenRunId": "evaluation-run.3ef9cb86-7cf1-4e46-9445-032f38dd7307"
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1048 passed, 1 skipped" },
+    {
+      "command": "node dist-server/server/golden-evaluation-cli.js --output /tmp/vellum-t35-golden",
+      "result": "pass: four cases, eight alternatives, eight detected mutations"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "7b51a6903d6a21c7e941a20c806d29fed5b277c5a6d3b2d4b7a29cfd23a74b0b"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/35-three-target-corpus.md",
+      "sha256": "9513fce83a629e30e5fe8b6a1eae9185da9faf0c8375175ecccc9a873630427a"
+    },
+    {
+      "path": "src/server/golden-evaluation-cli.ts",
+      "sha256": "38373629e4a6b0ecbf8059ec49d996b0041110cc2e417a17e08044e3d75bd2e4"
+    },
+    {
+      "path": "src/server/lib/golden-corpus.ts",
+      "sha256": "426f7ca1e78b9a3c326ade4d218a1f7f45b9862ca8e9058180414d8257e95ca4"
+    },
+    {
+      "path": "src/server/lib/golden-corpus.test.ts",
+      "sha256": "ef9e90f7753ad774db6cb6d3cb56b21be1256ac20a777adf3b6482adb2f722a6"
+    },
+    {
+      "path": "test/fixtures/README.md",
+      "sha256": "e587cd32d4c401b2834b78ab5b7258fc5a9f585a1589bfeb432736fefe54eb30"
+    },
+    {
+      "path": "test/fixtures/baroque-guitar-transition-study.ly",
+      "sha256": "cc2c035475d31ad05af4217466098ec70e8c2a3e6b79e1e4e129f588227ac2c4"
+    },
+    {
+      "path": "test/fixtures/classical-guitar-polyphony.ly",
+      "sha256": "082d2eea60fa32c015648bfc5e6296f2f7be217fd6383452bc758df3f51db008"
+    },
+    {
+      "path": "test/fixtures/diapason-test.ly",
+      "sha256": "5ba137d07d8488191d0914b1c0146591566fad4a11600fad6ed3b12666327b7f"
+    },
+    {
+      "path": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md",
+      "sha256": "f9496b57f108f0603ecf350f74a5f5b4833066014f473c1c41e8a185c760c19a"
+    },
+    {
+      "path": "test/fixtures/evaluation/three-target-golden-corpus.json",
+      "sha256": "0ba5da0e111a46310fa9e7b4ab172976a4100cd1b310b67221c76b69d04a3dc9"
+    }
+  ]
+}

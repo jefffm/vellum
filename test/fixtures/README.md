@@ -28,6 +28,15 @@ mappings, uncertainty classification, and Score-Anchored Review without relying
 on a fabricated backend result. See
 [`audiveris/PROVENANCE.md`](audiveris/PROVENANCE.md).
 
+## `evaluation/`
+
+The held-out-aware three-target Golden corpus combines the public-domain
+Greensleeves source with original CC0 baroque-guitar transition, 13-course lute
+stopped/diapason, and polyphonic classical-guitar studies. The manifest records
+reviewed truth, Analysis, independent target Plans, invariant boundaries,
+mutations, and multiple acceptable alternatives. See
+[`evaluation/THREE_TARGET_PROVENANCE.md`](evaluation/THREE_TARGET_PROVENANCE.md).
+
 ## LilyPond Fixtures
 
 | File                      | Source              | License       |

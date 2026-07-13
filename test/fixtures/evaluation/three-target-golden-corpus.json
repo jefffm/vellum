@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "dataset": {
+    "id": "dataset.three-target-golden",
+    "version": 1,
+    "role": "held_out",
+    "privateWorkspaceExports": []
+  },
+  "cases": [
+    {
+      "id": "golden.greensleeves-cross-target",
+      "source": {
+        "path": "test/fixtures/greensleeves/greensleeves-satb.ly",
+        "sha256": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+        "mediaType": "text/x-lilypond",
+        "origin": "Mutopia 1247, traditional Greensleeves SATB setting",
+        "license": "Public Domain",
+        "provenancePath": "test/fixtures/greensleeves/PROVENANCE.md"
+      },
+      "reviewedTruth": {
+        "reviewStatus": "repository_reviewed",
+        "principalVoice": "Soprano",
+        "voices": ["Soprano", "Alto", "Tenor", "Bass"],
+        "facts": [
+          "pickup and phrase boundaries retained",
+          "principal melody event order retained",
+          "cadential goals retained"
+        ]
+      },
+      "analysis": {
+        "texture": "SATB homophony with independent voice-leading",
+        "concepts": ["principal_voice", "counterpoint", "cadence", "voice_leading"],
+        "cadenceGoals": ["phrase-1", "phrase-2", "phrase-3"]
+      },
+      "plans": [
+        {
+          "targetId": "baroque-guitar-5",
+          "decisions": [
+            "preserve principal voice audibly above supporting texture",
+            "reduce inner voices before altering melody",
+            "use exact French-stringing mechanics"
+          ]
+        },
+        {
+          "targetId": "baroque-lute-13",
+          "decisions": [
+            "preserve principal voice and cadences",
+            "use stopped courses for the active upper texture",
+            "use diapasons only where the bass role and tuning permit"
+          ]
+        },
+        {
+          "targetId": "classical-guitar-6",
+          "decisions": [
+            "preserve principal voice as an independent notated voice",
+            "retain polyphonic durations where mechanically feasible",
+            "prefer standard notation with optional tablature"
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "id": "greensleeves.principal-sequence",
+          "category": "musical_identity",
+          "targetIds": ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"],
+          "assertion": "The complete reviewed principal-event sequence remains present and ordered.",
+          "allowedTransformations": [
+            "octave displacement within declared range",
+            "ornament disclosure"
+          ],
+          "forbidden": [
+            "principal event omission",
+            "voice crossing that obscures the principal voice"
+          ]
+        },
+        {
+          "id": "greensleeves.cadences",
+          "category": "cadence",
+          "targetIds": ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"],
+          "assertion": "Each reviewed phrase retains its cadential goal and arrival order.",
+          "allowedTransformations": ["target-idiomatic revoicing"],
+          "forbidden": ["cadence deletion", "cadential bass substitution without disclosure"]
+        }
+      ],
+      "mutations": [
+        {
+          "id": "mutation.greensleeves.omit-principal-event",
+          "operation": "omit_principal_event",
+          "expectedInvariantIds": ["greensleeves.principal-sequence"],
+          "expectedDisposition": "hard_fail"
+        },
+        {
+          "id": "mutation.greensleeves.delete-cadence",
+          "operation": "delete_cadential_arrival",
+          "expectedInvariantIds": ["greensleeves.cadences"],
+          "expectedDisposition": "hard_fail"
+        }
+      ],
+      "acceptableAlternatives": [
+        {
+          "id": "alternative.greensleeves.sparse",
+          "status": "reviewed_valid_boundary",
+          "description": "Principal melody with sparse cadence-defining support."
+        },
+        {
+          "id": "alternative.greensleeves.polyphonic",
+          "status": "reviewed_valid_boundary",
+          "description": "Denser polyphonic reduction retaining the same protected identity."
+        }
+      ]
+    },
+    {
+      "id": "golden.baroque-guitar-transition",
+      "source": {
+        "path": "test/fixtures/baroque-guitar-transition-study.ly",
+        "sha256": "cc2c035475d31ad05af4217466098ec70e8c2a3e6b79e1e4e129f588227ac2c4",
+        "mediaType": "text/x-lilypond",
+        "origin": "Original Vellum transition study",
+        "license": "CC0-1.0",
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+      },
+      "reviewedTruth": {
+        "reviewStatus": "repository_reviewed",
+        "principalVoice": "upper",
+        "voices": ["upper", "lower"],
+        "facts": ["G-major melody retained", "G-C-D-Em harmonic roles retained"]
+      },
+      "analysis": {
+        "texture": "melody with chordal support",
+        "concepts": ["principal_voice", "alfabeto", "reentrant_stringing", "transition_cost"],
+        "cadenceGoals": ["final-G"]
+      },
+      "plans": [
+        {
+          "targetId": "baroque-guitar-5",
+          "decisions": [
+            "use historical alfabeto where it preserves the required role",
+            "preserve exact French stringing",
+            "reject violent cross-neck transitions"
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "id": "baroque-guitar.exact-stringing",
+          "category": "target_mechanics",
+          "targetIds": ["baroque-guitar-5"],
+          "assertion": "Sounding pitches and course identities use the exact French-stringing Instrument Instance.",
+          "allowedTransformations": [
+            "alternative positions with identical sounding and role constraints"
+          ],
+          "forbidden": ["classical-guitar tuning substitution", "unreviewed stringing change"]
+        },
+        {
+          "id": "baroque-guitar.alfabeto-role",
+          "category": "historical_technique",
+          "targetIds": ["baroque-guitar-5"],
+          "assertion": "Applicable chordal support may use a chart-cited alfabeto shape without replacing the principal voice.",
+          "allowedTransformations": ["a different chart-cited shape satisfying the same role"],
+          "forbidden": [
+            "uncited computed shape presented as historical",
+            "principal voice replacement"
+          ]
+        },
+        {
+          "id": "baroque-guitar.observed-transition",
+          "category": "target_mechanics",
+          "targetIds": ["baroque-guitar-5"],
+          "assertion": "The course-5 fret-6 to course-2 fret-1 transition is rejected as a violent cross-neck jump.",
+          "allowedTransformations": ["bounded re-positioning that avoids the named transition"],
+          "forbidden": ["course-5 fret-6 followed by course-2 fret-1"]
+        }
+      ],
+      "mutations": [
+        {
+          "id": "mutation.baroque-guitar.wrong-stringing",
+          "operation": "substitute_classical_tuning",
+          "expectedInvariantIds": ["baroque-guitar.exact-stringing"],
+          "expectedDisposition": "hard_fail"
+        },
+        {
+          "id": "mutation.baroque-guitar.violent-jump",
+          "operation": "inject_course5_fret6_to_course2_fret1",
+          "expectedInvariantIds": ["baroque-guitar.observed-transition"],
+          "expectedDisposition": "hard_fail"
+        }
+      ],
+      "acceptableAlternatives": [
+        {
+          "id": "alternative.baroque-guitar.alfabeto",
+          "status": "reviewed_valid_boundary",
+          "description": "Historically cited alfabeto support with the melody independently retained."
+        },
+        {
+          "id": "alternative.baroque-guitar.puntado",
+          "status": "reviewed_valid_boundary",
+          "description": "Puntado reduction satisfying the same identity and transition boundaries."
+        }
+      ]
+    },
+    {
+      "id": "golden.baroque-lute-stopped-diapason",
+      "source": {
+        "path": "test/fixtures/diapason-test.ly",
+        "sha256": "5ba137d07d8488191d0914b1c0146591566fad4a11600fad6ed3b12666327b7f",
+        "mediaType": "text/x-lilypond",
+        "origin": "Original Vellum stopped-course and diapason study",
+        "license": "CC0-1.0",
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+      },
+      "reviewedTruth": {
+        "reviewStatus": "repository_reviewed",
+        "principalVoice": "melody",
+        "voices": ["melody", "diapasons"],
+        "facts": [
+          "upper voice uses stopped courses",
+          "bass includes open diapasons",
+          "course-10 D is ///a"
+        ]
+      },
+      "analysis": {
+        "texture": "two-voice lute texture",
+        "concepts": ["counterpoint", "stopped_course", "diapason", "course_identity"],
+        "cadenceGoals": ["final-D"]
+      },
+      "plans": [
+        {
+          "targetId": "baroque-lute-13",
+          "decisions": [
+            "keep upper counterpoint on stopped courses",
+            "assign eligible structural basses to exact diapasons",
+            "preserve independent durations and French diapason signs"
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "id": "lute.stopped-and-diapason",
+          "category": "target_mechanics",
+          "targetIds": ["baroque-lute-13"],
+          "assertion": "Stopped-course upper events and open-diapason bass events retain distinct course identities.",
+          "allowedTransformations": ["alternative stopped positions preserving voices"],
+          "forbidden": [
+            "fretting a diapason",
+            "collapsing the bass into an unrelated stopped course"
+          ]
+        },
+        {
+          "id": "lute.course10-sign",
+          "category": "notation_playback",
+          "targetIds": ["baroque-lute-13"],
+          "assertion": "Open course 10 sounds D2 once and engraves as ///a below the French tab staff.",
+          "allowedTransformations": ["layout displacement without semantic change"],
+          "forbidden": ["wrong course sign", "duplicate playback event"]
+        }
+      ],
+      "mutations": [
+        {
+          "id": "mutation.lute.course10-to-course9",
+          "operation": "change_course_identity",
+          "expectedInvariantIds": ["lute.course10-sign"],
+          "expectedDisposition": "hard_fail"
+        },
+        {
+          "id": "mutation.lute.fret-diapason",
+          "operation": "assign_nonzero_fret_to_diapason",
+          "expectedInvariantIds": ["lute.stopped-and-diapason"],
+          "expectedDisposition": "hard_fail"
+        }
+      ],
+      "acceptableAlternatives": [
+        {
+          "id": "alternative.lute.compact-upper",
+          "status": "reviewed_valid_boundary",
+          "description": "Compact stopped-course upper fingering with the reviewed diapason bass."
+        },
+        {
+          "id": "alternative.lute.shifted-upper",
+          "status": "reviewed_valid_boundary",
+          "description": "Shifted stopped-course fingering preserving voice duration and diapason identity."
+        }
+      ]
+    },
+    {
+      "id": "golden.classical-guitar-polyphony",
+      "source": {
+        "path": "test/fixtures/classical-guitar-polyphony.ly",
+        "sha256": "082d2eea60fa32c015648bfc5e6296f2f7be217fd6383452bc758df3f51db008",
+        "mediaType": "text/x-lilypond",
+        "origin": "Original Vellum classical-guitar study",
+        "license": "CC0-1.0",
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+      },
+      "reviewedTruth": {
+        "reviewStatus": "repository_reviewed",
+        "principalVoice": "upper",
+        "voices": ["upper", "bass"],
+        "facts": ["standard EADGBE tuning", "independent voice durations", "six single strings"]
+      },
+      "analysis": {
+        "texture": "polyphonic classical-guitar study",
+        "concepts": ["counterpoint", "voice_duration", "left_hand_fingering", "standard_notation"],
+        "cadenceGoals": ["final-C"]
+      },
+      "plans": [
+        {
+          "targetId": "classical-guitar-6",
+          "decisions": [
+            "engrave independent voices in standard notation",
+            "retain duration through each voice",
+            "choose feasible left-hand positions without claiming right-hand validation"
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "id": "classical.polyphonic-duration",
+          "category": "counterpoint",
+          "targetIds": ["classical-guitar-6"],
+          "assertion": "Each reviewed voice retains its independent onset and duration relationships.",
+          "allowedTransformations": ["alternative fingering", "standard-notation layout changes"],
+          "forbidden": ["premature voice truncation", "voice merge that changes duration"]
+        },
+        {
+          "id": "classical.fingering-boundary",
+          "category": "target_mechanics",
+          "targetIds": ["classical-guitar-6"],
+          "assertion": "Left-hand positions use six single strings in standard tuning and satisfy modeled reach constraints.",
+          "allowedTransformations": ["any modeled-feasible alternative fingering"],
+          "forbidden": ["course doubling", "out-of-range fret", "modeled stretch violation"]
+        }
+      ],
+      "mutations": [
+        {
+          "id": "mutation.classical.truncate-inner-voice",
+          "operation": "shorten_voice_duration",
+          "expectedInvariantIds": ["classical.polyphonic-duration"],
+          "expectedDisposition": "hard_fail"
+        },
+        {
+          "id": "mutation.classical.impossible-fingering",
+          "operation": "inject_modeled_stretch_violation",
+          "expectedInvariantIds": ["classical.fingering-boundary"],
+          "expectedDisposition": "hard_fail"
+        }
+      ],
+      "acceptableAlternatives": [
+        {
+          "id": "alternative.classical.open-position",
+          "status": "reviewed_valid_boundary",
+          "description": "Open-position fingering retaining the reviewed voices and durations."
+        },
+        {
+          "id": "alternative.classical.shifted-position",
+          "status": "reviewed_valid_boundary",
+          "description": "Shifted feasible fingering retaining the same polyphonic relationships."
+        }
+      ]
+    }
+  ]
+}

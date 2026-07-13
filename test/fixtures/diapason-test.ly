@@ -1,5 +1,7 @@
 \version "2.24.0"
 % Baroque lute passage using open diapason bass strings below the French tab staff
+% SPDX-License-Identifier: CC0-1.0
+% Original Vellum evaluation fixture; dedicated to the public domain.
 \include "baroque-lute-13.ily"
 
 melody = \relative c' {
