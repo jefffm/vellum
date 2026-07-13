@@ -18,7 +18,12 @@ export function continuoArrangementToLilyPond(
   const principal = arrangement.events.filter((event) => event.role === "principal_voice");
   const foundation = arrangement.events.filter((event) => event.role === "continuo_foundation");
   const realization = arrangement.events.filter((event) => event.role === "realization");
-  if (principal.length === 0 || foundation.length === 0 || realization.length === 0) {
+  const reduction = arrangement.continuoDisposition?.kind === "continuo_reduction";
+  if (
+    principal.length === 0 ||
+    realization.length === 0 ||
+    (!reduction && foundation.length === 0)
+  ) {
     throw new Error(
       "Continuo engraving requires Principal Voice, foundation, and realization events"
     );
@@ -28,21 +33,26 @@ export function continuoArrangementToLilyPond(
   );
   const profile = arrangement.targetConfiguration.realizationProfileId!;
   const separateBass = arrangement.continuoDisposition?.kind === "separate_bass_realization";
-  const include = separateBass
-    ? '\\include "instruments/baroque-guitar-5.ily"'
-    : '\\include "instruments/piano.ily"';
-  const realizationLabel = separateBass ? "5-course baroque guitar" : "Piano";
+  const include =
+    separateBass || reduction
+      ? '\\include "instruments/baroque-guitar-5.ily"'
+      : '\\include "instruments/piano.ily"';
+  const realizationLabel = separateBass || reduction ? "5-course baroque guitar" : "Piano";
   const foundationLabel = separateBass
     ? `Separate bass (${arrangement.continuoDisposition?.bassInstrumentId ?? "bass"})`
     : "Continuo Foundation";
-  const accompanimentBlock = separateBass
+  const accompanimentBlock = reduction
     ? `\\new Staff = "realization" \\with { instrumentName = "${realizationLabel}" } {
+      \\new Voice = "generatedRealization" { \\realizationMusic }
+    }`
+    : separateBass
+      ? `\\new Staff = "realization" \\with { instrumentName = "${realizationLabel}" } {
       \\new Voice = "generatedRealization" { \\realizationMusic }
     }
     \\new Staff = "foundation" \\with { instrumentName = "${foundationLabel}" } {
       \\new Voice = "continuoFoundation" { \\foundationMusic }
     }`
-    : `\\new PianoStaff \\with { instrumentName = "Piano" } <<
+      : `\\new PianoStaff \\with { instrumentName = "Piano" } <<
       \\new Staff = "realization" {
         \\new Voice = "generatedRealization" { \\realizationMusic }
       }
@@ -75,16 +85,22 @@ realizationMusic = {
   ${renderArrangementVoice(realization, score)}
 }
 
-foundationMusic = {
+${
+  reduction
+    ? "% Continuo Foundation intentionally unsounded in this disclosed reduction."
+    : `foundationMusic = {
   \\clef bass
   ${key}
   ${time}
   ${renderArrangementVoice(foundation, score)}
+}`
 }
 
 continuoFigures = \\figuremode {
   ${renderFigures(figures, score)}
 }
+
+${reduction ? '\\markup \\italic "Continuo Reduction: source foundation retained as evidence but not sounded by this target."' : ""}
 
 \\score {
   <<

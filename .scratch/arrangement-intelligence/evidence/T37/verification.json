@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T37",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T02:10:49Z",
+  "requirements": {
+    "AI-STP-058": {
+      "status": "machine_verified",
+      "remaining": "late historical and physical review"
+    },
+    "AI-DEL-036": { "status": "partial", "remaining": "T38 imitative-domain validation" },
+    "AI-DEL-050": {
+      "status": "partial",
+      "remaining": "T38 imitative-domain validation and later ADR review"
+    },
+    "AI-DEL-051": { "status": "machine_verified", "remaining": "late H2/H4/H3 evidence" }
+  },
+  "summary": {
+    "fullSuitePassed": 1051,
+    "fullSuiteSkipped": 1,
+    "continuoCases": [
+      { "id": "case.continuo.complete", "disposition": "complete_realization", "audit": "pass" },
+      {
+        "id": "case.continuo.separate-bass",
+        "disposition": "separate_bass_realization",
+        "audit": "pass"
+      },
+      {
+        "id": "case.continuo.reduction",
+        "disposition": "continuo_reduction",
+        "audit": "pass_with_disclosed_omission"
+      }
+    ],
+    "cards": 3,
+    "projectionsPerCase": 5,
+    "sourceAuthority": "authoritative_with_disclosed_uncertainty",
+    "humanEvidence": "explicitly_unknown"
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1051 passed, 1 skipped" },
+    {
+      "command": "npx vitest run test/e2e/greensleeves-tracer.test.ts",
+      "result": "pass after explicit 600-second three-sandbox real-smoke budget: 319 seconds"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "1cba4196fe027d0887f47e827938da7fbd622d57ef522e226442011723e668b9"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/37-contextual-continuo-loop.md",
+      "sha256": "6c098367511cd969c1894aea2153ceddf2a64f17161f466e60e891cca3613ab9"
+    },
+    {
+      "path": "src/lib/continuo-arranger.ts",
+      "sha256": "6fb392879a51114cbd96ece605969327a16411e9f5f07013932fc003319b7069"
+    },
+    {
+      "path": "src/lib/continuo-arranger.test.ts",
+      "sha256": "969cf14229ffb90797cb2e0c17443ceee43e205a7317c53bb3fa73093d026bd8"
+    },
+    {
+      "path": "src/lib/continuo-engrave.ts",
+      "sha256": "62630aade2fb7a8cfb2637509356b274ade67be43ba7a9e3f08c22b9597cf3b5"
+    },
+    {
+      "path": "src/lib/narrow-intelligence.ts",
+      "sha256": "8ecfb1fb63fb73ce532c75b636d2124fc1fab2b1dbe2f1ced9c690094e91709e"
+    },
+    {
+      "path": "src/server/lib/continuo-evaluation.ts",
+      "sha256": "1f8b039750b7372e1b65b6b08c064dfeb8daa75689c88b111d8dab0d4c4352cb"
+    },
+    {
+      "path": "src/server/lib/continuo-evaluation.test.ts",
+      "sha256": "526aec15f35cab75dba7d44d7add4e7296057793a71ba2f13227fc50633dd564"
+    },
+    {
+      "path": "test/e2e/greensleeves-tracer.test.ts",
+      "sha256": "77369fbfd190fb6e8f53e084d2850c900b3d5dcf3b6443a734b3fc5143bb2d2b"
+    }
+  ]
+}

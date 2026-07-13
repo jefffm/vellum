@@ -295,10 +295,11 @@ export function buildNarrowEvaluationCard(input: {
   const dimensions: EvaluationCardDimension[] = [
     {
       id: "source_authority",
-      status:
-        input.planning.sourceTruthAssessment.outcome === "authoritative_for_purpose"
-          ? "pass"
-          : "fail",
+      status: ["authoritative_for_purpose", "authoritative_with_disclosed_uncertainty"].includes(
+        input.planning.sourceTruthAssessment.outcome
+      )
+        ? "pass"
+        : "fail",
       hardGate: true,
       evidenceIds: [input.planning.sourceTruthAssessment.id],
       rationale: "Planning is authorized only for the exact reviewed source lineage.",

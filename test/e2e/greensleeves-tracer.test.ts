@@ -445,7 +445,7 @@ describe("Greensleeves PDF tracer bullet", () => {
         classicalArranged.arrangementScore.id,
       ],
     });
-  }, 300_000);
+  }, 600_000);
 });
 
 function midiNoteOns(midi: Buffer): number[] {

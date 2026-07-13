@@ -212,10 +212,8 @@ function buildContinuoEvents(
       });
     }
   }
-  const figures = score.events.filter(
-    (event): event is Extract<ScoreEvent, { type: "figured_bass" }> => event.type === "figured_bass"
-  );
-  for (const [index, figure] of figures.entries()) {
+  const realizationRequests = continuoRealizationRequests(score, foundationPartId);
+  for (const [index, figure] of realizationRequests.entries()) {
     const bass = score.events.find(
       (event): event is Extract<ScoreEvent, { type: "note" }> =>
         event.id === figure.bassEventId && event.type === "note"
@@ -241,7 +239,7 @@ function buildContinuoEvents(
       duration: figure.duration,
       pitches: voicing.pitches,
       positions: voicing.positions,
-      sourceEventIds: [figure.id, bass.id],
+      sourceEventIds: figure.implicit ? [bass.id] : [figure.id, bass.id],
       role: "realization",
       instrumentId: targetInstrumentId,
     });
@@ -251,6 +249,35 @@ function buildContinuoEvents(
       left.measureId.localeCompare(right.measureId) ||
       compareRational(left.onset, right.onset) ||
       roleOrder(left.role) - roleOrder(right.role)
+  );
+}
+
+export function continuoRealizationRequests(score: NormalizedScore, foundationPartId: string) {
+  const figures = score.events.filter(
+    (event): event is Extract<ScoreEvent, { type: "figured_bass" }> => event.type === "figured_bass"
+  );
+  const implicitFigures = score.events
+    .filter(
+      (event): event is Extract<ScoreEvent, { type: "note" }> =>
+        event.partId === foundationPartId &&
+        event.type === "note" &&
+        !figures.some((figure) => figure.bassEventId === event.id)
+    )
+    .map((bass) => ({
+      id: `implicit-figure.${bass.id}`,
+      measureId: bass.measureId,
+      onset: bass.onset,
+      duration: bass.duration,
+      bassEventId: bass.id,
+      figures: [{ interval: 3 }, { interval: 5 }],
+      implicit: true as const,
+    }));
+  return [
+    ...figures.map((figure) => ({ ...figure, implicit: false as const })),
+    ...implicitFigures,
+  ].sort(
+    (left, right) =>
+      left.measureId.localeCompare(right.measureId) || compareRational(left.onset, right.onset)
   );
 }
 
@@ -309,7 +336,7 @@ function playableVoicing(
 }
 
 function realizationIntervals(
-  event: Extract<ScoreEvent, { type: "figured_bass" }>,
+  event: { figures: Array<{ interval: number; accidental?: "#" | "b" | "natural" }> },
   strategy: "complete-realization" | "lean-realization"
 ): Array<{ interval: number; accidental?: "#" | "b" | "natural" }> {
   const explicit = event.figures.map((figure) => ({ ...figure }));

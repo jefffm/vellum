@@ -2,7 +2,11 @@ import { Value } from "@sinclair/typebox/value";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { arrangeContinuo, auditContinuo } from "./continuo-arranger.js";
+import {
+  arrangeContinuo,
+  auditContinuo,
+  continuoRealizationRequests,
+} from "./continuo-arranger.js";
 import { loadBrowserProfile } from "./browser-profiles.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { RecognizedScoreSchema } from "./music-domain.js";
@@ -120,6 +124,24 @@ describe("profile-scoped Continuo Realization", () => {
         },
       })
     ).toThrow("explicit Realization Profile");
+  });
+
+  it("derives a key-contextual implied 5-3 request for genuinely unfigured bass", () => {
+    const unfigured = {
+      ...score,
+      events: score.events.filter(
+        (event) => event.type !== "figured_bass" || event.bassEventId !== "event.bass.4"
+      ),
+    };
+    expect(
+      continuoRealizationRequests(unfigured, "part.continuo").find(
+        ({ bassEventId }) => bassEventId === "event.bass.4"
+      )
+    ).toMatchObject({
+      id: "implicit-figure.event.bass.4",
+      implicit: true,
+      figures: [{ interval: 3 }, { interval: 5 }],
+    });
   });
 
   it("uses a named separate bass when a re-entrant guitar cannot sound the foundation", () => {
