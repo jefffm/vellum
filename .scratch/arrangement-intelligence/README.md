@@ -1,7 +1,11 @@
 # Arrangement Intelligence execution controls
 
-This directory is the executable control plane for the draft specification in
-`docs/proposals/arrangement-intelligence/`.
+Status: frozen completed prototype evidence; not an active execution wave.
+
+The proposal snapshot that this wave implemented is archived under
+`docs/archive/specifications/2026-07-13/repository/docs/proposals/arrangement-intelligence/`.
+The current implementation specification is `SPEC.md`. Paths inside the frozen Plan,
+ledgers, manifest, and evidence are intentionally preserved as historical identities.
 
 ## Authoritative files
 
@@ -18,17 +22,17 @@ This directory is the executable control plane for the draft specification in
 
 ## Verification modes
 
-`npm run spec:arrangement-intelligence` validates the planning control plane. It
+`npm run history:arrangement-intelligence:verify` validates the planning control plane. It
 requires complete, unique, gap-free mappings and rejects unknown tracers,
 findings, requirements, evidence keys, invalid classifications, and corrupted
 renumbering.
 
-`npm run spec:arrangement-intelligence:complete` is the final goal judge. In
+`npm run history:arrangement-intelligence:complete` is the historical final goal judge. In
 addition to the planning checks, it requires every tracer to be complete, every
 requirement to have current passing machine evidence and its declared human
 evidence, every audit finding to have an allowed verified closure, and final
 suites to have passed at repository HEAD. Dependency content hashes make stale
 evidence fail instead of silently surviving a changed input.
 
-The completion command is expected to fail during implementation. A green
-planning command is not a product-completion claim.
+These commands preserve the 2026-07-13 prototype closure contract. They do not judge
+completion of the current specification.

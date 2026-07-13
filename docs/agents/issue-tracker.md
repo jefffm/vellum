@@ -2,6 +2,8 @@
 
 Active implementation waves are recorded as Markdown under `.scratch/`. This is intentionally independent of beads and GitHub Issues.
 
+The current product scope is `SPEC.md`. Check `.scratch/README.md` before choosing a wave: completed path-bound evidence may remain under `.scratch/` without being active work.
+
 ## Conventions
 
 - One wave per directory: `.scratch/<wave>/`

@@ -1,2169 +1,1160 @@
-# Vellum — ve*LLM*um
+# Vellum Instrument Intelligence
 
-> The writing surface where musical sources become informed arrangements.
+Status: Current and authoritative next-work specification
 
-## Overview
+Effective: 2026-07-13
 
-Vellum is an AI-assisted music arrangement tool for historical plucked string instruments, classical guitar, piano, and voice. It renders properly formatted tablature and standard notation via LilyPond.
+## Authority and reading order
 
-**The key insight:** Musical intelligence is shared by a hybrid **Musicological Engine**. Deterministic symbolic analysis establishes musical facts; curated historical knowledge supplies period, regional, contrapuntal, continuo, instrument, and notation practices; the LLM interprets ambiguity and proposes creative alternatives; and constraint checks verify preservation, playability, and engraving. The system preserves its evidence and decisions as structured analysis rather than leaving musical truth inside one model response.
+This is the only current implementation specification in the repository.
 
-Curated historical knowledge is source-backed and explicitly scoped by period, region, genre, instrument, and ensemble role. The engine distinguishes documented practice, modern editorial convention, and Vellum heuristics, and preserves conflicting authorities as inspectable alternatives.
+The reading order is:
 
-The Historical Knowledge Base combines reviewed, versioned Knowledge Packs with an Owner Reference Library. Locally added references yield cited Knowledge Candidates that require review before promotion; uncited model memory or live web results are not historical authority.
+1. [CONTEXT.md](./CONTEXT.md) defines Vellum's domain language and enduring invariants.
+2. Accepted decisions under [docs/adr](./docs/adr/) govern architecture.
+3. This document defines the next product outcome, scope, sequencing, and acceptance boundary.
+4. The active tracer plan under .scratch, when one exists, may divide this specification into executable slices but may not silently narrow or expand it.
+5. Current code and tests are evidence of implementation, not permission to contradict the preceding documents.
 
-State is divided into durable Arrangement Workspaces, cross-project Personal Defaults, and a reviewed Historical Knowledge Base. Workspace corrections save automatically; reusable claims require explicit source-backed promotion before they become global knowledge.
+Earlier specifications, proposals, audits, blunder hunts, and execution plans are preserved under [docs/archive/specifications/2026-07-13](./docs/archive/specifications/2026-07-13/README.md). They are design history, not a backlog and not an alternative source of current requirements.
 
-Vellum may notice equivalent choices recurring across distinct Arrangement
-Workspaces and propose a **Personal Default Candidate**. The proposal shows the
-choices that motivated it and an explicit scope—such as target instrument, tuning,
-Notation Layout, task, or repertoire context—but has no behavioral effect until
-the Owner approves it. Approved defaults are visible, editable, releasable, and
-removable. Rejected candidates do not repeatedly nag unless materially different
-evidence suggests a new scope. Applied defaults are disclosed in the Arrangement
-Brief and remain soft personal preferences, never source evidence, historical
-authority, Editorial Commitments, or hidden hard constraints.
+## Product outcome
 
-Personal Defaults have the lowest precedence in musical decision-making. They
-yield automatically to source evidence, applicable Historical Practice Claims,
-Preservation Targets, Editorial or Family Commitments, and hard instrument or
-validation constraints. An unapplied default remains available for other contexts
-and appears with the exact score-anchored or profile-backed reason it did not
-apply. The conflict is non-blocking unless the Owner explicitly promotes the
-choice into the current arrangement; overriding historical or preservation
-constraints requires changing the relevant profile, policy, or commitment rather
-than strengthening a Personal Default.
+Vellum should provide the practical benefit of a personal musicologist and expert arranger without requiring the Owner to supply musicological vocabulary or instrument-specific rules.
 
-Musical state has explicit versioned lineage: immutable Source Artifacts produce correctable Score Transcriptions, derived Normalized Scores, Analysis Records, Arrangement Scores, and reproducible Deliverables. No transformation silently rewrites an upstream layer.
+Given a musical source, Vellum should ordinarily infer:
 
-The lineage is dependency-aware. A new Score Transcription version automatically
-recomputes deterministic normalization and analysis. Applicable user corrections
-are carried forward explicitly, while corrections whose score anchors no longer
-resolve are returned for review. Creative downstream work is never silently
-replaced: existing Arrangement Scores, Performance Interpretations, and
-Deliverables remain available as **Stale Derivations**, with the changed upstream
-dependency identified. Regeneration is an explicit action that creates a new
-version and supports comparison with the preserved result.
+- the Principal Voice or the absence of one;
+- Texture, Contrapuntal Technique, voice roles, phrases, cadences, and form;
+- Continuo Foundation, Figured Bass, and realization obligations when present;
+- which source relationships define recognizability;
+- a coherent target texture and voice plan;
+- idiomatic target-instrument technique by passage;
+- playable phrase-level physical realization; and
+- what uncertainty or compromise is consequential enough to show the Owner.
 
-The default regeneration path is **Conservative Regeneration**. It descends from
-the stale Arrangement Score, carries forward user-authored or explicitly approved
-**Editorial Commitments**, and limits generation changes to the dependency region
-affected by the corrected source. A commitment that conflicts with corrected
-source material or a hard constraint becomes a targeted conflict; it is never
-silently discarded. The new arrangement still receives a complete Preservation
-Audit and all applicable validation. A fresh Arrangement Search remains available
-when the user wants the entire solution reconsidered.
+The default interaction stays simple: upload source material, choose one or more targets and Notation Layouts, optionally state an intention, then review only material uncertainty and consequential choices. Complete analysis, evidence, alternatives, rejected candidates, and source citations remain available through progressive disclosure.
 
-Each Arrangement Score realizes one exact **Target Configuration**: its solo or
-ensemble instruments, roles, tunings, stringing, and playability-relevant
-capabilities. French tablature, a Learning Layout, PDF, and browser notation can be
-different projections of that same score. Changing the target instrument, role,
-tuning, or stringing produces a sibling Arrangement Score in an **Arrangement
-Family**, not another layout. Family members share their Arrangement Brief and
-source-analysis lineage but run independent Arrangement Search, candidate ranking,
-playability validation, Preservation Audit, and version history.
+Five-course baroque guitar, thirteen-course baroque lute, and six-string classical guitar are coequal initial targets. Shared architecture must enable each target without reducing all three to the same technique, search state, notation, or evaluation model.
 
-Editorial Commitments are target-local by default. A user may explicitly promote a
-musically portable choice—such as a countermelody, cadence, or protected texture—to
-a **Family Commitment** applying to selected or future Target Configurations.
-Instrument-specific course, fret, fingering, diapason, tuning, or stringing choices
-remain local. Source corrections are made once in the Score Transcription or
-Analysis Record rather than copied into family constraints. Changing a Family
-Commitment marks affected sibling scores stale and offers Conservative Regeneration
-for each; infeasibility creates a target-local Commitment Conflict without
-invalidating feasible siblings.
+## Why this is the next work
 
-Every direct user edit to an Arrangement Score becomes an Editorial Commitment by
-default. Model-generated material becomes committed only when the user edits or
-explicitly approves it. The UI provides **Let Vellum reconsider**, which releases
-the selected commitment for future regeneration but does not revert the current
-score or erase the version in which the choice was made. Corrections to the Score
-Transcription remain evidence-layer corrections and are not mislabeled as
-arrangement commitments.
+The accepted prototype baseline already provides:
 
-Editorial Commitments are semantic rather than coarse score locks. Each commitment
-records stable score or relationship anchors, an optional temporal region, and a
-**Commitment Scope** identifying the protected dimension: Principal Voice pitch,
-rhythm, harmony, bass, Texture, contrapuntal relationship, ornament, notation, or
-course/fingering assignment. A direct edit creates the narrowest implied scope—for
-example, changing a course assignment preserves the fingering without freezing
-unrelated rhythm or harmony. The user may explicitly broaden the scope to a note
-group, voice, phrase, measure range, section, or whole arrangement. An anchor that
-no longer resolves becomes a targeted review item; Vellum does not silently widen
-or discard the commitment.
+- local-first Arrangement Workspaces;
+- symbolic and optical source ingestion;
+- Score-Anchored Review;
+- Musicological Analysis;
+- purpose-scoped Source Truth;
+- Arrangement and Performance Briefs;
+- versioned Arrangement Plans;
+- independent target Arrangement Searches;
+- Preservation Audits and Transformation Reports;
+- immutable Arrangement Scores and branching;
+- score selection, batch edits, and version history;
+- PDF, SVG, LilyPond, MIDI, Audio Preview, and score-following playback;
+- reviewed-learning boundaries; and
+- a versioned evaluation harness.
 
-If a commitment cannot coexist with corrected source evidence, a Preservation
-Target, or another hard constraint, Vellum creates a score-anchored **Commitment
-Conflict** and blocks completion. It presents the applicable explicit resolutions:
+That baseline proves the product loop, but not expert-quality target realization. Three exact Owner observations define the present failure boundary:
 
-1. release the Editorial Commitment for future generation;
-2. revise the Score Transcription if the recognized evidence is wrong, producing a
-   new evidence-layer version and dependency recomputation; or
-3. approve a versioned Policy Exception identifying the affected commitment,
-   Preservation Target or constraint, musical consequence, rationale, and Owner
-   approval.
+1. The Greensleeves baroque-guitar result preserves notes but is neither convincing punteado nor valid mixed-style writing. It uses chord and transition choices that are nominally reachable but not idiomatic.
+2. The Greensleeves baroque-lute result includes an f/b stopped-course combination spanning frets 1 through 5 on the Owner's approximately 690 mm instrument, despite closer equivalent realizations.
+3. The Greensleeves classical-guitar result preserves the Principal Voice but reduces a 59-event source bass to four isolated events, so it is not a coherent two-voice arrangement.
 
-The chosen resolution creates new versioned state. Vellum never silently favors
-either source fidelity or a user edit, and Commitment Conflicts and Policy
-Exceptions remain visible in the Preservation Audit rather than disappearing into
-a bulk approval action.
+The current knowledge implementation is also too weak for the product promise:
 
-A localized, Owner-approved Policy Exception can remain compatible with Faithful
-Reduction; the audit reports **pass with exceptions** and discloses the deviation.
-The audit also evaluates all exceptions together by musical consequence rather
-than applying an arbitrary count. One critical exception—or several local
-exceptions whose combined effect materially compromises a Preservation Target or
-the work's recognizable identity—produces **Policy Drift** and fails Faithful
-Reduction. Completion then requires revising the arrangement or explicitly
-changing the Preservation Policy, which creates a new Arrangement Score version
-and a new audit. Vellum cannot preserve the Faithful Reduction label by splitting
-a broad rewrite into many small exceptions.
+- OwnerReference collapses Work, Edition, Exemplar, Digital Asset, and citation identity.
+- HistoricalPracticeClaim mixes historical authority, modern editorial convention, and Vellum heuristics.
+- KnowledgePack contains little more than a list of claim IDs.
+- documentary classification is incorrectly treated as perfect confidence;
+- Arrangement Search records no applied Knowledge Pack identities; and
+- labels such as idiom, historical profile, playability, and voice leading are currently proxy scores rather than independently grounded evaluations.
 
-Every Arrangement Score also carries a policy-independent **Transformation
-Report**. It maps source events and relationships to their arrangement descendants
-and classifies retained, transposed, octave-relocated, revoiced, reharmonized,
-omitted, and newly generated material with its rationale. Under Faithful Reduction
-the Preservation Audit evaluates this map as a hard completion gate. Under
-Idiomatic Adaptation and Free Paraphrase it remains a complete, inspectable report
-rather than enforcing note-level fidelity. Instrument mechanics, explicit
-commitments, and applicable hard Validation Findings continue to gate every policy.
+This specification replaces those proxies with a source-backed, reviewable instrument-intelligence pipeline.
 
-The workbench can render the Transformation Report as a toggleable **Provenance
-Overlay** on linked source and arrangement notation. It distinguishes retained,
-transformed, omitted, and generated material using labels, icons, or patterns as
-well as color. Many-to-many transformations remain navigable; omitted events are
-marked at their source or timeline position even when the arrangement has no glyph
-to select. Activating a marker opens the linked objects, transformation class,
-rationale, evidence, applicable policy, and audit outcome. The overlay is
-diagnostic UI state: it neither clutters the normal view by default nor changes the
-Arrangement Score or ordinary Deliverables.
+## System loop
 
-**The product is a local-first pi-mono web app** — a custom application built on [pi-mono](https://github.com/badlogic/pi-mono)'s agent toolkit and run primarily on its Owner's machine. The browser hosts the conversational agent and live score workbench. Local services provide the Musicological Engine, LilyPond, source storage, durable workspaces, and model-provider proxying. Nix remains a reproducible packaging option and may support private remote access, but servoid is not the primary runtime.
-
----
-
-## Problem Statement
-
-Arranging music for historical lute-family instruments is hard:
-
-1. **Tuning complexity** — Baroque lute has 13 courses in d-minor tuning with diapasons (bass courses that can't be stopped). Baroque guitar has 5 courses with re-entrant tuning. These aren't standard guitar tunings.
-2. **Playability constraints** — Left-hand stretches, course spacing, open string availability, thumb-index alternation in the right hand. A mechanically correct transposition can be physically unplayable.
-3. **Idiomatic writing** — Good lute music uses campanella (bell-like ringing across courses), brisé texture (broken chords), and specific ornament conventions that differ from guitar idiom.
-4. **Notation** — Historical lute music uses tablature (French letter tab, Italian number tab), not standard notation. Modern tools handle this poorly.
-5. **Instrument conversion** — Taking a guitar arrangement and putting it on lute (or vice versa) requires re-mapping every note to the new tuning, often requiring re-voicing entire passages.
-
----
-
-## Architecture
-
-### Client-Server Split
-
-The Agent runs **in the browser**. Tools that need server resources (LilyPond, file storage) make HTTP calls to the Vellum server API. LLM API calls are proxied through the server to keep API keys secure.
-
-```
-Browser
-┌─────────────────────────────────────────────────────────────┐
-│                                                               │
-│  src/main.ts                                                  │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │  Agent instance (pi-agent-core)                           │ │
-│  │  • Tools array: compile, tabulate, voicings,              │ │
-│  │    check_playability, transpose, diapasons, fretboard,    │ │
-│  │    analyze, lint, theory                                  │ │
-│  │  • System prompt with instrument profiles                 │ │
-│  │  • LLM calls → streamProxy → server /api/stream           │ │
-│  │                                                            │ │
-│  │  Each tool's execute() calls server REST API:              │ │
-│  │    fetch("/api/compile", { body: lySource })               │ │
-│  │    fetch("/api/analyze", { body: musicxml })               │ │
-│  │    fetch("/api/lint", { body: passage })                   │ │
-│  │    etc.                                                    │ │
-│  │                                                            │ │
-│  │  theory() runs locally via tonal.js (no server call)       │ │
-│  └──────────────────────────────────────────────────────────┘ │
-│                                                               │
-│  pi-web-ui                                                    │
-│  ┌─────────────────────────┐  ┌────────────────────────────┐ │
-│  │  ChatPanel               │  │  ArtifactsPanel            │ │
-│  │  (AgentInterface)        │  │  (tablature workbench)     │ │
-│  │                          │  │                            │ │
-│  │  Conversation stream     │  │  • tablature.svg (compiled │ │
-│  │  with inline tool        │  │    LilyPond output)        │ │
-│  │  renderers:              │  │  • fretboard.svg           │ │
-│  │                          │  │  • arrangement.ly (source) │ │
-│  │  • compile → SVG preview │  │  • MIDI player (HTML       │ │
-│  │  • fretboard → diagram   │  │    artifact, v2)           │ │
-│  │  • playability → report  │  │                            │ │
-│  └─────────────────────────┘  └────────────────────────────┘ │
-│                                                               │
-└──────────────────────┬────────────────────────────────────────┘
-                       │  localhost HTTP
-                       │
-Owner machine          │
-┌──────────────────────┴────────────────────────────────────────┐
-│  Vellum Server (Express)                                       │
-│                                                                 │
-│  Static Assets                                                  │
-│  └─ Serves built browser bundle (Vite output)                   │
-│                                                                 │
-│  API Endpoints                                                  │
-│  ├─ POST /api/stream          LLM proxy (streamProxy from       │
-│  │                            pi-agent-core; keeps API keys      │
-│  │                            server-side)                       │
-│  │                                                               │
-│  ├─ POST /api/compile         Accepts .ly source string.         │
-│  │                            Writes temp file, runs LilyPond    │
-│  │                            subprocess, returns:               │
-│  │                            { svg, pdf?, midi?, errors[] }     │
-│  │                                                               │
-│  ├─ POST /api/validate        Syntax-only check (LilyPond       │
-│  │                            --loglevel=ERROR, no output)       │
-│  │                                                               │
-│  ├─ GET  /api/instruments     List all instrument profiles       │
-│  ├─ GET  /api/instruments/:id Single instrument profile (YAML)   │
-│  │                                                               │
-│  ├─ GET  /api/arrangements    List saved arrangements            │
-│  ├─ POST /api/arrangements    Save arrangement (.ly + metadata)  │
-│  ├─ GET  /api/arrangements/:id  Retrieve arrangement             │
-│  │                                                               │
-│  ├─ GET  /api/templates/:name  LilyPond template source          │
-│  │                                                               │
-│  ├─ POST /api/analyze         Accepts MusicXML string. Calls     │
-│  │                            music21 (Python subprocess):       │
-│  │                            parse → chordify → key analysis    │
-│  │                            → Roman numerals. Returns:         │
-│  │                            { key, chords[], voices[], time }  │
-│  │                                                               │
-│  ├─ POST /api/lint            Accepts passage (LilyPond or       │
-│  │                            structured note data). Calls       │
-│  │                            music21 voice leading analysis.    │
-│  │                            Returns: { violations[] } with     │
-│  │                            measure/beat locations             │
-│  │                                                               │
-│  ├─ POST /api/chordify        Accepts MusicXML. Returns          │
-│  │                            chord-per-beat reduction via        │
-│  │                            music21 chordify()                 │
-│  │                                                               │
-│  ├─ POST /api/realize         (v2) Figured bass realization      │
-│  │                            via music21 figuredBass.realizer   │
-│  │                                                               │
-│  │  ┌───────────────────────────────────────────────────────┐   │
-│  │  │  Music Theory Engine (Python / music21)                │   │
-│  │  │  Called as subprocess by /api/analyze, /api/lint,      │   │
-│  │  │  /api/chordify, /api/realize                           │   │
-│  │  │  Same deployment pattern as LilyPond — pinned via Nix  │   │
-│  │  └───────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  LilyPond (Nix package, pinned 2.24.x)                          │
-│  └─ Called as subprocess by /api/compile                         │
-│                                                                 │
-│  music21 (Nix package, python3Packages.music21)                  │
-│  └─ Called as subprocess by /api/analyze, /api/lint,             │
-│     /api/chordify, /api/realize                                  │
-│                                                                 │
-│  instruments/*.yaml + *.ily   (served via /api/instruments)      │
-│  templates/*.ly               (served via /api/templates)        │
-│                                                                 │
-│  Local data + optional private remote-access boundary            │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    A["Reference Source"] --> B["Source Identity and Page Atlas"]
+    B --> C["Modality-specific Extraction"]
+    C --> D["Cited Knowledge Candidates"]
+    D --> E["Reviewed Pack Release"]
+    E --> F["Applied Knowledge Manifest"]
+    F --> G["Analysis and Arrangement Plan"]
+    G --> H["Target Idiom Compiler"]
+    H --> I["Arrangement Candidates"]
+    I --> J["Independent Evaluation"]
+    J --> K["Workbench and Playtest"]
+    K --> L["Reviewed Proposals"]
+    L --> D
+    L --> M["Ergonomic or Personal Defaults"]
+    L --> N["Calibration or Fixture Candidates"]
 ```
 
-### Key Design Decisions
+The loop is accumulative but never self-authorizing. Extraction proposes evidence. Review releases knowledge. Arrangement produces candidates. Independent evaluation inspects output. Owner feedback proposes scoped changes. No stage promotes its own output into authority.
 
-**Agent in browser, not server.** Pi-web-ui's `ChatPanel` requires a local `Agent` instance via `chatPanel.setAgent(agent)`. Running the Agent server-side would require a custom WebSocket/SSE transport layer and lose most of pi-web-ui's built-in functionality. Browser-side Agent with server API calls is the natural pi-mono pattern.
+## Non-negotiable boundaries
 
-**LLM proxy via streamProxy.** Pi-agent-core provides `streamProxy` for routing LLM API calls through a server endpoint. This keeps API keys (Anthropic, OpenAI, etc.) server-side while the Agent runs in the browser. The browser never sees the API key.
+### Authority lanes remain distinct
 
-**Vellum-owned Provider Connection.** The local server initiates ChatGPT OAuth through Pi's public provider API, receives the localhost callback, stores and refreshes credentials in Vellum-controlled secure local storage, and reports connection state to the browser. Vellum does not read Pi or Codex credential files. API keys remain a fallback, and the provider-specific flow stays behind a replaceable adapter.
+| Evidence or decision                  | Canonical destination                         | Direct arranging authority                      |
+| ------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| Cited period prescription             | Historical Practice Pack                      | Only from an applicable released profile        |
+| Pattern observed in period repertoire | Descriptive observation                       | No; it may support a reviewed profile           |
+| Modern method or editorial synthesis  | Modern Pedagogy or Editorial Pack             | Only with explicit modern authority and scope   |
+| Vellum default or heuristic           | Software Profile                              | Yes when selected, but never labeled historical |
+| Instrument construction and geometry  | Instrument Model or exact Instrument Instance | Yes for the modeled mechanic                    |
+| Owner physical result                 | Owner Playtest or Ergonomic Profile candidate | Only for the reviewed performer and context     |
+| Repeated Owner choice                 | Personal Default Candidate                    | Only after Owner approval                       |
+| Evaluator disagreement                | Calibration or Fixture Candidate              | Only after separate review and dataset controls |
 
-**Disconnected operation.** Provider availability gates only durable **Model
-Actions**. PDF/MusicXML import, Score-Anchored Review, direct editing,
-deterministic analysis, validation, engraving, workspace access, and Audio Preview
-continue locally when ChatGPT authorization expires or the network is unavailable.
-Before provider work begins, a Model Action records exact input versions and the
-last confirmed canonical boundary. Incomplete responses never partially update a
-Score Transcription, Analysis Record, Arrangement Candidate, Arrangement Score, or
-Historical Knowledge Base. Interrupted actions remain inspectable, cancellable,
-and safely retryable after reconnection without replaying already committed state.
-Provider errors never delete or lock local musical work.
+A HistoricalPracticeClaim may not use modern editorial convention or a Vellum heuristic as its authority. Those belong to separately named record types.
 
-Reconnection does not automatically resume creative Model Actions. The workspace
-shows each interrupted action with explicit **Retry** and **Cancel** controls, its
-exact original inputs, completed local tool results, partial progress summary,
-interruption reason, and last confirmed version boundary. Partial model text can
-remain in diagnostic history but cannot become canonical musical state. Retrying
-uses the action's durable identity and idempotency boundary so it cannot duplicate
-already committed results or issue an undisclosed provider request.
+### Uncertainty is data
 
-Before Retry, Vellum compares the action's recorded inputs with current workspace
-versions. If they differ, the UI offers two explicit paths:
+Unknown, not evaluated, conflicting, and inapplicable are distinct from false. Missing evidence cannot produce a passing score. A useful provisional result may still be offered, but its heuristic or unresolved basis must be visible and must not be described as historically certified.
 
-- **Retry on current version** (default): create a revalidated attempt against
-  current state while retaining the original intent and an input-difference
-  summary.
-- **Retry original snapshot as a branch**: create an internal **Arrangement
-  Branch** rooted at the exact prior versions and continue the earlier intention
-  without overwriting or reverting current work.
+### Constitutive technique belongs to the score plan
 
-Both attempts remain linked to the interrupted Model Action and its durable
-idempotency boundary. An Arrangement Branch is musical version lineage inside the
-workspace, not a copied workspace or Git branch.
+Technique belongs to the Arrangement Plan or Arrangement Score when it changes the musical event, available notes, sounding courses, voice continuity, duration, articulation identity, or notation. Examples include a rasgueado stroke, an alfabeto chord, required course suppression, a campanella fingering that sustains overlapping notes, or a required damping event.
 
-**Tool execution pattern.** Each tool's `execute()` method runs in the browser but makes `fetch()` calls to server endpoints for anything requiring server resources. Pure-computation tools (tabulate, voicings, check*playability) \_could* run entirely in the browser — instrument profiles are loaded at init — but routing through the server keeps the browser bundle small and instrument data authoritative. The `theory` tool is the exception: it runs entirely in the browser via tonal.js for instant lookups with no server round-trip. For v1, all other tools call the server.
+Optional execution detail belongs to Performance Interpretation when changing it leaves the canonical notated and sounding musical obligations intact. The same family of technique may occupy different layers in different passages, so the decision is explicit rather than globally hard-coded.
 
-**Instrument profiles: dual location.** YAML profiles are served to the browser (for system prompts and tool context). `.ily` include files stay on the server (only LilyPond needs them). Both live in `instruments/` on disk; the server API handles the split.
+### Packs contain declarative knowledge, not executable uploads
 
-### Why Native Tools Beat Generic Agent + Bash
+Knowledge Packs may name registered compiler and evaluator components and provide schema-validated parameters. An imported document or pack cannot supply arbitrary executable code, file paths, shell commands, templates with active content, or provider credentials.
 
-A general-purpose agent with bash access can technically run LilyPond. But:
+### Old results remain reproducible
 
-| Generic agent                                          | Vellum                                                                                                     |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| LLM writes raw .ly hoping it compiles                  | LLM calls `voicings()` to get playable options, picks the best one                                         |
-| `bash lilypond foo.ly` → 200 lines of stderr           | `compile()` → structured errors: "Bar 8: stretch violation on course 3"                                    |
-| LLM invents fret positions from training data          | `tabulate()` returns all valid positions with idiomatic ranking                                            |
-| No verification until compile fails                    | `check_playability()` catches impossible fingerings before compilation                                     |
-| LLM does interval arithmetic in its head (error-prone) | `theory()` returns exact answers instantly via tonal.js                                                    |
-| LLM guesses at chord progressions from SATB score      | `analyze()` returns Roman numeral analysis via music21                                                     |
-| No voice leading verification                          | Contextual validation classifies score-anchored findings under an explicit historical and textural profile |
-| Human reads PDF to check quality                       | Browser shows live preview, fretboard diagrams, MIDI playback                                              |
+A new source, claim, profile, pack release, compiler, or evaluator never rewrites an existing Arrangement Search or Arrangement Score. It may create a Knowledge Reassessment explaining that regeneration could improve or invalidate an earlier readiness claim.
 
-The LLM participates in musical judgment, but it does not own musical truth. Structured analysis, historical profiles, and constraint checks make the result inspectable and resilient to model changes.
+## Reference-source substrate
 
----
+### Durable identity graph
 
-## Technology Stack
+Reference identity is decomposed into the following immutable or versioned records:
 
-### pi-mono Integration
+```ts
+type Work = {
+  id: string;
+  title: string;
+  creators: AgentIdentity[];
+  workDate?: DateRange;
+};
 
-Vellum is built on [pi-mono](https://github.com/badlogic/pi-mono), an open-source AI agent toolkit:
+type Edition = {
+  id: string;
+  workId: string;
+  publicationStatement: string;
+  language: string[];
+  editorIds: string[];
+  translatorIds: string[];
+  declaredChanges: string[];
+};
 
-| Package         | Role in Vellum                                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------ |
-| `pi-agent-core` | Agent loop, tool definitions (`AgentTool<T>`), tool execution, `streamProxy` for LLM API proxying      |
-| `pi-web-ui`     | `ChatPanel`, `AgentInterface`, `ArtifactsPanel`, `registerToolRenderer()`, `SessionsStore` (IndexedDB) |
-| `pi-ai`         | Multi-provider LLM API (Anthropic, OpenAI, Google, etc.) — consumed via streamProxy on the server      |
+type Exemplar = {
+  id: string;
+  editionId: string;
+  holdingInstitution?: string;
+  shelfmark?: string;
+  completeness: "complete" | "incomplete" | "unknown";
+  exemplarNotes: string[];
+};
 
-Pi-mono provides the agent infrastructure. Vellum provides the domain-specific tools, instrument knowledge, and UI customizations that transform a generic agent into a music arrangement specialist.
+type DigitalAsset = {
+  id: string;
+  exemplarId?: string;
+  sha256: string;
+  mediaType: string;
+  byteLength: number;
+  sourceKind: "upload" | "stable_url" | "iiif" | "library_object" | "private_scan";
+  retrievalUri?: string;
+  retrievedAt?: string;
+  localAccess: "owner_private" | "redistributable" | "metadata_only";
+};
 
-### Browser Stack
-
-- **pi-web-ui** — `ChatPanel` + `ArtifactsPanel` web components (the entire UI shell)
-- **pi-agent-core** — `Agent` class, `AgentTool<T>` definitions (runs in browser)
-- **tonal.js** — browser-side music theory library for instant lookups (intervals, chord detection, scale membership, Roman numeral parsing). Powers the `theory` tool with zero server round-trip
-- **Vite** — build tool, bundles the browser application
-- **Custom tool renderers** — `registerToolRenderer()` for inline SVG preview, fretboard diagrams, playability reports in the chat stream
-
-### Server Stack
-
-- **Node.js** ≥ 20 + **Express** — API server, static asset serving, LLM proxy
-- **LilyPond** ≥ 2.24 — music engraving subprocess, pinned as a Nix dependency
-- **Python 3** + **music21** — music theory engine subprocess. Handles MusicXML parsing, harmonic analysis (chordify, key detection, Roman numerals), voice leading lint (parallel fifths/octaves, voice crossing, spacing), and figured bass realization (v2). Pinned as a Nix dependency (`python3Packages.music21`)
-- **Local process supervisor or desktop shell** — starts the browser UI and services
-- **Nix** — reproducible LilyPond, Python, OMR, and optional NixOS packaging
-- **Private remote access** — optional and outside the primary local trust boundary
-
----
-
-## Custom Tools
-
-Tools are defined as `AgentTool<T>` objects using TypeBox schemas and passed to the `Agent` constructor. The LLM calls them as native tool calls. Each tool's `execute()` method makes an HTTP request to the Vellum server API for anything requiring server resources.
-
-### Tool Definition Pattern
-
-All Vellum tools follow this pattern:
-
-```typescript
-import { Type, type Static } from "@sinclair/typebox";
-import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
-
-// TypeBox schema for parameters
-const CompileParams = Type.Object({
-  source: Type.String({ description: "LilyPond source code to compile" }),
-  format: Type.Optional(
-    Type.Union([Type.Literal("svg"), Type.Literal("pdf"), Type.Literal("both")], { default: "svg" })
-  ),
-});
-
-// Tool result details type (for UI rendering via registerToolRenderer)
-interface CompileDetails {
-  svg?: string;
-  pdf?: string; // base64-encoded
-  midi?: string; // base64-encoded
-  errors: CompileError[];
-}
-
-// AgentTool definition
-const compileTool: AgentTool<typeof CompileParams, CompileDetails> = {
-  name: "compile",
-  description:
-    "Compile LilyPond source into rendered tablature/notation. " +
-    "Returns SVG for preview and structured errors if compilation fails. " +
-    "Call this after generating or modifying LilyPond source.",
-  parameters: CompileParams,
-
-  async execute(
-    toolCallId: string,
-    params: Static<typeof CompileParams>,
-    signal?: AbortSignal,
-    onUpdate?: AgentToolUpdateCallback<CompileDetails>
-  ): Promise<AgentToolResult<CompileDetails>> {
-    // Call server API
-    const res = await fetch("/api/compile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-      signal, // respect cancellation
-    });
-    const data = await res.json();
-
-    if (data.errors?.length > 0) {
-      return {
-        content: [
-          {
-            type: "text",
-            text:
-              `Compilation failed with ${data.errors.length} error(s):\n` +
-              data.errors
-                .map((e: CompileError) => `  Bar ${e.bar}, beat ${e.beat}: ${e.message}`)
-                .join("\n"),
-          },
-        ],
-        details: { errors: data.errors, svg: undefined, pdf: undefined, midi: undefined },
-      };
-    }
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Compiled successfully. SVG rendered (${data.barCount} bars, ${data.voiceCount} voices). No errors.`,
-        },
-      ],
-      details: {
-        svg: data.svg,
-        pdf: data.pdf,
-        midi: data.midi,
-        errors: [],
-      },
-    };
-  },
+type SourceSegment = {
+  id: string;
+  digitalAssetId: string;
+  printedLocator?: string;
+  scanLocator: string;
+  region?: PageRegion;
+  musicalRange?: MusicalRange;
+  modality: SourceModality;
+  sourceImageRef: ContentRef;
 };
 ```
 
-**Key points:**
+An import may begin with incomplete identity. Filename, repository grouping, and catalog metadata are candidate evidence, not proof of edition identity. Review can link or correct identities without changing the immutable asset bytes.
 
-- `content` is what the LLM sees — concise text summaries, never raw SVG/binary data
-- `details` carries structured data for the custom tool renderer — SVGs, diagrams, full error objects
-- `signal` enables aborting long LilyPond compilations
-- `onUpdate` can stream partial results (e.g., compilation progress)
+### Rights and access
 
-### Tool Renderers
+The following assertions remain separate:
 
-Custom tool renderers display visual results inline in the chat stream:
+- underlying Work status;
+- Edition, translation, or editorial rights;
+- physical Exemplar restrictions;
+- scan-provider terms and requested attribution;
+- Owner-private access;
+- local extraction permission;
+- pack citation and excerpt permission; and
+- export or redistribution permission.
 
-```typescript
-import { registerToolRenderer } from "@mariozechner/pi-web-ui";
+A public-domain Work does not imply that every digital scan is unrestricted. A copyrighted Owner-owned method may support local cited candidates without permitting source pages or extracted content to enter a repository pack.
 
-registerToolRenderer("compile", {
-  render(params, result) {
-    if (result.details?.svg) {
-      const container = document.createElement("div");
-      container.className = "compile-result";
-      container.innerHTML = result.details.svg;
-      return container;
-    }
-    return null; // fall back to default text rendering
-  },
-});
+Rights uncertainty blocks redistribution, not necessarily private local study. The UI must say which operation is allowed and why.
 
-registerToolRenderer("fretboard", {
-  render(params, result) {
-    if (result.details?.svg) {
-      const container = document.createElement("div");
-      container.className = "fretboard-diagram";
-      container.innerHTML = result.details.svg;
-      return container;
-    }
-    return null;
-  },
-});
-```
+### Page atlas
 
-### compile
+Every paged asset receives a versioned Page Atlas that records:
 
-Runs LilyPond as subprocess on the server. On success, returns rendered artifacts. On failure, parses stderr into structured errors with bar numbers and line references.
-
-**Parameters:**
-
-```typescript
-{
-  source: string,          // LilyPond source code
-  format?: "svg" | "pdf" | "both"  // output format (default: "svg")
-}
-```
-
-**Returns to LLM (`content`):** Text summary — "Compiled successfully. 42 bars, 3 voices." or structured error list.
-
-**Returns to UI (`details`):**
-
-```typescript
-{
-  svg?: string,            // rendered tablature SVG
-  pdf?: string,            // base64-encoded PDF
-  midi?: string,           // base64-encoded MIDI
-  errors: CompileError[]   // structured: { bar, beat, line, type, message }
-}
-```
-
-**Server endpoint:** `POST /api/compile` — writes temp `.ly` file, invokes `lilypond` subprocess, parses output. LilyPond stderr is parsed into structured `CompileError` objects (bar number, beat, error type, human-readable message) rather than passing raw Guile stack traces to the LLM.
-
-### tabulate
-
-Returns all valid course/fret positions for a pitch on the target instrument, ranked by idiomatic quality.
-
-**Parameters:**
-
-```typescript
-{
-  pitch: string,           // e.g. "F4", "A3"
-  instrument: string       // instrument profile ID
-}
-```
-
-**Returns to LLM:** Text listing of positions with quality ratings.
-
-**Returns to UI:** `{ positions: TabPosition[] }` — for potential fretboard highlighting.
-
-```typescript
-// TabPosition
-{ course: number, fret: number, quality: "open" | "low_fret" | "high_fret" | "diapason" }
-// e.g. tabulate("F4", "baroque-lute-13")
-// → [{ course: 1, fret: 0, quality: "open" },
-//    { course: 2, fret: 3, quality: "low_fret" }]
-```
-
-Ranking: open string > low fret (1-3) > high fret (4-8). Diapason courses return only if the pitch exactly matches the open tuning. The LLM uses this to make informed placement decisions instead of guessing from training data.
-
-### voicings
-
-Enumerates all playable voicings for a chord, ranked by stretch, idiomatic quality, and campanella potential.
-
-**Parameters:**
-
-```typescript
-{
-  notes: string[],         // e.g. ["F4", "A3", "D3"]
-  instrument: string,
-  max_stretch?: number     // max fret span (default: 4 for lute, 5 for guitar)
-}
-```
-
-**Returns to LLM:** Top 5 voicings with stretch and quality scores.
-
-**Returns to UI:** `{ voicings: Voicing[] }` — full list with positions for fretboard rendering.
-
-```typescript
-// Voicing
-{ positions: TabPosition[], stretch: number, campanella_score: number, open_strings: number }
-```
-
-### check_playability
-
-Validates a passage against instrument-specific constraints: fret stretch, same-course conflicts, right-hand pattern feasibility.
-
-**Parameters:**
-
-```typescript
-{
-  bars: Bar[],             // structured passage (notes with positions)
-  instrument: string
-}
-```
-
-**Returns to LLM:** Violation list and difficulty rating.
-
-**Returns to UI:** `{ violations: Violation[], difficulty: string, flagged_bars: number[] }`.
-
-```typescript
-// Violation
-{ bar: number, type: "stretch" | "same_course" | "rh_pattern" | "out_of_range", description: string }
-```
-
-**Difficulty algorithm (v1 minimum viable):**
-
-- Count violations (any → at least "intermediate")
-- Max fret stretch per chord (>4 lute / >5 guitar = "advanced")
-- Position shifts per bar (>2 = adds difficulty)
-- Simultaneous voice count (>3 sustained = "advanced" on lute)
-- Simple weighted sum → beginner / intermediate / advanced
-
-### transpose
-
-Transposes and validates against instrument range. Suggests idiomatic keys for the target instrument.
-
-**Parameters:**
-
-```typescript
-{
-  source: string,          // .ly passage or structured notes
-  interval: string,        // e.g. "m3 up", "P5 down"
-  instrument: string
-}
-```
-
-**Returns to LLM:** Transposed result with out-of-range warnings and key suggestions.
-
-**Returns to UI:** `{ result: string, out_of_range: Note[], suggested_key?: string }`.
-
-**Idiomatic keys by instrument:**
-
-| Instrument             | Good keys                                   | Why                                |
-| ---------------------- | ------------------------------------------- | ---------------------------------- |
-| Baroque lute (d-minor) | D minor, A minor, F major, G minor, C major | Open strings align with key center |
-| Baroque guitar         | A minor, E minor, C major, G major, D minor | Standard guitar-adjacent keys      |
-| Renaissance lute (G)   | G major, D minor, C major, A minor          | Open-string keys                   |
-| Theorbo                | D minor, G minor, A minor                   | Continuo keys, diapason alignment  |
-| Classical guitar       | E minor, A minor, D major, G major, C major | Standard repertoire keys           |
-
-### diapasons
-
-Returns the conventional diapason tuning for a key center. Lutenists retune bass courses per piece — this tool provides the historically informed default.
-
-**Parameters:**
-
-```typescript
-{
-  key: string,             // e.g. "D minor", "A minor", "G minor"
-  instrument?: string      // default: "baroque-lute-13"
-}
-```
-
-**Returns to LLM:** Human-readable tuning description.
-
-**Returns to UI:** `{ courses: DiapasonCourse[] }`.
-
-**Standard diapason tuning schemes (baroque lute, courses 7→13):**
-
-| Key Center         | 7   | 8   | 9   | 10  | 11  | 12  | 13  | Name                           |
-| ------------------ | --- | --- | --- | --- | --- | --- | --- | ------------------------------ |
-| D minor / F major  | G   | F   | E♭  | D   | C   | B♭  | A   | _Accord ordinaire_ (standard)  |
-| A minor / C major  | G   | F   | E♮  | D   | C   | B♮  | A   | Natural 3rd and 7th            |
-| G minor / B♭ major | G   | F   | E♭  | D   | C   | B♭  | A   | Same as standard (coincidence) |
-| D major (rare)     | G   | F♯  | E♮  | D   | C♯  | B♮  | A   | Sharp keys (Weiss)             |
-| E minor            | G   | F♯  | E♮  | D   | C♮  | B♮  | A   | Natural with F♯                |
-
-The tool also supports per-piece override for non-standard tunings found in some Weiss and Mouton manuscripts.
-
-**LilyPond integration:** The tool output maps directly to `additionalBassStrings` in the `.ily` include:
-
-```lilypond
-additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % D minor standard
-```
-
-### fretboard
-
-Renders a visual SVG fretboard diagram showing finger positions.
-
-**Parameters:**
-
-```typescript
-{
-  positions: TabPosition[],
-  instrument: string
-}
-```
-
-**Returns to LLM:** Text description of the diagram ("Fretboard showing D minor chord: course 1 open, course 3 fret 2...").
-
-**Returns to UI:** `{ svg: string }` — rendered SVG diagram, displayed inline via tool renderer and optionally in ArtifactsPanel.
-
-### Three-Layer Tool Architecture
-
-The tools form three layers. Each layer answers a different question:
-
-```
-Layer 3: Musical Judgment (LLM)         — "Does this sound good?"
-         Voice leading, arrangement decisions, idiom, style choices.
-         This is what the LLM is uniquely good at.
-
-Layer 2: Musicological Analysis and Validation — "Which musical expectations apply here?"
-         Harmonic, formal, textural, contrapuntal, continuo, and profile-scoped findings
-         rules (parallel 5ths/8ves, voice crossing), interval math,
-         chord identification. Deterministic — no LLM needed.
-
-Layer 1: Instrument Mechanics (tabulate, voicings, check_playability, etc.)
-                                         — "Can this be played?"
-         Pitch-to-fret mapping, stretch validation, course conflicts,
-         re-entrant tuning, diapason availability. Instrument-specific.
-```
-
-Without Layer 2, the model must do interval arithmetic, chord identification, profile selection, voice-leading evaluation, and harmonic analysis in its head. The Musicological Engine separates low-level observations from their contextual consequence: `check_playability` establishes physical feasibility, while a Validation Profile determines whether a parallel fifth, crossing, suspension, or doubling is prohibited, discouraged, or normal in that passage.
-
-### analyze
-
-Parses a score and returns harmonic analysis. Server-side — calls music21 via Python subprocess. This is the critical first step for any conversion workflow (hymnal → guitar, voice+piano → lute, etc.).
-
-**Parameters:**
-
-```typescript
-const AnalyzeParams = Type.Object({
-  source: Type.String({
-    description: "MusicXML source as string, or base64-encoded MusicXML file",
-  }),
-  format: Type.Optional(
-    Type.Union([Type.Literal("musicxml"), Type.Literal("lilypond")], { default: "musicxml" })
-  ),
-});
-```
-
-**Server endpoint:** `POST /api/analyze`
-
-**music21 operations:** `converter.parse()` → `score.analyze('key')` → `score.chordify()` → `roman.romanNumeralFromChord()` for each chord → extract part ranges
-
-**Returns to LLM:**
-
-```
-Key: D major
-Time: 4/4
-Voices: Soprano (D4–D5), Alto (A3–A4), Tenor (D3–D4), Bass (G2–D3)
-Chord progression (Roman numerals):
-  Bar 1: I | V6 | vi | IV
-  Bar 2: ii | V7 | I | I
-  ...
-```
-
-**Returns to UI:** `{ key, timeSignature, voices[], chords[] }` — structured analysis data, potentially rendered as a chord chart.
-
-### lint
-
-Produces low-level voice-leading observations and contextual Validation Findings. Server-side analyzers such as music21 establish intervallic facts; the selected Validation Profile classifies their consequence.
-
-**Parameters:**
-
-```typescript
-const LintParams = Type.Object({
-  source: Type.String({ description: "LilyPond or MusicXML passage to check" }),
-  validation_profile_id: Type.String(),
-  format: Type.Optional(
-    Type.Union([Type.Literal("lilypond"), Type.Literal("musicxml")], { default: "lilypond" })
-  ),
-  rules: Type.Optional(
-    Type.Array(
-      Type.Union([
-        Type.Literal("parallel_fifths"),
-        Type.Literal("parallel_octaves"),
-        Type.Literal("voice_crossing"),
-        Type.Literal("spacing"),
-        Type.Literal("direct_octaves"),
-        Type.Literal("unresolved_leading_tone"),
-        Type.Literal("all"),
-      ]),
-      { default: ["all"] }
-    )
-  ),
-});
-```
-
-**Server endpoint:** `POST /api/lint`
-
-**music21 operations:** Parse score → extract voice pairs → `VoiceLeadingQuartet` observations for parallel motion, voice crossing, spacing, and directed resolution. The Musicological Engine then classifies observations under the requested Validation Profile.
-
-**Returns to LLM:**
-
-```
-3 findings under renaissance-imitative-vocal:
-  HARD — Bar 4, beat 1: parallel fifths between structural outer voices
-  SOFT — Bar 7, beat 3: brief voice crossing during imitation
-  OBSERVATION — Bar 12, beat 1: scale degree 7 descends in an inner voice
-```
-
-**Returns to UI:** `{ violations[] }` with measure/beat locations, voice names, and violation types. Rendered inline as a diagnostic report.
-
-### theory
-
-Browser-side music theory calculations via tonal.js. No server round-trip — instant results for quick lookups during arrangement. This is the lightweight complement to the server-side music21 tools.
-
-**Parameters:**
-
-```typescript
-const TheoryParams = Type.Object({
-  operation: Type.Union([
-    Type.Literal("interval"), // distance between two notes
-    Type.Literal("transpose"), // transpose a pitch by an interval
-    Type.Literal("chord_detect"), // identify chord from notes
-    Type.Literal("chord_notes"), // spell out a chord's notes
-    Type.Literal("scale_notes"), // notes in a scale
-    Type.Literal("scale_chords"), // diatonic chords in a key
-    Type.Literal("roman_parse"), // parse Roman numeral → chord in key
-    Type.Literal("enharmonic"), // enharmonic equivalents
-  ]),
-  args: Type.Record(Type.String(), Type.Any(), {
-    description:
-      "Operation-specific arguments. interval: {from, to}. " +
-      "transpose: {note, interval}. chord_detect: {notes: string[]}. " +
-      "chord_notes: {chord}. scale_notes: {tonic, scale}. " +
-      "scale_chords: {tonic, scale}. roman_parse: {numeral, key}. " +
-      "enharmonic: {note}.",
-  }),
-});
-```
-
-**Runs in browser** — no `fetch()` call. Uses `@tonaljs/tonal` directly.
-
-**Example operations:**
-
-```
-theory("interval", { from: "C4", to: "G4" })        → "P5"
-theory("transpose", { note: "F#4", interval: "m3" }) → "A4"
-theory("chord_detect", { notes: ["C", "E", "G"] })   → "C major"
-theory("chord_notes", { chord: "Dm7" })               → ["D", "F", "A", "C"]
-theory("scale_chords", { tonic: "A", scale: "minor" })→ ["Am", "Bdim", "C", "Dm", "Em", "F", "G"]
-theory("roman_parse", { numeral: "V7", key: "D" })    → "A7" → ["A", "C#", "E", "G"]
-```
-
-**Returns to LLM:** Text result of the calculation.
-
-**Returns to UI:** `{ operation, result }` — no special renderer needed; text is sufficient.
-
----
-
-## Agent Setup
-
-### Browser Entry Point
-
-The main browser entry point creates the Agent, registers tool renderers, and wires up the ChatPanel:
-
-```typescript
-// src/main.ts
-import { Agent } from "@mariozechner/pi-agent-core";
-import { ChatPanel, ArtifactsPanel, registerToolRenderer } from "@mariozechner/pi-web-ui";
-import {
-  compileTool,
-  tabulateTool,
-  voicingsTool,
-  checkPlayabilityTool,
-  transposeTool,
-  diapasonsTool,
-  fretboardTool,
-  analyzeTool,
-  lintTool,
-  theoryTool,
-} from "./tools";
-import { compileRenderer, fretboardRenderer, playabilityRenderer } from "./renderers";
-
-// Register custom tool renderers (inline visual feedback in chat)
-registerToolRenderer("compile", compileRenderer);
-registerToolRenderer("fretboard", fretboardRenderer);
-registerToolRenderer("check_playability", playabilityRenderer);
-
-// Load instrument profiles for system prompt
-const instruments = await fetch("/api/instruments").then((r) => r.json());
-
-// Create Agent with all tools
-const agent = new Agent({
-  initialState: {
-    tools: [
-      compileTool,
-      tabulateTool,
-      voicingsTool,
-      checkPlayabilityTool,
-      transposeTool,
-      diapasonsTool,
-      fretboardTool,
-      analyzeTool,
-      lintTool,
-      theoryTool,
-    ],
-    systemPrompt: buildSystemPrompt(instruments),
-  },
-  // LLM calls proxied through server (API keys stay server-side)
-  streamProxy: "/api/stream",
-});
-
-// Wire up the UI
-const chatPanel = document.querySelector("chat-panel") as ChatPanel;
-chatPanel.setAgent(agent);
-```
-
-### System Prompt Design
-
-The system prompt establishes the LLM's role and injects instrument knowledge:
-
-```markdown
-You are Vellum, a music arrangement specialist for historical plucked string
-instruments, classical guitar, piano, and voice. You have expert knowledge of
-baroque lute, baroque guitar, Renaissance lute, theorbo, and classical guitar
-idioms.
-
-## Your Tools
-
-You have access to domain-specific tools for mechanical correctness. Use them:
-
-- Call `tabulate` to find valid positions — never guess fret/course placements
-- Call `voicings` to enumerate chord options — pick from real alternatives
-- Call `check_playability` to validate before presenting to the user
-- Call `compile` after generating or modifying LilyPond source
-- Call `diapasons` when working in a new key on baroque lute or theorbo
-- Call `analyze` when given a MusicXML file — get key, chord progression, voice ranges
-- Call `lint` after generating an arrangement — catch parallel fifths, voice crossing, spacing errors
-- Call `theory` for quick music theory lookups — intervals, chord names, scale degrees
-
-## Workflow
-
-1. When given a source file (.ly, MusicXML), read it first
-2. When given MusicXML, call `analyze` to get harmonic analysis before arranging
-3. When arranging from memory, warn the user: "I'm working from memory —
-   please verify the pitches against a reference score"
-4. Use tools for all mechanical decisions (positions, voicings, playability)
-5. After generating an arrangement, call `lint` to verify voice leading
-6. Always compile and verify before presenting the final result
-7. After a successful compile, use the artifacts tool to update the tablature
-   preview in the side panel
-
-## Instruments
-
-[Instrument profiles injected here — tunings, constraints, notation type]
-```
-
-**Source-file-first workflow:** The system prompt explicitly instructs the LLM to prefer source files over memory recall. LLMs cannot reliably recall specific pitches (see OQ-02 research). When no source is provided, the LLM must disclose this and recommend verification. This is a v1 design constraint, not a limitation to fix later.
-
-### Auto-Compile Behavior
-
-There is no file-system hook for auto-compilation. The Agent runs in the browser — there is no file system to watch. Instead, auto-compile is handled by **prompt instruction**: the system prompt tells the LLM to call the `compile` tool after generating or modifying LilyPond source. This is simpler and more reliable than event-based triggering.
-
-After a successful compile, the LLM is instructed to call the built-in `artifacts` tool to create or update `tablature.svg` in the ArtifactsPanel. This gives the user a persistent side-panel preview that updates as the arrangement evolves.
-
-### Profile Injection
-
-Instrument profiles are loaded from the server at initialization and included in the system prompt. When the user mentions a specific instrument mid-conversation, the LLM already has the profile in context — no runtime hook needed.
-
-For conversations that switch instruments, the full profile set is included in the system prompt (they're small — ~50 lines each in YAML). If context limits become an issue with very long arrangements, profiles can be lazy-loaded via a `get_instrument` tool call, but this is unlikely to be needed in v1.
-
----
-
-## Instrument Profiles
-
-Each supported instrument is defined as a YAML profile (for tool logic and system prompts) and a LilyPond include file (.ily, for engraving). Profiles are served to the browser via `GET /api/instruments/:id` and loaded into the system prompt at session start.
-
-### Baroque Lute (13-course, d-minor)
-
-```yaml
-id: baroque-lute-13
-name: "13-Course Baroque Lute (d-minor)"
-courses: 13
-fretted_courses: 6 # courses 1-6 have frets
-open_courses: 7 # courses 7-13 are diapasons (unfretted bass)
-tuning: # highest to lowest
-  - { course: 1, pitch: "f'", note: "F4" } # chanterelle
-  - { course: 2, pitch: "d'", note: "D4" }
-  - { course: 3, pitch: "a", note: "A3" }
-  - { course: 4, pitch: "f", note: "F3" }
-  - { course: 5, pitch: "d", note: "D3" }
-  - { course: 6, pitch: "a,", note: "A2" }
-  # Diapasons (open bass strings, tuned diatonically — varies by key)
-  - { course: 7, pitch: "g,", note: "G2" }
-  - { course: 8, pitch: "f,", note: "F2" }
-  - { course: 9, pitch: "e,", note: "E2" }
-  - { course: 10, pitch: "d,", note: "D2" }
-  - { course: 11, pitch: "c,", note: "C2" }
-  - { course: 12, pitch: "b,,", note: "B1" } # sometimes Bb
-  - { course: 13, pitch: "a,,", note: "A1" }
-frets: 8 # typically 8 frets on the neck
-diapason_schemes: # standard tunings by key (courses 7-13)
-  d_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"] # accord ordinaire
-  a_minor: ["G", "F", "E", "D", "C", "B", "A"] # natural 3rd/7th
-  g_minor: ["G", "F", "Eb", "D", "C", "Bb", "A"] # same as standard
-  d_major: ["G", "F#", "E", "D", "C#", "B", "A"] # sharp keys
-  e_minor: ["G", "F#", "E", "D", "C", "B", "A"] # natural with F#
-constraints:
-  - "Diapasons (courses 7-13) cannot be fretted — open only"
-  - "Maximum left-hand stretch: ~4 frets on upper courses"
-  - "Thumb plays courses 4-13; index-middle alternate on 1-3"
-  - "Campanella encouraged — let notes ring across courses"
-  - "Brisé (broken chord) texture is idiomatic, especially in French style"
-  - "Right-hand thumb-under technique for bass runs"
-notation: "french-letter" # a=0, b=1, c=2, d=3, e=4, f=5, g=6, h=7
-```
-
-### Baroque Guitar (5-course, re-entrant)
-
-```yaml
-id: baroque-guitar-5
-name: "5-Course Baroque Guitar"
-courses: 5
-fretted_courses: 5
-open_courses: 0
-tuning: # nominal pitches (actual sounding depends on stringing)
-  - { course: 1, pitch: "e'", note: "E4" }
-  - { course: 2, pitch: "b", note: "B3" }
-  - { course: 3, pitch: "g", note: "G3" }
-  - { course: 4, pitch: "d'", note: "D4", re_entrant: true }
-  - { course: 5, pitch: "a", note: "A3", re_entrant: true }
-frets: 8
-stringing: "french" # default; options: "french", "italian", "mixed"
-# Stringing variants (per OQ-04 / OQ-18 research):
-#
-# | Variant  | Course 5       | Course 4       | Origin              |
-# |----------|--------------- |----------------|---------------------|
-# | french   | a/a (unison)   | d/d' (octave)  | de Visée, Campion   |
-# | italian  | A/a (bourdon)  | d/d' (octave)  | Foscarini, Corbetta |
-# | mixed    | a/a (unison)   | d/d' (octave)  | Modern compromise   |
-#
-# French: fully re-entrant, maximum campanella, no bass below G3
-# Italian: bourdons on 4+5, bass foundation, continuo-ready
-# Mixed: bourdon on 4 only, partial bass
-#
-# The stringing parameter affects tabulate() and voicings() ranking:
-# - French stringing favors campanella scoring
-# - Italian stringing favors bass-line completeness
-constraints:
-  - "Re-entrant tuning: courses 4-5 sound higher than expected (depends on stringing)"
-  - "Strummed (rasgueado) and plucked (punteado) styles"
-  - "Alfabeto chord notation for strummed passages"
-  - "Campanella especially effective due to re-entrant tuning"
-  - "French stringing: no true bass below G3 (course 3 open)"
-  - "Italian stringing: bass available on courses 4-5 via bourdons"
-notation: "french-letter" # or italian-number depending on source tradition
-```
-
-### Renaissance Lute (6-course, G)
-
-```yaml
-id: renaissance-lute-6
-name: "6-Course Renaissance Lute (G tuning)"
-courses: 6
-fretted_courses: 6
-open_courses: 0
-tuning:
-  - { course: 1, pitch: "g'", note: "G4" }
-  - { course: 2, pitch: "d'", note: "D4" }
-  - { course: 3, pitch: "a", note: "A3" }
-  - { course: 4, pitch: "f", note: "F3" }
-  - { course: 5, pitch: "c", note: "C3" }
-  - { course: 6, pitch: "g,", note: "G2" }
-frets: 8
-constraints:
-  - "All courses fretted"
-  - "Thumb-index alternation standard"
-  - "Simpler voice leading than baroque lute"
-  - "Intabulation of vocal polyphony is core repertoire"
-notation: "italian-number" # or french-letter
-```
-
-### Theorbo (14-course)
-
-```yaml
-id: theorbo-14
-name: "14-Course Theorbo"
-courses: 14
-fretted_courses: 6
-open_courses: 8
-tuning:
-  # Fretted courses (1st and 2nd are an octave lower than on a standard lute)
-  - { course: 1, pitch: "a", note: "A3" } # octave down from lute
-  - { course: 2, pitch: "e", note: "E3" } # octave down from lute
-  - { course: 3, pitch: "b", note: "B3" }
-  - { course: 4, pitch: "g", note: "G3" }
-  - { course: 5, pitch: "d", note: "D3" }
-  - { course: 6, pitch: "a,", note: "A2" }
-  # Diapasons
-  - { course: 7, pitch: "g,", note: "G2" }
-  - { course: 8, pitch: "f,", note: "F2" }
-  - { course: 9, pitch: "e,", note: "E2" }
-  - { course: 10, pitch: "d,", note: "D2" }
-  - { course: 11, pitch: "c,", note: "C2" }
-  - { course: 12, pitch: "b,,", note: "B1" }
-  - { course: 13, pitch: "a,,", note: "A1" }
-  - { course: 14, pitch: "g,,", note: "G1" }
-frets: 8
-constraints:
-  - "Courses 1-2 tuned an octave lower than standard lute — melody often on 3rd course"
-  - "Diapasons (7-14) unfretted"
-  - "Very long scale length on diapasons — big instrument"
-  - "Continuo instrument: often reading from figured bass"
-notation: "french-letter"
-```
-
-### Classical Guitar (6-string)
-
-```yaml
-id: classical-guitar-6
-name: "Classical Guitar"
-type: fretted
-strings: 6
-fretted_strings: 6
-open_strings: 0
-tuning:
-  - { string: 1, pitch: "e'", note: "E4" }
-  - { string: 2, pitch: "b", note: "B3" }
-  - { string: 3, pitch: "g", note: "G3" }
-  - { string: 4, pitch: "d", note: "D3" }
-  - { string: 5, pitch: "a,", note: "A2" }
-  - { string: 6, pitch: "e,", note: "E2" }
-frets: 19
-constraints:
-  - "Standard concert tuning"
-  - "Maximum left-hand stretch: ~5 frets in lower positions, ~4 above 7th"
-  - "Thumb plays strings 4-6; i-m-a on 1-3 (p-i-m-a notation)"
-  - "Barre chords available — full or partial"
-  - "Harmonics at frets 5, 7, 12"
-  - "Can handle up to 4 independent voices simultaneously"
-notation: "number-tab" # standard guitar tablature (or standard notation)
-```
-
-### Piano
-
-```yaml
-id: piano
-name: "Piano"
-type: keyboard
-range:
-  lowest: "a,,," # A0
-  highest: "c''''''" # C8
-staves: 2 # treble + bass (grand staff)
-constraints:
-  - "Maximum stretch: ~10th (large hands) or octave (average)"
-  - "Each hand can play up to 5 simultaneous notes"
-  - "Sustain pedal extends note duration beyond finger release"
-  - "Wide dynamic range — can mark pp to ff"
-  - "No pitch bending, vibrato, or microtones"
-  - "Hands are semi-independent — voice crossing between staves is idiomatic"
-notation: "standard" # grand staff, treble + bass clef
-```
-
-### Voice (SATB)
-
-```yaml
-id: voice-soprano
-name: "Soprano Voice"
-type: voice
-range: { lowest: "c'", highest: "a''" } # C4–A5
-clef: treble
-constraints:
-  - "Monophonic — one note at a time"
-  - "Must breathe — phrase lengths limited by breath capacity"
-  - "Tessitura matters more than absolute range — avoid sitting at extremes"
-  - "Text underlay: syllables aligned to notes"
-  - "Melismatic or syllabic setting"
-  - "Passaggio (register break) around E5-F5"
----
-id: voice-alto
-name: "Alto Voice"
-range: { lowest: "f", highest: "d''" } # F3–D5
-clef: treble
----
-id: voice-tenor
-name: "Tenor Voice"
-range: { lowest: "c", highest: "a'" } # C3–A4
-clef: "treble_8"
----
-id: voice-bass
-name: "Bass Voice"
-range: { lowest: "e,", highest: "e'" } # E2–E4
-clef: bass
-```
-
-Voice profiles enable:
-
-- **Song arrangements** — melody line with lute/guitar accompaniment
-- **Continuo realization** — soprano line + figured bass → full texture
-- **Transcription** — vocal part extracted from a choral work for study
-- **Intabulation** — arranging vocal polyphony for solo lute (core Renaissance repertoire)
-
-Additional profiles can be added: archlute, mandora, vihuela, 7-course Dowland-era lute, etc.
-
----
-
-## Arrangement Engine — How the Musicological Engine Arranges
-
-### Input Types
-
-Vellum accepts multiple source formats and normalizes them into versioned musical state before arrangement. Model memory is a disclosed best-effort source, never an equivalent substitute for an uploaded score.
-
-1. **PDF or image** — uploaded Source Artifact → confidence-bearing Score Transcription → review only for Critical Uncertainty
-2. **MusicXML, restricted LilyPond, MEI, or ABC** — parsed into a versioned Normalized Score with source diagnostics
-3. **Lead sheet** — melody and chord symbols become simultaneous Preservation Targets
-4. **Existing tablature** — pitches, course choices, rhythm, and notation semantics are preserved where represented
-5. **Figured bass** — bass and figures become a Continuo Foundation; upper voices are generated under a Realization Profile
-6. **Natural language or model memory** — disclosed best effort with explicit source uncertainty
-
-### Continuo Output
-
-A result is a complete Continuo Realization only if its Arrangement Score actually
-sounds the authoritative Continuo Foundation. If the plucked target cannot do so,
-Vellum offers either of two honest outputs:
-
-- retain the Continuo Foundation on a separate bass staff or instrument and treat
-  the plucked part as the upper realization; or
-- create a clearly labeled **Continuo Reduction** for the solo target.
-
-A Continuo Reduction retains the entire foundation in source lineage and maps
-every unsounded bass event in its Preservation Audit. Systematic bass omission
-under Faithful Reduction requires a Policy Exception and may amount to Policy
-Drift; harmonic implication or a matching chord root does not count as sounding
-the authoritative bass. Engraving and Audio Preview must not add an absent bass
-while representing the target part as a complete realization.
-
-### PDF and Image Recognition
-
-PDF/image recognition uses a backend-neutral OMR adapter. Audiveris is the first
-supported implementation, but neither Audiveris nor MusicXML defines Vellum's
-canonical score model. Every recognition attempt creates a versioned **OMR Run**
-that retains:
-
-- the immutable PDF or image Source Artifact;
-- backend identity, version, configuration, and invocation;
-- logs, diagnostics, and confidence/uncertainty evidence where available;
-- mappings from recognized pages and regions back to the Source Artifact;
-- backend-native project and intermediate data, including Audiveris `.omr`; and
-- interchange exports such as MusicXML.
-
-MusicXML is an input to normalization, not the complete recognition record. A
-different backend, upgraded backend, or changed configuration creates a new OMR
-Run and Score Transcription version, leaving earlier evidence reproducible.
-
-### Score-Anchored Review
-
-When recognition produces a Critical Uncertainty, Vellum opens the exact source
-page and region beside the corresponding editable notation. The review shows the
-recognized value, ranked alternatives, confidence or other backend evidence, and
-the musical consequence of the uncertainty—for example, whether it changes a
-Principal Voice event, figure, rhythm, key signature, or repeat structure.
-
-Accepting a suggestion or direct notation edit creates a new Score Transcription
-version and preserves the earlier transcription and immutable Source Artifact.
-The source-region mapping remains attached to the corrected musical object for
-later audit. Chat can explain the issue and can accept textual corrections, but a
-user should not have to describe a visible notation error in prose when it can be
-corrected directly against the facsimile.
-
-### Arrangement Process
-
-The Musicological Engine follows this process:
-
-```
-1. INGEST AND VERSION
-   - Preserve the Source Artifact and create or import a Score Transcription
-   - Normalize musical time, voices, notation, figures, lyrics, and provenance
-
-2. ANALYZE AND SCOPE
-   - Produce score-anchored Analysis Claims for form, harmony, Texture,
-     Contrapuntal Techniques, phrases, cadences, and Preservation Targets
-   - Select applicable Knowledge Packs, Realization Profiles, and Validation Profiles
-
-3. PLAN
-   - Resolve Preservation Policy, target instrument, Notation Layouts, Bass Tuning,
-     Transposition Plan, sectional texture, and allowed transformations
-
-4. GENERATE CANDIDATES
-   - Explore musically consequential alternatives in key, register, texture,
-     voicing, course assignment, articulation, and ornamentation
-
-5. REJECT HARD FAILURES
-   - Run Preservation Audits, figured-bass checks, instrument constraints,
-     playability, and hard contextual Validation Findings
-
-6. RANK AND COMPARE
-   - Score surviving candidates by historical profile, idiom, voice leading,
-     playability, notation clarity, and soft preferences
-   - Use model judgment to compare close alternatives with inspectable rationale
-
-7. SELECT AND VERSION
-   - Promote the selected candidate to a versioned Arrangement Score
-   - Retain alternatives for audition and branching
-
-8. ENGRAVE AND VERIFY
-   - Generate requested Notation Layouts and Deliverables
-   - Compile, inspect, and regenerate until notation and rendering checks pass
-```
-
-### Transposition
-
-Faithful Reduction permits a uniform whole-work Transposition Plan. Vellum may
-choose the best playable key automatically when it preserves every protected
-interval, rhythm, contour, harmonic function, formal relationship, and cadence.
-Before generation it announces the source key, target key, interval, affected
-parts, and playability rationale. The Preservation Audit verifies the exact
-source-to-target mapping.
-
-Vellum asks before transposing when absolute pitch or key depends on a fixed voice
-or instrument, vocal range, source-specific scordatura, a requested edition or
-recording, or another detected ensemble constraint. In those cases the
-Transposition Plan remains unresolved until the user chooses or changes the
-constraint.
-
-Faithful Reduction does not permit independently transposing an isolated passage
-merely to make it fit. Arrangement Search must first exhaust viable octave
-placement, revoicing, Texture reduction, and accompaniment simplification within
-the whole-work Transposition Plan. A passage-level transposition is allowed only
-when it is present in the source or the Owner approves a score-anchored Policy
-Exception; otherwise the Preservation Audit fails it as a change to the work's
-tonal relationships.
-
-A uniform octave relocation of the complete Principal Voice is compatible with
-Faithful Reduction when announced and recorded in the Transposition Plan. Local
-octave displacement is more dangerous: the Preservation Audit must prove that it
-retains pitch-class order, phrase contour, registral emphasis and climax, cadence
-approach, rhythmic identity, and the voice's perceptual prominence in the target
-Texture. Octave folding that fragments, obscures, or changes the recognizable
-melodic shape requires a score-anchored Policy Exception.
-
-### Audio Preview
-
-Every selected Arrangement Score automatically receives a basic synthesized Audio
-Preview. Vellum already obtains MIDI from the LilyPond compilation path; the
-browser decodes that MIDI and schedules it through a lightweight Web Audio
-synthesizer. The initial controls are play/pause, stop, seek/progress, and volume.
-
-Playback is divided into named semantic **Playback Parts** for the Principal Voice,
-Continuo Foundation, accompaniment, and any other musically distinct voice or
-instrument. Each part has independent mute, solo, and level controls. Parts derive
-from canonical sounding events and arrangement roles rather than engraving staves,
-so presenting one voice in both standard notation and tablature cannot double its
-MIDI notes. Preservation Targets and audit findings link to their Playback Parts,
-making it possible to hear protected melody, bass, or accompaniment in isolation.
-
-Playback and score selection support bidirectional **Lineage Navigation**. Clicking
-an Arrangement Score event, recognized notation object, source facsimile region,
-Analysis Claim, or Preservation Audit finding seeks to the corresponding sounding
-time. During playback Vellum highlights all simultaneous Arrangement Score events
-and their linked transcription objects, source regions, claims, and audit mappings.
-
-The timeline uses **Playback Occurrences** rather than assuming one timestamp per
-written event. Each traversal of a repeat or ending receives its own occurrence
-identity while retaining the canonical event lineage. This lets the same written
-note highlight correctly on successive passes and prevents seeking or diagnostics
-from depending on page coordinates or matching raw MIDI pitches.
-
-By default the timeline follows the complete **Performed Form** derived from
-repeats, volta endings, da capo or dal segno instructions, segnos, codas, and
-related navigation signs. A **Skip repeats** practice toggle produces a temporary
-condensed traversal for faster checking; it does not edit score structure or create
-a Performance Interpretation. The chosen traversal and every Playback Occurrence
-are recorded reproducibly. A Critical Uncertainty in any form-defining sign blocks
-authoritative playback and opens Score-Anchored Review rather than silently
-guessing the work's form.
-
-Temporary **Practice State** adds passage looping and playback-speed control. Loop
-boundaries are selected on Playback Occurrences so they remain unambiguous within
-repeated form. Speed scaling preserves pitch and relative rhythmic proportions.
-Practice State is reset independently and never changes tempo markings,
-Arrangement Scores, Performance Interpretations, Preservation Audits, exported
-MIDI, or any other Deliverable.
-
-The preview is a reproducible projection of the Arrangement Score, not separate
-musical state. It must use the score's sounding pitches, durations, tempo, repeats,
-transpositions, re-entrant courses, and diapasons, and it must not double notes
-merely because the same music appears in both standard notation and tablature.
-Alternative Arrangement Candidates are previewed on demand so they can be compared
-without eagerly rendering every candidate. The initial neutral synthetic timbre is
-for checking notes and musical identity; realistic lute, baroque-guitar, or
-classical-guitar sampling is outside the basic preview contract.
-
-Literal score playback is the default. If Vellum later realizes ornaments,
-arpeggiation, inequality, articulation, tempo shaping, or rubato, those choices are
-stored in a versioned **Performance Interpretation** linked to an exact Arrangement
-Score version. Interpretive playback is explicitly labeled and can be toggled
-against literal playback. It does not mutate the Arrangement Score, invalidate the
-score's notational identity, or silently alter its Preservation Audit.
-
-### Instrument Conversion
-
-Converting between instruments (e.g., guitar → lute):
-
-1. **Extract pitches** from source (tab position → absolute pitch via `tabulate()`)
-2. **Re-map** each pitch to the target instrument using `tabulate(pitch, new_instrument)`
-3. **Re-voice** passages using `voicings()` where original voicing doesn't fit
-4. **Validate** via `check_playability()` on the new arrangement
-5. **Adapt idiom** — LLM adjusts style (guitar arpeggios → brisé, strummed chords → thinning)
-
----
-
-## LilyPond Integration
-
-### Why LilyPond
-
-- **Text-based input** — LLM generates it natively, no binary format issues
-- **Tablature support** — `\new TabStaff` with custom tunings, including French letter tab
-- **Publication quality** — best open-source music engraving available
-- **Programmable** — Scheme extensions for custom behavior
-- **Free** — no licensing issues
-
-### Server-Side Only
-
-LilyPond is a C++ program depending on Guile (Scheme), Pango, Fontconfig, and GhostScript. It cannot run in the browser. All compilation happens server-side via `POST /api/compile`. The browser receives rendered SVG/PDF artifacts.
-
-### French Letter Tablature
-
-French letter tab is the native notation for baroque lute. LilyPond 2.24 has full support:
-
-```lilypond
-\version "2.24.0"
-
-% Rhythm flags (above the tab)
-rhythm = \relative {
-  \autoBeamOff
-  d'4 a f d8 a |
-  % ...
-}
-
-% Music (the actual notes — shared between tab and hidden MIDI staff)
-music = \relative {
-  \voiceOne
-  d'4 a f d8 a |
-  % ...
-}
-
-\score {
-  <<
-    % Rhythm staff: flags only, no staff lines
-    \new RhythmicStaff \with {
-      \override StaffSymbol.line-count = 0
-      \autoBeamOff
-      \remove Bar_engraver
-      \override VerticalAxisGroup.staff-staff-spacing.basic-distance = 6
-    } \rhythm
-
-    % Tab staff: French letter notation with diapasons
-    \new TabStaff \with {
-      tablatureFormat = #fret-letter-tablature-format
-      stringTunings = \stringTuning <f' d' a f d a,>       % fretted courses 1-6
-      additionalBassStrings = \stringTuning <g, f, ees, d, c, bes,, a,,>  % diapasons 7-13
-    } \music
-
-    % Hidden staff for correct MIDI output
-    \new Staff \with {
-      \remove "Staff_symbol_engraver"
-      \override NoteHead.no-ledgers = ##t
-      \override NoteHead.transparent = ##t
-      \override Rest.transparent = ##t
-      \override Dots.transparent = ##t
-      \override Stem.transparent = ##t
-    } \music
-  >>
-
-  \layout { }
-  \midi { \tempo 4 = 72 }
-}
-```
-
-**Key LilyPond features for lute tablature:**
-
-| Feature            | Syntax                                            | Purpose                                         |
-| ------------------ | ------------------------------------------------- | ----------------------------------------------- |
-| French letters     | `tablatureFormat = #fret-letter-tablature-format` | a=open, b=1st fret, c=2nd, etc.                 |
-| Diapasons          | `additionalBassStrings = \stringTuning <...>`     | Bass courses below staff, printed as a, /a, //a |
-| Custom fret labels | `fretLabels = #'("a" "b" "c" ...)`                | Override default letter mapping if needed       |
-| Rhythm flags       | `\new RhythmicStaff` above `TabStaff`             | Separate rhythm notation above tab              |
-| Hidden MIDI staff  | `\new Staff \with { ... transparent ... }`        | Correct MIDI output (see below)                 |
-
-### MIDI Output
-
-LilyPond's MIDI from `TabStaff` with custom tunings works for basic cases but has edge cases with `additionalBassStrings`. The reliable pattern is a **hidden parallel Staff** that shares the same music expression:
-
-- The hidden `Staff` produces correct MIDI with proper pitch mapping
-- The visible `TabStaff` handles notation display only (`midiInstrument = ##f` if needed)
-- Both reference the same `\music` variable — no duplication
-
-This pattern is built into all LilyPond templates.
-
-**MIDI instrument mapping:** General MIDI has no "baroque lute." Closest: `"acoustic guitar (nylon)"` (program 25). For theorbo continuo, `"acoustic bass"` (program 33) may be more appropriate for the diapason register.
-
-### Ornaments in Tablature
-
-The six standard baroque lute ornaments for v1, using LilyPond builtins:
-
-| Ornament     | French Name    | LilyPond        | Tab Display         | Usage                            |
-| ------------ | -------------- | --------------- | ------------------- | -------------------------------- |
-| Trill        | tremblement    | `\trill`        | Symbol above letter | Very common, most accented notes |
-| Mordent      | martellement   | `\mordent`      | Symbol above letter | Alternation with note below      |
-| Appoggiatura | port de voix   | `\appoggiatura` | Small grace note    | Ascending approach note          |
-| Slur         | tirade/coulé   | `( )`           | Arc between letters | Hammer-on / pull-off             |
-| Staccato     | étouffé        | `\staccato`     | Dot                 | Muted/stopped note               |
-| Turn         | double cadence | `\turn`         | Symbol above letter | Upper-lower neighbor figure      |
-
-Ornament symbols render above the TabStaff by default. With the RhythmicStaff layout, they appear in the rhythm line area. A full configurable ornament table per style period (Gaultier vs. Mouton vs. Weiss) is a v2 refinement.
-
-### Output Formats
-
-LilyPond produces:
-
-- **SVG** — primary output for browser display (inline in chat via tool renderer, persistent in ArtifactsPanel)
-- **PDF** — for download/print
-- **MIDI** — for playback (via hidden Staff pattern)
-- **PNG** — for static display (fallback)
-
----
-
-## Workflow Examples
-
-### Example 1: Arrange from Source File
-
-```
-User: [uploads greensleeves.ly]
-      "Arrange this for baroque lute. Simple version,
-       mostly single line with bass notes."
-
-Agent:
-1. Reads uploaded .ly source — extracts melody and harmony
-2. Loads baroque-lute-13 profile (already in system prompt)
-3. Calls diapasons("A minor") → gets diapason tuning
-4. Calls tabulate() for each melody note → gets course/fret positions
-5. Writes .ly source using french-tab.ly template
-6. Calls compile() → SVG rendered, shown inline via tool renderer
-7. Calls check_playability() → no violations
-8. Calls artifacts tool to update tablature.svg in side panel
-9. Returns arrangement with explanation of voicing choices
-```
-
-### Example 2: Arrange from Memory (Best-Effort)
-
-```
-User: "Arrange Greensleeves for baroque lute."
-
-Agent:
-1. No source file detected — warns user:
-   "I'm working from memory. Greensleeves is well-known, but I recommend
-    verifying the pitches against a reference score (e.g., from IMSLP or
-    the Mutopia Project)."
-2. Proceeds with best-effort arrangement using training data
-3. Calls diapasons("A minor") → gets diapason tuning
-4. Calls tabulate() for each note → validates against instrument
-5. Writes .ly → compile() → preview
-6. Flags any passages where it's uncertain about the source pitches
-```
-
-### Example 3: Convert Guitar to Lute
-
-```
-User: [uploads guitar-arrangement.ly]
-      "Convert this guitar arrangement to baroque lute."
-
-Agent:
-1. Reads .ly source → extracts pitches + durations
-2. For each note: tabulate(pitch, "baroque-lute-13") → lute positions
-3. Calls voicings() for chords that need revoicing
-4. Calls check_playability() → flags 3 bars with stretch violations
-5. Revoices flagged bars using voicings(chord, max_stretch=3)
-6. Writes .ly → compile() → SVG preview inline
-7. Updates tablature.svg in side panel via artifacts tool
-8. Adjusts idiom (guitar hammer-ons → lute mordents, arpeggios → brisé)
-```
-
-### Example 4: Iterative Editing
-
-```
-User: "The stretch in bar 8 is too wide. Can you revoice that chord?"
-
-Agent:
-1. Identifies bar 8 in current arrangement
-2. Extracts chord pitches → calls voicings(pitches, instrument, max_stretch=3)
-3. Gets 4 alternatives ranked by quality
-4. Picks the best, explains the trade-off ("dropped the tenor D3")
-5. Edits .ly source → compile() → preview updates inline
-6. Updates tablature.svg in side panel
-```
-
-### Example 5: Instrument Swap
-
-```
-User: "Now give me this same piece for baroque guitar."
-
-Agent:
-1. Loads baroque-guitar-5 profile (already in system prompt)
-2. Asks: "Which stringing? French (no bourdons, full campanella),
-   Italian (with bourdons, bass available), or mixed?"
-3. User picks French
-4. For each note: tabulate(pitch, "baroque-guitar-5")
-5. Drops bass lines that don't fit (5 courses, no bass below G3 with French stringing)
-6. check_playability() → clean
-7. May suggest rasgueado for chordal passages
-8. New .ly → compile() → new preview
-```
-
-### Example 6: Hymnal Conversion (SATB → Baroque Guitar)
-
-```
-User: "I have 'All Creatures of Our God and King' from my hymnal in D major,
-       SATB + organ. Arrange it for baroque guitar."
-       [uploads MusicXML file]
-
-Agent:
-1. analyze(uploaded_musicxml)
-   → Key: D major, Time: 3/4
-   → Voices: Soprano (D4–E5), Alto (A3–B4), Tenor (D3–A3), Bass (G2–D3)
-   → Chord progression: I | V6 | vi | IV | ii | V7 | I ...
-   → Identifies Alleluia refrains (repeated descending I–V–vi–IV pattern)
-
-2. LLM reads analysis + baroque-guitar-5 profile:
-   "G major gives the melody and alfabeto shapes a better playable register, so
-    I'll transpose the complete D-major setting down a fifth to G major.
-    theory('scale_chords', {tonic: 'G', scale: 'major'}) confirms
-    G, Am, Bm, C, D, Em, F#dim — all available to the voicing search.
-    Which stringing? French (full re-entrant), Italian, or mixed?"
-
-3. User picks French
-
-4. Plans arrangement from chordify results:
-   - Verses: punteado — melody (soprano) on courses 1-3, bass reduced for courses 4-5
-   - Alleluias: rasgueado — strummed chords from the Roman numeral progression
-
-5. For verses: punteado arrangement
-   - Melody on courses 1-3 via tabulate()
-   - Bass line simplified for re-entrant courses 4-5
-   - check_playability() → clean
-
-6. For Alleluia refrains: rasgueado arrangement
-   - voicings(chord, "baroque-guitar-5", stringing="french")
-   - Strummed chords with rhythm notation
-
-7. lint(arrangement) → checks voice leading in punteado sections
-   → "Bar 6, beat 1: parallel fifths between melody and bass"
-   → Fixes the voicing, re-runs lint → clean
-
-8. Adds period-appropriate ornaments (mordents on cadences)
-
-9. compile() → French tab preview (punteado sections)
-   + alfabeto notation for rasgueado sections
-
-10. "Bars 5-8 had a wide tenor-bass gap — I dropped the alto D
-     and doubled the root in the strummed chord instead.
-     lint() confirms no voice leading violations in the final version."
-```
-
----
-
-## Quality Criteria
-
-### Primary Golden Arrangement Fixture
-
-The primary end-to-end acceptance fixture is a repository-stored, legally
-redistributable public-domain PDF of a four-part setting of _Greensleeves_. The
-fixture includes source and license provenance, reviewed Score Transcription data,
-and expected musical invariants so recognition drift can be distinguished from an
-arrangement regression.
-
-Its primary path must prove:
-
-1. generic PDF upload and immutable Source Artifact storage;
-2. a reproducible OMR Run and Score-Anchored Review of any Critical Uncertainty;
-3. four-voice normalization, Musicological Analysis, and correct Principal Voice
-   identification;
-4. Faithful Reduction through structured Arrangement Search to five-course
-   baroque guitar with French Stringing and French-Letter Tablature;
-5. event-by-event Preservation Audit of the complete Principal Voice, including
-   pitch, rhythm, ordering, contour, phrase, and cadence relationships;
-6. perceptual prominence of that voice as the recognizable top line while inner
-   voices yield to instrument range and playability;
-7. successful engraving plus semantic, non-duplicated Audio Preview; and
-8. sibling 13-course baroque-lute and classical-guitar Arrangement Scores from the
-   same source, each with independent search, constraints, and audit.
-
-The fixture cannot pass merely because LilyPond compiles, a MIDI file exists, or a
-model says the tune is recognizable. Tests compare the reviewed Principal Voice
-and its protected relationships against the exact selected Arrangement Score.
-
-### Figured-Bass Golden Fixture
-
-The second end-to-end fixture is a short, legally redistributable public-domain
-PDF containing an independent soprano and figured bass, including at least one
-prepared suspension. Its reviewed transcription identifies every soprano and bass
-event, figure, alteration, cadence, and suspension relationship.
-
-The fixture must prove:
-
-1. PDF/OMR recognition keeps the Continuo Foundation distinct from the Principal
-   Voice and flags Critical Uncertainty in either layer;
-2. analysis selects and discloses an applicable Realization Profile;
-3. a capable Target Configuration produces a complete Continuo Realization that
-   preserves every authoritative bass event and satisfies the figures;
-4. an incapable solo target produces either a separate bass part or a labeled
-   Continuo Reduction with every unsounded foundation event mapped;
-5. generated upper voices remain distinct from source evidence in lineage and the
-   Transformation Report;
-6. contextual validation recognizes the documented suspension treatment instead
-   of applying blanket dissonance or parallel-motion rules; and
-7. Audio Preview exposes separate Principal Voice, Continuo Foundation, and
-   generated-realization Playback Parts.
-
-### Imitative-Counterpoint Golden Fixture
-
-The third fixture is a short, legally redistributable public-domain three-voice
-imitative passage whose identity depends on ordered entries rather than one
-permanent Principal Voice. Its reviewed data identifies voice events, entry order,
-subject interval-rhythm shapes, cadential goals, and required voice continuities.
-
-The fixture must prove:
-
-1. Musicological Analysis classifies imitative-polyphonic Texture separately from
-   its Contrapuntal Techniques and selects an appropriate Validation Profile;
-2. entry order, subject shapes, cadential goals, and voice continuities become
-   explicit Preservation Targets;
-3. Arrangement Search intabulates the passage for six-course Renaissance lute in
-   French tablature, redistributing notes across playable courses and registers
-   without erasing or reordering the imitation;
-4. validation does not substitute generic Species Counterpoint or blanket
-   parallel-motion rules for the selected profile;
-5. the Preservation Audit checks every protected entry and relationship rather
-   than only pitch coverage or the highest source voice; and
-6. Audio Preview and Lineage Navigation can isolate each source voice and its
-   interleaved arrangement descendants on the single tablature staff.
-
-### Baroque-Lute Diapason Engraving Fixture
-
-A dedicated Golden Engraving Fixture must prove that open course 10 on the default
-13-course D-minor baroque lute renders as `///a` below the French tablature staff
-and sounds D2. The accepted sign is prefix-slash `///a`, not `a///`.
-
-The test checks all of the following independently:
-
-1. the structured event selects open course 10;
-2. generated LilyPond retains the correct course and `additionalBassStrings`
-   semantics;
-3. rendered output contains the approved `///a` glyph in the correct below-staff
-   position, using a semantic assertion or focused visual regression rather than a
-   non-empty-SVG check;
-4. MIDI and Audio Preview contain D2 exactly once; and
-5. changing course 10 through a Bass Tuning changes its sounding pitch while its
-   course-identity sign remains `///a`.
-
-A companion fixture verifies the complete default sign sequence `a`, `/a`, `//a`,
-`///a`, `4`, `5`, and `6` for courses 7–13.
-
-### Provider Connection Acceptance
-
-Provider Connection has two independent acceptance layers.
-
-The automated **Provider Contract Fixture** uses a deterministic fake provider to
-exercise connect initiation, callback validation, CSRF/state mismatch, successful
-authorization, expiry, refresh, atomic credential writes, single-flight refresh
-concurrency, interruption and retry of Model Actions, reconnect, logout, and all
-visible connection states. It requires no real account, never reads Pi or Codex
-credential files, and asserts that tokens cannot appear in logs, errors, test
-snapshots, workspace exports, or browser-visible state.
-
-An opt-in real ChatGPT subscription smoke test verifies the current provider OAuth
-flow, connected status, one minimal model request, local disconnect, and reconnect.
-It is never a CI requirement and never records credentials, authorization codes,
-callback parameters, or model content beyond a redacted success result. Reporting
-distinguishes provider-contract drift from deterministic Vellum state-machine
-failures.
-
-An arrangement is "good" if:
-
-1. **Faithful to its policy** — every Preservation Target passes a machine-readable Preservation Audit; necessary deviations have explicit Policy Exceptions
-2. **Playable** — no impossible stretches, fingerings are natural (`check_playability` passes)
-3. **Theoretically sound** — counterpoint, voice leading, figures, and harmonic claims satisfy the applicable analysis and Realization Profiles
-4. **Musical** — voice leading is coherent, the Continuo Foundation and bass make structural sense, and the intended Texture remains perceptible
-5. **Idiomatic** — sounds like it belongs on the instrument and within the selected historical scope, not like a mechanical transposition
-6. **Complete** — no required material is silently missing
-7. **Readable** — tablature or standard notation is clear, rhythmic notation is correct, and page layout is clean
-
-The engine cannot complete a Faithful Reduction with unexplained compromises. A necessary dropped note, altered rhythm, or changed relationship must become a visible, Owner-approved Policy Exception.
-
----
-
-## File Structure
-
-```
-vellum/
-├── flake.nix                  # Nix flake: package + NixOS module export
-├── SPEC.md                    # This file
-├── OPEN-QUESTIONS.md          # Gap tracker
-├── README.md
-├── package.json               # Node.js project root
-├── tsconfig.json
-├── vite.config.ts             # Vite config for browser bundle
-│
-├── src/
-│   ├── main.ts                # Browser entry: Agent setup, ChatPanel wiring,
-│   │                          #   tool renderer registration
-│   ├── tools.ts               # All AgentTool<T> definitions (compile, tabulate,
-│   │                          #   voicings, check_playability, transpose,
-│   │                          #   diapasons, fretboard, analyze, lint, theory)
-│   ├── theory.ts              # tonal.js wrapper — browser-side music theory
-│   │                          #   calculations for the theory tool
-│   ├── renderers.ts           # registerToolRenderer() implementations for
-│   │                          #   compile (SVG), fretboard (SVG), playability
-│   ├── prompts.ts             # System prompt builder — instrument profile
-│   │                          #   injection, workflow instructions
-│   ├── types.ts               # Shared TypeBox schemas, TypeScript interfaces
-│   │                          #   (TabPosition, Voicing, CompileError, etc.)
-│   │
-│   └── server/
-│       ├── index.ts           # Express server: static assets, API routes,
-│       │                      #   streamProxy endpoint
-│       ├── compile.ts         # POST /api/compile — LilyPond subprocess,
-│       │                      #   stderr parsing into structured errors
-│       ├── theory.ts          # POST /api/analyze, /api/lint, /api/chordify,
-│       │                      #   /api/realize — calls theory.py subprocess
-│       ├── theory.py          # Python CLI script wrapping music21:
-│       │                      #   python3 theory.py analyze < input.xml
-│       │                      #   python3 theory.py lint < input.ly
-│       │                      #   python3 theory.py chordify < input.xml
-│       │                      #   Returns JSON to stdout
-│       ├── instruments.ts     # GET /api/instruments — serves YAML profiles
-│       ├── arrangements.ts    # GET/POST /api/arrangements — persistence
-│       └── templates.ts       # GET /api/templates — LilyPond template source
-│
-├── instruments/               # Instrument profile definitions
-│   ├── baroque-lute-13.yaml
-│   ├── baroque-lute-13.ily
-│   ├── baroque-guitar-5.yaml
-│   ├── baroque-guitar-5.ily
-│   ├── classical-guitar-6.yaml
-│   ├── classical-guitar-6.ily
-│   ├── renaissance-lute-6.yaml
-│   ├── renaissance-lute-6.ily
-│   ├── theorbo-14.yaml
-│   ├── theorbo-14.ily
-│   ├── piano.yaml
-│   ├── piano.ily
-│   ├── voice-soprano.yaml
-│   ├── voice-alto.yaml
-│   ├── voice-tenor.yaml
-│   ├── voice-bass.yaml
-│   └── voice.ily
-│
-├── templates/                 # LilyPond boilerplate templates
-│   ├── solo-tab.ly            # Tab only (guitar number tab)
-│   ├── tab-and-staff.ly       # Tab + standard notation side by side
-│   ├── french-tab.ly          # French letter tab: RhythmicStaff + TabStaff
-│   │                          #   + hidden Staff for MIDI
-│   ├── grand-staff.ly         # Piano (treble + bass)
-│   ├── voice-and-tab.ly       # Voice line + lute/guitar tab
-│   ├── voice-and-piano.ly     # Voice line + piano accompaniment
-│   ├── satb.ly                # Four-part choral
-│   └── continuo.ly            # Figured bass realization
-│
-├── arrangements/              # Saved arrangements (server-side)
-│   └── .../
-├── sources/                   # Input files (reference scores, lead sheets)
-│   └── .../
-│
-└── public/                    # Static assets served by Express
-    └── index.html             # Shell HTML that loads the Vite-built bundle
-```
-
-**What changed from the original file structure:**
-
-- Removed `src/extension.ts` — Vellum is not a pi coding-agent extension
-- Removed `src/hooks/` directory — auto-compile is a prompt instruction, error parsing is in `server/compile.ts`, profile injection is in `prompts.ts`
-- Renamed `src/web/app.ts` → `src/main.ts` — this is the browser entry point
-- Added `src/server/` — Express server with API endpoints
-- Added `src/renderers.ts` — `registerToolRenderer()` implementations
-- Added `src/types.ts` — shared TypeBox schemas
-- Added `vite.config.ts` — browser build configuration
-- Added `public/` — static assets
-
----
-
-## Local-First Runtime and Optional NixOS Deployment
-
-Vellum runs primarily on the Owner's machine, where localhost can host the UI, musical services, durable state, and provider callback. Its `flake.nix` also exports a package and NixOS module for reproducible installation or optional private remote access. A servoid configuration remains possible:
-
-```nix
-# In flake.nix inputs:
-inputs.vellum.url = "github:jefffm/vellum";
-
-# In hosts/servoid/default.nix:
-services.vellum = {
-  enable = true;
-  port = 3XXX;                          # pick an available port
-  domain = "vellum.aoeu.pw";
-  apiKeyFile = "/run/secrets/anthropic-key";  # sops-nix or agenix
+- scan or canvas order;
+- printed pagination, foliation, plate labels, and separate internal sequences;
+- missing, duplicate, rotated, cropped, damaged, or blank pages;
+- detected regions and their modality;
+- links across split text and plate volumes; and
+- corrections with provenance.
+
+The atlas is the routing and citation surface. It is not a single OCR transcript.
+
+### Modality-specific extraction
+
+Regions may independently route to:
+
+- modern prose OCR;
+- long-s or historical-type OCR;
+- Fraktur OCR;
+- staff OMR;
+- printed tablature recognition;
+- handwritten tablature recognition;
+- alfabeto or diagram extraction;
+- handwriting recognition;
+- table or parallel-layout alignment;
+- translation; or
+- visual-only review.
+
+Every Extraction Run records component identity, version, configuration, inputs, outputs, confidence, geometry, logs, and failure state. Extracted text or notation never replaces the source crop as citation authority.
+
+### Cited extraction artifacts
+
+A candidate derived from a source retains:
+
+- exact Source Segment identity and asset digest;
+- source crop and geometry;
+- original transcription;
+- normalized transcription;
+- translation when used;
+- extraction component and confidence;
+- source-identity confidence;
+- interpretation confidence;
+- applicability confidence;
+- reviewer role and review state; and
+- unresolved alternatives.
+
+One scalar confidence cannot stand in for these independent uncertainties.
+
+## Reviewed Knowledge Library
+
+The Historical Knowledge Base becomes one lane in a broader Reviewed Knowledge Library.
+
+Initial pack kinds are:
+
+- historical practice;
+- analytical and contrapuntal;
+- continuo and figured bass;
+- modern pedagogy;
+- editorial convention;
+- software profile; and
+- notation convention.
+
+Instrument mechanics, Instrument Instances, Personal Defaults, Owner Ergonomic Profiles, and evaluator datasets remain linked external records rather than being smuggled into a pack kind.
+
+### Knowledge Candidates
+
+A Knowledge Candidate has one explicit kind:
+
+- prescription;
+- worked example;
+- descriptive observation;
+- modern synthesis;
+- editorial convention;
+- Vellum heuristic;
+- counterexample;
+- validation guidance;
+- unresolved conflict; or
+- research question.
+
+Claims and observations support many-to-many evidence. Typed relationships include:
+
+- supports;
+- contradicts;
+- narrows;
+- qualifies;
+- supersedes;
+- derived from;
+- exemplifies; and
+- counterexample to.
+
+Descriptive repertoire observations retain corpus identity, sampling method, numerator, denominator where meaningful, examples, counterexamples, and coverage limitations. Frequency is not silently converted into prescription.
+
+### Knowledge Pack releases
+
+A released pack is immutable and content-addressed. A new release creates a new identity.
+
+```ts
+type KnowledgePackRelease = {
+  id: string;
+  packId: string;
+  version: number;
+  digest: string;
+  kind: KnowledgePackKind;
+  releaseState: "draft" | "test_only" | "owner_reviewed_local" | "specialist_reviewed";
+  claimRefs: DigestedRef[];
+  observationRefs: DigestedRef[];
+  exampleRefs: DigestedRef[];
+  counterexampleRefs: DigestedRef[];
+  profileRefs: DigestedRef[];
+  conflictRefs: DigestedRef[];
+  dependencyRefs: DigestedRef[];
+  reviewerAssertions: ReviewerAssertion[];
+  rightsAssertions: RightsAssertion[];
 };
 ```
 
-The NixOS module provides:
+Owner-reviewed local knowledge may guide local work with explicit disclosure. It is not presented as specialist-reviewed historical practice. AFK automation may build extraction artifacts, candidates, test-only packs, and review packages; it may not invent the human authority required for a stronger release state.
 
-- **systemd service** — runs the Express server (serves browser assets + API + LLM proxy)
-- **LilyPond dependency** — `pkgs.lilypond` pinned at 2.24.x, reproducible, no version drift
-- **music21 dependency** — `pkgs.python3.withPackages (ps: [ ps.music21 ])` pinned via Nix. Called as subprocess by the theory API endpoints. Same deployment pattern as LilyPond — no separate Python service, no virtualenv, just a Nix-managed Python with music21 available
-- **Traefik integration** — reverse proxy with mTLS via step-ca
-- **Secrets management** — API keys injected at runtime, never in the repo
-- **Data directory** — `/var/lib/vellum/arrangements/` for saved arrangements
+### Profiles and compiler mappings
 
-The Nix build:
+A pack profile contains:
 
-1. `buildNpmPackage` builds the Express server + Vite browser bundle
-2. LilyPond and Python+music21 are runtime dependencies, not build dependencies
-3. The `xlsx` CDN tarball URL in pi-web-ui's dependency tree may need lockfile patching for `fetchNpmDeps` — test early
+- applicability predicates;
+- scoped claims and observations;
+- examples and counterexamples;
+- permitted, preferred, discouraged, and prohibited outcomes;
+- declarative mappings to registered Analysis, planning, compiler, notation, playback, and evaluator components;
+- parameter values and units;
+- conflict and precedence policy;
+- expected observable consequences; and
+- limitations and unevaluated dimensions.
 
-This remote configuration is optional and must not become the credential or ownership boundary for the local-first product.
+Profiles are not prompt fragments. Prompt summaries may be derived from them, but search constraints and evaluators consume the same typed profile identity.
 
----
+## Applied Knowledge Manifest
 
-## v1 Scope
+Analysis and planning resolve knowledge against an exact context:
 
-> Historical planning record: unchecked boxes in this section preserve the original build sequence and are not current implementation status. Current normative status and executable evidence are maintained in `docs/SPEC_RECONCILIATION.md`. Items under the explicitly labeled v2 scope remain optional future work unless an accepted ADR or CONTEXT.md promotes them into the current product contract.
+- source date and uncertainty;
+- region and school;
+- genre and source type;
+- Texture and Contrapuntal Technique;
+- intended technique;
+- instrument profile and exact Instrument Instance;
+- course or string count;
+- tuning and stringing;
+- ensemble role;
+- Performance Brief;
+- Preservation Policy; and
+- passage scope.
 
-### Delivery Strategy
+Resolution produces an immutable Applied Knowledge Manifest.
 
-V1 is delivered as production-path tracer-bullet slices, not as horizontal
-completion of storage, OMR, analysis, arrangement, engraving, and playback in
-isolation.
+```ts
+type AppliedKnowledgeEntry = {
+  profileRef: DigestedRef;
+  status: "applicable" | "inapplicable" | "conflicting" | "unknown";
+  matchedPredicates: string[];
+  unmatchedPredicates: string[];
+  consequences: ComponentBinding[];
+  evidenceRefs: DigestedRef[];
+  rationale: string;
+};
 
-1. **Greensleeves PDF → baroque guitar.** Implement the minimum real Provider
-   Connection, Guided Start, durable versioned workspace, backend-neutral
-   Audiveris OMR Run, Score-Anchored Review, multi-voice normalization,
-   Musicological Analysis, Faithful Reduction, Arrangement Search, Preservation
-   Audit, French tablature engraving, and semantic Audio Preview needed to pass the
-   primary Golden Arrangement Fixture.
-2. **Sibling targets.** Generalize Target Configuration and Arrangement Family
-   behavior through 13-course baroque-lute and classical-guitar siblings from the
-   same source.
-3. **Continuo.** Generalize source roles, Realization Profiles, generated-voice
-   provenance, and Continuo Reduction through the figured-bass fixture.
-4. **Imitative counterpoint.** Generalize relationship-level Preservation Targets
-   and Validation Profiles through the Renaissance-lute intabulation fixture.
-5. **Engraving and provider hardening.** Pass the exact diapason and two-layer
-   Provider Contract fixtures, then expand repertoire coverage.
-
-Each slice uses canonical persisted contracts rather than throwaway fixture code.
-It may initially support only the fixture-required capability, but production code
-cannot hard-code the piece title, pitches, voice count, or expected decisions. An
-isolated endpoint does not make a subsystem integrated until a golden path uses it
-end to end.
-
-### Infrastructure
-
-- [ ] Set up pi-mono packages (`pi-agent-core`, `pi-web-ui`, `pi-ai`)
-- [ ] Express server with API endpoints (`/api/stream`, `/api/compile`, `/api/analyze`, `/api/lint`, `/api/chordify`, `/api/instruments`, `/api/arrangements`, `/api/templates`)
-- [ ] `streamProxy` integration for LLM API key security
-- [ ] Vite build pipeline for browser bundle (including tonal.js)
-- [ ] Install LilyPond via Nix (2.24.x)
-- [ ] Install Python 3 + music21 via Nix (`python3Packages.music21`)
-- [ ] Create `flake.nix` with package + NixOS module
-- [ ] Package and verify the local-first owner runtime
-- [ ] Keep servoid deployment as an optional private-access configuration
-
-### Tools
-
-- [ ] Define all `AgentTool<T>` objects with TypeBox schemas: `compile`, `tabulate`, `voicings`, `check_playability`, `transpose`, `diapasons`, `fretboard`, `analyze`, `lint`, `theory`
-- [ ] Implement server-side `POST /api/compile` with LilyPond subprocess and structured error parsing
-- [ ] Implement server-side `POST /api/analyze` — music21 subprocess: MusicXML → key, Roman numerals, voice ranges, time signature
-- [ ] Implement server-side `POST /api/lint` — music21 subprocess: voice leading rule checking (parallel 5ths/8ves, voice crossing, spacing, unresolved leading tones)
-- [ ] Implement server-side `POST /api/chordify` — music21 subprocess: multi-voice → chord-per-beat reduction
-- [ ] Implement `server/theory.py` — Python CLI wrapping music21 (analyze, lint, chordify subcommands, JSON output)
-- [ ] Implement browser-side `theory` tool — tonal.js wrapper for instant interval/chord/scale lookups
-- [ ] Implement `tabulate` — pitch → position lookup against instrument profiles
-- [ ] Implement `voicings` — chord voicing enumeration with stretch/campanella ranking
-- [ ] Implement `check_playability` — stretch, same-course, RH pattern validation + difficulty rating
-- [ ] Implement `transpose` — interval transposition with range validation and idiomatic key suggestions
-- [ ] Implement `diapasons` — key → diapason tuning lookup table (5 standard schemes + override)
-- [ ] Implement `fretboard` — SVG fretboard diagram renderer
-
-### UI
-
-- [ ] Wire `ChatPanel` + `ArtifactsPanel` with custom tool renderers
-- [ ] `registerToolRenderer("compile", ...)` — inline SVG preview in chat
-- [ ] `registerToolRenderer("fretboard", ...)` — inline fretboard diagram
-- [ ] `registerToolRenderer("check_playability", ...)` — inline violation report
-
-### Instrument Data
-
-- [ ] Create instrument profiles (YAML + .ily) for all 7 instruments
-- [ ] Include diapason tuning schemes in baroque lute profile
-- [ ] Include stringing variants in baroque guitar profile
-- [ ] Create LilyPond templates: `french-tab.ly` (with RhythmicStaff + hidden MIDI Staff), `solo-tab.ly`, `tab-and-staff.ly`, `grand-staff.ly`, `voice-and-tab.ly`, `voice-and-piano.ly`, `satb.ly`, `continuo.ly`
-- [ ] French letter tablature working end-to-end (v1, not v2 — this is the native notation for the primary instrument)
-
-### Agent
-
-- [ ] System prompt with instrument profiles, workflow instructions, source-file-first guidance
-- [ ] Prompt instructions for auto-compile behavior (call compile after generating .ly)
-- [ ] Prompt instructions for artifacts panel updates (call artifacts tool after successful compile)
-
-### Validation
-
-- [ ] **Primary golden fixture: four-part "Greensleeves" PDF → five-course baroque guitar**
-- [ ] **Sibling fixtures: the same reviewed source → 13-course baroque lute and classical guitar**
-- [ ] **Specialist fixtures: figured bass, imitative counterpoint, and exact diapason engraving**
-- [ ] **Provider Contract Fixture: fake lifecycle suite plus opt-in real ChatGPT smoke test**
-- [ ] **Repertoire regression: Dowland "Flow My Tears" (Lachrimae)** — see below
-- [ ] **Test piece: "All Creatures of Our God and King" (LASST UNS ERFREUEN)** — hymnal SATB → baroque guitar conversion
-- [ ] End-to-end: upload .ly source → arrange for baroque lute → French tab output → SVG preview → MIDI playback
-- [ ] End-to-end: convert guitar tab → baroque lute French tab
-- [ ] End-to-end: SATB hymnal → baroque guitar (punteado + rasgueado)
-- [ ] Verify LilyPond French tab template with polyphonic voices + diapasons + ornaments
-
-### Repertoire Regression: Dowland "Flow My Tears" (Lachrimae)
-
-John Dowland's "Flow My Tears" (from _The Second Booke of Songs or Ayres_, 1600)
-remains a valuable post-golden-path repertoire regression, but it is not the
-primary integration fixture.
-
-**Why this piece:**
-
-- **Voice + lute** — exercises the voice-and-tab template, the most complex layout
-- **Well-documented** — multiple modern editions available, public domain, IMSLP has facsimiles
-- **Intabulation opportunity** — the vocal line can be intabulated for solo lute, testing instrument conversion
-- **Tests diapasons** — the lute part uses bass courses that align with d-minor/A-minor diapason tuning
-- **Ornaments** — period-appropriate trills and mordents in the lute part
-- **Moderate difficulty** — intermediate-level lute writing, good for validating playability checks
-- **Cultural significance** — one of the most famous English lute songs, widely recognized
-
-**Test scenarios with this piece:**
-
-1. Upload Dowland .ly source → compile → French tab + voice line
-2. Arrange for solo lute (intabulation of the vocal part)
-3. Convert to classical guitar (test instrument swap)
-4. Revoice a passage (test iterative editing)
-5. Change key (test transposition + diapason retuning)
-
-**Secondary test piece:** BWV 996 Bourrée (Bach) — purely instrumental, tests baroque lute idiom without voice. Good for simpler validation if voice+tab proves complex.
-
-### Test Piece 3: "All Creatures of Our God and King" (LASST UNS ERFREUEN)
-
-**Hymnal → baroque guitar conversion test.** This tests the full real-world workflow: take a standard SATB + organ hymn setting and produce a playable baroque guitar arrangement.
-
-**Why this piece:**
-
-- **Tune is from 1623** (_Geistliche Kirchengesäng_, Cologne) — literally contemporaneous with the baroque guitar's golden age
-- **Text by St. Francis of Assisi** (Canticle of the Sun, ~1225) — public domain, significant in Catholic tradition
-- **Tests the hardest conversion pipeline** — SATB/organ → 5-course baroque guitar requires harmonic reduction, voice thinning, key transposition, and style decisions (rasgueado vs. punteado)
-- **Exercises the full music21 pipeline** — MusicXML from hymnary.org is parsed directly by music21's `converter.parse()`, voices extracted automatically via `score.parts[]`, and `chordify()` produces the harmonic analysis the LLM needs for arrangement decisions
-- **The Alleluia refrains** — repeated descending figures that naturally call for rasgueado (strummed) treatment, while verses suit punteado (plucked) melody + bass
-- **Transposition test** — hymnals usually print this in D or Eb major; baroque guitar wants A minor or G major for idiomatic open-string usage with re-entrant tuning
-- **Re-entrant tuning payoff** — courses 4-5 sounding an octave higher means strummed chords ring with natural brightness that organ can't replicate
-- **Real liturgical use** — the output is something you could actually play at Mass or at home
-
-**The conversion workflow this validates:**
-
-```
-Input:  SATB hymnal setting (MusicXML from hymnary.org)
-Step 1: analyze(musicxml) → key, Roman numeral progression, voice ranges
-Step 2: LLM + theory() decides target key (D major → A minor or G major)
-Step 3: LLM plans arrangement from chordify results (verses=punteado, Alleluias=rasgueado)
-Step 4: Generate arrangement using tabulate() + voicings() + check_playability()
-Step 5: lint(arrangement) → fix voice leading errors → re-lint until clean
-Step 6: compile() → French letter tab or number tab PDF + optional voice line
+type AppliedKnowledgeManifest = {
+  id: string;
+  contextDigest: string;
+  packReleaseRefs: DigestedRef[];
+  entries: AppliedKnowledgeEntry[];
+  unresolvedConflictIds: string[];
+  selectedAlternativeIds: string[];
+  digest: string;
+};
 ```
 
-**Test scenarios:**
+Every Arrangement Search records the exact manifest, pack release digests, registered component versions, and compiled constraint digests it used.
 
-1. Upload SATB hymnal setting (MusicXML) → `analyze()` → `chordify()` → produce baroque guitar arrangement
-2. Generate both punteado (plucked) and rasgueado (strummed) sections within one piece
-3. Test alfabeto chord notation for strummed passages
-4. `lint()` the final arrangement — verify zero voice leading violations
-5. Convert the same hymn to classical guitar (compare voicing decisions)
-6. Produce a voice + guitar version (melody line + guitar accompaniment)
+Unknown applicability cannot be scored as neutral. Conflicting historically plausible profiles either produce separate candidate families or open a focused review when the choice materially changes the result.
 
-## v2 Scope
+## Knowledge reassessment
 
-- [ ] OSMD/VexFlow interactive score rendering for standard notation (guitar, piano, voice — **not** tablature, which stays LilyPond SVG)
-- [ ] MIDI playback via Web Audio API (HTML artifact with embedded player)
-- [ ] Bar-click interaction (click a bar → agent knows which bar to revoice)
-- [ ] MusicXML export (via MuseScore CLI on server, or custom writer)
-- [ ] Fretboard visualization with position overlay (interactive, beyond static SVG)
-- [ ] Durable Arrangement Workspaces with sources, analysis, corrections, plans, outputs, and provenance
-- [ ] Session branching for "try it this way" workflows
-- [ ] Figured bass realization workflow (`POST /api/realize` via music21's `figuredBass.realizer` — endpoint defined in v1, implementation deferred)
-- [ ] Batch conversion (whole suites at once)
-- [ ] Configurable ornament table per style period (Gaultier, Mouton, Weiss defaults)
-- [ ] Additional instrument profiles: archlute, mandora, vihuela, 7-course Dowland lute, 10-course Renaissance lute
-- [ ] Automated pitch verification tool (compare against melody database)
-- [ ] German tablature support (evaluate demand vs. effort)
-- [ ] Voice text underlay mechanics (lyrics aligned to notes)
-- [ ] Piano pedaling model (systematic Ped/senza ped markings)
+When a later source or pack release appears, Vellum compares it with existing knowledge and records whether it:
 
----
+- corroborates;
+- narrows;
+- qualifies;
+- contradicts;
+- supersedes;
+- leaves unchanged; or
+- raises a new research question.
 
-## Technology Decision
+A Knowledge Reassessment identifies affected analyses, plans, searches, scores, and evaluations without mutating them. Retraction or correction preserves prior evidence and changes current readiness honestly.
 
-### Chosen: pi-mono Web App + NixOS Deployment
+## Shared musical-intelligence contracts
 
-The core realization is that the agent shell must not become the sole repository of musical intelligence. Vellum needs:
+Knowledge becomes useful only when it changes an inspectable musical plan and an observable generated result.
 
-1. A conversational interface with visual feedback
-2. Canonical source, analysis, preservation, and arrangement representations
-3. Deterministic analyzers and curated historical profiles
-4. Model-assisted interpretation and creative planning with inspectable evidence
-5. Constraint checks for preservation, figured bass, counterpoint, playability, and notation
-6. A way to run LilyPond server-side
-7. A clean client-server split that keeps credentials secure
+### Source understanding precedes fingering
 
-Pi-mono provides the agent loop, chat components, and tool framework. Vellum provides the canonical musical representations, Musicological Engine, provider connection, and score workbench. Nix supplies reproducible musical dependencies for the local runtime and optional NixOS packaging.
+Before target realization, the current Analysis Record and Arrangement Plan must establish, as applicable:
 
-**Why pi-mono over building from scratch:**
+- Principal Voice and other Preservation Targets;
+- source voice identities, continuities, entries, and cadential obligations;
+- Continuo Foundation, figures, suspensions, and bass authority;
+- Texture and Contrapuntal Technique by passage;
+- phrase, cadence, sequence, repetition, climax, repose, and formal-return roles;
+- target texture and density;
+- target-portable versus target-local transformations;
+- allowed octave, duration, omission, redistribution, revoicing, and generated-material operations; and
+- what uncertainty would materially change those decisions.
 
-- Pi already provides the agent loop, tool framework, web UI, artifact display, session storage, and LLM proxy
-- Building these from scratch would replicate what pi does, but worse
-- Pi's `AgentTool<T>` pattern with TypeBox schemas maps perfectly to Vellum's domain tools
-- `registerToolRenderer()` enables inline visual feedback (SVG preview, fretboard diagrams) in the chat stream
-- The `ArtifactsPanel` handles the tablature workbench with no custom code (SVG is a built-in artifact type)
-- `streamProxy` solves the API key security problem cleanly
+Successful pitch placement cannot compensate for a weak or incoherent musical plan.
 
-### Complement: Python + music21 (Server-Side Theory Engine)
+### Target Voice Plan
 
-**Role:** Server-side music theory analysis engine, deployed alongside LilyPond as a subprocess dependency.
+Every polyphonic or melody-with-accompaniment passage receives a Target Voice Plan before physical search.
 
-**Why music21 and not just tonal.js:**
+```ts
+type TargetVoice = {
+  id: string;
+  role:
+    | "principal"
+    | "bass"
+    | "countervoice"
+    | "inner_fill"
+    | "continuo_foundation"
+    | "generated_realization";
+  sourceVoiceRefs: DigestedRef[];
+  priority: "invariant" | "structural" | "supporting" | "optional";
+  continuity: "continuous" | "phrase_bound" | "cadential" | "intermittent";
+  allowedTransformations: TransformationKind[];
+  cadenceObligations: MusicalObligation[];
+  rangeIntent?: PitchRange;
+  rhythmicIndependence: "preserve" | "simplify" | "may_merge";
+};
 
-- **MusicXML parsing** — music21 has native `converter.parse()` for full score ingestion. tonal.js has no file I/O at all. The hymnal conversion workflow requires reading MusicXML files with multiple SATB voices — music21 does this trivially, tonal.js can't start.
-- **`chordify()`** — reduces any multi-voice score to a chord-per-beat analysis. This is THE critical operation for hymnal → guitar conversion. tonal.js can detect a chord from a set of notes, but can't extract those notes from a score.
-- **Voice leading analysis** — `VoiceLeadingQuartet` with methods for parallel fifths, parallel octaves, contrary motion, voice crossing, spacing. tonal.js's `@tonaljs/voice-leading` is about jazz voicing smoothness, not counterpoint rule checking.
-- **Key detection** — Krumhansl-Schmuckler algorithm: `score.analyze('key')`. Signal processing on pitch class distributions. tonal.js can tell you what chords fit a key but can't determine a key from a passage.
-- **Roman numeral analysis** — `roman.romanNumeralFromChord(chord, key)` with full inversion awareness. tonal.js parses Roman numeral _symbols_ but can't derive them from music.
-- **Figured bass realization** (v2) — `figuredBass.realizer` engine. tonal.js has nothing comparable.
+type TargetVoicePlan = {
+  passageId: string;
+  texture: string;
+  voices: TargetVoice[];
+  crossingPolicy: string;
+  omissionPriority: string[];
+  perceptualProminence: string[];
+  evaluationRequirements: DigestedRef[];
+};
+```
 
-**Why tonal.js complements music21:**
+The Principal Voice is not merely a set of retained pitch classes. Under Faithful Reduction, its pitch, rhythm, order, phrase relationships, and required prominence are hard constraints. Other voices receive explicit continuity and cadence policies instead of disappearing event by event.
 
-- Runs in the browser — instant results, no server round-trip for simple lookups
-- Covers interval math, chord spelling, scale membership, enharmonic equivalents
-- The LLM uses `theory()` mid-conversation for quick calculations while `analyze()` and `lint()` handle the heavy analysis
+### Intended Technique Plan
 
-**Deployment:** Same pattern as LilyPond — subprocess call, not a separate service. `python3 theory.py analyze < input.xml` → JSON to stdout. No migration debt; the API surface (JSON in, JSON out) is implementation-agnostic. If music21 were ever replaced, only `server/theory.py` changes.
+Each passage receives an Intended Technique Plan where technique matters.
 
-**Role in the hybrid engine:** Music21 contributes deterministic analysis but is not the whole Musicological Engine. Its results feed structured Analysis Claims alongside curated historical profiles, model-assisted interpretation, user corrections, and downstream constraint verification. The model should not redo interval arithmetic or chord identification when a library can establish those facts reliably.
+It identifies:
 
-### Alternative Considered: Custom TypeScript + Rust/WASM
+- technique family and source-scoped profile;
+- phrase and event scope;
+- transitions into and out of the technique;
+- required right- and left-hand resources;
+- held, released, damped, and resonating state;
+- notation and playback consequences;
+- acceptable alternatives;
+- applicable historical or editorial evidence; and
+- unknown or unevaluated execution dimensions.
 
-**Strengths:**
+Technique selection is a musical choice before it is a fingering choice. A baroque-guitar phrase cannot become mixed style merely because some simultaneous notes happen to fit an alfabeto shape.
 
-- Maximum control, Rust for correctness-critical math
+### Ergonomic context
 
-**Weaknesses:**
+Instrument mechanics, general ergonomic models, Intended Performer Profile, and Owner Ergonomic Profile remain separate inputs.
 
-- Rebuilds the agent loop, web UI, session management from scratch
-- LilyPond can't run in the browser anyway — WASM doesn't help with the main pipeline
-- Over-engineered for v1
+An ergonomic observation records:
 
-**Verdict:** Revisit in v2 if tool performance becomes a bottleneck (e.g., batch voicing enumeration).
+- exact Instrument Instance;
+- scale length and relevant setup;
+- performer or population scope;
+- hand and technique context;
+- tempo, preparation, and reliability goal;
+- passage and transition;
+- measured or reported outcome;
+- confidence; and
+- whether it is a hard personal limit, calibrated estimate, or descriptive observation.
 
-### Alternative Considered: Pure Prompt Engineering (Skill file + bash)
+A five-fret span is not a universal unit of difficulty: physical distance varies by scale length and fret location. Likewise, a geometrically reachable chord is not automatically repeatable or performance-reliable at tempo.
 
-**Strengths:**
+### Phrase-level candidate state
 
-- Zero code — just a system prompt with instrument profiles
+Target compilers search phrases rather than greedily selecting each event.
 
-**Weaknesses:**
+Complete partial state includes, where applicable:
 
-- LLM invents fret positions from training data (error-prone)
-- Compilation errors come back as raw stderr
-- No visual feedback — human downloads PDF to check
-- No playability validation
-- Every arrangement burns tokens on mechanical correctness the tools should handle
+- current and prepared left-hand position;
+- finger assignments, shared fingers, barré, releases, and guide fingers;
+- right-hand resources, preparation, stroke, and bass access;
+- held and resonating notes;
+- required damping;
+- active target voices and remaining durations;
+- harmonic and cadential obligations;
+- technique state and legal transitions;
+- incoming state from the previous phrase;
+- outgoing obligations for the next phrase; and
+- active Commitments, Preservation Targets, and policy exceptions.
 
-**Verdict:** This is where the project started. Native tools are the difference between "an agent that can sort of do this" and "an agent that's genuinely good at this."
+Visible passage regeneration expands to a musically and physically sufficient context. It may not optimize a selected box while ignoring sustained notes or impossible boundary transitions.
 
----
+### Candidate output
 
-## References
+An Arrangement Candidate includes:
 
-- [pi-mono](https://github.com/badlogic/pi-mono) — AI agent toolkit (coding agent, unified LLM API, web UI components)
-- [pi-web-ui](https://www.npmjs.com/package/@mariozechner/pi-web-ui) — Reusable web UI components for AI chat interfaces
-- [pi-agent-core](https://www.npmjs.com/package/@mariozechner/pi-agent-core) — Agent loop, tool framework, streamProxy
-- [music21](https://web.mit.edu/music21/) — MIT's computational musicology toolkit (Python). MusicXML parsing, harmonic analysis, voice leading, figured bass realization
-- [tonal.js](https://github.com/tonaljs/tonal) — TypeScript music theory library. Intervals, chords, scales, keys, voicings, Roman numerals
-- [LilyPond Tablature docs](https://lilypond.org/doc/v2.24/Documentation/notation/common-notation-for-fretted-strings) — fretted string notation
-- [LilyPond Lute tablature](https://lilypond.org/doc/v2.24/Documentation/notation/lute-tablatures) — French tab, diapasons, `fret-letter-tablature-format`
-- [Fronimo](https://sites.google.com/view/fronimo/home) — reference for historical tablature rendering
-- [MEI Tablature encoding](https://music-encoding.org/guidelines/v5/content/tablature.html) — future interchange format
-- [OpenSheetMusicDisplay](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) — browser MusicXML rendering (standard notation only, not tablature)
-- Nigel North, _Continuo Playing on the Lute, Archlute and Theorbo_ — baroque lute tuning reference
-- Robert Dowland, _Varietie of Lute Lessons_ (1610) — ornament tables
-- James Tyler & Paul Sparks, _The Guitar and its Music_ (2002) — baroque guitar stringing evidence
-- Gaspar Sanz, _Instrucción de música sobre la guitarra española_ (1674) — stringing taxonomy
+- canonical notes, rhythms, voices, and event identities;
+- target positions and exact Instrument Instance;
+- constitutive technique events;
+- hidden fingering or execution evidence when not engraved;
+- Applied Knowledge Manifest and compiled constraints;
+- Transformation Report and Preservation Audit;
+- independent evaluation results;
+- rejected alternatives and binding constraints;
+- incoming and outgoing state;
+- unknown and not-evaluated dimensions; and
+- reproducible search identity.
+
+## Five-course baroque-guitar compiler
+
+### Required musical modes
+
+The compiler supports passage-level:
+
+- punteado;
+- rasgueado;
+- mixed style;
+- alfabeto;
+- campanella;
+- battuto or batterie patterns;
+- repicco where an applicable profile supports it; and
+- explicit transitions among these modes.
+
+Technique names alone are not sufficient. Each mode has its own event semantics, candidate generator, physical state, notation, playback, and evaluator.
+
+### Exact target configuration
+
+The compiler consumes:
+
+- single and doubled course construction;
+- unison or octave pairing;
+- re-entrant or bourdon stringing;
+- tuning and pitch reference;
+- scale and fret geometry;
+- available alfabeto chart releases;
+- notation convention; and
+- performer and technique context.
+
+No generic five-line fretboard may silently stand in for these facts.
+
+### Punteado
+
+Punteado search tracks individual right-hand allocation, preparation, alternation, repeated-course behavior, simultaneity, held notes, and left-hand transitions.
+
+Right-hand digit resources are source- and profile-scoped. Vellum must not encode a universal three-finger rule: Sanz explicitly permits a fourth right-hand finger in some four-voice contexts. A profile may prefer or limit particular digits for a school, source, texture, or performer, but the scope and evidence remain inspectable.
+
+Large simultaneities cannot be labeled idiomatic punteado merely because the left hand can form them. The compiler either finds a supported plucked allocation, selects a historically and musically valid strummed event, reduces the texture under policy, or reports the conflict.
+
+### Rasgueado and alfabeto
+
+An alfabeto event retains:
+
+- chord and inversion intention;
+- exact source chart and pack release;
+- alfabeto symbol and shape identity;
+- target tuning and stringing compatibility;
+- left-hand shape, barré, and held state;
+- physical stroke path and direction;
+- stroke digit or gesture where constitutive;
+- sounded-course mask;
+- omitted-course mask;
+- muted-course mask;
+- courses held through the event; and
+- notation ambiguity.
+
+Stroke path and sounding courses are different. Vellum must not assume either that every stroke sounds all five courses or that only edge courses may be omitted. Corbetta and other sources require context-specific course suppression and sometimes ambiguous notation. A selected profile determines which masks are supported, preferred, uncertain, or prohibited.
+
+Computed voicings do not silently replace a known applicable alfabeto vocabulary. Conversely, alfabeto shape lookup does not prove that a chord is appropriate at that point in the musical plan.
+
+### Mixed style
+
+Mixed style is planned across a phrase:
+
+- chordal and linear functions are identified;
+- held chord shapes and released notes remain explicit;
+- punteado-to-rasgueado transitions are physically evaluated;
+- the Principal Voice stays recognizable and perceptually prominent;
+- course suppression and re-entrant bass consequences are disclosed; and
+- notation and Audio Preview express the selected event kinds rather than flattening them into simultaneous MIDI notes.
+
+### Baroque-guitar acceptance
+
+For the Greensleeves regression:
+
+- every protected Principal Voice event remains correct and perceptually prominent;
+- the compiler declares punteado, rasgueado, or mixed style by passage;
+- every simultaneity has a supported right-hand or stroke realization;
+- alfabeto shapes cite the exact chart release;
+- transitions are evaluated across phrase boundaries;
+- the observed extreme reach/jump cannot receive an unqualified playable result;
+- strum masks and held harmony survive engraving and playback; and
+- materially different valid technique plans remain comparable in the workbench.
+
+## Thirteen-course baroque-lute compiler
+
+### Exact target configuration
+
+The compiler consumes:
+
+- all constituent strings and course construction;
+- six stopped-course tuning and stringing;
+- seven unstopped diapasons and current Bass Tuning;
+- exact scale length, fret geometry, and setup;
+- notation identity per course;
+- right-hand bass access assumptions;
+- performer and reliability context; and
+- applicable historical, modern-pedagogical, and software profiles.
+
+The current editor default may be a thirteen-course D-minor-tuning configuration. It must not be described as the universal historical default.
+
+### Joint left-hand search
+
+Search tracks:
+
+- physical span in millimeters as well as fret interval;
+- assigned left-hand fingers;
+- position and hand frame;
+- shared or retained fingers;
+- barré;
+- preparation and release;
+- longitudinal shifts;
+- simultaneous and successive stretches;
+- stopped-course stringing effects;
+- incoming and outgoing phrase state; and
+- tempo, preparation, and reliability goal.
+
+The Owner's approximately 690 mm Instrument Instance is a first-class regression context. The Greensleeves f/b combination spanning frets 1 through 5 must fail the applicable personal or calibrated ergonomic gate when a closer valid realization exists.
+
+### Diapasons, resonance, and right hand
+
+Open diapason changes are not left-hand shifts. They require independent modeling of:
+
+- right-hand preparation and reach;
+- bass-course succession;
+- resonance and overlap;
+- required damping;
+- voice and harmonic function;
+- retuning;
+- notational course identity; and
+- sounding pitch.
+
+Style brisé, resonance, bass deployment, and contrapuntal distribution apply only under matching profiles. They are not generic rewards for open strings.
+
+### French tablature and unresolved notation
+
+Course identity is independent of pitch. Under currently cited twelve-course evidence from Mace, courses 7 through 12 use:
+
+1. a
+2. /a
+3. //a
+4. ///a
+5. 4
+6. 5
+
+No slash is prepended to 4 or 5. The thirteenth-course sign is not established by that source. A value such as 6 may be used only as an explicitly named modern editorial or software convention until a directly applicable source supports it. The notation mapping belongs to the exact Notation Configuration or applicable pack profile; unknown remains unknown and is never inferred from sequence alone.
+
+Golden engraving tests separately verify semantic course, rendered sign, below-staff placement, sounding pitch, and playback identity.
+
+### Baroque-lute acceptance
+
+For the Greensleeves regression:
+
+- the f/b reach is rejected under the exact Owner context;
+- at least one musically equivalent closer realization is generated or the search honestly reports why none was found;
+- left-hand and right-hand costs are not conflated;
+- diapason use preserves voice and harmonic intent;
+- resonance and damping obligations are explicit;
+- the Principal Voice remains recognizable;
+- tablature and playback agree on course identity and pitch; and
+- the thirteenth sign is disclosed as sourced, editorial, or unresolved.
+
+## Six-string classical-guitar compiler
+
+### Target Voice Plan is mandatory
+
+For music containing a melody and meaningful subordinate line, the default plan contains:
+
+- a continuous Principal Voice;
+- a coherent Bass or Countervoice;
+- optional Inner Fill whose omission priority is lower than either structural voice; and
+- explicit cadence, inversion, rhythmic, and voice-duration obligations.
+
+Sparse isolated bass notes may be a disclosed reduction choice, but they cannot be presented as a successful two-voice arrangement.
+
+### Joint polyphonic search
+
+Search tracks all planned voices together:
+
+- onset, duration, release, and tie identity;
+- voice continuity and crossing;
+- bass motion, inversion, cadence, and harmonic function;
+- dissonance preparation and resolution;
+- sustain and open-string resonance;
+- left-hand position, fingers, shifts, guide fingers, and barré;
+- right-hand allocation and repeated-string constraints;
+- phrase boundary state; and
+- policy-authorized omission or redistribution.
+
+Event-local pitch placement cannot erase a voice in order to improve average fret or open-string scores.
+
+### Notation and playback
+
+Classical-guitar standard notation is a first-class Notation Layout, not tablature with labels removed. Canonical voice identities drive spelling, stems, rests, ties, duration, and layout. Hidden fingering plans remain linked evidence even when the printed score omits fingerings.
+
+Audio Preview can isolate every planned target voice. A voice that is declared continuous but vanishes in playback is a hard failure.
+
+### Classical-guitar acceptance
+
+For the Greensleeves regression:
+
+- the Principal Voice remains note- and rhythm-correct;
+- the Bass or Countervoice satisfies its declared continuity and cadence plan;
+- the source's substantial bass cannot collapse to four isolated events without an explicit Plan Conflict or policy-authorized disclosure;
+- all simultaneous notes and durations are mechanically realizable;
+- notation displays the intended polyphony clearly;
+- isolated playback confirms each voice; and
+- alternate reductions expose genuine musical tradeoffs rather than cosmetic fingerings.
+
+## Evaluation and grading
+
+Evaluation answers three separate questions:
+
+1. Did output violate an authoritative invariant?
+2. Did observable or reviewed quality improve, regress, or remain uncertain?
+3. Is a difference caused by product code, source or pack input, compiler semantics, evaluator semantics, or intentional design?
+
+There is no single overall grade. Hard failures cannot be averaged away, and subjective quality cannot be manufactured from deterministic proxy totals.
+
+### Evaluation layers
+
+The instrument-intelligence program adds the following layers to the existing harness:
+
+1. provenance, identity, rights, and private-export contract tests;
+2. Page Atlas and modality-routing fixtures;
+3. extraction and cited-segment fixtures;
+4. Knowledge Candidate, conflict graph, review, release, and retraction tests;
+5. Applied Knowledge Manifest and applicability tests;
+6. compiler property, differential, replay, and mutation tests;
+7. output-level musical, mechanical, ergonomic, idiom, notation, and playback evaluation;
+8. cross-target source-to-deliverable end-to-end cases; and
+9. late role-scoped human and physical review.
+
+Component cases may pin reviewed downstream inputs to isolate a stage. End-to-end cases begin with source assets, Arrangement Briefs, and Performance Briefs. Evaluator-only expectations, forbidden outcomes, reference answers, baseline outputs, and held-out labels are unavailable to generation, planning, search, prompts, and profile fitting.
+
+### Independent observable dimensions
+
+Evaluation Cards retain separate dimensions for:
+
+- source authority and unresolved uncertainty;
+- Applied Knowledge Manifest completeness;
+- Principal Voice and other Preservation Targets;
+- Target Voice Plan realization;
+- bass, Continuo Foundation, and cadence behavior;
+- target mechanics;
+- ergonomic estimate and exact personal evidence;
+- intended-technique realization;
+- historical or editorial evidence;
+- notation semantics and legibility;
+- literal playback and Performed Form;
+- workflow recovery and lineage;
+- human or physical evidence; and
+- explicit Owner usefulness.
+
+Each dimension records applicability, execution status, completeness, authority, evidence basis, permitted presentation, units, uncertainty, and observations. Unknown is never encoded as zero, neutral, or pass.
+
+### Generator and evaluator separation
+
+The same pack may explain why an evaluator applies and provide cited rubric anchors. It may not certify its own output. Evaluators inspect the generated canonical notes, rhythms, voices, positions, technique events, engraving, and playback.
+
+Compiler assertions such as preserved principal voice, idiomatic, playable, historical profile, or coherent bass are hypotheses until the appropriate independent evaluator checks observable output.
+
+### Dataset roles
+
+Every source segment, repertoire example, playtest, and fixture has one role for a particular component version:
+
+- derivation or profile authoring;
+- development and debugging;
+- evaluator calibration;
+- held-out evaluation; or
+- post-deployment monitoring.
+
+A source used to derive a profile cannot be the sole proof that the profile generalizes. Moving evidence between roles creates a new dataset identity and invalidates incompatible comparisons.
+
+### Required mutations
+
+The evaluation corpus must detect at least:
+
+- Principal Voice pitch, timing, order, phrase, prominence, or cadence loss;
+- a disappearing or rhythmically incoherent classical-guitar bass;
+- a false two-voice declaration;
+- the known lute f/b stretch;
+- an invented or collapsed lute diapason sign;
+- a wrong alfabeto chart or shape;
+- an unscoped universal three-finger baroque-guitar rule;
+- an unsupported strum mask;
+- a broken punteado, rasgueado, or mixed-style transition;
+- held-note, damping, or duration corruption;
+- right- and left-hand cost conflation;
+- an applicable pack omitted from search identity;
+- an inapplicable or conflicting profile treated as active;
+- an extraction promoted without review;
+- a private source exported without authority;
+- notation and playback disagreement; and
+- an evaluator or pack attempting to self-certify.
+
+Mutation success proves sensitivity only to the mutated class. It does not imply general musical correctness.
+
+### Fixture strategy
+
+Greensleeves remains the shared cross-target source because it exposes recognizability, reduction, voice continuity, and three distinct physical realizations.
+
+Each target also receives its own legally usable fixture set:
+
+- baroque guitar: exact stringing, alfabeto, stroke masks, punteado allocation, and mixed-style transition;
+- baroque lute: stopped-course geometry, diapason succession, resonance, damping, and French tablature;
+- classical guitar: reviewed two- and three-voice texture with independent voice-duration and fingering invariants.
+
+The corpus also retains separate Continuo and imitative-counterpoint cases so shared contracts do not collapse into fretted-position logic.
+
+## Feedback, state, and accumulated learning
+
+Vellum is stateful because useful musical learning requires durable evidence and review, not because chat history should become authority.
+
+Every comment, edit, or comparison is classified as one of:
+
+- Score Transcription correction;
+- Analysis Claim correction;
+- Arrangement Plan revision;
+- Arrangement Score edit;
+- Performance Interpretation;
+- Editorial or Family Commitment;
+- Policy Exception;
+- Owner ergonomic observation;
+- Personal Default Candidate;
+- Knowledge Candidate;
+- Calibration Candidate;
+- Golden Fixture candidate; or
+- research question.
+
+The model may propose a classification, but it cannot silently commit a reusable change.
+
+Repeated outcomes may nominate a candidate. They do not activate one. A physical playtest remains scoped to the exact performer, Instrument Instance, passage, tempo, preparation, and reliability goal. A later primary source does not automatically override a modern method, an Owner preference, or another historical school; it creates a reviewed comparison with explicit authority.
+
+## Owner experience
+
+### Guided Start
+
+The default launcher asks only for:
+
+- source document or documents;
+- target instruments and Notation Layouts;
+- desired Deliverables; and
+- an optional instruction.
+
+The launcher distinguishes arrangement evidence from reusable reference evidence. When appropriate, the Owner may choose:
+
+- arrange this;
+- add this to the Owner Reference Library; or
+- do both.
+
+There is no IMSLP-specific product coupling. PDF and image upload are first-class; stable library URLs and IIIF objects are acquisition conveniences.
+
+OCR or OMR confidence controls appear only when optical recognition is used. Score-Anchored Review provides sufficient musical and page context, zoom, an overlay that does not obscure the glyph, batch threshold provenance, inline correction, and exact resume without looping over resolved uncertainty.
+
+### Default arrangement view
+
+The default view shows:
+
+- inferred source structure and protected identity;
+- proportional Arrangement Plan;
+- target texture and intended technique;
+- major compromises, conflicts, and unknowns;
+- selected notation;
+- literal Audio Preview;
+- readiness by dimension; and
+- meaningful alternatives.
+
+It does not expose solver metadata as a questionnaire.
+
+### Expert disclosure
+
+Expert views expose:
+
+- applied pack releases and digests;
+- exact citations and source crops;
+- conflicting claims and alternative profiles;
+- extraction artifacts and confidence dimensions;
+- compiled constraints and evaluator identities;
+- rejected candidates and binding constraints;
+- target voices and technique layers;
+- notation and playback lineage;
+- pack history, retractions, and reassessments; and
+- all unevaluated dimensions.
+
+Expert mode changes presentation, not canonical semantics.
+
+### Knowledge workbench
+
+The Knowledge Workbench supports:
+
+- streamed local upload and stable-URL acquisition;
+- deduplication and source-identity resolution;
+- rights and access assertions;
+- resumable Page Atlas generation;
+- page thumbnails and modality regions;
+- side-by-side source crop, transcription, normalization, and translation;
+- zoom and accessible navigation;
+- citation-range editing;
+- candidate classification and conflict linking;
+- pack-profile drafting and diff;
+- test-only release generation;
+- role-scoped review packages;
+- pack release and retraction;
+- research-question queue;
+- affected-arrangement reassessment; and
+- private export controls.
+
+Failure at any stage resumes from the exact incomplete step without losing reviewed work.
+
+## Seed source program
+
+Raw binaries remain content-addressed in the Owner Reference Library and outside Git unless their rights and fixture purpose explicitly permit inclusion.
+
+### Five-course baroque guitar
+
+Initial sources, in research order:
+
+1. Gaspar Sanz, [Instrucción de música sobre la guitarra española](https://hdl.handle.net/10481/86789), complete 1697 issue: rasgueado, punteado, alfabeto, campanella, accompaniment, counterpoint, and contextual fourth-finger evidence.
+2. Francesco Corbetta, [La Guitarre royalle](https://gallica.bnf.fr/ark:/12148/bpt6k1505774n), 1671: mature mixed style, batteries, held harmony, course suppression, vocal accompaniment, and continuo.
+3. Giovanni Paolo Foscarini, [I quattro libri della chitarra spagnola](https://music.library.appstate.edu/guitar/foscarini-c1632), circa 1632–1635: transition from alfabeto and strummed practice into mixed tablature.
+4. Angelo Michele Bartolotti, [Libro primo di chitarra spagnola](https://music.library.appstate.edu/guitar/bartolotti-1640), 1640: explicit stroke annotation and systematic harmonic material.
+5. Santiago de Murcia, [Resumen de acompañar la parte con la guitarra](https://datos.bne.es/resource/XX2242096), 1714/1717: continuo, Figured Bass, cadences, scales, meter, and accompaniment.
+
+Different editions, compilations, exemplars, and provider scans remain separate identities.
+
+### Thirteen-course baroque lute
+
+Initial sources, in research order:
+
+1. Ernst Gottlieb Baron, [Untersuchung des Instruments der Lauten](https://www.digitale-sammlungen.de/de/details/bsb10598228), 1727: normative technique, posture, fingering, transitions, ornaments, and cantabile practice, explicitly scoped to his eleven-course context where applicable.
+2. Thomas Mace, [Musick's Monument](https://archive.org/details/musicksmonumento0000mace), 1676: economical motion, right-hand use, and exact twelve-course diapason notation.
+3. Perrine, [Livre de Musique pour le Lut](https://gallica.bnf.fr/ark:/12148/btv1b100756018), 1679/1680: staff-to-lute mapping, style brisé, movement, voice leading, and continuo.
+4. Silvius Leopold Weiss, [Dresden manuscripts](https://digital.slub-dresden.de/id508190533): descriptive repertoire evidence for voice leading, texture, bass deployment, resonance, and damping.
+5. Verified thirteen-course repertoire or treatise evidence for notation, geometry, and bass practice. Falckenhagen remains quarantined until exemplar and publication identity are resolved.
+
+Modern Serdoura, Satoh, and other Owner-supplied books are valuable modern pedagogy, not primary-source historical authority. Their assets remain private unless redistribution is licensed.
+
+### Six-string classical guitar
+
+Initial sources, in research order:
+
+1. Fernando Sor, [Méthode pour la guitare](https://imslp.org/wiki/M%C3%A9thode_compl%C3%A8te_pour_la_guitare_%28Sor%2C_Fernando%29), 1830 French text plus its separately identified plates: voice preservation, harmony-aware fingering, bass continuity, accompaniment, and reduction.
+2. Ferdinando Carulli, [L'Harmonie appliquée à la Guitare](https://img.kb.dk/ma/umus/carulli_harmonie.pdf), 1825: aligned source textures and guitar reductions.
+3. Dionisio Aguado, [Nuevo método para guitarra](https://imslp.org/wiki/Nuevo_m%C3%A9todo_para_guitarra_%28Aguado%2C_Dionisio%29), 1843: multi-part execution, right-hand allocation, intervals, barré, harmony, and expression.
+4. Ferdinando Carulli, [Méthode pour apprendre à accompagner le chant](https://gallica.bnf.fr/ark:/12148/btv1b100704061), Op. 61: melody-plus-accompaniment corpus.
+5. Matteo Carcassi, [Method, Op. 59](https://archive.org/details/newimprovedmeth00carc): graded fingering and multi-voice repertoire.
+
+The 1896 Harrison rewrite of Sor is comparison and edition-history evidence, not a substitute for the 1830 authority.
+
+### First extraction fixtures
+
+1. Mace: preserve the exact ordered sequence a, /a, //a, ///a, 4, 5 and refuse to infer a thirteenth symbol.
+2. Sanz: extract rules and examples that prevent an unscoped universal three-finger rule.
+3. Corbetta: represent stroke path, sounding courses, suppression, held harmony, and notation ambiguity independently.
+4. Carulli: align a source texture with its guitar reduction and propose retain, omit, octave, rhythm, and accompaniment transformations.
+5. Weiss: retain image geometry while extracting descriptive tablature and bass observations only.
+6. Sor: link text assertions to separate plates and distinguish the 1830 edition from the Harrison rewrite.
+
+One source per target proves plumbing, not idiomatic authority.
+
+## Execution sequence
+
+Implementation proceeds through production-path tracer bullets. Each tracer begins with a failing output-level or contract-level case, crosses the real canonical path, and ends with a demoable Owner outcome.
+
+### Slice 0 — Specification and baseline guard
+
+- Make this document the sole current specification.
+- Freeze earlier documents as history.
+- Correct active domain and README claims that overstate historical authority or prototype playability.
+- Verify that the completed prototype evidence remains intact.
+
+### Slice 1 — Source identity and safe migration
+
+- Introduce Work, Edition, Exemplar, Digital Asset, rights, and access records.
+- Migrate current OwnerReference records without losing IDs, bytes, hashes, or citations.
+- Separate historical, modern editorial, software, personal, and evaluator authority lanes.
+- Remove automatic perfect confidence for documentary classification.
+
+### Slice 2 — Mace ingestion vertical
+
+- Upload or acquire the Mace asset.
+- Resolve its source identity.
+- Build and resume a Page Atlas.
+- Create an exact cited segment for printed page 75.
+- Stage the twelve-course notation candidate and explicit thirteenth-course research question.
+- Complete the path in the real browser without promoting specialist authority.
+
+### Slice 3 — Candidate, pack, and applicability vertical
+
+- Add candidate kinds, many-to-many evidence, conflict relations, multidimensional confidence, and release states.
+- Produce a test-only pack with profiles, examples, counterexamples, and declarative mappings.
+- Resolve it into an Applied Knowledge Manifest.
+- Record exact digests in Arrangement Search and Evaluation Run identity.
+- Prove that unknown and conflicting applicability remain visible.
+
+### Slice 4 — Shared phrase intelligence
+
+- Add Target Voice Plan and Intended Technique Plan.
+- Add exact ergonomic context and phrase boundary state.
+- Replace event-local musical selection with phrase-level candidate state.
+- Ensure Principal Voice, bass, counterpoint, Continuo Foundation, cadence, and target texture compile into observable constraints.
+
+### Slice 5 — Evaluation substrate
+
+- Add source, extraction, pack, applicability, compiler, and output mutation fixtures.
+- Partition derivation, development, calibration, and held-out evidence.
+- Remove or relabel proxy scores that lack observable evaluators.
+- Add readiness dimensions for historical authority, idiom, target voices, and ergonomics.
+
+### Slice 6 — Baroque-guitar vertical
+
+- Run one reviewed Sanz or Corbetta evidence path into test-only profiles.
+- Implement punteado, rasgueado, alfabeto, and mixed-style phrase semantics.
+- Model right-hand resources and independent stroke and course masks.
+- Fix the exact Greensleeves regression through the production Arrangement Search, engraving, playback, and workbench.
+
+### Slice 7 — Baroque-lute vertical
+
+- Run Mace plus one normative and one repertoire evidence path into scoped test-only profiles.
+- Implement scale-aware left-hand geometry and independent right-hand diapason state.
+- Make notation identity explicit and refuse unsupported historical claims.
+- Fix the exact Greensleeves f/b regression through the full production path.
+
+### Slice 8 — Classical-guitar vertical
+
+- Run Sor plus one Carulli aligned reduction into scoped test-only profiles.
+- Implement joint Target Voice Plan realization and polyphonic phrase search.
+- Produce first-class standard notation and voice-isolated playback.
+- Fix the exact disappearing-bass regression through the full production path.
+
+Slices 6 through 8 are coequal sibling realizations of the shared contracts. They may proceed independently once slices 3 through 5 stabilize, but parity is incomplete until all three pass their own acceptance cases.
+
+### Slice 9 — Source refinement and reassessment
+
+- Ingest corroborating and conflicting sources.
+- Support source comparison, narrowing, contradiction, supersession, retraction, and research questions.
+- Produce affected-arrangement Knowledge Reassessments without mutation.
+- Prove rights-safe behavior for public and private references.
+
+### Slice 10 — Reviewed learning and workbench
+
+- Classify edits, playtests, feedback, and evaluator disagreements.
+- Propose but do not auto-activate Personal Defaults, Ergonomic Profiles, Knowledge Candidates, Calibration Candidates, and fixtures.
+- Add pack diff, review, release, retraction, and affected-workspace navigation.
+- Preserve complete lineage and recovery.
+
+### Slice 11 — Cross-target end-to-end acceptance
+
+- Upload a real PDF through Guided Start.
+- Complete consequential Score-Anchored Review.
+- Produce all three sibling Arrangement Scores.
+- Compare meaningful alternatives.
+- Verify notation, Audio Preview, score following, voice or technique isolation, manual edit adoption, and version history.
+- Emit Evaluation Cards and a compatible baseline comparison from exact manifests.
+
+### Slice 12 — Late human review and release
+
+HITL is intentionally concentrated here so AFK implementation can safely use test-only or explicitly provisional knowledge.
+
+The review package includes:
+
+- metadata and rights review;
+- source transcription and extraction review;
+- historical-claim and pack-profile review by declared role;
+- target-player physical playtests for all three instruments;
+- engraving-editor review;
+- Owner cross-target usefulness review;
+- disagreements and unresolved dimensions;
+- exact pack, compiler, evaluator, source, and output digests; and
+- rerun instructions.
+
+Only after the required role-scoped reviews may a test-only profile move to owner-reviewed local or specialist-reviewed status. Missing specialist evidence remains missing; the Owner may accept a provisional local workflow without relabeling its authority.
+
+## Completion boundary
+
+This specification is complete only when all of the following are true:
+
+- one real reference can travel from upload or stable acquisition through identity, Page Atlas, cited extraction, candidate review, pack release, applicability, arrangement consequence, and reassessment;
+- later sources can corroborate, narrow, contradict, or supersede knowledge without rewriting history;
+- private sources remain local and cannot leak through packs, fixtures, reports, or exports;
+- every Arrangement Search records an exact nonempty Applied Knowledge Manifest when historical or editorial behavior is claimed;
+- every historically described output links to applicable released evidence;
+- Principal Voice preservation works by default without a specialist prompt;
+- Target Voice Plans prevent structural subordinate voices from disappearing silently;
+- instrument mechanics, ergonomics, historical evidence, modern pedagogy, software heuristics, personal preference, and evaluation remain distinct;
+- baroque-guitar output implements a declared and supported punteado, rasgueado, or mixed technique plan;
+- baroque-lute output rejects the known reach, models diapasons independently, and does not invent historical notation;
+- classical-guitar output provides coherent planned voices in standard notation;
+- all three target regressions fail before their fixes and pass afterward at the generated-output level;
+- notation and playback agree with canonical notes, voices, positions, technique events, and Performed Form;
+- evaluation uses hard gates plus separate dimensions, not a compensating overall score;
+- held-out evidence is isolated from derivation and calibration;
+- the real-browser PDF-to-three-target workflow is resumable and inspectable;
+- material alternatives, conflicts, compromises, and unknowns are visible;
+- role-scoped human evidence is complete or explicitly left unevaluated without false certification;
+- the complete typecheck, test, formatting, specification, evaluation, rendering, playback, and relevant real-tool gates pass; and
+- every completed tracer is committed and pushed to main before its dependent tracer begins.
+
+## Non-goals
+
+- Training a model on the Owner's library.
+- Treating model memory, web search, OCR, OMR, or corpus frequency as historical authority.
+- Bulk-importing the entire BLUEUSB volume without selection, identity review, and deduplication.
+- Coupling the product to IMSLP or any one repository.
+- Redistributing copyrighted books or provider scans merely because the underlying Work is old.
+- Establishing one universal baroque-guitar, lute, or classical-guitar technique.
+- Calling a source-scoped practice a universal instrument rule.
+- Claiming total physical playability from geometry, synthesis, or one evaluator.
+- Generating realistic historical-instrument audio; Audio Preview remains a checking tool.
+- Replacing accepted lineage, Preservation Audit, Arrangement Search, or evaluation architecture.
+- Reopening completed historical tracer waves as the execution tracker for this work.
+
+## Research questions that do not block the substrate
+
+- Which directly citable source establishes one or more thirteen-course French-tablature diapason conventions?
+- Which baroque-guitar schools and dates support particular right-hand resources, stroke masks, and mixed-style transitions?
+- How should historically ambiguous Corbetta suppression marks be represented in engraving and playback?
+- Which repertoire sampling protocol can support descriptive idiom observations without circular evaluation?
+- Which classical-guitar voice-continuity and right-hand metrics correlate with expert review across difficulty contexts?
+- Which lute span and transition models generalize beyond the Owner's Instrument Instance while preserving personal calibration?
+
+Until resolved, Vellum may use explicit modern editorial conventions, software heuristics, separate alternatives, or unknown status. It may not manufacture historical certainty.
+
+## Historical material
+
+The archived snapshot preserves the former product specification, subordinate design specs, proposal suite, source-ingestion draft, tech-debt audit, blunder hunts, open questions, legacy waves, and superseded follow-up tracers in their former repository-relative layout.
+
+The completed Arrangement Intelligence evidence under .scratch/arrangement-intelligence remains in place because its manifest binds exact paths and hashes. It is a frozen prototype closure record, not an active plan. New execution receives a new .scratch namespace and a new manifest.

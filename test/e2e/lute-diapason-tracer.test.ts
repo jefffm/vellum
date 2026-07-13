@@ -83,7 +83,7 @@ describe("13-course lute diapason engraving tracer", () => {
     ).toHaveLength(1);
   }, 90_000);
 
-  it("renders the historical signs for courses 7 through 13 without duplicate playback", async () => {
+  it("renders the configured course signs without claiming course 13 is historically sourced", async () => {
     if (!lilypondAvailable) return;
     const engraved = engrave({
       ...diapasonSequence("d_minor"),

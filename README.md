@@ -2,7 +2,7 @@
 
 **ve*LLM*um** — an AI music desk for historical plucked strings.
 
-Vellum helps arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. Its Musicological Engine combines symbolic analysis, historical knowledge, model-assisted judgment, and constraint checks for source fidelity, frets, courses, playable voicings, alfabeto chords, notation, and rendered output.
+Vellum helps arrange music for baroque lute, baroque guitar, Renaissance lute, theorbo, classical guitar, piano, and voice. Its Musicological Engine combines symbolic analysis, reviewed knowledge, model-assisted judgment, and constraint checks for source fidelity, frets, courses, mechanically valid voicings, alfabeto chords, notation, and rendered output.
 
 ## How is it?
 
@@ -21,7 +21,7 @@ _“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellu
 ## What Vellum does
 
 - Finds valid pitch → course/fret positions with `tabulate`
-- Enumerates playable chord shapes with `voicings`
+- Enumerates mechanically valid chord shapes with `voicings`
 - Looks up historical baroque-guitar alfabeto with `alfabeto_lookup`
 - Validates stretches, ranges, and fingering conflicts with `check_playability`
 - Generates LilyPond from structured music data with `engrave`
@@ -30,7 +30,7 @@ _“Greensleeves” for soprano and 5-course baroque guitar, engraved with Vellu
 
 ## Why it exists
 
-Language models can be useful musical collaborators, but neither model memory nor mechanical validation alone is enough for informed arrangement. Vellum keeps musical evidence, historical practice, creative judgment, and instrument constraints in one inspectable workflow that produces checked, playable, engraved music.
+Language models can be useful musical collaborators, but neither model memory nor mechanical validation alone is enough for informed arrangement. Vellum keeps musical evidence, historical practice, creative judgment, and instrument constraints in one inspectable workflow. The current prototype produces preserved, mechanically checked, engraved candidates; the current specification governs the work required before Vellum may make stronger idiomatic or physical-playability claims.
 
 The default result now includes a short Musicological Analysis summary. Expanding it reveals passage-by-passage textures and contrapuntal techniques, score-anchored claims with evidence and confidence, historically scoped profiles, and alternative interpretations. Corrections are durable new analysis versions, so an Owner can teach Vellum what this particular source means without silently rewriting the prior reading.
 
@@ -97,14 +97,14 @@ The **New arrangement** control opens Guided Start. Upload an arbitrary score PD
 3. saves the recognized and normalized score with source regions and uncertainty records;
 4. pauses on Critical Uncertainty in Score-Anchored Review, focusing the exact Audiveris source-raster region (with the immutable PDF as a fallback) beside editable recognized notation and evidence-backed alternatives, then saves accepted corrections as a new transcription version;
 5. identifies and protects the Principal Voice;
-6. searches and audits an independent playable reduction for every selected target while sharing the reviewed source analysis;
+6. searches and audits an independent target reduction for every selected instrument while sharing the reviewed source analysis and disclosing unevaluated idiom or ergonomics;
 7. engraves the requested output - French letter tablature, classical-guitar standard notation, or a figured-bass continuo score - and creates a literal synthesized Audio Preview with isolatable semantic parts.
 
 Completed Arrangement Searches and all candidates are durable. Reopen an arrangement with `?workspace=<workspace-id>&arrangement=<arrangement-id>` to compare its ranked evidence, audition an unselected candidate on demand, or branch from that candidate without replacing the selected score.
 
 [Audiveris](https://audiveris.github.io/audiveris/_pages/guides/advanced/cli/) must be installed for arbitrary PDF recognition. Vellum discovers the standard macOS application automatically, otherwise uses `audiveris` on `PATH`; `VELLUM_AUDIVERIS_COMMAND` overrides either location. Vellum requires both the native `.omr` project and exported MusicXML: the former supplies symbol bounds and recognition grades, while the latter supplies the interchange score. If Audiveris is unavailable or omits its native project, the source and Arrangement Brief remain saved and Vellum reports the incomplete run without pretending that recognition succeeded. Checked-in public-domain fixtures include reviewed canonical truth plus a production-derived Audiveris 5.10.2 evidence pair, so arrangement regressions and evidence extraction can be tested independently of local OMR drift.
 
-The lute path uses the historical default 13-course D-minor tuning, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. The classical-guitar path uses standard EADGBE tuning and a single `treble_8` staff, so its PDF contains standard notation without tablature and its MIDI has one playback source. Each selected instrument gets an independent arrangement search and Preservation Audit while sharing the same reviewed source analysis.
+The lute path currently defaults in the editor to a 13-course D-minor-tuning configuration, supports key-specific diapason retuning, and preserves course identity independently from pitch: course 10 is engraved as `///a` and sounds D2 in both the D-minor and D-major bass schemes. This editor default is not claimed as one universal historical standard. Course 13 currently uses `6` as a software convention rather than a source-backed historical claim; the current specification requires explicit disclosure and configurable notation identity. The classical-guitar path uses standard EADGBE tuning and a single `treble_8` staff, so its PDF contains standard notation without tablature and its MIDI has one playback source. Each selected instrument gets an independent arrangement search and Preservation Audit while sharing the same reviewed source analysis.
 
 For a source containing an explicit Continuo Foundation, the soprano-plus-piano path preserves every bass event, figure, and accidental under the `continuo.italian-baroque` Realization Profile. Its contextual validator recognizes prepared dissonance such as a source-supported `4-3` suspension instead of applying blanket counterpoint prohibitions. Principal Voice, Continuo Foundation, and generated realization remain separately audible, and the compiled MIDI is derived from the same semantic events as the engraved score.
 
@@ -123,6 +123,7 @@ Preservation Audits recompute protected musical relationships from the selected 
 
 ## Docs
 
-- [SPEC.md](./SPEC.md) — full architecture and tool design
-- [ALFABETO-SPEC.md](./ALFABETO-SPEC.md) — historical baroque-guitar chord lookup
-- [HISTORICAL-RENDERING-SPEC.md](./HISTORICAL-RENDERING-SPEC.md) — engraving goals
+- [SPEC.md](./SPEC.md) — sole current implementation specification
+- [CONTEXT.md](./CONTEXT.md) — domain language and enduring invariants
+- [Accepted ADRs](./docs/adr/) — governing architecture decisions
+- [Specification archive](./docs/archive/specifications/2026-07-13/README.md) — non-current design and execution history

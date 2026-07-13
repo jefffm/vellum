@@ -92,17 +92,65 @@ _Avoid_: Local mode
 The reviewed, versioned collection of cited Historical Practice Claims and reusable historical profiles.
 _Avoid_: Memory, model knowledge
 
+**Reviewed Knowledge Library**:
+The local-first collection of versioned Knowledge Packs whose authority lanes distinguish historical practice, analytical guidance, continuo and Figured Bass, modern pedagogy, editorial convention, software heuristics, and notation convention.
+_Avoid_: Training data, memory, one undifferentiated knowledge base
+
 **Knowledge Pack**:
-A versioned, reviewed collection of Historical Practice Claims, profiles, examples, and validation guidance for a defined musical domain.
+A versioned collection of typed claims or observations, scoped profiles, examples, counterexamples, applicability predicates, and declarative compiler and validation guidance for a defined musical domain.
 _Avoid_: Prompt, preset
+
+**Knowledge Pack Release**:
+An immutable content-addressed version of a Knowledge Pack with an explicit release state, authority, reviewer assertions, dependencies, rights, and digest.
+_Avoid_: Current pack, mutable profile
+
+**Applied Knowledge Manifest**:
+The immutable resolution of exact Knowledge Pack Releases against one passage, source context, Arrangement Plan, Performance Brief, and Instrument Instance, including applicable, inapplicable, conflicting, and unknown profiles and their compiled consequences.
+_Avoid_: Historical profile score, prompt context
 
 **Owner Reference Library**:
 The Owner's local collection of treatises, books, articles, scores, and notes from which cited Knowledge Candidates may be extracted.
 _Avoid_: Training data, uploads
 
 **Knowledge Candidate**:
-A potentially reusable claim proposed from project work but not yet admitted to the Historical Knowledge Base.
+A cited prescription, example, observation, synthesis, convention, heuristic, counterexample, conflict, validation guidance, or research question proposed for review but not yet admitted to a Knowledge Pack Release.
 _Avoid_: Learned fact
+
+**Reference Work**:
+The abstract authored work represented in the Owner Reference Library independently from any edition, exemplar, or scan.
+_Avoid_: PDF title
+
+**Reference Edition**:
+A publication of a Reference Work with explicit date, language, editor, translator, and declared changes.
+_Avoid_: Scan, repository record
+
+**Reference Exemplar**:
+A physical copy of a Reference Edition identified by holding institution, shelfmark, completeness, and exemplar-specific features.
+_Avoid_: Edition, digital file
+
+**Reference Digital Asset**:
+An immutable uploaded or acquired representation of a Reference Exemplar, identified by content digest, media type, provenance, access, and separate rights assertions.
+_Avoid_: Reference Work, Source Artifact used as arrangement evidence
+
+**Source Segment**:
+A citable page or musical region within a Reference Digital Asset retaining printed and scan locators, geometry, source image, modality, transcription, normalization, translation, and extraction provenance.
+_Avoid_: Page number without asset identity
+
+**Knowledge Reassessment**:
+A versioned comparison that explains how a later source or Knowledge Pack Release corroborates, narrows, qualifies, contradicts, supersedes, or leaves existing knowledge and dependent arrangements unchanged without mutating them.
+_Avoid_: Automatic learning, silent pack upgrade
+
+**Target Voice Plan**:
+A passage-level plan that maps source voices and relationships to explicit target roles, continuity, cadence, transformation, prominence, and omission obligations before physical realization.
+_Avoid_: Preserve melody, pitch-class coverage
+
+**Intended Technique Plan**:
+A passage-level declaration of the target technique, transitions, constitutive hand resources, sounding and held state, notation and playback consequences, alternatives, and applicable evidence.
+_Avoid_: Instrument-wide technique default
+
+**Owner Ergonomic Profile**:
+Reviewed personal evidence about the Owner's capabilities or limitations for an exact instrument and performance context, kept separate from instrument mechanics and universal playability claims.
+_Avoid_: Instrument constraint, historical practice
 
 **Musicological Analysis**:
 A structured, evidence-bearing interpretation of a source's form, voices, Texture, Contrapuntal Techniques, harmony, phrases, cadences, and Preservation Targets.
@@ -176,6 +224,10 @@ _Avoid_: LilyPond file, rendered score
 The exact set of instruments, ensemble roles, tunings, stringing choices, and relevant capabilities for which an Arrangement Score is generated and validated.
 _Avoid_: Output format, instrument name without its configuration
 
+**Instrument Instance**:
+An immutable exact physical and notational configuration of one target instrument, including construction, strings or courses, tuning, geometry, setup, and notation identities.
+_Avoid_: Instrument name, generic profile
+
 **Arrangement Family**:
 Sibling Arrangement Scores that share an Arrangement Brief and source-analysis lineage but realize different Target Configurations.
 _Avoid_: Multiple layouts of one Arrangement Score
@@ -215,6 +267,14 @@ _Avoid_: Document when its role in the arrangement matters
 **Arrangement Brief**:
 A structured summary of Source Artifacts, target instruments, desired outputs, and explicit arrangement choices.
 _Avoid_: Prompt text
+
+**Performance Brief**:
+A versioned statement of intended use, performer capability, tempo, difficulty, preparation, reliability, allowed technique, notation need, and ensemble role that makes target evaluation meaningful.
+_Avoid_: Difficulty label without context
+
+**Arrangement Plan**:
+A versioned musical design linking exact source truth and Analysis to sectional Texture, target voices, material disposition, technique intention, transformations, alternatives, and expected compromises before target-specific search.
+_Avoid_: Fingering result, prompt
 
 **Guided Start**:
 An optional, dismissible launcher that helps a user assemble an initial Arrangement Brief and begin a suitable Vellum workflow.
@@ -301,11 +361,11 @@ An open bass course outside the lute's six stopped courses.
 _Avoid_: Bass string when course function matters
 
 **Diapason Sign**:
-The below-staff sign that identifies which Diapason sounds, using the historical default sequence `a`, `/a`, `//a`, `///a`, `4`, `5`, `6` for courses 7–13.
+The below-staff sign that identifies which Diapason sounds independently from its pitch. The source-backed twelve-course sequence is `a`, `/a`, `//a`, `///a`, `4`, `5` for courses 7–12; any course-13 sign requires an explicit historical, editorial, or software Notation Configuration.
 _Avoid_: Fret letter, because a Diapason is not stopped at a fret
 
 **13-Course Baroque Lute**:
-The default D-minor lute configuration with six stopped courses and seven open Diapasons.
+Vellum's initial thirteen-course target profile, normally instantiated in D-minor tuning with six stopped courses and seven open Diapasons; the editor default is not represented as one universal historical standard.
 _Avoid_: Baroque lute when the number of courses affects the arrangement
 
 **Bass Tuning**:
@@ -542,14 +602,14 @@ _Avoid_: French tab
 - The canonical product path runs inside an **Arrangement Workspace** from source evidence through purpose-scoped Source Truth, Analysis, compatible Briefs, proportional Plan, bounded Search, adopted Arrangement Score, audit, evaluation, and reproducible Deliverables
 - The flat `/api/arrangements` LilyPond store is a retained noncanonical compatibility projection; compilation or storage there does not establish reviewed Source Truth, an adopted Arrangement Score, or Arrangement Readiness
 - Existing flat files are not automatically migrated because reconstructing canonical lineage would invent missing provenance and decisions; canonical reuse begins by importing the actual source into an Arrangement Workspace
-- Focused Arrangement Intelligence ADRs remain proposed until the Owner accepts the architecture boundary after three-target parity plus continuo and imitative cross-domain evidence
+- Focused Arrangement Intelligence ADRs 0016 through 0021 are accepted architecture; their prototype evidence remains preserved even when later work supersedes an implementation detail
 - The initial intabulation target is the six-course Renaissance lute in French tablature; candidate search may redistribute playable notes across courses and registers but cannot erase or reorder protected imitation
 - The Preservation Audit verifies every protected entry and relationship, not merely pitch coverage or the highest source voice
 - Audio Preview and Lineage Navigation allow each source voice and its arrangement descendants to be isolated even when the intabulation interleaves them on one tablature staff
 - A dedicated **Golden Engraving Fixture** verifies that open course 10 on the default 13-course D-minor baroque lute renders as `///a` below the French tablature staff and sounds D2
 - The fixture checks the structured course assignment, generated LilyPond semantics, rendered glyph and placement, MIDI pitch, and absence of duplicate playback; non-empty SVG output is insufficient
 - The diapason sign remains `///a` when a Bass Tuning changes course 10's pitch, proving that course identity and sounding pitch are independent
-- A companion sequence verifies the historical default signs `a`, `/a`, `//a`, `///a`, `4`, `5`, and `6` for courses 7 through 13
+- A companion sequence verifies the source-backed twelve-course signs `a`, `/a`, `//a`, `///a`, `4`, and `5` for courses 7 through 12; the course-13 sign remains an explicit editorial or software convention until directly applicable historical evidence establishes it
 - Golden fixtures include reviewed canonical musical data so OMR backend drift can be distinguished from arrangement-engine regressions
 - An **Arrangement Brief** selects one or more **Notation Layouts** independently from one or more **Deliverables**
 - A **Notation Layout** may produce multiple **Deliverables**

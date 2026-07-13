@@ -1,6 +1,6 @@
 # Arrangement Intelligence boundaries and legacy disposition
 
-This inventory reconciles the implemented product with the focused proposed ADRs. The ADRs are not Owner-accepted architecture until tracer T44 records H9/H10 acceptance.
+This inventory records the implemented prototype boundary governed by accepted ADRs 0016 through 0021. Tracer T44 captured the Owner's architecture acceptance and prototype-scope decision; the remaining target-player attestations were explicitly left unevaluated rather than converted into passes.
 
 ## Canonical ownership
 
