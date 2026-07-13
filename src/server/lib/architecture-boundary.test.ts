@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { buildSystemPrompt } from "../../prompts.js";
 
 const projectRoot = process.cwd();
-const proposedAdrs = [
+const focusedAdrs = [
   "0016-converge-source-truth-by-purpose.md",
   "0017-version-briefs-and-proportional-plans.md",
   "0018-bind-arrangements-to-instrument-instances.md",
@@ -14,10 +14,12 @@ const proposedAdrs = [
 ];
 
 describe("Arrangement Intelligence architecture boundary", () => {
-  it("keeps every focused ADR proposed until Owner acceptance and grounds it in production and evaluation evidence", () => {
-    for (const filename of proposedAdrs) {
+  it("records Owner acceptance of every focused ADR and grounds it in production and evaluation evidence", () => {
+    for (const filename of focusedAdrs) {
       const document = readFileSync(path.join(projectRoot, "docs/adr", filename), "utf8");
-      expect(document).toMatch(/## Status\s+Proposed/);
+      expect(document).toMatch(
+        /## Status\s+Accepted — Owner accepted the prototype architecture baseline at T44 on 2026-07-13\./
+      );
       expect(document).toMatch(/## Decision/);
       expect(document).toMatch(/## Implemented evidence/);
       expect(document).toMatch(/- Production: `src\//);
