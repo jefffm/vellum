@@ -137,10 +137,33 @@ describe("Guided Start workflow recovery", () => {
       createdAt: "2026-07-12T12:00:00.000Z",
       updatedAt: "2026-07-12T12:01:00.000Z",
     };
+    const restartedWorkflow = {
+      ...workflow,
+      id: "workflow.22222222-2222-4222-8222-222222222222",
+      status: "active",
+      stage: "source_saved",
+      failureCode: undefined,
+    };
+    let activeRequestCount = 0;
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url.endsWith("/active")) return jsonResponse({ workflow });
+      if (url.endsWith("/active")) {
+        activeRequestCount += 1;
+        return jsonResponse({
+          workflow:
+            activeRequestCount === 1
+              ? workflow
+              : { ...restartedWorkflow, status: "interrupted", failureCode: "network_error" },
+        });
+      }
       if (url.endsWith(`/guided-workflows/${workflow.id}/restart`)) {
-        return jsonResponse({ ...workflow, status: "active", stage: "source_saved" });
+        return jsonResponse(restartedWorkflow);
+      }
+      if (url.endsWith(`/guided-workflows/${restartedWorkflow.id}/interrupt`)) {
+        return jsonResponse({
+          ...restartedWorkflow,
+          status: "interrupted",
+          failureCode: "network_error",
+        });
       }
       if (url.endsWith(`/workspaces/${workflow.workspaceId}`)) {
         return jsonResponse({
@@ -170,6 +193,14 @@ describe("Guided Start workflow recovery", () => {
         body: JSON.stringify({ ocrAutoAcceptConfidence: 0.7 }),
       });
     });
+    await vi.waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([url]) =>
+          String(url).endsWith(`/guided-workflows/${restartedWorkflow.id}/interrupt`)
+        )
+      ).toBe(true);
+    });
+    expect(activeRequestCount).toBe(2);
   });
 });
 

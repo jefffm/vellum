@@ -1774,6 +1774,7 @@ export async function refreshGuidedWorkflowRecovery(
   const run = async (action: "resume" | "restart") => {
     resume.disabled = true;
     restart.disabled = true;
+    let continuingWorkflow: GuidedWorkflow | undefined;
     try {
       const thresholdField = dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]");
       const threshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
@@ -1781,7 +1782,7 @@ export async function refreshGuidedWorkflowRecovery(
         action === "restart" && workflow.optical && thresholdField && !thresholdField.hidden
           ? { ocrAutoAcceptConfidence: Number(threshold?.value ?? "80") / 100 }
           : undefined;
-      const next = await api<GuidedWorkflow>(
+      continuingWorkflow = await api<GuidedWorkflow>(
         `/api/workspaces/${workspaceId}/guided-workflows/${workflow.id}/${action}`,
         {
           method: "POST",
@@ -1789,9 +1790,32 @@ export async function refreshGuidedWorkflowRecovery(
         }
       );
       panel.hidden = true;
-      await continueGuidedWorkflow(dialog, next, targetConfigurations, onComplete);
+      continuingWorkflow = await continueGuidedWorkflow(
+        dialog,
+        continuingWorkflow,
+        targetConfigurations,
+        onComplete
+      );
     } catch (error) {
-      message.textContent = error instanceof Error ? error.message : "Recovery failed.";
+      const failureMessage = error instanceof Error ? error.message : "Recovery failed.";
+      if (
+        continuingWorkflow &&
+        continuingWorkflow.status !== "complete" &&
+        continuingWorkflow.status !== "cancelled"
+      ) {
+        const code = error instanceof VellumApiError ? error.code : "workflow_interrupted";
+        try {
+          continuingWorkflow = await api<GuidedWorkflow>(
+            `/api/workspaces/${workspaceId}/guided-workflows/${continuingWorkflow.id}/interrupt`,
+            { method: "POST", body: JSON.stringify({ code }) }
+          );
+          await refreshGuidedWorkflowRecovery(dialog, workspaceId, onComplete);
+          return;
+        } catch {
+          // Keep the original failure visible if persistence or recovery discovery also fails.
+        }
+      }
+      message.textContent = failureMessage;
       panel.hidden = false;
     } finally {
       resume.disabled = false;
