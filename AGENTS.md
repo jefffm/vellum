@@ -23,10 +23,11 @@ It governs the next program of source-backed Knowledge Packs, Applied Knowledge 
 No new execution wave has yet been derived from the specification. Before implementation:
 
 1. Read CONTEXT.md, applicable accepted ADRs, and SPEC.md.
-2. Create a new local Markdown tracer wave under .scratch with its own plan, issues, requirement ledger, manifest, and evidence namespace.
-3. Do not reopen .scratch/arrangement-intelligence; it is a frozen completed prototype record with path- and hash-bound evidence.
-4. Sequence machine-executable tracer bullets before the late role-scoped HITL package defined by the specification.
-5. Complete, test, commit, and push each tracer before beginning a dependent tracer.
+2. Resolve proposed ADR 0022 before writing new canonical Reviewed Knowledge Library records.
+3. Create a new local Markdown tracer wave under .scratch with its own plan, issues, requirement ledger, manifest, and evidence namespace.
+4. Do not reopen .scratch/arrangement-intelligence; it is a frozen completed prototype record with path- and hash-bound evidence.
+5. Sequence machine-executable tracer bullets before the late role-scoped HITL package defined by the specification.
+6. Complete, test, commit, and push each tracer before beginning a dependent tracer.
 
 Historical specifications, proposals, audits, reviews, and superseded plans are under docs/archive/specifications/2026-07-13. They are evidence, not current work.
 

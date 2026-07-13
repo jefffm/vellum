@@ -93,7 +93,7 @@ The reviewed, versioned collection of cited Historical Practice Claims and reusa
 _Avoid_: Memory, model knowledge
 
 **Reviewed Knowledge Library**:
-The local-first collection of versioned Knowledge Packs whose authority lanes distinguish historical practice, analytical guidance, continuo and Figured Bass, modern pedagogy, editorial convention, software heuristics, and notation convention.
+The local-first collection of versioned Knowledge Packs whose orthogonal authority lanes and musical domains distinguish historical practice, modern pedagogy, editorial convention, software heuristics, analysis and counterpoint, continuo and Figured Bass, instrument technique, and notation.
 _Avoid_: Training data, memory, one undifferentiated knowledge base
 
 **Knowledge Pack**:
@@ -101,11 +101,35 @@ A versioned collection of typed claims or observations, scoped profiles, example
 _Avoid_: Prompt, preset
 
 **Knowledge Pack Release**:
-An immutable content-addressed version of a Knowledge Pack with an explicit release state, authority, reviewer assertions, dependencies, rights, and digest.
+An immutable content-addressed graph snapshot of one Knowledge Pack authority lane and its typed entries, profiles, derivations, relationships, dependencies, schema, and digest. Review status and current eligibility are external attestations and advisories.
 _Avoid_: Current pack, mutable profile
 
+**Release Attestation**:
+An immutable, reviewer-identified assertion that one exact Knowledge Pack Release was reviewed for a typed, digested claim or profile scope. Its trust and authorization are established separately by an Attestation Verification under a pinned verifier policy.
+_Avoid_: Mutable release state, self-certified specialist pack
+
+**Attestation Verification**:
+An immutable external decision that authenticates a Release Attestation's reviewer when possible, tests authorization against a typed review scope, and records verified, out-of-scope, unverified, or revoked under an exact verifier policy.
+_Avoid_: Reviewer-controlled trust field, attestation signature alone
+
+**Release Advisory**:
+An immutable notice that a Knowledge Pack Release or attestation is superseded, retracted, revoked, or rights-restricted without mutating its historical bytes.
+_Avoid_: Delete release, change release status
+
+**Advisory Verification**:
+An immutable external decision that authenticates a Release Advisory issuer and tests authority over the exact advisory kind, subject, and scope under a pinned verifier policy.
+_Avoid_: Trusting an `issuedBy` reference, advisory self-activation
+
+**Activation Decision**:
+An immutable allow, deny, or review-required decision over one exact release and profile, pinned attestations and verifications, rights decisions, effective advisories, requested scope, and Resolution Policy.
+_Avoid_: Activation flag on a pack, strongest-attestation wins
+
+**Knowledge Library Inventory Snapshot**:
+The complete immutable enumeration of every Knowledge Pack Release reachable from pinned configured registries under an exact inventory builder and policy, before trust, rights, advisory, or applicability filtering.
+_Avoid_: Packs selected by the resolver, directory listing without builder identity
+
 **Applied Knowledge Manifest**:
-The immutable resolution of exact Knowledge Pack Releases against one passage, source context, Arrangement Plan, Performance Brief, and Instrument Instance, including applicable, inapplicable, conflicting, and unknown profiles and their compiled consequences.
+The immutable, completeness-validated resolution of an exact Knowledge Library Inventory Snapshot, derived Knowledge Catalog Snapshot, and Resolution Policy against one passage, source context, Arrangement Plan, Performance Brief, and Instrument Instance, including an inventory and eligibility outcome for every release and an applicability outcome for every reachable profile plus conflicts, exclusions, unknowns, dependencies, Activation Decisions, and compiled consequences.
 _Avoid_: Historical profile score, prompt context
 
 **Owner Reference Library**:
@@ -113,7 +137,7 @@ The Owner's local collection of treatises, books, articles, scores, and notes fr
 _Avoid_: Training data, uploads
 
 **Knowledge Candidate**:
-A cited prescription, example, observation, synthesis, convention, heuristic, counterexample, conflict, validation guidance, or research question proposed for review but not yet admitted to a Knowledge Pack Release.
+A versioned cited node proposed for review but not yet admitted to a Knowledge Pack Release, classified independently by graph-node kind, authority lane, musical domain, epistemic form, evidence role, applicability, and review state.
 _Avoid_: Learned fact
 
 **Reference Work**:
@@ -124,25 +148,41 @@ _Avoid_: PDF title
 A publication of a Reference Work with explicit date, language, editor, translator, and declared changes.
 _Avoid_: Scan, repository record
 
+**Reference Source Manifestation**:
+A versioned edition, issue, volume, part, manuscript, or compilation object whose reviewed or disputed relationships may involve zero, one, or many Reference Works and other manifestations.
+_Avoid_: Assuming every source object is one complete edition of one work
+
 **Reference Exemplar**:
-A physical copy of a Reference Edition identified by holding institution, shelfmark, completeness, and exemplar-specific features.
-_Avoid_: Edition, digital file
+A physical copy or bound object associated with one or more Reference Source Manifestations and identified by holding institution, shelfmark, completeness, and exemplar-specific features.
+_Avoid_: Manifestation, digital file
 
 **Reference Digital Asset**:
-An immutable uploaded or acquired representation of a Reference Exemplar, identified by content digest, media type, provenance, access, and separate rights assertions.
-_Avoid_: Reference Work, Source Artifact used as arrangement evidence
+Immutable uploaded or acquired bytes identified by content digest, media type, and length. Acquisition provenance, represented Exemplars, access, and rights are separate linked records.
+_Avoid_: Reference Work, acquisition event, mutable rights field
 
-**Source Segment**:
-A citable page or musical region within a Reference Digital Asset retaining printed and scan locators, geometry, source image, modality, transcription, normalization, translation, and extraction provenance.
-_Avoid_: Page number without asset identity
+**Asset Acquisition**:
+An immutable record of how a Reference Digital Asset was obtained, from which provider object or local action, what it represents, and which rights and processing decisions apply.
+_Avoid_: Byte identity, permission inferred from deduplication
+
+**Source Segment Version**:
+An immutable citable page or musical region bound to exact asset bytes, Page Atlas version, canvas, coordinate space, transforms, crop digest, printed and scan locators, modality, and extraction provenance.
+_Avoid_: Mutable crop, page number without asset and Atlas identity
 
 **Knowledge Reassessment**:
 A versioned comparison that explains how a later source or Knowledge Pack Release corroborates, narrows, qualifies, contradicts, supersedes, or leaves existing knowledge and dependent arrangements unchanged without mutating them.
 _Avoid_: Automatic learning, silent pack upgrade
 
 **Target Voice Plan**:
-A passage-level plan that maps source voices and relationships to explicit target roles, continuity, cadence, transformation, prominence, and omission obligations before physical realization.
+A passage-level plan that maps source voices to explicit target roles, activity spans and rests, continuity, cadence, transformation, prominence, and omission obligations before physical realization.
 _Avoid_: Preserve melody, pitch-class coverage
+
+**Target Relationship Plan**:
+A passage-level set of machine-readable obligations among Target Voices, such as ordered imitation, subject shape, suspension preparation and resolution, figure-to-bass constraint, cadence, voice exchange, or generated voice leading, each bound to a Validation Profile.
+_Avoid_: Per-voice coverage as proof that counterpoint survived
+
+**Continuo Realization Plan**:
+A passage-level plan linking every authoritative Continuo Foundation and figure event to generated voices, Realization and Validation Profiles, spacing and doubling policy, uncertainty, and an explicit complete, separate-bass, or reduction disposition.
+_Avoid_: Chord implication as a sounded foundation bass
 
 **Intended Technique Plan**:
 A passage-level declaration of the target technique, transitions, constitutive hand resources, sounding and held state, notation and playback consequences, alternatives, and applicable evidence.
@@ -241,8 +281,48 @@ An explicitly promoted, target-portable musical constraint that applies across s
 _Avoid_: Personal Default, source correction, instrument-specific fingering
 
 **Arrangement Candidate**:
-A complete or sectional proposed realization of an arrangement plan with recorded derivation choices and evaluation results.
+A complete or sectional proposed realization of an Arrangement Plan with recorded derivation choices, Search Measurements, and Selection Policy identity. Independent evaluation produces a separate Card keyed to the immutable candidate.
 _Avoid_: Draft, option
+
+**Search Measurement**:
+A generator-visible fact or estimate used by an exact Selection Policy to reject, compare, or retain Arrangement Candidates without claiming independent quality certification.
+_Avoid_: Evaluation score, historical or physical proof
+
+**Selection Policy**:
+The versioned hard-gate, lexicographic-priority, target-preference, and non-dominated-alternative policy used by Arrangement Search before independent evaluation.
+_Avoid_: Hidden weighted total, held-out evaluator
+
+**Adoption Decision**:
+An immutable decision that adopts or blocks a preordered Arrangement Candidate after independent required evaluation without rewriting the search order; a failed candidate yields to the next already ordered survivor or a new search.
+_Avoid_: Evaluation changing the Selection Decision, held-out candidate selection
+
+**Evaluation Card**:
+Immutable independent evidence about one exact generated candidate or Arrangement Score, exposing required hard gates, separate dimensions, unknowns, authority, and observations without mutating or selecting the music.
+_Avoid_: Candidate score, overall grade
+
+**Generation System**:
+The exact transitive consumer closure capable of generating or fitting an arrangement: source analysis, plans, prompts, activated packs and examples, model and provider configuration, compiler and search code, fitted parameters, Selection Policy, runtime, and dependencies.
+_Avoid_: Compiler name alone, current deployment
+
+**Capability Qualification**:
+Immutable evidence that one sealed Generation System and target profile passed its required suites held out from Vellum development, prompt authoring, fitting, and evaluator calibration.
+_Avoid_: Exact arrangement approval, claim of absence from model pretraining
+
+**Artifact Readiness**:
+The claim-scoped state of one exact Arrangement Score and its Deliverables after required notation, playback, mechanics, relationships, and role-scoped human evidence pass under a compatible current Capability Qualification.
+_Avoid_: Pipeline completed, capability suite alone
+
+**Contamination Group**:
+The complete Generation-System- or evaluator-consumer-scoped evidence lineage that could reveal substantially the same expected answer, including editions, scans, excerpts, transcriptions, translations, analyses, arrangements, examples, candidates, derived claims, prompts, fitted parameters, and Selection Policies.
+_Avoid_: Dataset role on one file
+
+**Owner Evaluation Vault**:
+The local evaluator-only store outside Git that holds source assets held out from Vellum development and fitting, reviewed truth, expectations, mutations, precommitted reserve groups, provider and session exposure history, and split manifests; generation can receive a source envelope but cannot inspect its answers or reserves.
+_Avoid_: Repository fixture directory, prompt context
+
+**Vault Split Manifest**:
+The immutable pre-output commitment to one Generation System scope, eligible Contamination Groups, coverage assignments, invalid-fixture policy, deterministic reserve order or seed, exhaustion policy, exposure snapshots, and curator identity.
+_Avoid_: Choosing the next passing fixture after seeing output
 
 **Golden Arrangement Fixture**:
 A legally redistributable, provenance-bearing source artifact plus reviewed transcription and expected musical invariants used to test the complete Vellum workflow across selected Target Configurations.
@@ -400,6 +480,13 @@ _Avoid_: French tab
 - Symbolic facts, historical practices, interpretive judgments, and validation results remain distinguishable within the **Musicological Engine**
 - Curated historical knowledge consists of cited **Historical Practice Claims**, not unsourced universal rules
 - Conflicting **Historical Practice Claims** remain distinct alternatives with their own scope and authority
+- A **Knowledge Pack Release** has one authority lane and one or more musical domains; subject matter never substitutes for authority
+- Authoritative entries, profiles, and derivations match their Release authority lane; cross-lane references are typed evidence or conflict context and cannot launder authority
+- Knowledge Pack content changes create a new immutable Release, review creates a scoped **Release Attestation**, and retraction or revocation creates a **Release Advisory**
+- A **Release Attestation** or **Release Advisory** confers no authority by self-assertion; external **Attestation Verification** or **Advisory Verification** plus a scope-matched **Activation Decision** govern use
+- A test-only attestation authorizes isolated evaluation or explicit provisional research only; it cannot support default activation, readiness, or historical presentation
+- An **Applied Knowledge Manifest** is invalid unless its pinned **Knowledge Library Inventory Snapshot** enumerates every reachable Release, its Catalog records an eligibility outcome for each, and the Manifest records an outcome for every eligible Release and reachable profile
+- A descriptive observation cannot become a compiler prohibition or preference without a separately reviewed derivation and centrally governed Resolution Policy
 - The **Analysis Record** distinguishes documented practice, modern editorial convention, and Vellum heuristics
 - Every counterpoint and voice-leading evaluation uses an explicit **Validation Profile** selected from the passage's Texture, Contrapuntal Techniques, historical scope, and task
 - A **Validation Finding** identifies the **Validation Profile** and Historical Practice Claims that made it applicable
@@ -413,8 +500,9 @@ _Avoid_: French tab
 - The primary **Provider Connection** uses local ChatGPT OAuth through Pi's public provider API; API keys remain a fallback
 - A **Provider Connection** exposes connected, refreshing, expired, and disconnected states plus explicit reconnect and logout actions
 - Provider availability gates only **Model Actions**; source import, Score-Anchored Review, direct editing, deterministic analysis, validation, engraving, workspace access, and Audio Preview remain locally available while disconnected
+- Owner-private reference content cannot enter a Model Action or any remote processor without an operation-, destination-, and purpose-scoped Access Decision
 - A Model Action records its exact workspace inputs and last confirmed version boundary before provider work begins
-- Provider failure or logout never commits incomplete model output to a Score Transcription, Analysis Record, Arrangement Candidate, Arrangement Score, or Historical Knowledge Base
+- Provider failure or logout never commits incomplete model output to a Score Transcription, Analysis Record, Arrangement Candidate, Arrangement Score, or any canonical Reviewed Knowledge Library release, attestation, verification, advisory, Activation Decision, or authority-lane record; partial output may remain only in clearly noncanonical draft or diagnostic state
 - An interrupted Model Action remains inspectable, cancellable, and safely retryable after reconnection without duplicating already committed canonical state
 - Reconnection never automatically resumes an interrupted creative Model Action or sends a new provider request
 - The workspace surfaces an interrupted action with explicit **Retry** and **Cancel** controls plus its original inputs, completed local tool results, partial progress summary, interruption reason, and last confirmed boundary
@@ -455,6 +543,7 @@ _Avoid_: French tab
 - Critical ambiguity is surfaced for review while non-critical detail remains accessible without blocking the workflow
 - **Texture** may change between passages within one source
 - A passage may exhibit zero or more **Contrapuntal Techniques** independently of its **Texture**
+- Every preserved relation among voices is represented by a **Target Relationship Plan**; retaining the participating pitches does not prove that entry order, subject shape, suspension, cadence, or figure relation survived
 - **Species Counterpoint** is applied only when the source or request belongs to that pedagogical tradition
 - A **Continuo Foundation** is a **Preservation Target** whose bass and figures cannot be silently contradicted
 - A **Continuo Realization** is generated material and remains distinguishable from its **Continuo Foundation**
@@ -582,6 +671,13 @@ _Avoid_: French tab
 - Creating, editing, or releasing a Family Commitment marks affected family members stale and offers Conservative Regeneration independently for each Target Configuration
 - A Family Commitment that is infeasible for one Target Configuration produces a target-local Commitment Conflict without invalidating feasible sibling arrangements
 - The primary **Golden Arrangement Fixture** is a repository-stored, public-domain four-part Greensleeves PDF with explicit source and license provenance
+- Greensleeves is development and regression evidence, never held-out evidence for the compiler work that is explicitly designed to repair it
+- Non-Greensleeves acceptance uses **Contamination Groups** scoped to the complete **Generation System** and stored in the **Owner Evaluation Vault**; this means held out from Vellum development and fitting, not guaranteed absent from model pretraining
+- The Vault commits eligibility, invalid-fixture rules, reserve order or deterministic seed, and exhaustion policy before output; every valid failure remains disclosed and becomes a permanent regression while fresh precommitted groups qualify the successor
+- Generation receives only a sealed source and Brief envelope and cannot read evaluator expectations, mutations, baselines, labels, or reserve assets
+- A required `hardGateStatus` is pass only when every applicable required gate completed and passed; missing, unknown, or partial evidence is incomplete, while source, access, provider, evaluator, or infrastructure unavailability makes the enclosing acceptance blocked rather than passed
+- An independent hard-gate failure blocks an **Adoption Decision**; evaluation may advance to the next preordered survivor or require a new search but cannot rewrite the Selection Decision
+- A **Capability Qualification** applies to one sealed Generation System and target profile, while **Artifact Readiness** applies to one exact output; both must be current and compatible for release
 - Implementation proceeds through production-path tracer-bullet slices led by Golden Arrangement Fixtures rather than completing storage, OMR, analysis, arrangement, engraving, or playback as isolated horizontal subsystems
 - The first slice carries the Greensleeves PDF through Provider Connection, Guided Start, durable versioned workspace state, OMR and review, analysis, Faithful Reduction, baroque-guitar Arrangement Search, audit, French tablature, and Audio Preview
 - A subsystem is not considered integrated merely because its isolated API works; the Greensleeves acceptance path must exercise its real persisted contracts end to end
