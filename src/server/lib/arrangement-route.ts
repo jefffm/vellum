@@ -19,6 +19,7 @@ type ArrangementCreateResponse = {
   id: string;
   title: string;
   createdAt: string;
+  canonicality: Arrangement["canonicality"];
 };
 
 type ArrangementDeleteResponse = {
@@ -77,12 +78,14 @@ export function createArrangement(
   mkdirSync(directory, { recursive: true });
   const id = randomUUID();
   const now = new Date().toISOString();
+  const canonicality = legacyCanonicality();
   const arrangement: Arrangement = {
     id,
     title: input.title,
     instrument: input.instrument,
     lySource: input.lySource,
     ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
+    canonicality,
     createdAt: now,
     updatedAt: now,
   };
@@ -93,7 +96,7 @@ export function createArrangement(
     "utf8"
   );
 
-  return { id, title: arrangement.title, createdAt: arrangement.createdAt };
+  return { id, title: arrangement.title, createdAt: arrangement.createdAt, canonicality };
 }
 
 export function listArrangements(directory = arrangementsDirectory()): ArrangementSummary[] {
@@ -104,7 +107,13 @@ export function listArrangements(directory = arrangementsDirectory()): Arrangeme
   return readdirSync(directory)
     .filter((fileName) => fileName.endsWith(".json"))
     .map((fileName) => readArrangement(path.basename(fileName, ".json"), directory))
-    .map(({ id, title, instrument, createdAt }) => ({ id, title, instrument, createdAt }))
+    .map(({ id, title, instrument, canonicality, createdAt }) => ({
+      id,
+      title,
+      instrument,
+      canonicality,
+      createdAt,
+    }))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.title.localeCompare(b.title));
 }
 
@@ -116,8 +125,20 @@ export function readArrangement(id: string, directory = arrangementsDirectory())
     throw new ApiRouteError(`Arrangement not found: ${id}`, 404);
   }
 
-  const document = JSON.parse(readFileSync(filePath, "utf8")) as Arrangement;
-  return document;
+  const document = JSON.parse(readFileSync(filePath, "utf8")) as Omit<
+    Arrangement,
+    "canonicality"
+  > & { canonicality?: Arrangement["canonicality"] };
+  return { ...document, canonicality: legacyCanonicality() };
+}
+
+function legacyCanonicality(): Arrangement["canonicality"] {
+  return {
+    status: "noncanonical_legacy_projection",
+    canonicalWorkspaceImportRequired: true,
+    rationale:
+      "Flat LilyPond files do not establish Source Truth, reviewed Analysis, a Plan, Search, Preservation Audit, or immutable Arrangement Score lineage.",
+  };
 }
 
 export function deleteArrangement(

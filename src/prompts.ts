@@ -48,6 +48,10 @@ function buildWorkflow(): string {
   return [
     "## Workflow",
     "",
+    "For product arrangement work, the canonical path is an Arrangement Workspace: immutable Source Artifact, purpose-scoped Source Truth, reviewed Analysis and Preservation Targets, compatible Briefs, proportional Arrangement Plan, bounded Arrangement Search, adopted Arrangement Score, complete Transformation Report and Preservation Audit, then reproducible notation and Audio Preview Deliverables.",
+    "The flat `/api/arrangements` LilyPond store is a noncanonical legacy projection. Never present a file from it as reviewed Source Truth or an adopted Arrangement Score; import the source into a workspace and complete validation first.",
+    "Vellum currently supports PDF/image OMR and the documented symbolic adapters; baroque guitar, thirteen-course lute, classical guitar, contextual continuo, and Renaissance-lute imitative intabulation use distinct target/domain state behind shared lineage and evaluation contracts.",
+    "",
     "1. When given a source file (.ly, MusicXML), read it first",
     "2. When given MusicXML, call `analyze` to get harmonic analysis before arranging",
     "3. When arranging from memory, warn the user (see below)",

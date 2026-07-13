@@ -539,6 +539,10 @@ _Avoid_: French tab
 - Audio Preview exposes separate Principal Voice, Continuo Foundation, and generated realization Playback Parts for isolated verification
 - The third Golden Arrangement Fixture is a short, legally redistributable public-domain three-voice imitative passage whose musical identity depends on ordered entries rather than a single permanent Principal Voice
 - Its Analysis Record must classify the Texture as imitative polyphony, identify the applicable Contrapuntal Techniques and Validation Profile, and promote voice entries, subject interval-rhythm shapes, cadential goals, and required voice continuities to Preservation Targets
+- The canonical product path runs inside an **Arrangement Workspace** from source evidence through purpose-scoped Source Truth, Analysis, compatible Briefs, proportional Plan, bounded Search, adopted Arrangement Score, audit, evaluation, and reproducible Deliverables
+- The flat `/api/arrangements` LilyPond store is a retained noncanonical compatibility projection; compilation or storage there does not establish reviewed Source Truth, an adopted Arrangement Score, or Arrangement Readiness
+- Existing flat files are not automatically migrated because reconstructing canonical lineage would invent missing provenance and decisions; canonical reuse begins by importing the actual source into an Arrangement Workspace
+- Focused Arrangement Intelligence ADRs remain proposed until the Owner accepts the architecture boundary after three-target parity plus continuo and imitative cross-domain evidence
 - The initial intabulation target is the six-course Renaissance lute in French tablature; candidate search may redistribute playable notes across courses and registers but cannot erase or reorder protected imitation
 - The Preservation Audit verifies every protected entry and relationship, not merely pitch coverage or the highest source voice
 - Audio Preview and Lineage Navigation allow each source voice and its arrangement descendants to be isolated even when the intabulation interleaves them on one tablature staff

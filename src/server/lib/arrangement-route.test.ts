@@ -1,5 +1,5 @@
 import express from "express";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer, type Server } from "node:http";
@@ -18,6 +18,13 @@ type ArrangementCreateResponse = {
   id: string;
   title: string;
   createdAt: string;
+  canonicality: LegacyCanonicality;
+};
+
+type LegacyCanonicality = {
+  status: "noncanonical_legacy_projection";
+  canonicalWorkspaceImportRequired: true;
+  rationale: string;
 };
 
 type Arrangement = {
@@ -26,6 +33,7 @@ type Arrangement = {
   instrument: string;
   lySource: string;
   metadata?: Record<string, unknown>;
+  canonicality: LegacyCanonicality;
   createdAt: string;
   updatedAt: string;
 };
@@ -34,6 +42,7 @@ type ArrangementSummary = {
   id: string;
   title: string;
   instrument: string;
+  canonicality: LegacyCanonicality;
   createdAt: string;
   lySource?: string;
 };
@@ -78,6 +87,10 @@ describe("arrangement API routes", () => {
       expect(json.data.id).toMatch(/^[a-f0-9-]{36}$/);
       expect(json.data.title).toBe(validArrangement.title);
       expect(Date.parse(json.data.createdAt)).not.toBeNaN();
+      expect(json.data.canonicality).toMatchObject({
+        status: "noncanonical_legacy_projection",
+        canonicalWorkspaceImportRequired: true,
+      });
     }
   });
 
@@ -98,6 +111,10 @@ describe("arrangement API routes", () => {
         instrument: validArrangement.instrument,
         lySource: validArrangement.lySource,
         metadata: validArrangement.metadata,
+        canonicality: {
+          status: "noncanonical_legacy_projection",
+          canonicalWorkspaceImportRequired: true,
+        },
       });
     }
   });
@@ -121,7 +138,37 @@ describe("arrangement API routes", () => {
         ])
       );
       expect(json.data.every((summary) => summary.lySource === undefined)).toBe(true);
+      expect(
+        json.data.every(
+          ({ canonicality }) =>
+            canonicality.status === "noncanonical_legacy_projection" &&
+            canonicality.canonicalWorkspaceImportRequired
+        )
+      ).toBe(true);
     }
+  });
+
+  it("labels pre-boundary flat files noncanonical when reading them", async () => {
+    const id = "550e8400-e29b-41d4-a716-446655440000";
+    writeFileSync(
+      path.join(directory, `${id}.json`),
+      `${JSON.stringify({
+        id,
+        ...validArrangement,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })}\n`
+    );
+    const server = await listen(directory);
+    servers.push(server);
+
+    const response = await fetch(`${serverUrl(server)}/api/arrangements/${id}`);
+    const json = (await response.json()) as ApiEnvelope<Arrangement>;
+
+    expect(json.ok && json.data.canonicality).toMatchObject({
+      status: "noncanonical_legacy_projection",
+      canonicalWorkspaceImportRequired: true,
+    });
   });
 
   it("returns 404 for a missing arrangement id", async () => {

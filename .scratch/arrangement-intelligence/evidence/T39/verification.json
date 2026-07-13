@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T39",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T02:34:02Z",
+  "requirements": {
+    "AI-PROD-027": { "status": "partial", "remaining": "T44 H9 ownership acceptance" },
+    "AI-STP-013": { "status": "partial", "remaining": "T44 H9 migration acceptance" },
+    "AI-DEL-037": { "status": "partial", "remaining": "T44 H9 ADR acceptance" },
+    "AI-DEL-052": { "status": "partial", "remaining": "T44 H9/H10 acceptance" },
+    "AI-DEL-059": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-060": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-061": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-062": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-063": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-064": { "status": "partial", "remaining": "T44 H9 acceptance" },
+    "AI-DEL-065": { "status": "partial", "remaining": "T44 H9/H10 acceptance" }
+  },
+  "summary": {
+    "fullSuitePassed": 1056,
+    "fullSuiteSkipped": 1,
+    "focusedAdrs": 6,
+    "adrStatus": "proposed_pending_owner_acceptance",
+    "dependencyEvidence": ["T36", "T37", "T38"],
+    "legacyFlatStore": "noncanonical_legacy_projection",
+    "automaticCanonicalMigration": false,
+    "retainedCompatibilitySurfacesDocumented": true
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1056 passed, 1 skipped" },
+    {
+      "command": "npx vitest run src/server/lib/arrangement-route.test.ts src/server/lib/architecture-boundary.test.ts src/prompts.test.ts",
+      "result": "pass: 20 tests"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "cc60632c5dce0fab053a1824eb8d4a8fb6b6f93343f64f15f1a2a1dc835821e7"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/39-adrs-legacy-migration.md",
+      "sha256": "6442243affbdede8043b36139e59ef18835a0b0915ab530e81434e81a2510268"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "d749de5a27a0a512aa8c13cfef345380fe47db65c6efbfdffbf5d69f9a61e150"
+    },
+    {
+      "path": "src/types.ts",
+      "sha256": "ae513a612039fb507490e8119213fff53954d43d5dd21e29e3e1b24f0dc1f389"
+    },
+    {
+      "path": "src/prompts.ts",
+      "sha256": "57ef131d91ff52314abb95a94ecc808c92084f51c080f7adeab06213aec42344"
+    },
+    {
+      "path": "src/server/lib/arrangement-route.ts",
+      "sha256": "5c4d327510469a0055ef339ab174ff8dbf528f31d21b8b383d186344da7a07c6"
+    },
+    {
+      "path": "src/server/lib/arrangement-route.test.ts",
+      "sha256": "f1270c687eb5ac164d0e0e9289d28f3edfca403620832a27022e5fb41be60cdc"
+    },
+    {
+      "path": "src/server/lib/architecture-boundary.test.ts",
+      "sha256": "07d4d8cb4d296ead159570120c5f7e23f30455d281168fe9dc67a277f76f0777"
+    },
+    {
+      "path": "docs/architecture/arrangement-intelligence-boundaries.md",
+      "sha256": "ce1762fcafd75832afb593799fe6b2789681ae0bb98379985265ddfd3846b38b"
+    },
+    {
+      "path": "docs/adr/0016-converge-source-truth-by-purpose.md",
+      "sha256": "2cd305585b75ce765c6868396da4a2a5e2262e07011de8cc6bff02194ee3140a"
+    },
+    {
+      "path": "docs/adr/0017-version-briefs-and-proportional-plans.md",
+      "sha256": "49806e9fc78d17e09e31dbb6038ed9a066f0c70c4c035a0af976090188ea48f0"
+    },
+    {
+      "path": "docs/adr/0018-bind-arrangements-to-instrument-instances.md",
+      "sha256": "09a8702daa3d1c9db93ff1dd4af60d9be0563590f636476f0033062a223c4e54"
+    },
+    {
+      "path": "docs/adr/0019-search-serializable-constraints-and-report-outcomes.md",
+      "sha256": "f162c432c74651ea0596dfae1e710cbaaa9bdc3549eb236a7642a7eb1b231bf4"
+    },
+    {
+      "path": "docs/adr/0020-version-evaluation-manifests-baselines-and-promotion.md",
+      "sha256": "8c5607b4fd66c7b7dad2e313aa381fc8c542ec7761c83acbd7983b16a87cbb30"
+    },
+    {
+      "path": "docs/adr/0021-learn-only-from-reviewed-playtest-evidence.md",
+      "sha256": "a493110dfc2ee31e1bdca4928213ce29f73a894c35a16d74b8d406a4518216c6"
+    }
+  ]
+}

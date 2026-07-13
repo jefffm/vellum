@@ -190,12 +190,19 @@ export const CreateArrangementSchema = Type.Object({
 
 export type CreateArrangement = Static<typeof CreateArrangementSchema>;
 
+export const LegacyArrangementCanonicalitySchema = Type.Object({
+  status: Type.Literal("noncanonical_legacy_projection"),
+  canonicalWorkspaceImportRequired: Type.Literal(true),
+  rationale: Type.String(),
+});
+
 export const ArrangementSchema = Type.Object({
   id: Type.String(),
   title: Type.String(),
   instrument: Type.String(),
   lySource: Type.String(),
   metadata: Type.Optional(ArrangementMetadataSchema),
+  canonicality: LegacyArrangementCanonicalitySchema,
   createdAt: Type.String(),
   updatedAt: Type.String(),
 });
@@ -206,6 +213,7 @@ export const ArrangementSummarySchema = Type.Object({
   id: Type.String(),
   title: Type.String(),
   instrument: Type.String(),
+  canonicality: LegacyArrangementCanonicalitySchema,
   createdAt: Type.String(),
 });
 
