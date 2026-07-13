@@ -56,6 +56,10 @@ const InterruptBody = Type.Object(
   { code: Type.String({ minLength: 1 }) },
   { additionalProperties: false }
 );
+const RestartBody = Type.Object(
+  { ocrAutoAcceptConfidence: Type.Optional(Type.Number({ minimum: 0, maximum: 1 })) },
+  { additionalProperties: false }
+);
 
 type Options = { store?: WorkspaceStore; service?: GuidedWorkflowService };
 function service(options: Options) {
@@ -117,7 +121,11 @@ export function createGuidedWorkflowResumeRoute(options: Options = {}): RequestH
 export function createGuidedWorkflowRestartRoute(options: Options = {}): RequestHandler {
   const workflow = service(options);
   return createApiRoute({
-    validate: (_body, request) => Value.Decode(WorkflowParams, request.params),
-    handler: async ({ workspaceId, workflowId }) => workflow.restart(workspaceId, workflowId),
+    validate: (body, request) => ({
+      ...Value.Decode(WorkflowParams, request.params),
+      input: Value.Decode(RestartBody, body ?? {}),
+    }),
+    handler: async ({ workspaceId, workflowId, input }) =>
+      workflow.restart(workspaceId, workflowId, input),
   });
 }

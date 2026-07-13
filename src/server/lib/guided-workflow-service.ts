@@ -21,6 +21,7 @@ export type GuidedWorkflowCheckpoint = Partial<
     | "analysisRecordVersion"
   >
 > & { targets?: GuidedWorkflow["targets"] };
+export type RestartGuidedWorkflow = Pick<GuidedWorkflow, "ocrAutoAcceptConfidence">;
 
 const STAGES: GuidedWorkflow["stage"][] = [
   "source_saved",
@@ -136,7 +137,11 @@ export class GuidedWorkflowService {
     });
   }
 
-  restart(workspaceId: string, workflowId: string): GuidedWorkflow {
+  restart(
+    workspaceId: string,
+    workflowId: string,
+    input: Partial<RestartGuidedWorkflow> = {}
+  ): GuidedWorkflow {
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
     if (current.status !== "complete" && current.status !== "cancelled") {
       this.store.saveGuidedWorkflow(workspaceId, {
@@ -148,8 +153,9 @@ export class GuidedWorkflowService {
     return this.create(workspaceId, {
       sourceArtifactId: current.sourceArtifactId,
       optical: current.optical,
-      ocrAutoAcceptConfidence: current.ocrAutoAcceptConfidence,
+      ocrAutoAcceptConfidence: input.ocrAutoAcceptConfidence ?? current.ocrAutoAcceptConfidence,
       preservationPolicy: current.preservationPolicy,
+      performanceBrief: current.performanceBrief,
     });
   }
 

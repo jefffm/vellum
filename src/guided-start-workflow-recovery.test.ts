@@ -117,4 +117,65 @@ describe("Guided Start workflow recovery", () => {
     );
     expect(dialog.querySelector<HTMLElement>("[data-guided-workflow-recovery]")?.hidden).toBe(true);
   });
+
+  it("restarts an optical workflow with the threshold currently shown in the form", async () => {
+    const dialog = document.createElement("dialog");
+    dialog.innerHTML = guidedStartMarkup();
+    document.body.append(dialog);
+    const workflow = {
+      id: "workflow.11111111-1111-4111-8111-111111111111",
+      workspaceId: "workspace.11111111-1111-4111-8111-111111111111",
+      status: "interrupted",
+      stage: "transcription_review",
+      sourceArtifactId: "source.11111111-1111-4111-8111-111111111111",
+      optical: true,
+      ocrAutoAcceptConfidence: 0.8,
+      preservationPolicy: "faithful_reduction",
+      targets: [],
+      resumeCount: 0,
+      failureCode: "workflow_interrupted",
+      createdAt: "2026-07-12T12:00:00.000Z",
+      updatedAt: "2026-07-12T12:01:00.000Z",
+    };
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/active")) return jsonResponse({ workflow });
+      if (url.endsWith(`/guided-workflows/${workflow.id}/restart`)) {
+        return jsonResponse({ ...workflow, status: "active", stage: "source_saved" });
+      }
+      if (url.endsWith(`/workspaces/${workflow.workspaceId}`)) {
+        return jsonResponse({
+          brief: {
+            targetConfigurations: [
+              { id: "target.baroque-guitar", instrumentId: "baroque-guitar-5" },
+            ],
+          },
+        });
+      }
+      throw new Error(`Stop after restart: ${url} ${init?.method ?? "GET"}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const threshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]')!;
+    dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]")!.hidden = false;
+    threshold.value = "70";
+
+    await refreshGuidedWorkflowRecovery(dialog, workflow.workspaceId, vi.fn());
+    dialog.querySelector<HTMLButtonElement>("[data-guided-workflow-restart]")!.click();
+
+    await vi.waitFor(() => {
+      const restartCall = fetchMock.mock.calls.find(([url]) =>
+        String(url).endsWith(`/guided-workflows/${workflow.id}/restart`)
+      );
+      expect(restartCall?.[1]).toMatchObject({
+        method: "POST",
+        body: JSON.stringify({ ocrAutoAcceptConfidence: 0.7 }),
+      });
+    });
+  });
 });
+
+function jsonResponse(data: unknown): Response {
+  return new Response(JSON.stringify({ ok: true, data }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}

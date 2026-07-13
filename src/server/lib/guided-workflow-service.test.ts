@@ -36,7 +36,10 @@ describe("GuidedWorkflowService", () => {
     } as unknown as WorkspaceStore;
     const service = new GuidedWorkflowService({
       store,
-      createId: () => "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      createId: vi
+        .fn()
+        .mockReturnValueOnce("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
+        .mockReturnValueOnce("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
       now: () => new Date("2026-07-12T12:00:00.000Z"),
     });
     const created = service.create(workspace.id, {
@@ -105,5 +108,17 @@ describe("GuidedWorkflowService", () => {
     expect(() => service.checkpoint(workspace.id, created.id, { stage: "recognizing" })).toThrow(
       "cannot move backward"
     );
+
+    const restarted = service.restart(workspace.id, created.id, {
+      ocrAutoAcceptConfidence: 0.7,
+    });
+    expect(restarted).toMatchObject({
+      id: "workflow.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      status: "active",
+      stage: "source_saved",
+      ocrAutoAcceptConfidence: 0.7,
+      performanceBrief: created.performanceBrief,
+    });
+    expect(records.get(created.id)?.status).toBe("cancelled");
   });
 });

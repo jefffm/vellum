@@ -1775,9 +1775,18 @@ export async function refreshGuidedWorkflowRecovery(
     resume.disabled = true;
     restart.disabled = true;
     try {
+      const thresholdField = dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]");
+      const threshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
+      const restartInput =
+        action === "restart" && workflow.optical && thresholdField && !thresholdField.hidden
+          ? { ocrAutoAcceptConfidence: Number(threshold?.value ?? "80") / 100 }
+          : undefined;
       const next = await api<GuidedWorkflow>(
         `/api/workspaces/${workspaceId}/guided-workflows/${workflow.id}/${action}`,
-        { method: "POST" }
+        {
+          method: "POST",
+          ...(restartInput ? { body: JSON.stringify(restartInput) } : {}),
+        }
       );
       panel.hidden = true;
       await continueGuidedWorkflow(dialog, next, targetConfigurations, onComplete);
