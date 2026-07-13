@@ -7,9 +7,11 @@ import {
   SearchCheckpointSchema,
   SearchOutcomeSchema,
   assertCheckpointCompatible,
+  decodeCapabilityDeclaration,
   decodeConstraintSpecification,
   decodeEvaluatorConclusion,
   decodeSearchOutcome,
+  decodeSearchAdapterDeclaration,
   searchOutcomeDescription,
   type SearchExecutionIdentity,
 } from "./constraint-search.js";
@@ -21,11 +23,18 @@ const executionIdentity: SearchExecutionIdentity = {
   adapter: { id: "adapter.plucked-string", version: "1.0.0", digest: digest("b") },
   compiler: { id: "compiler.constraints", version: "1.0.0", digest: digest("c") },
   evaluators: [{ id: "evaluator.mechanics", version: "1.0.0", digest: digest("d") }],
+  profiles: [],
+  capabilities: [{ id: "capability.positions", version: "1", digest: digest("2") }],
+  knowledgePacks: [],
+  dependencies: [{ id: "dependency.search", version: "1", digest: digest("3") }],
   arrangementPlanId: "plan.1",
   performanceBriefId: "performance-brief.1",
   targetConfigurationId: "target.1",
   constraintDigests: [digest("e")],
   attemptConfigurationDigest: digest("f"),
+  orderingDigest: digest("4"),
+  pruningDigest: digest("5"),
+  seed: 0,
 };
 
 const constraint = {
@@ -219,6 +228,15 @@ describe("constraint and search protocol", () => {
       stateSchemaVersion: 1,
       equivalenceRelation: "Same event index, sounding pitches, held courses, and occupied fingers",
       dominanceRelation: "No worse hard evidence and strictly lower transition cost",
+      stateMerging: {
+        kind: "sufficient_relation" as const,
+        rationale: "Equivalent states retain every future-relevant property.",
+        evidenceIds: [
+          "evidence.exhaustive-small-space",
+          "evidence.property",
+          "evidence.adversarial",
+        ],
+      },
       completenessClaim: "bounded_only",
     };
     expect(Value.Check(SearchAdapterDeclarationSchema, base)).toBe(true);
@@ -232,6 +250,33 @@ describe("constraint and search protocol", () => {
         supportedPlanKinds: ["continuo_realization"],
       })
     ).toBe(true);
+    expect(decodeSearchAdapterDeclaration(base)).toEqual(base);
+    expect(() =>
+      decodeSearchAdapterDeclaration({
+        ...base,
+        stateMerging: { kind: "heuristic", rationale: "Approximate beam key", evidenceIds: [] },
+        completenessClaim: "exhaustive_when_certified",
+      })
+    ).toThrow(/Heuristic state merging/);
+  });
+
+  it("requires capabilities to declare data, evaluators, evidence vocabulary, and compatibility", () => {
+    const capability = {
+      identity: { id: "capability.positions", version: "1", digest: digest("2") },
+      dataSchemaId: "schema.positions",
+      dataSchemaVersion: 1,
+      evaluatorIdentities: [{ id: "evaluator.mechanics", version: "1.0.0", digest: digest("d") }],
+      evidenceVocabulary: ["course_collision", "hand_span"],
+      compatibleCapabilityIds: ["capability.french-tab"],
+      incompatibleCapabilityIds: ["capability.keyboard-only"],
+    };
+    expect(decodeCapabilityDeclaration(capability)).toEqual(capability);
+    expect(() =>
+      decodeCapabilityDeclaration({
+        ...capability,
+        incompatibleCapabilityIds: ["capability.french-tab"],
+      })
+    ).toThrow(/contradicts/);
   });
 
   it("does not accept an uncertified exhaustive outcome", () => {

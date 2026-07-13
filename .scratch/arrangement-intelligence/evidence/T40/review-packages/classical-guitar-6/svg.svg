@@ -1,0 +1,1729 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" width="210.00mm" height="297.00mm" viewBox="0.0000 -0.0000 119.5016 169.0094">
+
+<g transform="translate(50.1224, 12.0573)">
+<text font-family="serif" font-weight="bold" font-size="3.4923" text-anchor="start" fill="currentColor">
+<tspan>Greensleeves</tspan>
+</text>
+</g>
+<g transform="translate(28.4414, 15.5573)">
+<text font-family="serif" font-weight="bold" font-size="2.4697" text-anchor="start" fill="currentColor">
+<tspan>standard configuration · instrument instance 2001709da414</tspan>
+</text>
+</g>
+<g transform="translate(30.7529, 23.3303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(17.0717, 25.3303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="93.8441" y2="0"/>
+</g>
+<g transform="translate(17.0717, 24.3303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="93.8441" y2="0"/>
+</g>
+<g transform="translate(17.0717, 23.3303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="93.8441" y2="0"/>
+</g>
+<g transform="translate(17.0717, 22.3303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="93.8441" y2="0"/>
+</g>
+<g transform="translate(17.0717, 21.3303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="93.8441" y2="0"/>
+</g>
+<g transform="translate(110.7757, 23.3303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(95.1402, 23.3303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(74.5362, 23.3303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 26.3303)">
+<rect x="82.4891" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 26.3303)">
+<rect x="75.4463" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 26.3303)">
+<rect x="71.6682" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 26.3303)">
+<rect x="66.7782" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 26.3303)">
+<rect x="61.8963" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 27.3303)">
+<rect x="61.8963" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 20.3303)">
+<rect x="43.8735" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 20.3303)">
+<rect x="38.8307" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 19.3303)">
+<rect x="36.2896" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 20.3303)">
+<rect x="36.2896" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 20.3303)">
+<rect x="31.7880" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 20.3303)">
+<rect x="28.0099" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(51.4707, 23.3303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(17.8717, 24.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M266 -635h-6c-108 0 -195 88 -195 197c0 58 53 103 112 103c54 0 95 -47 95 -103c0 -52 -43 -95 -95 -95c-11 0 -21 2 -31 6c26 -39 68 -65 117 -65h4zM401 151c19 -89 48 -242 60 -354c76 27 112 94 112 163c0 89 -60 179 -172 191zM74 28c0 -112 98 -247 278 -247 c21 0 44 2 68 6c-7 64 -29 203 -63 364c-79 -8 -124 -61 -124 -119c0 -44 25 -91 81 -123c5 -5 7 -10 7 -15c0 -11 -10 -22 -22 -22c-15 0 -126 62 -126 187c0 88 58 174 160 197c-14 58 -29 117 -46 175c-107 -121 -213 -243 -213 -403zM357 1194c28 0 143 -206 143 -361 c0 -143 -86 -255 -180 -364c21 -68 39 -138 56 -207c5 0 10 1 14 1c155 0 255 -129 255 -262c0 -113 -74 -212 -180 -245c3 -35 5 -70 5 -105c0 -19 -1 -39 -2 -58c-7 -119 -88 -225 -202 -228l1 43c93 2 153 92 159 191c1 18 2 37 2 55c0 31 -1 61 -4 92 c-28 -5 -55 -8 -80 -8c-239 0 -342 217 -342 374c0 177 131 306 248 441c-29 96 -52 170 -52 346c0 189 144 295 159 295zM247 782c0 -55 12 -115 35 -190c82 100 147 202 147 326c0 40 -6 82 -21 127c-49 -24 -161 -97 -161 -263z" fill="currentColor"/>
+</g>
+<g transform="translate(18.5562, 27.7931)">
+<text font-family="serif" font-style="italic" font-size="1.3862" text-anchor="start" fill="currentColor">
+<tspan>8</tspan>
+</text>
+</g>
+
+<g transform="translate(21.2567, 21.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+
+
+<g transform="translate(23.5579, 23.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M170 259c-51 0 -53 -43 -53 -100v-18v-18c0 -57 2 -100 53 -100c57 0 61 51 61 118s-4 118 -61 118zM117 266c15 10 33 16 53 16c101 0 170 -46 170 -141s-69 -141 -170 -141c-112 0 -170 124 -170 250c0 128 72 250 190 250c70 0 136 -39 136 -103 c0 -36 -29 -66 -65 -66s-66 30 -66 66c0 24 40 25 40 49c0 20 -23 31 -45 31c-66 0 -75 -65 -75 -139c0 -24 2 -48 2 -72z" fill="currentColor"/>
+</g>
+<g transform="translate(23.5067, 25.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M261 287c25 30 44 64 44 103c0 54 -55 87 -114 87c-46 0 -73 -36 -73 -71c0 -21 10 -42 31 -54zM292 269c54 -31 80 -79 80 -125c0 -73 -66 -144 -189 -144c-94 0 -183 54 -183 140c0 50 36 87 72 123c-37 28 -55 66 -55 103c0 68 60 134 174 134c80 0 157 -39 157 -110 c0 -46 -25 -86 -56 -121zM103 244c-31 -30 -59 -61 -59 -104c0 -69 66 -117 139 -117c54 0 86 42 86 83c0 24 -10 48 -35 62z" fill="currentColor"/>
+</g>
+
+<g transform="translate(28.2140, 23.3303)">
+<rect x="-0.0650" y="-4.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(28.2790, 18.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(85.4824, 19.1403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.1328 -0.2000 7.1328 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(88.9490, 19.9503)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(64.8896, 19.1403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.1328 -0.8200 7.1328 -0.4200 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(68.3562, 19.6506)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.3007 1.1250 0.0993 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.2" data-measure-id="measure.1">
+
+<g transform="translate(31.8567, 20.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(41.8240, 16.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="7.1328 -0.2000 7.1328 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(45.2907, 17.6403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(33.0959, 23.3303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.3" data-measure-id="measure.1">
+
+<g transform="translate(36.8718, 20.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.3" data-measure-id="measure.1">
+
+<g transform="translate(36.8718, 25.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(38.1110, 23.3303)">
+<rect x="-0.0650" y="-6.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(38.1760, 17.3703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(36.9368, 23.3303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(37.0018, 28.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.4" data-measure-id="measure.1">
+
+<g transform="translate(40.6498, 19.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.4" data-measure-id="measure.1">
+
+<g transform="translate(40.6498, 25.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(42.4040, 19.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(41.8890, 23.3303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(42.4040, 25.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(40.7148, 23.3303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(40.7798, 28.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.5" data-measure-id="measure.1">
+
+<g transform="translate(45.1515, 19.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(46.3907, 23.3303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.6" data-measure-id="measure.1">
+
+<g transform="translate(47.6926, 19.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(48.9318, 23.3303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.7" data-measure-id="measure.2">
+
+<g transform="translate(52.7353, 20.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.6" data-measure-id="measure.2">
+
+<g transform="translate(52.7353, 22.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(53.9745, 23.3303)">
+<rect x="-0.0650" y="-5.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(52.8003, 23.3303)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(52.8653, 25.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.8" data-measure-id="measure.2">
+
+<g transform="translate(59.9373, 21.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.8" data-measure-id="measure.2">
+
+<g transform="translate(59.9373, 22.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(61.1765, 23.3303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(61.2415, 18.3703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(60.0023, 23.3303)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(60.0673, 25.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.9" data-measure-id="measure.2">
+
+<g transform="translate(63.7154, 22.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(65.4696, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(64.9546, 23.3303)">
+<rect x="-0.0650" y="-4.1956" width="0.1300" height="3.0094" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.10" data-measure-id="measure.2">
+
+<g transform="translate(68.2170, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(69.4562, 23.3303)">
+<rect x="-0.0650" y="-4.5847" width="0.1300" height="2.8985" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.11" data-measure-id="measure.2">
+
+<g transform="translate(70.7581, 21.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.1" data-measure-id="measure.0">
+
+<g transform="translate(26.9748, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(71.9973, 23.3303)">
+<rect x="-0.0650" y="-4.8044" width="0.1300" height="2.6182" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(70.8231, 23.3303)">
+<rect x="-0.0650" y="4.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(70.8881, 30.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.12" data-measure-id="measure.3">
+
+<g transform="translate(75.6401, 20.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.12" data-measure-id="measure.3">
+
+<g transform="translate(75.6401, 26.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(76.8793, 23.3303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(75.7051, 23.3303)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.13" data-measure-id="measure.3">
+
+<g transform="translate(80.5301, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.13" data-measure-id="measure.3">
+
+<g transform="translate(80.5301, 26.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(81.7693, 23.3303)">
+<rect x="-0.0650" y="-4.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(81.8343, 18.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(80.5951, 23.3303)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(80.6601, 29.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(108.3019, 18.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.14" data-measure-id="measure.3">
+
+<g transform="translate(84.3082, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.bass.12" data-measure-id="measure.3">
+
+<g transform="translate(84.3082, 26.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(86.0624, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(85.5474, 23.3303)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="2.5038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(84.3732, 23.3303)">
+<rect x="-0.0650" y="3.1862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.15" data-measure-id="measure.3">
+
+<g transform="translate(88.8098, 22.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(90.0490, 23.3303)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(87.3598, 22.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g transform="translate(108.2369, 23.3303)">
+<rect x="-0.0650" y="-4.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.16" data-measure-id="measure.3">
+
+<g transform="translate(91.3509, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.bass.13" data-measure-id="measure.3">
+
+<g transform="translate(91.3509, 26.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(92.5901, 23.3303)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="2.5038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(91.4159, 23.3303)">
+<rect x="-0.0650" y="3.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(91.4809, 29.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.19" data-measure-id="measure.4">
+
+<g transform="translate(106.9977, 21.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.17" data-measure-id="measure.4">
+
+<g transform="translate(96.2441, 21.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(97.9983, 20.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(97.4833, 23.3303)">
+<rect x="-0.0650" y="-4.6667" width="0.1300" height="2.4805" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.18" data-measure-id="measure.4">
+
+<g transform="translate(101.7327, 23.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(102.9719, 23.3303)">
+<rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.10" data-measure-id="measure.2">
+
+<g transform="translate(70.7581, 27.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(31.8666, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 39.8303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 38.8303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 37.8303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 36.8303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 35.8303)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(110.7757, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(94.2035, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(79.2663, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(67.9206, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 40.8303)">
+<rect x="98.8491" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 41.8303)">
+<rect x="98.8491" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="86.3251" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="82.2769" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 33.8303)">
+<rect x="80.2434" y="-0.1000" width="1.8052" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="80.0924" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 33.8303)">
+<rect x="75.9382" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="75.9382" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 33.8303)">
+<rect x="71.4782" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="71.4782" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="24.1356" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="19.9399" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 33.8303)">
+<rect x="17.7554" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="17.7554" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="14.1757" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 34.8303)">
+<rect x="11.1109" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(48.5863, 37.8303)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(66.0660, 37.8303)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="2.6238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(12.7208, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g transform="translate(7.6481, 34.7598)">
+<text font-family="serif" font-size="1.7459" text-anchor="start" fill="currentColor">
+<tspan>5</tspan>
+</text>
+</g>
+<g transform="translate(103.1210, 33.6403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8542 -0.8200 5.8542 -0.4200 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(105.6657, 34.1826)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.3225 1.1250 0.0775 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.20" data-measure-id="measure.5">
+
+<g transform="translate(16.0278, 35.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(17.2670, 37.8303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(85.9742, 30.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.4287 0.3000 6.4287 0.7000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(89.0934, 31.8814)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.1100 1.1250 0.2900 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.21" data-measure-id="measure.5">
+
+<g transform="translate(19.9728, 34.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.21" data-measure-id="measure.5">
+
+<g transform="translate(19.9728, 40.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(21.2120, 37.8303)">
+<rect x="-0.0650" y="-6.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(21.2770, 31.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(20.0378, 37.8303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(20.1028, 43.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(59.6623, 34.0203)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.4287 -0.2000 6.4287 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(62.7815, 34.8303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.22" data-measure-id="measure.5">
+
+<g transform="translate(23.0376, 34.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.22" data-measure-id="measure.5">
+
+<g transform="translate(23.0376, 40.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(24.7918, 34.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(24.2768, 37.8303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(24.7918, 40.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(23.1026, 37.8303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(23.1676, 43.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(50.7439, 32.6403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8542 0.4900 5.8542 0.8900 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(53.2886, 33.7482)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.0636 1.1250 0.3364 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.23" data-measure-id="measure.5">
+
+<g transform="translate(26.6173, 33.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(27.8565, 37.8303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(40.9315, 33.6403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8542 -0.8200 5.8542 -0.4200 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(43.4762, 34.1826)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.3225 1.1250 0.0775 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.24" data-measure-id="measure.5">
+
+<g transform="translate(28.8018, 34.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(30.0410, 37.8303)">
+<rect x="-0.0650" y="-6.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(24.2118, 31.3303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.8542 -0.2000 5.8542 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(26.7565, 32.1403)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.25" data-measure-id="measure.6">
+
+<g transform="translate(32.9975, 34.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.22" data-measure-id="measure.6">
+
+<g transform="translate(32.9975, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(9.3358, 38.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M266 -635h-6c-108 0 -195 88 -195 197c0 58 53 103 112 103c54 0 95 -47 95 -103c0 -52 -43 -95 -95 -95c-11 0 -21 2 -31 6c26 -39 68 -65 117 -65h4zM401 151c19 -89 48 -242 60 -354c76 27 112 94 112 163c0 89 -60 179 -172 191zM74 28c0 -112 98 -247 278 -247 c21 0 44 2 68 6c-7 64 -29 203 -63 364c-79 -8 -124 -61 -124 -119c0 -44 25 -91 81 -123c5 -5 7 -10 7 -15c0 -11 -10 -22 -22 -22c-15 0 -126 62 -126 187c0 88 58 174 160 197c-14 58 -29 117 -46 175c-107 -121 -213 -243 -213 -403zM357 1194c28 0 143 -206 143 -361 c0 -143 -86 -255 -180 -364c21 -68 39 -138 56 -207c5 0 10 1 14 1c155 0 255 -129 255 -262c0 -113 -74 -212 -180 -245c3 -35 5 -70 5 -105c0 -19 -1 -39 -2 -58c-7 -119 -88 -225 -202 -228l1 43c93 2 153 92 159 191c1 18 2 37 2 55c0 31 -1 61 -4 92 c-28 -5 -55 -8 -80 -8c-239 0 -342 217 -342 374c0 177 131 306 248 441c-29 96 -52 170 -52 346c0 189 144 295 159 295zM247 782c0 -55 12 -115 35 -190c82 100 147 202 147 326c0 40 -6 82 -21 127c-49 -24 -161 -97 -161 -263z" fill="currentColor"/>
+</g>
+<g transform="translate(34.2367, 37.8303)">
+<rect x="-0.0650" y="-5.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(33.0625, 37.8303)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.26" data-measure-id="measure.6">
+
+<g transform="translate(36.6925, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.26" data-measure-id="measure.6">
+
+<g transform="translate(36.6925, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(37.9317, 37.8303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(37.9967, 32.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(36.7575, 37.8303)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(36.8225, 40.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.27" data-measure-id="measure.6">
+
+<g transform="translate(39.7573, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(41.5115, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(40.9965, 37.8303)">
+<rect x="-0.0650" y="-4.1968" width="0.1300" height="3.0106" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.28" data-measure-id="measure.6">
+
+<g transform="translate(43.3370, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(44.5762, 37.8303)">
+<rect x="-0.0650" y="-4.5734" width="0.1300" height="2.8872" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.29" data-measure-id="measure.6">
+
+<g transform="translate(45.5215, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(46.7607, 37.8303)">
+<rect x="-0.0650" y="-4.8032" width="0.1300" height="2.6170" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.30" data-measure-id="measure.7">
+
+<g transform="translate(49.5697, 35.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(51.3239, 35.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(50.8089, 37.8303)">
+<rect x="-0.0650" y="-5.1824" width="0.1300" height="2.4962" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.31" data-measure-id="measure.7">
+
+<g transform="translate(53.1494, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(54.3886, 37.8303)">
+<rect x="-0.0650" y="-4.7633" width="0.1300" height="2.5771" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.32" data-measure-id="measure.7">
+
+<g transform="translate(55.3339, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.27" data-measure-id="measure.7">
+
+<g transform="translate(55.3339, 38.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(56.5731, 37.8303)">
+<rect x="-0.0650" y="-4.5076" width="0.1300" height="2.8214" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(55.3989, 37.8303)">
+<rect x="-0.0650" y="0.6862" width="0.1300" height="3.0638" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(55.4639, 41.5403)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.33" data-measure-id="measure.7">
+
+<g transform="translate(58.4881, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.33" data-measure-id="measure.7">
+
+<g transform="translate(58.4881, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(60.2423, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(59.7273, 37.8303)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="2.6238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(60.2423, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(58.5531, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(58.6181, 41.1653)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(57.0381, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.34" data-measure-id="measure.7">
+
+<g transform="translate(62.6423, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(63.8815, 37.8303)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="3.1238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(61.1923, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.35" data-measure-id="measure.7">
+
+<g transform="translate(64.8268, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.35" data-measure-id="measure.7">
+
+<g transform="translate(64.8268, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(10.0204, 42.2931)">
+<text font-family="serif" font-style="italic" font-size="1.3862" text-anchor="start" fill="currentColor">
+<tspan>8</tspan>
+</text>
+</g>
+<g transform="translate(64.9568, 41.1653)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.36" data-measure-id="measure.8">
+
+<g transform="translate(68.9944, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.36" data-measure-id="measure.8">
+
+<g transform="translate(68.9944, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(70.7486, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(70.2336, 37.8303)">
+<rect x="-0.0650" y="-4.3333" width="0.1300" height="2.6471" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(70.7486, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(69.0594, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(107.8410, 44.7903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.37" data-measure-id="measure.8">
+
+<g transform="translate(73.4544, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.37" data-measure-id="measure.8">
+
+<g transform="translate(73.4544, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(74.6936, 37.8303)">
+<rect x="-0.0650" y="-4.3333" width="0.1300" height="2.6471" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(73.5194, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(107.7760, 37.8303)">
+<rect x="-0.0650" y="4.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.39" data-measure-id="measure.9">
+
+<g transform="translate(80.3401, 33.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.33" data-measure-id="measure.9">
+
+<g transform="translate(80.3401, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(82.0943, 33.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(81.5793, 37.8303)">
+<rect x="-0.0650" y="-7.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(82.0943, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(80.4051, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.40" data-measure-id="measure.9">
+
+<g transform="translate(84.8000, 33.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.40" data-measure-id="measure.9">
+
+<g transform="translate(84.8000, 37.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(86.5542, 33.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(86.0392, 37.8303)">
+<rect x="-0.0650" y="-6.9950" width="0.1300" height="2.3088" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(86.5542, 37.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(84.8650, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(84.9300, 41.1653)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.41" data-measure-id="measure.9">
+
+<g transform="translate(88.9542, 33.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(90.1934, 37.8303)">
+<rect x="-0.0650" y="-6.6739" width="0.1300" height="2.4877" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(87.5042, 33.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.42" data-measure-id="measure.9">
+
+<g transform="translate(91.1387, 34.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.35" data-measure-id="measure.9">
+
+<g transform="translate(91.1387, 40.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(92.3779, 37.8303)">
+<rect x="-0.0650" y="-6.5050" width="0.1300" height="2.8188" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(91.2037, 37.8303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(91.2687, 43.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(108.9502, 37.8303)">
+<rect x="-0.0650" y="-4.8032" width="0.1300" height="2.6170" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.43" data-measure-id="measure.10">
+
+<g transform="translate(95.1869, 34.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.36" data-measure-id="measure.10">
+
+<g transform="translate(95.1869, 40.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(96.4261, 37.8303)">
+<rect x="-0.0650" y="-5.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(95.2519, 37.8303)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.39" data-measure-id="measure.10">
+
+<g transform="translate(107.7110, 41.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.44" data-measure-id="measure.10">
+
+<g transform="translate(98.8820, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.44" data-measure-id="measure.10">
+
+<g transform="translate(98.8820, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(100.1212, 37.8303)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(100.1862, 32.8703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(98.9470, 37.8303)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(99.0120, 40.2903)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.47" data-measure-id="measure.10">
+
+<g transform="translate(107.7110, 35.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.45" data-measure-id="measure.10">
+
+<g transform="translate(101.9468, 36.8303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(103.7010, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(103.1860, 37.8303)">
+<rect x="-0.0650" y="-4.1968" width="0.1300" height="3.0106" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.46" data-measure-id="measure.10">
+
+<g transform="translate(105.5265, 36.3303)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(106.7657, 37.8303)">
+<rect x="-0.0650" y="-4.5734" width="0.1300" height="2.8872" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(64.8918, 37.8303)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(32.6339, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 52.0103)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 51.0103)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 50.0103)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 49.0103)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(8.5358, 48.0103)">
+<line stroke-linejoin="round" stroke-linecap="round" stroke-width="0.1000" stroke="currentColor" x1="0.0500" y1="0" x2="102.3799" y2="0"/>
+</g>
+<g transform="translate(110.7757, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(99.1662, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(79.5939, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="95.8824" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="91.2992" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="87.1417" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="80.7686" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="77.6144" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="67.5985" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 54.0103)">
+<rect x="67.5985" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 47.0103)">
+<rect x="54.7793" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 47.0103)">
+<rect x="50.6509" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 46.0103)">
+<rect x="48.4320" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 47.0103)">
+<rect x="48.4320" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 46.0103)">
+<rect x="44.7634" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 47.0103)">
+<rect x="44.7634" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 46.0103)">
+<rect x="40.1802" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 47.0103)">
+<rect x="40.1802" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="20.6272" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="14.2542" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="11.1206" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(8.5358, 53.0103)">
+<rect x="7.1974" y="-0.1000" width="1.9563" height="0.2000" ry="0.1000" fill="currentColor"/>
+</g>
+<g transform="translate(62.6463, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(47.9554, 50.0103)">
+<rect x="0.0000" y="-2.0000" width="0.1900" height="4.0000" ry="0.0000" fill="currentColor"/>
+</g>
+<g transform="translate(12.7208, 48.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g transform="translate(6.8287, 46.9603)">
+<text font-family="serif" font-size="1.7459" text-anchor="start" fill="currentColor">
+<tspan>11</tspan>
+</text>
+</g>
+<g transform="translate(90.8047, 46.2003)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.4631 -0.2000 6.4631 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(93.9239, 47.0103)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.48" data-measure-id="measure.11">
+
+<g transform="translate(16.0593, 47.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.48" data-measure-id="measure.11">
+
+<g transform="translate(16.0593, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(17.2985, 50.0103)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(16.1243, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(81.7630, 44.8203)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9775 0.4900 5.9775 0.8900 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(84.3966, 45.9322)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.0664 1.1250 0.3336 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.49" data-measure-id="measure.11">
+
+<g transform="translate(19.9825, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.49" data-measure-id="measure.11">
+
+<g transform="translate(19.9825, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(21.2217, 50.0103)">
+<rect x="-0.0650" y="-4.5000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(21.2867, 45.5503)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(20.0475, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(20.1125, 56.4703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(71.7471, 45.8203)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9775 -0.8200 5.9775 -0.4200 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(74.3807, 46.3589)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.3200 1.1250 0.0800 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.50" data-measure-id="measure.11">
+
+<g transform="translate(23.1160, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.bass.42" data-measure-id="measure.11">
+
+<g transform="translate(23.1160, 53.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(24.8702, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(24.3552, 50.0103)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="2.5038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(23.1810, 50.0103)">
+<rect x="-0.0650" y="3.1862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(54.7995, 42.8203)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="5.9775 0.4900 5.9775 0.8900 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(57.4331, 43.9322)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.0664 1.1250 0.3336 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.51" data-measure-id="measure.11">
+
+<g transform="translate(27.2702, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(28.5094, 50.0103)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="3.0038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(25.8202, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g transform="translate(24.2902, 45.8203)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="6.4631 -0.2000 6.4631 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g transform="translate(27.4094, 46.6303)">
+<polygon stroke-linejoin="round" stroke-linecap="round" stroke-width="0.0800" fill="currentColor" stroke="currentColor" points="1.1250 -0.2000 1.1250 0.2000 0.0400 0.2000 0.0400 -0.2000"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.52" data-measure-id="measure.11">
+
+<g transform="translate(29.4891, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.bass.43" data-measure-id="measure.11">
+
+<g transform="translate(29.4891, 53.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(30.7283, 50.0103)">
+<rect x="-0.0650" y="-4.1900" width="0.1300" height="2.5038" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(29.5541, 50.0103)">
+<rect x="-0.0650" y="3.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(29.6191, 55.9703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.53" data-measure-id="measure.12">
+
+<g transform="translate(34.8739, 48.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.53" data-measure-id="measure.12">
+
+<g transform="translate(34.8739, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(9.3358, 51.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M266 -635h-6c-108 0 -195 88 -195 197c0 58 53 103 112 103c54 0 95 -47 95 -103c0 -52 -43 -95 -95 -95c-11 0 -21 2 -31 6c26 -39 68 -65 117 -65h4zM401 151c19 -89 48 -242 60 -354c76 27 112 94 112 163c0 89 -60 179 -172 191zM74 28c0 -112 98 -247 278 -247 c21 0 44 2 68 6c-7 64 -29 203 -63 364c-79 -8 -124 -61 -124 -119c0 -44 25 -91 81 -123c5 -5 7 -10 7 -15c0 -11 -10 -22 -22 -22c-15 0 -126 62 -126 187c0 88 58 174 160 197c-14 58 -29 117 -46 175c-107 -121 -213 -243 -213 -403zM357 1194c28 0 143 -206 143 -361 c0 -143 -86 -255 -180 -364c21 -68 39 -138 56 -207c5 0 10 1 14 1c155 0 255 -129 255 -262c0 -113 -74 -212 -180 -245c3 -35 5 -70 5 -105c0 -19 -1 -39 -2 -58c-7 -119 -88 -225 -202 -228l1 43c93 2 153 92 159 191c1 18 2 37 2 55c0 31 -1 61 -4 92 c-28 -5 -55 -8 -80 -8c-239 0 -342 217 -342 374c0 177 131 306 248 441c-29 96 -52 170 -52 346c0 189 144 295 159 295zM247 782c0 -55 12 -115 35 -190c82 100 147 202 147 326c0 40 -6 82 -21 127c-49 -24 -161 -97 -161 -263z" fill="currentColor"/>
+</g>
+<g transform="translate(36.1131, 50.0103)">
+<rect x="-0.0650" y="-4.6667" width="0.1300" height="2.4805" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(34.9389, 50.0103)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(33.4239, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.54" data-measure-id="measure.12">
+
+<g transform="translate(38.6721, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(39.9113, 50.0103)">
+<rect x="-0.0650" y="-4.1250" width="0.1300" height="2.9388" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(39.9763, 45.9253)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.55" data-measure-id="measure.12">
+
+<g transform="translate(41.8056, 50.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(43.0448, 50.0103)">
+<rect x="-0.0650" y="-3.3333" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.57" data-measure-id="measure.13">
+
+<g transform="translate(49.0420, 45.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.48" data-measure-id="measure.13">
+
+<g transform="translate(49.0420, 50.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(50.7962, 45.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(50.2812, 50.0103)">
+<rect x="-0.0650" y="-7.0000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(50.7962, 49.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(49.1070, 50.0103)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1471" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.58" data-measure-id="measure.13">
+
+<g transform="translate(53.6253, 45.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.58" data-measure-id="measure.13">
+
+<g transform="translate(53.6253, 50.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(55.3795, 45.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(54.8645, 50.0103)">
+<rect x="-0.0650" y="-7.1825" width="0.1300" height="2.4963" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(55.3795, 49.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(53.6903, 50.0103)">
+<rect x="-0.0650" y="0.1862" width="0.1300" height="3.1888" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(53.7553, 53.3453)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.59" data-measure-id="measure.13">
+
+<g transform="translate(57.2939, 46.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(58.5331, 50.0103)">
+<rect x="-0.0650" y="-6.7619" width="0.1300" height="2.5757" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.60" data-measure-id="measure.13">
+
+<g transform="translate(59.5128, 46.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.50" data-measure-id="measure.13">
+
+<g transform="translate(59.5128, 52.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(60.7520, 50.0103)">
+<rect x="-0.0650" y="-6.5075" width="0.1300" height="2.8213" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(59.5778, 50.0103)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(59.6428, 55.4703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.61" data-measure-id="measure.14">
+
+<g transform="translate(63.6412, 47.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.51" data-measure-id="measure.14">
+
+<g transform="translate(63.6412, 52.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(64.8804, 50.0103)">
+<rect x="-0.0650" y="-5.5000" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(63.7062, 50.0103)">
+<rect x="-0.0650" y="2.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(10.0204, 54.4731)">
+<text font-family="serif" font-style="italic" font-size="1.3862" text-anchor="start" fill="currentColor">
+<tspan>8</tspan>
+</text>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.62" data-measure-id="measure.14">
+
+<g transform="translate(67.4394, 48.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.62" data-measure-id="measure.14">
+
+<g transform="translate(67.4394, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(68.6786, 50.0103)">
+<rect x="-0.0650" y="-5.0000" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(68.7436, 45.0503)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0v-375h-16v375h16zM123 -729c0 10 42 87 42 196c0 103 -94 208 -165 283v250c0 -197 207 -336 207 -533c0 -71 -15 -141 -41 -207c-5 -8 -13 -12 -20 -12c-12 0 -23 9 -23 23z" fill="currentColor"/>
+</g>
+<g transform="translate(67.5044, 50.0103)">
+<rect x="-0.0650" y="-0.8138" width="0.1300" height="3.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(67.5694, 52.4703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.63" data-measure-id="measure.14">
+
+<g transform="translate(70.5729, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(72.3271, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(71.8121, 50.0103)">
+<rect x="-0.0650" y="-4.1967" width="0.1300" height="3.0105" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.64" data-measure-id="measure.14">
+
+<g transform="translate(74.2415, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(75.4807, 50.0103)">
+<rect x="-0.0650" y="-4.5747" width="0.1300" height="2.8885" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.65" data-measure-id="measure.14">
+
+<g transform="translate(76.4604, 48.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.tenor.54" data-measure-id="measure.14">
+
+<g transform="translate(76.4604, 54.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(77.6996, 50.0103)">
+<rect x="-0.0650" y="-4.8033" width="0.1300" height="2.6171" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(76.5254, 50.0103)">
+<rect x="-0.0650" y="4.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(76.5904, 56.9703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(104.8093, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.66" data-measure-id="measure.15">
+
+<g transform="translate(80.5888, 47.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(82.3430, 47.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(81.8280, 50.0103)">
+<rect x="-0.0650" y="-5.1825" width="0.1300" height="2.4963" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.67" data-measure-id="measure.15">
+
+<g transform="translate(84.2574, 48.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(85.4966, 50.0103)">
+<rect x="-0.0650" y="-4.7619" width="0.1300" height="2.5757" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.68" data-measure-id="measure.15">
+
+<g transform="translate(86.4763, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.67" data-measure-id="measure.15">
+
+<g transform="translate(86.4763, 53.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(87.7155, 50.0103)">
+<rect x="-0.0650" y="-4.5075" width="0.1300" height="2.8213" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(86.5413, 50.0103)">
+<rect x="-0.0650" y="3.1862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(86.6063, 55.9703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(105.9835, 50.0103)">
+<rect x="-0.0650" y="-4.3333" width="0.1300" height="2.6471" ry="0.0400" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.69" data-measure-id="measure.15">
+
+<g transform="translate(89.6305, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.68" data-measure-id="measure.15">
+
+<g transform="translate(89.6305, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(91.3847, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(90.8697, 50.0103)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="2.6238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(91.3847, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(89.6955, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(89.7605, 56.4703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g transform="translate(88.1805, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.72" data-measure-id="measure.16">
+
+<g transform="translate(104.7443, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.70" data-measure-id="measure.15">
+
+<g transform="translate(93.7847, 49.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(95.0239, 50.0103)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="3.1238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(92.3347, 49.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 119c0 8 5 15 13 18l46 17v158c0 10 8 19 18 19s19 -9 19 -19v-145l83 31v158c0 10 9 19 19 19s18 -9 18 -19v-145l32 12c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -16 -13 -19l-46 -16v-160l32 11c2 1 5 1 7 1c11 0 20 -9 20 -20v-60c0 -8 -5 -15 -13 -18l-46 -17 v-158c0 -10 -8 -19 -18 -19s-19 9 -19 19v145l-83 -31v-158c0 -10 -9 -19 -19 -19s-18 9 -18 19v145l-32 -12c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60c0 8 5 16 13 19l46 16v160l-32 -11c-2 -1 -5 -1 -7 -1c-11 0 -20 9 -20 20v60zM179 95l-83 -30v-160l83 30v160z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.73" data-measure-id="measure.16">
+
+<g transform="translate(104.7443, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.71" data-measure-id="measure.15">
+
+<g transform="translate(96.0036, 49.0103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.70" data-measure-id="measure.15">
+
+<g transform="translate(96.0036, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(97.2428, 50.0103)">
+<rect x="-0.0650" y="-3.8100" width="0.1300" height="2.6238" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(96.0686, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.8138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(96.1336, 56.4703)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0h-16v375h16v-375zM224 509c0 94 -40 158 -40 168c0 14 11 22 23 22c7 0 15 -3 20 -11c25 -56 40 -117 40 -179c0 -203 -267 -306 -267 -509v250c97 59 224 148 224 259z" fill="currentColor"/>
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.soprano.72" data-measure-id="measure.16">
+
+<g transform="translate(100.1611, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g class="vellum-score-event" data-arrangement-event-id="voice-constituent.event.alto.71" data-measure-id="measure.16">
+
+<g transform="translate(100.1611, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 -46c0 91 116 182 217 182c63 0 109 -35 109 -90c0 -87 -110 -182 -220 -182c-67 0 -106 39 -106 90z" fill="currentColor"/>
+</g>
+
+</g>
+<g transform="translate(101.9153, 48.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(101.4003, 50.0103)">
+<rect x="-0.0650" y="-4.3333" width="0.1300" height="2.6471" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(101.9153, 53.5103)">
+<path transform="scale(0.0040, -0.0040)" d="M0 0c0 31 25 56 56 56s56 -25 56 -56s-25 -56 -56 -56s-56 25 -56 56z" fill="currentColor"/>
+</g>
+<g transform="translate(100.2261, 50.0103)">
+<rect x="-0.0650" y="3.6862" width="0.1300" height="2.3138" ry="0.0400" fill="currentColor"/>
+</g>
+<g transform="translate(52.1198, 162.8440)">
+
+<rect x="0.0000" y="-0.4748" width="15.2621" height="2.0024" fill="none" stroke="none" stroke-width="0.0"/>
+
+</g>
+<g transform="translate(52.1198, 162.8440)">
+<text font-family="serif" font-size="2.2000" text-anchor="start" fill="currentColor">
+<tspan>LilyPond v2.26.0</tspan>
+</text>
+</g>
+</svg>

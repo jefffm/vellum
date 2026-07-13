@@ -1755,12 +1755,32 @@ function buildSearchProtocol(input: {
     evaluators: input.targetConfiguration.instrumentInstance
       ? [evaluator, mechanicalEvaluator]
       : [evaluator],
+    profiles: [
+      componentIdentity("profile.validation", "1.0.0", {
+        validationProfileId: input.analysis.validationProfileId,
+      }),
+    ],
+    capabilities: [
+      componentIdentity("capability.target-realization", "1.0.0", {
+        instrumentId: input.targetConfiguration.instrumentId,
+        notationLayouts: input.targetConfiguration.notationLayouts,
+      }),
+    ],
+    knowledgePacks: [],
+    dependencies: [
+      componentIdentity("dependency.vellum-search", "1.0.0", {
+        schemaVersion: attemptConfiguration.schemaVersion,
+      }),
+    ],
     arrangementPlanId: input.plan.id,
     performanceBriefId: input.performanceBriefId,
     targetConfigurationId: input.targetConfiguration.id,
     instrumentInstanceDigest: input.targetConfiguration.instrumentInstance?.contentDigest,
     constraintDigests: constraintSpecifications.map(digestJson),
     attemptConfigurationDigest: digestJson(attemptConfiguration),
+    orderingDigest: digestJson({ order: "source-event-then-adapter-successor" }),
+    pruningDigest: digestJson({ policy: attemptConfiguration.pruningPolicy }),
+    seed: attemptConfiguration.seed,
   };
   return {
     constraintSpecifications,

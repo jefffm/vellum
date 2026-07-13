@@ -138,6 +138,48 @@ export type LexicographicSelection =
   | { kind: "ambiguous"; survivingCandidateIds: string[]; reason: string }
   | { kind: "no_candidate"; rejectedCandidateIds: string[]; reason: string };
 
+export function paretoReduce(
+  candidates: LexicographicCandidate[],
+  metricDefinitions: ComparisonMetricDefinition[]
+): LexicographicCandidate[] {
+  const definitions = new Map(metricDefinitions.map((definition) => [definition.id, definition]));
+  return candidates.filter(
+    (candidate) =>
+      !candidates.some(
+        (other) => other.id !== candidate.id && paretoDominates(other, candidate, definitions)
+      )
+  );
+}
+
+function paretoDominates(
+  left: LexicographicCandidate,
+  right: LexicographicCandidate,
+  definitions: Map<string, ComparisonMetricDefinition>
+): boolean {
+  const pairs = left.measurements.flatMap((leftMeasurement) => {
+    const rightMeasurement = right.measurements.find(
+      ({ metricId }) => metricId === leftMeasurement.metricId
+    );
+    const definition = definitions.get(leftMeasurement.metricId);
+    return rightMeasurement &&
+      definition &&
+      leftMeasurement.applicability === "applicable" &&
+      rightMeasurement.applicability === "applicable" &&
+      leftMeasurement.value !== undefined &&
+      rightMeasurement.value !== undefined
+      ? [{ left: leftMeasurement.value, right: rightMeasurement.value, definition }]
+      : [];
+  });
+  if (pairs.length === 0) return false;
+  const noWorse = pairs.every(({ left, right, definition }) =>
+    definition.direction === "higher_is_better" ? left >= right : left <= right
+  );
+  const strictlyBetter = pairs.some(({ left, right, definition }) =>
+    definition.direction === "higher_is_better" ? left > right : left < right
+  );
+  return noWorse && strictlyBetter;
+}
+
 export function decodeMetricDefinition(value: unknown): ComparisonMetricDefinition {
   return Value.Decode(ComparisonMetricDefinitionSchema, value);
 }

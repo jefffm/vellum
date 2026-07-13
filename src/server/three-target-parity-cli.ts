@@ -4,7 +4,11 @@ import { runThreeTargetParityEvaluation } from "./lib/three-target-parity.js";
 
 try {
   const output = path.resolve(argument("--output") ?? ".vellum/evaluations");
-  const result = await runThreeTargetParityEvaluation({ evaluationRoot: output });
+  const reviewArtifactRoot = argument("--review-artifacts");
+  const result = await runThreeTargetParityEvaluation({
+    evaluationRoot: output,
+    ...(reviewArtifactRoot ? { reviewArtifactRoot: path.resolve(reviewArtifactRoot) } : {}),
+  });
   const hardFailure = result.cards.some((card) => card.hardGateStatus === "fail");
   process.stdout.write(
     `${JSON.stringify({

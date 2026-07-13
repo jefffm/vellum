@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { EvaluationCard, EvaluationDefinition } from "../../lib/evaluation-domain.js";
@@ -126,6 +126,7 @@ export async function runThreeTargetParityEvaluation(options: {
   now?: () => Date;
   createId?: () => string;
   runner?: Pick<SubprocessRunnerType, "run">;
+  reviewArtifactRoot?: string;
 }): Promise<{
   manifestId: string;
   runId: string;
@@ -149,6 +150,7 @@ export async function runThreeTargetParityEvaluation(options: {
     notationLayout: string;
     physicalEvidence: "awaiting_human";
     specialistEvidence: "awaiting_human";
+    reviewArtifacts: Array<{ kind: string; path: string; sha256: string }>;
   }>;
 }> {
   const projectRoot = options.projectRoot ?? process.cwd();
@@ -161,7 +163,14 @@ export async function runThreeTargetParityEvaluation(options: {
   const runner = options.runner ?? new SubprocessRunner();
   const targetEvidence = new Map<string, Awaited<ReturnType<typeof realizeTargets>>[number]>();
   try {
-    const realized = await realizeTargets({ projectRoot, workspaceStore, now, createId, runner });
+    const realized = await realizeTargets({
+      projectRoot,
+      workspaceStore,
+      now,
+      createId,
+      runner,
+      reviewArtifactRoot: options.reviewArtifactRoot,
+    });
     realized.forEach((item) => targetEvidence.set(item.caseId, item));
     const harness = new EvaluationHarness({
       store: evaluationStore,
@@ -226,6 +235,7 @@ export async function runThreeTargetParityEvaluation(options: {
         notationLayout: item.arranged.arrangementScore.targetConfiguration.notationLayouts[0]!,
         physicalEvidence: "awaiting_human",
         specialistEvidence: "awaiting_human",
+        reviewArtifacts: item.reviewArtifacts,
       })),
     };
   } finally {
@@ -239,6 +249,7 @@ async function realizeTargets(input: {
   now: () => Date;
   createId: () => string;
   runner: Pick<SubprocessRunnerType, "run">;
+  reviewArtifactRoot?: string;
 }) {
   const workspace = input.workspaceStore.create({
     title: "Greensleeves three-target parity",
@@ -281,6 +292,15 @@ async function realizeTargets(input: {
       throw new Error(`Parity projection failed for ${target.instrumentId}`);
     }
     const preview = buildAudioPreview(arranged.arrangementScore, imported.normalizedScore);
+    const reviewArtifacts = input.reviewArtifactRoot
+      ? exportReviewArtifacts(input.reviewArtifactRoot, target.instrumentId, {
+          lilypond: Buffer.from(lilypond),
+          svg: Buffer.from(compiled.svg),
+          pdf: Buffer.from(compiled.pdf, "base64"),
+          midi: Buffer.from(compiled.midi, "base64"),
+          audioPreview: Buffer.from(JSON.stringify(preview, null, 2)),
+        })
+      : [];
     const deliverables = [
       persistDeliverable(input.workspaceStore, workspace.id, arranged.arrangementScore, {
         kind: "lilypond",
@@ -351,6 +371,7 @@ async function realizeTargets(input: {
       arranged,
       deliverables,
       dimensions,
+      reviewArtifacts,
       generatedRecords: [
         imported.scoreTranscription,
         imported.normalizedScore,
@@ -364,6 +385,31 @@ async function realizeTargets(input: {
     });
   }
   return results;
+}
+
+function exportReviewArtifacts(
+  root: string,
+  instrumentId: string,
+  artifacts: Record<string, Buffer>
+): Array<{ kind: string; path: string; sha256: string }> {
+  const directory = path.join(root, instrumentId);
+  mkdirSync(directory, { recursive: true });
+  const extensions: Record<string, string> = {
+    lilypond: "ly",
+    svg: "svg",
+    pdf: "pdf",
+    midi: "midi",
+    audioPreview: "json",
+  };
+  return Object.entries(artifacts).map(([kind, bytes]) => {
+    const filePath = path.join(directory, `${kind}.${extensions[kind]}`);
+    writeFileSync(filePath, bytes);
+    return {
+      kind,
+      path: filePath,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+  });
 }
 
 function recordRef(record: { id: string; version?: number }) {

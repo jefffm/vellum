@@ -1,0 +1,3171 @@
+{
+  "tempo": 70,
+  "instrumentInstanceDigest": "2001709da4149de7168166c132788b4b1ad2a9be95b9d930d314fbd77762d91f",
+  "durationSeconds": 41.57142857142857,
+  "synthesis": "basic-oscillator",
+  "mode": "literal",
+  "performedForm": {
+    "measureOccurrences": [
+      {
+        "id": "measure-occurrence.measure.0",
+        "measureId": "measure.0",
+        "iteration": 1,
+        "startSeconds": 0,
+        "durationSeconds": 0.42857142857142855
+      },
+      {
+        "id": "measure-occurrence.measure.1",
+        "measureId": "measure.1",
+        "iteration": 1,
+        "startSeconds": 0.42857142857142855,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.2",
+        "measureId": "measure.2",
+        "iteration": 1,
+        "startSeconds": 3,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.3",
+        "measureId": "measure.3",
+        "iteration": 1,
+        "startSeconds": 5.571428571428571,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.4",
+        "measureId": "measure.4",
+        "iteration": 1,
+        "startSeconds": 8.142857142857142,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.5",
+        "measureId": "measure.5",
+        "iteration": 1,
+        "startSeconds": 10.714285714285714,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.6",
+        "measureId": "measure.6",
+        "iteration": 1,
+        "startSeconds": 13.285714285714285,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.7",
+        "measureId": "measure.7",
+        "iteration": 1,
+        "startSeconds": 15.857142857142856,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.8",
+        "measureId": "measure.8",
+        "iteration": 1,
+        "startSeconds": 18.428571428571427,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.9",
+        "measureId": "measure.9",
+        "iteration": 1,
+        "startSeconds": 21,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.10",
+        "measureId": "measure.10",
+        "iteration": 1,
+        "startSeconds": 23.57142857142857,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.11",
+        "measureId": "measure.11",
+        "iteration": 1,
+        "startSeconds": 26.142857142857142,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.12",
+        "measureId": "measure.12",
+        "iteration": 1,
+        "startSeconds": 28.71428571428571,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.13",
+        "measureId": "measure.13",
+        "iteration": 1,
+        "startSeconds": 31.285714285714285,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.14",
+        "measureId": "measure.14",
+        "iteration": 1,
+        "startSeconds": 33.857142857142854,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.15",
+        "measureId": "measure.15",
+        "iteration": 1,
+        "startSeconds": 36.42857142857142,
+        "durationSeconds": 2.571428571428571
+      },
+      {
+        "id": "measure-occurrence.measure.16",
+        "measureId": "measure.16",
+        "iteration": 1,
+        "startSeconds": 39,
+        "durationSeconds": 2.571428571428571
+      }
+    ],
+    "traversalDecisions": [
+      "Play written measures once in score order."
+    ],
+    "skipRepeats": false
+  },
+  "parts": [
+    {
+      "id": "full",
+      "label": "Full arrangement"
+    },
+    {
+      "id": "voice:part.alto",
+      "label": "Alto"
+    },
+    {
+      "id": "voice:part.tenor",
+      "label": "Tenor"
+    },
+    {
+      "id": "voice:part.bass",
+      "label": "Bass"
+    },
+    {
+      "id": "principal-voice",
+      "label": "Principal Voice"
+    }
+  ],
+  "events": [
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.0.arrangement-event.economical-fingering.1.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.0",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.1",
+      "sourceEventIds": [
+        "event.soprano.1"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.1",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 0,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.2.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.2",
+      "sourceEventIds": [
+        "event.soprano.2"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.2",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 0.42857142857142855,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.3.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.3",
+      "sourceEventIds": [
+        "event.soprano.3"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.3",
+        "transformation.source.77",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 1.2857142857142856,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.3.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.3",
+      "sourceEventIds": [
+        "event.alto.3"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.3",
+        "transformation.source.77",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.alto",
+      "midi": 50,
+      "startSeconds": 1.2857142857142856,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.4.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.4",
+      "sourceEventIds": [
+        "event.soprano.4"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.4",
+        "transformation.source.78",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 1.7142857142857142,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.4.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.4",
+      "sourceEventIds": [
+        "event.alto.4"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.4",
+        "transformation.source.78",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.alto",
+      "midi": 50,
+      "startSeconds": 1.7142857142857142,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.5.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.5",
+      "sourceEventIds": [
+        "event.soprano.5"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.5",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 72,
+      "startSeconds": 2.3571428571428568,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.1.arrangement-event.economical-fingering.6.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.1",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.6",
+      "sourceEventIds": [
+        "event.soprano.6"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.6",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 2.571428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.7.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.7",
+      "sourceEventIds": [
+        "event.soprano.7"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.7",
+        "transformation.source.153",
+        "transformation.source.214",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 3,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.7.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.7",
+      "sourceEventIds": [
+        "event.tenor.6"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.7",
+        "transformation.source.153",
+        "transformation.source.214",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.tenor",
+      "midi": 62,
+      "startSeconds": 3,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.8.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.8",
+      "sourceEventIds": [
+        "event.soprano.8"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.8",
+        "transformation.source.82",
+        "transformation.source.215",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 3.857142857142857,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.8.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.8",
+      "sourceEventIds": [
+        "event.alto.8"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.8",
+        "transformation.source.82",
+        "transformation.source.215",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 62,
+      "startSeconds": 3.857142857142857,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.9.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.9",
+      "sourceEventIds": [
+        "event.soprano.9"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.9",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 62,
+      "startSeconds": 4.285714285714286,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.10.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.10",
+      "sourceEventIds": [
+        "event.soprano.10"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.10",
+        "transformation.source.216",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 4.928571428571429,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.11.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.11",
+      "sourceEventIds": [
+        "event.soprano.11"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.11",
+        "transformation.source.157",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 5.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.2.arrangement-event.economical-fingering.11.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.2",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.11",
+      "sourceEventIds": [
+        "event.tenor.10"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.11",
+        "transformation.source.157",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.tenor",
+      "midi": 45,
+      "startSeconds": 5.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.12.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.12",
+      "sourceEventIds": [
+        "event.soprano.12"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.12",
+        "transformation.source.86",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 5.571428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.12.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.12",
+      "sourceEventIds": [
+        "event.alto.12"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.12",
+        "transformation.source.86",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 5.571428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.13.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.13",
+      "sourceEventIds": [
+        "event.soprano.13"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.13",
+        "transformation.source.87",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 6.428571428571428,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.13.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.13",
+      "sourceEventIds": [
+        "event.alto.13"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.13",
+        "transformation.source.87",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 6.428571428571428,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.14.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.14",
+      "sourceEventIds": [
+        "event.soprano.14"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.14",
+        "transformation.source.220",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 6.857142857142857,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.14.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.14",
+      "sourceEventIds": [
+        "event.bass.12"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.14",
+        "transformation.source.220",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.bass",
+      "midi": 48,
+      "startSeconds": 6.857142857142857,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.15.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.15",
+      "sourceEventIds": [
+        "event.soprano.15"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.15",
+        "transformation.source.220",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 7.5,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.16.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.16",
+      "sourceEventIds": [
+        "event.soprano.16"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.16",
+        "transformation.source.221",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 7.7142857142857135,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.3.arrangement-event.economical-fingering.16.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.3",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.16",
+      "sourceEventIds": [
+        "event.bass.13"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.16",
+        "transformation.source.221",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.bass",
+      "midi": 48,
+      "startSeconds": 7.7142857142857135,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.4.arrangement-event.economical-fingering.17.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.4",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.17",
+      "sourceEventIds": [
+        "event.soprano.17"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.17",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 8.142857142857142,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.4.arrangement-event.economical-fingering.18.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.4",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.18",
+      "sourceEventIds": [
+        "event.soprano.18"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.18",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 59,
+      "startSeconds": 9.428571428571427,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.4.arrangement-event.economical-fingering.19.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.4",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.19",
+      "sourceEventIds": [
+        "event.soprano.19"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.19",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 10.285714285714285,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.20.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.20",
+      "sourceEventIds": [
+        "event.soprano.20"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.20",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 10.714285714285714,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.21.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.21",
+      "sourceEventIds": [
+        "event.soprano.21"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.21",
+        "transformation.source.95",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 11.571428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.21.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.21",
+      "sourceEventIds": [
+        "event.alto.21"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.21",
+        "transformation.source.95",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.alto",
+      "midi": 50,
+      "startSeconds": 11.571428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.22.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.22",
+      "sourceEventIds": [
+        "event.soprano.22"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.22",
+        "transformation.source.96",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 12,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.22.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.22",
+      "sourceEventIds": [
+        "event.alto.22"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.22",
+        "transformation.source.96",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.alto",
+      "midi": 50,
+      "startSeconds": 12,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.23.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.23",
+      "sourceEventIds": [
+        "event.soprano.23"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.23",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 72,
+      "startSeconds": 12.642857142857142,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.5.arrangement-event.economical-fingering.24.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.5",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.24",
+      "sourceEventIds": [
+        "event.soprano.24"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.24",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 12.857142857142856,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.25.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.25",
+      "sourceEventIds": [
+        "event.soprano.25"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.25",
+        "transformation.source.169",
+        "transformation.source.229",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 13.285714285714285,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.25.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.25",
+      "sourceEventIds": [
+        "event.tenor.22"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.25",
+        "transformation.source.169",
+        "transformation.source.229",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.tenor",
+      "midi": 62,
+      "startSeconds": 13.285714285714285,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.26.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.26",
+      "sourceEventIds": [
+        "event.soprano.26"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.26",
+        "transformation.source.100",
+        "transformation.source.231",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 14.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.26.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.26",
+      "sourceEventIds": [
+        "event.alto.26"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.26",
+        "transformation.source.100",
+        "transformation.source.231",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 62,
+      "startSeconds": 14.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.27.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.27",
+      "sourceEventIds": [
+        "event.soprano.27"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.27",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 62,
+      "startSeconds": 14.57142857142857,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.28.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.28",
+      "sourceEventIds": [
+        "event.soprano.28"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.28",
+        "transformation.source.232",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 15.214285714285714,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.6.arrangement-event.economical-fingering.29.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.6",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.29",
+      "sourceEventIds": [
+        "event.soprano.29"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.29",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 15.428571428571427,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.30.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.30",
+      "sourceEventIds": [
+        "event.soprano.30"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.30",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 15.857142857142856,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.31.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.31",
+      "sourceEventIds": [
+        "event.soprano.31"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.31",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 16.5,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.32.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.32",
+      "sourceEventIds": [
+        "event.soprano.32"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.32",
+        "transformation.source.174",
+        "transformation.source.235",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 16.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.32.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.32",
+      "sourceEventIds": [
+        "event.tenor.27"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.32",
+        "transformation.source.174",
+        "transformation.source.235",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.3",
+      "part": "voice:part.tenor",
+      "midi": 57,
+      "startSeconds": 16.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.33.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.33",
+      "sourceEventIds": [
+        "event.soprano.33"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.33",
+        "transformation.source.107",
+        "transformation.source.236",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 17.142857142857142,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.33.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.33",
+      "sourceEventIds": [
+        "event.alto.33"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.33",
+        "transformation.source.107",
+        "transformation.source.236",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.3",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 17.142857142857142,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.34.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.34",
+      "sourceEventIds": [
+        "event.soprano.34"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.34",
+        "transformation.source.236",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 61,
+      "startSeconds": 17.785714285714285,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.35.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.35",
+      "sourceEventIds": [
+        "event.soprano.35"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.35",
+        "transformation.source.109",
+        "transformation.source.237",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 18,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.7.arrangement-event.economical-fingering.35.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.7",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.35",
+      "sourceEventIds": [
+        "event.alto.35"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.35",
+        "transformation.source.109",
+        "transformation.source.237",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.3",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 18,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.8.arrangement-event.economical-fingering.36.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.8",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.36",
+      "sourceEventIds": [
+        "event.soprano.36"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.36",
+        "transformation.source.110",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 18.428571428571427,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.8.arrangement-event.economical-fingering.36.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.8",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.36",
+      "sourceEventIds": [
+        "event.alto.36"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.36",
+        "transformation.source.110",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.3",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 18.428571428571427,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.8.arrangement-event.economical-fingering.37.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.8",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.37",
+      "sourceEventIds": [
+        "event.soprano.37"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.37",
+        "transformation.source.111",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 19.71428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.8.arrangement-event.economical-fingering.37.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.8",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.37",
+      "sourceEventIds": [
+        "event.alto.37"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.37",
+        "transformation.source.111",
+        "transformation.relationship.1",
+        "transformation.relationship.3"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-1"
+      ],
+      "constituentStringId": "string.3",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 19.71428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.39.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.39",
+      "sourceEventIds": [
+        "event.soprano.39"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.39",
+        "transformation.source.180",
+        "transformation.source.241",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 74,
+      "startSeconds": 21,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.39.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.39",
+      "sourceEventIds": [
+        "event.tenor.33"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.39",
+        "transformation.source.180",
+        "transformation.source.241",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.tenor",
+      "midi": 59,
+      "startSeconds": 21,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.40.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.40",
+      "sourceEventIds": [
+        "event.soprano.40"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.40",
+        "transformation.source.114",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 74,
+      "startSeconds": 22.285714285714285,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.40.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.40",
+      "sourceEventIds": [
+        "event.alto.40"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.40",
+        "transformation.source.114",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 22.285714285714285,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.41.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.41",
+      "sourceEventIds": [
+        "event.soprano.41"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.41",
+        "transformation.source.181",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 73,
+      "startSeconds": 22.928571428571427,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.42.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.42",
+      "sourceEventIds": [
+        "event.soprano.42"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.42",
+        "transformation.source.182",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 23.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.9.arrangement-event.economical-fingering.42.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.9",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.42",
+      "sourceEventIds": [
+        "event.tenor.35"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.42",
+        "transformation.source.182",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.tenor",
+      "midi": 50,
+      "startSeconds": 23.142857142857142,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.43.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.43",
+      "sourceEventIds": [
+        "event.soprano.43"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.43",
+        "transformation.source.183",
+        "transformation.source.244",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 23.57142857142857,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.43.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.43",
+      "sourceEventIds": [
+        "event.tenor.36"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.43",
+        "transformation.source.183",
+        "transformation.source.244",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.tenor",
+      "midi": 50,
+      "startSeconds": 23.57142857142857,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.44.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.44",
+      "sourceEventIds": [
+        "event.soprano.44"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.44",
+        "transformation.source.118",
+        "transformation.source.245",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 24.428571428571427,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.44.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.44",
+      "sourceEventIds": [
+        "event.alto.44"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.44",
+        "transformation.source.118",
+        "transformation.source.245",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 62,
+      "startSeconds": 24.428571428571427,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.45.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.45",
+      "sourceEventIds": [
+        "event.soprano.45"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.45",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 62,
+      "startSeconds": 24.857142857142854,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.46.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.46",
+      "sourceEventIds": [
+        "event.soprano.46"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.46",
+        "transformation.source.246",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 25.499999999999996,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.47.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.47",
+      "sourceEventIds": [
+        "event.soprano.47"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.47",
+        "transformation.source.186",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 25.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.10.arrangement-event.economical-fingering.47.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.10",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.47",
+      "sourceEventIds": [
+        "event.tenor.39"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.47",
+        "transformation.source.186",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.tenor",
+      "midi": 45,
+      "startSeconds": 25.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.48.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.48",
+      "sourceEventIds": [
+        "event.soprano.48"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.48",
+        "transformation.source.122",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 26.142857142857142,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.48.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.48",
+      "sourceEventIds": [
+        "event.alto.48"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.48",
+        "transformation.source.122",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 26.142857142857142,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.49.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.49",
+      "sourceEventIds": [
+        "event.soprano.49"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.49",
+        "transformation.source.123",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 27,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.49.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.49",
+      "sourceEventIds": [
+        "event.alto.49"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.49",
+        "transformation.source.123",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 27,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.50.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.50",
+      "sourceEventIds": [
+        "event.soprano.50"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.50",
+        "transformation.source.250",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 27.428571428571427,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.50.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.50",
+      "sourceEventIds": [
+        "event.bass.42"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.50",
+        "transformation.source.250",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.bass",
+      "midi": 48,
+      "startSeconds": 27.428571428571427,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.51.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.51",
+      "sourceEventIds": [
+        "event.soprano.51"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.51",
+        "transformation.source.250",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 28.07142857142857,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.52.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.52",
+      "sourceEventIds": [
+        "event.soprano.52"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.52",
+        "transformation.source.251",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 28.285714285714285,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.11.arrangement-event.economical-fingering.52.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.11",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.52",
+      "sourceEventIds": [
+        "event.bass.43"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.52",
+        "transformation.source.251",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.bass",
+      "midi": 48,
+      "startSeconds": 28.285714285714285,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.12.arrangement-event.economical-fingering.53.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.12",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.53",
+      "sourceEventIds": [
+        "event.soprano.53"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.53",
+        "transformation.source.127",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 28.71428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.12.arrangement-event.economical-fingering.53.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.12",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.53",
+      "sourceEventIds": [
+        "event.alto.53"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.53",
+        "transformation.source.127",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 63,
+      "startSeconds": 28.71428571428571,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.12.arrangement-event.economical-fingering.54.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.12",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.54",
+      "sourceEventIds": [
+        "event.soprano.54"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.54",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 29.57142857142857,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.12.arrangement-event.economical-fingering.55.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.12",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.55",
+      "sourceEventIds": [
+        "event.soprano.55"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.55",
+        "transformation.relationship.1",
+        "transformation.relationship.4"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-2"
+      ],
+      "constituentStringId": "string.3",
+      "part": "principal-voice",
+      "midi": 59,
+      "startSeconds": 29.999999999999996,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.57.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.57",
+      "sourceEventIds": [
+        "event.soprano.57"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.57",
+        "transformation.source.195",
+        "transformation.source.256",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 74,
+      "startSeconds": 31.285714285714285,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.57.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.57",
+      "sourceEventIds": [
+        "event.tenor.48"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.57",
+        "transformation.source.195",
+        "transformation.source.256",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.tenor",
+      "midi": 59,
+      "startSeconds": 31.285714285714285,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.58.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.58",
+      "sourceEventIds": [
+        "event.soprano.58"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.58",
+        "transformation.source.132",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 74,
+      "startSeconds": 32.57142857142857,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.58.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.58",
+      "sourceEventIds": [
+        "event.alto.58"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.58",
+        "transformation.source.132",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 59,
+      "startSeconds": 32.57142857142857,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.59.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.59",
+      "sourceEventIds": [
+        "event.soprano.59"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.59",
+        "transformation.source.196",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 72,
+      "startSeconds": 33.214285714285715,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.60.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.60",
+      "sourceEventIds": [
+        "event.soprano.60"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.60",
+        "transformation.source.197",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 71,
+      "startSeconds": 33.42857142857143,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.13.arrangement-event.economical-fingering.60.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.13",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.60",
+      "sourceEventIds": [
+        "event.tenor.50"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.60",
+        "transformation.source.197",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.tenor",
+      "midi": 50,
+      "startSeconds": 33.42857142857143,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.61.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.61",
+      "sourceEventIds": [
+        "event.soprano.61"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.61",
+        "transformation.source.198",
+        "transformation.source.259",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 69,
+      "startSeconds": 33.857142857142854,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.61.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.61",
+      "sourceEventIds": [
+        "event.tenor.51"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.61",
+        "transformation.source.198",
+        "transformation.source.259",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.4",
+      "part": "voice:part.tenor",
+      "midi": 50,
+      "startSeconds": 33.857142857142854,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.62.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.62",
+      "sourceEventIds": [
+        "event.soprano.62"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.62",
+        "transformation.source.136",
+        "transformation.source.261",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 34.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.62.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.62",
+      "sourceEventIds": [
+        "event.alto.62"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.62",
+        "transformation.source.136",
+        "transformation.source.261",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "voice:part.alto",
+      "midi": 62,
+      "startSeconds": 34.71428571428571,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.63.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.63",
+      "sourceEventIds": [
+        "event.soprano.63"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.63",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 62,
+      "startSeconds": 35.14285714285714,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.64.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.64",
+      "sourceEventIds": [
+        "event.soprano.64"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.64",
+        "transformation.source.137",
+        "transformation.source.262",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 35.785714285714285,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.65.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.65",
+      "sourceEventIds": [
+        "event.soprano.65"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.65",
+        "transformation.source.201",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 36,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.14.arrangement-event.economical-fingering.65.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.14",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.65",
+      "sourceEventIds": [
+        "event.tenor.54"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.65",
+        "transformation.source.201",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.tenor",
+      "midi": 45,
+      "startSeconds": 36,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.66.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.66",
+      "sourceEventIds": [
+        "event.soprano.66"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.66",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 67,
+      "startSeconds": 36.42857142857142,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.67.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.67",
+      "sourceEventIds": [
+        "event.soprano.67"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.67",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 66,
+      "startSeconds": 37.07142857142857,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.68.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.68",
+      "sourceEventIds": [
+        "event.soprano.68"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.68",
+        "transformation.source.141",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 37.28571428571428,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.68.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.68",
+      "sourceEventIds": [
+        "event.alto.67"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.68",
+        "transformation.source.141",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 48,
+      "startSeconds": 37.28571428571428,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.69.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.69",
+      "sourceEventIds": [
+        "event.soprano.69"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.69",
+        "transformation.source.142",
+        "transformation.source.266",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 37.71428571428571,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.69.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.69",
+      "sourceEventIds": [
+        "event.alto.68"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.69",
+        "transformation.source.142",
+        "transformation.source.266",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 37.71428571428571,
+      "durationSeconds": 0.6428571428571428
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.70.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.70",
+      "sourceEventIds": [
+        "event.soprano.70"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.70",
+        "transformation.source.266",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 61,
+      "startSeconds": 38.357142857142854,
+      "durationSeconds": 0.21428571428571427
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.71.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.71",
+      "sourceEventIds": [
+        "event.soprano.71"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.71",
+        "transformation.source.144",
+        "transformation.source.267",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.2",
+      "part": "principal-voice",
+      "midi": 63,
+      "startSeconds": 38.57142857142857,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.15.arrangement-event.economical-fingering.71.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.15",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.71",
+      "sourceEventIds": [
+        "event.alto.70"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.71",
+        "transformation.source.144",
+        "transformation.source.267",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 38.57142857142857,
+      "durationSeconds": 0.42857142857142855
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.16.arrangement-event.economical-fingering.72.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.16",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.72",
+      "sourceEventIds": [
+        "event.soprano.72"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.72",
+        "transformation.source.145",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 39,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.16.arrangement-event.economical-fingering.72.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.16",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.72",
+      "sourceEventIds": [
+        "event.alto.71"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.72",
+        "transformation.source.145",
+        "transformation.relationship.1",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 39,
+      "durationSeconds": 1.2857142857142856
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.16.arrangement-event.economical-fingering.73.voice.1",
+      "measureOccurrenceId": "measure-occurrence.measure.16",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.73",
+      "sourceEventIds": [
+        "event.soprano.73"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.73",
+        "transformation.source.146",
+        "transformation.relationship.1",
+        "transformation.relationship.2",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.1",
+      "part": "principal-voice",
+      "midi": 64,
+      "startSeconds": 40.285714285714285,
+      "durationSeconds": 0.8571428571428571
+    },
+    {
+      "occurrenceId": "playback-occurrence.measure-occurrence.measure.16.arrangement-event.economical-fingering.73.voice.2",
+      "measureOccurrenceId": "measure-occurrence.measure.16",
+      "iteration": 1,
+      "arrangementEventId": "arrangement-event.economical-fingering.73",
+      "sourceEventIds": [
+        "event.alto.72"
+      ],
+      "transformationEntryIds": [
+        "transformation.source.73",
+        "transformation.source.146",
+        "transformation.relationship.1",
+        "transformation.relationship.2",
+        "transformation.relationship.5"
+      ],
+      "auditTargetIds": [
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-voice",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.principal-sequence",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.cadential-goal",
+        "target.a05fe73a-aa08-4d60-a03e-2b8339e1d6bf.phrase-3"
+      ],
+      "constituentStringId": "string.5",
+      "part": "voice:part.alto",
+      "midi": 47,
+      "startSeconds": 40.285714285714285,
+      "durationSeconds": 0.8571428571428571
+    }
+  ]
+}

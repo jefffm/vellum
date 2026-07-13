@@ -34,12 +34,19 @@ export const SearchExecutionIdentitySchema = Type.Object(
     adapter: ExecutionComponentIdentitySchema,
     compiler: ExecutionComponentIdentitySchema,
     evaluators: Type.Array(ExecutionComponentIdentitySchema, { minItems: 1 }),
+    profiles: Type.Array(ExecutionComponentIdentitySchema),
+    capabilities: Type.Array(ExecutionComponentIdentitySchema, { minItems: 1 }),
+    knowledgePacks: Type.Array(ExecutionComponentIdentitySchema),
+    dependencies: Type.Array(ExecutionComponentIdentitySchema, { minItems: 1 }),
     arrangementPlanId: Id,
     performanceBriefId: Id,
     targetConfigurationId: Id,
     instrumentInstanceDigest: Type.Optional(Digest),
     constraintDigests: Type.Array(Digest),
     attemptConfigurationDigest: Digest,
+    orderingDigest: Digest,
+    pruningDigest: Digest,
+    seed: Type.Integer({ minimum: 0 }),
   },
   { additionalProperties: false }
 );
@@ -314,6 +321,18 @@ export const SearchAdapterDeclarationSchema = Type.Object(
     stateSchemaVersion: Type.Integer({ minimum: 1 }),
     equivalenceRelation: Type.String({ minLength: 1 }),
     dominanceRelation: Type.String({ minLength: 1 }),
+    stateMerging: Type.Object(
+      {
+        kind: Type.Union([
+          Type.Literal("none"),
+          Type.Literal("sufficient_relation"),
+          Type.Literal("heuristic"),
+        ]),
+        rationale: Type.String({ minLength: 1 }),
+        evidenceIds: Type.Array(Id),
+      },
+      { additionalProperties: false }
+    ),
     completenessClaim: Type.Union([
       Type.Literal("none"),
       Type.Literal("bounded_only"),
@@ -323,6 +342,20 @@ export const SearchAdapterDeclarationSchema = Type.Object(
   { additionalProperties: false }
 );
 export type SearchAdapterDeclaration = Static<typeof SearchAdapterDeclarationSchema>;
+
+export const CapabilityDeclarationSchema = Type.Object(
+  {
+    identity: ExecutionComponentIdentitySchema,
+    dataSchemaId: Id,
+    dataSchemaVersion: Type.Integer({ minimum: 1 }),
+    evaluatorIdentities: Type.Array(ExecutionComponentIdentitySchema, { minItems: 1 }),
+    evidenceVocabulary: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+    compatibleCapabilityIds: Type.Array(Id),
+    incompatibleCapabilityIds: Type.Array(Id),
+  },
+  { additionalProperties: false }
+);
+export type CapabilityDeclaration = Static<typeof CapabilityDeclarationSchema>;
 
 export interface SearchAdapter<State, Candidate> {
   readonly declaration: SearchAdapterDeclaration;
@@ -360,6 +393,34 @@ export function decodeSearchOutcome(value: unknown): SearchOutcome {
     throw new Error("Search checkpoint execution identity does not match search outcome");
   }
   return outcome;
+}
+
+export function decodeSearchAdapterDeclaration(value: unknown): SearchAdapterDeclaration {
+  const declaration = Value.Decode(SearchAdapterDeclarationSchema, value);
+  if (
+    declaration.stateMerging.kind === "heuristic" &&
+    declaration.completenessClaim === "exhaustive_when_certified"
+  ) {
+    throw new Error("Heuristic state merging cannot support an exhaustive completeness claim");
+  }
+  if (
+    declaration.stateMerging.kind === "sufficient_relation" &&
+    declaration.stateMerging.evidenceIds.length === 0
+  ) {
+    throw new Error("A sufficient state-merging relation requires differential evidence");
+  }
+  return declaration;
+}
+
+export function decodeCapabilityDeclaration(value: unknown): CapabilityDeclaration {
+  const declaration = Value.Decode(CapabilityDeclarationSchema, value);
+  const overlap = declaration.compatibleCapabilityIds.filter((id) =>
+    declaration.incompatibleCapabilityIds.includes(id)
+  );
+  if (overlap.length > 0) {
+    throw new Error(`Capability compatibility contradicts itself for: ${overlap.join(", ")}`);
+  }
+  return declaration;
 }
 
 export function decodeEvaluatorConclusion(value: unknown): EvaluatorConclusion {

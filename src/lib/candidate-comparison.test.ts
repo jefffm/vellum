@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ComparisonMetricDefinitionSchema,
   decodeMetricDefinition,
+  paretoReduce,
   selectLexicographically,
   verifyPrunedSearchAgainstReference,
   type ComparisonMetricDefinition,
@@ -174,6 +175,36 @@ describe("candidate comparison and search correctness", () => {
     });
   });
 
+  it("uses only mutually applicable dimensions for Pareto dominance", () => {
+    const candidates = [
+      {
+        id: "candidate.fretted",
+        hardGatePassed: true,
+        measurements: [
+          measurement("metric.principal-coverage", 1),
+          measurement("metric.total-position-motion", 3),
+        ],
+      },
+      {
+        id: "candidate.non-position-domain",
+        hardGatePassed: true,
+        measurements: [
+          measurement("metric.principal-coverage", 1),
+          {
+            metricId: "metric.total-position-motion",
+            applicability: "not_applicable" as const,
+            uncertainty: "exact_modeled_value" as const,
+            evidenceIds: ["evidence.not-applicable"],
+          },
+        ],
+      },
+    ];
+    expect(paretoReduce(candidates, metrics).map(({ id }) => id)).toEqual([
+      "candidate.fretted",
+      "candidate.non-position-domain",
+    ]);
+  });
+
   it("proves a documented dominance relation against unpruned finite reference search", () => {
     const result = verifyPrunedSearchAgainstReference({
       initial: { key: "root", depth: 0, cost: 0 },
@@ -191,6 +222,50 @@ describe("candidate comparison and search correctness", () => {
       equivalentOptima: true,
     });
     expect(result.prunedExpanded).toBeLessThan(result.referenceExpanded);
+  });
+
+  it("differentially checks the sufficient relation over a family of finite spaces and catches an adversarial merge", () => {
+    for (const depth of [1, 2, 3, 4]) {
+      for (const highCost of [2, 3, 5]) {
+        expect(
+          verifyPrunedSearchAgainstReference({
+            initial: { key: "root", depth: 0, cost: 0 },
+            terminalDepth: depth,
+            successors: (state) => [
+              { key: `${state.key}.low`, depth: state.depth + 1, cost: state.cost + 1 },
+              {
+                key: `${state.key}.high`,
+                depth: state.depth + 1,
+                cost: state.cost + highCost,
+              },
+            ],
+            equivalent: (left, right) => left.depth === right.depth,
+            dominates: (left, right) => left.cost <= right.cost,
+          }).equivalentOptima
+        ).toBe(true);
+      }
+    }
+
+    const unsafe = verifyPrunedSearchAgainstReference({
+      initial: { key: "root", depth: 0, cost: 0 },
+      terminalDepth: 2,
+      successors: (state) =>
+        state.depth === 0
+          ? [
+              { key: "promising", depth: 1, cost: 2 },
+              { key: "cheap-dead-end", depth: 1, cost: 1 },
+            ]
+          : [
+              {
+                key: `${state.key}.finish`,
+                depth: 2,
+                cost: state.cost + (state.key === "promising" ? 0 : 100),
+              },
+            ],
+      equivalent: (left, right) => left.depth === right.depth,
+      dominates: (left, right) => left.cost <= right.cost,
+    });
+    expect(unsafe.equivalentOptima).toBe(false);
   });
 });
 
