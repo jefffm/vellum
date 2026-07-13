@@ -1,6 +1,6 @@
 import { linkSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import {
@@ -12,6 +12,11 @@ import {
   EvaluationRunSchema,
   HumanEvaluationSchema,
   HumanComparisonConclusionSchema,
+  ReviewedLearningProposalSchema,
+  ReviewedLearningDecisionSchema,
+  ReviewedLearningOutputCandidateSchema,
+  EvaluatorDatasetManifestSchema,
+  EvaluatorRevisionSchema,
   ResolvedEvaluationManifestSchema,
   type EvaluationCard,
   type EvaluationBaseline,
@@ -21,6 +26,11 @@ import {
   type EvaluationRun,
   type HumanEvaluation,
   type HumanComparisonConclusion,
+  type ReviewedLearningProposal,
+  type ReviewedLearningDecision,
+  type ReviewedLearningOutputCandidate,
+  type EvaluatorDatasetManifest,
+  type EvaluatorRevision,
   type ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
 
@@ -147,6 +157,105 @@ export class EvaluationStore {
     return this.read("human-comparison-conclusions", id, HumanComparisonConclusionSchema);
   }
 
+  saveReviewedLearningProposal(value: ReviewedLearningProposal): ReviewedLearningProposal {
+    return this.write(
+      "reviewed-learning-proposals",
+      value.id,
+      ReviewedLearningProposalSchema,
+      value
+    );
+  }
+
+  getReviewedLearningProposal(id: string): ReviewedLearningProposal {
+    return this.read("reviewed-learning-proposals", id, ReviewedLearningProposalSchema);
+  }
+
+  saveReviewedLearningDecision(value: ReviewedLearningDecision): ReviewedLearningDecision {
+    return this.write(
+      "reviewed-learning-decisions",
+      value.id,
+      ReviewedLearningDecisionSchema,
+      value
+    );
+  }
+
+  getReviewedLearningDecision(id: string): ReviewedLearningDecision {
+    return this.read("reviewed-learning-decisions", id, ReviewedLearningDecisionSchema);
+  }
+
+  saveReviewedLearningOutputCandidate(
+    value: ReviewedLearningOutputCandidate
+  ): ReviewedLearningOutputCandidate {
+    return this.write(
+      "reviewed-learning-output-candidates",
+      value.id,
+      ReviewedLearningOutputCandidateSchema,
+      value
+    );
+  }
+
+  getReviewedLearningOutputCandidate(id: string): ReviewedLearningOutputCandidate {
+    return this.read(
+      "reviewed-learning-output-candidates",
+      id,
+      ReviewedLearningOutputCandidateSchema
+    );
+  }
+
+  saveEvaluatorDatasetManifest(value: EvaluatorDatasetManifest): EvaluatorDatasetManifest {
+    validateDatasetManifest(value);
+    if (!value.supersedesManifestRef && value.version !== 1) {
+      throw new Error("An initial Evaluator Dataset Manifest must start at version 1");
+    }
+    if (value.supersedesManifestRef) {
+      const prior = this.getEvaluatorDatasetManifest(value.supersedesManifestRef.id);
+      if (
+        value.version !== prior.version + 1 ||
+        value.supersedesManifestRef.version !== prior.version ||
+        value.supersedesManifestRef.digest !== digestStoredValue(prior)
+      ) {
+        throw new Error("Evaluator Dataset Manifest supersession identity is incompatible");
+      }
+      const priorRoles = new Map(
+        prior.assignments.map((item) => [
+          `${item.evidenceRef.id}@${item.evidenceRef.version}`,
+          item.role,
+        ])
+      );
+      const moved = value.assignments.some(
+        (item) =>
+          priorRoles.has(`${item.evidenceRef.id}@${item.evidenceRef.version}`) &&
+          priorRoles.get(`${item.evidenceRef.id}@${item.evidenceRef.version}`) !== item.role
+      );
+      if (moved && value.incompatibleComparisonIds.length === 0) {
+        throw new Error("Moving dataset roles must invalidate incompatible comparisons");
+      }
+    }
+    return this.write("evaluator-datasets", value.id, EvaluatorDatasetManifestSchema, value);
+  }
+
+  getEvaluatorDatasetManifest(id: string): EvaluatorDatasetManifest {
+    return this.read("evaluator-datasets", id, EvaluatorDatasetManifestSchema);
+  }
+
+  getGeneratorVisibleCalibrationInputs(id: string): EvaluatorDatasetManifest["assignments"] {
+    return this.getEvaluatorDatasetManifest(id).assignments.filter(
+      (assignment) => assignment.role === "fitting" || assignment.role === "development"
+    );
+  }
+
+  saveEvaluatorRevision(value: EvaluatorRevision): EvaluatorRevision {
+    const fitting = new Set(value.fittingInputRefs.map((ref) => `${ref.id}@${ref.version}`));
+    if (value.heldOutInputRefs.some((ref) => fitting.has(`${ref.id}@${ref.version}`))) {
+      throw new Error("Evaluator fitting and held-out inputs must be disjoint");
+    }
+    return this.write("evaluator-revisions", value.id, EvaluatorRevisionSchema, value);
+  }
+
+  getEvaluatorRevision(id: string): EvaluatorRevision {
+    return this.read("evaluator-revisions", id, EvaluatorRevisionSchema);
+  }
+
   saveReport(value: EvaluationReport): EvaluationReport {
     return this.write("reports", value.id, EvaluationReportSchema, value);
   }
@@ -236,6 +345,19 @@ function validateCaseRun(value: EvaluationCaseRun): void {
       `Evaluation Case Run ${value.id} has inconsistent acceptance and blocked reason`
     );
   }
+}
+
+function validateDatasetManifest(value: EvaluatorDatasetManifest): void {
+  const keys = value.assignments.map(
+    (assignment) => `${assignment.evidenceRef.id}@${assignment.evidenceRef.version}`
+  );
+  if (new Set(keys).size !== keys.length) {
+    throw new Error("Evidence has exactly one dataset role per evaluator version");
+  }
+}
+
+function digestStoredValue(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 
 export function canonicalJson(value: unknown): string {

@@ -324,6 +324,145 @@ export const HumanComparisonConclusionSchema = Type.Object(
 );
 export type HumanComparisonConclusion = Static<typeof HumanComparisonConclusionSchema>;
 
+export const CalibrationDatasetRoleSchema = Type.Union([
+  Type.Literal("fitting"),
+  Type.Literal("development"),
+  Type.Literal("held_out"),
+  Type.Literal("monitoring"),
+]);
+
+export const ReviewedLearningEvidenceSchema = Type.Object(
+  {
+    ref: DigestedRefSchema,
+    kind: Type.Union([
+      Type.Literal("candidate_decision"),
+      Type.Literal("owner_playtest"),
+      Type.Literal("human_evaluation"),
+      Type.Literal("manual_edit_or_repair"),
+      Type.Literal("source_or_analysis_correction"),
+      Type.Literal("prediction_disagreement"),
+      Type.Literal("recurring_choice"),
+      Type.Literal("owner_usefulness"),
+    ]),
+    relation: Type.Union([Type.Literal("supporting"), Type.Literal("conflicting")]),
+    datasetRole: CalibrationDatasetRoleSchema,
+    evaluatorRef: DigestedRefSchema,
+    privateWorkspaceEvidence: Type.Boolean(),
+  },
+  { additionalProperties: false }
+);
+
+export const ReviewedLearningProposalSchema = Type.Object(
+  {
+    id: Id,
+    kind: Type.Union([
+      Type.Literal("personal_default"),
+      Type.Literal("owner_ergonomic_profile"),
+      Type.Literal("knowledge_candidate"),
+      Type.Literal("evaluator_calibration"),
+      Type.Literal("golden_fixture"),
+      Type.Literal("minimal_counterexample"),
+    ]),
+    targetScope: Type.Array(Id, { minItems: 1 }),
+    evidence: Type.Array(ReviewedLearningEvidenceSchema, { minItems: 1 }),
+    rationale: Type.String({ minLength: 1 }),
+    proposedValue: Type.Unknown(),
+    reviewBoundary: Type.Union([
+      Type.Literal("owner_personal_default"),
+      Type.Literal("owner_ergonomic_profile"),
+      Type.Literal("historical_specialist_knowledge"),
+      Type.Literal("evaluation_maintainer_calibration"),
+      Type.Literal("fixture_maintainer_export"),
+    ]),
+    status: Type.Literal("proposed"),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type ReviewedLearningProposal = Static<typeof ReviewedLearningProposalSchema>;
+
+export const ReviewedLearningDecisionSchema = Type.Object(
+  {
+    id: Id,
+    proposalRef: DigestedRefSchema,
+    decision: Type.Union([Type.Literal("accepted"), Type.Literal("rejected")]),
+    reviewerRole: Type.Union([
+      Type.Literal("owner"),
+      Type.Literal("historical_specialist"),
+      Type.Literal("evaluation_maintainer"),
+      Type.Literal("fixture_maintainer"),
+    ]),
+    rationale: Type.String({ minLength: 1 }),
+    outputRef: Type.Optional(DigestedRefSchema),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type ReviewedLearningDecision = Static<typeof ReviewedLearningDecisionSchema>;
+
+export const EvaluatorDatasetManifestSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    evaluatorRef: DigestedRefSchema,
+    assignments: Type.Array(
+      Type.Object(
+        { evidenceRef: DigestedRefSchema, role: CalibrationDatasetRoleSchema },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    supersedesManifestRef: Type.Optional(DigestedRefSchema),
+    incompatibleComparisonIds: Type.Array(Id),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type EvaluatorDatasetManifest = Static<typeof EvaluatorDatasetManifestSchema>;
+
+export const EvaluatorRevisionSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    parentEvaluatorRef: DigestedRefSchema,
+    datasetManifestRef: DigestedRefSchema,
+    fittingInputRefs: Type.Array(DigestedRefSchema, { minItems: 1 }),
+    heldOutInputRefs: Type.Array(DigestedRefSchema, { minItems: 1 }),
+    targetScope: Type.Array(Id, { minItems: 1 }),
+    knownLimitations: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+    historicalDisagreementRefs: Type.Array(DigestedRefSchema),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type EvaluatorRevision = Static<typeof EvaluatorRevisionSchema>;
+
+export const ReviewedLearningOutputCandidateSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    proposalId: Id,
+    kind: Type.Union([
+      Type.Literal("owner_ergonomic_profile"),
+      Type.Literal("golden_fixture"),
+      Type.Literal("minimal_counterexample"),
+    ]),
+    payload: Type.Unknown(),
+    provenance: Type.Object(
+      {
+        license: Type.String({ minLength: 1 }),
+        sourceEvidenceRefs: Type.Array(DigestedRefSchema, { minItems: 1 }),
+        privateExportReviewed: Type.Boolean(),
+      },
+      { additionalProperties: false }
+    ),
+    status: Type.Literal("candidate"),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type ReviewedLearningOutputCandidate = Static<typeof ReviewedLearningOutputCandidateSchema>;
+
 export const EvaluationDefinitionSchema = Type.Object(
   {
     id: Id,

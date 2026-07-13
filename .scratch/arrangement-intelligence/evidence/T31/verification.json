@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T31",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T00:24:01Z",
+  "requirements": {
+    "AI-PROD-006": { "status": "machine_verified", "remaining": "late authorized human decisions" },
+    "AI-WPL-056": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-057": { "status": "machine_verified", "remaining": "late Owner acceptance" },
+    "AI-WPL-058": { "status": "machine_verified", "remaining": "late specialist acceptance" },
+    "AI-WPL-059": { "status": "machine_verified", "remaining": "late maintainer acceptance" },
+    "AI-WPL-060": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-061": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-062": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-063": {
+      "status": "machine_verified",
+      "remaining": "T34 retained comparison execution"
+    },
+    "AI-WPL-064": {
+      "status": "partial",
+      "remaining": "T32 process isolation and held-out secret canary"
+    },
+    "AI-WPL-065": {
+      "status": "machine_verified",
+      "remaining": "late evaluator-maintainer approval"
+    },
+    "AI-WPL-066": {
+      "status": "partial",
+      "remaining": "T34 retained new Evaluation and cross-version comparison proof"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1026,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Reviewed Learning Proposals retain typed supporting and conflicting evidence without changing behavior",
+      "Rejection creates only an immutable decision; accepted proposals route through the exact Owner, specialist, evaluation-maintainer, or fixture-maintainer boundary",
+      "Personal Default and cited Knowledge acceptance create candidates rather than active defaults or Historical Knowledge",
+      "Owner ergonomic, Golden Fixture, and minimal-counterexample paths create review candidates only; private fixture export requires explicit review and a license",
+      "Calibration acceptance requires fitting, held-out, supporting, and conflicting evidence for one exact evaluator version",
+      "Generator/fitting access excludes held-out assignments, fitting and held-out inputs are disjoint, and role moves require a new dataset version plus incompatible comparison IDs",
+      "Evaluator Revision records parent evaluator, dataset, target scope, known limitations, and historical disagreements while prior evidence bytes remain unchanged"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.4ce3638af3799729fcd7b56d",
+      "runId": "evaluation-run.97d9333b-4eaf-490d-ad7a-c880524f06bd",
+      "cardId": "evaluation-card.803e5cac-f2bb-48f8-9b89-b3c9467981d4",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "humanReviewAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1026 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t31-eval-final",
+      "result": "pass: hard gates pass; human review authority remains unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "2b4c30096842c3cf455bdd61809e745dfd0c85dfd5eb0c0f51e4a4a8321a67ac"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/31-reviewed-learning.md",
+      "sha256": "ffc9deb18348e05c129759987b31addabacb16d1a1a7db630cff711d2a1c10b8"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "b9740a32a179f8037abe96a054eb5dcc34ea7bbadbb761050e54aa8a87a316f0"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "sha256": "e8d0433522e8515dcdf251e020387b5c3cdb9927600c95a33908d8686ccbff1b"
+    },
+    {
+      "path": "src/server/lib/reviewed-learning.test.ts",
+      "sha256": "f839c21a5478d2bd15f7bf9b7f17638e92b2abe338d98f06eb330d055954deea"
+    },
+    {
+      "path": "src/server/lib/reviewed-learning.ts",
+      "sha256": "0c4b7e46963fa05253ee9762e1bb974019db0a21dba159bf7977be81c26d2c12"
+    }
+  ]
+}
