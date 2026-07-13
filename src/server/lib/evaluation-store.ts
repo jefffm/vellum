@@ -10,6 +10,8 @@ import {
   EvaluationComparisonSchema,
   EvaluationReportSchema,
   EvaluationRunSchema,
+  HumanEvaluationSchema,
+  HumanComparisonConclusionSchema,
   ResolvedEvaluationManifestSchema,
   type EvaluationCard,
   type EvaluationBaseline,
@@ -17,6 +19,8 @@ import {
   type EvaluationComparison,
   type EvaluationReport,
   type EvaluationRun,
+  type HumanEvaluation,
+  type HumanComparisonConclusion,
   type ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
 
@@ -120,6 +124,27 @@ export class EvaluationStore {
 
   getComparison(id: string): EvaluationComparison {
     return this.read("comparisons", id, EvaluationComparisonSchema);
+  }
+
+  saveHumanEvaluation(value: HumanEvaluation): HumanEvaluation {
+    return this.write("human-evaluations", value.id, HumanEvaluationSchema, value);
+  }
+
+  getHumanEvaluation(id: string): HumanEvaluation {
+    return this.read("human-evaluations", id, HumanEvaluationSchema);
+  }
+
+  saveHumanComparisonConclusion(value: HumanComparisonConclusion): HumanComparisonConclusion {
+    return this.write(
+      "human-comparison-conclusions",
+      value.id,
+      HumanComparisonConclusionSchema,
+      value
+    );
+  }
+
+  getHumanComparisonConclusion(id: string): HumanComparisonConclusion {
+    return this.read("human-comparison-conclusions", id, HumanComparisonConclusionSchema);
   }
 
   saveReport(value: EvaluationReport): EvaluationReport {

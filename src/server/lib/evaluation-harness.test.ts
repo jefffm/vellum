@@ -104,6 +104,30 @@ describe("versioned Evaluation Harness", () => {
     expect(store.getManifest(first.id)).toEqual(first);
   });
 
+  it("rejects a human protocol that omits reviewer authority or comparison safeguards", () => {
+    const registry = createFirstLoopRegistry();
+    registry.definitions.find(
+      (definition) => definition.id === "protocol.first-loop-human"
+    )!.payload = {
+      requiredRolesByDimension: [],
+      rubricAnchors: [],
+      minimumJudgmentsForComparativeConclusion: 1,
+    };
+    expect(() =>
+      resolveEvaluationManifest({
+        suiteRef: FIRST_LOOP_SUITE_REF,
+        registry,
+        executionIdentity: {
+          productVersion: "test",
+          runtime: "node-test",
+          platform: "test",
+          architecture: "test",
+          command: "eval:fast",
+        },
+      })
+    ).toThrow();
+  });
+
   it("keeps absolute outcomes free of comparative semantics and hard failures uncompensated", async () => {
     expect(() =>
       Value.Decode(AbsoluteDimensionResultSchema, {

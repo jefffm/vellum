@@ -124,9 +124,83 @@ export function createFirstLoopRegistry(projectRoot = process.cwd()): Evaluation
       discloseUnknown: true,
     }),
     definition("protocol.first-loop-human", "human_protocol", {
-      status: "deferred_to_hitl_tracers",
-      requiredRoles: ["target_player", "owner"],
-      missingEvidencePresentation: "unknown_only",
+      requiredRolesByDimension: [
+        { dimension: "personal_adoption", authorizedRoles: ["owner_usability"] },
+        { dimension: "personal_calibration", authorizedRoles: ["owner_usability"] },
+        { dimension: "physical_execution", authorizedRoles: ["target_player"] },
+        { dimension: "historical_practice", authorizedRoles: ["historical_specialist"] },
+        { dimension: "engraving_notation", authorizedRoles: ["editor_engraver"] },
+        {
+          dimension: "musical_identity",
+          authorizedRoles: ["independent_listener"],
+        },
+        { dimension: "listening_clarity", authorizedRoles: ["independent_listener"] },
+      ],
+      rubricAnchors: [
+        {
+          id: "rubric.personal-adoption",
+          dimension: "personal_adoption",
+          label: "Personal adoption",
+          description: "The Owner would adopt this exact result for the declared use.",
+        },
+        {
+          id: "rubric.personal-calibration",
+          dimension: "personal_calibration",
+          label: "Personal calibration",
+          description: "The observation is useful only for the Owner's declared personal profile.",
+        },
+        {
+          id: "rubric.principal-voice-recognition",
+          dimension: "musical_identity",
+          label: "Principal voice recognition",
+          description: "The tune remains recognizable without seeing candidate identity.",
+        },
+        {
+          id: "rubric.physical-execution",
+          dimension: "physical_execution",
+          label: "Physical execution",
+          description: "The exact passage is physically tested under its declared context.",
+        },
+        {
+          id: "rubric.historical-practice",
+          dimension: "historical_practice",
+          label: "Historical practice",
+          description:
+            "A qualified specialist assesses the claim against cited historical evidence.",
+        },
+        {
+          id: "rubric.engraving-notation",
+          dimension: "engraving_notation",
+          label: "Engraving and notation",
+          description: "A qualified editor assesses legibility and notational correctness.",
+        },
+        {
+          id: "rubric.listening-clarity",
+          dimension: "listening_clarity",
+          label: "Listening clarity",
+          description: "An independent listener can follow the intended musical hierarchy.",
+        },
+      ],
+      minimumJudgmentsForComparativeConclusion: 2,
+      evidenceBasis: ["notation", "listening", "physical_playing"],
+      ordering: { method: "randomized_balanced", retainedSeedRequired: true },
+      blinding: {
+        candidateIdentity: "blinded_where_practical",
+        implementationIdentity: "blinded_where_practical",
+        limitations:
+          "Notation and musical style may reveal identity; anonymity is not promised beyond practical blinding.",
+      },
+      duplicates: { required: true, minimumCount: 1 },
+      confidenceRequired: true,
+      conflictDisclosureRequired: true,
+      disagreement: { policy: "retain_unresolved", threshold: 0.25 },
+      adjudication: { requiredRole: "owner_usability", rationaleRequired: true },
+      privacyAndConsent: {
+        consentRequired: true,
+        storage: "local_first",
+        retentionPolicy: "Retain only with the evaluation run until explicit reviewed promotion.",
+        accessPolicy: "Owner-controlled local workspace access.",
+      },
     }),
   ];
   const evaluationCase: EndToEndEvaluationCase = {

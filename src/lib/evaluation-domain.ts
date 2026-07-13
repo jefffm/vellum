@@ -101,6 +101,229 @@ export const EvaluationSuiteSchema = Type.Object(
 );
 export type EvaluationSuite = Static<typeof EvaluationSuiteSchema>;
 
+export const HumanReviewerRoleSchema = Type.Union([
+  Type.Literal("owner_usability"),
+  Type.Literal("target_player"),
+  Type.Literal("historical_specialist"),
+  Type.Literal("editor_engraver"),
+  Type.Literal("independent_listener"),
+  Type.Literal("other_declared"),
+]);
+export type HumanReviewerRole = Static<typeof HumanReviewerRoleSchema>;
+
+export const HumanEvidenceDimensionSchema = Type.Union([
+  Type.Literal("personal_adoption"),
+  Type.Literal("personal_calibration"),
+  Type.Literal("physical_execution"),
+  Type.Literal("historical_practice"),
+  Type.Literal("engraving_notation"),
+  Type.Literal("musical_identity"),
+  Type.Literal("listening_clarity"),
+]);
+
+export const HumanComparisonProtocolSchema = Type.Object(
+  {
+    requiredRolesByDimension: Type.Array(
+      Type.Object(
+        {
+          dimension: HumanEvidenceDimensionSchema,
+          authorizedRoles: Type.Array(HumanReviewerRoleSchema, {
+            minItems: 1,
+            uniqueItems: true,
+          }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    rubricAnchors: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          dimension: HumanEvidenceDimensionSchema,
+          label: Type.String({ minLength: 1 }),
+          description: Type.String({ minLength: 1 }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    minimumJudgmentsForComparativeConclusion: Type.Integer({ minimum: 2 }),
+    evidenceBasis: Type.Array(
+      Type.Union([
+        Type.Literal("notation"),
+        Type.Literal("listening"),
+        Type.Literal("physical_playing"),
+      ]),
+      { minItems: 1, uniqueItems: true }
+    ),
+    ordering: Type.Object(
+      {
+        method: Type.Literal("randomized_balanced"),
+        retainedSeedRequired: Type.Literal(true),
+      },
+      { additionalProperties: false }
+    ),
+    blinding: Type.Object(
+      {
+        candidateIdentity: Type.Literal("blinded_where_practical"),
+        implementationIdentity: Type.Literal("blinded_where_practical"),
+        limitations: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    duplicates: Type.Object(
+      {
+        required: Type.Boolean(),
+        minimumCount: Type.Integer({ minimum: 0 }),
+      },
+      { additionalProperties: false }
+    ),
+    confidenceRequired: Type.Literal(true),
+    conflictDisclosureRequired: Type.Literal(true),
+    disagreement: Type.Object(
+      {
+        policy: Type.Union([
+          Type.Literal("retain_unresolved"),
+          Type.Literal("adjudicate_when_threshold_met"),
+        ]),
+        threshold: Type.Number({ minimum: 0, maximum: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    adjudication: Type.Object(
+      {
+        requiredRole: HumanReviewerRoleSchema,
+        rationaleRequired: Type.Literal(true),
+      },
+      { additionalProperties: false }
+    ),
+    privacyAndConsent: Type.Object(
+      {
+        consentRequired: Type.Literal(true),
+        storage: Type.Literal("local_first"),
+        retentionPolicy: Type.String({ minLength: 1 }),
+        accessPolicy: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+  },
+  { additionalProperties: false }
+);
+export type HumanComparisonProtocol = Static<typeof HumanComparisonProtocolSchema>;
+
+const HumanCandidateContextSchema = Type.Object(
+  {
+    candidateRef: DigestedRefSchema,
+    arrangementSearchRef: DigestedRefSchema,
+    performanceBriefRef: DigestedRefSchema,
+    instrumentInstanceDigest: Digest,
+    candidateEventIds: Type.Array(Id, { minItems: 1 }),
+    arrangementScoreEventIds: Type.Array(Id, { minItems: 1 }),
+    sourceEventIds: Type.Array(Id, { minItems: 1 }),
+    playbackOccurrenceIds: Type.Array(Id, { minItems: 1 }),
+  },
+  { additionalProperties: false }
+);
+
+export const HumanEvaluationSchema = Type.Object(
+  {
+    id: Id,
+    protocolRef: DigestedRefSchema,
+    reviewer: Type.Object(
+      {
+        pseudonymousId: Id,
+        role: HumanReviewerRoleSchema,
+        qualifications: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+        confidence: Type.Number({ minimum: 0, maximum: 1 }),
+        conflictsOfInterest: Type.Array(Type.String({ minLength: 1 })),
+        consented: Type.Literal(true),
+      },
+      { additionalProperties: false }
+    ),
+    evidenceBasis: Type.Array(
+      Type.Union([
+        Type.Literal("notation"),
+        Type.Literal("listening"),
+        Type.Literal("physical_playing"),
+      ]),
+      { minItems: 1, uniqueItems: true }
+    ),
+    ownerPlaytestIds: Type.Array(Id),
+    pairwise: Type.Object(
+      {
+        left: HumanCandidateContextSchema,
+        right: HumanCandidateContextSchema,
+        retainedRandomizationSeed: Type.String({ minLength: 1 }),
+        presentedOrder: Type.Union([
+          Type.Tuple([Type.Literal("left"), Type.Literal("right")]),
+          Type.Tuple([Type.Literal("right"), Type.Literal("left")]),
+        ]),
+        duplicateAssignmentId: Type.Optional(Id),
+        practicalBlindingApplied: Type.Boolean(),
+        blindingLimitations: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    judgments: Type.Array(
+      Type.Object(
+        {
+          dimension: HumanEvidenceDimensionSchema,
+          rubricAnchorId: Id,
+          preference: Type.Union([
+            Type.Literal("left"),
+            Type.Literal("right"),
+            Type.Literal("tie"),
+            Type.Literal("insufficient_evidence"),
+          ]),
+          rationale: Type.String({ minLength: 1 }),
+          citedEvidenceIds: Type.Array(Id),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    conclusion: Type.Object(
+      {
+        status: Type.Union([
+          Type.Literal("single_scoped_judgment"),
+          Type.Literal("unresolved"),
+          Type.Literal("adjudicated"),
+        ]),
+        winner: Type.Optional(Type.Union([Type.Literal("left"), Type.Literal("right")])),
+        rationale: Type.String({ minLength: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    learningDisposition: Type.Literal("scoped_judgment_only"),
+    regressionEligible: Type.Literal(false),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type HumanEvaluation = Static<typeof HumanEvaluationSchema>;
+
+export const HumanComparisonConclusionSchema = Type.Object(
+  {
+    id: Id,
+    protocolRef: DigestedRefSchema,
+    humanEvaluationIds: Type.Array(Id, { minItems: 1, uniqueItems: true }),
+    status: Type.Union([
+      Type.Literal("insufficient_evidence"),
+      Type.Literal("unresolved_disagreement"),
+      Type.Literal("concluded"),
+      Type.Literal("adjudicated"),
+    ]),
+    winner: Type.Optional(Type.Union([Type.Literal("left"), Type.Literal("right")])),
+    adjudicatorEvaluationId: Type.Optional(Id),
+    rationale: Type.String({ minLength: 1 }),
+    regressionEligible: Type.Literal(false),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type HumanComparisonConclusion = Static<typeof HumanComparisonConclusionSchema>;
+
 export const EvaluationDefinitionSchema = Type.Object(
   {
     id: Id,

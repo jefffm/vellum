@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T30",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T00:11:47Z",
+  "requirements": {
+    "AI-PROD-012": {
+      "status": "machine_verified",
+      "remaining": "late role-authority HITL evidence"
+    },
+    "AI-PROD-039": { "status": "machine_verified", "remaining": "late reviewer attestation" },
+    "AI-WPL-041": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-042": { "status": "machine_verified", "remaining": "late protocol approval" },
+    "AI-WPL-043": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-044": { "status": "machine_verified", "remaining": "late target-player evidence" },
+    "AI-WPL-045": { "status": "machine_verified", "remaining": "late cited specialist evidence" },
+    "AI-WPL-046": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-047": { "status": "machine_verified", "remaining": "late rubric approval" },
+    "AI-WPL-048": { "status": "machine_verified", "remaining": "none" },
+    "AI-WPL-049": { "status": "machine_verified", "remaining": "late assignment execution" },
+    "AI-WPL-050": { "status": "machine_verified", "remaining": "late duplicate execution" },
+    "AI-WPL-051": { "status": "machine_verified", "remaining": "late reviewer disclosures" },
+    "AI-WPL-052": { "status": "machine_verified", "remaining": "late adjudication authority" },
+    "AI-WPL-053": { "status": "partial", "remaining": "T34 access and retention enforcement" },
+    "AI-WPL-054": { "status": "machine_verified", "remaining": "late wording review" },
+    "AI-WPL-055": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-070": { "status": "machine_verified", "remaining": "late protocol approval" },
+    "AI-DEL-032": {
+      "status": "machine_verified",
+      "remaining": "late actual role-qualified evidence"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1025,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "The pinned first-loop Human Protocol declares a non-substitutable reviewer authority and rubric anchor for every human evidence dimension",
+      "Protocols retain randomized balanced ordering seed, duplicate policy, practical-blinding limits, confidence, conflict, consent, privacy, minimum evidence, disagreement, and adjudication rules",
+      "Human Evaluations bind exact protocol, candidate, Search, Performance Brief, Instrument Instance, candidate-local passage, common score/source passage, Playback Occurrences, reviewer, and evidence basis",
+      "Physical comparison references compatible physical Owner Playtests for both candidates; Owner role cannot substitute for target-player authority and historical judgments require citations",
+      "One preference remains a scoped judgment with no winner and regressionEligible false",
+      "Aggregate derivation keeps one vote insufficient, balanced conflicts unresolved, and accepts only the declared adjudicator role while remaining non-regression evidence",
+      "Human Evaluation and Human Comparison Conclusion records persist immutably in the local Evaluation Store"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.4ce3638af3799729fcd7b56d",
+      "runId": "evaluation-run.d5675f66-4145-436e-a740-d529aabaf816",
+      "cardId": "evaluation-card.409cffa5-3179-4398-bd26-bce5e110ec37",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "realHumanAuthority": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1025 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t30-eval-final",
+      "result": "pass: validated protocol is transitively pinned; hard gates pass and real human evidence remains unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "fe056817943971c67b3d7e5b7317c93df0060e9d46dd38a3138f892b4b24985a"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/30-human-comparison-protocol.md",
+      "sha256": "4d359d098e58950e43cddd672301a2a58748e9a740a379e8dc4f851a725f27a8"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "69d40d88bf3d9266cdf70c9b4a6bfa7f197e742e6456dd4599d06cae6f0d5e29"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.test.ts",
+      "sha256": "f38301259f34852f83b9cccfd5cacd36672e5061fa4c728b804824662788e58f"
+    },
+    {
+      "path": "src/server/lib/evaluation-harness.test.ts",
+      "sha256": "b4297713f7218ec2ef11881f8241fbc4c5aec8750bda44b9e395e4c4b4e23a70"
+    },
+    {
+      "path": "src/server/lib/evaluation-harness.ts",
+      "sha256": "72fe912d4810383b5968089dfa844406ec14784c13f476087fafcbb1c5315a2f"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "sha256": "ca7896c14f0a2efa907dff66cb970534564c02988291372db6591e825d64bfcd"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "sha256": "5cf5e36e2c86485876d1e9c5777bf1a17e244dc6704cdccfc04bbdc118d070fe"
+    },
+    {
+      "path": "src/server/lib/human-comparison.test.ts",
+      "sha256": "b7a95fece4d241180bfa5bc04da913fdc00a22db140e22ad82315329165526d2"
+    },
+    {
+      "path": "src/server/lib/human-comparison.ts",
+      "sha256": "6b0acfd3dd12d73b9519d3f2ad88ebc1633edc2247b09052a7dfae89165695a6"
+    }
+  ]
+}

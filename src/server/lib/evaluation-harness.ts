@@ -4,6 +4,7 @@ import {
   EvaluationCaseSchema,
   EvaluationDefinitionSchema,
   EvaluationSuiteSchema,
+  HumanComparisonProtocolSchema,
   type AbsoluteDimensionResult,
   type DigestedRef,
   type EvaluationCard,
@@ -14,6 +15,7 @@ import {
   type EvaluationSuite,
   type ResolvedEvaluationManifest,
   type VersionedRef,
+  type HumanComparisonProtocol,
 } from "../../lib/evaluation-domain.js";
 import { canonicalJson, EvaluationStore } from "./evaluation-store.js";
 
@@ -60,6 +62,11 @@ export function resolveEvaluationManifest(input: {
     const definition = requireVersioned(definitions, ref, "definition");
     if (kinds && !kinds.includes(definition.kind)) {
       throw new Error(`${ref.id}@${ref.version} has kind ${definition.kind}, expected ${kinds}`);
+    }
+    if (definition.kind === "human_protocol") {
+      validateHumanComparisonProtocol(
+        Value.Decode(HumanComparisonProtocolSchema, definition.payload)
+      );
     }
     return { ...ref, digest: digestValue(definition) };
   };
@@ -119,6 +126,56 @@ export function resolveEvaluationManifest(input: {
   };
   const digest = digestValue(resolved);
   return { id: `evaluation-manifest.${digest.slice(0, 24)}`, digest, ...resolved };
+}
+
+export function validateHumanComparisonProtocol(protocol: HumanComparisonProtocol): void {
+  const requiredDimensions = [
+    "personal_adoption",
+    "personal_calibration",
+    "physical_execution",
+    "historical_practice",
+    "engraving_notation",
+    "musical_identity",
+    "listening_clarity",
+  ] as const;
+  const declared = protocol.requiredRolesByDimension.map(({ dimension }) => dimension);
+  if (
+    new Set(declared).size !== declared.length ||
+    requiredDimensions.some((dimension) => !declared.includes(dimension))
+  ) {
+    throw new Error("Human protocol must declare reviewer authority once for every dimension");
+  }
+  if (
+    requiredDimensions.some(
+      (dimension) => !protocol.rubricAnchors.some((anchor) => anchor.dimension === dimension)
+    )
+  ) {
+    throw new Error("Human protocol must anchor every human evidence dimension");
+  }
+  const exclusiveAuthority: Partial<Record<(typeof requiredDimensions)[number], string>> = {
+    personal_adoption: "owner_usability",
+    personal_calibration: "owner_usability",
+    physical_execution: "target_player",
+    historical_practice: "historical_specialist",
+    engraving_notation: "editor_engraver",
+    musical_identity: "independent_listener",
+    listening_clarity: "independent_listener",
+  };
+  for (const entry of protocol.requiredRolesByDimension) {
+    const exclusive = exclusiveAuthority[entry.dimension];
+    if (
+      exclusive &&
+      (entry.authorizedRoles.length !== 1 || entry.authorizedRoles[0] !== exclusive)
+    ) {
+      throw new Error(`${entry.dimension} has a distinct non-substitutable reviewer authority`);
+    }
+  }
+  if (
+    protocol.duplicates.required !== protocol.duplicates.minimumCount > 0 ||
+    !protocol.blinding.limitations.toLowerCase().includes("reveal")
+  ) {
+    throw new Error("Human protocol duplicate or practical-blinding disclosure is inconsistent");
+  }
 }
 
 export function generatorVisibleInput(evaluationCase: EvaluationCase): unknown {

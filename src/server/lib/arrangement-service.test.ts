@@ -18,6 +18,7 @@ import { ApiRouteError } from "./create-route.js";
 import { LineageService } from "./lineage-service.js";
 import { ArrangementPlanService } from "./arrangement-plan-service.js";
 import { OwnerIntentService } from "./owner-intent-service.js";
+import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
 import {
   createArrangementCandidatePreviewRoute,
   createArrangementSearchGetRoute,
@@ -33,6 +34,11 @@ import {
   createOwnerPlaytestCreateRoute,
   readiness,
 } from "./owner-playtest-route.js";
+import { createFirstLoopRegistry } from "./first-loop-evaluation.js";
+import { digestValue } from "./evaluation-harness.js";
+import { EvaluationStore } from "./evaluation-store.js";
+import { validateAndSaveHumanEvaluation } from "./human-comparison.js";
+import type { HumanEvaluation } from "../../lib/evaluation-domain.js";
 
 describe("Greensleeves faithful arrangement service", () => {
   let rootDirectory: string;
@@ -1002,6 +1008,7 @@ describe("Greensleeves faithful arrangement service", () => {
       "25252525-2525-4525-8525-252525252525",
       "26262626-2626-4626-8626-262626262626",
       "27272727-2727-4727-8727-272727272727",
+      "28282828-2828-4828-8828-282828282828",
     ];
     const deferredScoreStaleness = store
       .get(workspace.id)
@@ -1081,7 +1088,16 @@ describe("Greensleeves faithful arrangement service", () => {
       data: { status: "inspection_only", currentPlaytestIds: [], stalePlaytestIds: [] },
     });
     const occurrenceId = omr.normalizedScore.performedForm!.measureOccurrences[0]!.id;
-    const testedEventIds = result.arrangementScore.events.slice(0, 2).map(({ id }) => id);
+    const sharedCandidateSourceId = result.candidates[0]!.events.flatMap(
+      (event) => event.sourceEventIds
+    ).find((sourceId) =>
+      result.candidates.every((candidate) =>
+        candidate.events.some((event) => event.sourceEventIds.includes(sourceId))
+      )
+    )!;
+    const testedEventIds = result.arrangementScore.events
+      .filter((event) => event.sourceEventIds.includes(sharedCandidateSourceId))
+      .map(({ id }) => id);
     const playtestRecordCounts = {
       scores: store.get(workspace.id).arrangementScoreIds.length,
       commitments: store.get(workspace.id).editorialCommitmentIds.length,
@@ -1166,11 +1182,124 @@ describe("Greensleeves faithful arrangement service", () => {
       },
       readiness: { status: "blocked" },
     });
+    const alternativePlaytest = await submitPlaytest({
+      candidate_id: alternative.id,
+      tempo_bpm: 72,
+      evidence_basis: ["physical_playing"],
+      outcome: "practice_playable",
+      observations: [
+        {
+          dimension: "mechanics",
+          code: "reach",
+          outcome: "supports",
+          rationale: "This alternative avoids the blocking reach in the same context.",
+        },
+      ],
+      rationale: "The comparison alternative was physically tested in the same context.",
+    });
     const afterPlaytests = store.get(workspace.id);
     expect(afterPlaytests.arrangementScoreIds).toHaveLength(playtestRecordCounts.scores);
     expect(afterPlaytests.editorialCommitmentIds).toHaveLength(playtestRecordCounts.commitments);
     expect(afterPlaytests.familyCommitmentIds).toHaveLength(playtestRecordCounts.familyCommitments);
-    expect(afterPlaytests.ownerPlaytestIds).toHaveLength(3);
+    expect(afterPlaytests.ownerPlaytestIds).toHaveLength(4);
+    const protocolDefinition = createFirstLoopRegistry().definitions.find(
+      (definition) => definition.id === "protocol.first-loop-human"
+    )!;
+    const comparisonSourceEventIds = [sharedCandidateSourceId];
+    const candidateContext = (candidate: (typeof result.candidates)[number]) => ({
+      candidateRef: { id: candidate.id, version: 1, digest: digestValue(candidate) },
+      arrangementSearchRef: {
+        id: result.arrangementSearch.id,
+        version: 1,
+        digest: digestValue(result.arrangementSearch),
+      },
+      performanceBriefRef: {
+        id: result.performanceBrief.id,
+        version: 1,
+        digest: digestValue(result.performanceBrief),
+      },
+      instrumentInstanceDigest: digestInstrumentInstance(
+        result.arrangementSearch.targetConfiguration.instrumentInstance!
+      ),
+      candidateEventIds: candidate.events
+        .filter((event) => event.sourceEventIds.some((id) => comparisonSourceEventIds.includes(id)))
+        .map(({ id }) => id),
+      arrangementScoreEventIds: testedEventIds,
+      sourceEventIds: comparisonSourceEventIds,
+      playbackOccurrenceIds: [occurrenceId],
+    });
+    const humanEvaluation: HumanEvaluation = {
+      id: "human-evaluation.29292929-2929-4929-8929-292929292929",
+      protocolRef: {
+        id: protocolDefinition.id,
+        version: protocolDefinition.version,
+        digest: digestValue(protocolDefinition),
+      },
+      reviewer: {
+        pseudonymousId: "reviewer.target-player-1",
+        role: "target_player",
+        qualifications: ["Owner physically playing the declared five-course instrument"],
+        confidence: 0.8,
+        conflictsOfInterest: ["Owner requested and helped define the arrangement"],
+        consented: true,
+      },
+      evidenceBasis: ["physical_playing"],
+      ownerPlaytestIds: [blockedPlaytest.playtest.id, alternativePlaytest.playtest.id],
+      pairwise: {
+        left: candidateContext(
+          result.candidates.find(
+            (candidate) => candidate.id === result.arrangementScore.selectedCandidateId
+          )!
+        ),
+        right: candidateContext(alternative),
+        retainedRandomizationSeed: "seed.greensleeves.physical.1",
+        presentedOrder: ["right", "left"],
+        practicalBlindingApplied: true,
+        blindingLimitations: "The tablature itself may reveal different fingering strategies.",
+      },
+      judgments: [
+        {
+          dimension: "physical_execution",
+          rubricAnchorId: "rubric.physical-execution",
+          preference: "right",
+          rationale: "The right candidate removes the blocking reach under identical conditions.",
+          citedEvidenceIds: [blockedPlaytest.playtest.id, alternativePlaytest.playtest.id],
+        },
+      ],
+      conclusion: {
+        status: "single_scoped_judgment",
+        rationale: "One target-player preference is retained without an aggregate winner.",
+      },
+      learningDisposition: "scoped_judgment_only",
+      regressionEligible: false,
+      createdAt: "2026-07-10T16:40:00.000Z",
+    };
+    const evaluationStore = new EvaluationStore({
+      rootDirectory: path.join(rootDirectory, "eval"),
+    });
+    expect(
+      validateAndSaveHumanEvaluation({
+        workspaceId: workspace.id,
+        evaluation: humanEvaluation,
+        protocolDefinition,
+        workspaceStore: store,
+        evaluationStore,
+      })
+    ).toEqual(humanEvaluation);
+    expect(evaluationStore.getHumanEvaluation(humanEvaluation.id)).toEqual(humanEvaluation);
+    expect(() =>
+      validateAndSaveHumanEvaluation({
+        workspaceId: workspace.id,
+        evaluation: {
+          ...humanEvaluation,
+          id: "human-evaluation.30303030-3030-4030-8030-303030303030",
+          reviewer: { ...humanEvaluation.reviewer, role: "owner_usability" },
+        },
+        protocolDefinition,
+        workspaceStore: store,
+        evaluationStore,
+      })
+    ).toThrow(/not authorized.*physical_execution/i);
     const staleTemplate = deferredScoreStaleness[0]!;
     store.saveStaleDerivation(workspace.id, {
       ...staleTemplate,
