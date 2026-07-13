@@ -463,6 +463,100 @@ export const ReviewedLearningOutputCandidateSchema = Type.Object(
 );
 export type ReviewedLearningOutputCandidate = Static<typeof ReviewedLearningOutputCandidateSchema>;
 
+export const ExternalEvaluationEvidenceSchema = Type.Object(
+  {
+    id: Id,
+    kind: Type.Union([Type.Literal("omr"), Type.Literal("model_judge")]),
+    mode: Type.Union([Type.Literal("recorded_contract"), Type.Literal("live_current")]),
+    reproducibility: Type.Union([
+      Type.Literal("deterministic_recorded_fixture"),
+      Type.Literal("external_not_reproducible"),
+    ]),
+    provider: Type.String({ minLength: 1 }),
+    modelOrBackend: Type.String({ minLength: 1 }),
+    fixtureOrRequestDigest: Digest,
+    compatibility: Type.Object(
+      {
+        productVersion: Type.String({ minLength: 1 }),
+        adapterVersion: Type.String({ minLength: 1 }),
+        compatible: Type.Boolean(),
+        limitations: Type.Array(Type.String({ minLength: 1 })),
+      },
+      { additionalProperties: false }
+    ),
+    observedAt: IsoDate,
+    staleAfter: Type.Optional(IsoDate),
+    result: Type.Unknown(),
+  },
+  { additionalProperties: false }
+);
+export type ExternalEvaluationEvidence = Static<typeof ExternalEvaluationEvidenceSchema>;
+
+export const ModelJudgeActionSchema = Type.Object(
+  {
+    id: Id,
+    version: Version,
+    provider: Type.String({ minLength: 1 }),
+    model: Type.String({ minLength: 1 }),
+    prompt: Type.String({ minLength: 1 }),
+    configuration: Type.Record(Type.String(), Type.Unknown()),
+    candidateOrder: Type.Array(Id, { minItems: 1 }),
+    evidenceRefs: Type.Array(DigestedRefSchema, { minItems: 1 }),
+    generatorRelationship: Type.Union([
+      Type.Literal("independent_judge"),
+      Type.Literal("same_model_self_evaluation"),
+      Type.Literal("unknown_relationship"),
+    ]),
+    uncertainty: Type.Object(
+      {
+        confidence: Type.Number({ minimum: 0, maximum: 1 }),
+        limitations: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+      },
+      { additionalProperties: false }
+    ),
+    output: Type.Unknown(),
+    createdAt: IsoDate,
+  },
+  { additionalProperties: false }
+);
+export type ModelJudgeAction = Static<typeof ModelJudgeActionSchema>;
+
+export const StochasticEvaluationAggregateSchema = Type.Object(
+  {
+    sampling: Type.Object(
+      {
+        sampleCount: Type.Integer({ minimum: 1 }),
+        temperature: Type.Number({ minimum: 0 }),
+        retainedOutputs: Type.Literal(true),
+      },
+      { additionalProperties: false }
+    ),
+    samples: Type.Array(
+      Type.Object(
+        {
+          id: Id,
+          hardGateStatus: Type.Union([Type.Literal("pass"), Type.Literal("fail")]),
+          measuredValue: Type.Number(),
+          uncertainty: Type.Number({ minimum: 0 }),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    deterministicGateStatus: Type.Union([Type.Literal("pass"), Type.Literal("fail")]),
+    stochasticStatus: Type.Union([
+      Type.Literal("pass"),
+      Type.Literal("fail"),
+      Type.Literal("inconclusive"),
+    ]),
+    mean: Type.Number(),
+    uncertainty: Type.Number({ minimum: 0 }),
+    compatibilityLimitations: Type.Array(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false }
+);
+export type StochasticEvaluationAggregate = Static<typeof StochasticEvaluationAggregateSchema>;
+
 export const EvaluationDefinitionSchema = Type.Object(
   {
     id: Id,

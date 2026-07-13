@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "tracerId": "T32",
+  "result": "pass",
+  "verifiedAt": "2026-07-13T00:34:57Z",
+  "requirements": {
+    "AI-WPL-064": { "status": "machine_verified", "remaining": "late held-out policy review" },
+    "AI-EVAL-059": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-060": { "status": "machine_verified", "remaining": "late threat-model review" },
+    "AI-EVAL-061": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-071": {
+      "status": "machine_verified",
+      "remaining": "late actual scoped human evidence"
+    },
+    "AI-EVAL-072": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-073": {
+      "status": "machine_verified",
+      "remaining": "late live-evidence promotion review"
+    },
+    "AI-EVAL-074": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-075": { "status": "machine_verified", "remaining": "late sampling-policy approval" },
+    "AI-EVAL-076": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-084": {
+      "status": "partial",
+      "remaining": "T33-T34 golden, render, playback, and report commands"
+    },
+    "AI-EVAL-085": { "status": "machine_verified", "remaining": "none" },
+    "AI-EVAL-091": {
+      "status": "partial",
+      "remaining": "T34 complete external-evidence CI status reporting"
+    },
+    "AI-DEL-033": {
+      "status": "machine_verified",
+      "remaining": "late evaluation-maintainer approval"
+    }
+  },
+  "summary": {
+    "fullSuitePassed": 1030,
+    "fullSuiteSkipped": 1,
+    "focusedEvidence": [
+      "Recorded OMR and model-provider fixtures produce deterministic typed contract evidence and explicitly establish no current-quality claim",
+      "Model Judge Actions retain model, provider, prompt, configuration, candidate order, evidence, uncertainty, output, date, and self-evaluation relationship",
+      "Protected musical and physical dimensions accept model judgments as observations only, never sole hard gates",
+      "Stochastic aggregation retains individual samples and separates deterministic/stochastic status; one hard failure defeats a favorable mean",
+      "Live evidence requires explicit opt-in and retains observation date, stale-after date, compatibility, and non-reproducible labeling",
+      "A spawned generator/fitting worker receives a minimal environment and cannot observe the held-out secret canary",
+      "eval:omr and eval:model execute offline against retained fixtures and emit/persist machine-readable records"
+    ],
+    "evaluation": {
+      "manifestId": "evaluation-manifest.4ce3638af3799729fcd7b56d",
+      "runId": "evaluation-run.d1ca8fd8-5dd9-4fe4-bab2-f3c8cb062b93",
+      "cardId": "evaluation-card.938412d2-8599-4b5e-9e86-b2fdabe77dea",
+      "executionStatus": "completed",
+      "hardGateStatus": "pass",
+      "acceptanceStatus": "incomplete",
+      "currentExternalQuality": "explicitly_unknown"
+    }
+  },
+  "commands": [
+    { "command": "npm run format:check", "result": "pass" },
+    { "command": "npm run typecheck", "result": "pass" },
+    { "command": "npm run build", "result": "pass with existing KaTeX and chunk-size warnings" },
+    { "command": "npm run server:build", "result": "pass" },
+    { "command": "npm test", "result": "pass: 1030 passed, 1 skipped" },
+    {
+      "command": "npm run --silent eval:omr -- --output /tmp/vellum-eval-omr",
+      "result": "pass: deterministic contract-only OMR evidence"
+    },
+    {
+      "command": "npm run --silent eval:model -- --output /tmp/vellum-eval-model",
+      "result": "pass: deterministic recorded Model Judge Action and samples"
+    },
+    {
+      "command": "npm run --silent eval:fast -- --output /tmp/vellum-t32-eval-final",
+      "result": "pass: hard gates pass and current external quality remains unknown"
+    },
+    {
+      "command": "node scripts/verify-arrangement-intelligence.mjs",
+      "result": "pass: 447 requirements, 47 findings, 45 tracers"
+    },
+    { "command": "git diff --check", "result": "pass" }
+  ],
+  "dependencies": [
+    {
+      "path": ".scratch/arrangement-intelligence/REQUIREMENTS.md",
+      "sha256": "0a8675e1af4bb094f812c78528496e123760e01cff50b2756fac5f79647a310a"
+    },
+    {
+      "path": ".scratch/arrangement-intelligence/issues/32-omr-model-evaluation.md",
+      "sha256": "704035f759ddaea766aab24d1d70271ada9e340324544931916b6ee6a7854a70"
+    },
+    {
+      "path": "package.json",
+      "sha256": "6f2f3ddb5cffeb90af54fa3a601e125f021661384e8ad7cea18949ba1544824d"
+    },
+    {
+      "path": "src/lib/evaluation-domain.ts",
+      "sha256": "d5ddbca5dc4b2e4dd3f54579b8763a7d5ae66a9d107b4a224b228f37f26da1fb"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "sha256": "06c0bc4ff4d4c50af8f358566cfa77ecdbd8622a914b3072c8a32675305115be"
+    },
+    {
+      "path": "src/server/external-evaluation-cli.ts",
+      "sha256": "4b63f5f70cc6e97b630a7f248f3656884c933b427bbd944d7fc455909c9c97a5"
+    },
+    {
+      "path": "src/server/lib/external-evaluation.test.ts",
+      "sha256": "dd00ff0e8c2eaeb16c7bd2aee719d6ca46a0b0da483aebe168cc100f52aa6a79"
+    },
+    {
+      "path": "src/server/lib/external-evaluation.ts",
+      "sha256": "3bd59a36faca7dbbab7f287e829aa26f244fd87480df95f7d1603bad7937e8e7"
+    },
+    {
+      "path": "test/fixtures/evaluation/omr-recorded-contract.json",
+      "sha256": "d8133c7e341c072c0b9703fd2c5f31020b1987fa0477e16a45aa00874eb9528f"
+    },
+    {
+      "path": "test/fixtures/evaluation/model-judge-recorded-contract.json",
+      "sha256": "2f86febea29d94f3c2bccdc258462afcc6aa007eb3b6eba5e703489b28a91d39"
+    }
+  ]
+}

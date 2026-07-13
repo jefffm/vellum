@@ -17,6 +17,8 @@ import {
   ReviewedLearningOutputCandidateSchema,
   EvaluatorDatasetManifestSchema,
   EvaluatorRevisionSchema,
+  ExternalEvaluationEvidenceSchema,
+  ModelJudgeActionSchema,
   ResolvedEvaluationManifestSchema,
   type EvaluationCard,
   type EvaluationBaseline,
@@ -31,6 +33,8 @@ import {
   type ReviewedLearningOutputCandidate,
   type EvaluatorDatasetManifest,
   type EvaluatorRevision,
+  type ExternalEvaluationEvidence,
+  type ModelJudgeAction,
   type ResolvedEvaluationManifest,
 } from "../../lib/evaluation-domain.js";
 
@@ -254,6 +258,22 @@ export class EvaluationStore {
 
   getEvaluatorRevision(id: string): EvaluatorRevision {
     return this.read("evaluator-revisions", id, EvaluatorRevisionSchema);
+  }
+
+  saveExternalEvaluationEvidence(value: ExternalEvaluationEvidence): ExternalEvaluationEvidence {
+    return this.write("external-evidence", value.id, ExternalEvaluationEvidenceSchema, value);
+  }
+
+  getExternalEvaluationEvidence(id: string): ExternalEvaluationEvidence {
+    return this.read("external-evidence", id, ExternalEvaluationEvidenceSchema);
+  }
+
+  saveModelJudgeAction(value: ModelJudgeAction): ModelJudgeAction {
+    return this.write("model-judge-actions", value.id, ModelJudgeActionSchema, value);
+  }
+
+  getModelJudgeAction(id: string): ModelJudgeAction {
+    return this.read("model-judge-actions", id, ModelJudgeActionSchema);
   }
 
   saveReport(value: EvaluationReport): EvaluationReport {

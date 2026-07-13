@@ -1,0 +1,25 @@
+{
+  "fixtureVersion": 1,
+  "evidenceClass": "recorded_contract",
+  "provider": "recorded-provider",
+  "model": "recorded-judge-v1",
+  "prompt": "Compare candidate A and candidate B using only the supplied evidence.",
+  "configuration": { "temperature": 0.2, "sampleCount": 2 },
+  "candidateOrder": ["candidate.a", "candidate.b"],
+  "generatorRelationship": "same_model_self_evaluation",
+  "evidenceRefs": [
+    {
+      "id": "evidence.recorded-comparison",
+      "version": 1,
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "samples": [
+    { "id": "sample.1", "hardGateStatus": "pass", "measuredValue": 0.7, "uncertainty": 0.2 },
+    { "id": "sample.2", "hardGateStatus": "pass", "measuredValue": 0.6, "uncertainty": 0.3 }
+  ],
+  "limitations": [
+    "Recorded output tests the contract and is not current live-provider evidence.",
+    "The judge relationship is self-evaluation and cannot establish a protected hard gate."
+  ]
+}

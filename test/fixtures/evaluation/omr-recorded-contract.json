@@ -1,0 +1,16 @@
+{
+  "fixtureVersion": 1,
+  "evidenceClass": "recorded_contract",
+  "backend": { "provider": "Audiveris", "version": "5.5.3-recorded" },
+  "expected": {
+    "symbols": ["G4:quarter", "A4:quarter", "B4:half"],
+    "voices": ["soprano", "soprano", "soprano"]
+  },
+  "observed": {
+    "symbols": ["G4:quarter", "A4:quarter", "B4:half"],
+    "voices": ["soprano", "soprano", "soprano"]
+  },
+  "limitations": [
+    "This retained fixture proves the adapter contract only, not current Audiveris quality."
+  ]
+}
