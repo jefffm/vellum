@@ -14,6 +14,10 @@ Evaluation Definitions, Cases, Suites, and resolved Manifests will be versioned.
 
 Baseline comparisons require compatible briefs or an explicit mapping. Promotion records the exact run, classification, suites, regressions, materiality, reviews, human evidence, unknowns, promoter, and rationale. Content-addressed artifacts retain provenance, privacy, expiry, pinning, and deletion behavior.
 
+Aggregate hard-gate and acceptance status follows an explicit precedence: any conclusive required product or output violation is `fail`; otherwise an unavailable required source, access decision, provider, evaluator, Vault, or infrastructure dependency is `blocked`; otherwise unfinished, partial, unknown, or unevaluated required evidence is `incomplete`; only complete passing evidence is `pass`. Per-gate execution, evidence completeness, and result remain separately inspectable.
+
+Held-out evaluation uses a Vault-only append-only attempt ledger whose unique genesis is committed by the pre-output split manifest and whose head advances by compare-and-swap. Every fork remains retained and blocks qualification until reconciled; every blocked, incomplete, failed, and invalid attempt remains in order. Invalidation must be permitted by the frozen policy and independent of the observed candidate result, and valid failures become permanent regressions. Capability Qualification pins the finalized ledger, exact Generation System, qualified truth and evaluator authorities, explicit Claim Scope, and a deterministic or precommitted stochastic execution policy; one favorable stochastic sample cannot qualify capability.
+
 ## Implemented evidence
 
 - Production: `src/lib/evaluation-domain.ts`, `src/server/lib/evaluation-harness.ts`, `src/server/lib/evaluation-comparison.ts`, `src/server/lib/evaluation-promotion.ts`, and `src/server/lib/evaluation-store.ts`.

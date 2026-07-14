@@ -84,6 +84,14 @@ _Avoid_: Imported credentials, API key setting
 A durable, retryable request for provider-dependent analysis, judgment, or generation, linked to exact input versions and committed to canonical musical state only after a complete validated result exists.
 _Avoid_: Chat message, background job
 
+**Egress Envelope**:
+A server-minted immutable authorization for one Model Action attempt that binds the exact source and derivative versions permitted to leave the local trust boundary, named provider and model, purpose, Access Decisions, prompt and tool-capability identities, and redaction policy. Provider requests are reconstructed from this envelope rather than accepting arbitrary client-supplied context.
+_Avoid_: Browser request body as provider authorization, Provider Connection as consent to transmit data
+
+**Model Action Result Commit**:
+A server-issued immutable binding from one Model Action attempt and Egress Envelope through the exact provider response, completed local tool results, validation evidence, input versions, and canonical result digest, published atomically with that result.
+_Avoid_: Marking an attempt complete by naming any existing workspace record
+
 **Local-First Runtime**:
 The Owner's machine running Vellum's browser interface, services, musical toolchain, data stores, and provider callback as the primary deployment.
 _Avoid_: Local mode
@@ -176,9 +184,17 @@ _Avoid_: Automatic learning, silent pack upgrade
 A passage-level plan that maps source voices to explicit target roles, activity spans and rests, continuity, cadence, transformation, prominence, and omission obligations before physical realization.
 _Avoid_: Preserve melody, pitch-class coverage
 
+**Source Voice Graph**:
+The immutable, evidence-bearing identity graph of source voices and occurrences, including event membership, activity and rest spans, notated or inferred identity, cross-staff movement, splits, merges, exchanges, and uncertainty before target planning.
+_Avoid_: Part ID as voice identity, visible staff as a permanent voice
+
 **Target Relationship Plan**:
 A passage-level set of machine-readable obligations among Target Voices, such as ordered imitation, subject shape, suspension preparation and resolution, figure-to-bass constraint, cadence, voice exchange, or generated voice leading, each bound to a Validation Profile.
 _Avoid_: Per-voice coverage as proof that counterpoint survived
+
+**Target Harmonic Plan**:
+A passage-level plan for tonal or modal context, harmonic rhythm, bass and inversion obligations, required sonorities and tendency tones, essential dissonances, cadences, and the exact reharmonization freedom permitted by the Preservation Policy.
+_Avoid_: Chord labels as proof that harmony survived, alfabeto shape as harmonic intent
 
 **Continuo Realization Plan**:
 A passage-level plan linking every authoritative Continuo Foundation and figure event to generated voices, Realization and Validation Profiles, spacing and doubling policy, uncertainty, and an explicit complete, separate-bass, or reduction disposition.
@@ -268,6 +284,10 @@ _Avoid_: Output format, instrument name without its configuration
 An immutable exact physical and notational configuration of one target instrument, including construction, strings or courses, tuning, geometry, setup, and notation identities.
 _Avoid_: Instrument name, generic profile
 
+**Instrument Calibration**:
+A versioned measurement or reviewed estimate of one exact Instrument Instance's physical values, units, geometry, setup, uncertainty, and measurement method. Evaluators compose it with separate performer, tempo, preparation, and reliability context at invocation.
+_Avoid_: Generic difficulty, fret span alone, one performer's result as universal playability
+
 **Arrangement Family**:
 Sibling Arrangement Scores that share an Arrangement Brief and source-analysis lineage but realize different Target Configurations.
 _Avoid_: Multiple layouts of one Arrangement Score
@@ -305,7 +325,7 @@ The exact transitive consumer closure capable of generating or fitting an arrang
 _Avoid_: Compiler name alone, current deployment
 
 **Capability Qualification**:
-Immutable evidence that one sealed Generation System and target profile passed its required suites held out from Vellum development, prompt authoring, fitting, and evaluator calibration.
+Immutable evidence that one sealed Generation System passed held-out suites for one explicit claim scope naming covered source modalities, textures, techniques, target configurations, notation and playback dimensions, workload envelope, provider conditions, exclusions, and unknowns.
 _Avoid_: Exact arrangement approval, claim of absence from model pretraining
 
 **Artifact Readiness**:
@@ -485,6 +505,7 @@ _Avoid_: French tab
 - Knowledge Pack content changes create a new immutable Release, review creates a scoped **Release Attestation**, and retraction or revocation creates a **Release Advisory**
 - A **Release Attestation** or **Release Advisory** confers no authority by self-assertion; external **Attestation Verification** or **Advisory Verification** plus a scope-matched **Activation Decision** govern use
 - A test-only attestation authorizes isolated evaluation or explicit provisional research only; it cannot support default activation, readiness, or historical presentation
+- A maintainer-reviewed-system attestation may authorize an explicitly nonhistorical software or editorial default but cannot authorize historical, pedagogical, ergonomic, performer, or specialist claims
 - An **Applied Knowledge Manifest** is invalid unless its pinned **Knowledge Library Inventory Snapshot** enumerates every reachable Release, its Catalog records an eligibility outcome for each, and the Manifest records an outcome for every eligible Release and reachable profile
 - A descriptive observation cannot become a compiler prohibition or preference without a separately reviewed derivation and centrally governed Resolution Policy
 - The **Analysis Record** distinguishes documented practice, modern editorial convention, and Vellum heuristics
@@ -497,6 +518,7 @@ _Avoid_: French tab
 - Private remote access may expose a **Local-First Runtime** without moving ownership or provider credentials to a hosted service
 - **Provider Authorization** is independent of the **Owner** and does not determine ownership of stored musical data
 - Vellum owns its **Provider Connection** and never treats another application's credential file as an integration contract
+- A **Provider Connection** authenticates calls but does not authorize data egress; every remote **Model Action** uses a server-minted **Egress Envelope** over exact permitted inputs, destination, purpose, and tool capabilities
 - The primary **Provider Connection** uses local ChatGPT OAuth through Pi's public provider API; API keys remain a fallback
 - A **Provider Connection** exposes connected, refreshing, expired, and disconnected states plus explicit reconnect and logout actions
 - Provider availability gates only **Model Actions**; source import, Score-Anchored Review, direct editing, deterministic analysis, validation, engraving, workspace access, and Audio Preview remain locally available while disconnected
@@ -656,8 +678,9 @@ _Avoid_: French tab
 - Interpretive playback is labeled and toggleable against literal playback
 - **Arrangement Search** generates alternatives for musically consequential choices rather than accepting a single first attempt
 - An **Arrangement Candidate** that fails a Preservation Audit, instrument constraint, figure, or hard Validation Finding is rejected
-- Surviving **Arrangement Candidates** are ranked by applicable historical profiles, playability, idiom, voice leading, and soft preferences
-- The selected **Arrangement Candidate** becomes the next **Arrangement Score** version; unselected candidates remain available for audition or branching
+- Before independent evaluation, surviving **Arrangement Candidates** are preordered by the exact versioned **Selection Policy** using generator-visible Search Measurements, lexicographic preservation obligations, and disclosed target preferences; this order is not evidence that a candidate is historically correct, idiomatic, comfortable, or ready
+- Independent **Evaluation Cards** inspect candidates in that committed order without rewriting it; a separate immutable **Adoption Decision** may adopt a candidate only after every required applicable independent hard gate passes
+- A rejected candidate yields to the next already ordered survivor or a new Arrangement Search; a candidate blocked only by unavailable evaluation remains pending retry and cannot be skipped merely because infrastructure failed; unadopted candidates remain available for disclosed audition or branching but never become the default Arrangement Score merely by ranking first
 - An **Arrangement Brief** may contain one or more **Source Artifacts**
 - Each **Arrangement Score** realizes exactly one **Target Configuration**, which may itself be a solo target or a defined ensemble such as voice and lute
 - Multiple Notation Layouts and Deliverables for the same Target Configuration project the same Arrangement Score
@@ -673,23 +696,22 @@ _Avoid_: French tab
 - The primary **Golden Arrangement Fixture** is a repository-stored, public-domain four-part Greensleeves PDF with explicit source and license provenance
 - Greensleeves is development and regression evidence, never held-out evidence for the compiler work that is explicitly designed to repair it
 - Non-Greensleeves acceptance uses **Contamination Groups** scoped to the complete **Generation System** and stored in the **Owner Evaluation Vault**; this means held out from Vellum development and fitting, not guaranteed absent from model pretraining
-- The Vault commits eligibility, invalid-fixture rules, reserve order or deterministic seed, and exhaustion policy before output; every valid failure remains disclosed and becomes a permanent regression while fresh precommitted groups qualify the successor
+- The Vault commits eligibility, output-independent invalid-fixture rules, reserve order or deterministic seed, and exhaustion policy before output; every attempt enters an append-only ledger, every valid failure remains disclosed and becomes a permanent regression, and successors inherit the unconsumed reserve cursor before fresh groups qualify them
 - Generation receives only a sealed source and Brief envelope and cannot read evaluator expectations, mutations, baselines, labels, or reserve assets
+- Public tracer artifacts retain only opaque held-out IDs, coverage classes, digests, aggregate status, and redacted evidence; exact identities, truth, mutations, invalidations, reserve selection, and attempt diagnostics remain Vault-only
 - A required `hardGateStatus` is pass only when every applicable required gate completed and passed; missing, unknown, or partial evidence is incomplete, while source, access, provider, evaluator, or infrastructure unavailability makes the enclosing acceptance blocked rather than passed
 - An independent hard-gate failure blocks an **Adoption Decision**; evaluation may advance to the next preordered survivor or require a new search but cannot rewrite the Selection Decision
 - A **Capability Qualification** applies to one sealed Generation System and target profile, while **Artifact Readiness** applies to one exact output; both must be current and compatible for release
-- Implementation proceeds through production-path tracer-bullet slices led by Golden Arrangement Fixtures rather than completing storage, OMR, analysis, arrangement, engraving, or playback as isolated horizontal subsystems
-- The first slice carries the Greensleeves PDF through Provider Connection, Guided Start, durable versioned workspace state, OMR and review, analysis, Faithful Reduction, baroque-guitar Arrangement Search, audit, French tablature, and Audio Preview
-- A subsystem is not considered integrated merely because its isolated API works; the Greensleeves acceptance path must exercise its real persisted contracts end to end
-- The first slice may implement only the capability needed by the fixture but cannot hard-code the work's title, pitches, voice count, or expected target decisions into production behavior
-- Later slices generalize the same contracts through the sibling lute and classical-guitar outputs, figured-bass fixture, imitative-counterpoint fixture, and diapason engraving fixture
-- Its primary acceptance path is generic PDF upload, OMR Run, Score-Anchored Review where needed, Principal Voice identification, Faithful Reduction, five-course baroque-guitar Arrangement Search, French-Letter Tablature with French Stringing, engraving, Preservation Audit, and Audio Preview
+- Implementation sequencing is defined only by the current `SPEC.md`; this enduring context requires production-path tracer bullets, shared substrate before dependent verticals, and coequal five-course baroque-guitar, thirteen-course baroque-lute, and six-string classical-guitar target obligations
+- A subsystem is not integrated merely because its isolated API works; each tracer must exercise its affected persisted domain, API, UI, validation, evaluation, and deliverable contracts through a real vertical path
+- A fixture-led tracer may implement only the generic capability needed by its fixture, but production behavior cannot hard-code the Work title, pitches, voice count, expected target decisions, hidden evaluation truth, or reserve identities
+- The Greensleeves development fixture's baroque-guitar path covers generic PDF upload, OMR Run, Score-Anchored Review where needed, Principal Voice identification, Faithful Reduction, five-course baroque-guitar Arrangement Search, French-Letter Tablature with French Stringing, engraving, Preservation Audit, and Audio Preview without prescribing target execution order
 - Acceptance compares every protected Greensleeves Principal Voice pitch, rhythm, order, and phrase relationship against the reviewed Score Transcription; recognizability is not inferred from successful compilation or a subjective claim alone
 - The selected guitar arrangement must keep the Principal Voice perceptually prominent as the top line, pass instrument constraints, avoid duplicated playback events, and produce valid notation and audio
-- The same source then produces sibling 13-course baroque-lute and classical-guitar Arrangement Scores with independent search, validation, and Preservation Audits
+- The same source also produces coequal sibling 13-course baroque-lute and classical-guitar Arrangement Scores with independent search, validation, and Preservation Audits
 - The second Golden Arrangement Fixture is a short, legally redistributable public-domain soprano-plus-figured-bass PDF containing an independent Principal Voice, a complete Continuo Foundation, and at least one prepared suspension
 - Its reviewed transcription identifies every bass event, figure, accidental, soprano event, cadence, and suspension relationship so figure recognition and realization can be tested independently
-- Its first complete target is soprano plus piano under the explicit `continuo.italian-baroque` Realization Profile, engraved as a soprano staff above a keyboard grand staff with the source figures retained
+- Its first historically scoped complete target is soprano plus an exact harpsichord Instrument Instance under the explicit `continuo.italian-baroque.cembalo` Realization Profile, engraved as a soprano staff above a keyboard grand staff with the source figures retained; a piano realization is a separately labeled modern editorial adaptation and does not inherit historical keyboard-instrument authority
 - A target capable of sounding the bass must produce a complete Continuo Realization under an explicit Realization Profile; a target that cannot must produce a separate bass part or labeled Continuo Reduction with every unsounded foundation event reported
 - The fixture verifies that contextual validation accepts the source-supported suspension treatment rather than applying a blanket dissonance or parallel-motion prohibition
 - Audio Preview exposes separate Principal Voice, Continuo Foundation, and generated realization Playback Parts for isolated verification
@@ -706,6 +728,8 @@ _Avoid_: French tab
 - The fixture checks the structured course assignment, generated LilyPond semantics, rendered glyph and placement, MIDI pitch, and absence of duplicate playback; non-empty SVG output is insufficient
 - The diapason sign remains `///a` when a Bass Tuning changes course 10's pitch, proving that course identity and sounding pitch are independent
 - A companion sequence verifies the source-backed twelve-course signs `a`, `/a`, `//a`, `///a`, `4`, and `5` for courses 7 through 12; the course-13 sign remains an explicit editorial or software convention until directly applicable historical evidence establishes it
+- Coequal baroque-guitar engraving fixtures verify alfabeto binding, stroke direction and order, course masks, omitted and muted courses, held and damped state, constituent-string playback, and notation timing
+- Coequal classical-guitar engraving fixtures verify independent voice layers, stem direction, rests, ties and spanners, written-to-sounding octave identity, isolated Playback Parts, and absence of duplicated sounding events
 - Golden fixtures include reviewed canonical musical data so OMR backend drift can be distinguished from arrangement-engine regressions
 - An **Arrangement Brief** selects one or more **Notation Layouts** independently from one or more **Deliverables**
 - A **Notation Layout** may produce multiple **Deliverables**

@@ -18,17 +18,25 @@ Knowledge authority lane and musical domain are orthogonal. Authoritative entrie
 
 A mutable Knowledge Pack Draft may produce an immutable content-addressed Knowledge Pack Release. Review authority is expressed by separate typed, digested scoped attestations. Trust and reviewer authorization are computed by external Attestation Verifications under pinned verifier policies; advisory issuer identity and authority are computed by external Advisory Verifications. They are not claimant-controlled fields. Supersession, retraction, rights restriction, and attestation revocation are separate advisories; none mutates a release. An immutable Activation Decision combines scope-matched attestations and verifications, verified advisories, rights decisions, and the Resolution Policy before a profile can affect arranging. Every considered profile receives exactly one allow, deny, or review-required Activation Decision.
 
+Content-addressed candidate and release records form a Merkle DAG: relationship and derivation edges point to already digested node cores without node back-references, and authority dependencies are acyclic. Semantic conflicts or mutual comparisons remain external edges pinned by graph snapshots rather than creating digest cycles.
+
 Test-only attestations are system-issued under a pinned test policy and convey no human authority. Owner-reviewed-local and specialist attestations require the corresponding human reviewer authority and scope verification.
 
+Software and editorial consequences may additionally use a maintainer-reviewed-system attestation under a pinned maintainer policy. It authorizes only explicitly classified software heuristics or editorial defaults and cannot authorize, imply, or present historical, pedagogical, ergonomic, or specialist claims. Activation authority is a required discriminated result derived from the complete verified attestation closure; it is never an optional claimant-selected label.
+
 An authoritative Knowledge Library Inventory Snapshot enumerates every Release reachable from pinned configured registries under an exact inventory builder and policy. A Knowledge Catalog Snapshot records an eligibility outcome for every inventoried Release. An Applied Knowledge Manifest resolves those exact snapshots, Resolution Policy, context, Component Registry Snapshot, Activation Decisions, attestations, Attestation and Advisory Verifications, advisories, and rights decisions. It records an outcome for every eligible release and reachable profile, including exclusions, conflicts, and unknowns. A manifest containing only the packs a catalog builder, resolver, or generator happened to find or use is invalid.
+
+Catalogs and Activation Decisions pin resolution time, clock policy, and validity boundaries. Verified and out-of-scope results pin both evaluated and authority scope; unverified and revoked results carry no authority scope. Expiry or verified revocation fails closed for current use and requires an atomically published deny or review-required successor before ordinary activation resumes, while prior decisions remain reproducible as-of their pinned time.
 
 Reference evidence separates immutable versioned bibliographic assertion snapshots with parent and digest identity, immutable bytes, acquisition provenance, Source Segment Versions, identity redirects, rights assertions, and operation-specific Access Decisions. Unreviewed extraction creates candidates only. Private or uncertain content cannot leave the local trust boundary without an applicable destination- and purpose-scoped decision.
 
 Existing Arrangement Searches and Historical Knowledge records remain immutable legacy evidence. Migration maps same-lane records where provenance permits, quarantines mixed or self-authorizing authority by default, retains explicit compatibility reads, and disables old activation paths at cutover. It cannot invent missing source identity, release authority, or manifests.
 
+Cutover occurs atomically only after compatible readers, shadow resolution, migration validation, integrity checks, and rollback pass; an earlier tracer may inventory or quarantine legacy authority but cannot disable a working path before its replacement is active. Publication of releases, attestations, advisories, verifications, Inventory and Catalog generations, and activation-visible pointers has an explicit transactional boundary with stable snapshot reads, concurrent-writer protection, and crash recovery.
+
 ## Relationship to existing decisions
 
-This decision extends rather than erases ADRs 0002 and 0015: workspace corrections still remain project-local, Personal Defaults remain soft Owner authority, and only reviewed source-backed historical claims enter the Historical Knowledge Base. ADRs 0019 through 0021 continue to govern search, evaluation, and reviewed learning.
+This decision extends ADRs 0002 and 0015 while explicitly superseding ADR 0015's former mutable pack-increment mechanism: workspace corrections still remain project-local, Personal Defaults remain soft Owner authority, and only reviewed source-backed historical claims enter the Historical Knowledge Base. ADRs 0019 through 0021 continue to govern search, evaluation, and reviewed learning.
 
 ## Consequences
 

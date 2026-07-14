@@ -29,7 +29,8 @@ Vellum should provide the practical benefit of a personal musicologist and exper
 Given a musical source, Vellum should ordinarily infer:
 
 - the Principal Voice or the absence of one;
-- Texture, Contrapuntal Technique, voice roles, phrases, cadences, and form;
+- a Source Voice Graph that distinguishes voices from parts and staves;
+- Texture, Contrapuntal Technique, harmonic structure, voice roles, phrases, cadences, changing musical context, and form;
 - Continuo Foundation, Figured Bass, and realization obligations when present;
 - which source relationships define recognizability;
 - a coherent target texture and voice plan;
@@ -132,7 +133,7 @@ Vellum distinguishes five non-interchangeable states:
 
 Pipeline completion never implies capability or artifact readiness. Capability evidence qualifies a sealed system/profile version; exact-output evidence qualifies an artifact. Changing either side independently stales the corresponding claim. Readiness is claim- and profile-scoped: a dimension deliberately excluded by an editorial profile is `not_applicable` or `not_claimed`, not `unknown`. An applicable unresolved dimension may remain visible on a provisional result, but it cannot support labels such as `ready`, `playable`, `idiomatic`, `historically supported`, or `specialist reviewed`.
 
-A Capability Qualification pins the Generation System digest and transitive dependency closure, target and acceptance profiles, split manifest and contamination history, provider-exposure record, evaluator versions, all attempted groups, and machine results. Artifact Readiness pins the exact Arrangement Score and Deliverable digests, Instrument Instance and Performance Brief, compatible Capability Qualification, independent Evaluation Cards and Adoption Decision, and required human or physical evidence. Either record is immutable; a changed dependency, profile, output, or required-evidence policy creates a new record or an explicit stale state.
+A Capability Qualification pins the Generation System digest and transitive dependency closure, target and acceptance profiles, explicit Qualification Claim Scope, split manifest and contamination history, provider-exposure record, evaluator versions, all attempted groups, and machine results. The Claim Scope names supported source modalities, textures, techniques, instrument configurations, notation and playback dimensions, workload envelope, provider conditions, evaluated coverage, exclusions, and unknown or unclaimed dimensions. Passing two groups cannot authorize the broader label “target qualified” outside that scope. Artifact Readiness pins the exact Arrangement Score and Deliverable digests, Instrument Instance and Performance Brief, compatible Capability Qualification, independent Evaluation Cards and Adoption Decision, and required human or physical evidence. Either record is immutable; a changed dependency, profile, output, or required-evidence policy creates a new record or an explicit stale state.
 
 ### Knowledge activation is explicit
 
@@ -142,10 +143,11 @@ Knowledge lifecycle and arranging authority are separate. The activation policy 
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Mutable draft                                | Workbench authoring only                                                                                                    |
 | Immutable release with test-only attestation | Isolated evaluation or an explicitly enabled provisional research mode                                                      |
+| Maintainer-reviewed-system attestation       | Default software heuristics or editorial behavior within an explicitly nonhistorical system scope                           |
 | Owner-reviewed-local attestation             | Disclosed local guidance within the attested scope                                                                          |
 | Specialist attestation                       | Historical or specialist presentation only within the attested claim, profile, instrument, period, school, and review scope |
 
-A test-only release may exercise the production code path, but it cannot become the default candidate, produce a ready result, or satisfy a historical-readiness gate. Promotion creates a new immutable release or attestation; it never changes an existing release in place.
+A test-only release may exercise the production code path, but it cannot become the default candidate, produce a ready result, or satisfy a historical-readiness gate. A maintainer-reviewed-system attestation authorizes only explicitly classified software heuristics or editorial defaults under a pinned policy; it cannot authorize or imply historical, pedagogical, ergonomic, performer, or specialist claims. Promotion creates a new immutable release or attestation; it never changes an existing release in place.
 
 ### Constitutive technique belongs to the score plan
 
@@ -157,9 +159,9 @@ Optional execution detail belongs to Performance Interpretation when changing it
 
 Knowledge Packs may name registered compiler and evaluator components and provide schema-validated parameters. An imported document or pack cannot supply arbitrary executable code, file paths, shell commands, templates with active content, or provider credentials.
 
-### Old results remain reproducible
+### Old results remain immutable; replayability is explicit
 
-A new source, claim, profile, pack release, compiler, or evaluator never rewrites an existing Arrangement Search or Arrangement Score. It may create a Knowledge Reassessment explaining that regeneration could improve or invalidate an earlier readiness claim.
+A new source, claim, profile, pack release, compiler, or evaluator never rewrites an existing Arrangement Search or Arrangement Score. Replayability is recorded as complete, partial, unavailable, or legacy-unverifiable according to retained bytes, executable semantics, authority, and rights. A Knowledge Reassessment may explain that regeneration could improve or invalidate an earlier readiness claim without pretending an unreplayable historical result can still be reproduced.
 
 ### Data lifecycle and deletion
 
@@ -228,6 +230,7 @@ type DigitalAsset = {
   sha256: string;
   mediaType: string;
   byteLength: number;
+  digest: string;
 };
 
 type AssetAcquisition = {
@@ -237,9 +240,11 @@ type AssetAcquisition = {
   sourceKind: "upload" | "stable_url" | "iiif" | "library_object" | "private_scan";
   providerObjectRef?: string;
   redactedRetrievalUri?: string;
-  retrievedAt?: string;
+  acquiredAt: string;
   rightsAssertionRefs: DigestedRef[];
   processingPolicyRef: DigestedRef;
+  supersedesAcquisitionRef?: DigestedRef;
+  digest: string;
 };
 
 type SourceSegmentVersion = {
@@ -247,6 +252,8 @@ type SourceSegmentVersion = {
   version: number;
   parentVersionRef?: DigestedRef;
   digitalAssetRef: DigestedRef;
+  acquisitionRefs: DigestedRef[];
+  provenancePathRefs: DigestedRef[];
   pageAtlasRef: DigestedRef;
   canvasId: string;
   printedLocator?: string;
@@ -258,6 +265,18 @@ type SourceSegmentVersion = {
   modality: SourceModality;
   sourceImageRef: ContentRef;
   cropDigest: string;
+  digest: string;
+};
+
+type AssetRoleBinding = {
+  id: string;
+  digitalAssetRef: DigestedRef;
+  acquisitionRefs: DigestedRef[];
+  role: "arrangement_source" | "owner_reference" | "evaluation_source";
+  workspaceRef?: DigestedRef;
+  ownerLibraryRef?: DigestedRef;
+  accessDecisionRefs: DigestedRef[];
+  retentionPolicyRef: DigestedRef;
   digest: string;
 };
 
@@ -274,6 +293,10 @@ type IdentityRedirect = {
 Each entity version is an immutable bibliographic assertion snapshot. An import may begin with incomplete or disputed identity. Filename, repository grouping, and catalog metadata create candidate identity assertions, not placeholder Editions or proof. Correction creates a child or superseding version; merge, split, and alias decisions create an immutable Identity Redirect while preserving every prior record and the asset bytes it described. One Work may occur in many manifestations, a compilation may contain many Works, a manuscript need not pretend to be an Edition, and one digital asset may represent multiple exemplars or provider objects.
 
 Every released claim cites one or more immutable Source Segment Versions. A Page Atlas correction creates new segment versions; it cannot change the canvas, crop, coordinates, or meaning of an existing citation.
+
+Deduplication shares immutable bytes, never acquisition provenance, rights, retention, or authority. Every segment, extraction, candidate, derivative, fixture, prompt, report, and export pins the exact acquisition and provenance path that authorized it. A later, more permissive acquisition of identical bytes cannot retroactively authorize an existing derivative without an explicit reviewed provenance-substitution decision. Deletion first removes or restricts acquisition edges; effective rights are recomputed over surviving authorized paths, and shared bytes are garbage-collected only when no retained acquisition, derivative, or explicit pin requires them.
+
+Guided Start's **arrange this**, **add to Owner Reference Library**, and **do both** choices create role-specific Asset Role Bindings over the same content-addressed Digital Asset and explicit acquisition paths. They do not copy bytes into unrelated stores or let one role borrow another role's access, retention, export, or deletion authority.
 
 ### Rights, access, processing, and egress
 
@@ -295,6 +318,50 @@ Every operation records an immutable Access Decision over exact source and deriv
 
 Before remote processing, Vellum shows and records the exact regions, text, notation, or metadata to be transmitted; named destination and purpose; applicable rights and Owner authorization; provider-policy identity when known; and resulting Access Decision. Every extraction, crop, transcription, translation, candidate, pack entry, fixture, prompt, report, log, and export retains transitive source refs so policy follows derivatives rather than stopping at the original bytes.
 
+Remote model processing is available only through a server-minted Model Action Attempt. A client submits intent and canonical workspace refs; it cannot supply raw provider context, substitute a destination, append source content directly, or widen tool capability. The server reconstructs the exact permitted context and issues an immutable Model Egress Envelope:
+
+```ts
+type ModelEgressEnvelope = {
+  id: string;
+  workspaceRef: DigestedRef;
+  modelActionAttemptRef: DigestedRef;
+  inputVersionRefs: DigestedRef[];
+  disclosedSourceAndDerivativeRefs: DigestedRef[];
+  accessDecisionRefs: DigestedRef[];
+  destination: {
+    providerRef: DigestedRef;
+    modelRef: DigestedRef;
+    accountScopeRef?: DigestedRef;
+  };
+  purposeRef: DigestedRef;
+  promptTemplateRef: DigestedRef;
+  serializedRequestDigest: string;
+  allowedToolCapabilityRefs: DigestedRef[];
+  resourcePolicyRef: DigestedRef;
+  issuedAt: string;
+  digest: string;
+};
+
+type ModelActionResultCommit = {
+  id: string;
+  modelActionAttemptRef: DigestedRef;
+  egressEnvelopeRef: DigestedRef;
+  exactInputVersionRefs: DigestedRef[];
+  providerResponseRef: ContentRef;
+  providerResponseDigest: string;
+  completedToolResultRefs: DigestedRef[];
+  validationEvidenceRefs: DigestedRef[];
+  canonicalResultRef: DigestedRef;
+  canonicalResultDigest: string;
+  committedAt: string;
+  digest: string;
+};
+```
+
+Every disclosed ref must be authorized for the exact destination and purpose. Provider Authorization authenticates the connection but never authorizes arbitrary data transmission. Imported text, OCR, metadata, notation, and pack prose are quoted as untrusted data and cannot alter system instructions, destination, egress policy, or tool capabilities. A generic client-supplied provider stream is not a production interface.
+
+Completion is also server-bound. The service validates that the provider response and local tool transcript descend from the exact attempt and Egress Envelope, validates the proposed canonical result, and atomically publishes that result with a Model Action Result Commit. A client cannot complete an attempt merely by naming an unrelated pre-existing record in the same workspace.
+
 ### Untrusted-ingestion boundary
 
 Reference files, URLs, IIIF manifests, catalog metadata, OCR text, translations, and imported packs are untrusted input.
@@ -305,6 +372,7 @@ Reference files, URLs, IIIF manifests, catalog metadata, OCR text, translations,
 - PDF, image, archive, OCR, OMR, and conversion components run with bounded resources and without ambient network, credential, provider-token, or unrestricted filesystem access.
 - Imported text and metadata render as inert escaped data under the applicable Content Security Policy. Content refs resolve only through Vellum's content store and cannot embed arbitrary paths or executable URLs.
 - Pack bindings resolve only through an exact authorized Component Registry Snapshot. Parameter schemas include units, ranges, collection limits, compatibility, and resource budgets.
+- Model-facing imported content is delimited as untrusted evidence and receives no instruction authority. Model Actions expose only the least-privilege tool capabilities named by their Egress Envelope; source text cannot request another provider, workspace, filesystem region, secret, callback, or tool.
 - Secrets, callbacks, source content without export authority, and local paths are redacted from logs, diagnostics, snapshots, prompts, and exported state.
 
 ### Page atlas
@@ -375,6 +443,26 @@ Instrument mechanics, Instrument Instances, Personal Defaults, Owner Ergonomic P
 Candidate classification uses orthogonal axes rather than one overloaded kind.
 
 ```ts
+type KnowledgeEvidenceEdge = {
+  id: string;
+  sourceRef: DigestedRef;
+  targetRef: DigestedRef;
+  role: "support" | "contradiction" | "qualification" | "counterexample";
+  scopeRef?: DigestedRef;
+  rationale: string;
+  digest: string;
+};
+
+type ApplicabilityPredicateRecord = {
+  id: string;
+  schemaVersion: string;
+  expression: TypedApplicabilityExpression;
+  requiredContextRefs: DigestedRef[];
+  unknownPolicy: "preserve_unknown" | "review_required";
+  unitSchemaRef?: DigestedRef;
+  digest: string;
+};
+
 type KnowledgeCandidate = {
   id: string;
   parentVersionRef?: DigestedRef;
@@ -388,19 +476,15 @@ type KnowledgeCandidate = {
     | "modern_synthesis"
     | "editorial_convention"
     | "software_heuristic";
-  evidenceRoles: ("support" | "contradiction" | "qualification" | "counterexample")[];
   proposition?: TypedKnowledgeProposition;
-  applicability: ApplicabilityPredicate[];
-  evidenceRefs: DigestedRef[];
-  relationshipRefs: DigestedRef[];
-  derivationRefs: DigestedRef[];
+  applicabilityPredicateRefs: DigestedRef[];
   reviewState: "proposed" | "reviewed" | "rejected" | "superseded";
   assertedBy: ActorRef;
   digest: string;
 };
 ```
 
-A worked example may also be descriptive evidence or a counterexample; those roles do not change its authority lane. A conflict and a research question are graph nodes, not disguised claims. Candidate corrections create a new digested version.
+A worked example may also be descriptive evidence or a counterexample; those roles do not change its authority lane. A conflict and a research question are graph nodes, not disguised claims. Candidate corrections create a new digested version. Evidence, relationship, and derivation edges are external immutable records that point to already digested candidate cores; candidate cores do not point back to those edges. A Knowledge Pack Release pins the exact node and edge sets. This Merkle-DAG rule prevents candidate↔edge digest cycles. Applicability predicates have stable identities so evaluation, correction, supersession, and replay can address the exact expression that ran.
 
 Authority lanes are discriminated, not additive badges. A `historical_practice` candidate cannot use `modern_synthesis`, `editorial_convention`, or `software_heuristic` as its authoritative epistemic form. A release's authoritative entries, profiles, and Constraint Derivations must match its declared authority lane. Cross-lane references are permitted only through typed `evidence_only`, `counterevidence`, or `conflict_context` relations; they cannot activate consequences in the receiving lane or launder software, editorial, pedagogical, or personal judgment into a historical claim.
 
@@ -422,6 +506,8 @@ Converting evidence into a compiler or evaluator consequence requires a separate
 ### Drafts, releases, attestations, and advisories
 
 A Knowledge Pack Draft is mutable workbench state. A Knowledge Pack Release is an immutable content-addressed graph snapshot. Review authority and current eligibility are external immutable records; neither mutates release content.
+
+Canonical library publication is transactional, not merely file-atomic. Releases, attestations, advisories, identity and authority verifications, Activation Decisions, Inventory and Catalog snapshots, and visible head-state changes are staged in one publication generation and become visible through one compare-and-swap commit. Readers resolve one stable committed generation. A crash leaves either the previous generation current or an unreachable recoverable staging set; concurrent writers use optimistic revision checks or serialization, and recovery is idempotent.
 
 ```ts
 type KnowledgePackRelease = {
@@ -446,8 +532,8 @@ type KnowledgePackRelease = {
 type ReleaseAttestation = {
   id: string;
   releaseRef: DigestedRef;
-  kind: "test_only" | "owner_reviewed_local" | "specialist_reviewed";
-  reviewerIdentityRef: EntityRef;
+  kind: "test_only" | "maintainer_reviewed_system" | "owner_reviewed_local" | "specialist_reviewed";
+  reviewerIdentitySnapshotRef: DigestedRef;
   reviewerRoleRef: DigestedRef;
   reviewScopeRef: DigestedRef;
   signatureRef?: ContentRef;
@@ -456,17 +542,58 @@ type ReleaseAttestation = {
   digest: string;
 };
 
-type AttestationVerification = {
+type ReviewerIdentitySnapshot = {
+  id: string;
+  subjectRef: EntityRef;
+  assertedAttributes: Record<string, unknown>;
+  evidenceRefs: DigestedRef[];
+  capturedAt: string;
+  digest: string;
+};
+
+type CredentialAssertion = {
+  id: string;
+  reviewerIdentitySnapshotRef: DigestedRef;
+  issuerIdentityRef: DigestedRef;
+  roleRef: DigestedRef;
+  scopeRef: DigestedRef;
+  validFrom: string;
+  validUntil?: string;
+  revocationSourceRefs: DigestedRef[];
+  signatureRef?: ContentRef;
+  digest: string;
+};
+
+type AttestationVerificationBase = {
   id: string;
   attestationRef: DigestedRef;
   verifierPolicyRef: DigestedRef;
-  authenticatedReviewerIdentityRef?: EntityRef;
-  authorizationScopeRef?: DigestedRef;
-  result: "verified_authorized" | "verified_out_of_scope" | "unverified" | "revoked";
+  verifierIdentityRef: DigestedRef;
+  verifierComponentRef?: DigestedRef;
+  reviewerIdentitySnapshotRef: DigestedRef;
+  credentialAssertionRefs: DigestedRef[];
+  verificationMethodRef: DigestedRef;
+  revocationSnapshotRefs: DigestedRef[];
+  validUntil?: string;
+  receiptOrSignatureRef?: ContentRef;
   checkedAt: string;
   evidenceRefs: DigestedRef[];
   digest: string;
 };
+
+type AttestationVerification = AttestationVerificationBase &
+  (
+    | {
+        result: "verified_authorized" | "verified_out_of_scope";
+        evaluatedScopeRef: DigestedRef;
+        authorizationScopeRef: DigestedRef;
+      }
+    | {
+        result: "unverified" | "revoked";
+        evaluatedScopeRef?: never;
+        authorizationScopeRef?: never;
+      }
+  );
 
 type ReleaseAdvisory = {
   id: string;
@@ -480,19 +607,61 @@ type ReleaseAdvisory = {
   digest: string;
 };
 
-type AdvisoryVerification = {
+type AdvisoryVerificationBase = {
   id: string;
   advisoryRef: DigestedRef;
   verifierPolicyRef: DigestedRef;
-  authenticatedIssuerIdentityRef?: EntityRef;
-  authorizationScopeRef?: DigestedRef;
-  result: "verified_authorized" | "verified_out_of_scope" | "unverified" | "revoked";
+  verifierIdentityRef: DigestedRef;
+  verifierComponentRef?: DigestedRef;
+  issuerIdentitySnapshotRef: DigestedRef;
+  credentialAssertionRefs: DigestedRef[];
+  verificationMethodRef: DigestedRef;
+  revocationSnapshotRefs: DigestedRef[];
+  validUntil?: string;
+  receiptOrSignatureRef?: ContentRef;
   checkedAt: string;
   evidenceRefs: DigestedRef[];
   digest: string;
 };
 
-type ActivationDecision = {
+type AdvisoryVerification = AdvisoryVerificationBase &
+  (
+    | {
+        result: "verified_authorized" | "verified_out_of_scope";
+        evaluatedScopeRef: DigestedRef;
+        authorizationScopeRef: DigestedRef;
+      }
+    | {
+        result: "unverified" | "revoked";
+        evaluatedScopeRef?: never;
+        authorizationScopeRef?: never;
+      }
+  );
+
+type ActivationAuthority =
+  | {
+      kind: "test_only";
+      testPolicyRef: DigestedRef;
+      permittedUse: "isolated_evaluation" | "provisional_research";
+    }
+  | {
+      kind: "maintainer_reviewed_system";
+      authorityVerificationRef: DigestedRef;
+      permittedUse: "software_default" | "editorial_default";
+      nonHistoricalScopeRef: DigestedRef;
+    }
+  | {
+      kind: "owner_reviewed_local";
+      authorityVerificationRef: DigestedRef;
+      permittedUse: "disclosed_local_guidance";
+    }
+  | {
+      kind: "specialist_reviewed";
+      authorityVerificationRefs: DigestedRef[];
+      presentationScopeRef: DigestedRef;
+    };
+
+type ActivationDecisionBase = {
   id: string;
   releaseRef: DigestedRef;
   profileRef: DigestedRef;
@@ -503,18 +672,27 @@ type ActivationDecision = {
   advisoryVerificationRefs: DigestedRef[];
   requestedScopeRef: DigestedRef;
   resolutionPolicyRef: DigestedRef;
-  mode?: "test_only" | "owner_reviewed_local" | "specialist_reviewed";
-  result: "allow" | "deny" | "review_required";
+  resolutionTimeRef: DigestedRef;
+  clockPolicyRef: DigestedRef;
+  validThrough?: string;
   rationale: string;
   digest: string;
 };
+
+type ActivationDecision = ActivationDecisionBase &
+  (
+    | { result: "allow"; authority: ActivationAuthority }
+    | { result: "deny" | "review_required"; authority?: never }
+  );
 ```
 
-Canonical serialization, digest domain, schema version, and internal digested references are part of the storage contract. Content changes create a new release. Later review creates an attestation; supersession, retraction, rights restriction, or revocation creates an advisory. Trust is computed by an external Attestation Verification under a pinned verifier policy; advisory issuer identity and authority over the advisory kind, subject, and scope are computed by an external Advisory Verification. Neither is a claimant-controlled field. An imported self-assertion remains unverified and cannot confer specialist authority or change current eligibility.
+Canonical serialization, digest domain, schema version, and internal digested references are part of the storage contract. Content changes create a new release. Later review creates an attestation; supersession, retraction, rights restriction, or revocation creates an advisory. Trust is computed by an external Attestation Verification under a pinned verifier policy; advisory issuer identity and authority over the advisory kind, subject, and scope are computed by an external Advisory Verification. Neither is a claimant-controlled field. A verified or out-of-scope result always pins both the evaluated scope and the authority scope used for comparison; unverified and revoked results cannot carry an authority scope. A verification is trusted only when issued through a verifier authorized by the pinned Trust Policy; importing a verification record cannot confer trust. Every Catalog and Activation Decision pins resolution time, clock policy, and any earliest validity boundary. Current use fails closed after expiry or verified revocation and atomically publishes a replacement `review_required` or `deny` decision before further ordinary activation, while historical outputs retain their original as-of snapshots.
 
 For brevity, this specification may call a release whose only activating attestation is `test_only` a test-only release; the state belongs to the attestation, not mutable release content.
 
-A test-only attestation is system-issued under a pinned test policy and conveys no human, historical, or specialist authority. Owner-reviewed-local and specialist attestations require the corresponding human reviewer and external scope verification. Owner-reviewed local knowledge may guide local work with explicit disclosure; it is not presented as specialist-reviewed historical practice. AFK automation may build drafts, extraction artifacts, candidates, test-only releases and attestations, and review packages; it may not invent the human authority required for an Owner-local or specialist attestation.
+A test-only attestation is system-issued under a pinned test policy and conveys no human, historical, or specialist authority. A maintainer-reviewed-system attestation authorizes only software or editorial consequences inside its explicitly nonhistorical scope. Owner-reviewed-local and specialist attestations require the corresponding human reviewer and external scope verification. Exact-artifact human reviews use the same external Reviewer Authority Verification contract: Owner-usefulness review may use explicit Owner authority, while target-player, idiom, historical, continuo, counterpoint, and engraving claims require matching verified roles. AFK automation may build drafts, extraction artifacts, candidates, test-only releases and attestations, and review packages; it may not invent human authority.
+
+An `allow` Activation Decision without exactly one valid authority variant is schema-invalid. Its authority must agree with the complete attestation and verification closure and remains part of the Manifest, Arrangement Search identity, export policy, readiness calculation, and user disclosure.
 
 ### Profiles and compiler mappings
 
@@ -566,6 +744,8 @@ type KnowledgeLibraryInventorySnapshot = {
 type KnowledgeCatalogSnapshot = {
   id: string;
   inventorySnapshotRef: DigestedRef;
+  resolutionTimeRef: DigestedRef;
+  clockPolicyRef: DigestedRef;
   eligibleReleaseRefs: DigestedRef[];
   inventoryOutcomeRefs: DigestedRef[];
   attestationRefs: DigestedRef[];
@@ -575,11 +755,14 @@ type KnowledgeCatalogSnapshot = {
   rightsDecisionRefs: DigestedRef[];
   trustPolicyRef: DigestedRef;
   catalogBuilderRef: DigestedRef;
+  validThrough?: string;
   digest: string;
 };
 
 type PredicateResult = {
   predicateRef: DigestedRef;
+  evaluatedContextRef: DigestedRef;
+  evaluatorComponentRef: DigestedRef;
   result: "true" | "false" | "unknown" | "error";
   evidenceRefs: DigestedRef[];
   rationale: string;
@@ -616,15 +799,18 @@ type AppliedKnowledgeManifest = {
 };
 ```
 
+Release dependencies form an acyclic Merkle DAG and may reference only already digested releases. A semantic conflict, mutual comparison, or citation relationship that is not an authority dependency belongs in an external relationship edge pinned by the Inventory or Release graph snapshot. Dependency cycles are schema-invalid rather than being resolved through an unspecified fixed-point hash.
+
 Manifest completeness is an enforced invariant:
 
 - the Inventory Snapshot is the authoritative enumeration of every release reachable from the pinned configured registries under the pinned inventory builder and policy;
 - every release in the Inventory Snapshot has exactly one Catalog inclusion or exclusion outcome, and every included release appears in the Catalog Snapshot;
 - every eligible release in the Catalog Snapshot has one retained manifest outcome;
 - every reachable profile in every considered release appears exactly once;
-- exclusions record typed reasons and every dependency appears in a cycle-valid closure;
+- exclusions record typed reasons and every dependency appears in a complete acyclic closure;
 - every predicate retains true, false, unknown, or error rather than collapsing missing data into false;
 - every profile entry has exactly one Activation Decision: applicable authorized entries receive `allow`, inapplicable or excluded entries receive `deny`, and unresolved or conflicting authority receives `review_required` unless policy resolves it without erasure;
+- every `allow` decision carries exactly one scope-compatible Activation Authority derived from its complete verified attestation closure; missing or mixed authority invalidates the decision;
 - only applicable entries with an `allow` Activation Decision over matching release, profile, scope, trusted Attestation Verification, rights decisions, verified effective advisories, and Resolution Policy activate ordinary consequences;
 - conflicting entries retain separate candidate-family consequences until an explicit resolution selects one; and
 - every selected component and parameter set resolves through the exact Component Registry Snapshot.
@@ -632,6 +818,22 @@ Manifest completeness is an enforced invariant:
 A manifest that omits an inventoried release, Catalog outcome, profile, dependency, conflict, exclusion reason, Activation Decision, or resolution decision is invalid. Validators independently rebuild the Inventory and Catalog Snapshots from their pinned registries, builders, and policies before recomputing completeness; a generator or catalog builder cannot certify its own completeness by listing only the packs it found or used.
 
 Every Arrangement Search records the exact manifest and referenced immutable records. Unknown applicability cannot be scored as neutral. Materially different historically plausible resolutions produce separate candidate families or a focused review.
+
+### Authority Path Inventory
+
+Musical authority does not live only in stored Knowledge Packs. An immutable Authority Path Inventory covers every prompt instruction, prompt example, tool description or default, built-in lookup table or chart, compiler branch, ranker, validator, parameter, profile constant, and presentation label capable of changing musical behavior or the authority claimed for that behavior.
+
+Every path is classified as one of:
+
+- mechanical fact resolved through an Instrument Model or Instrument Instance;
+- reviewed Knowledge Pack or profile consequence;
+- maintainer-reviewed software heuristic;
+- editorial convention;
+- Owner-local preference;
+- evaluator-only logic; or
+- forbidden unregistered bypass.
+
+Each nonmechanical production path resolves through the exact Component Registry Snapshot and Applied Knowledge Manifest or is disabled. Static scans and runtime instrumentation detect newly introduced unregistered paths. A manifest that records an empty pack set while prompt, table, ranker, or compiler behavior still supplies unregistered historical or idiomatic guidance is invalid.
 
 ## Knowledge reassessment
 
@@ -649,7 +851,7 @@ A Knowledge Reassessment identifies affected analyses, plans, searches, scores, 
 
 Uploading or extracting a later source creates candidates and comparison work only. It does not change production readiness, active compiler behavior, or release eligibility.
 
-Each immutable Reassessment records its triggering candidate, release, attestation, advisory, identity correction, or rights decision; exact old and new refs; affected dependency paths; proposed, reviewed, or effective state; resolver, policy, Inventory and Catalog Snapshot identities; reviewer and evidence refs; and remediation or regeneration choices. Only a new Activation Decision over an immutable release, trusted applicable Attestation Verification, verified effective advisories, current rights decisions, and the pinned Resolution Policy changes current resolution. Old outputs retain their original as-of snapshots.
+Each immutable Reassessment records its triggering candidate, release, attestation, advisory, identity correction, rights decision, or validity expiry; exact old and new refs; affected dependency paths; proposed, reviewed, or effective state; resolver, policy, Inventory and Catalog Snapshot identities; reviewer and evidence refs; and remediation or regeneration choices. Positive authority arises only from a new Activation Decision over an immutable release, trusted applicable Attestation Verification, verified effective advisories, current rights decisions, resolution time and clock policy, and the pinned Resolution Policy. Expiry or verified revocation immediately makes an old `allow` ineligible for current use and requires an atomically published `review_required` or `deny` successor before ordinary activation resumes. Old outputs retain their original as-of snapshots.
 
 ## Shared musical-intelligence contracts
 
@@ -670,6 +872,158 @@ Before target realization, the current Analysis Record and Arrangement Plan must
 - what uncertainty would materially change those decisions.
 
 Successful pitch placement cannot compensate for a weak or incoherent musical plan.
+
+### Source Voice Graph
+
+A staff, part, tablature system, or MIDI track is not automatically one musical voice. Before target planning, every polyphonic source receives a Source Voice Graph. Identity basis is notated, inferred, or hybrid; resolved, disputed, and unresolved are separate identity states.
+
+```ts
+type SourceVoice = {
+  id: string;
+  sourcePartRefs: DigestedRef[];
+  identityBasis: "notated" | "inferred" | "hybrid";
+  identityState: "resolved" | "disputed" | "unresolved";
+  occurrenceRefs: DigestedRef[];
+  roleClaimRefs: DigestedRef[];
+  evidenceRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+};
+
+type SourceVoiceOccurrence = {
+  id: string;
+  sourceVoiceId: string;
+  eventRefs: StableEventRef[];
+  musicalRange: MusicalRange;
+  state: "sounding" | "notated_rest" | "inferred_inactive" | "tacet" | "disputed";
+  evidenceRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+
+type SourceVoiceRelation = {
+  id: string;
+  kind: "continuation" | "split" | "merge" | "exchange" | "cross_staff" | "ambiguity";
+  fromVoiceIds: string[];
+  toVoiceIds: string[];
+  scope: MusicalRange;
+  evidenceRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+};
+
+type SourceVoiceGraph = {
+  id: string;
+  normalizedScoreRef: DigestedRef;
+  voices: SourceVoice[];
+  occurrenceRefs: DigestedRef[];
+  relations: SourceVoiceRelation[];
+  unresolvedEventRefs: StableEventRef[];
+  unresolvedIdentityRefs: DigestedRef[];
+  digest: string;
+};
+```
+
+Every voice-bearing Normalized Score event appears in exactly one resolved Source Voice Occurrence or in `unresolvedEventRefs`. Intentional ambiguous membership uses disputed occurrences that name the same uncertainty and may overlap only under an explicit ambiguity relation; silent omission or unexplained duplicate membership invalidates the graph. Every Target Voice source ref resolves through the pinned Source Voice Graph, never implicitly through a part or visible staff. An uncertainty that could change entry order, continuity, bass identity, Principal Voice identity, or a preserved relationship is Critical Uncertainty.
+
+### Lyrics and text underlay
+
+When a source contains sung text or a requested layout includes a vocal line, lyrics are versioned source truth rather than engraving-only strings.
+
+```ts
+type LyricSyllable = {
+  id: string;
+  verseId: string;
+  text: string;
+  sourceVoiceRef: DigestedRef;
+  anchorEventRefs: StableEventRef[];
+  boundaryAfter: "word_end" | "hyphen" | "elision" | "none";
+  noteExtension: "single_note" | "melisma";
+  extenderEndEventRef?: StableEventRef;
+  extenderGeometryRef?: DigestedRef;
+  language?: string;
+  sourceRegionRef: DigestedRef;
+  confidence: number;
+  uncertaintyRefs: DigestedRef[];
+};
+
+type LyricUnderlay = {
+  id: string;
+  sourceVoiceRef: DigestedRef;
+  verseRefs: DigestedRef[];
+  syllableRefs: DigestedRef[];
+  digest: string;
+};
+```
+
+OCR and OMR alignment retain verse order, syllable boundaries, hyphens, elisions, extenders, melismas, and source geometry. Underlay uncertainty is Critical when it affects a requested song deliverable, textual phrase, accent, or preserved vocal identity. Faithful Reduction preserves requested text and alignment or records a Policy Exception. Audio Preview need not synthesize words, but score following and lineage retain syllable anchors.
+
+### Musical context, transposition, and spanners
+
+Key signature, tonal or modal interpretation, meter, clef, tempo, pitch reference, and written-to-sounding transposition are time-varying canonical context, not one score-level string.
+
+```ts
+type MusicalContextChange = {
+  id: string;
+  kind:
+    | "key_signature"
+    | "tonal_or_modal_context"
+    | "meter"
+    | "clef"
+    | "tempo"
+    | "pitch_reference"
+    | "written_to_sounding";
+  scope: MusicalRange;
+  valueRef: DigestedRef;
+  evidenceRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+};
+
+type PitchMapping = {
+  sourceVoiceRefs: DigestedRef[];
+  targetVoiceIds: string[];
+  scope: MusicalRange;
+  chromaticSemitones: number;
+  diatonicIntervalRef?: DigestedRef;
+  octaveDisplacement: number;
+  sourceWrittenToSounding: number;
+  targetWrittenToSounding: number;
+  capoRef?: DigestedRef;
+  scordaturaRef?: DigestedRef;
+  fixedPitchConstraintRefs: DigestedRef[];
+};
+
+type TranspositionPlan = {
+  id: string;
+  sourceContextMapRef: DigestedRef;
+  targetContextMapRef: DigestedRef;
+  mappings: PitchMapping[];
+  conflictRefs: DigestedRef[];
+  digest: string;
+};
+
+type MusicalSpanner = {
+  id: string;
+  kind: "tie" | "slur" | "phrase" | "arpeggiation";
+  startEventRef: StableEventRef;
+  intermediateEventRefs: StableEventRef[];
+  endEventRef: StableEventRef;
+  sourceGeometryRefs: DigestedRef[];
+  semanticLayer: "source_notated" | "arrangement_score";
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+
+type NotatedOrnament = {
+  id: string;
+  anchorEventRefs: StableEventRef[];
+  markRef: DigestedRef;
+  requiredNotation: boolean;
+  realizationPolicyRef?: DigestedRef;
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+```
+
+A uniform musical transposition may still require distinct per-part written-to-sounding mappings. Enharmonic spelling, internal key or meter changes, fixed vocal range, capo, scordatura, and octave-transposing notation remain explicit. One tie chain has one identity and one uninterrupted Playback Occurrence; intermediate written notes do not reattack. Source-notated ornaments remain source truth even when their sounded realization is an optional Performance Interpretation.
 
 ### Target Voice and Relationship Plans
 
@@ -701,18 +1055,36 @@ type TargetVoice = {
   rhythmicIndependence: "preserve" | "simplify" | "may_merge";
 };
 
+type SourceRelationshipObligationGroup = {
+  id: string;
+  sourceEventRefs: StableEventRef[];
+  orderIndex: number;
+  timingRelationRef?: DigestedRef;
+  requiredTargetSlotIds: string[];
+  digest: string;
+};
+
 type TargetRelationship = {
   id: string;
   kind: RegisteredMusicalRelationshipKind;
   sourceRelationshipRefs: DigestedRef[];
   participantVoiceIds: string[];
-  orderedEventGroups: StableEventRef[][];
+  sourceObligationGroupRefs: DigestedRef[];
   protectedFeatures: RelationshipFeature[];
   activityScope: MusicalRange;
   priority: "invariant" | "structural" | "supporting" | "optional";
   allowedTransformations: TransformationKind[];
   validationProfileRef: DigestedRef;
   evaluatorRequirementRefs: DigestedRef[];
+};
+
+type RealizedRelationshipMapping = {
+  id: string;
+  targetRelationshipRef: DigestedRef;
+  sourceObligationGroupRef: DigestedRef;
+  targetEventRefs: StableEventRef[];
+  targetVoiceIds: string[];
+  digest: string;
 };
 
 type TargetRelationshipPlan = {
@@ -730,6 +1102,7 @@ type TargetVoicePlan = {
   texture: Texture;
   voices: TargetVoice[];
   relationshipPlanRef: DigestedRef;
+  harmonicPlanRef?: DigestedRef;
   crossingPolicy: CrossingPolicy;
   omissionPriority: VoiceRole[];
   prominenceObligations: ProminenceObligation[];
@@ -746,11 +1119,108 @@ Under Faithful Reduction, the Principal Voice's exact pitch mapping under the se
 
 Relationship evaluators recompute protected timing, order, interval-rhythm shape, preparation and resolution, cadence placement, and voice identity from generated output. Generator declarations and event coverage cannot self-certify preservation.
 
-### Continuo Realization and Disposition Plan
+### Target Harmonic Plan
 
-A passage containing a Continuo Foundation receives a Continuo Realization Plan before target search. It records every authoritative bass event, figure and accidental, continuation, inferred or unfigured-bass claim with authority and uncertainty, harmonic rhythm, suspension obligation, selected Realization and Validation Profiles, generated-voice range and density, and doubling and spacing policy.
+Every passage whose recognizability or structural behavior depends on harmony receives a Target Harmonic Plan before physical search. Harmonic interpretation remains Validation-Profile-scoped; Roman-numeral function, modal sonority, chord identity, and dissonance treatment are not assumed to be universal equivalents.
 
 ```ts
+type HarmonicObligation = {
+  id: string;
+  scope: MusicalRange;
+  sourceEventRefs: StableEventRef[];
+  interpretationRef: DigestedRef;
+  protectedFeatures: Array<
+    | "tonal_or_modal_context"
+    | "harmonic_rhythm"
+    | "bass"
+    | "inversion"
+    | "sonority"
+    | "function"
+    | "essential_dissonance"
+    | "tendency_resolution"
+    | "cadence"
+  >;
+  priority: "invariant" | "structural" | "supporting" | "optional";
+  allowedTransformations: TransformationKind[];
+  validationProfileRef: DigestedRef;
+  evaluatorRequirementRefs: DigestedRef[];
+};
+
+type TargetHarmonicPlan = {
+  id: string;
+  passageId: string;
+  obligations: HarmonicObligation[];
+  reharmonizationPolicy: "preserve" | "bounded" | "free";
+  conflictRefs: DigestedRef[];
+  digest: string;
+};
+```
+
+Under Faithful Reduction, Vellum protects the source harmonic skeleton—harmonic rhythm, structural bass and inversion, cadential function, and essential dissonance or resolution—unless Analysis establishes that a dimension is nonstructural or a Policy Exception authorizes its change. Correct Principal Voice events cannot compensate for wrong harmony. Baroque-guitar alfabeto selection, lute bass deployment, classical-guitar bass generation, and Continuo planning consume the exact Harmonic Plan.
+
+### Continuo Realization and Disposition Plan
+
+A passage containing a Continuo Foundation receives a Continuo Realization Plan before target search. Canonical Figured Bass preserves source glyph and normalized musical meaning separately, including standalone accidentals, altered or ambiguous signs, stacked order, changes over a held bass, continuation geometry, and uncertainty.
+
+```ts
+type FiguredBassSign = {
+  id: string;
+  sourceGlyphRef: ContentRef;
+  normalizedKind:
+    | "interval"
+    | "accidental_only"
+    | "altered_interval"
+    | "slash_or_cross"
+    | "unknown";
+  interval?: number;
+  alteration?: "sharp" | "flat" | "natural" | "raised" | "lowered";
+  stackIndex: number;
+  evidenceRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+
+type FiguredBassGroup = {
+  id: string;
+  bassEventRef: StableEventRef;
+  onsetOffset: Rational;
+  duration?: Rational;
+  signRefs: DigestedRef[];
+  continuationSpanRefs: DigestedRef[];
+  geometryRef: DigestedRef;
+  digest: string;
+};
+
+type FiguredBassContinuationSpan = {
+  id: string;
+  sourceGroupRef: DigestedRef;
+  bassEventRefs: StableEventRef[];
+  scope: MusicalRange;
+  geometryRef: DigestedRef;
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+
+type ContinuoConstraintSegment = {
+  id: string;
+  scope: MusicalRange;
+  foundationEventRefs: StableEventRef[];
+  figureGroupRefs: DigestedRef[];
+  inferredConstraintRefs: DigestedRef[];
+  suspensionObligationRefs: DigestedRef[];
+  uncertaintyRefs: DigestedRef[];
+  digest: string;
+};
+
+type GeneratedRealizationMapping = {
+  id: string;
+  segmentRef: DigestedRef;
+  generatedEventRefs: StableEventRef[];
+  generatedVoiceIds: string[];
+  satisfiedConstraintRefs: DigestedRef[];
+  digest: string;
+};
+
 type ContinuoDisposition =
   | {
       kind: "complete_on_target";
@@ -770,9 +1240,12 @@ type ContinuoDisposition =
     };
 
 type ContinuoRealizationPlan = {
+  id: string;
   passageId: string;
   foundationEventRefs: StableEventRef[];
-  figureEventRefs: StableEventRef[];
+  figureGroupRefs: DigestedRef[];
+  constraintSegmentRefs: DigestedRef[];
+  realizationMappings: GeneratedRealizationMapping[];
   relationshipRefs: DigestedRef[];
   realizationProfileRef: DigestedRef;
   validationProfileRef: DigestedRef;
@@ -780,14 +1253,34 @@ type ContinuoRealizationPlan = {
   generatedVoiceIds: string[];
   spacingAndDoublingPolicyRef: DigestedRef;
   uncertaintyRefs: DigestedRef[];
+  digest: string;
 };
 ```
 
-A chord symbol, alfabeto shape, re-entrant course, pitch-class implication, or upper-octave doubling never counts as sounding an authoritative foundation bass. An incapable target includes a separate bass or produces a labeled Continuo Reduction. Engraving, playback, lineage, and evaluation retain the same disposition and never synthesize an absent bass while labeling the result complete.
+A chord symbol, alfabeto shape, re-entrant course, pitch-class implication, or upper-octave doubling never counts as sounding an authoritative foundation bass. Complete dispositions require the sounded-foundation set to equal the complete foundation set. Reduction dispositions require sounded and unsounded sets to be disjoint and their union to equal the complete foundation set. An incapable target includes a separate bass or produces a labeled Continuo Reduction. Engraving, playback, lineage, and evaluation retain the same disposition and never synthesize an absent bass while labeling the result complete.
 
 ### Intended Technique Plan
 
 Each passage receives an Intended Technique Plan where technique matters.
+
+```ts
+type IntendedTechniquePlan = {
+  id: string;
+  passageId: string;
+  techniqueFamilyRef: DigestedRef;
+  profileRef: DigestedRef;
+  scope: MusicalRange;
+  transitionRefs: DigestedRef[];
+  requiredResourceRefs: DigestedRef[];
+  stateObligationRefs: DigestedRef[];
+  notationConsequenceRefs: DigestedRef[];
+  playbackConsequenceRefs: DigestedRef[];
+  alternativeRefs: DigestedRef[];
+  evidenceRefs: DigestedRef[];
+  unknownDimensionRefs: DigestedRef[];
+  digest: string;
+};
+```
 
 It identifies:
 
@@ -821,6 +1314,22 @@ An ergonomic observation records:
 
 A five-fret span is not a universal unit of difficulty: physical distance varies by scale length and fret location. Likewise, a geometrically reachable chord is not automatically repeatable or performance-reliable at tempo.
 
+### Instrument Instance authoring and calibration
+
+Exact mechanics are useful only if the Owner can create, inspect, select, and version the Instrument Instance that supplies them. Built-in templates are editable starting points, not measured personal instruments.
+
+Every mechanically relevant field records value, unit, provenance, measurement method, uncertainty, and status as `measured`, `manufacturer_supplied`, `template_default`, `inferred`, or `unknown`. The authoring workflow supports:
+
+- constituent strings and courses, spatial order, tuning, pitch reference, capo, and scordatura;
+- scale and vibrating lengths, fret positions, neck and nut width, bridge and plucking-zone spacing, action, and setup;
+- handedness and exact two-dimensional left-hand contact geometry;
+- diapason, extension, or bass-rider layout and right-hand access geometry;
+- notation identity and written-to-sounding behavior;
+- photographs or diagrams with a scale reference, plausibility checks, repeated measurement, and Owner confirmation; and
+- immutable versioning, default selection, diff, and dependency-aware staleness.
+
+A partial Instrument Instance may support provisional generation. A mechanical, ergonomic, playable, or performance-reliable claim remains incomplete whenever a dimension used by its evaluator is defaulted, inferred, or unknown. Calibration creates a new immutable version and stales dependent searches, evaluations, and readiness evidence. Owner Ergonomic Profiles remain separate from instrument measurement.
+
 ### Phrase-level candidate state
 
 Target compilers search phrases rather than greedily selecting each event.
@@ -853,11 +1362,30 @@ An Arrangement Candidate includes:
 - hidden fingering or execution evidence when not engraved;
 - Applied Knowledge Manifest and compiled constraints;
 - Transformation Report and Preservation Audit;
+- realized Target Voice, Harmonic, Relationship, Continuo, and Technique mappings;
 - generator-visible Search Measurements and exact Selection Policy identity;
 - retained non-dominated alternatives plus bounded representative rejection reasons and binding constraints;
 - incoming and outgoing state;
 - unknown and not-evaluated dimensions; and
 - reproducible search identity.
+
+```ts
+type AdoptionDecision = {
+  id: string;
+  arrangementSearchRef: DigestedRef;
+  candidateRef: DigestedRef;
+  committedOrderIndex: number;
+  evaluationCardRefs: DigestedRef[];
+  requiredGatePolicyRef: DigestedRef;
+  result: "adopt" | "reject" | "blocked";
+  resultingArrangementScoreRef?: DigestedRef;
+  rationale: string;
+  decidedAt: string;
+  digest: string;
+};
+```
+
+Only `adopt` may create the referenced Arrangement Score, and only when every required applicable independent gate is complete and passing. `reject` records a conclusive candidate failure and may advance evaluation to the next committed survivor. `blocked` records unavailable execution or evidence; that candidate remains pending retry, and no later candidate may be adopted merely because infrastructure failed unless the Owner explicitly abandons the pending candidate or starts a new search. Neither outcome rewrites search order. Adoption is a canonical versioned service and workbench action, not an implicit side effect of storing or ranking a candidate.
 
 ### Search selection and independent evaluation
 
@@ -925,6 +1453,20 @@ type PluckedAttack = {
   }>;
 };
 
+type ResolvedConstituentAttack = {
+  canonicalEventRef: StableEventRef;
+  constituentStringId: string;
+  soundingPitch: Pitch;
+  onsetOffset: Rational;
+};
+
+type ResolvedCourseAttack = {
+  course: number;
+  onsetOffset: Rational;
+  constituentAttacks: ResolvedConstituentAttack[];
+  exceptionalSelectiveAttackRef?: DigestedRef;
+};
+
 type StrummedAttack = {
   kind: "strum";
   onsetOffset: Rational;
@@ -933,7 +1475,7 @@ type StrummedAttack = {
   traversedCourses: number[];
   soundedCourses: number[];
   mutedCourses: number[];
-  resolvedCourseAttacks: Array<{ course: number; onsetOffset: Rational }>;
+  resolvedCourseAttacks: ResolvedCourseAttack[];
 };
 
 type DampingGesture = {
@@ -951,7 +1493,7 @@ type GestureSequence = {
 };
 ```
 
-The sequence records beat and subdivision, attack order, exact right-hand allocation, stroke path, sounded, omitted, and muted courses, constituent-string sounding pitches, held state, releases, and damping. A normal course attack derives its complete constituent-string set from the exact Instrument Instance; search cannot selectively pluck one member of a doubled course. Selective constituent attack is legal only through an explicit exceptional-technique ref with applicable evidence, notation, playback, and evaluation semantics. Stroke traversal and simultaneous chord notation do not erase temporal attack order. A batterie or repicco pattern contains its ordered gestures rather than one generic stroke field.
+The sequence records beat and subdivision, attack order, exact right-hand allocation, stroke path, sounded, omitted, and muted courses, constituent-string sounding pitches, held state, releases, and damping. `traversedCourses` is ordered in physical stroke order; sounded and muted sets are disjoint subsets of it, and every sounded course has exactly one Resolved Course Attack. A normal course attack's constituent set equals the exact Instrument Instance construction; search cannot selectively pluck one member of a doubled course. Selective constituent attack is legal only through an explicit exceptional-technique ref with applicable evidence, notation, playback, and evaluation semantics. Playback consumes canonical constituent attacks rather than independently expanding course numbers. Stroke traversal and simultaneous chord notation do not erase temporal attack order. A batterie or repicco pattern contains its ordered gestures rather than one generic stroke field.
 
 An alfabeto binding separately retains harmonic intent, exact source chart and pack release, symbol and shape identity, tuning and stringing compatibility, left-hand shape and barré, and notation ambiguity. Harmonic-bass or inversion intent remains distinct from the actual lowest sounding constituent string and from Continuo Disposition.
 
@@ -992,13 +1534,18 @@ The compiler consumes:
 - all constituent strings and course construction;
 - six stopped-course tuning and stringing;
 - seven unstopped diapasons and current Bass Tuning;
-- exact scale length, two-dimensional course and fret geometry, neck width, and setup;
+- exact stopped-string vibrating lengths and fret positions;
+- exact constituent-string and course order and spacing at nut, bridge, and every modeled plucking zone;
+- diapason, bass-rider, or extension layout, attachment path, and spatial access;
+- neck width, action, setup, pitch reference, and temperament or fret-placement assumptions used by evaluation;
 - notation identity per course;
-- right-hand bass access assumptions;
+- exact right-hand position and reach inputs rather than an undifferentiated bass-access flag;
 - performer and reliability context; and
 - applicable historical, modern-pedagogical, and software profiles.
 
 The current editor default may be a thirteen-course D-minor-tuning configuration. It must not be described as the universal historical default.
+
+When plucking-zone or diapason-access geometry is absent, right-hand reach, crossing, and transition readiness remain incomplete. Contrastive tests vary course spacing and bass layout while retaining the same tuning so pitch identity cannot masquerade as physical access.
 
 ### Joint left-hand search
 
@@ -1199,7 +1746,7 @@ Evaluation Cards retain separate dimensions for:
 
 Each dimension records applicability, execution status, completeness, authority, evidence basis, permitted presentation, units, uncertainty, and observations. Unknown is never encoded as zero, neutral, or pass.
 
-Every acceptance sentence has a versioned Requirement Ledger entry naming observable inputs, hard-gate or rubric status, evaluator identity and implementation boundary, outcome vocabulary, units or threshold where meaningful, uncertainty behavior, mutation, contamination role, and authorized human role. Adjectives such as coherent, prominent, supported, idiomatic, equivalent, meaningful, or clear are not executable until such an entry exists.
+Every acceptance sentence has a versioned Requirement Ledger entry naming observable inputs, hard-gate or rubric status, evaluator identity and implementation boundary, outcome vocabulary, units or threshold where meaningful, uncertainty behavior, contamination role, and authorized human role. Adjectives such as coherent, prominent, supported, idiomatic, equivalent, meaningful, or clear are not executable until such an entry exists. Public repository ledgers may name development mutations directly, but held-out-specific expectations, forbidden outcomes, mutations, reserve order, and exact case identity live only in a Vault Requirement Ledger. The public ledger retains opaque IDs, coverage classes, and digests without resolving hidden truth.
 
 ### Generator and evaluator separation
 
@@ -1221,13 +1768,14 @@ Contract tests place canaries in serialized case data, environment variables, pr
 
 ### Hard-gate and acceptance status
 
-Every hard-gate definition declares whether it is required for the applicable case. `hardGateStatus` is:
+Every hard-gate definition declares whether it is required for the applicable case. Per-gate execution status, evidence completeness, and result remain orthogonal. Aggregate status uses this precedence:
 
-- `pass` only when every required applicable hard gate completed with complete evidence and passed;
-- `fail` when any required applicable hard gate fails; or
-- `incomplete` when any required gate is unknown, partial, or not evaluated.
+- `fail` when any required applicable gate conclusively establishes a product or output violation;
+- otherwise `blocked` at the enclosing acceptance level when required execution cannot proceed because a source, Access Decision, provider, evaluator, Vault, or infrastructure dependency is unavailable;
+- otherwise `incomplete` when any required gate has unfinished, partial, unknown, or unevaluated evidence; and
+- `pass` only when every required applicable gate completed with complete evidence and passed.
 
-The enclosing `acceptanceStatus` is `pass`, `fail`, `blocked`, or `incomplete`. A confirmed product or output violation is `fail`; unavailable source bytes, denied required access, evaluator crash, provider outage, or other infrastructure failure is `blocked`; missing or unfinished evidence while execution remains available is `incomplete`. Neither blocked nor incomplete can be presented as pass.
+`hardGateStatus` is `pass`, `fail`, or `incomplete`; blocking execution is recorded on the affected gate and aggregated as `acceptanceStatus: blocked` unless a conclusive required failure already establishes `fail`. The enclosing `acceptanceStatus` is `pass`, `fail`, `blocked`, or `incomplete`. Neither blocked nor incomplete can be presented as pass.
 
 Unknown is never converted to pass. The UI may say `no failure observed` for incomplete evidence, but not `hard gates pass`. Arrangement Readiness cannot be ready while hard-gate status is incomplete.
 
@@ -1236,6 +1784,21 @@ Unknown is never converted to pass. The UI may say `no failure observed` for inc
 A dataset role belongs to the tuple of contamination-group identity, exact Generation System consumer closure or evaluator consumer, exact consumer version, and immutable split-manifest identity. It does not belong globally to a file or one nominal compiler.
 
 ```ts
+type QualificationClaimScope = {
+  id: string;
+  targetProfileRefs: DigestedRef[];
+  sourceModalityRefs: DigestedRef[];
+  textureAndTechniqueRefs: DigestedRef[];
+  instrumentConfigurationRefs: DigestedRef[];
+  notationAndPlaybackDimensionRefs: DigestedRef[];
+  performanceAcceptanceProfileRefs: DigestedRef[];
+  providerConditionRefs: DigestedRef[];
+  coveredRequirementRefs: DigestedRef[];
+  exclusionRefs: DigestedRef[];
+  unknownOrUnclaimedDimensionRefs: DigestedRef[];
+  digest: string;
+};
+
 type VaultSplitManifest = {
   id: string;
   generationSystemScopeRef: DigestedRef;
@@ -1247,25 +1810,54 @@ type VaultSplitManifest = {
     | { kind: "seeded"; seed: string; algorithmRef: DigestedRef };
   exhaustionPolicyRef: DigestedRef;
   exposureSnapshotRefs: DigestedRef[];
-  curatorIdentityRef: EntityRef;
+  curatorIdentityRef: DigestedRef;
+  predecessorManifestRef?: DigestedRef;
+  inheritedRegressionRefs: DigestedRef[];
+  inheritedReserveCursorRef?: DigestedRef;
+  holdoutRunLedgerGenesisRef: DigestedRef;
   frozenAt: string;
+  digest: string;
+};
+
+type HoldoutRunLedgerGenesis = {
+  id: string;
+  splitManifestId: string;
+  createdAt: string;
   digest: string;
 };
 
 type HoldoutAttempt = {
   id: string;
   splitManifestRef: DigestedRef;
+  selectionOrdinal: number;
   contaminationGroupRef: DigestedRef;
+  previousAttemptRef?: DigestedRef;
   generationSystemRef: DigestedRef;
+  generatedOutputRefs: DigestedRef[];
   exposureSnapshotRefs: DigestedRef[];
   evaluationCardRefs: DigestedRef[];
+  startedAt: string;
+  completedAt?: string;
   acceptanceStatus: "pass" | "fail" | "blocked" | "incomplete";
-  disposition: "still_held_out" | "permanent_regression" | "invalid_with_reason";
+  validity: { kind: "valid" } | { kind: "invalid"; invalidationDecisionRef: DigestedRef };
+  regressionDisposition:
+    | { kind: "still_held_out" }
+    | { kind: "permanent_regression"; regressionCaseRef: DigestedRef };
+  digest: string;
+};
+
+type HoldoutRunLedger = {
+  id: string;
+  splitManifestRef: DigestedRef;
+  genesisRef: DigestedRef;
+  previousLedgerOrGenesisRef: DigestedRef;
+  orderedAttemptRefs: DigestedRef[];
+  finalizedAt?: string;
   digest: string;
 };
 ```
 
-The Vault Split Manifest and each Holdout Attempt live inside the Owner Evaluation Vault. Ordinary generation receives neither object; the evaluator exposes only the source envelope selected by the committed manifest.
+The Vault Split Manifest precommits exactly one Holdout Run Ledger genesis. The Vault enforces one compare-and-swap current head for that manifest; every ledger version descends from the genesis through a required predecessor ref, every fork remains retained, and an unreconciled fork invalidates qualification. The Vault Requirement Ledger, Holdout Attempts, invalidation decisions, genesis, ledger versions, and head live inside the Owner Evaluation Vault. Ordinary generation receives none of them; the evaluator exposes only the source envelope selected by the committed manifest. Every attempt, including blocked, incomplete, failed, and invalid attempts, is appended in manifest-derived order. A valid failure references a permanent regression; invalid attempts cannot count as passes. Capability Qualification pins a finalized head proven to descend from the precommitted genesis. A successor manifest inherits accumulated regressions and the predecessor's unconsumed reserve cursor and cannot reseed or reorder that remainder.
 
 A contamination group includes every artifact that can reveal substantially the same answer to that consumer: all editions and scans of the same Work, excerpts, crops, transcriptions, translations, analyses, arrangements, extracted examples, candidates, and claims or profiles authored from them. A conservative split may additionally group by composer, school, source family, tune family, transposition, near duplicate, or shared editorial derivation.
 
@@ -1286,6 +1878,11 @@ Moving a group creates a new split manifest and invalidates incompatible compari
 The evaluation corpus must detect at least:
 
 - Principal Voice pitch, timing, order, phrase, prominence, or cadence loss;
+- collapse of two source voices sharing one part or staff, cross-staff identity loss, or a wrong voice exchange;
+- harmonic-rhythm, bass, inversion, essential-dissonance, tendency-resolution, or cadence corruption despite a preserved melody;
+- a wrong part-scoped written-to-sounding mapping, internal key or meter change, capo, or scordatura mapping;
+- a multi-segment tie retrigger, lost slur, or source-notated ornament silently discarded;
+- lyric verse, syllable, hyphen, elision, melisma, or event-alignment corruption when text is in scope;
 - a disappearing or rhythmically incoherent classical-guitar bass;
 - a false two-voice declaration;
 - the known lute f/b stretch;
@@ -1296,6 +1893,7 @@ The evaluation corpus must detect at least:
 - a broken punteado, rasgueado, or mixed-style transition;
 - a baroque-guitar reach or transition falsely accepted by fret-only rather than two-dimensional course-and-fret geometry;
 - a strummed Gesture Sequence flattened into one simultaneous MIDI chord;
+- a course mask with missing, duplicated, or octave-corrupted constituent-string attacks;
 - an impossible lute right-hand digit allocation, simultaneous stopped-course attack, alternation, crossing, thumb behavior, or stopped-course-to-diapason transition;
 - held-note, damping, or duration corruption;
 - a figured-bass figure, accidental, bass alignment, continuation, or suspension corruption;
@@ -1314,6 +1912,16 @@ The evaluation corpus must detect at least:
 
 Mutation success proves sensitivity only to the mutated class. It does not imply general musical correctness.
 
+### Coequal Golden Engraving and Playback Fixtures
+
+Each initial target has an exact semantic-to-rendered-to-sounding fixture:
+
+- **baroque guitar**: punteado allocation, alfabeto binding, ordered up- and down-strokes, course suppression, octave-paired constituent pitches, held harmony, release, and damping;
+- **baroque lute**: the accepted diapason fixture plus a stopped doubled-course and stopped-course-to-diapason right-hand transition; and
+- **classical guitar**: independent voices with planned rests, stems, multi-segment ties, voice crossing, written-to-sounding octave identity, and isolated Playback Parts.
+
+Tests inspect canonical semantic events, generated notation semantics, rendered PDF or SVG glyphs and placement, Playback Occurrences, sounding pitches, held and damped state, and duplicate prevention. Non-empty notation, matching pitch classes, or successful LilyPond compilation is insufficient.
+
 ### Content-addressed regression contracts
 
 Every named regression resolves to an immutable bundle rather than a tune title or anecdote. The bundle pins source and reviewed truth, Analysis, Arrangement and Performance Briefs, Preservation Policy, Applied Knowledge Manifest, Instrument Instance, notation, scoped events, required observations, forbidden outcomes, mutations, evaluators, review roles, and one digest.
@@ -1326,9 +1934,11 @@ The Greensleeves bundles pin the observed baroque-guitar course/fret transition 
 
 Greensleeves is permanently development and regression evidence for all three target compilers. It exercises shared plumbing and the three known failures; it is never held-out evidence and cannot establish generalization.
 
-Visible repository fixtures remain contract and development evidence. Assets held out from Vellum development, prompt authoring, fitting, and evaluator calibration, together with reviewed truth, evaluator-only expectations, and split manifests, live outside Git and outside the ordinary workspace/content-store read capability in the Owner Evaluation Vault. Repository code may retain opaque case IDs, content digests, and coverage requirements, but not the hidden answers. A narrow evaluation orchestrator releases the source input—not its labels—to the sealed generation process only when a held-out run begins; the generation process has no filesystem, database, environment, or API capability that can enumerate the Vault or its reserves.
+Visible repository fixtures remain contract and development evidence. Assets held out from Vellum development, prompt authoring, fitting, and evaluator calibration, together with reviewed truth, evaluator-only expectations, mutations, invalidation decisions, reserve order or seed, per-attempt diagnostics, and split manifests, live outside Git and outside the ordinary workspace/content-store read capability in the Owner Evaluation Vault. Repository code and public tracer artifacts may retain only opaque case IDs, content digests, coverage requirements, aggregate statuses, and redacted evidence—not hidden answers or identities. Public manifests bind Vault artifacts by digest without resolving them. Repository verification rejects reserve identities, hidden expectations, mutations, answers, or unredacted held-out diagnostics. A narrow evaluation orchestrator releases the source input—not its labels—to the sealed generation process only when a held-out run begins; the generation process has no filesystem, database, environment, or API capability that can enumerate the Vault or its reserves.
 
-This is a product-development isolation claim, not a claim that a Work was absent from a pretrained model's corpus. Every run records provider, model, account or project, session, retention and training policy when knowable, prior-call exposure, prompt digest, and whether execution was provider-free. Held-out generation uses either a deterministic provider-free path or a stateless isolated provider context with no cross-run memory or retrieval over prior sessions. Provider and conversation exposure enter the contamination history and may make a comparison ineligible.
+The Vault has a separate least-privilege capability boundary, authenticated encryption at rest, atomic durable writes, versioned schema migrations, integrity scans, an explicit encrypted-backup and backup-exclusion policy, restore verification, retention and purge controls, and redacted operational telemetry. Ordinary workspace, development-agent, search-index, backup, logging, and diagnostic capabilities cannot enumerate it. Corruption, unavailable keys, failed migration, or unavailable storage produces blocked acceptance, never an empty-pool pass. Every released source envelope and administrative read enters the exposure ledger.
+
+This is a product-development isolation claim, not a claim that a Work was absent from a pretrained model's corpus. Every run records provider, model, account or project, session, retention and training policy when knowable, prior-call exposure, prompt digest, and whether execution was provider-free. Every Capability Qualification pins a Qualification Execution Policy declaring deterministic/provider-free or stochastic execution. Stochastic execution precommits sample count, seeds or isolated sessions, retry treatment, retained-output policy, confidence rule, and tolerated hard-failure rate; every attempt counts and is retained, and one favorable sample cannot qualify capability. If a provider exposes no immutable deployment revision, qualification is explicitly time- or sentinel-bounded. Semantic drift, deployment change, failed sentinel checks, or changed retention or session behavior stales qualification and requires fresh precommitted evaluation.
 
 Initial release acceptance contains at least two independent, non-Greensleeves contamination groups per target:
 
@@ -1340,7 +1950,9 @@ Dedicated non-Greensleeves shared-contract groups cover a soprano-plus-figured-b
 
 Holdout selection is a blinded curation task. Sources must be legally usable, absent from derivation, development, fitting, evaluator calibration, prompt examples, and pack examples, and grouped with all near duplicates and derivatives. The source pool deliberately varies key, meter, Texture, technique, stringing or tuning, density, and performance context and includes contrastive cases in which an attractive idiom is inapplicable.
 
-The tracked specification intentionally names coverage classes rather than the exact held-out Works. Publishing their identities, reviewed truth, or expected repairs in the normal repository would make them development targets. Before any system output is observed, an independent curator commits inside the Vault the eligible pool, contamination closures, invalid-fixture policy, reserve order or deterministic selection seed, coverage assignment, and exhaustion rule. The split-manifest digest is frozen before the relevant Generation System versions are run; invalidation requires a documented source-independent reason and preserves the attempted case history.
+Holdout independence and musical authority are separate. The split curator controls eligibility and coverage but does not thereby certify musical truth. Every gate and reviewed expectation identifies a scope-qualified truth reviewer, evaluator implementer, evaluator calibrator, and run operator under a conflict-of-role policy. Target idiom truth requires corresponding target-instrument authority; Continuo, counterpoint, lyrics, and engraving truth require their corresponding musical or editorial authority. Calibration consumes calibration-role evidence only. Unresolved reviewer disagreement yields incomplete evidence, never a passing gate.
+
+The tracked specification intentionally names coverage classes rather than the exact held-out Works. Publishing their identities, reviewed truth, or expected repairs in the normal repository would make them development targets. Before any system output is observed, an independent curator commits inside the Vault the eligible pool, contamination closures, invalid-fixture policy, reserve order or deterministic selection seed, coverage assignment, and exhaustion rule. The split-manifest digest is frozen before the relevant Generation System versions are run. Invalidation requires a reason permitted by the frozen policy and independent of the candidate output or observed evaluation outcome. The reason may concern source corruption, identity, rights, reviewed truth, or evaluator validity. An immutable decision records adjudicator, policy, evidence, time, and affected attempt; the attempt remains in history and replacement follows the precommitted reserve sequence.
 
 Generation System, profile, Selection Policy, and evaluator versions are sealed before execution. Every valid failed group remains disclosed in the result history and becomes a mandatory permanent development regression. A repaired successor must pass all accumulated valid failures plus the next precommitted reserve groups; it cannot consume reserves until two convenient groups happen to pass. Those reserves are described as fresh and held out from Vellum development, not guaranteed unseen by a pretrained model.
 
@@ -1488,7 +2100,7 @@ The 1896 Harrison rewrite of Sor is comparison and edition-history evidence, not
 
 ### Shared Italian keyboard continuo
 
-The canonical seed is Francesco Gasparini, [L'armonico pratico al cimbalo](https://www.loc.gov/item/05004057/) (Venice, 1708), Library of Congress Music Division, LCCN 05004057. Its keyboard dispositions, doublings, economical motion, figured dissonance preparation and resolution, accompaniment density, cadences, and ornamented realizations can support a scoped `continuo.italian-baroque` development profile after cited extraction and review. The 1764 manifestation may assist OCR and comparison but does not replace the 1708 manifestation identity. Gasparini is derivation and development evidence and is excluded, with its contamination group, from held-out Continuo acceptance.
+The canonical seed is Francesco Gasparini, [L'armonico pratico al cimbalo](https://www.loc.gov/item/05004057/) (Venice, 1708), Library of Congress Music Division, LCCN 05004057. Its keyboard dispositions, doublings, economical motion, figured dissonance preparation and resolution, accompaniment density, cadences, and ornamented realizations can support a scoped `continuo.italian-baroque.cembalo` development profile after cited extraction and review. The first exact target is a harpsichord or cembalo Instrument Instance; spinet and organ behavior require separately scoped profiles. A modern-piano result is an explicitly named editorial adaptation that may compose historical harmonic constraints with modern-piano mechanics but cannot inherit Gasparini's target-instrument authority. The 1764 manifestation may assist OCR and comparison but does not replace the 1708 manifestation identity. Gasparini is derivation and development evidence and is excluded, with its contamination group, from held-out Continuo acceptance.
 
 ### First extraction fixtures
 
@@ -1502,6 +2114,22 @@ The canonical seed is Francesco Gasparini, [L'armonico pratico al cimbalo](https
 
 One source per target proves plumbing, not idiomatic authority.
 
+## Performance and operability acceptance
+
+Correctness on short fixtures does not establish usefulness on a real score or an accumulated library. Versioned Performance Acceptance Profiles bind exact hardware/runtime classes, reference and stress workloads, thresholds, measurement methods, and result digests.
+
+The initial workload set includes:
+
+- a short interactive excerpt through PDF review and all three target siblings;
+- a multi-page SATB source with changing context, repeats, lyrics where present, and all three targets;
+- a complete representative work exercising section-level backtracking, interruption, checkpoint, reload, and resume;
+- a mature Reviewed Knowledge Library containing enough releases, profiles, conflicts, advisories, and inapplicable entries to exercise complete enumeration rather than an empty or toy catalog; and
+- adversarial high-density passages and an oversized library that may legitimately exhaust a declared budget.
+
+Each profile records maximum wall time by workflow stage, peak memory, persisted bytes, Inventory, Catalog and Manifest size, candidate frontier and checkpoint size, cancellation response, checkpoint interval, resume overhead, and redacted diagnostic limits. Before measuring a baseline, Slice 0 commits the release-floor derivation algorithm, safety margins, supported hardware classes, workload generators, and measurement method. It then applies that policy exactly to the recorded clean baseline and pins `performance.release-floor.v1` before optimization or qualification output is observed. A later profile may support a narrower claim, but it cannot replace or satisfy that mandatory release floor. Changing the floor after results exist requires an explicit Owner-approved specification decision, preserves the original failure and comparison, and invalidates any broader claim rather than shopping for a passing threshold.
+
+Inventory and Catalog Snapshots are shared by digest across passages. Context-specific manifests may factor shared snapshots and reusable completeness proofs but cannot weaken authoritative enumeration. Applicability evaluation is incremental over immutable dependency closures, and phrase or section search retains bounded frontiers and resumable checkpoints. Reference workloads must complete or return an actionable musical conflict within their profile. Stress exhaustion is acceptable only when `budget_exhausted`, cancellation, checkpointing, resume, retained alternatives, and user presentation remain correct; exhaustion cannot masquerade as infeasibility or success.
+
 ## Execution sequence
 
 Implementation proceeds through production-path tracer bullets. Each tracer begins with a failing output-level or contract-level case, crosses the real canonical path, and ends with a demoable Owner outcome.
@@ -1509,21 +2137,27 @@ Implementation proceeds through production-path tracer bullets. Each tracer begi
 ### Slice 0 — Specification and baseline guard
 
 - Make this document the sole current specification.
-- Enforce accepted ADR 0022 before canonical knowledge-schema implementation.
+- Align `CONTEXT.md`, ADRs 0004, 0015, and 0018–0022, `AGENTS.md`, and issue-tracker guidance with this specification before deriving the wave.
 - Freeze earlier documents as history.
 - Correct active domain and README claims that overstate historical authority or prototype playability.
 - Verify that the completed prototype evidence remains intact.
-- Separate tri-state `hardGateStatus` from four-state `acceptanceStatus` and remove every false `hard gates pass` presentation.
-- Enforce a first evaluator-input canary so later evaluation work cannot build on the current porous executor boundary.
+- Disable the generic client-supplied production provider stream or bind it to server-minted Model Action, Egress Envelope, and Result Commit enforcement before private reference ingestion; add forged-context, cross-workspace, prompt-injection, destination-substitution, tool-capability escalation, denied-egress, mismatched-response, and unrelated-canonical-result tests.
+- Inventory tracked source-derived code, tests, fixtures, prompts, and Git history. Quarantine the Tyler-derived universal chart and Foscarini overlay from production defaults pending exact repository-inclusion and redistribution decisions, record already-pushed copies as irreversible prior disclosure, and prefer reviewed public-domain primary-source data or an authorized local pack.
+- Add red contract guards for one-part/multiple-voice source data, changing key or meter, per-part written-to-sounding mapping, multi-segment ties, figure changes and continuations, and the current semitone-only Transposition Plan.
+- Separate tri-state `hardGateStatus` from four-state `acceptanceStatus`, enforce aggregate precedence, and remove every false `hard gates pass` presentation.
+- Enforce evaluator-input and public-repository held-out-data canaries so later evaluation work cannot build on the current porous executor or ledger boundary.
+- Commit the release-floor derivation policy before measuring, then deterministically derive and commit `performance.release-floor.v1`, its supported hardware classes and numeric thresholds, and the per-tracer gate-matrix schema from the recorded clean baseline before optimization begins.
 
 ### Slice 1 — Source identity and safe migration
 
 - Introduce versioned identity assertions, Works, Source Manifestations, Exemplars, immutable Digital Assets, acquisition records, Source Segment Versions, rights assertions, and Access Decisions.
+- Implement shared content-addressed bytes with acquisition-edge provenance and role-specific Arrangement Source, Owner Reference, and Evaluation Source bindings; deletion and rights resolution operate on provenance paths rather than whichever identical byte arrived last.
 - Preserve each OwnerReference as an immutable legacy record with a permanent mapping, migration journal, collision and unresolved-identity quarantine, and exact byte and hash verification.
-- Inventory legacy Historical Practice Claims, Knowledge Packs, and activation paths; map same-lane records where provenance permits, quarantine mixed or self-authorizing authority by default, preserve compatibility reads, and shut down every legacy activation bypass at cutover.
-- Make migration transactional, idempotent, resumable, dry-runnable, and rollback-safe through cutover; never manufacture missing Work, date, edition, provenance, rights, or review authority.
+- Build the immutable Authority Path Inventory over legacy claims and packs plus prompts, tool descriptions and defaults, built-in tables and charts, compiler branches, rankers, validators, constants, and presentation labels. Classify or quarantine each path and add old/new compatibility readers and shadow resolution without changing production activation.
+- Establish the transactional publication-generation store, stable snapshot reads, concurrent-writer protection, crash recovery, and compare-and-swap head before canonical writers rely on it.
+- Make migration transactional, idempotent, resumable, dry-runnable, and rollback-safe; never manufacture missing Work, date, edition, provenance, rights, or review authority, and prove rollback before cutover.
 - Default migrated private content to no provider egress, fixture inclusion, or redistribution.
-- Exercise duplicate bytes with different provenance, incomplete and composite identity, interruption, rollback, rerun, post-cutover referential integrity, compatibility reads, and attempts to reactivate quarantined legacy knowledge through an old code path.
+- Exercise both acquisition orderings for duplicate bytes with different rights, deletion of either acquisition, incomplete and composite identity, interruption, rollback, rerun, stable snapshot reads, compatibility reads, and attempts to reactivate quarantined legacy knowledge through an old code path.
 - Remove automatic perfect confidence for documentary classification.
 - End with one migrated and one newly uploaded real reference visible through the production Workbench.
 
@@ -1539,35 +2173,45 @@ Implementation proceeds through production-path tracer bullets. Each tracer begi
 
 ### Slice 3 — Release, manifest, and provisional-consequence vertical
 
-- Add orthogonal candidate axes, lane-compatible typed evidence and derivation relations, immutable releases, externally verified scoped attestations, advisories, Activation Decisions, and centrally governed Resolution Policy.
+- Add typed evidence edges and stable predicate identities, orthogonal candidate axes, lane-compatible derivation relations, immutable releases, credential-backed external reviewer and verifier authority, advisories, required discriminated Activation Authority, Activation Decisions, and centrally governed Resolution Policy.
 - Produce a test-only release with profiles, examples, counterexamples, derivations, and declarative mappings.
 - Resolve it into an Applied Knowledge Manifest.
 - Rebuild an authoritative Knowledge Library Inventory, derive an exact Catalog, and recompute manifest completeness against those and the Component Registry Snapshot; detect an omitted inventoried release, eligibility outcome, profile, or dependency.
 - Run one visible arrangement consequence only in explicit provisional-research mode and prove that default Guided Start cannot activate it or claim readiness.
 - Record exact Inventory, Catalog, Activation Decision, component, and manifest digests in Arrangement Search and Evaluation Run identity.
 - Prove that unknown, excluded, conflicting, retracted, and unavailable-source states remain distinct.
+- Prove that verified and out-of-scope authority always carries evaluated and authorization scopes, unverified or revoked records carry none, and missing scope, credential intersection, expiry, revocation, or clock-policy mismatch fails closed and publishes the required successor decision.
+- Reconcile every Authority Path Inventory entry against the Component Registry and Applied Knowledge Manifest; disable any nonmechanical path absent from both and add static and runtime bypass detection.
+- Activate the new resolver and disable legacy activation in one transactional cutover only after compatible readers, migration validation, shadow comparison, post-cutover integrity checks, and tested rollback pass. No tracer may introduce a canonical writer before compatible readers and migration exist or disable a production path before its replacement is active.
+- Crash after every staged publication write and before and after head commit; test concurrent upload, review, advisory, and activation writers, stale-head rejection, orphan recovery, and snapshot-consistent Inventory and Catalog rebuilding.
+- Prove that maintainer-reviewed-system authority enables an explicitly nonhistorical software or editorial default while absent, mixed, test-only, Owner-local, or out-of-scope authority cannot produce an ordinary or historically presented result.
 
 ### Slice 4 — Evaluation contracts, isolation, and vault
 
 - Migrate old Cards and baselines without reinterpreting prior proxy dimensions; incompatible comparisons say so.
 - Enforce the Generation Input Envelope and evaluator-only store in a separate process.
-- Add tri-state hard gates, four-state acceptance, Generation-System-scoped contamination groups, split manifests, provider and session exposure history, and precommitted reserve ordering.
-- Add Search Measurement and Selection Policy contracts separately from Evaluation Cards.
-- Create the Owner Evaluation Vault outside Git and prove with canaries that generation cannot read its labels, mutations, expectations, or reserve assets.
+- Add tri-state hard gates, precedence-governed four-state acceptance, Generation-System-scoped contamination groups, split manifests, append-only Holdout Run Ledgers, provider and session exposure history, and inherited precommitted reserve ordering.
+- Add Search Measurement and Selection Policy contracts separately from Evaluation Cards, plus canonical Adoption Decision storage and workflow.
+- Create the encrypted, schema-versioned Owner Evaluation Vault outside Git under a separate capability boundary; prove canary isolation from generation, workspaces, development agents, indexing, backups, logs, and diagnostics and verify integrity, restore, key failure, migration, retention, and purge behavior.
+- Enforce the public-ledger/Vault-ledger split and repository leak scanner.
+- Add qualified truth-reviewer, curator, evaluator-implementer, calibrator, and run-operator role contracts plus deterministic and stochastic Qualification Execution Policies and opaque-provider drift expiry.
+- Add evaluator contracts and mutations for Source Voice identity, Harmonic Plans, exact Transposition, Figure spans, lyrics, spanners, constituent-string attacks, and all three target engraving fixtures.
 - Validate the framework with synthetic contract cases; target musical evaluators remain owned by their verticals.
 
 ### Slice 5 — Shared voice, relationship, and phrase intelligence
 
-- Add separately identified and digested Target Voice, Target Relationship, Continuo Realization and Disposition, and Intended Technique Plans.
-- Add exact ergonomic context, activity spans and planned rests, phrase boundary state, and work-level obligations.
+- Add Source Voice Graphs, Lyric Underlays, time-varying Musical Context maps, exact Transposition Plans, canonical spanners and source-notated ornaments.
+- Add separately identified and digested Target Voice, Target Harmonic, Target Relationship, Continuo Realization and Disposition, and Intended Technique Plans plus realized candidate mappings.
+- Add Instrument Instance authoring, measurement, calibration, versioning, default selection, exact ergonomic context, activity spans and planned rests, phrase boundary state, and work-level obligations.
 - Replace event-local musical selection with bounded phrase search and honest terminal outcomes.
-- Compile Principal Voice, bass, counterpoint, figures, Continuo Foundation, cadence, target texture, and technique into observable constraints and independent evaluator requirements.
+- Compile Principal Voice, source and target voice identity, harmonic skeleton, bass, counterpoint, figures, Continuo Foundation, cadence, lyrics where applicable, target texture, and technique into observable constraints and independent evaluator requirements.
+- Implement explicit candidate Adoption Decisions so ranking or persistence cannot promote a candidate before independent required gates pass.
 
 ### Slice 6 — Continuo relationship vertical
 
-- Carry Gasparini source segments and the legally usable soprano-plus-figured-bass Golden Fixture through optical import, reviewed bass and figure truth, a source-backed `continuo.italian-baroque` Realization Profile, Applied Manifest, Voice and Relationship Plans, search, engraving, isolated playback, audit, and independent evaluation.
-- Produce a complete soprano-plus-piano realization and policy-contract cases for complete, separate-bass, and correctly rejected or explicitly labeled Continuo Reduction dispositions without presupposing an unrepaired fretted-target compiler.
-- Mutate every foundation event, figure, accidental, alignment, continuation, prepared 4-3 suspension, generated voice, and disposition outside generation's view.
+- Carry Gasparini source segments and the legally usable soprano-plus-figured-bass Golden Fixture through optical import, reviewed bass and figure truth, a source-backed `continuo.italian-baroque.cembalo` Realization Profile, Applied Manifest, Voice, Harmonic, Relationship, and Continuo Plans, search, engraving, isolated playback, audit, and independent evaluation.
+- Produce a complete soprano-plus-harpsichord realization for an exact Instrument Instance and policy-contract cases for complete, separate-bass, and correctly rejected or explicitly labeled Continuo Reduction dispositions without presupposing an unrepaired fretted-target compiler. Treat any piano deliverable as a separately named modern editorial adaptation.
+- Implement canonical Figure Signs, Groups, continuation spans, constraint segments, and generated-realization mappings. Mutate every foundation event, figure, accidental, alignment, change over a held bass, continuation, prepared 4-3 suspension, generated voice, and disposition outside generation's view.
 
 ### Slice 7 — Imitative-counterpoint relationship vertical
 
@@ -1578,22 +2222,22 @@ Implementation proceeds through production-path tracer bullets. Each tracer begi
 ### Slice 8 — Baroque-guitar development vertical
 
 1. Preserve the exact known-bad Greensleeves output and prove that independent evaluators reject its voice, two-dimensional course-and-fret reach, allocation, stroke-mask, Gesture Sequence, and transition failures.
-2. Run one reviewed Sanz or Corbetta path into a test-only release, implement exact two-dimensional left-hand contact and transition geometry plus orthogonal punteado, rasgueado, alfabeto, mixed-style, course-allocation, resonance, and gesture semantics, and repair the production search, engraving, playback, and workbench paths.
+2. Run one reviewed Sanz or Corbetta path into a test-only historical release and a separately classified maintainer-reviewed nonhistorical production consequence, implement exact two-dimensional left-hand contact and transition geometry plus orthogonal punteado, rasgueado, alfabeto, mixed-style, course-allocation, resolved constituent attacks, resonance, and gesture semantics, and repair the production search, engraving, playback, and workbench paths.
 3. Apply the shared Continuo disposition contract to baroque guitar and prove that any incomplete foundation receives an explicit separate bass or correctly labeled reduction rather than a false complete realization.
-4. Pass the development Regression Bundle without activating test-only knowledge in default Guided Start.
+4. Pass the development Regression Bundle and baroque-guitar Golden Engraving and Playback Fixture without activating test-only knowledge in default Guided Start.
 
 ### Slice 9 — Baroque-lute development vertical
 
 1. Preserve the exact known-bad Greensleeves output and prove that independent evaluators reject its pinned `f` and `b` reach, course, transition, notation, and playback failures; add mutations that reject impossible digit allocation, stopped-course simultaneity, alternation, crossing, thumb behavior, and stopped-course-to-diapason transitions.
-2. Run Mace plus one normative and one repertoire path into scoped test-only releases, implement two-dimensional left-hand geometry and whole-instrument right-hand allocation, preparation, simultaneity, alternation, crossing, thumb, diapason, transition, resonance, and damping state, and repair the full production path.
-3. Re-run the accepted Golden Engraving Fixture for course 10 `///a`/D2, Bass Tuning invariance, the full `a`, `/a`, `//a`, `///a`, `4`, `5` sequence, below-staff glyph placement, MIDI identity, and absence of duplicate playback.
+2. Run Mace plus one normative and one repertoire path into scoped test-only historical releases and a separately classified maintainer-reviewed nonhistorical production consequence; implement two-dimensional left-hand geometry and calibrated plucking-zone, course-spacing, diapason or bass-rider geometry plus whole-instrument right-hand allocation, preparation, simultaneity, alternation, crossing, thumb, transition, resonance, and damping state.
+3. Re-run the accepted Golden Engraving Fixture for course 10 `///a`/D2, Bass Tuning invariance, the full `a`, `/a`, `//a`, `///a`, `4`, `5` sequence, below-staff glyph placement, MIDI identity, absence of duplicate playback, a stopped doubled-course attack, and a stopped-course-to-diapason transition.
 4. Pass the development Regression Bundle while treating course-13 historical notation as `not_claimed` under the editorial profile or unresolved under a historically scoped profile.
 
 ### Slice 10 — Classical-guitar development vertical
 
 1. Preserve the disappearing-bass output and prove that evaluators reject its activity-span, relationship, cadence, duration, mechanics, notation, and playback failures.
-2. Run Sor plus one Carulli aligned reduction into scoped test-only releases, implement exact joint left- and right-hand polyphonic phrase search, and repair first-class standard notation and isolated playback.
-3. Pass the development Regression Bundle without using event count or continuous sound as a proxy for coherent voice.
+2. Run Sor plus one Carulli aligned reduction into scoped test-only historical releases and a separately classified maintainer-reviewed nonhistorical production consequence, implement exact joint left- and right-hand polyphonic phrase search, and repair first-class standard notation and isolated playback.
+3. Pass the development Regression Bundle and classical-guitar Golden Engraving and Playback Fixture, including planned rests, stems, multi-segment ties, voice crossing, and written-to-sounding octave identity, without using event count or continuous sound as a proxy for coherent voice.
 
 Slices 8 through 10 are coequal target siblings. Slice 8 steps 1–2 and Slices 9–10 may proceed independently after Slice 5; Slice 8 step 3 depends on the shared Continuo contract in Slice 6, and its step 4 depends on step 3. Each numbered red, repair, and development-acceptance step is a separate tracer committed before its dependent step.
 
@@ -1605,26 +2249,37 @@ Slices 8 through 10 are coequal target siblings. Slice 8 steps 1–2 and Slices 
 - Add release and attestation diff, advisory and deletion workflow, affected-workspace navigation, exact resume, and derivative purge tests.
 - Preserve legacy searches without invented manifests and offer canonical regeneration.
 
-### Slice 12 — Sealed non-Greensleeves machine acceptance
+### Slice 12 — Qualification infrastructure and sealed-run readiness
 
-- Before any output is observed, a curator who did not develop the Generation Systems commits the legally usable eligible pool, contamination closures, invalid-fixture policy, reserve order or selection seed, coverage assignment, and exhaustion rule in the Owner Evaluation Vault without exposing evaluator truth to generation.
-- Freeze compiler, pack, Resolution and Selection Policy, evaluator, split-manifest, and runtime versions.
+- Complete every machine-executable implementation, development regression, isolation, security, migration, target-specific engraving and playback, and mandatory release-floor performance gate.
+- Exercise the complete sealed-run protocol with synthetic and disclosed development cases, including ledger genesis and CAS head enforcement, invalidation, fork detection, inherited regressions and reserve cursor, stochastic policy, provider-drift sentinel, cancellation, retry, and redacted reporting.
+- Exercise the real PDF-to-three-target Guided Start path with consequential review, alternatives, score following, isolation, manual edit adoption, version history, interruption, reload, retry of incomplete siblings only, and complete deliverable rehydration using development evidence.
+- Produce a `ready-for-human` Vault curation and truth-review package containing role requirements, conflict-of-role policy, coverage classes, acquisition and rights workflow, review tooling, invalidation policy, reserve protocol, and exact frozen candidate Generation System and evaluator identities without preselecting or exposing future held-out Works to development.
+- Prove that no real held-out attempt can begin until the independent Slice 13 commitments exist.
+
+### Slice 13 — Late holdout curation and sealed machine qualification
+
+This is the first HITL boundary. All machine-executable implementation work is sequenced before it; after the required independent commitments, the sealed run and reporting proceed automatically.
+
+- Before any candidate output is observed, an independent curator commits the legally usable eligible pool, contamination closures, output-independent invalid-fixture policy, reserve order or selection seed, coverage assignment, exhaustion rule, role-conflict policy, ledger genesis, and inherited regression and reserve state in the Owner Evaluation Vault without exposing evaluator truth to generation or development.
+- Scope-qualified truth reviewers independently review case truth and gate definitions; they are verified separately from the curator, evaluator implementer, calibrator, and run operator.
+- Freeze compiler, pack, Resolution and Selection Policy, evaluator, Qualification Execution Policy, split-manifest, provider or provider-free runtime, and performance-profile versions.
 - Run at least two non-Greensleeves groups per target plus the dedicated Continuo and imitative groups.
-- Include a real PDF-to-three-target Guided Start path with consequential review, alternatives, score following, isolation, manual edit adoption, version history, interruption, reload, retry of incomplete siblings only, and complete deliverable rehydration.
-- Every valid failed group remains disclosed and becomes a permanent required regression; after repair, the successor must pass all accumulated failures plus the next precommitted reserve groups held out from Vellum development.
-- Emit tri-state hard-gate and four-state acceptance Evaluation Cards plus compatible or explicitly incomparable baseline results.
+- Every attempted group enters the append-only ledger. Every valid failed group remains disclosed and becomes a permanent required regression; after repair, the successor inherits all accumulated failures and the unconsumed reserve cursor and must pass those failures plus the next precommitted reserve groups held out from Vellum development.
+- Emit tri-state hard-gate and four-state acceptance Evaluation Cards plus compatible or explicitly incomparable baseline results, exact Qualification Claim Scopes, and provider or deterministic-execution validity boundaries.
+- Machine Complete is reached only when the sealed qualifications and all mandatory release-floor gates pass.
 
-### Slice 13 — Late human review and release remediation loop
+### Slice 14 — Late human review and release remediation loop
 
-HITL is intentionally concentrated here so AFK implementation can safely reach provisional machine completion first.
-
-The exact-digest review package includes:
+The exact-digest artifact review package includes:
 
 - metadata and rights review;
 - source transcription and extraction review;
 - historical-claim and pack-profile review by declared role;
+- verified reviewer identity, credential, scope, freshness, and revocation evidence for every authority-bearing review;
+- Source Voice, Harmonic, Transposition, lyric and spanner review wherever those dimensions are in scope;
 - target-player physical playtests for all three instruments;
-- qualified keyboard-continuo review of the generated soprano-plus-piano realization;
+- qualified historical keyboard-continuo review of the exact soprano-plus-harpsichord realization and separate modern-piano review only if that editorial adaptation is produced;
 - qualified imitative-intabulation review of the six-course lute output;
 - engraving-editor review;
 - Owner cross-target usefulness review;
@@ -1649,39 +2304,50 @@ Unqualified `complete` in this specification means Release Complete. Machine Com
 
 - one real reference travels from upload or safe acquisition through versioned identity, Page Atlas, cited extraction, candidate review, immutable release and attestation, complete applicability resolution, arrangement consequence, and Reassessment;
 - migration preserves every legacy ID, byte, hash, and citation through a verified mapping or actionable quarantine without inventing provenance;
-- unauthorized provider egress, fixture inclusion, logs, reports, exports, and redistribution are blocked across the complete derivative graph;
+- unauthorized provider egress, fixture inclusion, logs, reports, exports, and redistribution are blocked across the complete derivative graph; every remote request is reconstructed from a server-minted Egress Envelope rather than arbitrary client context, and every committed provider result is bound to the exact attempt, response, tools, validation, inputs, and canonical output by a server-issued Result Commit;
+- no tracked code, test, fixture, prompt example, or built-in table contains source-derived material without an exact provenance path and repository-inclusion and redistribution decision;
 - hostile and oversized acquisition, parser, rendering, pack-parameter, and content-reference cases fail safely within resource bounds;
 - every Arrangement Search that claims historical, editorial, pedagogical, or software-guided behavior records a complete Applied Knowledge Manifest over an exact Catalog, Resolution Policy, and Component Registry Snapshot;
-- omitted eligible packs, dependencies, conflicts, exclusions, activation modes, and rights decisions invalidate a manifest;
+- every authority-affecting prompt, table, default, compiler branch, ranker, validator, and presentation label appears in the exact Authority Path Inventory and resolves through the Component Registry and Applied Knowledge Manifest or is mechanically classified with evidence;
+- omitted eligible packs, dependencies, conflicts, exclusions, Activation Authorities, rights decisions, or authority paths invalidate a manifest;
 - no release activated only by a test-only attestation is active in default or machine-ready output;
-- Principal Voice preservation works by default under the exact Transposition Plan without a specialist prompt;
-- Target Voice and Relationship Plans prevent structural voices, rests, entries, suspensions, bass functions, and cadential relationships from disappearing silently;
-- the figured-bass Golden Fixture traverses the new pack, manifest, Voice, Relationship, Continuo Realization, and Disposition contracts and passes every required mutation;
+- explicitly nonhistorical maintainer-reviewed software or editorial defaults can power ordinary output without being mislabeled historical or specialist-reviewed;
+- Source Voice Graphs distinguish voices from parts and staves, and Principal Voice preservation works by default under the exact time- and part-scoped Transposition Plan without a specialist prompt;
+- Target Voice, Harmonic, and Relationship Plans prevent structural voices, rests, entries, harmony, inversion, suspensions, bass functions, and cadential relationships from disappearing silently;
+- requested song outputs preserve versioned lyric underlay, and canonical ties, slurs, and source-notated ornaments retain notation, lineage, and playback semantics;
+- the figured-bass Golden Fixture traverses canonical Figure Signs, Groups, continuation spans, constraint segments, generated mappings, the new pack, manifest, Voice, Harmonic, Relationship, Continuo Realization, and Disposition contracts and passes every required mutation;
 - the imitative-counterpoint Golden Fixture traverses the same contracts and preserves ordered entries and subject relationships without assuming one Principal Voice;
 - instrument mechanics, ergonomics, historical evidence, modern pedagogy, editorial convention, software heuristics, personal preference, and evaluation remain distinct;
+- the Owner can author, calibrate, version, select, and inspect exact Instrument Instances; a missing evaluator input produces incomplete physical evidence rather than a default-derived pass;
 - the three exact Greensleeves regressions fail before repair and pass afterward as development evidence;
 - each target passes at least two sealed non-Greensleeves contamination groups, and dedicated Continuo and imitative groups pass;
-- baroque-guitar output realizes exact two-dimensional course-and-fret contacts and transitions plus supported orthogonal attack, gesture, alfabeto, course-allocation, resonance, and damping facets rather than a mislabeled flat mode;
-- baroque-lute output rejects the known reach; realizes explicit right-hand digit allocation, preparation, simultaneity, alternation, crossing, thumb behavior, and stopped-course/diapason transitions; models diapasons independently; and labels every course-13 convention as historical, editorial, or unknown according to direct evidence;
-- the Golden Engraving Fixture passes course 10 `///a`/D2, Bass Tuning sign invariance, the full course 7–12 sign sequence, below-staff placement, MIDI identity, and duplicate-playback checks;
-- classical-guitar output provides coherent planned voices, exact joint-hand state, and first-class standard notation;
+- every Capability Qualification and UI label states its exact Claim Scope, exclusions, provider conditions, workload envelope, and unclaimed dimensions rather than implying universal target qualification;
+- baroque-guitar output realizes exact two-dimensional course-and-fret contacts and transitions plus supported orthogonal attack, gesture, alfabeto, course-allocation, constituent-string, resonance, and damping facets rather than a mislabeled flat mode;
+- baroque-lute output rejects the known reach; realizes explicit right-hand digit allocation, preparation, simultaneity, alternation, crossing, thumb behavior, calibrated plucking-zone and diapason access, and stopped-course/diapason transitions; models diapasons independently; and labels every course-13 convention as historical, editorial, or unknown according to direct evidence;
+- the three coequal Golden Engraving and Playback Fixtures pass target-specific semantic, glyph, placement, constituent-string, written-to-sounding, voice-layer, tie, MIDI identity, and duplicate-playback checks;
+- classical-guitar output provides coherent planned voices, exact joint-hand state, multi-voice rests and spanners, and first-class standard notation;
 - notation and playback agree with canonical notes, written and sounding pitch, voices, positions, constituent strings, gesture timing, held and damped state, and Performed Form;
 - generation is technically unable to read evaluator-only expectations, mutations, baselines, labels, or vault contents outside its sealed source envelope;
+- the public repository contains no resolvable held-out identity, truth, mutation, invalidation, reserve order, or diagnostic, and the encrypted Vault passes isolation, integrity, backup, restore, migration, retention, purge, and exposure-ledger tests;
+- every held-out attempt appears in a finalized append-only ledger, every valid failure remains a permanent regression, successors inherit the unconsumed reserve cursor, and qualified truth and evaluator roles are independently verified;
+- stochastic qualifications satisfy their precommitted repeated-trial and confidence policy, and opaque-provider qualifications remain within their pinned sentinel or expiry boundary;
 - hard-gate status passes only when every required applicable gate completed and passed;
-- acceptance remains blocked for required source, access, provider, evaluator, or infrastructure failure and incomplete for missing evidence; neither state is displayed as pass;
-- default candidate selection records Search Measurements and Selection Policy rather than using hidden totals or held-out evaluation;
-- bounded search distinguishes proven infeasibility, exhaustion, cancellation, and infrastructure failure;
+- aggregate acceptance precedence reports conclusive violations as fail, otherwise unavailable required dependencies as blocked, otherwise unfinished evidence as incomplete; none is displayed as pass;
+- default candidate selection records Search Measurements and Selection Policy rather than using hidden totals or held-out evaluation, and only a passing immutable Adoption Decision creates the default Arrangement Score;
+- bounded search distinguishes `unsat_proven`, `budget_exhausted`, `cancelled`, and `infrastructure_failed` from `found`;
+- all pinned Performance Acceptance Profiles and tracer-applicable build, browser, evaluation, rendering, playback, security, migration, and real-tool gates pass;
 - the real-browser PDF-to-three-target workflow is resumable, rehydrates completed siblings, retries only incomplete work, avoids duplicate versions, and opens the selected score;
 - material alternatives, conflicts, compromises, activation modes, and unknowns remain visible; and
 - complete typecheck, test, formatting, specification, evaluation, rendering, playback, security, migration, and relevant real-tool gates pass.
 
 ### Release Complete
 
-- every historical or specialist presentation has a trusted scope-appropriate attestation over the exact release and claim or profile scope;
+- every historical or specialist presentation has a current credential-backed, externally verified, scope-appropriate attestation over the exact release and claim or profile scope;
 - every released target artifact cites a current compatible Capability Qualification over its exact Generation System and profile closure;
 - exact-digest target-player playtests are current for all three target outputs under their pinned Instrument Instances and Performance Briefs;
 - each target has a separately qualified, profile-specific idiom review; a novice Owner playtest remains personal ergonomic evidence rather than historical authority;
-- the Continuo and imitative outputs have qualified profile-specific musical reviews of spacing, doubling, voice leading, disposition, and contrapuntal realization as applicable;
+- the harpsichord Continuo and imitative outputs have qualified profile- and target-specific musical reviews of source voices, harmonic plan, spacing, doubling, voice leading, disposition, and contrapuntal realization as applicable;
+- requested sung-text outputs have qualified underlay review when textual alignment is a claimed dimension;
 - engraving-editor and Owner cross-target usefulness reviews are current;
 - every course-13-specific historical claim has directly applicable released evidence, or an editorial-profile output explicitly makes no historical-authenticity claim for that sign;
 - every finding-triggered repair completed impact analysis, fresh deterministic evaluation, replacement of contaminated holdouts, and review of changed digests;

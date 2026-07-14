@@ -10,7 +10,7 @@ Event-local first fit, opaque executable predicates, and one proxy score cannot 
 
 ## Decision
 
-Constraint Specifications and Evaluator Specifications will be immutable, serializable, versioned data with applicability and identity. Arrangement Search will retain multiple candidates, separate hard constraints from evidence dimensions, rank complete retained assignments, disclose bounds and truncation, and report `success`, `infeasible`, `exhausted`, `cancelled`, or `failed` honestly. Adoption requires a complete Transformation Report and Preservation Audit under the exact Preservation Policy.
+Constraint Specifications and Evaluator Specifications will be immutable, serializable, versioned data with applicability and identity. Arrangement Search will retain multiple candidates, separate hard constraints from evidence dimensions, rank complete retained assignments, disclose bounds and truncation, and report `found`, `unsat_proven`, `budget_exhausted`, `cancelled`, or `infrastructure_failed` honestly. These are the canonical terms formerly summarized as success, infeasible, exhausted, cancelled, and failed. `unsat_proven` requires an exhaustive proof under the declared finite search domain; `budget_exhausted` does not imply infeasibility. Adoption requires a complete Transformation Report, Preservation Audit, independent required Evaluation Cards, and a separate immutable Adoption Decision under the exact Preservation Policy.
 
 No aggregate grade may hide a hard failure. Rankings compare compatible candidates within declared evidence; they do not certify comfort, history, beauty, or global optimality.
 

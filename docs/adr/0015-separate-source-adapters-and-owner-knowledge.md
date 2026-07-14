@@ -16,7 +16,7 @@ Non-optical sources create Score Transcription, Normalized Score, and Analysis R
 
 Cross-workspace Owner state is stored outside Arrangement Workspaces. Equivalent choices in at least two distinct workspaces can produce a Personal Default Candidate, but no behavior changes until explicit approval. Defaults are soft, scoped preferences; every application or precedence-based yield is disclosed in the Arrangement Brief.
 
-Owner references are content-addressed local artifacts. Proposed reusable claims require a reference and citation locator and remain Knowledge Candidates until explicit promotion. Promotion creates a reviewed Historical Practice Claim and increments a reviewed Knowledge Pack. Built-in packs are schema-validated and cited. Neither OMR output nor uncited model memory can enter the Historical Knowledge Base directly.
+Owner references are content-addressed local artifacts. Proposed reusable claims require a reference and citation locator and remain Knowledge Candidates until explicit promotion. Under ADR 0022, promotion creates a new immutable Knowledge Pack Release and a separate scoped attestation; it never increments or mutates a reviewed pack in place. Built-in packs are schema-validated and cited. Neither OMR output nor uncited model memory can enter the Historical Knowledge Base directly.
 
 ## Consequences
 
@@ -24,3 +24,7 @@ Owner references are content-addressed local artifacts. Proposed reusable claims
 - Missing local converters fail with an actionable format-specific error rather than silently degrading.
 - Preferences, project evidence, and historical authority remain separately inspectable.
 - Public-domain regression fixtures can exercise genuinely different source adapters.
+
+## Amendment
+
+ADR 0022 supersedes only this decision's former mutable pack-promotion mechanism. The source-adapter, workspace-boundary, Owner-reference, Personal Default, and explicit-review decisions remain in force.
