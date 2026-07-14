@@ -2,7 +2,9 @@
 
 Current implementation authority: [SPEC.md](../SPEC.md)
 
-No new implementation wave has yet been derived from the current specification. The next wave must use its own .scratch namespace, requirement ledger, manifest, and evidence directory.
+Active implementation wave: [instrument-intelligence](instrument-intelligence/README.md)
+
+The active wave has its own plan, issue queue, requirement ledger, completion manifest, and evidence directory. Execute its AFK tracers in dependency order before entering its late HITL queue.
 
 The remaining arrangement-intelligence directory is a frozen completed prototype record. Its exact paths and hashes are part of its evidence identity; it is not active work.
 

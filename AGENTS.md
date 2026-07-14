@@ -20,11 +20,11 @@ The sole current implementation specification is SPEC.md: **Vellum Instrument In
 
 It governs the next program of source-backed Knowledge Packs, Applied Knowledge Manifests, shared phrase and voice planning, and coequal idiom compilers for five-course baroque guitar, thirteen-course baroque lute, and six-string classical guitar.
 
-No new execution wave has yet been derived from the specification. Before implementation:
+The active execution wave is `.scratch/instrument-intelligence`. Before implementation:
 
 1. Read CONTEXT.md, applicable accepted ADRs, and SPEC.md.
 2. Apply accepted ADR 0022 to all new canonical Reviewed Knowledge Library records.
-3. Create a new local Markdown tracer wave under .scratch with its own plan, issues, requirement ledger, manifest, and evidence namespace.
+3. Read `.scratch/instrument-intelligence/PLAN.md`, its requirement ledger, and the selected tracer issue before changing code.
 4. Do not reopen .scratch/arrangement-intelligence; it is a frozen completed prototype record with path- and hash-bound evidence.
 5. Sequence machine-executable tracer bullets before the late role-scoped HITL package defined by the specification.
 6. Complete, test, commit, and push each tracer before beginning a dependent tracer.

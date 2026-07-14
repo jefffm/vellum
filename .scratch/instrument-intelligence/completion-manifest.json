@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "status": "planned",
+  "objective": "Release Complete Vellum Instrument Intelligence",
+  "specification": "SPEC.md",
+  "plan": ".scratch/instrument-intelligence/PLAN.md",
+  "requirementsLedger": ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  "issueDirectory": ".scratch/instrument-intelligence/issues",
+  "evidenceDirectory": ".scratch/instrument-intelligence/evidence",
+  "tracerCount": 69,
+  "afkTracerRange": [1, 63],
+  "humanTracerRange": [64, 69],
+  "machineComplete": "pending",
+  "releaseComplete": "pending",
+  "publicEvidencePolicy": {
+    "allowedHeldoutFields": [
+      "opaque_case_id",
+      "coverage_class",
+      "digest",
+      "aggregate_status",
+      "redacted_evidence"
+    ],
+    "vaultOnlyFields": [
+      "source_identity",
+      "truth",
+      "expected_observation",
+      "forbidden_outcome",
+      "mutation",
+      "invalidation_decision",
+      "reserve_order_or_seed",
+      "per_attempt_diagnostic"
+    ]
+  },
+  "requirementEvidence": {}
+}

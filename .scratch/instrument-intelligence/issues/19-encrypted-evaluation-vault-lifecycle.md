@@ -1,0 +1,41 @@
+# Encrypted Evaluation Vault lifecycle
+
+Status: ready-for-agent
+
+Type: AFK
+
+User stories: U8, U10
+
+SPEC coverage: Owner Evaluation Vault; Slice 4
+
+Requirement IDs: II-EVAL-002, II-EXEC-004B, II-MC-027, II-NG-009
+
+## What to build
+
+Create the encrypted, schema-versioned Owner Evaluation Vault outside Git under a capability boundary and prove its complete operational lifecycle without adding any real held-out material.
+
+## Acceptance criteria
+
+- [ ] Initialize, unlock, lock, migrate, integrity-check, back up, restore, retain, expire, and purge synthetic Vault state.
+- [ ] Workspace, generation, development-agent, repository-index, search, ordinary backup, log, and diagnostic capabilities cannot enumerate Vault contents.
+- [ ] Key absence/corruption, storage failure, incompatible migration, and restore mismatch fail closed as blocked with redacted diagnostics.
+- [ ] Authorized administrative reads are purpose-bound and appended to an exposure ledger.
+- [ ] Public state contains only Vault generation/split digests and allowed redacted status, never resolvable synthetic or future real truth.
+
+## Gate matrix
+
+- Focused: `npm test -- test/instrument-intelligence/T19-encrypted-evaluation-vault-lifecycle.test.ts`.
+- Base: `npm run typecheck`; `npm test`; `npm run format:check`; `npm run spec:verify`; `npm run build`; `npm run server:build`.
+- Conditional: `npm run eval:fast`; the tracer's adversarial security/fake-provider suite through the focused Vitest command above.
+- Toolchain: record Node, npm, Nix, musical-tool, provider/fake-provider, OS, and hardware identities that materially affect the result; record `not_applicable` with rationale.
+- Observable outcome: the acceptance path is demonstrated through the production boundary named above, not only by schema/unit tests.
+- Evidence: `../evidence/T19/verification.json` plus its digest-bound redacted artifacts.
+
+## Public/Vault boundary
+
+This tracer uses synthetic cases only. Public evidence must obey the wave allowlist; exact case truth, mutations, invalidation decisions, reserve state, and per-attempt diagnostics remain in the test Vault and are represented publicly only by permitted opaque receipts.
+
+## Blocked by
+
+- 07
+- 18
