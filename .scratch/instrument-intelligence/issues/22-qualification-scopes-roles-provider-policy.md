@@ -4,15 +4,19 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U8, U10
 
 SPEC coverage: Readiness tiers; dataset assignments; provider exposure; Slice 4
 
-Requirement IDs: II-BND-003, II-EVAL-006, II-EXEC-004B, II-MC-019–020, II-MC-028–029
+Requirement families touched: II-BND-003, II-EVAL-006, II-EXEC-004B, II-MC-019–020, II-MC-028–029
 
 ## What to build
 
-Define exact Capability Qualification Claim Scopes, independent operational roles, deterministic/stochastic execution policies, and opaque-provider drift/expiry boundaries using only synthetic cases.
+Define exact Capability Qualification Claim Scopes, independent operational roles, deterministic/stochastic execution policies, and opaque-provider drift/expiry boundaries using only synthetic cases. Qualification judges an already committed Generation System and output; it does not rank, select, or adopt candidates.
 
 ## Acceptance criteria
 
@@ -20,6 +24,7 @@ Define exact Capability Qualification Claim Scopes, independent operational role
 - [ ] Curator, truth reviewer, evaluator implementer, calibrator, and run operator are separate roles with credential/scope/conflict validation.
 - [ ] Deterministic and repeated-trial stochastic policies retain every attempt; one favorable sample cannot pass a precommitted confidence rule.
 - [ ] Provider/session exposure history binds each attempt; sentinel drift, version change, expiry, or unavailable evidence stales or blocks qualification.
+- [ ] Qualification consumes immutable preordered output and Evaluation Cases only after output commit; it cannot mutate Search Measurements, Selection Policy, candidate order, Selection Decision, or Adoption Decision for the run it judges.
 - [ ] UI and Evaluation Cards show narrow claims and unknowns without implying universal target-instrument capability.
 
 ## Gate matrix

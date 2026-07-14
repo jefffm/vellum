@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3
 
 SPEC coverage: Target Voice and Relationship Plans; Slice 5
 
-Requirement IDs: II-MUS-006, II-EXEC-005B, II-MC-012
+Requirement families touched: II-MUS-006, II-EXEC-005B, II-MC-012
 
 ## What to build
 

@@ -4,20 +4,25 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U8, U10
 
 SPEC coverage: Evaluation isolation; held-out acceptance; Slice 4 public ledger/Vault split
 
-Requirement IDs: II-EVAL-002, II-EVAL-010, II-EXEC-004B, II-MC-026–027, II-NG-009
+Requirement families touched: II-EVAL-002, II-EVAL-010, II-EXEC-004B, II-MC-026–027, II-NG-009
 
 ## What to build
 
-Enforce the public/Vault ledger boundary at write, export, log, report, fixture, commit, and build time using synthetic canaries and a repository leak scanner.
+Enforce typed public-receipt, Vault, and ordinary Owner-private boundaries at write, export, log, report, fixture, commit, and build time. Public receipts use bounded non-resolving commitments and enumerated redaction reasons rather than arbitrary blobs or direct digests of low-entropy private material.
 
 ## Acceptance criteria
 
-- [ ] Public schemas allow only opaque case IDs, coverage classes, digests, aggregate status, and redacted evidence.
-- [ ] Exact identities, truth, expected observations, forbidden outcomes, mutations, invalidation, reserve order/seed, and per-attempt diagnostics are rejected outside the Vault capability.
+- [ ] Public schemas are closed typed unions that bound opaque case IDs, coverage classes, aggregate status, approved high-entropy artifact commitments, and enumerated redaction receipts; arbitrary `redactedEvidence`, nested payloads, filenames, or direct hashes of guessable secrets are rejected.
+- [ ] Exact held-out identities, truth, expected observations, forbidden outcomes, mutations, invalidation, reserve order/seed, and per-attempt diagnostics are rejected outside the Vault capability.
+- [ ] Ordinary Owner-private source paths, names, bibliographic metadata, images, text, crops, and direct content digests are rejected from public evidence unless an explicit compatible repository-inclusion/redistribution decision authorizes that exact disclosure.
 - [ ] Leak scanning covers tracked files, staged diffs, generated bundles, source maps, test snapshots, logs, reports, exports, caches, and public evidence.
 - [ ] Canary variants encoded, compressed, hashed with weak identifiers, or nested in error payloads are detected without exposing the secret in scanner output.
 - [ ] Build and qualification publication fail closed on a leak; cleanup records an exposure event rather than pretending it never occurred.
@@ -38,3 +43,4 @@ This tracer uses synthetic cases only. Public evidence must obey the wave allowl
 ## Blocked by
 
 - 19
+- 71

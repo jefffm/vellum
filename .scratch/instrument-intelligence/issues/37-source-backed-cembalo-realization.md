@@ -4,22 +4,26 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U7
 
 SPEC coverage: Continuo vertical; shared Italian keyboard seed; Slice 6
 
-Requirement IDs: II-KNW-004, II-MUS-009, II-SEED-004, II-EXEC-006B, II-MC-014
+Requirement families touched: II-KNW-004, II-MUS-009, II-SEED-004, II-EXEC-006B, II-MC-014
 
 ## What to build
 
-Use cited Gasparini segments to build a scoped cembalo realization profile and produce a complete soprano-plus-harpsichord arrangement for an exact Instrument Instance through manifest, plans, search, engraving, isolated playback, audit, evaluation, and Workbench.
+Use the cited Gasparini test-only release and the separately rights-cleared figured-bass Golden Fixture to build a provisional-research cembalo realization profile and produce a complete soprano-plus-harpsichord development arrangement for an exact Instrument Instance through manifest, plans, search, engraving, isolated playback, audit, evaluation, and Workbench.
 
 ## Acceptance criteria
 
-- [ ] Gasparini evidence resolves into a source-backed test-only profile with exact release/attestation/manifest identity and no universal claim.
+- [ ] Gasparini evidence resolves into an exact source-backed test-only release/profile/attestation/manifest identity and is usable only in visibly provisional-research mode; it grants no production, specialist, or universal historical authority.
 - [ ] Complete score retains soprano and figured-bass source truth plus generated keyboard voices under exact spacing, doubling, voice-leading, and cadence obligations.
 - [ ] Isolated soprano, foundation, and generated voices agree with full engraving/playback and canonical occurrence identity.
-- [ ] Workbench exposes figures, realization mappings, plan choices, alternatives, audit, and Evaluation Card.
+- [ ] Workbench exposes figures, realization mappings, plan choices, alternatives, audit, Evaluation Card, source scope, uncertainty, and the test-only/provisional boundary.
 - [ ] Any piano output is a separately named modern editorial adaptation with separate profile, plan, artifact, and claim.
 
 ## Gate matrix
@@ -38,5 +42,7 @@ Development fixtures named by this tracer may be public only with verified right
 ## Blocked by
 
 - 14
+- 16
 - 34
 - 36
+- 75

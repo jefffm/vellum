@@ -23,6 +23,11 @@ requirePaths(
     "docs/agents/domain.md",
     "docs/adr/0022-govern-reviewed-knowledge-library.md",
     "docs/architecture/arrangement-intelligence-boundaries.md",
+    ".scratch/instrument-intelligence/README.md",
+    ".scratch/instrument-intelligence/PLAN.md",
+    ".scratch/instrument-intelligence/REQUIREMENTS.md",
+    ".scratch/instrument-intelligence/completion-manifest.json",
+    "scripts/verify-instrument-intelligence-plan.mjs",
     archiveRoot + "/README.md",
     archiveRoot + "/repository/SPEC.md",
     archiveRoot + "/repository/docs/SPEC_RECONCILIATION.md",
@@ -219,6 +224,9 @@ for (const file of [
   "SPEC.md",
   "README.md",
   ".scratch/README.md",
+  ".scratch/instrument-intelligence/README.md",
+  ".scratch/instrument-intelligence/PLAN.md",
+  ".scratch/instrument-intelligence/REQUIREMENTS.md",
   "docs/archive/specifications/2026-07-13/README.md",
 ]) {
   verifyLocalMarkdownLinks(file);

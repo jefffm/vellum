@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U5, U8
 
 SPEC coverage: French tablature; Golden fixtures; Slice 9.3
 
-Requirement IDs: II-BL-004–005, II-EVAL-008, II-EXEC-009C, II-MC-023, II-MC-025
+Requirement families touched: II-BL-004–005, II-EVAL-008, II-EXEC-009C, II-MC-023, II-MC-025
 
 ## What to build
 

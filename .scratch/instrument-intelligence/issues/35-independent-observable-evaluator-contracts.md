@@ -1,26 +1,30 @@
-# Independent observable evaluator contracts
+# Independent evaluator framework contracts
 
 Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U8, U10
 
-SPEC coverage: Independent observable dimensions; required mutations; Slice 4/5
+SPEC coverage: Independent observable framework; required synthetic mutations; Slice 4
 
-Requirement IDs: II-EVAL-001, II-EVAL-007, II-EXEC-004B, II-MC-011–015, II-MC-025–026
+Requirement families touched: II-EVAL-001, II-EVAL-007, II-EXEC-004B
 
 ## What to build
 
-Build evaluator contracts that recompute canonical observable truth outside generation for voices, harmony, transposition, figures, lyrics, spanners, constituent attacks, notation, playback, and target-specific state.
+Build the shared evaluator protocol and synthetic contract harness for independent canonical-output recomputation, applicability/status semantics, Evaluation Cards, mutation registration, persistence, and dependency-driven recomputation. Real domain and target musical evaluators remain owned by their verticals.
 
 ## Acceptance criteria
 
-- [ ] Evaluators consume persisted canonical output and sealed truth, never generator self-reported pass flags or hidden aggregate scores.
-- [ ] Voice identity/activity, harmony/inversion/cadence, transposition/context, figures/spans, lyric underlay, spanners/ornaments, constituent attacks, and notation/playback dimensions report independently.
-- [ ] Every named development mutation changes one controlled observable and is killed by its corresponding evaluator without contaminating generation.
-- [ ] Unavailable required input yields blocked/incomplete; inapplicable dimensions require explicit profile rationale.
-- [ ] Cards retain exact evaluator/input/output identities, observable findings, Claim Scope, and redacted evidence through persistence and UI.
+- [ ] The common protocol consumes persisted canonical output plus capability-isolated evaluator inputs, never generator pass flags, generator-derived answers, or hidden aggregate scores.
+- [ ] A synthetic fixture proves independently registered dimensions, exact evaluator/input/output identities, applicability, units, uncertainty, observations, Claim Scope, and typed bounded evaluator receipts through persistence and UI.
+- [ ] The synthetic mutation registry changes one controlled observable at a time, proves the corresponding evaluator recomputes rather than trusts a declaration, and cannot contaminate generation.
+- [ ] Shared status semantics preserve unavailable required input as blocked/incomplete and require an explicit profile rationale for `not_applicable`; unknown never becomes zero, neutral, or pass.
+- [ ] Dependency changes stale the right Card and trigger deterministic recomputation without rewriting prior Cards; real Source Voice, harmonic, transposition, figure, lyric, spanner, constituent-attack, notation, playback, and target evaluators are explicitly deferred to their owning verticals.
 
 ## Gate matrix
 
@@ -39,12 +43,4 @@ Development fixtures named by this tracer may be public only with verified right
 
 - 20
 - 22
-- 24
-- 25
-- 26
-- 27
-- 28
-- 29
-- 30
-- 31
-- 34
+- 72

@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U4, U8
 
 SPEC coverage: Baroque-guitar acceptance; Regression contracts; Slice 8.1
 
-Requirement IDs: II-BG-002–003, II-BG-007, II-EVAL-007, II-EXEC-008A, II-MC-018, II-NG-008
+Requirement families touched: II-BG-002–003, II-BG-007, II-EVAL-007, II-EXEC-008A, II-MC-018, II-NG-008
 
 ## What to build
 
@@ -20,6 +24,7 @@ Freeze the exact observed unidiomatic Greensleeves baroque-guitar output as deve
 - [ ] Independent gates reject principal-voice loss, two-dimensional reach/transition, left/right-hand allocation, stroke/traverse/sound/mute masks, Gesture Sequence, held/released/damped state, and playback disagreement.
 - [ ] Each failure is observable and separately mutated; no scalar comfort score or fret distance alone substitutes.
 - [ ] Production output remains unchanged while the red fixture proves the regression.
+- [ ] The content-addressed bad output and its expected failing observations remain immutable, permanently failing development evidence; later repair creates new output/run identities and never relabels this bundle as passing.
 - [ ] Public evidence uses Greensleeves only as disclosed development evidence and makes no general idiom claim.
 
 ## Gate matrix

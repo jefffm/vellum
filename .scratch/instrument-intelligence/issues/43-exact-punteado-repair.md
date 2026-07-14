@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U4
 
 SPEC coverage: Baroque-guitar exact configuration and punteado; Slice 8.2
 
-Requirement IDs: II-BG-001–003, II-SEED-001, II-EXEC-008B, II-MC-021
+Requirement families touched: II-BG-001–003, II-SEED-001, II-EXEC-008B, II-MC-021
 
 ## What to build
 
@@ -18,7 +22,7 @@ Use one reviewed Sanz path for scoped test-only historical knowledge plus a sepa
 
 - [ ] Exact two-dimensional contacts, fingers, course allocation, constituent strings, held notes, transitions, hand position, and profile-scoped right-hand resources drive search.
 - [ ] No universal three-finger assertion is hard-coded; historical, pedagogical, software, and player-specific rules remain distinct.
-- [ ] Principal Voice stays recognizable and the known violent cross-neck transition is absent under the exact instance/context.
+- [ ] The realized principal voice preserves every pinned source occurrence, pitch/rhythm obligation, phrase position, and prominence threshold, and the known violent cross-neck transition is absent under the exact instance/context; perceptual recognizability remains reserved for the later target-player/Owner review.
 - [ ] Notation and playback preserve selected course/string constituents, attacks, durations, releases, and no duplicates.
 - [ ] Test-only historical knowledge remains unavailable by default; the nonhistorical consequence is visibly labeled and manifest-bound.
 
@@ -37,5 +41,6 @@ Development fixtures named by this tracer may be public only with verified right
 
 ## Blocked by
 
-- 14
+- 16
 - 42
+- 73

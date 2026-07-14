@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U8, U9
 
 SPEC coverage: Knowledge reassessment; feedback/state/learning; Slice 11
 
-Requirement IDs: II-KNW-007, II-LEARN-001, II-EXEC-011, II-MC-001, II-MC-036
+Requirement families touched: II-KNW-007, II-LEARN-001, II-EXEC-011, II-MC-001, II-MC-036
 
 ## What to build
 

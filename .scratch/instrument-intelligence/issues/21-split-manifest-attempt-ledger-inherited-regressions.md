@@ -4,23 +4,30 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U8, U10
 
 SPEC coverage: Dataset assignments/contamination; content-addressed regressions; held-out acceptance; Slice 4
 
-Requirement IDs: II-EVAL-004–005, II-EVAL-009–010, II-EXEC-004B, II-MC-027–029
+Requirement families touched: II-EVAL-004–005, II-EVAL-009–010, II-EXEC-004B, II-MC-027–029
 
 ## What to build
 
-Implement synthetic split manifests and an append-only Holdout Run Ledger with pre-output genesis, unique CAS head, fork detection, invalidation, permanent valid-failure regressions, and inherited reserve state.
+Implement synthetic split manifests and an append-only Holdout Run Ledger with pre-output genesis, unique CAS head, fork detection, output-independent invalidation, inherited reserve state, and an explicit transaction that reclassifies a valid held-out failure before it may inform development.
 
 ## Acceptance criteria
 
 - [ ] Manifest and ledger genesis freeze before any candidate output; every attempted group records an ordered terminal or nonterminal state.
 - [ ] Concurrent append uses one CAS head; forks, rewritten history, missing attempts, and head rollback invalidate qualification.
 - [ ] Blocked, incomplete, invalid, failed, cancelled, and infrastructure attempts remain retained and semantically distinct.
-- [ ] A valid failure becomes a permanent required regression; a successor inherits all failures and the unconsumed reserve cursor.
-- [ ] Public receipts expose only opaque IDs, coverage classes, digests, aggregate status, and redacted diagnostics; exact synthetic truth remains in the test Vault.
+- [ ] Fixture-invalidity predicates and decision authority freeze before output; post-output invalidation requires an independent, reason-coded decision and cannot discard an inconvenient failure, rewrite reserve order, or depend on candidate quality.
+- [ ] Before a valid failure informs product work, one atomic declassification/contamination transaction removes it from held-out eligibility, preserves the immutable attempt, records exposure and rights decisions, and creates a content-addressed mandatory development-regression identity.
+- [ ] Public-safe regression material is disclosed only when authorized; otherwise an authorized minimized reproduction or private development-regression capability preserves the failing behavior without copying Owner-private/Vault truth into Git.
+- [ ] A successor inherits every valid failure and the unconsumed reserve cursor in addition to fresh held-out groups; it cannot treat an inherited regression as fresh held-out evidence.
+- [ ] Public receipts expose only random non-resolving IDs, public coverage classes, keyed non-resolving Vault commitments, digests of already-public artifacts, bounded aggregate states, and typed diagnostics; exact synthetic truth and direct private-data digests remain in the test Vault.
 
 ## Gate matrix
 

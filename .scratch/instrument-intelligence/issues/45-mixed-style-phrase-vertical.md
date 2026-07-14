@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U4
 
 SPEC coverage: Mixed style; Slice 8.2
 
-Requirement IDs: II-BG-001, II-BG-005, II-EXEC-008B, II-MC-021
+Requirement families touched: II-BG-001, II-BG-005, II-EXEC-008B, II-MC-021
 
 ## What to build
 
@@ -17,7 +21,7 @@ Realize a complete phrase that transitions between punteado and rasgueado/alfabe
 ## Acceptance criteria
 
 - [ ] Technique transition is planned at a musically meaningful boundary and carried in phrase state rather than inferred after event selection.
-- [ ] Principal Voice prominence and exact harmony remain intelligible across single-note, partial, and strummed gestures.
+- [ ] Principal Voice pitch/rhythm identity, phrase position, audibility/prominence thresholds, and exact harmonic obligations remain satisfied across single-note, partial, and strummed gestures; human musical intelligibility is assessed only in the later digest-bound reviews.
 - [ ] Held harmony, preparation, release, resonance/damping, stroke masks, and left/right-hand transitions remain feasible under the exact instance.
 - [ ] At least two non-dominated alternatives expose meaningful technique/texture/ergonomic compromises in Workbench and Audio Preview.
 - [ ] Flattened mode, lost melody, impossible transition, stale hold, missing release, and duplicate attack mutations fail.

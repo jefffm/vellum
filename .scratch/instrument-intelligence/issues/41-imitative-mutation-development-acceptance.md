@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U7, U8
 
 SPEC coverage: Required mutations; Slice 7 acceptance
 
-Requirement IDs: II-EVAL-007, II-EXEC-007B, II-MC-015, II-MC-025
+Requirement families touched: II-EVAL-007, II-EXEC-007B, II-MC-015, II-MC-025
 
 ## What to build
 

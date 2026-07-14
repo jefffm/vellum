@@ -4,23 +4,27 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U4, U5, U6
 
 SPEC coverage: Intended Technique Plan; Slice 5
 
-Requirement IDs: II-MUS-010, II-BND-005, II-EXEC-005B, II-MC-016
+Requirement families touched: II-MUS-010, II-BND-005, II-EXEC-005B, II-MC-016
 
 ## What to build
 
-Carry a named, profile-scoped technique plan with resources, transitions, attack/release, held/damped state, notation, and playback consequences into candidate search instead of relabeling a generated texture after the fact.
+Carry a target-neutral, named, profile-scoped technique plan with only its applicable registered resource, transition, state, notation, and playback facets into candidate search instead of relabeling generated texture after the fact.
 
 ## Acceptance criteria
 
-- [ ] Plan identifies technique/profile scope, applicability, hand/resource budgets, transition obligations, attack masks, held/released/damped state, resonance, and target notation/playback consequences.
-- [ ] Orthogonal compatible facets compose explicitly; unsupported combinations produce Plan Conflict rather than a flat substitute mode.
-- [ ] Candidate mappings and Transformation Audit prove which technique obligations each event/gesture realizes.
+- [ ] Plan identifies technique family, profile and passage scope, applicability, transitions, required resources, state obligations, notation/playback consequences, alternatives, evidence, and unknown dimensions without requiring instrument-specific facets on unrelated targets.
+- [ ] Registered target/profile facets compose explicitly where applicable; a target that has no attack mask, course allocation, digit allocation, resonance rule, or other facet records `not_applicable` rather than a fabricated value, and unsupported combinations produce Plan Conflict.
+- [ ] Candidate mappings, the accepted Transformation Report, and Preservation Audit identify which technique obligations each event or gesture realizes.
 - [ ] Historical, pedagogical, software, and personal rationale remain separate and visibly scoped.
-- [ ] Missing transition, impossible resource, relabeled attack, hold/release, and damping mutations fail.
+- [ ] Missing applicable transition, impossible resource, relabeled constitutive event, hold/release, and damping mutations fail; an inapplicable target-specific mutation cannot become a universal gate.
 
 ## Gate matrix
 

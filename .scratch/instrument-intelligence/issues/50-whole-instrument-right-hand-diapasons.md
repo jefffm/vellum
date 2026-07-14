@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U5
 
 SPEC coverage: Diapasons, resonance, and right hand; Slice 9.2
 
-Requirement IDs: II-BL-003–004, II-EXEC-009B, II-MC-022
+Requirement families touched: II-BL-003–004, II-EXEC-009B, II-MC-022
 
 ## What to build
 
@@ -38,3 +42,4 @@ Named development fixtures may be public only with verified rights. Future held-
 ## Blocked by
 
 - 49
+- 78

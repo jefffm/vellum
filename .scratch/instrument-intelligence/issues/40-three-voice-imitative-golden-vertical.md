@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U7
 
 SPEC coverage: Imitative-counterpoint relationship vertical; Slice 7
 
-Requirement IDs: II-MUS-008, II-EXEC-007A, II-MC-015
+Requirement families touched: II-MUS-008, II-EXEC-007A, II-MC-015
 
 ## What to build
 

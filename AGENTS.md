@@ -26,10 +26,13 @@ The active execution wave is `.scratch/instrument-intelligence`. Before implemen
 2. Apply accepted ADR 0022 to all new canonical Reviewed Knowledge Library records.
 3. Read `.scratch/instrument-intelligence/PLAN.md`, its requirement ledger, and the selected tracer issue before changing code.
 4. Do not reopen .scratch/arrangement-intelligence; it is a frozen completed prototype record with path- and hash-bound evidence.
-5. Sequence machine-executable tracer bullets before the late role-scoped HITL package defined by the specification.
-6. Complete, test, commit, and push each tracer before beginning a dependent tracer.
+5. Treat tracer IDs as stable locators, not sequence. Follow the typed dependency/result-predicate graph and temporal execution generations in the generated completion manifest.
+6. Sequence autonomous implementation before late human commitments, then resume automatic sealed execution, remediation, packaging, and aggregation after those commitments; never hide AFK work inside one HITL ticket.
+7. Treat schema 5 as an evidence-empty execution lock. After this bootstrap is pushed, the Owner establishes its one-time local trust checkpoint with `npm run plan:instrument-intelligence:trust-bootstrap`; never infer a fresh bootstrap after schema-5 history exists.
+8. T01 first lands and strictly verifies a governance-only next-schema/verifier/clause-ledger pre-registration transaction. Do not add or push T01 evidence before that upgraded pending-evidence validator is active.
+9. Thereafter complete, test, commit, push, and record `origin/main` reachability for each tracer before beginning a dependent tracer. Run `npm run spec:verify` for draft/precommit validation; after pushing prevalidated implementation/evidence and its separate manifest-only receipt commit, run `npm run plan:instrument-intelligence:verify`. Dependents require local `HEAD` and a clean worktree at the strictly verified `origin/main` receipt tip.
 
-Public tracer artifacts may contain only development-fixture details plus opaque held-out case IDs, coverage classes, digests, aggregate statuses, and redacted evidence. Exact held-out source identities, reviewed truth, expected observations, forbidden outcomes, mutations, invalidation decisions, reserve order or seed, and per-attempt diagnostics remain exclusively in the Owner Evaluation Vault. Public manifests bind those artifacts by digest without resolving them.
+Public tracer artifacts may contain only rights-approved development-fixture details plus typed bounded receipts. Hidden material uses non-resolving case IDs and keyed Vault commitments, never bare hidden-source or truth digests. Exact held-out source identities, reviewed truth, expected observations, forbidden outcomes, mutations, invalidation decisions, reserve order or seed, and per-attempt diagnostics remain exclusively in the Owner Evaluation Vault. Owner-private reference identities, paths, metadata, crops, text, images, and direct digests are equally private unless an explicit repository-inclusion decision authorizes disclosure.
 
 Historical specifications, proposals, audits, reviews, and superseded plans are under docs/archive/specifications/2026-07-13. They are evidence, not current work.
 

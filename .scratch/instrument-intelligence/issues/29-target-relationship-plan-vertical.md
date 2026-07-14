@@ -4,22 +4,26 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U7
 
 SPEC coverage: Target Voice/Relationship Plans; Slice 5
 
-Requirement IDs: II-MUS-008, II-EXEC-005B, II-MC-012
+Requirement families touched: II-MUS-008, II-EXEC-005B, II-MC-012
 
 ## What to build
 
-Preserve ordered entries, subject relations, voice exchanges, counterpoint, suspensions, and cadential goals as named relationship obligations under an exact Validation Profile.
+Preserve ordered entries, subject relations, voice exchanges, counterpoint, suspensions, and cadential goals as named relationship obligations under an exact Validation Profile while resolving all source identity through the pinned Source Voice Graph.
 
 ## Acceptance criteria
 
 - [ ] Relationship Plan maps source obligation groups to target voices/events with relation kind, timing/order, interval/rhythm shape, cadence, allowed transformation, and evidence.
-- [ ] An explicit ambiguity relation can preserve overlapping disputed analyses without forcing false certainty.
+- [ ] The plan references Source Voice Graph ambiguity and uncertainty records by digest and can defer or scope obligations affected by them; it never re-encodes a new source-membership or source-identity judgment as a target relationship.
 - [ ] Entry order, identity exchange, relation timing, subject shape, suspension, and cadence mutations fail independently.
-- [ ] Candidate and evaluation reports show which relationship passed, failed, was intentionally transformed, or remains unknown.
+- [ ] Candidate and evaluation reports show which relationship passed, failed, was intentionally transformed, is blocked by unresolved source truth, or remains unknown.
 - [ ] Plans survive serialization/reload and stale correctly when Source Voice, context, harmonic, or profile inputs change.
 
 ## Gate matrix

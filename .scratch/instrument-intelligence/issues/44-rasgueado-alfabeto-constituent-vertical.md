@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U4
 
 SPEC coverage: Rasgueado and alfabeto; Slice 8.2
 
-Requirement IDs: II-BG-001–002, II-BG-004, II-EXEC-008B, II-MC-021
+Requirement families touched: II-BG-001–002, II-BG-004, II-EXEC-008B, II-MC-021
 
 ## What to build
 
@@ -38,3 +42,4 @@ Development fixtures named by this tracer may be public only with verified right
 ## Blocked by
 
 - 43
+- 74

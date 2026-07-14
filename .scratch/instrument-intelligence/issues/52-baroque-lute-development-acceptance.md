@@ -4,19 +4,23 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U5, U8
 
 SPEC coverage: Baroque-lute evidence/readiness and acceptance; Slice 9.4
 
-Requirement IDs: II-BL-006, II-EVAL-008, II-EXEC-009D, II-MC-018, II-MC-022–023, II-RC-008
+Requirement families touched: II-BL-006, II-EVAL-008, II-EXEC-009D, II-MC-018, II-MC-022–023, II-RC-008
 
 ## What to build
 
-Close lute development acceptance with the repaired Greensleeves regression, complete Regression Bundle, and an evidence-honest course-13 notation policy.
+Close lute development acceptance with a new repaired Greensleeves generative regression, complete Regression Bundle, and an evidence-honest course-13 notation policy while retaining the original bad output as permanently failing evidence.
 
 ## Acceptance criteria
 
-- [ ] Known-bad bundle now passes calibrated left/right-hand, diapason, notation, and playback gates without weakening the original evaluators.
+- [ ] The immutable T48 bad-output bundle still produces its pinned failures; a separate generative regression binds the disclosed source/input, old-system run digest, repaired-system run/output digests, and unchanged evaluator identities, proving old generation fails and new generation passes.
 - [ ] Golden fixture and required mutations pass under exact development system/profile/evaluator identities.
 - [ ] Editorial course-13 sign is displayed as `not_claimed`; a historically scoped profile stays unresolved unless directly applicable released evidence exists.
 - [ ] No Mace twelve-course statement, modern convention, corpus frequency, or Owner preference is generalized into a historical course-13 claim.

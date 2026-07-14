@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U8, U10
 
 SPEC coverage: Evaluation layers; hard-gate/acceptance status; Slice 0 and Slice 4
 
-Requirement IDs: II-EVAL-001, II-EVAL-003, II-EXEC-000, II-EXEC-004A, II-MC-030–031
+Requirement families touched: II-EVAL-001, II-EVAL-003, II-EXEC-000, II-EXEC-004A, II-MC-030–031
 
 ## What to build
 
@@ -31,7 +35,12 @@ Migrate legacy Cards and baselines without reinterpreting old proxy dimensions, 
 - Observable outcome: the acceptance path is demonstrated through the production boundary named above, not only by schema/unit tests.
 - Evidence: `../evidence/T17/verification.json` plus its digest-bound redacted artifacts.
 
+## Public/Vault boundary
+
+Public planning and verification contain only rights-approved development identifiers and closed-schema bounded receipts. Owner-private or held-out identity, truth, paths, direct private-data digests, mutations, reserve state, and diagnostics remain private/Vault data; unknown public evidence fields and unlisted artifacts fail closed.
+
 ## Blocked by
 
 - 01
 - 07
+- 71

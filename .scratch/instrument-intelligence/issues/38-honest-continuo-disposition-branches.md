@@ -4,23 +4,27 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U7
 
 SPEC coverage: Continuo Disposition; Slice 6
 
-Requirement IDs: II-MUS-009, II-EXEC-006B, II-MC-014
+Requirement families touched: II-MUS-009, II-EXEC-006B, II-MC-014
 
 ## What to build
 
-Demonstrate complete-on-target, complete-with-separate-bass, policy-valid labeled reduction, and correctly rejected Continuo dispositions using the same reviewed foundation.
+Demonstrate all three Continuo dispositions—complete-on-target, complete-with-separate-bass, and policy-valid labeled reduction—plus a separate incapable-target Plan Conflict using the same reviewed foundation.
 
 ## Acceptance criteria
 
-- [ ] Each branch is chosen before search, covers the entire foundation set, records target capacity/policy, and produces distinct deliverable lineage.
+- [ ] Each of the three dispositions is chosen before search, covers the entire foundation set under its required equality/partition rule, records target capacity/policy, and produces distinct deliverable lineage.
 - [ ] Complete-with-separate-bass includes an exact separate bass part; a re-entrant or otherwise incomplete target cannot imply completeness.
 - [ ] Reduction is visibly and machine-readably labeled, lists omitted/altered obligations, and never inherits complete-realization readiness.
-- [ ] An incapable faithful target rejects with typed Plan Conflict and meaningful alternatives.
-- [ ] Notation, playback, Workbench labels, audit, Cards, and exports agree on disposition.
+- [ ] An incapable faithful target stops before search with typed Plan Conflict and meaningful alternatives; this conflict is never serialized as a fourth or rejected disposition.
+- [ ] Notation, playback, Workbench labels, audit, Cards, and exports agree on one of the three dispositions or on the separate Plan Conflict state.
 
 ## Gate matrix
 

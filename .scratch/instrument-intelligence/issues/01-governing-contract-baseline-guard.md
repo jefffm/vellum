@@ -1,26 +1,47 @@
-# Governing contract and baseline guard
+# Governance bootstrap and requirement-ledger verifier
 
 Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: eligible
+
+Completion semantics: implementation-pass
+
 User stories: U10
 
-SPEC coverage: Authority and reading order; non-negotiable boundaries; Slice 0; completion boundary
+SPEC coverage: Authority and reading order; Slice 0 specification guard; completion evidence contract
 
-Requirement IDs: II-AUTH-001, II-BND-001–008, II-EXEC-000, II-NG-013–014, II-RC-011
+Requirement families touched: II-AUTH-001, II-EXEC-000, II-RC-011
 
 ## What to build
 
-Make the current specification and this wave executable rather than merely descriptive. Preserve the frozen prototype evidence, correct any remaining active overclaims, create clause-level requirement/evidence verification, and make dependency advancement fail closed.
+Replace the deliberately execution-locked schema-5 bootstrap with the machine-readable governance contract for this wave. First land a governance-only pre-registration transaction containing the new verifier, closed clause ledger, receipt/evidence schemas, and regenerated empty manifest; strictly verify that transaction before producing T01 evidence. Then use the ordinary implementation/evidence commit followed by its manifest-only receipt commit. No product implementation or public evidence may precede the pre-registration guard.
 
 ## Acceptance criteria
 
-- [ ] Every normative subsection, execution bullet, Machine Complete clause, Release Complete clause, and non-goal has a stable requirement digest, owner tracer, evidence family, and current status.
-- [ ] A verifier rejects missing, duplicated, contradictory, stale, or incompatible coverage and rejects a dependent tracer whose blocker is not committed and pushed.
-- [ ] Current docs identify only `SPEC.md` and this wave as active; frozen prototype evidence retains identical path and bytes.
-- [ ] Active UI/docs do not overstate historical authority, specialist review, physical playability, or generic completeness.
-- [ ] The issue/evidence schema validates triage status, AFK/HITL type, gate commands, toolchain identity, public/Vault classification, and evidence path.
+- [ ] Every normative clause, execution step, Machine Complete clause, Release Complete clause, non-goal, and guardrail has one stable requirement ID and content digest; broad planning rows cannot stand in for clause-level coverage.
+- [ ] Requirement records distinguish `implementationOwner`, `evidenceContributors`, and `closureVerifier`; bidirectional checks reject an issue-to-ledger or ledger-to-issue mismatch, unknown ID, duplicate owner, or incompatible scope.
+- [ ] Every dependency/result predicate is a typed expression over an exact source tracer generation, bounded field, operator, and expected value with explicit AND/OR grouping; prose is explanatory only. The verifier evaluates current eligibility from execution receipts and, after execution, proves ancestry through at least one actually satisfied witness branch of each OR predicate rather than flattening every alternative into a mandatory predecessor.
+- [ ] The completion manifest enumerates every tracer definition, immutable initial execution declaration, computed runtime eligibility, typed predicate, closed-schema evidence and gate receipt, committed authority snapshot, invalidation/supersession edge, remote-reachability proof, stable-ID tombstone, and temporal `(tracer ID, execution generation)` node without assuming a fixed count or numeric range.
+- [ ] Tracer ID allocation is append-only and compare-and-swap protected; after execution begins, governed remediation may append only the next issue definition and its PLAN row while all prior authority bytes and definitions remain stable. Deletion requires an explicit retained tombstone, concurrent allocation cannot reuse an ID, a tombstone cannot erase the dynamic tracer's unresolved closure obligation, and malformed requirement/blocker/mapping tokens or noncanonical evidence paths fail closed.
+- [ ] Runtime repair/rerun lineage is an acyclic immutable generation DAG. Every remediation generation is bound to an exact typed T69/T84/T85/T87/T103/T106 dispatch artifact prescribing `rejoinAt`, actual invalidation edges/scopes, derived Machine impact, and nonempty closure targets. The verifier retains contracts for every historical generation, permits reservations only while closure is pending, and proves current closure covers even superseded or tombstoned generations; neither rerun nor state transition can erase an obligation.
+- [ ] Issue completion, four-state product acceptance, applicability, comparison, freshness, and wave closure are separate. Completion semantics are derived from exact gate coverage and typed outcomes; closure/status are derived from current active receipts and cumulative obligations. Changed authority/definition bytes explicitly stale affected evidence while preserving prior generations.
+- [ ] `origin/main` is the immutable prefix anchor. Every execution receipt names a reachable implementation/evidence commit whose committed evidence, issue definition, SPEC, PLAN, requirement index, registry head, tombstone set, and predecessors match its authority snapshot. The separate receipt-manifest commit must then be pushed and pass strict byte-equality verification before dependency advancement.
+- [ ] Current docs identify only `SPEC.md` and this wave as active; the frozen prototype evidence retains identical path and bytes.
+- [ ] The issue/evidence schema validates status, type, `Initial execution eligibility`, completion semantics, exact gate commands, bounded toolchains, artifact closure, public/Vault classification, and evidence path; unknown keys, symlinks, unlisted files, private-path material, and arbitrary diagnostics fail closed.
+- [ ] The schema-5 bootstrap remains incapable of accepting execution generations, requirement evidence, tombstones, closure state, or any evidence file beyond `.gitkeep`. T01 upgrades to a new explicitly versioned schema only through a manifest-changing, governance-only pre-registration commit whose diff is closed to the declared authority/verifier paths and whose strict verification advances the Owner-local trust checkpoint.
+- [ ] The upgraded protocol validates pending evidence _before_ its first public push: it discovers every changed/new `evidence/TNN` directory, requires one closed `verification.json`, validates every artifact/media/sanitization/privacy rule, rejects global orphan or unreceipted evidence, and reserves the exact tracer/generation. One implementation/evidence commit belongs to one generation and cannot be reused.
+- [ ] Every run has a closed start receipt binding definition, exact authority/path snapshots, current blocker/result-witness generations and their pushed receipt commits, fetched `origin/main`, Generation System/product tree, subject/package/component identities, and start time. The implementation commit is a direct child of that exact trusted tip; predecessor receipt commits are Git ancestors and their reachability checks precede the run. The subsequent single-parent receipt commit changes only the manifest, appends exactly one generation, names its parent implementation commit, and is itself `origin/main`/local `HEAD` in a clean strict worktree.
+- [ ] Gate proof is exact and non-reusable: every proving artifact binds command digest and status; test-report counts agree with status; conditional applicability is derived from a typed issue condition rather than self-declared; required toolchain/subject identities come from the issue contract; and a typed outcome artifact agrees with manifest completion, acceptance, applicability, result code, freshness, compatibility, and authority state.
+- [ ] Requirement evidence is append-only but never retroactive or circular. Each evidence receipt declares exact clause claims and contributor role; ledger records bind those claims at that generation; closure verifiers T85/T87 cannot witness the underlying clauses they judge; implementation owner, evidence contributor, and closure verifier remain distinct; and invalidated/superseded evidence cannot be current coverage.
+- [ ] Every attempt, review, adjudication, decision, and applicability tracer has an exact result enum with acceptance correlation and exact-generation downstream disposition. T85/T87 finalize pass, repair-dispatched failure, blocked, and incomplete audits, but only exact `machine_complete`/`release_complete` pass codes create closure; their failed codes require dispatch obligations and their blocked/incomplete codes forbid them. Failed T83 rounds are each consumed by T84; every package-bound human review round is consumed by T69 before rerun; decision/truth/applicability successors preserve their predecessors; and no failed or skipped generation disappears merely because a later generation passes.
+- [ ] Remediation is an append-only obligation ledger derived from every historical typed T69/T84/T85/T87/T103/T106 disposition artifact, independently of whether a repair issue/attempt exists. Repair-dispatch result codes require nonempty dispatches; human-successor/retry/pass outcomes forbid them. Each dispatch binds opaque finding, exact-next unallocated ID and registry head, immutable repair definition digest, AFK `implementation-pass` contract, affected public requirement IDs, inherited regression/reserve commitment, actual invalidation edges/scopes, earliest rejoin, and corresponding closure targets. Registration/attempts consume it one-to-one; retries inherit rather than erase the obligation; current passing descendants may discharge failed attempts or invalidated rejoins; supersession/tombstone requires explicit obligation transfer; and an unexecuted dynamic repair cannot be tombstoned into impossibility.
+- [ ] Invalidation permits multiple independent incoming findings and may target static or dynamic evidence. Actual edges—not booleans—derive Machine/Release impact. Current active replacement generations and clause claims must descend from issue/evidence/requirement invalidations; corresponding closure (T85 for Machine-impacting scope, T87 for every release repair) descends from the repair and every cumulative target. Release-only findings do not revoke Machine Complete.
+- [ ] Owner stop/resume uses a dedicated signed decision receipt with verified Owner subject, credential, scope, freshness/revocation, exact T85/T81/review snapshot, and explicit deferred/nonpassing state. Only `provisional_stop_current` and a passing authorized `provisional_stop_resumed` successor are valid; a stop cannot downgrade an already current Release Complete state without a typed revocation transition.
+- [ ] Human/public review receipts bind exact package/output/system subjects, reviewer role and credential, scope, independence/conflicts, freshness/revocation, Claim Scopes, and bounded result. Public musical artifacts undergo media-specific sanitization. Hidden cases use precommitted non-resolving commitments separately from allowlisted, minimum-cardinality aggregate coverage reports; no stable per-case public outcome, direct private digest, free-form coverage identity, path, truth, or diagnostic is permitted.
+- [ ] Authority snapshots carry their historical path sets, not today's list. Domain authority includes `CONTEXT.md`, the closed accepted-ADR set, delegated agent governance docs, SPEC/PLAN/ledger, and the stable verifier runtime/config; ordinary product dependencies/scripts are subject-tree inputs rather than immutable verifier authority. A typed authority migration stales affected current evidence without making historical receipts unverifiable.
+- [ ] Strict trust is monotonic outside rewritable branch history: freshly fetched `origin/main` must first-parent-descend from the Owner-local checkpoint; bootstrap is an explicit one-time ceremony; schema downgrade/rebootstrap is permanently rejected after any schema-5 history; protected linear `main` is a prerequisite; all parsed local bytes/path sets receive final compare-and-swap checks; and current closure is impossible while any unreceipted commit or dirty/untracked worktree changes the governed product tree.
 
 ## Gate matrix
 
@@ -28,8 +49,12 @@ Make the current specification and this wave executable rather than merely descr
 - Base: `npm run typecheck`; `npm test`; `npm run format:check`; `npm run spec:verify`; `npm run build`; `npm run server:build`.
 - Conditional: none beyond the focused and base gates.
 - Toolchain: record Node, npm, Nix, musical-tool, provider/fake-provider, OS, and hardware identities that materially affect the result; record `not_applicable` with rationale.
-- Observable outcome: the acceptance path is demonstrated through the production boundary named above, not only by schema/unit tests.
-- Evidence: `../evidence/T01/verification.json` plus its digest-bound redacted artifacts.
+- Observable outcome: a clean wave passes the committed verifier, while fixtures with an omitted clause, reversed ownership edge, stale issue digest, reused/deleted ID, malformed token/path, opaque prose predicate, temporal cycle, inherited stale closure, orphaned required tracer, fixed-count assumption, or unreachable dependency commit fail closed.
+- Evidence: `../evidence/T01/verification.json` plus its digest-bound typed bounded artifacts.
+
+## Public/Vault boundary
+
+Public planning and verification contain only rights-approved development identifiers and closed-schema bounded receipts. Owner-private or held-out identity, truth, paths, direct private-data digests, mutations, reserve state, and diagnostics remain private/Vault data; unknown public evidence fields and unlisted artifacts fail closed.
 
 ## Blocked by
 

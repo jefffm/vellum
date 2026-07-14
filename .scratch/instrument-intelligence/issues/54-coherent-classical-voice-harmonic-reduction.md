@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U6
 
 SPEC coverage: Target Voice Plan; polyphonic search; seed program; Slice 10.2
 
-Requirement IDs: II-CG-003–004, II-SEED-003, II-EXEC-010B, II-MC-024
+Requirement families touched: II-CG-003–004, II-SEED-003, II-EXEC-010B, II-MC-024
 
 ## What to build
 
@@ -37,6 +41,8 @@ Named development fixtures may be public only with verified rights. Future held-
 
 ## Blocked by
 
-- 14
+- 16
 - 29
 - 53
+- 79
+- 80

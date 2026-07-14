@@ -4,21 +4,25 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U6, U8
 
 SPEC coverage: Classical-guitar acceptance; Golden fixtures; Slice 10.3
 
-Requirement IDs: II-CG-006, II-EVAL-008, II-EXEC-010C, II-MC-018, II-MC-023–025
+Requirement families touched: II-CG-006, II-EVAL-008, II-EXEC-010C, II-MC-018, II-MC-023–025
 
 ## What to build
 
-Close classical-guitar development acceptance with the repaired disappearing-bass regression and a coequal semantic/render/playback Golden fixture.
+Close classical-guitar development acceptance with a new repaired disappearing-bass generative regression and a coequal semantic/render/playback Golden fixture while retaining the original bad output as permanently failing evidence.
 
 ## Acceptance criteria
 
-- [ ] Known-bad bundle now passes voice activity, relationships, cadence, duration, joint mechanics, notation, and playback without weakening red evaluators.
+- [ ] The immutable T53 bad-output bundle still produces its pinned failures; a separate generative regression binds the disclosed source/input, old-system run digest, repaired-system run/output digests, and unchanged evaluator identities, proving old generation fails and new generation passes.
 - [ ] Golden fixture covers planned rests, stems, multi-segment ties, voice crossing, written-to-sounding octave, isolated voices, full score, and no duplicates.
-- [ ] Principal voice remains recognizable and bass is a coherent independent voice rather than intermittent low notes.
+- [ ] Principal-voice occurrences preserve pinned pitch/rhythm/phrase-position/prominence obligations, while the bass preserves reviewed identity, activity/rest, relationship, function, cadence, and duration obligations; perceptual recognizability and musical coherence remain reserved for later target-player/Owner review.
 - [ ] Canonical plans/mappings, standard notation, SVG/PDF, MIDI/Audio Preview, and playback following agree after reload.
 - [ ] Test-only knowledge stays inactive by default; public development acceptance does not imply held-out or human idiom qualification.
 

@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U5
 
 SPEC coverage: Exact lute configuration; joint left-hand search; Slice 9.2
 
-Requirement IDs: II-BL-001–002, II-SEED-002, II-EXEC-009B, II-MC-022
+Requirement families touched: II-BL-001–002, II-SEED-002, II-EXEC-009B, II-MC-022
 
 ## What to build
 
@@ -17,7 +21,7 @@ Use Mace plus one scoped normative and one repertoire path to repair the known r
 ## Acceptance criteria
 
 - [ ] Exact course/stringing, scale, fret geometry, hand/finger contacts, preparation, held notes, barré where applicable, release, and transition trajectories drive whole-phrase search.
-- [ ] The pinned `f`/`b` realization is rejected and a closer musically equivalent mapping preserves voice/harmony/relationship obligations.
+- [ ] The pinned `f`/`b` realization is rejected; a distinct mapping passes versioned, independently reviewed physical and musical evaluator truth for voice/harmony/relationship obligations. Generator rankings, proximity, or self-authored labels cannot certify equivalence.
 - [ ] Missing or low-confidence calibration yields incomplete physical evidence rather than a default pass.
 - [ ] Mace, normative, repertoire, modern pedagogy, software, and Owner ergonomic evidence stay separately scoped; test-only historical releases remain inactive by default.
 - [ ] Workbench compares exact alternatives and explains musical/physical tradeoffs under the selected instance and tempo/reliability context.
@@ -38,5 +42,7 @@ Named development fixtures may be public only with verified rights. Future held-
 ## Blocked by
 
 - 11
-- 14
+- 16
 - 48
+- 76
+- 77

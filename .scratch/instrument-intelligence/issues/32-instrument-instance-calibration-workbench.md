@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U4, U5, U6, U9
 
 SPEC coverage: Ergonomic context; Instrument Instance authoring/calibration; Slice 5
 
-Requirement IDs: II-MUS-011–012, II-EXEC-005B, II-MC-016–017
+Requirement families touched: II-MUS-011–012, II-EXEC-005B, II-MC-016–017
 
 ## What to build
 

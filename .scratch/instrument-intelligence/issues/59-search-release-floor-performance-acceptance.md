@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U8, U10
 
 SPEC coverage: Performance/operability; Slice 12; Machine Complete performance clauses
 
-Requirement IDs: II-OPS-001, II-EXEC-012, II-MC-033–035
+Requirement families touched: II-OPS-001, II-EXEC-012, II-MC-033–035
 
 ## What to build
 
@@ -38,9 +42,11 @@ Named development fixtures may be public only with verified rights. Future held-
 ## Blocked by
 
 - 04
+- 70
 - 33
 - 39
 - 41
 - 47
 - 52
 - 56
+- 97

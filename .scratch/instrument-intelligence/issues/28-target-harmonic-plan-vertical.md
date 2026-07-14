@@ -4,23 +4,27 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3
 
 SPEC coverage: Target Harmonic Plan; Slice 5
 
-Requirement IDs: II-MUS-007, II-EXEC-005B, II-MC-012
+Requirement families touched: II-MUS-007, II-EXEC-005B, II-MC-012
 
 ## What to build
 
-Make bass function, inversion, harmonic rhythm, essential tones/dissonances, suspensions, and cadences explicit enough that a same-melody/wrong-harmony candidate fails for independent reasons.
+Make profile-scoped harmonic obligations explicit enough that a same-melody/wrong-harmony candidate fails for independently applicable reasons without forcing Roman-numeral, functional, chordal, or tonal analysis onto modal or nonfunctional material.
 
 ## Acceptance criteria
 
-- [ ] Harmonic Plan records spans, bass/foundation, chord/function/inversion, harmonic rhythm, essential tones, dissonance treatment, suspension preparation/resolution, cadence, uncertainty, and source evidence.
+- [ ] Each Harmonic Obligation records its span, source events, interpretation, protected features, priority, transformations, Validation Profile, evaluator requirements, uncertainty, and source evidence; bass, inversion, sonority, function, dissonance, tendency, and cadence are present only when applicable.
 - [ ] Candidate mappings identify which events realize each obligation and where an authorized reduction or compromise applies.
-- [ ] Wrong bass, inversion, change time, essential dissonance, suspension, cadence, and unsupported harmonic inference mutations fail independently.
+- [ ] Applicable wrong-bass, inversion, change-time, essential-dissonance, suspension, and cadence mutations fail independently; the same fixture includes a modal or nonfunctional counterexample in which Roman-numeral function is explicitly `not_applicable` or unresolved rather than fabricated.
 - [ ] Plan conflicts are typed and remain visible rather than repaired by hidden local substitutions.
-- [ ] Workbench compares two melody-preserving alternatives by their actual harmonic obligations, not one scalar score.
+- [ ] Workbench compares two melody-preserving alternatives by their actual profile-scoped obligations, unknowns, and inapplicable dimensions, not one scalar score.
 
 ## Gate matrix
 

@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U2, U9, U10
 
 SPEC coverage: Applied Knowledge Manifest; Slice 3 inventory/catalog/manifest
 
-Requirement IDs: II-BND-003–004, II-KNW-004–006, II-EXEC-003B, II-MC-006–009
+Requirement families touched: II-BND-003–004, II-KNW-004–006, II-EXEC-003B, II-MC-006–009
 
 ## What to build
 
@@ -30,6 +34,10 @@ Resolve the test-only release through an exact Inventory, Catalog, Resolution Po
 - Toolchain: record Node, npm, Nix, musical-tool, provider/fake-provider, OS, and hardware identities that materially affect the result; record `not_applicable` with rationale.
 - Observable outcome: the acceptance path is demonstrated through the production boundary named above, not only by schema/unit tests.
 - Evidence: `../evidence/T14/verification.json` plus its digest-bound redacted artifacts.
+
+## Public/Vault boundary
+
+Public planning and verification contain only rights-approved development identifiers and closed-schema bounded receipts. Owner-private or held-out identity, truth, paths, direct private-data digests, mutations, reserve state, and diagnostics remain private/Vault data; unknown public evidence fields and unlisted artifacts fail closed.
 
 ## Blocked by
 

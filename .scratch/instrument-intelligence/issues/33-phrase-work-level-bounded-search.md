@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U4, U5, U6
 
 SPEC coverage: Phrase-level candidate state; search selection; Slice 5
 
-Requirement IDs: II-MUS-013, II-EXEC-005C, II-MC-033
+Requirement families touched: II-MUS-013, II-EXEC-005C, II-MC-033
 
 ## What to build
 

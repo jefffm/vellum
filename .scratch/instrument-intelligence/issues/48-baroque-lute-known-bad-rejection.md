@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U5, U8
 
 SPEC coverage: Baroque-lute acceptance; Regression contracts; Slice 9.1
 
-Requirement IDs: II-BL-001–004, II-BL-006, II-EVAL-007, II-EXEC-009A, II-MC-018, II-NG-008
+Requirement families touched: II-BL-001–004, II-BL-006, II-EVAL-007, II-EXEC-009A, II-MC-018, II-NG-008
 
 ## What to build
 
@@ -20,6 +24,7 @@ Freeze the exact observed Greensleeves baroque-lute output containing the first-
 - [ ] Evaluator rejects the reach using calibrated two-dimensional finger/contact geometry and transition state, not fret span alone.
 - [ ] Course allocation, digit allocation, preparation, simultaneity, alternation, crossing, thumb behavior, stopped-course/diapason transition, notation, and playback failures report independently.
 - [ ] Production output remains unchanged while red cases and controlled mutations prove the regression.
+- [ ] The content-addressed bad output and expected failing observations remain immutable, permanently failing development evidence; later repair records distinct run and output identities.
 - [ ] Evidence is explicitly development-only and makes no general lute-idiom or player-playability claim.
 
 ## Gate matrix

@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U6, U8
 
 SPEC coverage: Classical-guitar acceptance; Regression contracts; Slice 10.1
 
-Requirement IDs: II-CG-001–004, II-CG-006, II-EVAL-007, II-EXEC-010A, II-MC-018, II-NG-008
+Requirement families touched: II-CG-001–004, II-CG-006, II-EVAL-007, II-EXEC-010A, II-MC-018, II-NG-008
 
 ## What to build
 
@@ -20,6 +24,7 @@ Freeze the exact Greensleeves classical-guitar output whose bass disappears and 
 - [ ] Evaluator rejects dropped/incoherent bass, false two-voice presentation, missing function/cadence/duration, impossible mechanics, notation mismatch, and playback mismatch independently.
 - [ ] Event count, sounding density, low pitch, or continuous sound cannot substitute for coherent bass voice identity and relationships.
 - [ ] Production output remains unchanged while controlled omission/rest/crossing/tie/octave mutations prove the red regression.
+- [ ] The content-addressed bad output and expected failing observations remain immutable, permanently failing development evidence; later repair records distinct run and output identities.
 - [ ] Evidence is development-only and makes no general classical-guitar idiom claim.
 
 ## Gate matrix

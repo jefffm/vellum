@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3
 
 SPEC coverage: Lyrics and text underlay; Slice 5
 
-Requirement IDs: II-MUS-003, II-EXEC-005A, II-MC-013, II-RC-006
+Requirement families touched: II-MUS-003, II-EXEC-005A, II-MC-013, II-RC-006
 
 ## What to build
 
@@ -26,7 +30,7 @@ Carry a rights-cleared vocal fixture through optical/manual review into versione
 
 - Focused: `npm test -- test/instrument-intelligence/T25-lyric-underlay-vertical.test.ts`.
 - Base: `npm run typecheck`; `npm test`; `npm run format:check`; `npm run spec:verify`; `npm run build`; `npm run server:build`.
-- Conditional: `npm run test:browser -- test/browser/instrument-intelligence/T25-lyric-underlay-vertical.spec.ts`; `npm run eval:fast`; `nix develop --command bash -c 'npm run sandbox:lilypond:verify && npm run eval:render && npm run eval:playback'`.
+- Conditional: `npm run test:browser -- test/browser/instrument-intelligence/T25-lyric-underlay-vertical.spec.ts`; `npm run eval:fast`; `npm run eval:omr` when the optical rather than manual path is selected; `nix develop --command bash -c 'npm run sandbox:lilypond:verify && npm run eval:render && npm run eval:playback'`.
 - Toolchain: record Node, npm, Nix, LilyPond/Audiveris, provider/fake-provider, OS, hardware, and fixture identities that materially affect the result; record `not_applicable` with rationale.
 - Observable outcome: demonstrate the complete production-path result named above, including reload and the applicable Workbench/render/playback/evaluator boundary.
 - Evidence: `../evidence/T25/verification.json` plus digest-bound public development artifacts.

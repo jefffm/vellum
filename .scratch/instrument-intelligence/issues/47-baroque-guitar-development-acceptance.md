@@ -4,19 +4,23 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U4, U8
 
 SPEC coverage: Baroque-guitar acceptance; Golden fixtures; Slice 8.4
 
-Requirement IDs: II-BG-007, II-EVAL-008, II-EXEC-008D, II-MC-018, II-MC-021, II-MC-023
+Requirement families touched: II-BG-007, II-EVAL-008, II-EXEC-008D, II-MC-018, II-MC-021, II-MC-023
 
 ## What to build
 
-Close baroque-guitar development acceptance with the repaired Greensleeves regression and a coequal semantic-to-rendered-to-sounding Golden fixture.
+Close baroque-guitar development acceptance with a new repaired Greensleeves generative regression and a coequal semantic-to-rendered-to-sounding Golden fixture while retaining the original bad artifact as permanently failing evidence.
 
 ## Acceptance criteria
 
-- [ ] Known-bad bundle now passes voice, mechanics, gesture, notation, and playback gates under its exact nonhistorical development profile without weakening the red evaluator.
+- [ ] The immutable T42 bad-output bundle still produces its pinned failures; a separate generative regression binds the same disclosed source/input plus old-system run digest, repaired-system run/output digests, and unchanged evaluator identities, proving old generation fails and new generation passes.
 - [ ] Golden fixture covers punteado, alfabeto, up/down rasgueado, edge suppression, paired constituents, technique transition, hold/release, resonance, and damping.
 - [ ] Canonical semantics, tablature/notation, PDF/SVG, MIDI/Audio Preview, and playback-following marker agree with no duplicate constituents.
 - [ ] Default Guided Start cannot activate test-only historical knowledge and displays exact readiness/unknowns.

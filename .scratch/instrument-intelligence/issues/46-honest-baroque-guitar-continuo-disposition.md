@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U4, U7
 
 SPEC coverage: Baroque-guitar Slice 8.3; Continuo disposition
 
-Requirement IDs: II-BG-006, II-MUS-009, II-EXEC-008C
+Requirement families touched: II-BG-006, II-MUS-009, II-EXEC-008C
 
 ## What to build
 
@@ -17,7 +21,7 @@ Apply the shared Continuo disposition contract to the re-entrant five-course tar
 ## Acceptance criteria
 
 - [ ] Exact target/instance capacity is evaluated against every foundation obligation before search.
-- [ ] An incomplete foundation produces an explicit separate bass part, a policy-valid visibly labeled reduction, or rejection.
+- [ ] A selected Continuo Plan records exactly one of the three dispositions: complete foundation, explicit separate bass part, or policy-valid visibly labeled reduction; if none is valid, search returns a Plan Conflict/rejected candidate rather than inventing a fourth disposition.
 - [ ] Implied root, chord membership, octave displacement, Audio Preview pitch, or low-looking notation cannot count as a complete foundation.
 - [ ] Full and isolated playback, notation, lineage, Cards, Workbench, and export agree on the chosen disposition.
 - [ ] Mutations that remove the separate bass, hide reduction labeling, or misreport coverage fail.

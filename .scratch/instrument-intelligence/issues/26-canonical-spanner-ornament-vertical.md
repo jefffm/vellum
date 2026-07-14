@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3
 
 SPEC coverage: Musical context, transposition, and spanners; Slice 5
 
-Requirement IDs: II-MUS-005, II-EXEC-005A, II-MC-013, II-MC-025
+Requirement families touched: II-MUS-005, II-EXEC-005A, II-MC-013, II-MC-025
 
 ## What to build
 

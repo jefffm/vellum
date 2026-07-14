@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
-User stories: U3, U4, U5, U6, U8
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
+User stories: U3, U4, U5, U6
 
 SPEC coverage: Candidate output; search selection/evaluation; Slice 5
 
-Requirement IDs: II-MUS-014–015, II-EXEC-005C, II-MC-032, II-UX-002–003
+Requirement families touched: II-MUS-014–015, II-EXEC-005C, II-MC-032, II-UX-002–003
 
 ## What to build
 
@@ -20,7 +24,7 @@ Persist complete candidate mappings and committed Selection Policy separately fr
 - [ ] Ranking or persistence alone cannot create or replace an Arrangement Score.
 - [ ] A conclusive evaluation failure rejects and advances committed ordering; unavailable infrastructure remains retryable and cannot be silently skipped.
 - [ ] Only a passing immutable Adoption Decision creates a new default score version; manual adoption records scope and rationale.
-- [ ] Workbench compares, prompts against, selects notes from, manually edits in a batch, adopts, versions, reloads, and audits candidates without losing lineage.
+- [ ] Workbench compares committed candidates, their mappings, measurements, tradeoffs, Evaluation Cards, and Adoption Decisions, then adopts, versions, reloads, and audits without losing lineage; note selection, prompting, and manual batch editing are outside this tracer.
 
 ## Gate matrix
 

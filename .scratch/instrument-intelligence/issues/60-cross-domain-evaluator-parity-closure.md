@@ -4,11 +4,15 @@ Status: ready-for-agent
 
 Type: AFK
 
+Initial execution eligibility: blocked
+
+Completion semantics: implementation-pass
+
 User stories: U3, U4, U5, U6, U7, U8
 
 SPEC coverage: Evaluation/grading; required mutations; coequal Golden fixtures; Slice 12
 
-Requirement IDs: II-OUT-002, II-SEED-005, II-EVAL-001, II-EVAL-007–009, II-EXEC-012, II-MC-014–025, II-MC-030–032, II-NG-011
+Requirement families touched: II-OUT-002, II-SEED-005, II-EVAL-001, II-EVAL-007–009, II-EXEC-012, II-MC-014–025, II-MC-030–032, II-NG-011
 
 ## What to build
 
@@ -39,6 +43,8 @@ Named development fixtures may be public only with verified rights. Future held-
 
 - 21
 - 22
+- 25
+- 26
 - 39
 - 41
 - 47
