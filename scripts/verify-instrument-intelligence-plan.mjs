@@ -13,6 +13,23 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { format, resolveConfig } from "prettier";
+import {
+  INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF,
+  INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY,
+  INSTRUMENT_INTELLIGENCE_PUBLICATION_TRUST,
+  INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF,
+  INSTRUMENT_INTELLIGENCE_TRUST_POLICY_REF,
+  assertAttestedPublicationHead,
+  assertCheckpointState,
+  assertMonotonicPublication,
+  assertPinnedGitHubAttestation,
+  assertPinnedRemoteIdentity,
+  assertPreTrustCorrection,
+  assertStablePublicationObservation,
+  assertTrustBootstrapAllowed,
+  canonicalPublicationTrustBytes,
+  updatePublicationCheckpoint,
+} from "./lib/instrument-intelligence-trust.mjs";
 
 const root = process.cwd();
 const waveRoot = path.join(root, ".scratch/instrument-intelligence");
@@ -23,7 +40,6 @@ const manifestLockPath = `${manifestPath}.lock`;
 const writeManifest = process.argv.includes("--write-manifest");
 const draftMode = writeManifest || process.argv.includes("--draft");
 const trustBootstrap = process.argv.includes("--trust-bootstrap");
-const trustedOriginRef = "refs/vellum/instrument-intelligence/trusted-main";
 if (trustBootstrap && draftMode) {
   fail("--trust-bootstrap is a strict one-time Owner ceremony, not a draft/write option");
 }
@@ -31,9 +47,36 @@ const verificationAuthorityPaths = [
   "package.json",
   "package-lock.json",
   ".prettierrc",
+  "flake.nix",
+  "flake.lock",
+  "scripts/nix-podman",
+  "scripts/lib/instrument-intelligence-trust.mjs",
   "scripts/verify-current-spec.mjs",
   "scripts/verify-instrument-intelligence-plan.mjs",
+  "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
 ];
+const preTrustCorrectionAllowedPaths = Object.freeze([
+  manifestRepoPath,
+  "SPEC.md",
+  "AGENTS.md",
+  ".scratch/instrument-intelligence/PLAN.md",
+  ".scratch/instrument-intelligence/README.md",
+  ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  ".scratch/instrument-intelligence/issues/01-governing-contract-baseline-guard.md",
+  "docs/agents/issue-tracker.md",
+  "flake.nix",
+  "scripts/nix-podman",
+  "scripts/lib/instrument-intelligence-trust.mjs",
+  "scripts/verify-instrument-intelligence-plan.mjs",
+  "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+]);
+const requiredPreTrustCorrectionPaths = Object.freeze([
+  manifestRepoPath,
+  "scripts/nix-podman",
+  "scripts/lib/instrument-intelligence-trust.mjs",
+  "scripts/verify-instrument-intelligence-plan.mjs",
+  "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+]);
 const domainAdrFiles = readdirSync(path.join(root, "docs/adr"))
   .filter((name) => name.endsWith(".md"))
   .sort();
@@ -314,6 +357,156 @@ function optionalRefCommit(ref) {
   }
 }
 
+function gitObjectType(object) {
+  if (!object) return null;
+  try {
+    return execFileSync("git", ["cat-file", "-t", object], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function hashGitObject(bytes) {
+  try {
+    return execFileSync("git", ["hash-object", "--stdin"], {
+      cwd: root,
+      input: bytes,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    fail("cannot compute the closed publication-policy object identity");
+  }
+}
+
+function originRemoteUrls() {
+  let fetchUrls;
+  let pushUrls;
+  try {
+    fetchUrls = execFileSync("git", ["remote", "get-url", "--all", "origin"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+    pushUrls = execFileSync("git", ["remote", "get-url", "--push", "--all", "origin"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    fail("origin effective fetch/push identity is unavailable");
+  }
+  try {
+    return assertPinnedRemoteIdentity({ fetchUrls, pushUrls });
+  } catch (error) {
+    fail(error.message);
+  }
+}
+
+function githubPublicationHead() {
+  const forbiddenOverrides = [
+    "GH_HTTP_UNIX_SOCKET",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+    "NODE_EXTRA_CA_CERTS",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+  ].filter((name) => process.env[name]);
+  if (forbiddenOverrides.length) {
+    fail(
+      `GitHub head attestation refuses transport override ${forbiddenOverrides.sort().join(", ")}`
+    );
+  }
+  const repository = INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY;
+  let configuredSocket;
+  try {
+    configuredSocket = execFileSync(
+      "gh",
+      ["config", "get", "http_unix_socket", "--host", repository.host],
+      {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 10_000,
+      }
+    ).trim();
+  } catch {
+    fail("cannot inspect GitHub CLI transport configuration before head attestation");
+  }
+  if (configuredSocket) {
+    fail("GitHub head attestation refuses configured http_unix_socket transport override");
+  }
+  const query = `query { repository(owner: \"${repository.owner}\", name: \"${repository.name}\") { id databaseId nameWithOwner ref(qualifiedName: \"${repository.branch}\") { name target { __typename oid } } } }`;
+  let parsed;
+  try {
+    const output = execFileSync(
+      "gh",
+      ["api", "graphql", "--hostname", repository.host, "-f", `query=${query}`],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: { ...process.env, GH_PROMPT_DISABLED: "1" },
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 30_000,
+        maxBuffer: 1024 * 1024,
+      }
+    );
+    parsed = JSON.parse(output);
+  } catch {
+    fail(
+      "cannot independently attest github.com/jefffm/vellum main through authenticated GitHub GraphQL"
+    );
+  }
+  const result = parsed?.data?.repository;
+  try {
+    return assertPinnedGitHubAttestation({
+      nodeId: result?.id,
+      databaseId: result?.databaseId,
+      nameWithOwner: result?.nameWithOwner,
+      refName: result?.ref?.name,
+      targetType: result?.ref?.target?.__typename,
+      oid: result?.ref?.target?.oid,
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+}
+
+function firstParentRowsBetween(ancestor, descendant) {
+  if (!ancestor || ancestor === descendant) return [];
+  try {
+    return execFileSync(
+      "git",
+      ["rev-list", "--first-parent", "--parents", `${ancestor}..${descendant}`],
+      {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => line.split(/\s+/));
+  } catch {
+    fail("cannot inspect the first-parent publication range");
+  }
+}
+
 function isFirstParentAncestor(ancestor, descendant) {
   try {
     return execFileSync("git", ["rev-list", "--first-parent", descendant], {
@@ -328,13 +521,22 @@ function isFirstParentAncestor(ancestor, descendant) {
   }
 }
 
-function advanceTrustedOriginRef(newCommit, oldCommit) {
+function advanceTrustedPublicationCheckpoint({
+  newCommit,
+  oldCommit,
+  bootstrapAnchor,
+  policyObject,
+}) {
   try {
-    const args = ["update-ref", "-m", "vellum strict verification", trustedOriginRef, newCommit];
-    args.push(oldCommit ?? "0000000000000000000000000000000000000000");
-    execFileSync("git", args, { cwd: root, stdio: "ignore" });
+    updatePublicationCheckpoint({
+      cwd: root,
+      newCommit,
+      oldCommit,
+      bootstrapAnchor,
+      policyObject,
+    });
   } catch {
-    fail("could not atomically advance the Owner-local trusted origin checkpoint");
+    fail("could not atomically advance all Owner-local publication checkpoint refs");
   }
 }
 
@@ -372,21 +574,55 @@ function manifestChangingCommits(ref) {
   }
 }
 
+const publicationTrustAtRead = originRemoteUrls();
+const expectedTrustPolicyObject = hashGitObject(canonicalPublicationTrustBytes());
+const trustedOriginCommitAtRead = optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF);
+const bootstrapAnchorAtRead = optionalRefCommit(INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF);
+const trustPolicyObjectAtRead = optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUST_POLICY_REF);
+if (
+  (trustedOriginCommitAtRead && gitObjectType(trustedOriginCommitAtRead) !== "commit") ||
+  (bootstrapAnchorAtRead && gitObjectType(bootstrapAnchorAtRead) !== "commit") ||
+  (trustPolicyObjectAtRead && gitObjectType(trustPolicyObjectAtRead) !== "blob")
+) {
+  fail("the Owner-local publication checkpoint refs target an invalid Git object type");
+}
+let checkpointEstablishedAtRead;
+try {
+  checkpointEstablishedAtRead = assertCheckpointState({
+    trustedCommit: trustedOriginCommitAtRead,
+    bootstrapAnchor: bootstrapAnchorAtRead,
+    policyObject: trustPolicyObjectAtRead,
+    expectedPolicyObject: expectedTrustPolicyObject,
+    isFirstParentAncestor,
+  });
+} catch (error) {
+  fail(error.message);
+}
 const originMainBeforeFetch = optionalRefCommit("refs/remotes/origin/main");
 refreshOriginMain();
 const originMainCommitAtRead = originMainCommit();
-const trustedOriginCommitAtRead = optionalRefCommit(trustedOriginRef);
-if (
-  originMainBeforeFetch &&
-  !isFirstParentAncestor(originMainBeforeFetch, originMainCommitAtRead)
-) {
-  fail("the fetched origin/main is not a first-parent fast-forward of the pre-fetch remote ref");
+const attestedOriginMainAtRead = draftMode ? null : githubPublicationHead();
+if (attestedOriginMainAtRead) {
+  try {
+    assertAttestedPublicationHead({
+      fetchedCommit: originMainCommitAtRead,
+      attestedCommit: attestedOriginMainAtRead,
+    });
+  } catch (error) {
+    fail(error.message);
+  }
 }
-if (
-  trustedOriginCommitAtRead &&
-  !isFirstParentAncestor(trustedOriginCommitAtRead, originMainCommitAtRead)
-) {
-  fail("origin/main does not descend from the Owner-local trusted verification checkpoint");
+try {
+  assertMonotonicPublication({
+    trustedCommit: trustedOriginCommitAtRead,
+    checkpointEstablished: checkpointEstablishedAtRead,
+    observedBeforeFetch: originMainBeforeFetch,
+    fetchedCommit: originMainCommitAtRead,
+    isFirstParentAncestor,
+    firstParentRows: firstParentRowsBetween(trustedOriginCommitAtRead, originMainCommitAtRead),
+  });
+} catch (error) {
+  fail(error.message);
 }
 const originManifestBytes = gitBytesAt("origin/main", manifestRepoPath, { required: false });
 const originManifest = originManifestBytes
@@ -848,6 +1084,21 @@ for (const issue of issues) {
   }
 }
 const rawExistingHasProgress = manifestHasMutableProgress(existingManifest);
+const preTrustCorrectionCandidate = Boolean(
+  !trustedOriginCommitAtRead &&
+  !checkpointEstablishedAtRead &&
+  compatibleTransitionAnchorManifest &&
+  !manifestHasMutableProgress(compatibleTransitionAnchorManifest) &&
+  !rawExistingHasProgress
+);
+if (
+  compatibleExistingManifest &&
+  !preTrustCorrectionCandidate &&
+  JSON.stringify(compatibleExistingManifest.publicationTrust) !==
+    JSON.stringify(INSTRUMENT_INTELLIGENCE_PUBLICATION_TRUST)
+) {
+  fail("completion manifest does not bind the closed Owner-local publication trust policy");
+}
 if (existingManifest && !compatibleExistingManifest && rawExistingHasProgress) {
   fail(
     "manifest schema migration would discard mutable evidence; T01 must perform a governed state migration"
@@ -869,11 +1120,13 @@ if (compatibleTransitionAnchorManifest) {
   if (!compatibleExistingManifest) {
     fail("the working manifest cannot downgrade the schema anchored by the trusted transition");
   }
-  assertJsonPrefix(
-    compatibleTransitionAnchorManifest.idPolicy?.registryEvents ?? [],
-    compatibleExistingManifest.idPolicy?.registryEvents ?? [],
-    "idPolicy.registryEvents"
-  );
+  if (!preTrustCorrectionCandidate) {
+    assertJsonPrefix(
+      compatibleTransitionAnchorManifest.idPolicy?.registryEvents ?? [],
+      compatibleExistingManifest.idPolicy?.registryEvents ?? [],
+      "idPolicy.registryEvents"
+    );
+  }
   assertJsonPrefix(
     compatibleTransitionAnchorManifest.executionGenerations ?? [],
     compatibleExistingManifest.executionGenerations ?? [],
@@ -1349,7 +1602,7 @@ const registryDefinitionsChanged =
       replayedRegistry.definitions.get(issue.id) !== issue.definitionDigest
   );
 const registryNeedsRebaseline = registryHistoryMissing || registryDefinitionsChanged;
-if (compatibleTransitionAnchorManifest && registryNeedsRebaseline) {
+if (compatibleTransitionAnchorManifest && registryNeedsRebaseline && !preTrustCorrectionCandidate) {
   fail("an origin-anchored registry genesis cannot be rebaselined");
 }
 if (registryNeedsRebaseline && hasMutableProgress) {
@@ -2968,6 +3221,7 @@ const manifest = {
   status: "bootstrap_pending",
   objective: "Release Complete Vellum Instrument Intelligence",
   authorities: authorityInputs,
+  publicationTrust: publicationTrustAtRead,
   idPolicy: {
     kind: "append_only_stable_numeric_locators",
     registeredTracerIds,
@@ -3418,6 +3672,89 @@ if (writeManifest) {
     !manifestHasMutableProgress(rawTransitionAnchorManifest) &&
     !rawExistingHasProgress
   );
+  const authorityMigrationAllowedPaths = new Set([
+    manifestRepoPath,
+    "SPEC.md",
+    ".scratch/instrument-intelligence/PLAN.md",
+    ".scratch/instrument-intelligence/REQUIREMENTS.md",
+    ...verificationAuthorityPaths,
+    ...domainAuthorityPaths,
+    ...issues.map((issue) => issue.file),
+    ...(compatibleTransitionAnchorManifest?.tracers ?? []).map((tracer) => tracer.file),
+  ]);
+  let preTrustCorrectionTransition = false;
+  const possiblePreTrustCorrection = Boolean(
+    preTrustCorrectionCandidate &&
+    compatibleOriginManifest &&
+    priorOriginManifest?.schemaVersion === 5 &&
+    originManifestChangingCommits[2]
+  );
+  if (possiblePreTrustCorrection) {
+    const originalSchema5Commit = priorManifestChangingCommit;
+    const originalSchema1Commit = originManifestChangingCommits[2];
+    const originalSchema1Manifest = gitJsonAt(originalSchema1Commit, manifestRepoPath, {
+      required: true,
+    });
+    const schema5CommitCount = originManifestChangingCommits
+      .map((commit) => gitJsonAt(commit, manifestRepoPath, { required: true }))
+      .filter((candidate) => candidate?.schemaVersion === 5).length;
+    const originalBootstrapParentIssuePaths = gitFilesUnder(
+      originalSchema1Commit,
+      ".scratch/instrument-intelligence/issues"
+    ).filter((file) => /^\.scratch\/instrument-intelligence\/issues\/\d+-.*\.md$/.test(file));
+    const originalBootstrapAllowedPaths = new Set([
+      manifestRepoPath,
+      "SPEC.md",
+      ".scratch/instrument-intelligence/PLAN.md",
+      ".scratch/instrument-intelligence/REQUIREMENTS.md",
+      ...verificationAuthorityPaths,
+      ...domainAuthorityPaths,
+      ...issues.map((issue) => issue.file),
+      ...originalBootstrapParentIssuePaths,
+      ...(originalSchema1Manifest?.tracers ?? []).map((tracer) => tracer.file),
+    ]);
+    const originalBootstrapPaths = changedPaths(originalSchema5Commit);
+    const originalTransitionValid = Boolean(
+      singleParent(originMainCommitAtRead, "pre-trust policy correction") ===
+        originalSchema5Commit &&
+      singleParent(originalSchema5Commit, "original schema-5 bootstrap") ===
+        originalSchema1Commit &&
+      originalSchema1Manifest?.schemaVersion === 1 &&
+      !manifestHasMutableProgress(originalSchema1Manifest) &&
+      strictCommitPaths.includes(manifestRepoPath) &&
+      originalBootstrapPaths.includes(manifestRepoPath) &&
+      originalBootstrapPaths.every((file) => originalBootstrapAllowedPaths.has(file))
+    );
+    try {
+      assertPreTrustCorrection({
+        trustedCommit: trustedOriginCommitAtRead,
+        checkpointEstablished: checkpointEstablishedAtRead,
+        schema5ManifestChangingCommitCount: schema5CommitCount,
+        anchorHasProgress: manifestHasMutableProgress(priorOriginManifest),
+        candidateHasProgress: rawExistingHasProgress,
+        originalTransitionValid,
+        currentEvidenceFiles: gitFilesUnder(
+          originMainCommitAtRead,
+          ".scratch/instrument-intelligence/evidence"
+        ).sort(),
+        historicalEvidenceFiles: [
+          gitFilesUnder(originalSchema5Commit, ".scratch/instrument-intelligence/evidence").sort(),
+          gitFilesUnder(originalSchema1Commit, ".scratch/instrument-intelligence/evidence").sort(),
+        ],
+        changedPaths: strictCommitPaths,
+        allowedPaths: [...preTrustCorrectionAllowedPaths],
+        requiredPaths: [...requiredPreTrustCorrectionPaths],
+        manifestPath: manifestRepoPath,
+        publicationTrust: compatibleOriginManifest.publicationTrust,
+      });
+      preTrustCorrectionTransition = true;
+    } catch (error) {
+      fail(error.message);
+    }
+  }
+  if (preTrustCorrectionCandidate && !preTrustCorrectionTransition) {
+    fail("the sole pre-trust correction does not satisfy its closed path and lineage contract");
+  }
   if (bootstrapTransition) {
     const bootstrapParent = singleParent(originMainCommitAtRead, "schema-5 bootstrap commit");
     const bootstrapParentIssuePaths = gitFilesUnder(
@@ -3447,7 +3784,7 @@ if (writeManifest) {
         "the one-time schema-5 bootstrap must be one governance-only commit over the exact prior schema-1 manifest"
       );
     }
-  } else {
+  } else if (!preTrustCorrectionTransition) {
     if (governedRegistryTailChange) {
       const expectedRegistryPaths = new Set([
         manifestRepoPath,
@@ -3461,15 +3798,10 @@ if (writeManifest) {
         fail("a registry transaction changed paths outside its manifest/PLAN/one-definition scope");
       }
     } else if (!hasMutableProgress && (authorityChanged || definitionChanged)) {
-      const allowedMigrationPaths = new Set([
-        manifestRepoPath,
-        "SPEC.md",
-        ".scratch/instrument-intelligence/PLAN.md",
-        ".scratch/instrument-intelligence/REQUIREMENTS.md",
-        ...verificationAuthorityPaths,
-        ...domainAuthorityPaths,
-        ...issues.map((issue) => issue.file),
-      ]);
+      if (!checkpointEstablishedAtRead) {
+        fail("an untrusted authority migration is not an authorized pre-trust correction");
+      }
+      const allowedMigrationPaths = authorityMigrationAllowedPaths;
       if (
         !strictCommitPaths.includes(manifestRepoPath) ||
         strictCommitPaths.some((file) => !allowedMigrationPaths.has(file))
@@ -3518,10 +3850,6 @@ if (writeManifest) {
       fail(`${governedPath} differs from its latest execution-generation receipt`);
     }
   }
-  refreshOriginMain();
-  if (originMainCommit() !== originMainCommitAtRead) {
-    fail("origin/main changed during strict verification; retry against one stable remote state");
-  }
   assertLocalReadSetUnchanged(issueFiles);
   const localHead = optionalRefCommit("HEAD");
   let worktreeStatus;
@@ -3537,17 +3865,59 @@ if (writeManifest) {
   if (localHead !== originMainCommitAtRead || worktreeStatus) {
     fail("strict verification requires local HEAD == origin/main and a completely clean worktree");
   }
+  refreshOriginMain();
+  const originMainCommitAtEnd = originMainCommit();
+  const attestedOriginMainAtEnd = githubPublicationHead();
+  try {
+    assertStablePublicationObservation({
+      commitAtRead: originMainCommitAtRead,
+      commitAtEnd: originMainCommitAtEnd,
+      attestedCommitAtRead: attestedOriginMainAtRead,
+      attestedCommitAtEnd: attestedOriginMainAtEnd,
+      trustAtRead: publicationTrustAtRead,
+      trustAtEnd: originRemoteUrls(),
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+  if (
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF) !== trustedOriginCommitAtRead ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF) !== bootstrapAnchorAtRead ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUST_POLICY_REF) !== trustPolicyObjectAtRead
+  ) {
+    fail("the Owner-local publication checkpoint changed during strict verification");
+  }
   if (!trustedOriginCommitAtRead) {
-    if (!trustBootstrap || !bootstrapTransition) {
-      fail(
-        "no Owner-local trust checkpoint exists; the one-time unprogressed bootstrap requires --trust-bootstrap"
-      );
+    try {
+      assertTrustBootstrapAllowed({
+        requested: trustBootstrap,
+        trustedCommit: trustedOriginCommitAtRead,
+        checkpointEstablished: checkpointEstablishedAtRead,
+        bootstrapTransition,
+        preTrustCorrectionTransition,
+        hasMutableProgress: rawExistingHasProgress,
+      });
+    } catch (error) {
+      fail(error.message);
     }
   } else if (trustBootstrap) {
     fail("--trust-bootstrap cannot replace an existing Owner-local trust checkpoint");
   }
-  advanceTrustedOriginRef(originMainCommitAtRead, trustedOriginCommitAtRead);
+  advanceTrustedPublicationCheckpoint({
+    newCommit: originMainCommitAtRead,
+    oldCommit: trustedOriginCommitAtRead,
+    bootstrapAnchor: bootstrapAnchorAtRead,
+    policyObject: trustPolicyObjectAtRead,
+  });
+  if (
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF) !== originMainCommitAtRead ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF) !==
+      (bootstrapAnchorAtRead ?? originMainCommitAtRead) ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUST_POLICY_REF) !== expectedTrustPolicyObject
+  ) {
+    fail("the atomic Owner-local publication checkpoint transaction did not persist exactly");
+  }
   console.log(
-    `Instrument Intelligence schema-5 bootstrap strictly verified on origin/main: ${issues.length} stable tracers, execution locked pending T01, and Owner-local trust checkpoint advanced.`
+    `Instrument Intelligence schema-5 bootstrap strictly verified at the pinned origin/main publication head: ${issues.length} stable tracers, execution locked pending T01, remote protection not assumed, and Owner-local trust checkpoint advanced.`
   );
 }

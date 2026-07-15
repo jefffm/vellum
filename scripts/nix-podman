@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run Nix for this checkout inside the project's pinned ARM64 Nix image. This
+# is intentionally a narrow compatibility proxy, not a general replacement for
+# a native Nix installation. In particular, it mounts only this repository and
+# named caches; it never mounts the caller's home directory or an arbitrary
+# current working directory.
+
+readonly NIX_IMAGE="docker.io/nixos/nix@sha256:c92bead5f53f23919a57c20d12d4ab7db915b01d80e7e3e8a429780f0dc8ac4a"
+readonly LILYPOND_IMAGE="docker.io/codello/lilypond@sha256:e9aeee661e40f9cd4b7cd573e3787f09abc52858b074e03ba04c2e17326b69f4"
+readonly PODMAN_CONNECTION="podman-machine-default"
+readonly PODMAN_MACHINE="podman-machine-default"
+readonly OUTER_CONTAINER="vellum-nix-proxy"
+readonly CACHE_HOLDER="vellum-nix-cache-holder"
+readonly ROLE_LABEL="io.vellum.role"
+readonly CACHE_SCHEMA_LABEL="io.vellum.cache-schema"
+readonly CACHE_SCHEMA="1"
+readonly OUTER_ROLE="nix-proxy"
+readonly CACHE_ROLE="nix-cache-holder"
+readonly STORE_VOLUME="vellum-nix-store"
+readonly MODULES_VOLUME="vellum-nix-node-modules"
+readonly NPM_CACHE_VOLUME="vellum-nix-npm-cache"
+readonly STATE_VOLUME="vellum-nix-state"
+readonly MINIMUM_FREE_KIB=$((12 * 1024 * 1024))
+readonly LOCK_FILE="${TMPDIR:-/tmp}/vellum-nix-podman.shlock"
+
+die() {
+  printf 'nix-podman: %s\n' "$*" >&2
+  exit 1
+}
+
+# macOS readlink has no portable -f flag. Resolve the complete symlink chain so
+# ~/.local/bin/nix may safely point here without changing the repository scope.
+resolve_script_path() {
+  local source_path="${BASH_SOURCE[0]}"
+  local source_dir target
+
+  while [[ -L "$source_path" ]]; do
+    source_dir="$(cd -P "$(dirname "$source_path")" >/dev/null 2>&1 && pwd)"
+    target="$(readlink "$source_path")"
+    if [[ "$target" == /* ]]; then
+      source_path="$target"
+    else
+      source_path="$source_dir/$target"
+    fi
+  done
+
+  source_dir="$(cd -P "$(dirname "$source_path")" >/dev/null 2>&1 && pwd)"
+  printf '%s/%s\n' "$source_dir" "$(basename "$source_path")"
+}
+
+readonly SCRIPT_PATH="$(resolve_script_path)"
+readonly SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+readonly REPO_ROOT="$(cd -P "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+readonly CALLER_CWD="$(pwd -P)"
+
+# Do not let this project-scoped command become a convenient way to mount some
+# unrelated checkout into the VM. Subdirectories of this exact physical repo
+# are supported because normal Nix CLI behavior is preserved for the caller.
+if [[ "$CALLER_CWD" != "$REPO_ROOT" && "$CALLER_CWD" != "$REPO_ROOT/"* ]]; then
+  die "must be run from $REPO_ROOT (or one of its subdirectories); cwd is $CALLER_CWD"
+fi
+
+readonly PODMAN_GATE="${VELLUM_NIX_PODMAN_GATE:-0}"
+[[ "$PODMAN_GATE" == "0" || "$PODMAN_GATE" == "1" ]] || \
+  die "VELLUM_NIX_PODMAN_GATE must be exactly 0 or 1"
+
+command -v podman >/dev/null 2>&1 || die "Podman is not installed"
+[[ -x /usr/bin/shlock ]] || die "/usr/bin/shlock is unavailable"
+
+# shlock creates the lock with link(2), verifies an existing owner's PID, and
+# atomically replaces a stale lock. All VM and cache mutations happen under
+# this host lock. Crucially, the script does not exec its final Podman command,
+# so the EXIT trap always has an opportunity to remove the lock.
+umask 077
+if ! /usr/bin/shlock -p "$$" -f "$LOCK_FILE"; then
+  lock_owner="$(cat "$LOCK_FILE" 2>/dev/null || printf 'unknown')"
+  printf 'nix-podman: another Vellum Nix operation owns %s (pid %s)\n' \
+    "$LOCK_FILE" "$lock_owner" >&2
+  exit 75
+fi
+
+cleanup_lock() {
+  rm -f "$LOCK_FILE"
+}
+trap cleanup_lock EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Avoid filling the host while pulling or expanding Nix closures. Named caches
+# are deliberately disposable, but a low-space failure halfway through npm ci
+# or a render is much harder to diagnose than a fail-fast message.
+available_kib="$(df -Pk "$REPO_ROOT" | awk 'NR > 1 { available = $4 } END { print available }')"
+if [[ ! "$available_kib" =~ ^[0-9]+$ ]]; then
+  die "could not determine free disk space for $REPO_ROOT"
+fi
+if ((available_kib < MINIMUM_FREE_KIB)); then
+  available_gib=$((available_kib / 1024 / 1024))
+  die "requires at least 12 GiB free on the repository filesystem; ${available_gib} GiB is available"
+fi
+
+# Pin every remote Podman operation to the intended rootless connection rather
+# than accepting a mutable default connection from the user's environment.
+connection_found=0
+while IFS= read -r connection_name; do
+  if [[ "$connection_name" == "$PODMAN_CONNECTION" ]]; then
+    connection_found=1
+    break
+  fi
+done < <(podman system connection list --format '{{.Name}}')
+((connection_found == 1)) || die "Podman connection $PODMAN_CONNECTION does not exist"
+
+podman_remote() {
+  command podman --connection "$PODMAN_CONNECTION" "$@"
+}
+
+# Starting and polling the VM while holding the same lock prevents two proxy
+# invocations from racing through Podman's machine startup path.
+if ! podman_remote info >/dev/null 2>&1; then
+  podman machine inspect "$PODMAN_MACHINE" >/dev/null 2>&1 || \
+    die "Podman machine $PODMAN_MACHINE does not exist"
+  podman machine start "$PODMAN_MACHINE" >/dev/null 2>&1 || \
+    die "could not start Podman machine $PODMAN_MACHINE"
+
+  machine_ready=0
+  for _attempt in {1..60}; do
+    if podman_remote info >/dev/null 2>&1; then
+      machine_ready=1
+      break
+    fi
+    sleep 1
+  done
+  ((machine_ready == 1)) || die "Podman machine did not become ready within 60 seconds"
+fi
+
+podman_facts="$(podman_remote info --format '{{.Host.Security.Rootless}}|{{.Host.OS}}|{{.Host.Arch}}|{{.Host.RemoteSocket.Path}}')"
+IFS='|' read -r podman_rootless podman_os podman_arch podman_socket <<<"$podman_facts"
+[[ "$podman_rootless" == "true" ]] || die "Podman connection is not rootless"
+[[ "$podman_os" == "linux" ]] || die "Podman VM OS is $podman_os, expected linux"
+[[ "$podman_arch" == "arm64" ]] || die "Podman VM architecture is $podman_arch, expected arm64"
+# Podman versions differ on whether RemoteSocket.Path is a bare path or a
+# unix:// URI. Normalize only that explicit local-socket scheme.
+podman_socket="${podman_socket#unix://}"
+[[ "$podman_socket" == /* ]] || die "Podman reported an invalid VM socket path"
+
+# A stable outer name makes interrupted operations observable. A running
+# orphan is a hard stop: attaching to it or killing it could corrupt the Nix
+# store or node_modules. Only a stopped container bearing our exact role label
+# may be removed automatically. Check this before pulling or changing caches.
+if podman_remote container exists "$OUTER_CONTAINER"; then
+  outer_facts="$(podman_remote inspect --format \
+    '{{.State.Running}}|{{index .Config.Labels "io.vellum.role"}}' "$OUTER_CONTAINER")"
+  IFS='|' read -r outer_running outer_role <<<"$outer_facts"
+  [[ "$outer_role" == "$OUTER_ROLE" ]] || \
+    die "container $OUTER_CONTAINER exists without the expected ownership label"
+  [[ "$outer_running" == "false" ]] || {
+    printf 'nix-podman: labeled outer container %s is still running; refusing concurrent recovery\n' \
+      "$OUTER_CONTAINER" >&2
+    exit 75
+  }
+  podman_remote rm "$OUTER_CONTAINER" >/dev/null
+fi
+
+# Pull by immutable digest when the local reference has been reclaimed. The
+# run itself uses --pull=never so registry state cannot change between this
+# check and container creation.
+if ! podman_remote image exists "$NIX_IMAGE"; then
+  podman_remote pull --platform=linux/arm64 "$NIX_IMAGE" >/dev/null || \
+    die "could not pull pinned Nix image $NIX_IMAGE"
+fi
+
+for volume in "$STORE_VOLUME" "$MODULES_VOLUME" "$NPM_CACHE_VOLUME" "$STATE_VOLUME"; do
+  if ! podman_remote volume inspect "$volume" >/dev/null 2>&1; then
+    podman_remote volume create --label "$ROLE_LABEL=$CACHE_ROLE" "$volume" >/dev/null
+  fi
+done
+
+# A stopped, labeled holder protects the warmed image and named volumes from
+# ordinary prune operations. A same-named object without our label is never
+# deleted automatically. If the pinned image or mount set changes, a correctly
+# labeled stopped holder is safely rebuilt under the host lock.
+holder_needs_create=1
+if podman_remote container exists "$CACHE_HOLDER"; then
+  holder_facts="$(podman_remote inspect --format \
+    '{{.State.Running}}|{{index .Config.Labels "io.vellum.role"}}|{{index .Config.Labels "io.vellum.cache-schema"}}|{{.ImageName}}|{{range .Mounts}}{{.Name}}={{.Destination}};{{end}}' \
+    "$CACHE_HOLDER")"
+  IFS='|' read -r holder_running holder_role holder_schema holder_image holder_mounts <<<"$holder_facts"
+  [[ "$holder_role" == "$CACHE_ROLE" ]] || \
+    die "container $CACHE_HOLDER exists without the expected ownership label"
+  [[ "$holder_running" == "false" ]] || \
+    die "cache holder $CACHE_HOLDER is unexpectedly running"
+
+  expected_mounts=(
+    "$STORE_VOLUME=/nix;"
+    "$MODULES_VOLUME=/vellum-node-modules;"
+    "$NPM_CACHE_VOLUME=/root/.npm;"
+    "$STATE_VOLUME=/vellum-state;"
+  )
+  holder_matches=1
+  [[ "$holder_schema" == "$CACHE_SCHEMA" ]] || holder_matches=0
+  [[ "$holder_image" == "$NIX_IMAGE" ]] || holder_matches=0
+  for expected_mount in "${expected_mounts[@]}"; do
+    [[ "$holder_mounts" == *"$expected_mount"* ]] || holder_matches=0
+  done
+
+  if ((holder_matches == 1)); then
+    holder_needs_create=0
+  else
+    podman_remote rm "$CACHE_HOLDER" >/dev/null
+  fi
+fi
+
+if ((holder_needs_create == 1)); then
+  podman_remote create \
+    --name "$CACHE_HOLDER" \
+    --label "$ROLE_LABEL=$CACHE_ROLE" \
+    --label "$CACHE_SCHEMA_LABEL=$CACHE_SCHEMA" \
+    --pull=never \
+    --platform=linux/arm64 \
+    --volume "$STORE_VOLUME:/nix" \
+    --volume "$MODULES_VOLUME:/vellum-node-modules" \
+    --volume "$NPM_CACHE_VOLUME:/root/.npm" \
+    --volume "$STATE_VOLUME:/vellum-state" \
+    --entrypoint=/root/.nix-profile/bin/true \
+    "$NIX_IMAGE" >/dev/null
+fi
+
+# Hash all inputs that can alter the Linux dependency environment. File names,
+# missing-file markers, separators, the wrapper itself, and the immutable image
+# identity are included to avoid concatenation ambiguity or stale cache reuse.
+dependency_fingerprint="$({
+  printf 'vellum-nix-dependencies-v2\0'
+  printf 'nix-image\0%s\0' "$NIX_IMAGE"
+  for dependency_path in \
+    "$REPO_ROOT/package.json" \
+    "$REPO_ROOT/package-lock.json" \
+    "$REPO_ROOT/flake.nix" \
+    "$REPO_ROOT/flake.lock" \
+    "$SCRIPT_PATH"; do
+    relative_path="${dependency_path#"$REPO_ROOT/"}"
+    printf 'file\0%s\0' "$relative_path"
+    if [[ -f "$dependency_path" ]]; then
+      printf 'present\0'
+      cat "$dependency_path"
+    else
+      printf 'missing\0'
+    fi
+    printf '\0end-file\0'
+  done
+} | shasum -a 256 | awk '{print $1}')"
+
+sync_dependencies=0
+for arg in "$@"; do
+  if [[ "$arg" == "develop" ]]; then
+    sync_dependencies=1
+    break
+  fi
+done
+
+run_args=(
+  run --rm
+  --name "$OUTER_CONTAINER"
+  --label "$ROLE_LABEL=$OUTER_ROLE"
+  --pull=never
+  --platform=linux/arm64
+  --cpus=3
+  --memory=3g
+  --pids-limit=2048
+  --cap-drop=all
+  # Nix's configured nixbld users require this narrow subset of the normal
+  # rootless-container capabilities to realize a previously uncached closure.
+  --cap-add=chown
+  --cap-add=dac_override
+  --cap-add=fowner
+  --cap-add=kill
+  --cap-add=setgid
+  --cap-add=setuid
+  --security-opt=no-new-privileges
+  --security-opt=label=disable
+  --workdir="$CALLER_CWD"
+  --volume="$STORE_VOLUME:/nix"
+  --volume="$REPO_ROOT:$REPO_ROOT:rw"
+  --volume="$MODULES_VOLUME:$REPO_ROOT/node_modules"
+  --volume="$NPM_CACHE_VOLUME:/root/.npm"
+  --volume="$STATE_VOLUME:/vellum-state"
+  --env=CI=1
+  --env=QT_QPA_PLATFORM=offscreen
+  --env=MPLBACKEND=Agg
+  --env=XDG_RUNTIME_DIR=/tmp/vellum-xdg
+  --env="VELLUM_REPO_ROOT=$REPO_ROOT"
+  --env="VELLUM_CALLER_CWD=$CALLER_CWD"
+  --env="VELLUM_NIX_SYNC_DEPENDENCIES=$sync_dependencies"
+  --env="VELLUM_NIX_DEPENDENCY_FINGERPRINT=$dependency_fingerprint"
+  --env="VELLUM_LILYPOND_IMAGE=$LILYPOND_IMAGE"
+)
+
+# The rootless Podman API grants control over the VM, even if the socket mount
+# is marked read-only. It is therefore absent by default and exposed only for
+# an explicitly selected nested-container gate. The source path comes from the
+# pinned connection's live Podman info rather than a hard-coded host UID.
+if [[ "$PODMAN_GATE" == "1" ]]; then
+  run_args+=(
+    --volume="$podman_socket:/run/podman/podman.sock"
+    --env=CONTAINER_HOST=unix:///run/podman/podman.sock
+  )
+fi
+
+if [[ -t 0 && -t 1 ]]; then
+  run_args+=(--interactive --tty)
+fi
+
+run_args+=(
+  --entrypoint=/bin/sh
+  "$NIX_IMAGE"
+  -c
+  'set -eu
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+if [ "$VELLUM_NIX_SYNC_DEPENDENCIES" = 1 ]; then
+  fingerprint="$VELLUM_NIX_DEPENDENCY_FINGERPRINT"
+  sentinel="$VELLUM_REPO_ROOT/node_modules/.vellum-nix-dependencies-$fingerprint"
+  recorded="$(cat /vellum-state/dependency-fingerprint 2>/dev/null || true)"
+
+  # Require both independently stored markers plus representative executable
+  # entry points. If a volume is partially reclaimed, manually corrupted, or a
+  # previous npm ci is interrupted, the next develop repairs it.
+  if [ "$recorded" != "$fingerprint" ] || \
+    [ ! -f "$sentinel" ] || \
+    [ ! -x "$VELLUM_REPO_ROOT/node_modules/.bin/vitest" ] || \
+    [ ! -x "$VELLUM_REPO_ROOT/node_modules/.bin/prettier" ]; then
+    cd "$VELLUM_REPO_ROOT"
+    nix --extra-experimental-features "nix-command flakes" develop --command \
+      npm ci --no-audit --no-fund
+
+    rm -f "$VELLUM_REPO_ROOT"/node_modules/.vellum-nix-dependencies-*
+    sentinel_tmp="$sentinel.tmp.$$"
+    printf "%s\n" "$fingerprint" >"$sentinel_tmp"
+    mv "$sentinel_tmp" "$sentinel"
+
+    state_tmp="/vellum-state/dependency-fingerprint.tmp.$$"
+    printf "%s\n" "$fingerprint" >"$state_tmp"
+    mv "$state_tmp" /vellum-state/dependency-fingerprint
+  fi
+fi
+
+cd "$VELLUM_CALLER_CWD"
+exec nix --extra-experimental-features "nix-command flakes" "$@"'
+  nix-podman
+  "$@"
+)
+
+# Preserve the Nix/Podman status while returning through the shell so EXIT can
+# release the host lock. Do not replace this with exec.
+if podman_remote "${run_args[@]}"; then
+  command_status=0
+else
+  command_status=$?
+fi
+exit "$command_status"

@@ -271,35 +271,56 @@ The graph distinguishes finalizing an attempt from passing it. T103, T105, T106,
 
 ## Execution rules
 
-1. Immediately before beginning a tracer, record a start receipt containing its definition digest, blocker commits/evidence generations, result predicates, and observed `origin/main` reachability.
+1. Immediately before beginning a tracer, record a start receipt containing its definition digest, blocker commits/evidence generations, result predicates, pinned publication-remote identity and GitHub repository node, the atomic Owner-local three-ref checkpoint tuple, and freshly fetched and independently attested `origin/main` reachability. The receipt states `remoteProtectionAssumed: false`.
 2. Begin every implementation tracer with its named failing output- or contract-level case.
 3. Keep each tracer a narrow complete path through every applicable persistence, service, API, UI, render/playback, and evaluator boundary.
 4. Record focused evidence under `evidence/TNN/verification.json` and reference only rights-approved public artifacts or typed non-resolving private receipts. A rerun replaces that canonical working path in a new commit; verification of every older generation reads its immutable evidence and artifacts from that generation's reachable commit.
 5. Run the base gates plus every applicable conditional gate in the issue. `not_applicable` requires a clause-specific rationale.
-6. Rebase/reconcile onto current `main`, rerun affected and base gates, commit and push implementation plus canonical typed evidence, then append the receipt naming that reachable commit, regenerate the manifest, commit and push the receipt transaction, and pass strict origin-equality verification before dependent work starts.
+6. Reconcile unpublished work onto the current strictly verified `main`, rerun affected and base gates, commit and push implementation plus canonical typed evidence, then append the receipt naming that reachable commit, regenerate the manifest, commit and push the receipt transaction, and pass strict origin-equality verification before dependent work starts. Once a commit is pushed, it is never amended or rebased.
 7. Never weaken an accepted invariant, evaluator, mutation, regression, or review requirement to obtain a pass.
 8. A finalized failed evaluation/review attempt is preserved and may unblock remediation, but it never advances a closure-pass predicate.
 9. A valid held-out failure remains in the attempt ledger and enters development only through an explicit rights-checked declassification transaction that updates exposure and contamination state.
 10. Remediation transactionally allocates the next unused numeric ID under a compare-and-swap registry head, appends only its new issue and PLAN row while every prior definition and authority narrative remains byte-stable, and binds the repair to an exact typed dispatch artifact emitted by T69, T84, T85, T87, T103, or T106. The dispatch prescribes the finding, actual invalidation edges/scopes, earliest safe rejoin point, and closure targets; the repair cannot self-declare weaker obligations. Deleted definitions require retained tombstones; IDs are never reused, and tombstoning or superseding a dynamic repair cannot erase any historical closure obligation.
 11. Only the next precommitted reserve group may replace an independently invalidated fixture; output-dependent invalidation and convenient reserve selection are forbidden.
-12. Parallel implementation uses isolated worktrees/branches and declared ownership. Integration/push is serialized, and evidence binds the final remote-reachable commit.
+12. Parallel implementation uses isolated worktrees/branches and declared ownership. One publisher serializes integration and uses ordinary fast-forward pushes only; merge commits, force pushes, branch deletion, and rebasing or amending pushed history are forbidden. Evidence binds the final remote-reachable commit.
 13. Shared real-tool locks remain until their owning process is proven absent; orphan cleanup and clean rerun are recorded.
 14. Every rerun appends a temporal node keyed by `(tracer ID, execution generation)` with exact predecessor generations, closed-schema result receipts, and typed supersession/invalidation edges. Each remediation generation has dispatcher-bound `rejoinAt`, actual bounded invalidation edges/scopes, a derived `invalidatesMachineComplete`, and nonempty `closureTargets`. The repair reserves those exact future identities; an unresolved reservation is allowed only while closure remains pending and makes it ineligible. Once materialized, the rejoin is a strict descendant of the repair and each target descends from the rejoin. Current T85/T87 must equal or strictly descend from the targets of every historical remediation generation, including superseded or tombstoned generations. T87 is always targeted; T85 is targeted exactly when actual scope reaches Machine Complete. Static definitions remain immutable and acyclic. For an OR predicate, execution descends from one actually satisfied branch, not the union of alternatives.
+15. The Owner-local checkpoint, not the unprotected publication branch, is the monotonic trust anchor. It is one atomic tuple over immutable `refs/vellum/instrument-intelligence/bootstrap-anchor`, immutable `refs/vellum/instrument-intelligence/trust-policy`, and mutable compare-and-swap `refs/vellum/instrument-intelligence/trusted-main`. Strict verification pins the normalized `origin` identity, fetches before use, independently queries authenticated GitHub GraphQL for `refs/heads/main` in repository node `R_kgDOSNEx6w`, requires the fetched and GraphQL heads to agree at both ends of verification, proves first-parent descent from the preceding observation and checkpoint, verifies the clean exact local tip, and only then atomically advances the mutable ref while verifying both immutable refs. No hosted protection setting is required. Divergence, rewind, deletion, remote substitution, GraphQL disagreement, concurrent movement, or partial checkpoint loss/mismatch becomes `ready-for-human`; no autonomous reset, recovery bootstrap, or trust inference is permitted. Total loss of all three refs is indistinguishable from a fresh clone, but automation still cannot bootstrap because the explicit Owner ceremony is mandatory.
 
 ## Bootstrap and manifest rules
 
 The committed schema-5 manifest begins in `bootstrap_pending` and is deliberately execution-locked and evidence-empty. It cannot certify T01 or any later tracer. T01 first atomizes this requirement-family index and all adversarial requirements in its issue into clause-level records, installs the upgraded evidence/obligation/trust verifier, and regenerates an empty next-schema manifest in a governance-only pre-registration commit. That commit must be pushed and strictly verified before T01 begins its ordinary implementation/evidence commit and manifest-only receipt commit. Until the upgrade, family mappings are planning coverage only and `evidence/` contains only `.gitkeep`.
 
+Because no Owner-local checkpoint yet exists, the Owner may authorize one evidence-empty pre-trust correction with this literal, non-expanding path allowlist:
+
+- `.scratch/instrument-intelligence/completion-manifest.json`
+- `SPEC.md`
+- `AGENTS.md`
+- `.scratch/instrument-intelligence/PLAN.md`
+- `.scratch/instrument-intelligence/README.md`
+- `.scratch/instrument-intelligence/REQUIREMENTS.md`
+- `.scratch/instrument-intelligence/issues/01-governing-contract-baseline-guard.md`
+- `docs/agents/issue-tracker.md`
+- `flake.nix`
+- `scripts/nix-podman`
+- `scripts/lib/instrument-intelligence-trust.mjs`
+- `scripts/verify-instrument-intelligence-plan.mjs`
+- `test/instrument-intelligence/bootstrap-trust-policy.test.ts`
+
+The Podman authorization is limited to the repo-tracked Nix proxy and exact `flake.nix` corrections needed to make the pinned execution/music shell and explicit nested LilyPond sandbox gate runnable. Product code, product tests, package manifests/lockfiles, and arbitrary dependency changes are forbidden. The strict verifier and Owner ceremony run on the macOS host with the existing authenticated `gh` keychain session; GitHub credentials are not mounted or forwarded into the Nix proxy. This correction neither establishes trust nor unlocks T01 evidence. The Owner still performs the one-time bootstrap over the exact corrected pushed tip; after that checkpoint exists, the correction exception and every re-bootstrap path are permanently closed.
+
 Run:
 
 - `npm run plan:instrument-intelligence:manifest` after any tracker definition or receipt change;
 - `npm run spec:verify` before committing a draft;
-- `npm run plan:instrument-intelligence:trust-bootstrap` exactly once, after the Owner independently verifies the pushed unprogressed bootstrap and protected linear-main policy;
+- `npm run plan:instrument-intelligence:trust-bootstrap` exactly once, after the Owner independently verifies the exact pushed unprogressed bootstrap and explicitly accepts the Owner-local monotonic publication policy with `remoteProtectionAssumed: false`;
 - for T01 only, push and strictly verify the governance-only pre-registration transaction before producing any evidence;
 - push implementation/evidence before creating its receipt, then push the separate receipt-manifest commit; and
 - `npm run plan:instrument-intelligence:verify` after push for strict byte equality with `origin/main`.
 
 The manifest enumerates every issue, typed dependency/result predicate, definition digest, closed evidence schema, authority snapshot, implementation commit, remote-reachability receipt, immutable registry/tombstone prefix, typed invalidation/supersession edge, and temporal execution node. Closure and wave status are derived from current active receipts plus cumulative dynamic obligations rather than copied from editable fields. Acceptance, applicability, comparison, freshness, issue completion, and closure remain separate axes. It has no fixed tracer count or AFK/HITL numeric ranges.
+
+The unprotected host may still accept a destructive rewrite; this protocol detects rather than prevents it before advancing dependencies. It also cannot defend against an actor controlling both publication credentials and the executor filesystem. Partial checkpoint loss or mismatch requires human adjudication. Total tuple loss is indistinguishable from a fresh clone, but cannot authorize automatic bootstrap. These residual risks are part of the recorded trust policy.
 
 ## Late human boundary
 

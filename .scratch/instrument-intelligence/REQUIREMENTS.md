@@ -6,11 +6,11 @@ Authority: [SPEC.md](../../SPEC.md)
 
 This file is an honest planning index of requirement **families**. It does not claim that each row is one atomic clause, and it is not sufficient to judge completion. The parser-facing `Initial execution eligibility` scalar in each issue records only the immutable bootstrap declaration; runtime eligibility is computed independently. Tracer 01 must enumerate every normative SPEC clause, execution bullet, Machine Complete clause, Release Complete clause, and guardrail into the generated manifest with a stable ID, normalized-text digest, implementation owner, evidence contributors, closure verifier, dependency digests, and stale-evidence rules before any dependent tracer can become runtime-eligible. It may split a family into smaller stable IDs but may not silently drop, merge, weaken, or relabel one.
 
-The checked-in schema-5 verifier is correspondingly a static bootstrap guard only: it rejects mutable progress and all public evidence. T01's first governance-only pre-registration transaction must upgrade the schema and atomize every T01 acceptance item—including pending-evidence validation, exact A → P → manifest-only-M ancestry, result-disposition and remediation-obligation ledgers, role-separated clause claims, signed Owner/reviewer authority, subject/tree freshness, privacy aggregation, media sanitization, historical authority path sets, and monotonic external trust—before T01 itself can record execution evidence.
+The checked-in schema-5 verifier is correspondingly a static bootstrap guard only: it rejects mutable progress and all public evidence. Before an Owner-local checkpoint exists, one explicit Owner-authorized, evidence-empty pre-trust correction may change only the literal non-expanding allowlist in `SPEC.md`: its non-governance entries are the repo-tracked `scripts/nix-podman` proxy and exact `flake.nix` fixes needed to run the pinned execution/music shell and explicit nested LilyPond sandbox gate; product code, product tests, package manifests/lockfiles, and arbitrary dependency changes are forbidden. The strict verifier and Owner ceremony run on the macOS host with existing authenticated `gh` keychain credentials, which are never exposed to the Nix proxy. The correction neither establishes trust nor permits product work, and the exception closes permanently at bootstrap. T01's first governance-only pre-registration transaction must then upgrade the schema and atomize every T01 acceptance item—including pending-evidence validation, exact A → P → manifest-only-M ancestry, result-disposition and remediation-obligation ledgers, role-separated clause claims, signed Owner/reviewer authority, subject/tree freshness, privacy aggregation, media sanitization, historical authority path sets, and the Owner-local monotonic publication policy over an explicitly unprotected remote—before T01 itself can record execution evidence. That trust policy binds an atomic tuple of immutable reviewed-bootstrap commit, immutable canonical-policy blob, and mutable trusted-main compare-and-swap head, and matches each freshly fetched `origin/main` to an independent authenticated GitHub GraphQL observation pinned to repository node `R_kgDOSNEx6w`; it does not depend on hosted protection settings. Partial tuple loss/mismatch is `ready-for-human`. Total tuple loss is indistinguishable from a fresh clone, but still cannot authorize automatic bootstrap because the explicit Owner ceremony is mandatory.
 
 Issue headers name `Requirement families touched`; they are not completion claims. In the clause ledger, `implementation owner`, `evidence contributor`, and `closure verifier` are separate roles. A development tracer may contribute evidence to a Release Complete family without owning or satisfying its human-authority clause.
 
-Tracers 01–107 are the designed base wave, not a fixed completion count. A failed qualification, Machine-closure audit, review round, or Release-closure audit appends new remediation IDs after T107 through an origin-anchored registry/PLAN-row transaction that cannot alter prior definitions or authority narrative. Each remediation generation is bound to a closed-schema T69/T84/T85/T87/T103/T106 dispatch artifact and names affected requirement families, exact actual invalidation edges/scopes, the prescribed `rejoinAt`, derived Machine impact, and closure targets. Finalizing repair reserves exact future identities. An unresolved reservation is permitted only while closure remains pending and blocks it; a materialized rejoin strictly descends from repair and each target descends from rejoin. Current closure covers every target from every historical remediation generation, including superseded and tombstoned generations, so later state cannot erase an obligation. T87 is mandatory; T85 is present exactly when actual scope reaches Machine Complete. Release Complete requires every cumulative contract current, materialized, passing, committed, pushed, and strictly verified against freshly fetched `origin/main` and the preceding manifest-changing revision.
+Tracers 01–107 are the designed base wave, not a fixed completion count. A failed qualification, Machine-closure audit, review round, or Release-closure audit appends new remediation IDs after T107 through a checkpoint-descended, freshly fetched and independently GraphQL-attested `origin/main` registry/PLAN-row transaction that cannot alter prior definitions or authority narrative. Each remediation generation is bound to a closed-schema T69/T84/T85/T87/T103/T106 dispatch artifact and names affected requirement families, exact actual invalidation edges/scopes, the prescribed `rejoinAt`, derived Machine impact, and closure targets. Finalizing repair reserves exact future identities. An unresolved reservation is permitted only while closure remains pending and blocks it; a materialized rejoin strictly descends from repair and each target descends from rejoin. Current closure covers every target from every historical remediation generation, including superseded and tombstoned generations, so later state cannot erase an obligation. T87 is mandatory; T85 is present exactly when actual scope reaches Machine Complete. Release Complete requires every cumulative contract current, materialized, passing, committed, pushed, and strictly verified against that dual-observed `origin/main` and the preceding manifest-changing revision.
 
 ## Evidence contract
 
@@ -110,71 +110,72 @@ Tracers 01–107 are the designed base wave, not a fixed completion count. A fai
 
 ## Execution-step coverage
 
-| ID           | SPEC execution obligation                                                                               | Evidence-producing tracer(s) |
-| ------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| II-EXEC-000  | Slice 0 specification, security, rights, evaluator-canary, and baseline guard umbrella                  | 01–04, 70–71                 |
-| II-EXEC-000A | Slice 0 specification, provider/security, rights, and release-floor policy guard                        | 01–04                        |
-| II-EXEC-000B | Slice 0 clean-baseline measurement and immutable release-floor publication                              | 70                           |
-| II-EXEC-000C | Slice 0 early evaluator-input and private/public leak canaries                                          | 71                           |
-| II-EXEC-001A | Slice 1 versioned identity and shared asset/provenance graph                                            | 05–06                        |
-| II-EXEC-001B | Slice 1 publication store, authority inventory, migration, rollback, quarantine, and Workbench proof    | 07–10                        |
-| II-EXEC-002  | Slice 2 Mace upload/acquisition through safe cited browser segment                                      | 11                           |
-| II-EXEC-002A | Slice 2 Sanz and Corbetta acquisition through cited test-only baroque-guitar releases                   | 73–74                        |
-| II-EXEC-002B | Slice 2 Gasparini acquisition through cited test-only Continuo release                                  | 75                           |
-| II-EXEC-002C | Slice 2 Baron, Perrine, and Weiss acquisition through cited test-only baroque-lute releases             | 76–78                        |
-| II-EXEC-002D | Slice 2 Sor and Carulli acquisition through cited test-only classical-guitar releases                   | 79–80                        |
-| II-EXEC-003A | Slice 3 evidence, release, reviewer authority, profile, and mapping contracts                           | 12–13                        |
-| II-EXEC-003B | Slice 3 exact inventory/catalog/manifest and provisional consequence                                    | 14                           |
-| II-EXEC-003C | Slice 3 atomic resolver cutover and isolated nonhistorical test default                                 | 15–16                        |
-| II-EXEC-003D | Slice 3 authorized maintainer decision                                                                  | 102                          |
-| II-EXEC-003E | Slice 3 automatic maintainer verification and ordinary nonhistorical activation                         | 105                          |
-| II-EXEC-004A | Slice 4 legacy Card/status, sealed-evaluator, and canonical search/selection foundation umbrella        | 17–18, 72                    |
-| II-EXEC-004B | Slice 4 Vault/public split, ledgers, qualification policies, and evaluator-framework umbrella           | 19–22, 35, 71                |
-| II-EXEC-004C | Slice 4 legacy Card/status migration                                                                    | 17                           |
-| II-EXEC-004D | Slice 4 sealed evaluator service and typed private/public capability boundaries                         | 18–20, 71                    |
-| II-EXEC-004E | Slice 4 split/attempt ledgers and qualification/provider policies                                       | 21–22                        |
-| II-EXEC-004F | Slice 4 Search Measurement, Selection Policy/Decision, and Adoption Decision foundation                 | 72                           |
-| II-EXEC-004G | Slice 4 synthetic observable evaluator framework and mutation contracts                                 | 35                           |
-| II-EXEC-005A | Slice 5 Source Voice, text, context, transposition, and spanners                                        | 23–26                        |
-| II-EXEC-005B | Slice 5 target voice, harmony, relationships, Continuo, technique, and Instrument Instance              | 27–32                        |
-| II-EXEC-005C | Slice 5 phrase search, candidate mapping, independent evaluation, and adoption                          | 33–35                        |
-| II-EXEC-006A | Slice 6 optical/reviewed canonical figured-bass truth                                                   | 36                           |
-| II-EXEC-006B | Slice 6 source-backed cembalo realization and disposition branches                                      | 37–38                        |
-| II-EXEC-006C | Slice 6 mutation and development acceptance                                                             | 39                           |
-| II-EXEC-007A | Slice 7 imitative Golden realization                                                                    | 40                           |
-| II-EXEC-007B | Slice 7 independent imitative mutations and acceptance                                                  | 41                           |
-| II-EXEC-008A | Slice 8.1 preserve and reject known-bad baroque-guitar output                                           | 42                           |
-| II-EXEC-008B | Slice 8.2 source-backed punteado, rasgueado, alfabeto, and mixed-style repair                           | 43–45                        |
-| II-EXEC-008C | Slice 8.3 honest baroque-guitar Continuo disposition                                                    | 46                           |
-| II-EXEC-008D | Slice 8.4 development Regression Bundle and Golden fixture                                              | 47                           |
-| II-EXEC-009A | Slice 9.1 preserve and reject known-bad baroque-lute output                                             | 48                           |
-| II-EXEC-009B | Slice 9.2 source-backed calibrated left/right-hand and diapason repair                                  | 49–50                        |
-| II-EXEC-009C | Slice 9.3 Golden engraving and playback semantics                                                       | 51                           |
-| II-EXEC-009D | Slice 9.4 development Regression Bundle and course-13 claim policy                                      | 52                           |
-| II-EXEC-010A | Slice 10.1 preserve and reject disappearing-bass output                                                 | 53                           |
-| II-EXEC-010B | Slice 10.2 source-backed coherent reduction and joint-hand notation repair                              | 54–55                        |
-| II-EXEC-010C | Slice 10.3 development Regression Bundle and Golden fixture                                             | 56                           |
-| II-EXEC-011  | Slice 11 reassessment, reviewed learning, deletion, recovery, regeneration, and interactive editing     | 57–58, 96–99                 |
-| II-EXEC-011A | Slice 11 reassessment and governed learning proposals                                                   | 57                           |
-| II-EXEC-011B | Slice 11 Workbench advisory, affected-workspace navigation, and review diff                             | 58                           |
-| II-EXEC-011C | Slice 11 rights deletion, derivative purge, and invalidation                                            | 96                           |
-| II-EXEC-011D | Slice 11 interruption, exact resume, and incomplete-sibling retry                                       | 97                           |
-| II-EXEC-011E | Slice 11 legacy regeneration and immutable-result classification                                        | 98                           |
-| II-EXEC-011F | Slice 11 interactive selection, prompting, batch editing, and new-version save                          | 99                           |
-| II-EXEC-012  | Slice 12 performance, evaluator/parity closure, rehearsal, real E2E, and human-readiness package        | 59–63                        |
-| II-EXEC-013A | Slice 13 independent held-out curator precommit                                                         | 64                           |
-| II-EXEC-013B | Slice 13 independent human truth-review commitments                                                     | 82                           |
-| II-EXEC-013C | Slice 13 automatic sealed multi-target qualification runner                                             | 83                           |
-| II-EXEC-013D | Slice 13 failed-qualification routing, append-only remediation, and rerun                               | 84                           |
-| II-EXEC-013E | Slice 13 Machine closure adjudication, remediation dispatch, and pass-only state transition             | 85                           |
-| II-EXEC-013F | Slice 13 curator/maintainer precommit adjudication and successor-decision routing                       | 106                          |
-| II-EXEC-013G | Slice 13 automatic truth verification, exact Generation System freeze, and interlock                    | 103                          |
-| II-EXEC-014A | Slice 14 post-qualification digest-bound review-package generation and validation                       | 81                           |
-| II-EXEC-014B | Slice 14 review aggregation, typed temporal rejoin, impact invalidation, remediation, and repeat review | 69, dynamic-remediation      |
-| II-EXEC-014C | Slice 14 optional Owner provisional-stop decision without completion claims                             | 86                           |
-| II-EXEC-014D | Slice 14 independently scoped exact-artifact reviews                                                    | 65–68, 88–95, 100–101, 104   |
-| II-EXEC-014E | Slice 14 Release closure adjudication, remediation dispatch, and pass-only state transition             | 87                           |
-| II-EXEC-014F | Slice 14 four-way lyric applicability result and direct nonpass remediation routing                     | 107                          |
+| ID           | SPEC execution obligation                                                                                                                    | Evidence-producing tracer(s) |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| II-EXEC-000  | Slice 0 specification, security, rights, evaluator-canary, and baseline guard umbrella                                                       | 01–04, 70–71                 |
+| II-EXEC-000A | Slice 0 specification, provider/security, rights, and release-floor policy guard                                                             | 01–04                        |
+| II-EXEC-000B | Slice 0 clean-baseline measurement and immutable release-floor publication                                                                   | 70                           |
+| II-EXEC-000C | Slice 0 early evaluator-input and private/public leak canaries                                                                               | 71                           |
+| II-EXEC-000D | Slice 0 atomic three-ref Owner-local trust, pinned-node GraphQL head attestation, and narrow pre-trust correction over an unprotected remote | 01                           |
+| II-EXEC-001A | Slice 1 versioned identity and shared asset/provenance graph                                                                                 | 05–06                        |
+| II-EXEC-001B | Slice 1 publication store, authority inventory, migration, rollback, quarantine, and Workbench proof                                         | 07–10                        |
+| II-EXEC-002  | Slice 2 Mace upload/acquisition through safe cited browser segment                                                                           | 11                           |
+| II-EXEC-002A | Slice 2 Sanz and Corbetta acquisition through cited test-only baroque-guitar releases                                                        | 73–74                        |
+| II-EXEC-002B | Slice 2 Gasparini acquisition through cited test-only Continuo release                                                                       | 75                           |
+| II-EXEC-002C | Slice 2 Baron, Perrine, and Weiss acquisition through cited test-only baroque-lute releases                                                  | 76–78                        |
+| II-EXEC-002D | Slice 2 Sor and Carulli acquisition through cited test-only classical-guitar releases                                                        | 79–80                        |
+| II-EXEC-003A | Slice 3 evidence, release, reviewer authority, profile, and mapping contracts                                                                | 12–13                        |
+| II-EXEC-003B | Slice 3 exact inventory/catalog/manifest and provisional consequence                                                                         | 14                           |
+| II-EXEC-003C | Slice 3 atomic resolver cutover and isolated nonhistorical test default                                                                      | 15–16                        |
+| II-EXEC-003D | Slice 3 authorized maintainer decision                                                                                                       | 102                          |
+| II-EXEC-003E | Slice 3 automatic maintainer verification and ordinary nonhistorical activation                                                              | 105                          |
+| II-EXEC-004A | Slice 4 legacy Card/status, sealed-evaluator, and canonical search/selection foundation umbrella                                             | 17–18, 72                    |
+| II-EXEC-004B | Slice 4 Vault/public split, ledgers, qualification policies, and evaluator-framework umbrella                                                | 19–22, 35, 71                |
+| II-EXEC-004C | Slice 4 legacy Card/status migration                                                                                                         | 17                           |
+| II-EXEC-004D | Slice 4 sealed evaluator service and typed private/public capability boundaries                                                              | 18–20, 71                    |
+| II-EXEC-004E | Slice 4 split/attempt ledgers and qualification/provider policies                                                                            | 21–22                        |
+| II-EXEC-004F | Slice 4 Search Measurement, Selection Policy/Decision, and Adoption Decision foundation                                                      | 72                           |
+| II-EXEC-004G | Slice 4 synthetic observable evaluator framework and mutation contracts                                                                      | 35                           |
+| II-EXEC-005A | Slice 5 Source Voice, text, context, transposition, and spanners                                                                             | 23–26                        |
+| II-EXEC-005B | Slice 5 target voice, harmony, relationships, Continuo, technique, and Instrument Instance                                                   | 27–32                        |
+| II-EXEC-005C | Slice 5 phrase search, candidate mapping, independent evaluation, and adoption                                                               | 33–35                        |
+| II-EXEC-006A | Slice 6 optical/reviewed canonical figured-bass truth                                                                                        | 36                           |
+| II-EXEC-006B | Slice 6 source-backed cembalo realization and disposition branches                                                                           | 37–38                        |
+| II-EXEC-006C | Slice 6 mutation and development acceptance                                                                                                  | 39                           |
+| II-EXEC-007A | Slice 7 imitative Golden realization                                                                                                         | 40                           |
+| II-EXEC-007B | Slice 7 independent imitative mutations and acceptance                                                                                       | 41                           |
+| II-EXEC-008A | Slice 8.1 preserve and reject known-bad baroque-guitar output                                                                                | 42                           |
+| II-EXEC-008B | Slice 8.2 source-backed punteado, rasgueado, alfabeto, and mixed-style repair                                                                | 43–45                        |
+| II-EXEC-008C | Slice 8.3 honest baroque-guitar Continuo disposition                                                                                         | 46                           |
+| II-EXEC-008D | Slice 8.4 development Regression Bundle and Golden fixture                                                                                   | 47                           |
+| II-EXEC-009A | Slice 9.1 preserve and reject known-bad baroque-lute output                                                                                  | 48                           |
+| II-EXEC-009B | Slice 9.2 source-backed calibrated left/right-hand and diapason repair                                                                       | 49–50                        |
+| II-EXEC-009C | Slice 9.3 Golden engraving and playback semantics                                                                                            | 51                           |
+| II-EXEC-009D | Slice 9.4 development Regression Bundle and course-13 claim policy                                                                           | 52                           |
+| II-EXEC-010A | Slice 10.1 preserve and reject disappearing-bass output                                                                                      | 53                           |
+| II-EXEC-010B | Slice 10.2 source-backed coherent reduction and joint-hand notation repair                                                                   | 54–55                        |
+| II-EXEC-010C | Slice 10.3 development Regression Bundle and Golden fixture                                                                                  | 56                           |
+| II-EXEC-011  | Slice 11 reassessment, reviewed learning, deletion, recovery, regeneration, and interactive editing                                          | 57–58, 96–99                 |
+| II-EXEC-011A | Slice 11 reassessment and governed learning proposals                                                                                        | 57                           |
+| II-EXEC-011B | Slice 11 Workbench advisory, affected-workspace navigation, and review diff                                                                  | 58                           |
+| II-EXEC-011C | Slice 11 rights deletion, derivative purge, and invalidation                                                                                 | 96                           |
+| II-EXEC-011D | Slice 11 interruption, exact resume, and incomplete-sibling retry                                                                            | 97                           |
+| II-EXEC-011E | Slice 11 legacy regeneration and immutable-result classification                                                                             | 98                           |
+| II-EXEC-011F | Slice 11 interactive selection, prompting, batch editing, and new-version save                                                               | 99                           |
+| II-EXEC-012  | Slice 12 performance, evaluator/parity closure, rehearsal, real E2E, and human-readiness package                                             | 59–63                        |
+| II-EXEC-013A | Slice 13 independent held-out curator precommit                                                                                              | 64                           |
+| II-EXEC-013B | Slice 13 independent human truth-review commitments                                                                                          | 82                           |
+| II-EXEC-013C | Slice 13 automatic sealed multi-target qualification runner                                                                                  | 83                           |
+| II-EXEC-013D | Slice 13 failed-qualification routing, append-only remediation, and rerun                                                                    | 84                           |
+| II-EXEC-013E | Slice 13 Machine closure adjudication, remediation dispatch, and pass-only state transition                                                  | 85                           |
+| II-EXEC-013F | Slice 13 curator/maintainer precommit adjudication and successor-decision routing                                                            | 106                          |
+| II-EXEC-013G | Slice 13 automatic truth verification, exact Generation System freeze, and interlock                                                         | 103                          |
+| II-EXEC-014A | Slice 14 post-qualification digest-bound review-package generation and validation                                                            | 81                           |
+| II-EXEC-014B | Slice 14 review aggregation, typed temporal rejoin, impact invalidation, remediation, and repeat review                                      | 69, dynamic-remediation      |
+| II-EXEC-014C | Slice 14 optional Owner provisional-stop decision without completion claims                                                                  | 86                           |
+| II-EXEC-014D | Slice 14 independently scoped exact-artifact reviews                                                                                         | 65–68, 88–95, 100–101, 104   |
+| II-EXEC-014E | Slice 14 Release closure adjudication, remediation dispatch, and pass-only state transition                                                  | 87                           |
+| II-EXEC-014F | Slice 14 four-way lyric applicability result and direct nonpass remediation routing                                                          | 107                          |
 
 ## Machine Complete clause coverage
 

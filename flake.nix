@@ -22,7 +22,7 @@
           inherit pname version;
           hash = "sha256-sFbMQfuYn0kuKRiCwTwC68E+j1c0xqq5rrn+bP0sJVA=";
         };
-        build-system = [ pkgs.python3Packages.setuptools ];
+        build-system = [ pkgs.python3Packages.hatchling ];
         dependencies = with pkgs.python3Packages; [
           chardet
           joblib
@@ -47,9 +47,11 @@
         {
           default = pkgs.mkShell {
             packages = [
+              pkgs.git
               pkgs.nodejs_20
               pkgs.lilypond
               pkgs.musescore
+              pkgs.podman
               python
             ];
 

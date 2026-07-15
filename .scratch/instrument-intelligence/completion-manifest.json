@@ -5,16 +5,16 @@
   "authorities": {
     "specification": {
       "path": "SPEC.md",
-      "digest": "754f05fc804e7d24bc2686949e349e0d71df756a9071297f71cfa515df223f63"
+      "digest": "c794002889ba4e0c6c93a75c4515ca3c8fbf413b5640ddb60a4faba4b0ce7517"
     },
     "plan": {
       "path": ".scratch/instrument-intelligence/PLAN.md",
-      "digest": "d673f0e741e3db90886286fe46639589f76ccf2307951dbb97af7c09926f10bb",
-      "narrativeDigest": "22d1a5e32f0aaf374ba255427fe801f17c339fffa4eb59836c820c9dbaa6c5c3"
+      "digest": "f9e028dce7934c5913696434f7a753f3f62c308feb1db8bb76565a042868ea7a",
+      "narrativeDigest": "ef7f0ff7ea2ccf0c4279867471b82c9b68c6c8e31e4c6119dcdeffd56d811324"
     },
     "requirementFamilyIndex": {
       "path": ".scratch/instrument-intelligence/REQUIREMENTS.md",
-      "digest": "cee3ad1a41f6152e243e3e99ba1a2c3548ff2186370c8bbfc61007c47f3a2ad9",
+      "digest": "4c422ad25dff303ed2940b7fd04d6ddb5a62888c6dddbe6f1f8179799f4788e2",
       "clauseLedgerStatus": "bootstrap_pending_T01"
     },
     "verifier": {
@@ -22,10 +22,15 @@
         "package.json",
         "package-lock.json",
         ".prettierrc",
+        "flake.nix",
+        "flake.lock",
+        "scripts/nix-podman",
+        "scripts/lib/instrument-intelligence-trust.mjs",
         "scripts/verify-current-spec.mjs",
-        "scripts/verify-instrument-intelligence-plan.mjs"
+        "scripts/verify-instrument-intelligence-plan.mjs",
+        "test/instrument-intelligence/bootstrap-trust-policy.test.ts"
       ],
-      "digest": "411b177d87ca94fb844dc225129436cbf43d67584bc50dba93fbe8cbdcfe1234"
+      "digest": "2bb2cc66e61a79357958ef3c3266ba89d11731fcca466001456fffd2c56d2527"
     },
     "domainModel": {
       "paths": [
@@ -59,8 +64,28 @@
         "docs/adr/0021-learn-only-from-reviewed-playtest-evidence.md",
         "docs/adr/0022-govern-reviewed-knowledge-library.md"
       ],
-      "digest": "8ec0c9d25b84c13b3449487f8219661a62ae43322f62c65391c83727f747f9e9"
+      "digest": "56291e60ad06d2b7d400075ed6b4dc407c8696132658f668ec6e5ed06217db4e"
     }
+  },
+  "publicationTrust": {
+    "mode": "owner_local_monotonic_publication_v2",
+    "remote": "origin",
+    "remoteIdentity": "github.com/jefffm/vellum",
+    "branch": "refs/heads/main",
+    "independentHeadAttestation": {
+      "provider": "github_graphql_v4",
+      "host": "github.com",
+      "repositoryNodeId": "R_kgDOSNEx6w",
+      "repositoryDatabaseId": 1221669355,
+      "repository": "jefffm/vellum",
+      "branch": "refs/heads/main"
+    },
+    "remoteProtectionAssumed": false,
+    "publisherCardinality": 1,
+    "publication": "serialized_fast_forward_only",
+    "mergeCommits": "forbidden_after_checkpoint",
+    "destructiveRemoteOperations": "forbidden",
+    "divergenceDisposition": "ready_for_human"
   },
   "idPolicy": {
     "kind": "append_only_stable_numeric_locators",
@@ -76,7 +101,7 @@
     "nextDynamicTracerId": 108,
     "registryGeneration": 1,
     "previousRegistryHead": null,
-    "registryHead": "8f64173f291986f5119a2b4861685a21d21183733f3c68a78fce7e64971b196a",
+    "registryHead": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e",
     "registryEvents": [
       {
         "generation": 1,
@@ -84,7 +109,7 @@
         "addedDefinitions": [
           {
             "id": 1,
-            "definitionDigest": "21e4b5ce23e2349a25ab41c49761d92bb197579360f8119f9e224ef7393b7abb"
+            "definitionDigest": "83b9b8b9396c0f33216be38c455a8c1a3e48538159995bac8ddd42d3f75dedd3"
           },
           {
             "id": 2,
@@ -512,7 +537,7 @@
           }
         ],
         "tombstonesAdded": [],
-        "head": "8f64173f291986f5119a2b4861685a21d21183733f3c68a78fce7e64971b196a"
+        "head": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e"
       }
     ],
     "tombstones": [],
@@ -576,13 +601,13 @@
       "initialEligibility": "eligible",
       "completionSemantics": "implementation-pass",
       "stories": "U10",
-      "requirementIds": ["II-AUTH-001", "II-EXEC-000", "II-RC-011"],
+      "requirementIds": ["II-AUTH-001", "II-EXEC-000", "II-EXEC-000D", "II-RC-011"],
       "blockedBy": [],
       "dependencyPredicate": { "all": [] },
       "resultPredicate": null,
       "resultPredicateExplanation": [],
       "evidencePath": ".scratch/instrument-intelligence/evidence/T01/verification.json",
-      "gateMatrixDigest": "412874b03da95309e04f73712c495aaedf5fadec44afbf1dcd0af75bb57f1839",
+      "gateMatrixDigest": "65682f3ffbdb822f7218f890fda3f1783621057289d6d9c8024baf131a905f7c",
       "expectedGateCommands": {
         "focused": [
           "npm test -- test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts"
@@ -597,7 +622,7 @@
         ],
         "conditional": []
       },
-      "definitionDigest": "21e4b5ce23e2349a25ab41c49761d92bb197579360f8119f9e224ef7393b7abb",
+      "definitionDigest": "83b9b8b9396c0f33216be38c455a8c1a3e48538159995bac8ddd42d3f75dedd3",
       "eligibilityPredicate": { "all": [] },
       "implementationCommit": null,
       "remoteReachabilityReceipt": null,
