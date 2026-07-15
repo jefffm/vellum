@@ -2087,7 +2087,7 @@
       "evidenceDigest": null,
       "supersedes": [],
       "invalidatedBy": [],
-      "computedEligibility": "blocked"
+      "computedEligibility": "eligible"
     },
     {
       "id": 3,
@@ -2169,7 +2169,7 @@
       "evidenceDigest": null,
       "supersedes": [],
       "invalidatedBy": [],
-      "computedEligibility": "blocked"
+      "computedEligibility": "eligible"
     },
     {
       "id": 4,
@@ -2242,7 +2242,7 @@
       "evidenceDigest": null,
       "supersedes": [],
       "invalidatedBy": [],
-      "computedEligibility": "blocked"
+      "computedEligibility": "eligible"
     },
     {
       "id": 5,
@@ -2488,7 +2488,7 @@
       "evidenceDigest": null,
       "supersedes": [],
       "invalidatedBy": [],
-      "computedEligibility": "blocked"
+      "computedEligibility": "eligible"
     },
     {
       "id": 8,
@@ -9714,7 +9714,7 @@
       "evidenceDigest": null,
       "supersedes": [],
       "invalidatedBy": [],
-      "computedEligibility": "blocked"
+      "computedEligibility": "eligible"
     },
     {
       "id": 72,
