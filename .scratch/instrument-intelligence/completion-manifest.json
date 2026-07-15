@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "status": "preregistered",
+  "status": "active",
   "objective": "Release Complete Vellum Instrument Intelligence",
   "authorities": {
     "specification": {
@@ -1981,19 +1981,35 @@
       },
       "definitionDigest": "ad52f62cb267aeebe97263aa7cde3f068369d29e73ce7fb93490b32e52cb04cc",
       "eligibilityPredicate": { "all": [] },
-      "implementationCommit": null,
-      "remotePublicationReceipt": null,
-      "issueCompletion": "open",
-      "productAcceptance": null,
-      "applicability": "not_claimed",
-      "comparison": "unknown",
-      "freshness": "unknown",
-      "compatibility": "unknown",
-      "authorityValidity": "unknown",
-      "resultCode": null,
-      "currentExecutionGeneration": null,
-      "evidenceGeneration": 0,
-      "evidenceDigest": null,
+      "implementationCommit": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+      "remotePublicationReceipt": {
+        "schemaId": "vellum.instrument-intelligence.publication-receipt.v1",
+        "remote": "origin",
+        "remoteIdentity": "github.com/jefffm/vellum",
+        "branch": "refs/heads/main",
+        "repositoryNodeId": "R_kgDOSNEx6w",
+        "repositoryDatabaseId": 1221669355,
+        "repositoryNameWithOwner": "jefffm/vellum",
+        "remoteProtectionAssumed": false,
+        "bootstrapAnchor": "f0d0ab69c489350b13f4ed62e1c69e70202a1119",
+        "trustPolicyObject": "8d538d7abca19a10d52f979f95d0c1652dcca982",
+        "trustedMainAtStart": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6",
+        "commit": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "fetchedHead": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "graphQlHead": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "checkedAt": "2026-07-15T12:13:10.113Z"
+      },
+      "issueCompletion": "complete",
+      "productAcceptance": "pass",
+      "applicability": "applicable",
+      "comparison": "not_required",
+      "freshness": "current",
+      "compatibility": "compatible",
+      "authorityValidity": "valid",
+      "resultCode": "implementation_passed",
+      "currentExecutionGeneration": 1,
+      "evidenceGeneration": 1,
+      "evidenceDigest": "3b867bf96fc4a2bfab100fa32592a3aff48e2ce1602c51e7dbbb33b3982d736e",
       "supersedes": [],
       "invalidatedBy": [],
       "computedEligibility": "eligible"
@@ -13684,7 +13700,360 @@
       "computedEligibility": "blocked"
     }
   ],
-  "executionGenerations": [],
+  "executionGenerations": [
+    {
+      "tracerId": 1,
+      "generation": 1,
+      "evidenceGeneration": 1,
+      "definitionPath": ".scratch/instrument-intelligence/issues/01-governing-contract-baseline-guard.md",
+      "definitionDigest": "ad52f62cb267aeebe97263aa7cde3f068369d29e73ce7fb93490b32e52cb04cc",
+      "startReceipt": {
+        "schemaId": "vellum.instrument-intelligence.start-receipt.v1",
+        "start": { "tracerId": "T01", "generation": 1, "startedAt": "2026-07-15T12:10:50.153Z" },
+        "definition": {
+          "path": ".scratch/instrument-intelligence/issues/01-governing-contract-baseline-guard.md",
+          "sha256": "ad52f62cb267aeebe97263aa7cde3f068369d29e73ce7fb93490b32e52cb04cc",
+          "gateMatrixDigest": "65682f3ffbdb822f7218f890fda3f1783621057289d6d9c8024baf131a905f7c",
+          "completionSemantics": "implementation-pass"
+        },
+        "authoritySnapshot": {
+          "schemaId": "vellum.instrument-intelligence.authority-snapshot.v1",
+          "authoritySetDigest": "1dd469561a59c61956a52db7a0efabf035c7e7b47059d737456984bbd8e1cfb9",
+          "pathDigests": [
+            {
+              "path": ".prettierrc",
+              "sha256": "824c8c55a71bac12cf3c013657ecb8f06fbd6eaa4c1c3e725a80507c59ca1ad7"
+            },
+            {
+              "path": ".scratch/README.md",
+              "sha256": "f83f03ffe2359a697d4e5d282f61d24ae14b265f03efa9b117bf0590a6294919"
+            },
+            {
+              "path": ".scratch/instrument-intelligence/PLAN.md",
+              "sha256": "f9e028dce7934c5913696434f7a753f3f62c308feb1db8bb76565a042868ea7a"
+            },
+            {
+              "path": ".scratch/instrument-intelligence/README.md",
+              "sha256": "a56a3d4f65b0771662d632cf5222fd21fea7538b83b2873ff07f55d718d23ed6"
+            },
+            {
+              "path": ".scratch/instrument-intelligence/REQUIREMENTS.md",
+              "sha256": "23e83b2d3d9a92194159908832d3b11e3906190045a347ef554020ca88fe3803"
+            },
+            {
+              "path": ".scratch/instrument-intelligence/clause-ledger.json",
+              "sha256": "b909da896d847626d6dca2393e1e233a742c2fd7d652141adfaadc17cb285d3b"
+            },
+            {
+              "path": ".scratch/instrument-intelligence/review-authority-catalog.json",
+              "sha256": "c45387ae1cba82c494fad09e60475639511d2bbe19b3b72e1566df32b69dba66"
+            },
+            {
+              "path": "AGENTS.md",
+              "sha256": "afd766a3a176ee85b68e220f89672f7f0416f603de9bce512431e8865ff2db6b"
+            },
+            {
+              "path": "CONTEXT.md",
+              "sha256": "f4bc8ee624b3f6a6be6be2338a2d5242677c077364a88d848285759c915449a0"
+            },
+            {
+              "path": "SPEC.md",
+              "sha256": "005d39f55a680e31837d654462e7d10e2c8c12739d0b08893d0145e7683fa99e"
+            },
+            {
+              "path": "docs/adr/0001-hybrid-musicological-engine.md",
+              "sha256": "104b4526e4fe340d2d08092e846b6fd59d0dd100f8689885e4d9d13e7a738215"
+            },
+            {
+              "path": "docs/adr/0002-separate-project-state-from-reviewed-knowledge.md",
+              "sha256": "dbfc934c2849955f06b488a5c7d250b35b475e9e610adb23849443d470299982"
+            },
+            {
+              "path": "docs/adr/0003-local-first-single-owner-runtime.md",
+              "sha256": "5f37ab66d17fcc48345983b7c8e03cc7f171599032c8325baaed9c944528e923"
+            },
+            {
+              "path": "docs/adr/0004-own-the-model-provider-connection.md",
+              "sha256": "cfbdf023b3906c2e98ba19c9d18aeff5ea015faea223f58be95af3231842e53a"
+            },
+            {
+              "path": "docs/adr/0005-version-musical-lineage.md",
+              "sha256": "ea4434919a19fe1ac55995d6a32a18aaddaad3cc2f02d5cf3fd7595d31403054"
+            },
+            {
+              "path": "docs/adr/0006-require-preservation-audits.md",
+              "sha256": "68f03391a4600fbea498b3d09bde5405e763e45a926cc3a312fbdc3a48aa89c1"
+            },
+            {
+              "path": "docs/adr/0007-scope-musical-validation-by-context.md",
+              "sha256": "b802f9db43e171cdcb97b7dadb76ad982622f2bfdc57f21f653cf733df46cc71"
+            },
+            {
+              "path": "docs/adr/0008-search-over-arrangement-candidates.md",
+              "sha256": "0a4c79014fc1dfe50d0a2c425afe99df281849267facb1d2874b4a924cf5ccc7"
+            },
+            {
+              "path": "docs/adr/0009-preserve-omr-evidence-behind-adapters.md",
+              "sha256": "1383a52716c3f65e08b090429827306c992dfa5cdc560bf46569d4bcbc5c27aa"
+            },
+            {
+              "path": "docs/adr/0010-use-performed-form-for-playback.md",
+              "sha256": "f281f840df77ac2ed97c7800b5fc180b20d1634004e36af1554f0095bbfdc0a3"
+            },
+            {
+              "path": "docs/adr/0011-name-continuo-disposition-honestly.md",
+              "sha256": "4afdcf915e663537f8f8e8f3e623d4e19701d3eac7d34484980de61fb23ca5ff"
+            },
+            {
+              "path": "docs/adr/0012-version-families-and-deliverables.md",
+              "sha256": "7e78f22d5824341b9979380f6f53d88f7636e744efc9aa19dabcb21726d42476"
+            },
+            {
+              "path": "docs/adr/0013-treat-edits-as-versioned-commitments.md",
+              "sha256": "252d092e3820410b38b34aaaa2b854dbd5e39ad781058a49657a771c86a5ba41"
+            },
+            {
+              "path": "docs/adr/0014-make-preservation-policy-an-executable-choice.md",
+              "sha256": "3d30db02eb163559b8b6d75dc5173829440293503a4b899e728a1e94a66091e6"
+            },
+            {
+              "path": "docs/adr/0015-separate-source-adapters-and-owner-knowledge.md",
+              "sha256": "ba2868add35c8c09998eed74742e64c4e4d10570471f38cd1b7fbb7f07fa1881"
+            },
+            {
+              "path": "docs/adr/0016-converge-source-truth-by-purpose.md",
+              "sha256": "c6dfb64ca2efc4f149b38c03d4bf88b679451773cf2505da660734f393404d4e"
+            },
+            {
+              "path": "docs/adr/0017-version-briefs-and-proportional-plans.md",
+              "sha256": "a221dbf40a5a0da62b144dd0922b72860dc1132cc51b5c2fd44798be34378c9a"
+            },
+            {
+              "path": "docs/adr/0018-bind-arrangements-to-instrument-instances.md",
+              "sha256": "70a9e935fb8902dce8ad0a3c571b18b5f1f90cb5f9ab543e0dd5ad0d3f1f059c"
+            },
+            {
+              "path": "docs/adr/0019-search-serializable-constraints-and-report-outcomes.md",
+              "sha256": "5ba146cfd59ac499bb622ef86225b10516b27fbff7394f38e79f9ce6fdb291b1"
+            },
+            {
+              "path": "docs/adr/0020-version-evaluation-manifests-baselines-and-promotion.md",
+              "sha256": "9f681313a0b843dcc13ad100fae0ee201df772d33ca031c7366acb4fe54d8e74"
+            },
+            {
+              "path": "docs/adr/0021-learn-only-from-reviewed-playtest-evidence.md",
+              "sha256": "13871424e69f606b8731d7ade5a0a55a25940142f4c0168ba64e9a4fd7390695"
+            },
+            {
+              "path": "docs/adr/0022-govern-reviewed-knowledge-library.md",
+              "sha256": "1b02d4ab352a33c85c5804753511d8b154a3ccfe205e3c4f3a252dddcb2ab134"
+            },
+            {
+              "path": "docs/agents/domain.md",
+              "sha256": "84b2aaa5fafef9d7cecd0c0f3f9ddd77f6b52933f1601313a4f417549e6cd7b2"
+            },
+            {
+              "path": "docs/agents/issue-tracker.md",
+              "sha256": "0d851477520478ce48067d383643d742303d9bc0506993fd380b6c51bdfabdf2"
+            },
+            {
+              "path": "docs/agents/triage-labels.md",
+              "sha256": "0a02e58d03bc30e4824655a78eb0060d9db5b9ddc167f82501b9c89ef537a6eb"
+            },
+            {
+              "path": "flake.lock",
+              "sha256": "047784f0e6724b378d389f299f2447eca140bace0bf3ee5a1bafe8225a6f58a3"
+            },
+            {
+              "path": "flake.nix",
+              "sha256": "256721fb3e31c8c185909d8c20f3b83c0e09bd80b69527122f7959ef18defbb8"
+            },
+            {
+              "path": "schemas/instrument-intelligence/clause-ledger.schema.json",
+              "sha256": "58b7990fee771c0edf36ea62de2170f6143984ea71e48387f2b0c6a798689c5a"
+            },
+            {
+              "path": "schemas/instrument-intelligence/evidence.v2.schema.json",
+              "sha256": "8dfea3cf14d40118991ae0c25f7e38e8361f3353b2a9a3dc9ec03e51a9e3c553"
+            },
+            {
+              "path": "schemas/instrument-intelligence/start-receipt.v1.schema.json",
+              "sha256": "b9bb336c9aee4685597288473c8059e7e2050846a8e16666896d6b0da2a8f371"
+            },
+            {
+              "path": "scripts/generate-instrument-intelligence-clause-ledger.mjs",
+              "sha256": "6facd8859093e82b96664087d6335e71326a51b5dce84aaab5329a9dc233d586"
+            },
+            {
+              "path": "scripts/lib/instrument-intelligence-clause-ledger.mjs",
+              "sha256": "0cf1e186b3b286d70b9b9de9c9751f9d2667b68d4bbc6da85e37c5964edbad7e"
+            },
+            {
+              "path": "scripts/lib/instrument-intelligence-receipts.mjs",
+              "sha256": "54132851d07c160f368bb9ddbc6860bf9cea6fa7ee6ba6ac00e3d27ecce69765"
+            },
+            {
+              "path": "scripts/lib/instrument-intelligence-results.mjs",
+              "sha256": "e7575cc927f7134eaaf419d9affdf6969fbb5ba280ac32f0d48739e362d05c2e"
+            },
+            {
+              "path": "scripts/lib/instrument-intelligence-trust.mjs",
+              "sha256": "9215a0ba5778d39b760a771119f12b699bd839d03350ac7ce7be737d962f889b"
+            },
+            {
+              "path": "scripts/nix-podman",
+              "sha256": "841878e34e8017ff7b97cf1206beb65f1d10fb94d7480d5175347297a85f0e93"
+            },
+            {
+              "path": "scripts/verify-current-spec.mjs",
+              "sha256": "cd19473b63726189c536248ac04ff479d5add5b64f54da998dc2e09537638925"
+            },
+            {
+              "path": "scripts/verify-instrument-intelligence-plan.mjs",
+              "sha256": "64048a05b8b91c7bbad34a902380fc7206d0fb32d8c4c18cf21eba69620a8d5b"
+            },
+            {
+              "path": "test/instrument-intelligence/T01-clause-ledger.test.ts",
+              "sha256": "79e41e865bd5c3e8cf5c416dcca0caa6dce6cbb9a0b35656dde5e29583475a7f"
+            },
+            {
+              "path": "test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts",
+              "sha256": "3007fe6195c1a9a7c080085df1eaa63e41474de8b58a78be988a80be74773bc7"
+            },
+            {
+              "path": "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+              "sha256": "fe1f79956aba2cdb5551fea26c0e9059e4bd79859b930c62344c2e1a0d89771d"
+            },
+            {
+              "path": "test/instrument-intelligence/receipt-contract.test.ts",
+              "sha256": "5332e9811b5778eddebbb106c8fd0e3fa872f81c5475bdb6b6be5baf12c95f59"
+            },
+            {
+              "path": "test/instrument-intelligence/result-contract.test.ts",
+              "sha256": "361bbb3b931f9c1c7d748cbc4c7228e17a73e114c57e5018db0eb2f9290539e1"
+            }
+          ]
+        },
+        "registry": {
+          "generation": 2,
+          "registryHead": "ae406fcb587ec80a3685ee0f46f9695137ba2c24dbda3574e5f03ac0d5217e61",
+          "tombstoneSetDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "baseWaveHighestId": 107
+        },
+        "predecessors": [],
+        "predicateWitnesses": [],
+        "publication": {
+          "remote": "origin",
+          "remoteIdentity": "github.com/jefffm/vellum",
+          "branch": "refs/heads/main",
+          "repository": {
+            "nodeId": "R_kgDOSNEx6w",
+            "databaseId": 1221669355,
+            "nameWithOwner": "jefffm/vellum"
+          },
+          "remoteProtectionAssumed": false,
+          "checkpoint": {
+            "bootstrapAnchor": {
+              "ref": "refs/vellum/instrument-intelligence/bootstrap-anchor",
+              "object": "f0d0ab69c489350b13f4ed62e1c69e70202a1119"
+            },
+            "trustPolicy": {
+              "ref": "refs/vellum/instrument-intelligence/trust-policy",
+              "object": "8d538d7abca19a10d52f979f95d0c1652dcca982"
+            },
+            "trustedMain": {
+              "ref": "refs/vellum/instrument-intelligence/trusted-main",
+              "object": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6"
+            }
+          },
+          "fetchedHead": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6",
+          "graphQlHead": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6",
+          "observedAt": "2026-07-15T12:10:20.153Z"
+        },
+        "execution": {
+          "baseCommit": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6",
+          "productTreeDigest": "6151f53ce905f2fc34a33c838e9943e94c632e7c2dc995e79568b181a385d4be",
+          "generationSystem": {
+            "id": "vellum_execution_agent",
+            "version": "v1",
+            "digest": "854cd536876989b9e16aa2318d80e5569a561cd5758c24202a18ba29ceca90bf"
+          },
+          "subjects": [
+            {
+              "kind": "system",
+              "id": "vellum",
+              "version": "v1",
+              "digest": "0975dac42a02fbdec68f165d585e2c5f303a022f37f5d70b07de4ba3cdee0c3d"
+            },
+            {
+              "kind": "package",
+              "id": "t01",
+              "version": "v1",
+              "digest": "a43378d9a7034cc602a80ed4272645e77b53da86f8f442fe4f5e77e49ea51da3"
+            },
+            {
+              "kind": "component",
+              "id": "governance_verifier",
+              "version": "v1",
+              "digest": "0a3ed89f92739b7f05650810095148b3e10b38bdab26003805b9829842eed5bb"
+            }
+          ]
+        }
+      },
+      "authoritySnapshot": {
+        "authoritySetDigest": "1dd469561a59c61956a52db7a0efabf035c7e7b47059d737456984bbd8e1cfb9",
+        "clauseLedgerDigest": "b909da896d847626d6dca2393e1e233a742c2fd7d652141adfaadc17cb285d3b",
+        "domainModelDigest": "56291e60ad06d2b7d400075ed6b4dc407c8696132658f668ec6e5ed06217db4e",
+        "planDigest": "f9e028dce7934c5913696434f7a753f3f62c308feb1db8bb76565a042868ea7a",
+        "planNarrativeDigest": "ef7f0ff7ea2ccf0c4279867471b82c9b68c6c8e31e4c6119dcdeffd56d811324",
+        "registryHead": "ae406fcb587ec80a3685ee0f46f9695137ba2c24dbda3574e5f03ac0d5217e61",
+        "requirementFamilyIndexDigest": "23e83b2d3d9a92194159908832d3b11e3906190045a347ef554020ca88fe3803",
+        "schemaRegistryDigest": "54d939a137113b7245e15bf2ea9fa546cdab4da9ee0fdd0ae9c7b10185d40d2f",
+        "specificationDigest": "005d39f55a680e31837d654462e7d10e2c8c12739d0b08893d0145e7683fa99e",
+        "tombstoneSetDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "verifierDigest": "b1294b5b51fc061f1b63e556f4eb9e7a298f1d5a2beabd7e0676a5363fd6a02f"
+      },
+      "implementationCommit": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+      "evidenceDigest": "3b867bf96fc4a2bfab100fa32592a3aff48e2ce1602c51e7dbbb33b3982d736e",
+      "predecessors": [],
+      "clauseClaims": [],
+      "issueCompletion": "complete",
+      "productAcceptance": "pass",
+      "applicability": "applicable",
+      "comparison": "not_required",
+      "freshness": "current",
+      "compatibility": "compatible",
+      "authorityValidity": "valid",
+      "resultCode": "implementation_passed",
+      "resultDisposition": {
+        "tracerId": 1,
+        "resultCode": "implementation_passed",
+        "productAcceptance": "pass",
+        "applicability": "applicable",
+        "disposition": "unlock",
+        "dispatchCount": 0
+      },
+      "supersedes": [],
+      "invalidates": [],
+      "remotePublicationReceipt": {
+        "schemaId": "vellum.instrument-intelligence.publication-receipt.v1",
+        "remote": "origin",
+        "remoteIdentity": "github.com/jefffm/vellum",
+        "branch": "refs/heads/main",
+        "repositoryNodeId": "R_kgDOSNEx6w",
+        "repositoryDatabaseId": 1221669355,
+        "repositoryNameWithOwner": "jefffm/vellum",
+        "remoteProtectionAssumed": false,
+        "bootstrapAnchor": "f0d0ab69c489350b13f4ed62e1c69e70202a1119",
+        "trustPolicyObject": "8d538d7abca19a10d52f979f95d0c1652dcca982",
+        "trustedMainAtStart": "e2532f5c2c5669cd5a1de89b9f8b837ae91c06a6",
+        "commit": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "fetchedHead": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "graphQlHead": "4b3c4af2e8998b6a6e1c55ccb90d09d7b10d38e4",
+        "checkedAt": "2026-07-15T12:13:10.113Z"
+      }
+    }
+  ],
   "stateEdges": [],
   "requirementEvidence": {},
   "clauseEvidence": {},
