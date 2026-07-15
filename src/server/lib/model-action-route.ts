@@ -15,39 +15,30 @@ const ActionParamsSchema = Type.Object({
 });
 const CreateSchema = Type.Object(
   {
-    kind: Type.String({ minLength: 1 }),
+    kind: Type.Literal("interactive_guidance_v1"),
     intent: Type.String({ minLength: 1 }),
-    inputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
-    lastConfirmedBoundary: Type.String({ minLength: 1 }),
+    inputVersions: Type.Optional(Type.Array(ModelActionInputVersionSchema)),
     idempotencyKey: Type.Optional(Type.String({ minLength: 16 })),
   },
   { additionalProperties: false }
 );
-const ProgressSchema = Type.Object(
+const AuthorizationSchema = Type.Object(
   {
-    completedLocalToolResults: Type.Optional(
-      Type.Array(
-        Type.Object(
-          {
-            toolName: Type.String({ minLength: 1 }),
-            resultReference: Type.String({ minLength: 1 }),
-          },
-          { additionalProperties: false }
-        )
-      )
-    ),
-    partialProgressSummary: Type.Optional(Type.String({ minLength: 1 })),
-    diagnosticPartialOutput: Type.Optional(Type.String({ minLength: 1 })),
-    lastConfirmedBoundary: Type.Optional(Type.String({ minLength: 1 })),
+    decision: Type.Union([
+      Type.Literal("authorize"),
+      Type.Literal("deny"),
+      Type.Literal("withdraw"),
+    ]),
+    disclosureDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }),
   },
-  { additionalProperties: false, minProperties: 1 }
+  { additionalProperties: false }
 );
 const InterruptSchema = Type.Object(
   { reason: Type.String({ minLength: 1 }) },
   { additionalProperties: false }
 );
-const CompleteSchema = Type.Object(
-  { canonicalResultReference: Type.String({ minLength: 1 }) },
+const RunSchema = Type.Object(
+  { envelopeDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }) },
   { additionalProperties: false }
 );
 const RetrySchema = Type.Object(
@@ -94,15 +85,24 @@ export function createModelActionGetRoute(options: Options = {}): RequestHandler
   });
 }
 
-export function createModelActionProgressRoute(options: Options = {}): RequestHandler {
+export function createModelActionPublicationGetRoute(options: Options = {}): RequestHandler {
+  const { store } = dependencies(options);
+  return createApiRoute({
+    validate: (_body, request) => Value.Decode(ActionParamsSchema, request.params),
+    handler: async ({ workspaceId, modelActionId }) =>
+      store.getModelActionPublicationForAction(workspaceId, modelActionId),
+  });
+}
+
+export function createModelActionAuthorizationRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
   return createApiRoute({
     validate: (body, request) => ({
       ...Value.Decode(ActionParamsSchema, request.params),
-      progress: Value.Decode(ProgressSchema, body),
+      ...Value.Decode(AuthorizationSchema, body),
     }),
-    handler: async ({ workspaceId, modelActionId, progress }) =>
-      service.progress(workspaceId, modelActionId, progress),
+    handler: async ({ workspaceId, modelActionId, decision, disclosureDigest }) =>
+      service.authorize(workspaceId, modelActionId, decision, disclosureDigest),
   });
 }
 
@@ -118,15 +118,25 @@ export function createModelActionInterruptRoute(options: Options = {}): RequestH
   });
 }
 
-export function createModelActionCompleteRoute(options: Options = {}): RequestHandler {
+export function createModelActionRunRoute(options: Options = {}): RequestHandler {
   const { service } = dependencies(options);
   return createApiRoute({
     validate: (body, request) => ({
       ...Value.Decode(ActionParamsSchema, request.params),
-      ...Value.Decode(CompleteSchema, body),
+      ...Value.Decode(RunSchema, body),
     }),
-    handler: async ({ workspaceId, modelActionId, canonicalResultReference }) =>
-      service.complete(workspaceId, modelActionId, canonicalResultReference),
+    handler: async ({ workspaceId, modelActionId, envelopeDigest }, _request, response) => {
+      const controller = new AbortController();
+      const abortDisconnectedRequest = () => {
+        if (!response.writableEnded) controller.abort("Model Action client disconnected");
+      };
+      response.once("close", abortDisconnectedRequest);
+      try {
+        return await service.run(workspaceId, modelActionId, envelopeDigest, controller.signal);
+      } finally {
+        response.off("close", abortDisconnectedRequest);
+      }
+    },
   });
 }
 

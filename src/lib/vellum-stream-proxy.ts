@@ -1,81 +1,119 @@
-import type { ProxyAssistantMessageEvent, ProxyStreamOptions } from "@mariozechner/pi-agent-core";
+import type { ProxyStreamOptions } from "@mariozechner/pi-agent-core";
 import {
   createAssistantMessageEventStream,
-  parseStreamingJson,
+  getModel,
   type AssistantMessage,
-  type AssistantMessageEvent,
   type Context,
   type Model,
-  type ToolCall,
 } from "@mariozechner/pi-ai";
+import type { ModelAction, ModelActionPublication, ModelEgressDisclosure } from "./music-domain.js";
 import { apiErrorFromResponse, isApiFailure } from "./api-contract.js";
 
+type ApiSuccess<T> = { data: T };
+type ModelActionRunResult = { action: ModelAction; publication: ModelActionPublication };
+type EgressAuthorizer = (disclosure: ModelEgressDisclosure) => Promise<boolean>;
+
+let egressAuthorizer: EgressAuthorizer = presentEgressDisclosure;
+
+/** Test seam for the one explicit Owner authorization decision. */
+export function setModelEgressAuthorizer(authorizer?: EgressAuthorizer): void {
+  egressAuthorizer = authorizer ?? presentEgressDisclosure;
+}
+
 /**
- * Vellum's typed-error-compatible equivalent of Pi's streamProxy.
+ * Pi-compatible adapter for Vellum's server-governed Model Action boundary.
  *
- * Pi 0.70 treats a non-2xx `error` value as a string. Vellum's shared API
- * contract deliberately makes it a structured object, so the stock client
- * would surface `Proxy error: [object Object]`. Keep the protocol adapter here
- * until the installed Pi client accepts structured failures.
+ * The model and full Context arguments are intentionally not serialized. The
+ * browser can submit only the latest Owner intent to one registered policy;
+ * the server selects destination, system prompt, data, and capabilities.
  */
 export function vellumStreamProxy(
-  model: Model<string>,
+  _clientModel: Model<string>,
   context: Context,
   options: ProxyStreamOptions
 ) {
   const stream = createAssistantMessageEventStream();
 
   void (async () => {
-    const partial = initialMessage(model);
-    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-    const abort = () => void reader?.cancel("Request aborted by user").catch(() => undefined);
-    options.signal?.addEventListener("abort", abort);
-
+    const partial = initialMessage();
     try {
-      const response = await fetch(`${options.proxyUrl}/api/stream`, {
+      const workspaceId = activeWorkspaceId();
+      const intent = latestOwnerIntent(context);
+      const action = await api<ModelAction>(`/api/workspaces/${workspaceId}/model-actions`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${options.authToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ model, context, options: serializableOptions(options) }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "interactive_guidance_v1", intent }),
         signal: options.signal,
       });
-      if (!response.ok) throw await typedProxyError(response);
-      if (!response.body) throw new Error("Vellum stream response has no body");
-
-      reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (options.signal?.aborted) throw new Error("Request aborted by user");
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (!data) continue;
-          const event = applyProxyEvent(JSON.parse(data) as ProxyAssistantMessageEvent, partial);
-          if (event) stream.push(event);
-        }
+      const attempt = action.attempts.at(-1);
+      if (!attempt?.disclosure || !attempt.disclosureDigest) {
+        throw new Error("The server did not return a complete Model Action disclosure");
       }
-      if (options.signal?.aborted) throw new Error("Request aborted by user");
-      stream.end();
+
+      const authorizedByOwner = await egressAuthorizer(attempt.disclosure);
+      const decided = await api<ModelAction>(
+        `/api/workspaces/${workspaceId}/model-actions/${action.id}/authorization`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            decision: authorizedByOwner ? "authorize" : "deny",
+            disclosureDigest: attempt.disclosureDigest,
+          }),
+          signal: options.signal,
+        }
+      );
+      if (!authorizedByOwner || decided.status === "denied") {
+        pushAssistantText(
+          stream,
+          partial,
+          authorizedByOwner
+            ? `Nothing was sent. ${attempt.disclosure.policyReason}`
+            : "Nothing was sent. You declined this one-time Model Action egress request."
+        );
+        return;
+      }
+
+      const authorizedAttempt = decided.attempts.at(-1);
+      if (!authorizedAttempt?.envelopeDigest) {
+        throw new Error("The server did not mint an authorized Egress Envelope");
+      }
+      const completed = await api<ModelActionRunResult>(
+        `/api/workspaces/${workspaceId}/model-actions/${action.id}/run`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ envelopeDigest: authorizedAttempt.envelopeDigest }),
+          signal: options.signal,
+        }
+      );
+      if (
+        completed.action.status !== "completed" ||
+        completed.action.publicationReference !== completed.publication.id
+      ) {
+        throw new Error("The Model Action result was not atomically published");
+      }
+      pushAssistantText(stream, partial, completed.publication.result.content);
     } catch (error) {
       const reason = options.signal?.aborted ? "aborted" : "error";
       partial.stopReason = reason;
       partial.errorMessage = error instanceof Error ? error.message : String(error);
       stream.push({ type: "error", reason, error: partial });
       stream.end();
-    } finally {
-      options.signal?.removeEventListener("abort", abort);
     }
   })();
 
   return stream;
+}
+
+async function api<T>(path: string, init: RequestInit): Promise<T> {
+  const response = await fetch(path, init);
+  if (!response.ok) throw await typedProxyError(response);
+  const body = (await response.json()) as ApiSuccess<T>;
+  if (!body || typeof body !== "object" || !("data" in body)) {
+    throw new Error("Vellum returned an invalid Model Action response");
+  }
+  return body.data;
 }
 
 async function typedProxyError(response: Response): Promise<Error> {
@@ -91,22 +129,39 @@ async function typedProxyError(response: Response): Promise<Error> {
   return error;
 }
 
-function serializableOptions(options: ProxyStreamOptions) {
-  return {
-    temperature: options.temperature,
-    maxTokens: options.maxTokens,
-    reasoning: options.reasoning,
-    cacheRetention: options.cacheRetention,
-    sessionId: options.sessionId,
-    headers: options.headers,
-    metadata: options.metadata,
-    transport: options.transport,
-    thinkingBudgets: options.thinkingBudgets,
-    maxRetryDelayMs: options.maxRetryDelayMs,
-  };
+function activeWorkspaceId(): string {
+  if (typeof window === "undefined") {
+    throw new Error("A Vellum workspace is required before starting a Model Action");
+  }
+  const query = new URL(window.location.href).searchParams.get("workspace");
+  const stored = window.localStorage.getItem("vellum.active-workspace");
+  const workspaceId = query ?? stored;
+  if (!workspaceId?.match(/^workspace\.[a-f0-9-]{16,}$/)) {
+    throw new Error("Open or create a Vellum project before asking the musicology assistant");
+  }
+  return workspaceId;
 }
 
-function initialMessage(model: Model<string>): AssistantMessage {
+function latestOwnerIntent(context: Context): string {
+  const message = [...context.messages].reverse().find((candidate) => candidate.role === "user");
+  if (!message) throw new Error("A Model Action requires an Owner intent");
+  if (typeof message.content === "string" && message.content.trim()) return message.content.trim();
+  if (Array.isArray(message.content)) {
+    const text = message.content
+      .map((item) =>
+        typeof item === "object" && item !== null && "text" in item && typeof item.text === "string"
+          ? item.text
+          : ""
+      )
+      .join("\n")
+      .trim();
+    if (text) return text;
+  }
+  throw new Error("The latest Owner message contains no text that Vellum can disclose");
+}
+
+function initialMessage(): AssistantMessage {
+  const model = getModel("openai-codex", "gpt-5.3-codex");
   return {
     role: "assistant",
     stopReason: "stop",
@@ -114,108 +169,121 @@ function initialMessage(model: Model<string>): AssistantMessage {
     api: model.api,
     provider: model.provider,
     model: model.id,
-    usage: {
-      input: 0,
-      output: 0,
-      cacheRead: 0,
-      cacheWrite: 0,
-      totalTokens: 0,
-      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-    },
+    usage: emptyUsage(),
     timestamp: Date.now(),
   };
 }
 
-function applyProxyEvent(
-  event: ProxyAssistantMessageEvent,
-  partial: AssistantMessage
-): AssistantMessageEvent | undefined {
-  switch (event.type) {
-    case "start":
-      return { type: "start", partial };
-    case "text_start":
-      partial.content[event.contentIndex] = { type: "text", text: "" };
-      return { type: "text_start", contentIndex: event.contentIndex, partial };
-    case "text_delta": {
-      const content = partial.content[event.contentIndex];
-      if (content?.type !== "text") throw new Error("Received text_delta for non-text content");
-      content.text += event.delta;
-      return { type: "text_delta", contentIndex: event.contentIndex, delta: event.delta, partial };
-    }
-    case "text_end": {
-      const content = partial.content[event.contentIndex];
-      if (content?.type !== "text") throw new Error("Received text_end for non-text content");
-      content.textSignature = event.contentSignature;
-      return { type: "text_end", contentIndex: event.contentIndex, content: content.text, partial };
-    }
-    case "thinking_start":
-      partial.content[event.contentIndex] = { type: "thinking", thinking: "" };
-      return { type: "thinking_start", contentIndex: event.contentIndex, partial };
-    case "thinking_delta": {
-      const content = partial.content[event.contentIndex];
-      if (content?.type !== "thinking")
-        throw new Error("Received thinking_delta for non-thinking content");
-      content.thinking += event.delta;
-      return {
-        type: "thinking_delta",
-        contentIndex: event.contentIndex,
-        delta: event.delta,
-        partial,
-      };
-    }
-    case "thinking_end": {
-      const content = partial.content[event.contentIndex];
-      if (content?.type !== "thinking")
-        throw new Error("Received thinking_end for non-thinking content");
-      content.thinkingSignature = event.contentSignature;
-      return {
-        type: "thinking_end",
-        contentIndex: event.contentIndex,
-        content: content.thinking,
-        partial,
-      };
-    }
-    case "toolcall_start":
-      partial.content[event.contentIndex] = {
-        type: "toolCall",
-        id: event.id,
-        name: event.toolName,
-        arguments: {},
-        partialJson: "",
-      } as ToolCall & { partialJson: string };
-      return { type: "toolcall_start", contentIndex: event.contentIndex, partial };
-    case "toolcall_delta": {
-      const content = partial.content[event.contentIndex] as
-        | (ToolCall & { partialJson?: string })
-        | undefined;
-      if (content?.type !== "toolCall")
-        throw new Error("Received toolcall_delta for non-toolCall content");
-      content.partialJson = `${content.partialJson ?? ""}${event.delta}`;
-      content.arguments = parseStreamingJson(content.partialJson) || {};
-      partial.content[event.contentIndex] = { ...content };
-      return {
-        type: "toolcall_delta",
-        contentIndex: event.contentIndex,
-        delta: event.delta,
-        partial,
-      };
-    }
-    case "toolcall_end": {
-      const content = partial.content[event.contentIndex] as
-        | (ToolCall & { partialJson?: string })
-        | undefined;
-      if (content?.type !== "toolCall") return undefined;
-      delete content.partialJson;
-      return { type: "toolcall_end", contentIndex: event.contentIndex, toolCall: content, partial };
-    }
-    case "done":
-      partial.stopReason = event.reason;
-      partial.usage = event.usage;
-      return { type: "done", reason: event.reason, message: partial };
-    case "error":
-      partial.stopReason = event.reason;
-      partial.errorMessage = event.errorMessage;
-      partial.usage = event.usage;
-      return { type: "error", reason: event.reason, error: partial };
+function pushAssistantText(
+  stream: ReturnType<typeof createAssistantMessageEventStream>,
+  partial: AssistantMessage,
+  content: string
+): void {
+  stream.push({ type: "start", partial });
+  partial.content[0] = { type: "text", text: "" };
+  stream.push({ type: "text_start", contentIndex: 0, partial });
+  partial.content[0] = { type: "text", text: content };
+  stream.push({ type: "text_delta", contentIndex: 0, delta: content, partial });
+  stream.push({ type: "text_end", contentIndex: 0, content, partial });
+  partial.stopReason = "stop";
+  stream.push({ type: "done", reason: "stop", message: partial });
+  stream.end();
+}
+
+async function presentEgressDisclosure(disclosure: ModelEgressDisclosure): Promise<boolean> {
+  if (typeof document === "undefined" || typeof HTMLDialogElement === "undefined") {
+    return typeof window !== "undefined" ? window.confirm(disclosureSummary(disclosure)) : false;
   }
+  return await new Promise<boolean>((resolve) => {
+    const dialog = document.createElement("dialog");
+    dialog.className = "model-egress-disclosure";
+    const title = document.createElement("h2");
+    title.id = `model-egress-title-${disclosure.id}`;
+    title.textContent = "Authorize this one-time ChatGPT request?";
+    const summary = document.createElement("p");
+    summary.id = `model-egress-summary-${disclosure.id}`;
+    summary.textContent = disclosure.policyReason;
+    dialog.setAttribute("aria-labelledby", title.id);
+    dialog.setAttribute("aria-describedby", summary.id);
+    const details = document.createElement("dl");
+    appendDetail(details, "Destination", `${disclosure.provider} · ${disclosure.model}`);
+    appendDetail(details, "Purpose", disclosure.purpose.replaceAll("_", " "));
+    appendDetail(details, "Data", disclosure.dataClasses.join(", "));
+    appendDetail(
+      details,
+      "Exact Owner text",
+      disclosure.ownerIntent,
+      "model-egress-disclosure-intent"
+    );
+    appendDetail(
+      details,
+      "Source references",
+      disclosure.sourceReferences.length
+        ? disclosure.sourceReferences.map((reference) => reference.recordId).join(", ")
+        : "None"
+    );
+    appendDetail(details, "Provider tools", "None");
+    const actions = document.createElement("div");
+    actions.className = "model-egress-disclosure-actions";
+    const deny = document.createElement("button");
+    deny.type = "button";
+    deny.textContent = "Don't send";
+    const authorize = document.createElement("button");
+    authorize.type = "button";
+    authorize.textContent = "Authorize once";
+    authorize.disabled = disclosure.policyDecision !== "allow";
+    actions.append(deny, authorize);
+    dialog.append(title, summary, details, actions);
+    document.body.append(dialog);
+    const finish = (decision: boolean) => {
+      dialog.close();
+      dialog.remove();
+      resolve(decision);
+    };
+    deny.addEventListener("click", () => finish(false));
+    authorize.addEventListener("click", () => finish(true));
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(false);
+    });
+    dialog.showModal();
+  });
+}
+
+function appendDetail(
+  list: HTMLDListElement,
+  label: string,
+  value: string,
+  className?: string
+): void {
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const description = document.createElement("dd");
+  description.textContent = value;
+  if (className) description.className = className;
+  list.append(term, description);
+}
+
+function disclosureSummary(disclosure: ModelEgressDisclosure): string {
+  return [
+    "Authorize this one-time ChatGPT request?",
+    `Destination: ${disclosure.provider} · ${disclosure.model}`,
+    `Purpose: ${disclosure.purpose}`,
+    `Data: ${disclosure.dataClasses.join(", ")}`,
+    `Exact Owner text: ${disclosure.ownerIntent}`,
+    `Source references: ${disclosure.sourceReferences.map((item) => item.recordId).join(", ") || "none"}`,
+    "Provider tools: none",
+    disclosure.policyReason,
+  ].join("\n");
+}
+
+function emptyUsage() {
+  return {
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cacheWrite: 0,
+    totalTokens: 0,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+  };
 }

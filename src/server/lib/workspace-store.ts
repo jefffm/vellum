@@ -36,6 +36,7 @@ import {
   CommitmentConflictSchema,
   PolicyExceptionSchema,
   PerformanceInterpretationSchema,
+  ModelActionPublicationSchema,
   ModelActionSchema,
   GuidedWorkflowSchema,
   SourceTruthAssessmentSchema,
@@ -65,6 +66,7 @@ import type {
   CommitmentConflict,
   PolicyException,
   PerformanceInterpretation,
+  ModelActionPublication,
   ModelAction,
   GuidedWorkflow,
   SourceTruthAssessment,
@@ -79,6 +81,7 @@ import type {
   UploadSourceArtifact,
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
+import { modelActionResponseDigest, modelActionValidationDigest } from "./model-action-boundary.js";
 
 type WorkspaceStoreOptions = {
   rootDirectory?: string;
@@ -221,6 +224,7 @@ export class WorkspaceStore {
         }
       }
     }
+    this.recoverModelActionPublications(workspaceId, quarantinedPaths);
     const report = { workspaceId, linkedRecordIds, quarantinedPaths, staleLockRemoved };
     writeJsonAtomic(
       path.join(this.workspaceDirectory(workspaceId), ".recovery", "last-report.json"),
@@ -237,6 +241,48 @@ export class WorkspaceStore {
         this.recoverWorkspace(entry.name);
       } catch {
         // A damaged workspace remains isolated; opening it will return its precise validation error.
+      }
+    }
+  }
+
+  private recoverModelActionPublications(workspaceId: string, quarantinedPaths: string[]): void {
+    const directory = path.join(
+      this.workspaceDirectory(workspaceId),
+      "records",
+      "model-action-publications"
+    );
+    if (!existsSync(directory)) return;
+    const actions = this.listModelActions(workspaceId);
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+      const publicationPath = path.join(directory, entry.name);
+      try {
+        const publication = Value.Decode(
+          ModelActionPublicationSchema,
+          JSON.parse(readFileSync(publicationPath, "utf8"))
+        );
+        if (entry.name !== `${publication.id}.json`) {
+          throw new Error("Model Action publication filename does not match its identity");
+        }
+        const referencing = actions.filter(
+          (action) => action.publicationReference === publication.id
+        );
+        if (referencing.length !== 1) {
+          throw new Error("Model Action publication is not uniquely referenced");
+        }
+        const action = referencing[0]!;
+        const attempt = action.attempts.at(-1);
+        if (
+          action.status !== "completed" ||
+          !attempt ||
+          attempt.status !== "completed" ||
+          attempt.publicationReference !== publication.id
+        ) {
+          throw new Error("Model Action publication visibility link is incomplete");
+        }
+        this.assertModelActionPublicationBindings(workspaceId, action, attempt, publication);
+      } catch {
+        quarantinedPaths.push(this.quarantineRecoveryPath(workspaceId, publicationPath));
       }
     }
   }
@@ -1154,9 +1200,66 @@ export class WorkspaceStore {
   saveModelAction(workspaceId: string, action: ModelAction): ModelAction {
     const workspace = this.get(workspaceId);
     const decoded = Value.Decode(ModelActionSchema, action);
+    if (workspace.modelActionIds.includes(decoded.id)) {
+      const release = this.acquireWorkspaceLock(workspaceId);
+      try {
+        const existing = this.getModelAction(workspaceId, decoded.id);
+        if (existing.publicationReference) {
+          if (JSON.stringify(existing) !== JSON.stringify(decoded)) {
+            throw new ApiRouteError("A published Model Action is immutable", 409);
+          }
+          return existing;
+        }
+        if (decoded.publicationReference) {
+          throw new ApiRouteError(
+            "A Model Action publication can only become visible through atomic publication",
+            409
+          );
+        }
+        this.writeRecord(workspaceId, "model-actions", decoded.id, decoded);
+        return decoded;
+      } finally {
+        release();
+      }
+    }
+    if (decoded.publicationReference) {
+      throw new ApiRouteError("A new Model Action cannot claim an existing publication", 409);
+    }
     this.writeRecord(workspaceId, "model-actions", decoded.id, decoded);
     this.linkRecord(workspace, "modelActionIds", decoded.id);
     return decoded;
+  }
+
+  /**
+   * Persist one Model Action state transition only if the caller's complete
+   * source record is still current. The workspace lock makes the comparison
+   * and write a single claim, so competing run/withdraw/cancel requests fail
+   * closed instead of resurrecting stale authorization.
+   */
+  compareAndSwapModelAction(
+    workspaceId: string,
+    expected: ModelAction,
+    transition: (current: ModelAction) => ModelAction
+  ): ModelAction {
+    this.get(workspaceId);
+    const release = this.acquireWorkspaceLock(workspaceId);
+    try {
+      const current = this.getModelAction(workspaceId, expected.id);
+      if (digestValue(current) !== digestValue(expected)) {
+        throw new ApiRouteError("Model Action state changed before this transition", 409);
+      }
+      if (current.publicationReference) {
+        throw new ApiRouteError("A published Model Action is immutable", 409);
+      }
+      const updated = Value.Decode(ModelActionSchema, transition(structuredClone(current)));
+      if (updated.id !== current.id || updated.publicationReference) {
+        throw new ApiRouteError("Model Action transition changed immutable identity", 409);
+      }
+      this.writeRecord(workspaceId, "model-actions", updated.id, updated);
+      return updated;
+    } finally {
+      release();
+    }
   }
 
   getModelAction(workspaceId: string, modelActionId: string): ModelAction {
@@ -1172,6 +1275,106 @@ export class WorkspaceStore {
   listModelActions(workspaceId: string): ModelAction[] {
     const workspace = this.get(workspaceId);
     return workspace.modelActionIds.map((id) => this.getModelAction(workspaceId, id));
+  }
+
+  publishModelActionResult(
+    workspaceId: string,
+    actionId: string,
+    publication: ModelActionPublication
+  ): ModelActionPublication {
+    const decoded = Value.Decode(ModelActionPublicationSchema, publication);
+    validateRecordId(decoded.id, "model-publication");
+    this.get(workspaceId);
+    const release = this.acquireWorkspaceLock(workspaceId);
+    const publicationPath = this.modelActionPublicationPath(workspaceId, decoded.id);
+    let publicationWritten = false;
+    try {
+      const action = this.getModelAction(workspaceId, actionId);
+      const attempt = action.attempts.at(-1);
+      if (!attempt) throw new ApiRouteError("Model Action has no current attempt", 409);
+      if (action.publicationReference || attempt.publicationReference) {
+        throw new ApiRouteError("Model Action result publication is a replay", 409);
+      }
+      if (action.status !== "authorized" && action.status !== "running") {
+        throw new ApiRouteError("Model Action is not authorized for publication", 409);
+      }
+      if (attempt.status !== "authorized" && attempt.status !== "running") {
+        throw new ApiRouteError("Model Action attempt is not authorized for publication", 409);
+      }
+      this.assertModelActionPublicationBindings(workspaceId, action, attempt, decoded);
+      if (existsSync(publicationPath)) {
+        throw new ApiRouteError("Model Action result publication already exists", 409);
+      }
+
+      writeJsonAtomic(publicationPath, decoded);
+      publicationWritten = true;
+      const finishedAt = decoded.createdAt;
+      const attempts = [...action.attempts];
+      attempts[attempts.length - 1] = {
+        ...attempt,
+        status: "completed",
+        publicationReference: decoded.id,
+        finishedAt,
+      };
+      const completed = Value.Decode(ModelActionSchema, {
+        ...action,
+        status: "completed",
+        attempts,
+        publicationReference: decoded.id,
+        updatedAt: finishedAt,
+      });
+      writeJsonAtomic(
+        path.join(
+          this.workspaceDirectory(workspaceId),
+          "records",
+          "model-actions",
+          `${action.id}.json`
+        ),
+        completed
+      );
+      return decoded;
+    } catch (error) {
+      if (publicationWritten) rmSync(publicationPath, { force: true });
+      throw error;
+    } finally {
+      release();
+    }
+  }
+
+  getModelActionPublicationForAction(
+    workspaceId: string,
+    actionId: string
+  ): ModelActionPublication {
+    const action = this.getModelAction(workspaceId, actionId);
+    if (!action.publicationReference) {
+      throw new ApiRouteError(`Model Action result is not published: ${actionId}`, 404);
+    }
+    const matchingAttempts = action.attempts.filter(
+      (candidate) => candidate.publicationReference === action.publicationReference
+    );
+    const attempt = matchingAttempts[0];
+    if (
+      !attempt ||
+      matchingAttempts.length !== 1 ||
+      attempt !== action.attempts.at(-1) ||
+      action.status !== "completed" ||
+      attempt.status !== "completed"
+    ) {
+      throw new ApiRouteError(`Model Action publication link is inconsistent: ${actionId}`, 500);
+    }
+    const publicationPath = this.modelActionPublicationPath(
+      workspaceId,
+      action.publicationReference
+    );
+    if (!existsSync(publicationPath)) {
+      throw new ApiRouteError(`Model Action publication is missing: ${actionId}`, 500);
+    }
+    const publication = Value.Decode(
+      ModelActionPublicationSchema,
+      JSON.parse(readFileSync(publicationPath, "utf8"))
+    );
+    this.assertModelActionPublicationBindings(workspaceId, action, attempt, publication);
+    return publication;
   }
 
   saveGuidedWorkflow(workspaceId: string, workflow: GuidedWorkflow): GuidedWorkflow {
@@ -1610,6 +1813,7 @@ export class WorkspaceStore {
     workspaceId: string,
     originals: ModelActionInputVersion[]
   ): ModelActionInputVersion[] {
+    this.resolveModelActionInputVersions(workspaceId, originals);
     const workspace = this.get(workspaceId);
     return originals.map((original) => {
       if (original.recordId.startsWith("transcription.")) {
@@ -1666,6 +1870,26 @@ export class WorkspaceStore {
     });
   }
 
+  resolveModelActionInputVersions(
+    workspaceId: string,
+    inputs: ModelActionInputVersion[]
+  ): ModelActionInputVersion[] {
+    this.get(workspaceId);
+    return inputs.map((input) => {
+      const resolved = this.resolveModelActionInputRecord(workspaceId, input);
+      if (resolved.version !== input.version) {
+        throw new ApiRouteError(
+          `Model Action input version mismatch for ${input.recordId}: expected ${input.version}, current ${resolved.version}`,
+          409
+        );
+      }
+      if (input.sha256 && input.sha256 !== resolved.sha256) {
+        throw new ApiRouteError(`Model Action input digest mismatch for ${input.recordId}`, 409);
+      }
+      return { ...input };
+    });
+  }
+
   assertCanonicalResultReference(workspaceId: string, reference: string): void {
     if (reference.startsWith("transcription.")) {
       this.getScoreTranscription(workspaceId, reference);
@@ -1704,6 +1928,142 @@ export class WorkspaceStore {
         : undefined;
     }
     return false;
+  }
+
+  private resolveModelActionInputRecord(
+    workspaceId: string,
+    input: ModelActionInputVersion
+  ): { version: number; sha256: string } {
+    if (input.recordType === "source_artifact" && input.recordId.startsWith("source.")) {
+      const source = this.getSourceArtifact(workspaceId, input.recordId);
+      return { version: 1, sha256: source.sha256 };
+    }
+    if (input.recordType === "score_transcription" && input.recordId.startsWith("transcription.")) {
+      const record = this.getScoreTranscription(workspaceId, input.recordId);
+      return { version: record.version, sha256: digestValue(record) };
+    }
+    if (input.recordType === "normalized_score" && input.recordId.startsWith("score.")) {
+      const record = this.getNormalizedScore(workspaceId, input.recordId);
+      return { version: record.version, sha256: digestValue(record) };
+    }
+    if (input.recordType === "analysis_record" && input.recordId.startsWith("analysis.")) {
+      const record = this.getAnalysisRecord(workspaceId, input.recordId);
+      return { version: record.version, sha256: digestValue(record) };
+    }
+    if (input.recordType === "arrangement_score" && input.recordId.startsWith("arrangement.")) {
+      const record = this.getArrangementScore(workspaceId, input.recordId);
+      return { version: record.version ?? 1, sha256: digestValue(record) };
+    }
+    throw new ApiRouteError(
+      `Unsupported or mismatched Model Action input reference: ${input.recordType}/${input.recordId}`,
+      400
+    );
+  }
+
+  private assertModelActionPublicationBindings(
+    workspaceId: string,
+    action: ModelAction,
+    attempt: ModelAction["attempts"][number],
+    publication: ModelActionPublication
+  ): void {
+    const { disclosure, disclosureDigest, accessDecision, egressEnvelope, envelopeDigest } =
+      attempt;
+    if (!disclosure || !disclosureDigest || !accessDecision || !egressEnvelope || !envelopeDigest) {
+      throw new ApiRouteError("Model Action publication lacks its authorization bindings", 409);
+    }
+    if (action.publicationReference && action.publicationReference !== publication.id) {
+      throw new ApiRouteError("Model Action publication reference mismatch", 409);
+    }
+    const identityValues = [
+      publication.actionId,
+      publication.result.actionId,
+      publication.commit.actionId,
+      disclosure.actionId,
+      egressEnvelope.actionId,
+    ];
+    if (identityValues.some((id) => id !== action.id)) {
+      throw new ApiRouteError("Model Action publication action binding mismatch", 409);
+    }
+    const attemptValues = [
+      publication.attemptId,
+      publication.result.attemptId,
+      publication.commit.attemptId,
+      disclosure.attemptId,
+      egressEnvelope.attemptId,
+    ];
+    if (attemptValues.some((id) => id !== attempt.id)) {
+      throw new ApiRouteError("Model Action publication attempt binding mismatch", 409);
+    }
+    if (
+      disclosure.policyDecision !== "allow" ||
+      accessDecision.effectiveDecision !== "authorized" ||
+      accessDecision.decision !== "authorize"
+    ) {
+      throw new ApiRouteError("Model Action publication is not Owner-authorized", 409);
+    }
+    if (
+      digestValue(disclosure) !== disclosureDigest ||
+      accessDecision.disclosureDigest !== disclosureDigest ||
+      egressEnvelope.disclosureDigest !== disclosureDigest ||
+      egressEnvelope.accessDecisionId !== accessDecision.id
+    ) {
+      throw new ApiRouteError("Model Action publication disclosure binding mismatch", 409);
+    }
+    if (
+      digestValue(egressEnvelope) !== envelopeDigest ||
+      publication.result.envelopeDigest !== envelopeDigest ||
+      publication.commit.envelopeDigest !== envelopeDigest
+    ) {
+      throw new ApiRouteError("Model Action publication envelope binding mismatch", 409);
+    }
+    if (
+      !sameModelActionInputs(disclosure.sourceReferences, attempt.inputVersions) ||
+      !sameModelActionInputs(egressEnvelope.inputVersions, attempt.inputVersions)
+    ) {
+      throw new ApiRouteError("Model Action publication input binding mismatch", 409);
+    }
+    this.resolveModelActionInputVersions(workspaceId, attempt.inputVersions);
+    if (
+      egressEnvelope.provider !== publication.result.provider ||
+      egressEnvelope.model !== publication.result.model
+    ) {
+      throw new ApiRouteError("Model Action publication provider binding mismatch", 409);
+    }
+    if (
+      attempt.completedLocalToolResults.length !== 0 ||
+      egressEnvelope.toolCapabilities.length !== 0 ||
+      publication.commit.toolResultDigests.length !== 0
+    ) {
+      throw new ApiRouteError("Model Action publication exceeds its tool capability binding", 409);
+    }
+    if (publication.commit.canonicalResultDigest !== digestValue(publication.result)) {
+      throw new ApiRouteError("Model Action publication canonical result digest mismatch", 409);
+    }
+    const response = {
+      envelopeDigest,
+      provider: publication.result.provider,
+      model: publication.result.model,
+      providerResponseId: publication.result.providerResponseId,
+      content: publication.result.content,
+    };
+    if (publication.commit.responseDigest !== modelActionResponseDigest(response)) {
+      throw new ApiRouteError("Model Action publication provider response digest mismatch", 409);
+    }
+    if (
+      publication.commit.validationDigest !==
+      modelActionValidationDigest(egressEnvelope, envelopeDigest)
+    ) {
+      throw new ApiRouteError("Model Action publication validation digest mismatch", 409);
+    }
+  }
+
+  private modelActionPublicationPath(workspaceId: string, publicationId: string): string {
+    return path.join(
+      this.workspaceDirectory(workspaceId),
+      "records",
+      "model-action-publications",
+      `${validateRecordId(publicationId, "model-publication")}.json`
+    );
   }
 
   saveArrangementBranch(workspaceId: string, branch: ArrangementBranch): ArrangementBranch {
@@ -2098,6 +2458,23 @@ function latestVersion(
   }
   const { sha256: _obsoleteHash, ...identity } = original;
   return { ...identity, recordId: latest.id, version: latest.version };
+}
+
+function sameModelActionInputs(
+  left: ModelActionInputVersion[],
+  right: ModelActionInputVersion[]
+): boolean {
+  const canonical = (values: ModelActionInputVersion[]) =>
+    JSON.stringify(
+      [...values].sort(
+        (first, second) =>
+          first.recordId.localeCompare(second.recordId) ||
+          first.recordType.localeCompare(second.recordType) ||
+          first.version - second.version ||
+          (first.sha256 ?? "").localeCompare(second.sha256 ?? "")
+      )
+    );
+  return canonical(left) === canonical(right);
 }
 
 function validateRhythmicReferences(

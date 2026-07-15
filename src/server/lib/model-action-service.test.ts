@@ -2,18 +2,25 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ModelActionInputVersion } from "../../lib/music-domain.js";
+import type { ModelActionInputVersion, ModelEgressEnvelope } from "../../lib/music-domain.js";
+import type { ModelActionProviderResponse } from "./model-action-boundary.js";
 import { ModelActionService } from "./model-action-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
-describe("ModelActionService", () => {
+describe("server-governed ModelActionService", () => {
   let store: WorkspaceStore;
   let service: ModelActionService;
   let workspaceId: string;
   let sequence: number;
-  const original: ModelActionInputVersion[] = [
-    { recordType: "normalized_score", recordId: "score.1111111111111111", version: 1 },
-  ];
+  let provider: ReturnType<
+    typeof vi.fn<
+      (
+        envelope: ModelEgressEnvelope,
+        digest: string,
+        signal?: AbortSignal
+      ) => Promise<ModelActionProviderResponse>
+    >
+  >;
 
   beforeEach(async () => {
     sequence = 0;
@@ -23,144 +30,299 @@ describe("ModelActionService", () => {
       now: () => new Date("2026-07-11T12:00:00.000Z"),
     });
     workspaceId = store.create({ title: "Action fixture" }).id;
+    vi.spyOn(store, "resolveModelActionInputVersions").mockImplementation((_workspaceId, values) =>
+      values.map((value) => ({ ...value }))
+    );
     vi.spyOn(store, "resolveCurrentInputVersions").mockImplementation((_workspaceId, values) =>
       values.map((value) => ({ ...value }))
     );
-    vi.spyOn(store, "assertCanonicalResultReference").mockImplementation(() => undefined);
+    provider = vi.fn(async (envelope, envelopeDigest) => ({
+      envelopeDigest,
+      provider: envelope.provider,
+      model: envelope.model,
+      providerResponseId: "provider-response.fake",
+      content: "A bounded musicological answer.",
+    }));
     service = new ModelActionService({
       store,
+      executeProvider: provider,
       createId: () => `${(++sequence).toString(16).padStart(16, "0")}`,
-      now: () => new Date(`2026-07-11T12:00:${sequence.toString().padStart(2, "0")}.000Z`),
+      now: () => new Date(`2026-07-11T12:00:${String(sequence).padStart(2, "0")}.000Z`),
     });
   });
 
-  it("persists exact inputs and returns the same action at an idempotency boundary", () => {
+  it("mints a fixed destination disclosure and preserves an idempotent intent-only request", () => {
     const input = {
-      kind: "musicological_analysis",
-      intent: "Identify contrapuntal entries",
-      inputVersions: original,
-      lastConfirmedBoundary: "Normalized Score v1",
+      kind: "interactive_guidance_v1" as const,
+      intent: "Identify the contrapuntal entries",
       idempotencyKey: "same-request-boundary",
     };
     const first = service.create(workspaceId, input);
     const duplicate = service.create(workspaceId, input);
 
     expect(duplicate.id).toBe(first.id);
-    expect(store.listModelActions(workspaceId)).toHaveLength(1);
+    expect(first).toMatchObject({ status: "awaiting_authorization", originalInputVersions: [] });
     expect(first.attempts[0]).toMatchObject({
-      status: "running",
-      inputVersions: original,
-      lastConfirmedBoundary: "Normalized Score v1",
+      status: "awaiting_authorization",
+      disclosure: {
+        provider: "openai-codex",
+        model: "gpt-5.3-codex",
+        purpose: "interactive_musicological_guidance",
+        dataClasses: ["owner_intent"],
+        sourceReferences: [],
+        toolCapabilities: [],
+        policyDecision: "allow",
+      },
     });
     expect(() => service.create(workspaceId, { ...input, intent: "A different request" })).toThrow(
       /reused for different inputs/
     );
   });
 
-  it("keeps partial output diagnostic and commits canonical state only after validation", () => {
+  it("defaults every canonical record or source-content request to denied egress", () => {
+    const source: ModelActionInputVersion = {
+      recordType: "source_artifact",
+      recordId: "source.1111111111111111",
+      version: 1,
+    };
     const action = service.create(workspaceId, {
-      kind: "arrangement_generation",
-      intent: "Create a faithful reduction",
-      inputVersions: original,
-      lastConfirmedBoundary: "Analysis Record v1",
+      kind: "interactive_guidance_v1",
+      intent: "Read the source",
+      inputVersions: [source],
     });
-    service.progress(workspaceId, action.id, {
-      completedLocalToolResults: [{ toolName: "theory", resultReference: "tool-result.1" }],
-      partialProgressSummary: "Generated two bars",
-      diagnosticPartialOutput: "Bearer secret-token and api_key=sk-1234567890",
+    const attempt = action.attempts[0]!;
+    expect(attempt.disclosure).toMatchObject({
+      dataClasses: ["owner_intent", "canonical_workspace_record", "source_content"],
+      policyDecision: "deny",
     });
-    const interrupted = service.interrupt(
+
+    const denied = service.authorize(
       workspaceId,
       action.id,
-      "network failed with token=secret-token"
+      "authorize",
+      attempt.disclosureDigest!
+    );
+    expect(denied.status).toBe("denied");
+    expect(denied.attempts[0]!.egressEnvelope).toBeUndefined();
+    expect(provider).not.toHaveBeenCalled();
+  });
+
+  it("publishes one validated provider result and Result Commit as an atomic unit", async () => {
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Explain this cadence",
+    });
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    const result = await service.run(
+      workspaceId,
+      action.id,
+      authorized.attempts[0]!.envelopeDigest!
     );
 
-    expect(interrupted.status).toBe("interrupted");
-    expect(interrupted.attempts[0]).toMatchObject({
-      partialProgressSummary: "Generated two bars",
-      interruptionReason: "network failed with token=[redacted]",
+    expect(result.action).toMatchObject({
+      status: "completed",
+      publicationReference: result.publication.id,
     });
-    expect(interrupted.attempts[0]).not.toHaveProperty("canonicalResultReference");
-    expect(JSON.stringify(interrupted)).not.toContain("secret-token");
-    expect(JSON.stringify(interrupted)).not.toContain("sk-1234567890");
-  });
-
-  it("defaults retry to current inputs and records a difference without duplicating state", () => {
-    const action = service.create(workspaceId, {
-      kind: "analysis",
-      intent: "Analyze texture",
-      inputVersions: original,
-      lastConfirmedBoundary: "Score v1",
+    expect(result.publication.result.content).toBe("A bounded musicological answer.");
+    expect(result.publication.commit).toMatchObject({
+      actionId: action.id,
+      attemptId: action.attempts[0]!.id,
+      toolResultDigests: [],
     });
-    service.interrupt(workspaceId, action.id, "provider expired");
-    const retried = service.retry(workspaceId, action.id, "current_version", [
-      { ...original[0]!, version: 2 },
-    ]);
-
-    expect(retried.attempts).toHaveLength(2);
-    expect(retried.attempts[1]).toMatchObject({
-      number: 2,
-      mode: "current_version",
-      status: "running",
-      inputDifferenceSummary: "score.1111111111111111: v1 -> v2",
-    });
-    const completed = service.complete(workspaceId, action.id, "analysis.2222222222222222");
-    expect(completed.status).toBe("completed");
-    expect(completed.attempts[1]?.canonicalResultReference).toBe("analysis.2222222222222222");
-    expect(() => service.retry(workspaceId, action.id, "current_version", original)).toThrow(
-      /Only an interrupted/
+    expect(store.getModelActionPublicationForAction(workspaceId, action.id)).toEqual(
+      result.publication
     );
+    await expect(
+      service.run(workspaceId, action.id, authorized.attempts[0]!.envelopeDigest!)
+    ).rejects.toThrow(/not currently authorized/);
   });
 
-  it("retries the original snapshot on a separately persisted Arrangement Branch", () => {
+  it("rejects forged disclosure and envelope digests before the provider is called", async () => {
     const action = service.create(workspaceId, {
-      kind: "arrangement",
-      intent: "Preserve the principal voice",
-      inputVersions: original,
-      lastConfirmedBoundary: "Score v1",
-    });
-    service.interrupt(workspaceId, action.id, "logged out");
-    const retried = service.retry(workspaceId, action.id, "original_snapshot_branch", [
-      { ...original[0]!, version: 2 },
-    ]);
-    const branchId = retried.attempts[1]?.arrangementBranchId;
-
-    expect(branchId).toBeDefined();
-    expect(store.getArrangementBranch(workspaceId, branchId!)).toMatchObject({
-      rootInputVersions: original,
-      createdByModelActionId: action.id,
-    });
-  });
-
-  it("cancels idempotently and never allows cancellation of committed work", () => {
-    const running = service.create(workspaceId, {
-      kind: "analysis",
+      kind: "interactive_guidance_v1",
       intent: "Analyze",
-      inputVersions: original,
-      lastConfirmedBoundary: "Score v1",
     });
-    expect(service.cancel(workspaceId, running.id).status).toBe("cancelled");
-    expect(service.cancel(workspaceId, running.id).status).toBe("cancelled");
+    expect(() => service.authorize(workspaceId, action.id, "authorize", "0".repeat(64))).toThrow(
+      /digest mismatch/
+    );
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    await expect(service.run(workspaceId, action.id, "f".repeat(64))).rejects.toThrow(
+      /not currently authorized/
+    );
+    expect(provider).not.toHaveBeenCalled();
+    expect(authorized.status).toBe("authorized");
+  });
 
-    const interrupted = service.create(workspaceId, {
-      kind: "analysis",
-      intent: "Interrupt then cancel",
-      inputVersions: original,
-      lastConfirmedBoundary: "Score v1",
+  it("withdraws authorization without publishing even when a provider response is in flight", async () => {
+    let release!: () => void;
+    provider.mockImplementation(
+      (envelope, envelopeDigest) =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              envelopeDigest,
+              provider: envelope.provider,
+              model: envelope.model,
+              providerResponseId: "provider-response.late",
+              content: "Too late",
+            });
+        })
+    );
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Analyze",
     });
-    service.interrupt(workspaceId, interrupted.id, "network failure");
-    expect(service.cancel(workspaceId, interrupted.id)).toMatchObject({
-      status: "cancelled",
-      attempts: [expect.objectContaining({ status: "cancelled" })],
-    });
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    const pending = service.run(workspaceId, action.id, authorized.attempts[0]!.envelopeDigest!);
+    service.authorize(workspaceId, action.id, "withdraw", action.attempts[0]!.disclosureDigest!);
+    release();
 
-    const complete = service.create(workspaceId, {
-      kind: "analysis",
-      intent: "Analyze again",
-      inputVersions: original,
-      lastConfirmedBoundary: "Score v1",
+    await expect(pending).rejects.toThrow(/authorization changed/);
+    const withdrawn = store.getModelAction(workspaceId, action.id);
+    expect(withdrawn.status).toBe("interrupted");
+    expect(withdrawn.attempts[0]!.lastConfirmedBoundary).toMatch(/dispatch began/i);
+    expect(withdrawn.attempts[0]!.lastConfirmedBoundary).not.toMatch(/no provider data sent/i);
+    expect(() => store.getModelActionPublicationForAction(workspaceId, action.id)).toThrow(
+      /not published/
+    );
+  });
+
+  it("allows exactly one authorized-to-running provider claim", async () => {
+    let release!: () => void;
+    provider.mockImplementation(
+      (envelope, envelopeDigest) =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              envelopeDigest,
+              provider: envelope.provider,
+              model: envelope.model,
+              providerResponseId: "provider-response.single-claim",
+              content: "One response",
+            });
+        })
+    );
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Analyze",
     });
-    service.complete(workspaceId, complete.id, "analysis.3333333333333333");
-    expect(() => service.cancel(workspaceId, complete.id)).toThrow(/cannot be cancelled/);
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    const envelopeDigest = authorized.attempts[0]!.envelopeDigest!;
+
+    const first = service.run(workspaceId, action.id, envelopeDigest);
+    await expect(service.run(workspaceId, action.id, envelopeDigest)).rejects.toThrow(
+      /not currently authorized/
+    );
+    expect(provider).toHaveBeenCalledTimes(1);
+    release();
+    await expect(first).resolves.toMatchObject({ action: { status: "completed" } });
+  });
+
+  it("propagates request cancellation and leaves no published result", async () => {
+    provider.mockImplementation(
+      (_envelope, _envelopeDigest, signal) =>
+        new Promise((_resolve, reject) => {
+          signal?.addEventListener(
+            "abort",
+            () => reject(new DOMException("Model Action request aborted", "AbortError")),
+            { once: true }
+          );
+        })
+    );
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Analyze",
+    });
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    const controller = new AbortController();
+    const pending = service.run(
+      workspaceId,
+      action.id,
+      authorized.attempts[0]!.envelopeDigest!,
+      controller.signal
+    );
+
+    controller.abort();
+
+    await expect(pending).rejects.toThrow(/aborted/i);
+    expect(store.getModelAction(workspaceId, action.id).status).toBe("interrupted");
+    expect(() => store.getModelActionPublicationForAction(workspaceId, action.id)).toThrow(
+      /not published/i
+    );
+  });
+
+  it("interrupts safely on a mismatched or secret-bearing provider response", async () => {
+    provider.mockImplementation(async (envelope) => ({
+      envelopeDigest: "0".repeat(64),
+      provider: envelope.provider,
+      model: envelope.model,
+      providerResponseId: "provider-response.bad",
+      content: "api_key=sk-secret-token",
+    }));
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Analyze",
+    });
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    await expect(
+      service.run(workspaceId, action.id, authorized.attempts[0]!.envelopeDigest!)
+    ).rejects.toThrow(/does not match/);
+    const interrupted = store.getModelAction(workspaceId, action.id);
+    expect(interrupted.status).toBe("interrupted");
+    expect(JSON.stringify(interrupted)).not.toContain("sk-secret-token");
+    expect(() => store.getModelActionPublicationForAction(workspaceId, action.id)).toThrow(
+      /not published/
+    );
+  });
+
+  it("retries with a fresh disclosure and never reuses the old envelope", () => {
+    const action = service.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: "Analyze",
+    });
+    const authorized = service.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    service.interrupt(workspaceId, action.id, "Provider disconnected");
+    const retried = service.retry(workspaceId, action.id);
+    expect(retried).toMatchObject({ status: "awaiting_authorization" });
+    expect(retried.attempts).toHaveLength(2);
+    expect(retried.attempts[1]!.disclosureDigest).not.toBe(
+      authorized.attempts[0]!.disclosureDigest
+    );
+    expect(retried.attempts[1]).not.toHaveProperty("egressEnvelope");
   });
 });

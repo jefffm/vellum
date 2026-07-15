@@ -1393,3 +1393,60 @@ chat-panel > div > div:has(agent-interface) {
     grid-template-columns: 1fr;
   }
 }
+.model-egress-disclosure {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(90vh, 48rem);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--color-border, #6d5f4b) 70%, transparent);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  color: var(--color-text, #211d18);
+  background: var(--color-surface, #fffaf0);
+  box-shadow: 0 1.25rem 4rem rgb(30 24 16 / 28%);
+}
+
+.model-egress-disclosure::backdrop {
+  background: rgb(25 20 15 / 48%);
+  backdrop-filter: blur(2px);
+}
+
+.model-egress-disclosure h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.model-egress-disclosure dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 0.9rem;
+  margin: 1rem 0;
+}
+
+.model-egress-disclosure dt {
+  font-weight: 700;
+}
+
+.model-egress-disclosure dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.model-egress-disclosure-intent {
+  max-height: 12rem;
+  overflow: auto;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-border, #6d5f4b) 55%, transparent);
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--color-surface, #fffaf0) 85%, white);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.model-egress-disclosure-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}

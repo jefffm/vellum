@@ -3,45 +3,63 @@ import type {
   ModelAction,
   ModelActionAttempt,
   ModelActionInputVersion,
+  ModelActionPublication,
+  ModelEgressEnvelope,
 } from "../../lib/music-domain.js";
+import {
+  authorizeModelActionEgress,
+  buildModelActionPublication,
+  prepareModelActionEgress,
+  type ModelActionProviderResponse,
+} from "./model-action-boundary.js";
+import { executeServerModelAction } from "./model-action-provider.js";
 import { ApiRouteError } from "./create-route.js";
 import { redactSecretText } from "./secret-redaction.js";
 import { WorkspaceStore } from "./workspace-store.js";
+
+type ModelActionProviderExecutor = (
+  envelope: ModelEgressEnvelope,
+  envelopeDigest: string,
+  signal?: AbortSignal
+) => Promise<ModelActionProviderResponse>;
 
 type ModelActionServiceOptions = {
   store?: WorkspaceStore;
   now?: () => Date;
   createId?: () => string;
+  executeProvider?: ModelActionProviderExecutor;
 };
 
 export type CreateModelAction = {
-  kind: string;
+  kind: "interactive_guidance_v1";
   intent: string;
-  inputVersions: ModelActionInputVersion[];
-  lastConfirmedBoundary: string;
+  inputVersions?: ModelActionInputVersion[];
   idempotencyKey?: string;
-};
-
-export type ModelActionProgress = {
-  completedLocalToolResults?: ModelActionAttempt["completedLocalToolResults"];
-  partialProgressSummary?: string;
-  diagnosticPartialOutput?: string;
-  lastConfirmedBoundary?: string;
 };
 
 export class ModelActionService {
   private readonly store: WorkspaceStore;
   private readonly now: () => Date;
   private readonly createId: () => string;
+  private readonly executeProvider: ModelActionProviderExecutor;
 
   constructor(options: ModelActionServiceOptions = {}) {
     this.store = options.store ?? new WorkspaceStore();
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
+    this.executeProvider = options.executeProvider ?? executeServerModelAction;
   }
 
   create(workspaceId: string, input: CreateModelAction): ModelAction {
-    this.store.resolveCurrentInputVersions(workspaceId, input.inputVersions);
+    if (input.kind !== "interactive_guidance_v1") {
+      throw new ApiRouteError("Unknown server-governed Model Action policy", 400);
+    }
+    const intent = redactSecretText(input.intent).trim();
+    if (!intent) throw new ApiRouteError("A bounded Owner intent is required", 400);
+    const inputVersions = this.store.resolveModelActionInputVersions(
+      workspaceId,
+      input.inputVersions ?? []
+    );
     const idempotencyKey = createHash("sha256")
       .update(input.idempotencyKey ?? randomUUID())
       .digest("hex");
@@ -50,9 +68,9 @@ export class ModelActionService {
       .find((action) => action.idempotencyKey === idempotencyKey);
     if (existing) {
       const sameRequest =
-        existing.kind === redactSecretText(input.kind) &&
-        existing.intent === redactSecretText(input.intent) &&
-        JSON.stringify(existing.originalInputVersions) === JSON.stringify(input.inputVersions);
+        existing.kind === input.kind &&
+        existing.intent === intent &&
+        JSON.stringify(existing.originalInputVersions) === JSON.stringify(inputVersions);
       if (!sameRequest) {
         throw new ApiRouteError(
           "Model Action idempotency key was reused for different inputs",
@@ -61,15 +79,17 @@ export class ModelActionService {
       }
       return existing;
     }
+
+    const actionId = `model-action.${this.createId()}`;
+    const attempt = this.newAttempt(actionId, 1, "initial", intent, inputVersions);
     const timestamp = this.now().toISOString();
-    const attempt = this.newAttempt(1, "initial", input.inputVersions, input.lastConfirmedBoundary);
     const action: ModelAction = {
-      id: `model-action.${this.createId()}`,
-      kind: redactSecretText(input.kind),
-      intent: redactSecretText(input.intent),
+      id: actionId,
+      kind: input.kind,
+      intent,
       idempotencyKey,
-      status: "running",
-      originalInputVersions: input.inputVersions,
+      status: "awaiting_authorization",
+      originalInputVersions: inputVersions,
       attempts: [attempt],
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -77,36 +97,144 @@ export class ModelActionService {
     return this.store.saveModelAction(workspaceId, action);
   }
 
-  progress(workspaceId: string, actionId: string, progress: ModelActionProgress): ModelAction {
-    return this.updateRunning(workspaceId, actionId, (attempt) => ({
-      ...attempt,
-      completedLocalToolResults: (
-        progress.completedLocalToolResults ?? attempt.completedLocalToolResults
-      ).map((result) => ({
-        toolName: redactSecretText(result.toolName),
-        resultReference: redactSecretText(result.resultReference),
-      })),
-      partialProgressSummary: cleanOptional(progress.partialProgressSummary),
-      diagnosticPartialOutput: cleanOptional(progress.diagnosticPartialOutput),
-      lastConfirmedBoundary: progress.lastConfirmedBoundary
-        ? redactSecretText(progress.lastConfirmedBoundary)
-        : attempt.lastConfirmedBoundary,
-    }));
-  }
+  authorize(
+    workspaceId: string,
+    actionId: string,
+    decision: "authorize" | "deny" | "withdraw",
+    disclosureDigest: string
+  ): ModelAction {
+    const action = this.store.getModelAction(workspaceId, actionId);
+    const attempt = action.attempts.at(-1)!;
+    if (!attempt.disclosure || !attempt.disclosureDigest) {
+      throw new ApiRouteError("Model Action has no server-minted egress disclosure", 409);
+    }
+    if (attempt.disclosureDigest !== disclosureDigest) {
+      throw new ApiRouteError("Model Action disclosure digest mismatch", 409);
+    }
+    if (decision === "withdraw") {
+      if (!["authorized", "running"].includes(action.status)) {
+        throw new ApiRouteError("Only an active authorization can be withdrawn", 409);
+      }
+    } else if (action.status !== "awaiting_authorization") {
+      throw new ApiRouteError("Model Action authorization is no longer pending", 409);
+    }
 
-  interrupt(workspaceId: string, actionId: string, reason: string): ModelAction {
-    return this.finishAttempt(workspaceId, actionId, "interrupted", {
-      interruptionReason: redactSecretText(reason),
+    const authorization = authorizeModelActionEgress({
+      actionId: action.id,
+      attemptId: attempt.id,
+      createId: this.createId,
+      now: this.now,
+      ownerIntent: action.intent,
+      inputVersions: attempt.inputVersions,
+      disclosure: attempt.disclosure,
+      disclosureDigest,
+      decision,
+    });
+    const dispatched = action.status === "running";
+    const status =
+      authorization.accessDecision.effectiveDecision === "authorized"
+        ? "authorized"
+        : dispatched
+          ? "interrupted"
+          : "denied";
+    return this.saveCurrentAttempt(workspaceId, action, status, {
+      ...attempt,
+      status,
+      accessDecision: authorization.accessDecision,
+      egressEnvelope: authorization.egressEnvelope ?? attempt.egressEnvelope,
+      envelopeDigest: authorization.envelopeDigest ?? attempt.envelopeDigest,
+      finishedAt: status === "authorized" ? undefined : this.now().toISOString(),
+      interruptionReason: dispatched
+        ? "Owner withdrew authorization after provider dispatch; no result was published"
+        : undefined,
+      lastConfirmedBoundary:
+        status === "authorized"
+          ? "Owner authorized one exact server-minted Egress Envelope"
+          : dispatched
+            ? "Provider dispatch began; authorization was withdrawn before publication"
+            : "No provider data sent; egress denied or withdrawn",
     });
   }
 
-  complete(workspaceId: string, actionId: string, canonicalResultReference: string): ModelAction {
-    if (!canonicalResultReference.trim()) {
-      throw new ApiRouteError("A validated canonical result reference is required", 400);
+  async run(
+    workspaceId: string,
+    actionId: string,
+    envelopeDigest: string,
+    signal?: AbortSignal
+  ): Promise<{ action: ModelAction; publication: ModelActionPublication }> {
+    const action = this.store.getModelAction(workspaceId, actionId);
+    const attempt = action.attempts.at(-1)!;
+    if (
+      action.status !== "authorized" ||
+      attempt.status !== "authorized" ||
+      !attempt.egressEnvelope ||
+      attempt.envelopeDigest !== envelopeDigest ||
+      attempt.accessDecision?.effectiveDecision !== "authorized"
+    ) {
+      throw new ApiRouteError("Model Action Egress Envelope is not currently authorized", 409);
     }
-    this.store.assertCanonicalResultReference(workspaceId, canonicalResultReference);
-    return this.finishAttempt(workspaceId, actionId, "completed", {
-      canonicalResultReference: redactSecretText(canonicalResultReference),
+    const claimed = this.saveCurrentAttempt(workspaceId, action, "running", {
+      ...attempt,
+      status: "running",
+      lastConfirmedBoundary:
+        "Provider dispatch began; no canonical result has been validated or published",
+    });
+    const claimedAttempt = claimed.attempts.at(-1)!;
+
+    try {
+      const response = await this.executeProvider(
+        claimedAttempt.egressEnvelope!,
+        envelopeDigest,
+        signal
+      );
+      const current = this.store.getModelAction(workspaceId, actionId);
+      const currentAttempt = current.attempts.at(-1)!;
+      if (
+        current.status !== "running" ||
+        currentAttempt.envelopeDigest !== envelopeDigest ||
+        currentAttempt.accessDecision?.effectiveDecision !== "authorized"
+      ) {
+        throw new ApiRouteError(
+          "Model Action authorization changed before publication; no result was committed",
+          409
+        );
+      }
+      const publication = buildModelActionPublication({
+        actionId,
+        attemptId: currentAttempt.id,
+        createId: this.createId,
+        now: this.now,
+        envelope: currentAttempt.egressEnvelope!,
+        envelopeDigest,
+        response,
+      });
+      this.store.publishModelActionResult(workspaceId, actionId, publication);
+      return {
+        action: this.store.getModelAction(workspaceId, actionId),
+        publication: this.store.getModelActionPublicationForAction(workspaceId, actionId),
+      };
+    } catch (error) {
+      const current = this.store.getModelAction(workspaceId, actionId);
+      if (current.status === "running") {
+        this.interrupt(workspaceId, actionId, safeError(error));
+      }
+      if (error instanceof ApiRouteError) throw error;
+      throw new ApiRouteError(safeError(error), 502);
+    }
+  }
+
+  interrupt(workspaceId: string, actionId: string, reason: string): ModelAction {
+    const action = this.store.getModelAction(workspaceId, actionId);
+    if (!["awaiting_authorization", "authorized", "running"].includes(action.status)) {
+      throw new ApiRouteError("Model Action is not active", 409);
+    }
+    const attempt = action.attempts.at(-1)!;
+    return this.saveCurrentAttempt(workspaceId, action, "interrupted", {
+      ...attempt,
+      status: "interrupted",
+      interruptionReason: redactSecretText(reason),
+      finishedAt: this.now().toISOString(),
+      lastConfirmedBoundary: "No canonical Model Action result published",
     });
   }
 
@@ -116,21 +244,13 @@ export class ModelActionService {
       throw new ApiRouteError("A completed Model Action cannot be cancelled", 409);
     }
     if (action.status === "cancelled") return action;
-    if (action.status === "interrupted") {
-      const attempts = [...action.attempts];
-      attempts[attempts.length - 1] = {
-        ...attempts[attempts.length - 1]!,
-        status: "cancelled",
-        finishedAt: this.now().toISOString(),
-      };
-      return this.store.saveModelAction(workspaceId, {
-        ...action,
-        status: "cancelled",
-        attempts,
-        updatedAt: this.now().toISOString(),
-      });
-    }
-    return this.finishAttempt(workspaceId, actionId, "cancelled", {});
+    const attempt = action.attempts.at(-1)!;
+    return this.saveCurrentAttempt(workspaceId, action, "cancelled", {
+      ...attempt,
+      status: "cancelled",
+      finishedAt: this.now().toISOString(),
+      lastConfirmedBoundary: "Model Action cancelled; no new provider result published",
+    });
   }
 
   retry(
@@ -140,20 +260,24 @@ export class ModelActionService {
     currentInputVersions?: ModelActionInputVersion[]
   ): ModelAction {
     const action = this.store.getModelAction(workspaceId, actionId);
-    if (action.status !== "interrupted") {
-      throw new ApiRouteError("Only an interrupted Model Action can be retried", 409);
+    if (!["interrupted", "denied"].includes(action.status)) {
+      throw new ApiRouteError("Only an interrupted or denied Model Action can be retried", 409);
     }
     const current =
       currentInputVersions ??
       this.store.resolveCurrentInputVersions(workspaceId, action.originalInputVersions);
     const selected = mode === "current_version" ? current : action.originalInputVersions;
-    const difference = inputDifference(action.originalInputVersions, current);
+    if (mode === "original_snapshot_branch" && selected.length === 0) {
+      throw new ApiRouteError("An intent-only Model Action has no snapshot to branch", 409);
+    }
     const attempt = this.newAttempt(
+      action.id,
       action.attempts.length + 1,
       mode,
-      selected,
-      action.attempts.at(-1)?.lastConfirmedBoundary ?? "No canonical result committed"
+      action.intent,
+      selected
     );
+    const difference = inputDifference(action.originalInputVersions, current);
     if (difference) attempt.inputDifferenceSummary = difference;
     if (mode === "original_snapshot_branch") {
       const branchId = `branch.${this.createId()}`;
@@ -167,79 +291,59 @@ export class ModelActionService {
         createdAt: this.now().toISOString(),
       });
     }
-    const updated: ModelAction = {
-      ...action,
-      status: "running",
-      attempts: [...action.attempts, attempt],
+    return this.store.compareAndSwapModelAction(workspaceId, action, (currentAction) => ({
+      ...currentAction,
+      status: "awaiting_authorization",
+      attempts: [...currentAction.attempts, attempt],
       updatedAt: this.now().toISOString(),
-    };
-    return this.store.saveModelAction(workspaceId, updated);
+    }));
   }
 
   private newAttempt(
+    actionId: string,
     number: number,
     mode: ModelActionAttempt["mode"],
-    inputVersions: ModelActionInputVersion[],
-    lastConfirmedBoundary: string
+    intent: string,
+    inputVersions: ModelActionInputVersion[]
   ): ModelActionAttempt {
+    const attemptId = `model-attempt.${this.createId()}`;
+    const prepared = prepareModelActionEgress({
+      actionId,
+      attemptId,
+      createId: this.createId,
+      now: this.now,
+      ownerIntent: intent,
+      inputVersions,
+    });
     return {
-      id: `model-attempt.${this.createId()}`,
+      id: attemptId,
       number,
       mode,
-      status: "running",
+      status: "awaiting_authorization",
       inputVersions,
       completedLocalToolResults: [],
-      lastConfirmedBoundary: redactSecretText(lastConfirmedBoundary),
+      lastConfirmedBoundary: "No provider data sent; awaiting exact egress authorization",
+      disclosure: prepared.disclosure,
+      disclosureDigest: prepared.disclosureDigest,
       startedAt: this.now().toISOString(),
     };
   }
 
-  private updateRunning(
+  private saveCurrentAttempt(
     workspaceId: string,
-    actionId: string,
-    update: (attempt: ModelActionAttempt) => ModelActionAttempt
+    action: ModelAction,
+    status: ModelAction["status"],
+    attempt: ModelActionAttempt
   ): ModelAction {
-    const action = this.store.getModelAction(workspaceId, actionId);
-    if (action.status !== "running") {
-      throw new ApiRouteError("Model Action is not running", 409);
-    }
     const attempts = [...action.attempts];
-    attempts[attempts.length - 1] = update(attempts[attempts.length - 1]!);
-    return this.store.saveModelAction(workspaceId, {
-      ...action,
-      attempts,
-      updatedAt: this.now().toISOString(),
-    });
-  }
-
-  private finishAttempt(
-    workspaceId: string,
-    actionId: string,
-    status: "interrupted" | "completed" | "cancelled",
-    details: Pick<ModelActionAttempt, "interruptionReason" | "canonicalResultReference">
-  ): ModelAction {
-    const action = this.store.getModelAction(workspaceId, actionId);
-    if (action.status !== "running") {
-      throw new ApiRouteError("Model Action is not running", 409);
-    }
-    const attempts = [...action.attempts];
-    attempts[attempts.length - 1] = {
-      ...attempts[attempts.length - 1]!,
-      ...details,
-      status,
-      finishedAt: this.now().toISOString(),
-    };
-    return this.store.saveModelAction(workspaceId, {
-      ...action,
+    attempts[attempts.length - 1] = attempt;
+    return this.store.compareAndSwapModelAction(workspaceId, action, (currentAction) => ({
+      ...currentAction,
       status,
       attempts,
       updatedAt: this.now().toISOString(),
-    });
+    }));
   }
-}
-
-function cleanOptional(value: string | undefined): string | undefined {
-  return value?.trim() ? redactSecretText(value) : undefined;
 }
 
 function inputDifference(
@@ -257,8 +361,14 @@ function inputDifference(
       : `${item.recordId}: added at v${item.version}`;
   });
   for (const prior of original) {
-    if (!current.some((item) => item.recordId === prior.recordId))
+    if (!current.some((item) => item.recordId === prior.recordId)) {
       changes.push(`${prior.recordId}: removed`);
+    }
   }
   return changes.join("; ");
+}
+
+function safeError(error: unknown): string {
+  if (error instanceof Error && error.message) return redactSecretText(error.message);
+  return "Model Action provider execution failed";
 }

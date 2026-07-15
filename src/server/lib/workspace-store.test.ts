@@ -1,9 +1,16 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ModelAction, ModelActionPublication } from "../../lib/music-domain.js";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
+import { digestValue } from "./evaluation-harness.js";
+import {
+  authorizeModelActionEgress,
+  buildModelActionPublication,
+  prepareModelActionEgress,
+} from "./model-action-boundary.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 describe("WorkspaceStore", () => {
@@ -254,6 +261,178 @@ describe("WorkspaceStore", () => {
     ).toThrow(/valid PDF signature/i);
   });
 
+  it("resolves Model Action inputs only inside their workspace and rejects stale bindings", () => {
+    const workspace = store.create({ title: "Bound inputs" });
+    const otherWorkspace = store.create({ title: "Other workspace" });
+    const content = Buffer.from("%PDF-1.4\nfixture");
+    const source = store.addSourceArtifact(workspace.id, {
+      filename: "source.pdf",
+      mimeType: "application/pdf",
+      contentBase64: content.toString("base64"),
+      provenance: { license: "Public Domain" },
+    });
+    const input = {
+      recordType: "source_artifact",
+      recordId: source.id,
+      version: 1,
+      sha256: source.sha256,
+    };
+
+    expect(store.resolveModelActionInputVersions(workspace.id, [])).toEqual([]);
+    expect(store.resolveModelActionInputVersions(workspace.id, [input])).toEqual([input]);
+    expect(() =>
+      store.resolveModelActionInputVersions(workspace.id, [{ ...input, version: 2 }])
+    ).toThrow(/version mismatch/i);
+    expect(() =>
+      store.resolveModelActionInputVersions(workspace.id, [{ ...input, sha256: "0".repeat(64) }])
+    ).toThrow(/digest mismatch/i);
+    expect(() =>
+      store.resolveModelActionInputVersions(workspace.id, [
+        { ...input, recordType: "normalized_score" },
+      ])
+    ).toThrow(/mismatched Model Action input reference/i);
+    expect(() => store.resolveModelActionInputVersions(otherWorkspace.id, [input])).toThrow(
+      /not part of workspace/i
+    );
+  });
+
+  it("publishes one closed Model Action result and exposes it only through the action", () => {
+    const workspace = store.create({ title: "Atomic publication" });
+    const otherWorkspace = store.create({ title: "Wrong workspace" });
+    const { action, publication } = modelActionPublicationFixture("1");
+    store.saveModelAction(workspace.id, action);
+
+    expect(() => store.getModelActionPublicationForAction(workspace.id, action.id)).toThrow(
+      /not published/i
+    );
+    expect(store.publishModelActionResult(workspace.id, action.id, publication)).toEqual(
+      publication
+    );
+    expect(store.getModelActionPublicationForAction(workspace.id, action.id)).toEqual(publication);
+    expect(store.getModelAction(workspace.id, action.id)).toMatchObject({
+      status: "completed",
+      publicationReference: publication.id,
+      attempts: [
+        expect.objectContaining({
+          status: "completed",
+          publicationReference: publication.id,
+        }),
+      ],
+    });
+    expect(() => store.publishModelActionResult(workspace.id, action.id, publication)).toThrow(
+      /replay/i
+    );
+    expect(() => store.getModelActionPublicationForAction(otherWorkspace.id, action.id)).toThrow(
+      /not found/i
+    );
+    expect(() =>
+      store.saveModelAction(workspace.id, {
+        ...store.getModelAction(workspace.id, action.id),
+        status: "interrupted",
+      })
+    ).toThrow(/published Model Action is immutable/i);
+  });
+
+  it("rejects a stale Model Action transition after another request wins the claim", () => {
+    const workspace = store.create({ title: "Atomic action transition" });
+    const { action } = modelActionPublicationFixture("4");
+    store.saveModelAction(workspace.id, action);
+
+    const claimed = store.compareAndSwapModelAction(workspace.id, action, (current) => ({
+      ...current,
+      status: "running",
+      attempts: current.attempts.map((attempt) => ({ ...attempt, status: "running" })),
+    }));
+    expect(claimed.status).toBe("running");
+    expect(() =>
+      store.compareAndSwapModelAction(workspace.id, action, (current) => ({
+        ...current,
+        status: "denied",
+        attempts: current.attempts.map((attempt) => ({ ...attempt, status: "denied" })),
+      }))
+    ).toThrow(/state changed/i);
+    expect(store.getModelAction(workspace.id, action.id).status).toBe("running");
+  });
+
+  it("keeps an unlinked publication orphan unreadable and rejects binding mismatches", () => {
+    const workspace = store.create({ title: "Publication failures" });
+    const first = modelActionPublicationFixture("2");
+    store.saveModelAction(workspace.id, first.action);
+    const publicationDirectory = path.join(
+      rootDirectory,
+      workspace.id,
+      "records",
+      "model-action-publications"
+    );
+    mkdirSync(publicationDirectory, { recursive: true });
+    writeFileSync(
+      path.join(publicationDirectory, `${first.publication.id}.json`),
+      JSON.stringify(first.publication)
+    );
+
+    expect(() => store.getModelActionPublicationForAction(workspace.id, first.action.id)).toThrow(
+      /not published/i
+    );
+    expect(() =>
+      store.publishModelActionResult(workspace.id, first.action.id, first.publication)
+    ).toThrow(/already exists/i);
+
+    const second = modelActionPublicationFixture("3");
+    store.saveModelAction(workspace.id, second.action);
+    expect(() =>
+      store.publishModelActionResult(workspace.id, second.action.id, {
+        ...second.publication,
+        result: { ...second.publication.result, attemptId: "model-attempt.ffffffffffffffff" },
+      })
+    ).toThrow(/attempt binding mismatch/i);
+    expect(() => store.getModelActionPublicationForAction(workspace.id, second.action.id)).toThrow(
+      /not published/i
+    );
+
+    const badResponseDigest = modelActionPublicationFixture("6");
+    store.saveModelAction(workspace.id, badResponseDigest.action);
+    expect(() =>
+      store.publishModelActionResult(workspace.id, badResponseDigest.action.id, {
+        ...badResponseDigest.publication,
+        commit: { ...badResponseDigest.publication.commit, responseDigest: "0".repeat(64) },
+      })
+    ).toThrow(/provider response digest mismatch/i);
+
+    const badValidationDigest = modelActionPublicationFixture("7");
+    store.saveModelAction(workspace.id, badValidationDigest.action);
+    expect(() =>
+      store.publishModelActionResult(workspace.id, badValidationDigest.action.id, {
+        ...badValidationDigest.publication,
+        commit: { ...badValidationDigest.publication.commit, validationDigest: "0".repeat(64) },
+      })
+    ).toThrow(/validation digest mismatch/i);
+  });
+
+  it("quarantines a publication left unlinked by a simulated process crash", () => {
+    const workspace = store.create({ title: "Publication crash recovery" });
+    const { action, publication } = modelActionPublicationFixture("5");
+    store.saveModelAction(workspace.id, action);
+    const publicationDirectory = path.join(
+      rootDirectory,
+      workspace.id,
+      "records",
+      "model-action-publications"
+    );
+    const publicationPath = path.join(publicationDirectory, `${publication.id}.json`);
+    mkdirSync(publicationDirectory, { recursive: true });
+    writeFileSync(publicationPath, JSON.stringify(publication));
+
+    const report = store.recoverWorkspace(workspace.id);
+
+    expect(report.quarantinedPaths).toContain(
+      `.recovery/quarantine/records/model-action-publications/${publication.id}.json`
+    );
+    expect(existsSync(publicationPath)).toBe(false);
+    expect(store.publishModelActionResult(workspace.id, action.id, publication)).toEqual(
+      publication
+    );
+  });
+
   it("persists immutable transcription lineage and derived analysis records", () => {
     const workspace = store.create({ title: "Greensleeves" });
     const pdf = readFileSync(
@@ -416,3 +595,74 @@ describe("WorkspaceStore", () => {
     );
   });
 });
+
+function modelActionPublicationFixture(suffix: string): {
+  action: ModelAction;
+  publication: ModelActionPublication;
+} {
+  const digits = suffix.repeat(16);
+  const actionId = `model-action.${digits}`;
+  const attemptId = `model-attempt.${digits}`;
+  const timestamp = "2026-07-10T12:00:00.000Z";
+  const identity = {
+    actionId,
+    attemptId,
+    createId: () => digits,
+    now: () => new Date(timestamp),
+  };
+  const intent = "Explain the passage.";
+  const { disclosure, disclosureDigest } = prepareModelActionEgress({
+    ...identity,
+    ownerIntent: intent,
+    inputVersions: [],
+  });
+  const { accessDecision, egressEnvelope, envelopeDigest } = authorizeModelActionEgress({
+    ...identity,
+    ownerIntent: intent,
+    inputVersions: [],
+    disclosure,
+    disclosureDigest,
+    decision: "authorize" as const,
+  });
+  if (!egressEnvelope || !envelopeDigest) throw new Error("Fixture authorization failed");
+  const action: ModelAction = {
+    id: actionId,
+    kind: "interactive_guidance_v1",
+    intent,
+    idempotencyKey: suffix.repeat(64),
+    status: "authorized",
+    originalInputVersions: [],
+    attempts: [
+      {
+        id: attemptId,
+        number: 1,
+        mode: "initial",
+        status: "authorized",
+        inputVersions: [],
+        completedLocalToolResults: [],
+        lastConfirmedBoundary: "No canonical state changed",
+        disclosure,
+        disclosureDigest,
+        accessDecision,
+        egressEnvelope,
+        envelopeDigest,
+        startedAt: timestamp,
+      },
+    ],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+  const publication = buildModelActionPublication({
+    ...identity,
+    envelope: egressEnvelope,
+    envelopeDigest,
+    response: {
+      envelopeDigest,
+      provider: egressEnvelope.provider,
+      model: egressEnvelope.model,
+      providerResponseId: `provider-response.${digits}`,
+      content: "The upper voice is structurally primary.",
+    },
+  });
+  return { action, publication };
+}

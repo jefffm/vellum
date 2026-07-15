@@ -18,17 +18,16 @@ describe("Provider Contract Fixture", () => {
     );
     const actions = new ModelActionService({ store });
     const action = actions.create(workspaceId, {
-      kind: "arrangement_generation",
+      kind: "interactive_guidance_v1",
       intent: "Preserve the lead voice",
-      inputVersions: [
-        { recordType: "normalized_score", recordId: "score.1111111111111111", version: 1 },
-      ],
-      lastConfirmedBoundary: "Normalized Score v1",
     });
-    actions.progress(workspaceId, action.id, {
-      completedLocalToolResults: [{ toolName: "theory", resultReference: "result.local.1" }],
-      partialProgressSummary: "Analysis completed; no arrangement committed",
-    });
+    const authorized = actions.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    expect(authorized.status).toBe("authorized");
     actions.interrupt(workspaceId, action.id, "Provider authorization expired");
 
     let loginCount = 0;
@@ -66,7 +65,7 @@ describe("Provider Contract Fixture", () => {
     expect(store.getModelAction(workspaceId, action.id).attempts).toHaveLength(1);
 
     const retried = actions.retry(workspaceId, action.id);
-    expect(retried.status).toBe("running");
+    expect(retried.status).toBe("awaiting_authorization");
     expect(retried.attempts).toHaveLength(2);
     expect(actions.cancel(workspaceId, action.id).status).toBe("cancelled");
   });

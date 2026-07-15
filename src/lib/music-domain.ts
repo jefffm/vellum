@@ -886,6 +886,121 @@ export const ModelActionInputVersionSchema = Type.Object(
   { additionalProperties: false }
 );
 
+const ModelActionDigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
+
+export const ModelEgressDisclosureSchema = Type.Object(
+  {
+    id: IdSchema,
+    actionId: IdSchema,
+    attemptId: IdSchema,
+    provider: Type.Literal("openai-codex"),
+    model: Type.Literal("gpt-5.3-codex"),
+    purpose: Type.Literal("interactive_musicological_guidance"),
+    policyDigest: ModelActionDigestSchema,
+    systemPromptDigest: ModelActionDigestSchema,
+    serializedRequestDigest: ModelActionDigestSchema,
+    ownerIntent: Type.String({ minLength: 1 }),
+    ownerIntentDigest: ModelActionDigestSchema,
+    dataClasses: Type.Array(
+      Type.Union([
+        Type.Literal("owner_intent"),
+        Type.Literal("canonical_workspace_record"),
+        Type.Literal("source_content"),
+        Type.Literal("private_owner_knowledge"),
+      ]),
+      { minItems: 1, uniqueItems: true }
+    ),
+    sourceReferences: Type.Array(ModelActionInputVersionSchema, { uniqueItems: true }),
+    toolCapabilities: Type.Array(Type.String({ minLength: 1 }), { maxItems: 0 }),
+    policyDecision: Type.Union([Type.Literal("allow"), Type.Literal("deny")]),
+    policyReason: Type.String({ minLength: 1 }),
+    requiresOwnerAuthorization: Type.Literal(true),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export const ModelEgressAccessDecisionSchema = Type.Object(
+  {
+    id: IdSchema,
+    disclosureDigest: ModelActionDigestSchema,
+    decision: Type.Union([
+      Type.Literal("authorize"),
+      Type.Literal("deny"),
+      Type.Literal("withdraw"),
+    ]),
+    effectiveDecision: Type.Union([Type.Literal("authorized"), Type.Literal("denied")]),
+    decidedAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export const ModelEgressEnvelopeSchema = Type.Object(
+  {
+    id: IdSchema,
+    actionId: IdSchema,
+    attemptId: IdSchema,
+    disclosureDigest: ModelActionDigestSchema,
+    accessDecisionId: IdSchema,
+    provider: Type.Literal("openai-codex"),
+    model: Type.Literal("gpt-5.3-codex"),
+    purpose: Type.Literal("interactive_musicological_guidance"),
+    policyDigest: ModelActionDigestSchema,
+    systemPromptDigest: ModelActionDigestSchema,
+    serializedRequestDigest: ModelActionDigestSchema,
+    ownerIntentDigest: ModelActionDigestSchema,
+    requestCreatedAt: IsoDateSchema,
+    systemPrompt: Type.String({ minLength: 1 }),
+    ownerIntent: Type.String({ minLength: 1 }),
+    inputVersions: Type.Array(ModelActionInputVersionSchema),
+    toolCapabilities: Type.Array(Type.String({ minLength: 1 }), { maxItems: 0 }),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export const ModelActionCanonicalResultSchema = Type.Object(
+  {
+    id: IdSchema,
+    actionId: IdSchema,
+    attemptId: IdSchema,
+    envelopeDigest: ModelActionDigestSchema,
+    providerResponseId: IdSchema,
+    content: Type.String({ minLength: 1 }),
+    provider: Type.Literal("openai-codex"),
+    model: Type.Literal("gpt-5.3-codex"),
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export const ModelActionResultCommitSchema = Type.Object(
+  {
+    id: IdSchema,
+    actionId: IdSchema,
+    attemptId: IdSchema,
+    envelopeDigest: ModelActionDigestSchema,
+    responseDigest: ModelActionDigestSchema,
+    toolResultDigests: Type.Array(ModelActionDigestSchema, { maxItems: 0 }),
+    validationDigest: ModelActionDigestSchema,
+    canonicalResultDigest: ModelActionDigestSchema,
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
+export const ModelActionPublicationSchema = Type.Object(
+  {
+    id: IdSchema,
+    actionId: IdSchema,
+    attemptId: IdSchema,
+    result: ModelActionCanonicalResultSchema,
+    commit: ModelActionResultCommitSchema,
+    createdAt: IsoDateSchema,
+  },
+  { additionalProperties: false }
+);
+
 export const ModelActionAttemptSchema = Type.Object(
   {
     id: IdSchema,
@@ -896,12 +1011,15 @@ export const ModelActionAttemptSchema = Type.Object(
       Type.Literal("original_snapshot_branch"),
     ]),
     status: Type.Union([
+      Type.Literal("awaiting_authorization"),
+      Type.Literal("authorized"),
       Type.Literal("running"),
+      Type.Literal("denied"),
       Type.Literal("interrupted"),
       Type.Literal("completed"),
       Type.Literal("cancelled"),
     ]),
-    inputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
+    inputVersions: Type.Array(ModelActionInputVersionSchema),
     inputDifferenceSummary: Type.Optional(Type.String({ minLength: 1 })),
     arrangementBranchId: Type.Optional(IdSchema),
     completedLocalToolResults: Type.Array(
@@ -918,6 +1036,12 @@ export const ModelActionAttemptSchema = Type.Object(
     interruptionReason: Type.Optional(Type.String({ minLength: 1 })),
     lastConfirmedBoundary: Type.String({ minLength: 1 }),
     canonicalResultReference: Type.Optional(Type.String({ minLength: 1 })),
+    disclosure: Type.Optional(ModelEgressDisclosureSchema),
+    disclosureDigest: Type.Optional(ModelActionDigestSchema),
+    accessDecision: Type.Optional(ModelEgressAccessDecisionSchema),
+    egressEnvelope: Type.Optional(ModelEgressEnvelopeSchema),
+    envelopeDigest: Type.Optional(ModelActionDigestSchema),
+    publicationReference: Type.Optional(IdSchema),
     startedAt: IsoDateSchema,
     finishedAt: Type.Optional(IsoDateSchema),
   },
@@ -931,13 +1055,17 @@ export const ModelActionSchema = Type.Object(
     intent: Type.String({ minLength: 1 }),
     idempotencyKey: Type.String({ pattern: "^[a-f0-9]{64}$" }),
     status: Type.Union([
+      Type.Literal("awaiting_authorization"),
+      Type.Literal("authorized"),
       Type.Literal("running"),
+      Type.Literal("denied"),
       Type.Literal("interrupted"),
       Type.Literal("completed"),
       Type.Literal("cancelled"),
     ]),
-    originalInputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
+    originalInputVersions: Type.Array(ModelActionInputVersionSchema),
     attempts: Type.Array(ModelActionAttemptSchema, { minItems: 1 }),
+    publicationReference: Type.Optional(IdSchema),
     createdAt: IsoDateSchema,
     updatedAt: IsoDateSchema,
   },
@@ -945,6 +1073,12 @@ export const ModelActionSchema = Type.Object(
 );
 
 export type ModelActionInputVersion = Static<typeof ModelActionInputVersionSchema>;
+export type ModelEgressDisclosure = Static<typeof ModelEgressDisclosureSchema>;
+export type ModelEgressAccessDecision = Static<typeof ModelEgressAccessDecisionSchema>;
+export type ModelEgressEnvelope = Static<typeof ModelEgressEnvelopeSchema>;
+export type ModelActionCanonicalResult = Static<typeof ModelActionCanonicalResultSchema>;
+export type ModelActionResultCommit = Static<typeof ModelActionResultCommitSchema>;
+export type ModelActionPublication = Static<typeof ModelActionPublicationSchema>;
 export type ModelActionAttempt = Static<typeof ModelActionAttemptSchema>;
 export type ModelAction = Static<typeof ModelActionSchema>;
 

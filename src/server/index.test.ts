@@ -79,7 +79,7 @@ describe("server API endpoints", () => {
 
   it.each([
     ["provider lifecycle", "GET", "/api/provider-connection"],
-    ["model stream", "POST", "/api/stream"],
+    ["model action creation", "POST", "/api/workspaces/workspace.1234567890abcdef/model-actions"],
     ["compile tool", "POST", "/api/compile"],
     ["owner state", "GET", "/api/owner"],
     ["workspace mutation", "POST", "/api/workspaces"],
@@ -107,6 +107,22 @@ describe("server API endpoints", () => {
       code: "forbidden_origin",
       status: 403,
       correlationId: response.headers.get("x-vellum-correlation-id"),
+    });
+  });
+
+  it("does not expose the generic provider stream as a production route", async () => {
+    const server = await listen();
+    servers.push(server);
+    const response = await fetch(`${serverUrl(server)}/api/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: { code: "not_found" },
     });
   });
 

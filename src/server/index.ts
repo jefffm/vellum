@@ -13,7 +13,7 @@ import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
 import type { SubprocessRunner } from "./lib/subprocess.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
-import { createStreamRoute, providerConnection } from "./lib/stream-route.js";
+import { providerConnection } from "./lib/provider-runtime.js";
 import {
   createProviderDisconnectRoute,
   createProviderLoginRoute,
@@ -23,12 +23,13 @@ import {
 } from "./lib/provider-connection-route.js";
 import {
   createModelActionCancelRoute,
-  createModelActionCompleteRoute,
+  createModelActionAuthorizationRoute,
   createModelActionCreateRoute,
   createModelActionGetRoute,
   createModelActionInterruptRoute,
   createModelActionListRoute,
-  createModelActionProgressRoute,
+  createModelActionPublicationGetRoute,
+  createModelActionRunRoute,
   createModelActionRetryRoute,
 } from "./lib/model-action-route.js";
 import { redactSecretText } from "./lib/secret-redaction.js";
@@ -206,7 +207,6 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     response.json({ status: "ok" });
   });
 
-  router.post("/stream", createStreamRoute());
   router.get("/provider-connection", createProviderStatusRoute(providerConnection));
   router.post("/provider-connection/login", createProviderLoginRoute(providerConnection));
   router.post("/provider-connection/prompt", createProviderPromptRoute(providerConnection));
@@ -291,17 +291,21 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get("/workspaces/:workspaceId/model-actions", createModelActionListRoute());
   router.post("/workspaces/:workspaceId/model-actions", createModelActionCreateRoute());
   router.get("/workspaces/:workspaceId/model-actions/:modelActionId", createModelActionGetRoute());
-  router.patch(
-    "/workspaces/:workspaceId/model-actions/:modelActionId",
-    createModelActionProgressRoute()
+  router.get(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/publication",
+    createModelActionPublicationGetRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/model-actions/:modelActionId/authorization",
+    createModelActionAuthorizationRoute()
   );
   router.post(
     "/workspaces/:workspaceId/model-actions/:modelActionId/interrupt",
     createModelActionInterruptRoute()
   );
   router.post(
-    "/workspaces/:workspaceId/model-actions/:modelActionId/complete",
-    createModelActionCompleteRoute()
+    "/workspaces/:workspaceId/model-actions/:modelActionId/run",
+    createModelActionRunRoute()
   );
   router.post(
     "/workspaces/:workspaceId/model-actions/:modelActionId/retry",

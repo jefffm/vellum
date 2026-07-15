@@ -1,4 +1,4 @@
-export const VELLUM_API_SCHEMA_VERSION = "vellum-api-2026-07-12.1";
+export const VELLUM_API_SCHEMA_VERSION = "vellum-api-2026-07-15.1";
 
 export type RuntimeHealth = {
   status: "ok";

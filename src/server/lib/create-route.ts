@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from "express";
+import type { Request, RequestHandler, Response } from "express";
 import type { ApiErrorCode, ApiSuccess } from "../../lib/api-contract.js";
 import {
   ensureCorrelationId,
@@ -13,7 +13,7 @@ export type { ApiResponse } from "../../lib/api-contract.js";
 
 export type ApiRouteConfig<TInput, TOutput> = {
   validate: (body: unknown, request: Request) => TInput;
-  handler: (input: TInput) => Promise<TOutput>;
+  handler: (input: TInput, request: Request, response: Response) => Promise<TOutput>;
 };
 
 export function createApiRoute<TInput, TOutput>(
@@ -39,7 +39,7 @@ export function createApiRoute<TInput, TOutput>(
         return;
       }
 
-      const data = await config.handler(input);
+      const data = await config.handler(input, request, response);
       status = 200;
       response.status(status).json({ ok: true, data } satisfies ApiSuccess<TOutput>);
     } catch (error) {

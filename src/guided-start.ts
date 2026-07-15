@@ -2501,7 +2501,7 @@ type RecoverableModelAction = {
   id: string;
   kind: string;
   intent: string;
-  status: "interrupted";
+  status: "interrupted" | "denied";
   originalInputVersions: Array<{ recordId: string; version: number }>;
   attempts: Array<{
     completedLocalToolResults: Array<{ toolName: string; resultReference: string }>;
@@ -2519,10 +2519,12 @@ async function refreshModelActionRecovery(root: HTMLElement, workspaceId: string
   const actions = await api<RecoverableModelAction[]>(
     `/api/workspaces/${workspaceId}/model-actions`
   );
-  const interrupted = actions.filter((action) => action.status === "interrupted");
-  panel.hidden = interrupted.length === 0;
+  const recoverable = actions.filter(
+    (action) => action.status === "interrupted" || action.status === "denied"
+  );
+  panel.hidden = recoverable.length === 0;
   items.replaceChildren();
-  for (const action of interrupted) {
+  for (const action of recoverable) {
     const attempt = action.attempts.at(-1)!;
     const item = document.createElement("article");
     item.className = "model-action-recovery-item";
@@ -2530,7 +2532,10 @@ async function refreshModelActionRecovery(root: HTMLElement, workspaceId: string
     heading.textContent = `${action.kind.replaceAll("_", " ")}: ${action.intent}`;
     const detail = document.createElement("p");
     detail.textContent = [
-      attempt.interruptionReason ?? "Provider work was interrupted.",
+      attempt.interruptionReason ??
+        (action.status === "denied"
+          ? "No data was sent; egress was denied or withdrawn."
+          : "Provider work was interrupted."),
       `Last confirmed boundary: ${attempt.lastConfirmedBoundary}`,
       attempt.partialProgressSummary,
       `${action.originalInputVersions.length} exact input version(s) retained; ${attempt.completedLocalToolResults.length} local tool result(s) retained.`,
@@ -2545,6 +2550,7 @@ async function refreshModelActionRecovery(root: HTMLElement, workspaceId: string
     const retryBranch = recoveryButton("Retry original snapshot as a branch", async () => {
       await mutate("retry", { mode: "original_snapshot_branch" });
     });
+    retryBranch.disabled = action.originalInputVersions.length === 0;
     const cancel = recoveryButton("Cancel", async () => {
       await mutate("cancel", {});
     });
