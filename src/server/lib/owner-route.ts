@@ -11,7 +11,10 @@ import { pipeline } from "node:stream/promises";
 import { KnowledgeScopeSchema } from "../../lib/owner-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
 import { OwnerStore } from "./owner-store.js";
-import { loadBuiltInKnowledgePacks } from "./knowledge-pack-loader.js";
+import {
+  listQuarantinedBuiltInKnowledgePacks,
+  loadBuiltInKnowledgePacks,
+} from "./knowledge-pack-loader.js";
 
 const IdParams = Type.Object({ id: Type.String({ minLength: 1 }) });
 
@@ -26,6 +29,7 @@ export function createOwnerStateRoute(store = new OwnerStore()): RequestHandler 
       historicalPracticeClaims: store.listClaims(),
       knowledgePacks: store.listPacks(),
       builtInKnowledgePacks: loadBuiltInKnowledgePacks(),
+      quarantinedBuiltInKnowledgePacks: listQuarantinedBuiltInKnowledgePacks(),
     }),
   });
 }

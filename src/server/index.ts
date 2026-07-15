@@ -133,6 +133,7 @@ import {
   createArrangementReadinessRoute,
   createOwnerPlaytestCreateRoute,
 } from "./lib/owner-playtest-route.js";
+import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventory-route.js";
 import {
   createApiBoundary,
   errorCodeForStatus,
@@ -229,6 +230,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
 
   router.get("/workspaces", createWorkspaceListRoute());
   router.get("/owner", createOwnerStateRoute());
+  router.get("/owner/tracked-source-inventory", createTrackedSourceInventoryRoute());
   router.post("/owner/choices", createOwnerChoiceRoute());
   router.post(
     "/owner/personal-default-candidates/:id/approve",

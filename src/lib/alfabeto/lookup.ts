@@ -1,5 +1,12 @@
-import type { AlfabetoLookupParams, AlfabetoLookupResult, AlfabetoMatch } from "./types.js";
-import { getChart } from "./charts/index.js";
+import type {
+  AlfabetoChart,
+  AlfabetoLookupParams,
+  AlfabetoLookupResult,
+  AlfabetoMatch,
+  AvailableAlfabetoLookupResult,
+  ChartId,
+  ReviewRequiredAlfabetoLookupResult,
+} from "./types.js";
 import {
   barrePitchClasses,
   barreTranspose,
@@ -7,6 +14,15 @@ import {
   shapeToPositions,
 } from "./barre-transpose.js";
 import { soundingPitches } from "../instrument-instance.js";
+import {
+  authorizeTrackedSourceOperation,
+  loadBundledTrackedSourceInventory,
+} from "../tracked-source-quarantine.js";
+
+const QUARANTINED_CHART_ARTIFACTS: Readonly<Record<ChartId, string>> = {
+  "tyler-universal": "tracked.alfabeto-tyler-universal",
+  foscarini: "tracked.alfabeto-foscarini-overlay",
+};
 
 /**
  * Parse a chord name string into MIDI pitch classes (0–11).
@@ -113,14 +129,66 @@ function isProperSuperset(a: Set<number>, b: Set<number>): boolean {
 }
 
 /**
- * Look up alfabeto shapes matching a chord.
+ * Resolve a production alfabeto request.
  *
- * Accepts either a chord name or explicit pitch classes.
- * Returns matches ranked: standard exact > low barré > high barré.
+ * The only built-in chart locators point at quarantined tracked-source data.
+ * They intentionally return a structured review requirement instead of loading
+ * those bytes. A future release loader may call `lookupAlfabetoChart` only after
+ * binding exact authorized release bytes to the core source-authority decision.
  */
 export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResult {
   const chartId = params.chartId ?? "tyler-universal";
-  const chart = getChart(chartId);
+  const artifactId = QUARANTINED_CHART_ARTIFACTS[chartId];
+  const artifact = loadBundledTrackedSourceInventory().artifacts.find(
+    (candidate) => candidate.id === artifactId
+  );
+
+  if (!artifact) {
+    return reviewRequiredResult(params, chartId, artifactId, "tracked_source_review_required", [
+      "The tracked-source inventory does not contain the requested chart artifact.",
+    ]);
+  }
+
+  const decision = authorizeTrackedSourceOperation({
+    artifactId,
+    sha256: artifact.sha256,
+    operation: "default_generation",
+  });
+
+  if (decision.outcome !== "allow") {
+    return reviewRequiredResult(
+      params,
+      chartId,
+      artifactId,
+      decision.outcome === "deny" ? "tracked_source_denied" : "tracked_source_review_required",
+      decision.reasons
+    );
+  }
+
+  // Authorization of a provenance substitution never authorizes the legacy
+  // bytes at this path. T03 deliberately has no caller-constructible chart
+  // injection seam; the reviewed release registry will supply exact bytes in a
+  // later tracer.
+  return reviewRequiredResult(
+    params,
+    chartId,
+    decision.resolvedArtifactId ?? artifactId,
+    "authorized_chart_release_unavailable",
+    [
+      ...decision.reasons,
+      "The authority decision allows an artifact, but no exact authorized chart release is loaded.",
+    ]
+  );
+}
+
+/**
+ * Pure shape-matching algorithm for synthetic tests and future exact release
+ * bytes. This function conveys no production activation or rights authority.
+ */
+export function lookupAlfabetoChart(
+  chart: AlfabetoChart,
+  params: Omit<AlfabetoLookupParams, "chartId">
+): AvailableAlfabetoLookupResult {
   const maxFret = params.maxFret ?? 8;
   const includeBarre = params.includeBarreVariants ?? true;
 
@@ -135,8 +203,9 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
 
   if (!targetPitchClasses || targetPitchClasses.size === 0) {
     return {
+      status: "available",
       matches: [],
-      chartId,
+      chartId: chart.id,
       instrumentInstanceDigest: params.instrumentInstance?.contentDigest,
     };
   }
@@ -158,8 +227,7 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
         source: "standard",
       });
     } else if (isProperSuperset(pitchClasses, targetPitchClasses)) {
-      // Shape contains all target pitch classes plus extras (e.g. Foscarini L
-      // for C minor — produces C, D, Eb, G which is a superset of C, Eb, G).
+      // Shape contains all target pitch classes plus one or more chart-defined extras.
       supersetMatches.push({
         letter: shape.letter,
         chord: shape.chord,
@@ -203,6 +271,7 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
 
   const matches = [...standardMatches, ...supersetMatches, ...lowBarreMatches, ...highBarreMatches];
   return {
+    status: "available",
     matches: params.instrumentInstance
       ? matches.map((match) => ({
           ...match,
@@ -211,7 +280,29 @@ export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResu
           ),
         }))
       : matches,
+    chartId: chart.id,
+    instrumentInstanceDigest: params.instrumentInstance?.contentDigest,
+  };
+}
+
+function reviewRequiredResult(
+  params: AlfabetoLookupParams,
+  chartId: ChartId,
+  artifactId: string,
+  code: ReviewRequiredAlfabetoLookupResult["reviewRequired"]["code"],
+  reasons: readonly string[]
+): ReviewRequiredAlfabetoLookupResult {
+  return {
+    status: "review_required",
+    matches: [],
     chartId,
     instrumentInstanceDigest: params.instrumentInstance?.contentDigest,
+    reviewRequired: {
+      code,
+      artifactId,
+      message:
+        "Alfabeto chart use requires an exact rights-authorized Knowledge Pack release; no chart data was used.",
+      reasons,
+    },
   };
 }

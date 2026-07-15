@@ -1,9 +1,8 @@
 import type { TabPosition } from "../../types.js";
 import type { InstrumentInstanceConfiguration } from "../instrument-instance.js";
 
-/**
- * Supported alfabeto chart identifiers.
- */
+/** Legacy chart locators retained only so old callers can receive a typed,
+ * fail-closed review decision. They are not production defaults. */
 export type ChartId = "tyler-universal" | "foscarini";
 
 /**
@@ -12,7 +11,7 @@ export type ChartId = "tyler-universal" | "foscarini";
  * - cross: the "+" symbol (E minor open)
  * - standard: letters A–P (no J) — the core 15 shapes
  * - extended: letters Q–Z (no U/W) — higher-position variants
- * - special: auxiliary symbols (&, 9, ℞, and Foscarini-only glyphs)
+ * - special: chart-defined auxiliary symbols
  */
 export type ShapeCategory = "cross" | "standard" | "extended" | "special";
 
@@ -31,7 +30,8 @@ export interface AlfabetoShapeEntry {
  * A complete alfabeto chart with metadata.
  */
 export interface AlfabetoChart {
-  readonly id: ChartId;
+  /** A local algorithm/test identifier, not an activation authority. */
+  readonly id: string;
   readonly name: string;
   readonly source: string;
   readonly shapes: readonly AlfabetoShapeEntry[];
@@ -45,7 +45,7 @@ export interface AlfabetoLookupParams {
   readonly chordName?: string;
   /** MIDI pitch classes (0–11) to match against shape output */
   readonly pitchClasses?: readonly number[];
-  /** Which chart to use (default: "tyler-universal") */
+  /** Legacy chart locator. Omission still fails closed; it does not select a default chart. */
   readonly chartId?: ChartId;
   /** Maximum fret for barré transpositions (default: 8) */
   readonly maxFret?: number;
@@ -70,8 +70,33 @@ export interface AlfabetoMatch {
 /**
  * Result from the alfabeto lookup function.
  */
-export interface AlfabetoLookupResult {
+export interface AvailableAlfabetoLookupResult {
+  readonly status: "available";
   readonly matches: AlfabetoMatch[];
-  readonly chartId: ChartId;
+  readonly chartId: string;
   readonly instrumentInstanceDigest?: string;
 }
+
+export type AlfabetoReviewRequiredCode =
+  | "tracked_source_review_required"
+  | "tracked_source_denied"
+  | "authorized_chart_release_unavailable";
+
+export interface ReviewRequiredAlfabetoLookupResult {
+  readonly status: "review_required";
+  readonly matches: [];
+  readonly chartId: ChartId;
+  readonly instrumentInstanceDigest?: string;
+  readonly reviewRequired: {
+    readonly code: AlfabetoReviewRequiredCode;
+    readonly artifactId: string;
+    readonly message: string;
+    readonly reasons: readonly string[];
+  };
+}
+
+/** Production lookup is a closed result: quarantined data never masquerades as
+ * an ordinary empty match set. */
+export type AlfabetoLookupResult =
+  | AvailableAlfabetoLookupResult
+  | ReviewRequiredAlfabetoLookupResult;

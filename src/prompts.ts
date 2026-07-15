@@ -32,7 +32,7 @@ function buildTools(): string {
     "- Call `tabulate` to find valid course/fret positions — never guess fret/course placements",
     "- Call `voicings` to enumerate chord voicing options — pick from real alternatives",
     "- Call `check_playability` to validate before presenting to the user",
-    "- Call `alfabeto_lookup` to find standard alfabeto chord shapes for baroque guitar — always prefer historical shapes over computed voicings for baroque guitar chordal passages",
+    "- Call `alfabeto_lookup` only to resolve an exact activated alfabeto chart release; `review_required` means no chart data was used and must never be bypassed with remembered or built-in shapes",
     "- Call `engrave` to generate LilyPond source from structured musical data (instrument, template, bars with note, chord, rest, and alfabeto events) — use for tablature generation instead of writing raw LilyPond; it eliminates syntax errors",
     "- Call `compile` after generating or modifying LilyPond source; this is mandatory, not optional",
     "- Call `analyze` when given a MusicXML file — get key, chord progression, voice ranges",
@@ -72,8 +72,8 @@ function buildWorkflow(): string {
     "",
     "**IMPORTANT: Never write raw LilyPond syntax for tab instruments. Always use `engrave`.**",
     "For supported notation templates (`solo-staff`, `solo-tab`, `french-tab`, `tab-and-staff`, `voice-and-tab`), prefer `engrave` over hand-written LilyPond: choose an instrument, build structured bars with position or pitch events, call `engrave`, then compile the result. Use `solo-staff` for classical guitar standard notation without tablature.",
-    "For historical or re-entrant plucked instruments, use `tabulate`, `voicings`, `diapasons`, `alfabeto_lookup`, and `check_playability` to choose playable explicit course/fret data before calling `engrave`.",
-    'For baroque guitar rasgueado/strummed passages, call `alfabeto_lookup` first, then encode the choice as an engrave event like `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` (optionally add `prefer` or `chart_id`). Alfabeto chord events are for `baroque-guitar-5` and produce a five-course historical chord shape.',
+    "For historical or re-entrant plucked instruments, use `tabulate`, `voicings`, `diapasons`, and `check_playability` to choose playable explicit course/fret data before calling `engrave`; use `alfabeto_lookup` only when an exact authorized chart release is active.",
+    'For baroque guitar rasgueado/strummed passages, call `alfabeto_lookup` first. Continue to an `{ type: "alfabeto_chord", ... }` engrave event only when lookup returns `available`; on `review_required`, stop the alfabeto path and request review rather than substituting a remembered chart or computed voicing.',
     "When converting an existing LilyPond file to a supported tablature target, treat it as new tab generation: extract the musical events and use `engrave`; do not hand-write replacement TabStaff LilyPond.",
     "For small edits to an existing LilyPond file that is already in the requested target format, continue editing the source directly, then compile it.",
     "For standard-notation ensemble layouts (`grand-staff`, `continuo`, `satb`, `voice-and-piano`), use the corresponding maintained template and structured source-generation path, then compile; do not describe these shipped templates as future or unsupported.",
@@ -95,16 +95,16 @@ function buildWorkflow(): string {
 
 function buildBaroqueGuitarWorkflow(): string {
   return [
-    "## Baroque Guitar Arrangement — Alfabeto Priority",
+    "## Baroque Guitar Arrangement — Authorized Alfabeto",
     "",
     "When arranging chordal passages for `baroque-guitar-5`:",
-    "1. First call `alfabeto_lookup` with the chord name to check for a standard alfabeto shape.",
-    "2. If a standard non-barré match exists, use it — these are historically correct voicings.",
-    "3. If only barré matches exist, prefer low barré (frets 1-3) over high barré (4+).",
-    "4. Only fall back to `voicings` for chords with no alfabeto match at all.",
-    '5. In `engrave`, prefer `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` over manually constructing baroque-guitar chord positions.',
+    "1. Call `alfabeto_lookup` to resolve the chord against the exact activated chart release.",
+    "2. Treat `review_required` as a terminal authority result for this path: no chart data was used, and neither a remembered shape nor a legacy built-in table may replace it.",
+    "3. If lookup returns `available`, preserve its release/chart identity and use only the returned positions within the release's scoped applicability.",
+    "4. A computed `voicings` result is an explicitly non-alfabeto alternative; never label it historical alfabeto or silently encode it as `alfabeto_chord`.",
+    '5. Submit `{ type: "alfabeto_chord", chord_name: "G major", duration: "4" }` only after an available authorized lookup; engraving independently repeats the authority check and otherwise fails with `review_required`.',
     "",
-    'The Tyler Universal chart is the default. With barré transpositions, every major and minor triad is reachable; use `chart_id: "foscarini"` only when that historical chart is specifically desired.',
+    "There is no built-in historical chart default. Legacy chart locators are quarantined until exact source, rights, release, and activation decisions authorize their use.",
   ].join("\n");
 }
 

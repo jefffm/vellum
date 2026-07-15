@@ -90,7 +90,7 @@ export const alfabetoLookupTool: AgentTool<
   name: "alfabeto_lookup",
   label: "Alfabeto Lookup",
   description:
-    "Look up historical baroque guitar alfabeto chord symbols and course/fret shapes from supported charts. Use for rasgueado/strummed alfabeto passages before engraving alfabeto events.",
+    "Resolve alfabeto shapes only from an exact rights-authorized chart release. Quarantined built-in chart locators return structured review_required without exposing or using chart data.",
   parameters: AlfabetoLookupParamsSchema,
   execute: async (_toolCallId, params) => {
     try {
@@ -157,6 +157,15 @@ function normalizeAlfabetoLookupParams(
 
 function formatAlfabetoLookup(result: AlfabetoLookupResult, chordName?: string): string {
   const label = chordName ? ` for ${chordName}` : "";
+
+  if (result.status === "review_required") {
+    return [
+      `review_required: no alfabeto chart data was used${label}.`,
+      result.reviewRequired.message,
+      `artifact: ${result.reviewRequired.artifactId}`,
+      `reason: ${result.reviewRequired.code}`,
+    ].join("\n");
+  }
 
   if (result.matches.length === 0) {
     return `No alfabeto matches found${label} in ${result.chartId}.`;

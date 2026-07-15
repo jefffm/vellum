@@ -144,6 +144,12 @@ describe("TypeBox schema validation", () => {
     expect(Value.Check(AlfabetoLookupParamsSchema, { chart_id: "unknown" })).toBe(false);
     expect(Value.Check(AlfabetoLookupParamsSchema, { pitchClasses: [99] })).toBe(false);
     expect(Value.Check(AlfabetoLookupParamsSchema, { chartId: "unknown" })).toBe(false);
+    expect(
+      Value.Check(AlfabetoLookupParamsSchema, {
+        chord_name: "G major",
+        authorization: { outcome: "allow" },
+      })
+    ).toBe(false);
   });
 
   it("validates TheoryParams operations", () => {

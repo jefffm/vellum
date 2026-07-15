@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 1,
+  "inventoryId": "tracked-source-inventory.v1",
+  "artifacts": [
+    {
+      "id": "tracked.alfabeto-tyler-universal",
+      "path": "git:623234a:src/lib/alfabeto/charts/tyler-universal.ts",
+      "sha256": "f39bd77758f89ad075dd3225f94a9d06100c0a35bbaf07b5b12c676d0719e331",
+      "byteLength": 3046,
+      "mediaType": "text/typescript",
+      "derivation": {
+        "kind": "direct_transcription",
+        "sourceRefs": ["reference-work.tyler-guide-2011.example-6.7"],
+        "evidenceRefs": [
+          "docs/archive/specifications/2026-07-13/repository/ALFABETO-CHART-TYLER.md"
+        ]
+      },
+      "consumers": [
+        "src/lib/alfabeto/charts/index.ts",
+        "src/lib/alfabeto/lookup.ts",
+        "src/prompts.ts",
+        "src/server/lib/engrave.ts",
+        "src/tools.ts"
+      ],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "James Tyler, A Guide to Playing the Baroque Guitar (2011), Example 6.7",
+          "rightsStatus": "copyrighted",
+          "evidenceRefs": [
+            "docs/archive/specifications/2026-07-13/repository/ALFABETO-CHART-TYLER.md"
+          ]
+        },
+        "exemplar": {
+          "status": "unresolved",
+          "rightsStatus": "unknown",
+          "evidenceRefs": []
+        },
+        "scan": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git:623234a:src/lib/alfabeto/charts/tyler-universal.ts"]
+      }
+    },
+    {
+      "id": "tracked.alfabeto-foscarini-overlay",
+      "path": "git:623234a:src/lib/alfabeto/charts/foscarini.ts",
+      "sha256": "9fb1d7b0179cb0008e1fac439f828d08b635a5c15b4c57d6f52022bc3b06008a",
+      "byteLength": 1512,
+      "mediaType": "text/typescript",
+      "derivation": {
+        "kind": "derived_overlay",
+        "sourceRefs": ["reference-work.foscarini-quattro-libri", "reference-work.tyler-guide-2011"],
+        "evidenceRefs": [
+          "docs/archive/specifications/2026-07-13/repository/ALFABETO-CHART-FOSCARINI.md"
+        ]
+      },
+      "consumers": [
+        "src/lib/alfabeto/charts/index.ts",
+        "src/lib/alfabeto/lookup.ts",
+        "src/prompts.ts",
+        "src/server/lib/engrave.ts",
+        "src/tools.ts"
+      ],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Giovanni Paolo Foscarini, I quattro libri della chitarra spagnola",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["SPEC.md#II-CLAUSE-0946"]
+        },
+        "exemplar": {
+          "status": "unresolved",
+          "rightsStatus": "unknown",
+          "evidenceRefs": []
+        },
+        "scan": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git:623234a:src/lib/alfabeto/charts/foscarini.ts"]
+      }
+    },
+    {
+      "id": "tracked.knowledge-pack-core-baroque-guitar",
+      "path": "knowledge-packs/core-baroque-guitar.json",
+      "sha256": "21310478c1932c2e40eb1c23a4be665d74e394a153f12882b600c8b3ea077c70",
+      "byteLength": 1055,
+      "mediaType": "application/json",
+      "derivation": {
+        "kind": "reviewed_claim",
+        "sourceRefs": ["reference-work.sanz-instruccion"],
+        "evidenceRefs": ["knowledge-packs/core-baroque-guitar.json"]
+      },
+      "consumers": ["knowledge pack loader", "historical practice search"],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Gaspar Sanz, Instruccion de musica sobre la guitarra espanola",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["SPEC.md#II-CLAUSE-0944"]
+        },
+        "exemplar": {
+          "status": "unresolved",
+          "rightsStatus": "unknown",
+          "evidenceRefs": []
+        },
+        "scan": {
+          "status": "unresolved",
+          "rightsStatus": "unknown",
+          "evidenceRefs": []
+        }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git-history:knowledge-packs/core-baroque-guitar.json"]
+      }
+    },
+    {
+      "id": "fixture.greensleeves-satb",
+      "path": "test/fixtures/greensleeves/greensleeves-satb.ly",
+      "sha256": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+      "byteLength": 5021,
+      "mediaType": "text/x-lilypond",
+      "derivation": {
+        "kind": "source_fixture",
+        "sourceRefs": ["mutopia.1247"],
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      },
+      "consumers": ["three-target golden corpus"],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Traditional Greensleeves SATB setting, Mutopia 1247",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+        },
+        "exemplar": {
+          "status": "identified",
+          "identity": "Mutopia-2008/01/13-1247 LilyPond source",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+        },
+        "scan": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git-history:test/fixtures/greensleeves/greensleeves-satb.ly"]
+      }
+    },
+    {
+      "id": "fixture.baroque-guitar-transition",
+      "path": "test/fixtures/baroque-guitar-transition-study.ly",
+      "sha256": "cc2c035475d31ad05af4217466098ec70e8c2a3e6b79e1e4e129f588227ac2c4",
+      "byteLength": 890,
+      "mediaType": "text/x-lilypond",
+      "derivation": {
+        "kind": "source_fixture",
+        "sourceRefs": ["vellum.original.baroque-guitar-transition-study"],
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "consumers": ["three-target golden corpus"],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Original Vellum baroque-guitar transition study",
+          "rightsStatus": "owner_authored",
+          "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+        },
+        "exemplar": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        },
+        "scan": { "status": "not_applicable", "rightsStatus": "not_applicable", "evidenceRefs": [] }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git-history:test/fixtures/baroque-guitar-transition-study.ly"]
+      }
+    },
+    {
+      "id": "fixture.baroque-lute-diapason",
+      "path": "test/fixtures/diapason-test.ly",
+      "sha256": "5ba137d07d8488191d0914b1c0146591566fad4a11600fad6ed3b12666327b7f",
+      "byteLength": 883,
+      "mediaType": "text/x-lilypond",
+      "derivation": {
+        "kind": "source_fixture",
+        "sourceRefs": ["vellum.original.baroque-lute-diapason-study"],
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "consumers": ["three-target golden corpus"],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Original Vellum baroque-lute diapason study",
+          "rightsStatus": "owner_authored",
+          "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+        },
+        "exemplar": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        },
+        "scan": { "status": "not_applicable", "rightsStatus": "not_applicable", "evidenceRefs": [] }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git-history:test/fixtures/diapason-test.ly"]
+      }
+    },
+    {
+      "id": "fixture.classical-polyphony",
+      "path": "test/fixtures/classical-guitar-polyphony.ly",
+      "sha256": "082d2eea60fa32c015648bfc5e6296f2f7be217fd6383452bc758df3f51db008",
+      "byteLength": 860,
+      "mediaType": "text/x-lilypond",
+      "derivation": {
+        "kind": "source_fixture",
+        "sourceRefs": ["vellum.original.classical-guitar-polyphony-study"],
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "consumers": ["three-target golden corpus"],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Original Vellum classical-guitar polyphony study",
+          "rightsStatus": "owner_authored",
+          "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+        },
+        "exemplar": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        },
+        "scan": { "status": "not_applicable", "rightsStatus": "not_applicable", "evidenceRefs": [] }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["git-history:test/fixtures/classical-guitar-polyphony.ly"]
+      }
+    },
+    {
+      "id": "fixture.greensleeves-source-pdf",
+      "path": "test/fixtures/greensleeves/greensleeves-satb.pdf",
+      "sha256": "41242dae463d8fefbfa3a11cefe78ea025f7649f4e8b631329e4904989fc5348",
+      "byteLength": 50824,
+      "mediaType": "application/pdf",
+      "derivation": {
+        "kind": "source_fixture",
+        "sourceRefs": ["mutopia.1247.greensleeves-a4.pdf"],
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      },
+      "consumers": [
+        "src/server/lib/source-import-route.ts",
+        "src/server/lib/omr-route.ts",
+        "test/fixtures/greensleeves/PROVENANCE.md"
+      ],
+      "sourceIdentity": {
+        "underlyingWork": {
+          "status": "identified",
+          "identity": "Greensleeves, traditional English melody",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+        },
+        "exemplar": {
+          "status": "identified",
+          "identity": "Mutopia 1247 typesetting by Steve Dunlop",
+          "rightsStatus": "public_domain",
+          "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+        },
+        "scan": {
+          "status": "not_applicable",
+          "rightsStatus": "not_applicable",
+          "evidenceRefs": []
+        }
+      },
+      "irreversiblePriorDisclosure": {
+        "status": "disclosed",
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision.tyler.default-generation.review",
+      "outcome": "review_required",
+      "binding": {
+        "artifactId": "tracked.alfabeto-tyler-universal",
+        "artifactSha256": "f39bd77758f89ad075dd3225f94a9d06100c0a35bbaf07b5b12c676d0719e331",
+        "operation": "default_generation",
+        "scope": {
+          "operation": "default_generation",
+          "distribution": "local_only",
+          "purpose": "production alfabeto default"
+        }
+      },
+      "unresolved": [
+        "repository inclusion authority",
+        "redistribution authority",
+        "exact exemplar identity"
+      ],
+      "evidenceRefs": ["SPEC.md#II-CLAUSE-1013"]
+    },
+    {
+      "id": "decision.foscarini.default-generation.review",
+      "outcome": "review_required",
+      "binding": {
+        "artifactId": "tracked.alfabeto-foscarini-overlay",
+        "artifactSha256": "9fb1d7b0179cb0008e1fac439f828d08b635a5c15b4c57d6f52022bc3b06008a",
+        "operation": "default_generation",
+        "scope": {
+          "operation": "default_generation",
+          "distribution": "local_only",
+          "purpose": "production alfabeto chart"
+        }
+      },
+      "unresolved": [
+        "repository inclusion authority",
+        "redistribution authority",
+        "exact exemplar identity"
+      ],
+      "evidenceRefs": ["SPEC.md#II-CLAUSE-1013"]
+    },
+    {
+      "id": "decision.sanz-pack.load.review",
+      "outcome": "review_required",
+      "binding": {
+        "artifactId": "tracked.knowledge-pack-core-baroque-guitar",
+        "artifactSha256": "21310478c1932c2e40eb1c23a4be665d74e394a153f12882b600c8b3ea077c70",
+        "operation": "knowledge_pack_load",
+        "scope": {
+          "operation": "knowledge_pack_load",
+          "distribution": "local_only",
+          "purpose": "production reviewed knowledge"
+        }
+      },
+      "unresolved": ["exact manifestation", "exact exemplar", "review authority"],
+      "evidenceRefs": ["SPEC.md#II-CLAUSE-0944"]
+    },
+    {
+      "id": "decision.greensleeves.fixture.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.greensleeves-satb",
+        "artifactSha256": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+        "operation": "fixture",
+        "scope": {
+          "operation": "fixture",
+          "distribution": "repository",
+          "purpose": "three-target golden corpus"
+        }
+      },
+      "authority": {
+        "id": "authority.mutopia-public-domain",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+    },
+    {
+      "id": "decision.greensleeves-source-pdf.fixture.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.greensleeves-source-pdf",
+        "artifactSha256": "41242dae463d8fefbfa3a11cefe78ea025f7649f4e8b631329e4904989fc5348",
+        "operation": "fixture",
+        "scope": {
+          "operation": "fixture",
+          "distribution": "repository",
+          "purpose": "real PDF ingestion fixture"
+        }
+      },
+      "authority": {
+        "id": "authority.mutopia-public-domain",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+    },
+    {
+      "id": "decision.baroque-guitar.fixture.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.baroque-guitar-transition",
+        "artifactSha256": "cc2c035475d31ad05af4217466098ec70e8c2a3e6b79e1e4e129f588227ac2c4",
+        "operation": "fixture",
+        "scope": {
+          "operation": "fixture",
+          "distribution": "repository",
+          "purpose": "three-target golden corpus"
+        }
+      },
+      "authority": {
+        "id": "authority.vellum-cc0",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+    },
+    {
+      "id": "decision.baroque-lute.fixture.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.baroque-lute-diapason",
+        "artifactSha256": "5ba137d07d8488191d0914b1c0146591566fad4a11600fad6ed3b12666327b7f",
+        "operation": "fixture",
+        "scope": {
+          "operation": "fixture",
+          "distribution": "repository",
+          "purpose": "three-target golden corpus"
+        }
+      },
+      "authority": {
+        "id": "authority.vellum-cc0",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+    },
+    {
+      "id": "decision.classical.fixture.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.classical-polyphony",
+        "artifactSha256": "082d2eea60fa32c015648bfc5e6296f2f7be217fd6383452bc758df3f51db008",
+        "operation": "fixture",
+        "scope": {
+          "operation": "fixture",
+          "distribution": "repository",
+          "purpose": "three-target golden corpus"
+        }
+      },
+      "authority": {
+        "id": "authority.vellum-cc0",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"]
+    },
+    {
+      "id": "decision.greensleeves.export.allow",
+      "outcome": "allow",
+      "binding": {
+        "artifactId": "fixture.greensleeves-satb",
+        "artifactSha256": "187caee2fa16c81d9ce8f71f47e928f2276ad81d98bb38ba2d06adfbeee45a4e",
+        "operation": "export",
+        "scope": {
+          "operation": "export",
+          "distribution": "external",
+          "purpose": "deliberate privacy-reviewed fixture export"
+        }
+      },
+      "authority": {
+        "id": "authority.mutopia-public-domain",
+        "kind": "source_license",
+        "evidenceRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+      },
+      "basisRefs": ["test/fixtures/greensleeves/PROVENANCE.md"]
+    }
+  ],
+  "substitutions": []
+}

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { authorizeTrackedSourceOperation } from "../../lib/tracked-source-quarantine.js";
 
 const Id = Type.String({ minLength: 1 });
 const NonEmpty = Type.String({ minLength: 1 });
@@ -21,6 +22,8 @@ const SourceSchema = Type.Object(
     origin: NonEmpty,
     license: NonEmpty,
     provenancePath: NonEmpty,
+    rightsArtifactId: Id,
+    rightsSubstitutionId: Type.Optional(Id),
   },
   { additionalProperties: false }
 );
@@ -104,6 +107,8 @@ export const PrivateFixtureExportSchema = Type.Object(
     reviewRef: NonEmpty,
     deliberatelySelected: Type.Literal(true),
     privacyReviewed: Type.Literal(true),
+    rightsArtifactId: Id,
+    rightsSubstitutionId: Type.Optional(Id),
   },
   { additionalProperties: false }
 );
@@ -179,9 +184,18 @@ export function goldenGeneratorVisibleInput(evaluationCase: GoldenCase): {
 
 export function validatePrivateFixtureExport(input: unknown): PrivateFixtureExport {
   const value = Value.Decode(PrivateFixtureExportSchema, input);
-  if (/private|proprietary|all rights reserved/i.test(value.license)) {
-    throw new Error("Private fixture export requires a legally reusable license");
-  }
+  requireTrackedSourceAuthorization(
+    value.rightsArtifactId,
+    value.contentSha256,
+    "export",
+    value.rightsSubstitutionId
+  );
+  requireTrackedSourceAuthorization(
+    value.rightsArtifactId,
+    value.contentSha256,
+    "fixture",
+    value.rightsSubstitutionId
+  );
   return value;
 }
 
@@ -199,9 +213,12 @@ export function validateGoldenCorpus(corpus: GoldenCorpus, projectRoot = process
     if (createHash("sha256").update(bytes).digest("hex") !== evaluationCase.source.sha256) {
       throw new Error(`Golden source digest mismatch: ${evaluationCase.id}`);
     }
-    if (/private|proprietary|all rights reserved/i.test(evaluationCase.source.license)) {
-      throw new Error(`Golden source is not legally reusable: ${evaluationCase.id}`);
-    }
+    requireTrackedSourceAuthorization(
+      evaluationCase.source.rightsArtifactId,
+      evaluationCase.source.sha256,
+      "fixture",
+      evaluationCase.source.rightsSubstitutionId
+    );
     if (
       /owner workspace/i.test(evaluationCase.source.origin) &&
       !corpus.dataset.privateWorkspaceExports.some(
@@ -253,6 +270,45 @@ export function validateGoldenCorpus(corpus: GoldenCorpus, projectRoot = process
     "left_hand_fingering",
     "standard_notation",
   ]);
+}
+
+function requireTrackedSourceAuthorization(
+  artifactId: string,
+  sha256: string,
+  operation: "fixture" | "export",
+  substitutionId?: string
+): void {
+  const resolution = authorizeTrackedSourceOperation({
+    artifactId,
+    sha256,
+    operation,
+    ...(substitutionId ? { substitutionId } : {}),
+  });
+  const resolvedSha256 = resolution.resolvedSha256 ?? resolution.artifactSha256;
+  const exactRequestBinding =
+    resolution.artifactId === artifactId &&
+    resolution.artifactSha256 === sha256 &&
+    resolution.operation === operation;
+  const exactSubstitutionBinding = substitutionId
+    ? resolution.substitutionId === substitutionId
+    : !resolution.substitutionId &&
+      resolution.resolvedArtifactId === artifactId &&
+      resolvedSha256 === sha256;
+  if (
+    resolution.outcome !== "allow" ||
+    !resolution.decisionId ||
+    !resolution.resolvedArtifactId ||
+    !resolution.resolvedSha256 ||
+    resolution.provenanceEvidenceRefs.length === 0 ||
+    !exactRequestBinding ||
+    !exactSubstitutionBinding
+  ) {
+    const reason =
+      resolution.outcome !== "allow"
+        ? resolution.outcome
+        : "incomplete or mismatched allow decision";
+    throw new Error(`Tracked source ${artifactId} is not authorized for ${operation}: ${reason}`);
+  }
 }
 
 function safeFixturePath(projectRoot: string, relativePath: string): string {

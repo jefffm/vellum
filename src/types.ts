@@ -353,35 +353,38 @@ export const AlfabetoChartIdSchema = Type.Union([
 
 export type AlfabetoChartId = Static<typeof AlfabetoChartIdSchema>;
 
-export const AlfabetoLookupParamsSchema = Type.Object({
-  chord_name: Type.Optional(
-    Type.String({
-      minLength: 1,
-      description: 'Chord name to look up, e.g. "G major", "Dm", "Bb".',
-    })
-  ),
-  pitch_classes: Type.Optional(
-    Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
-      minItems: 1,
-      description: "MIDI pitch classes (0-11) to match instead of chord_name.",
-    })
-  ),
-  chart_id: Type.Optional(AlfabetoChartIdSchema),
-  max_fret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
-  include_barre: Type.Optional(Type.Boolean()),
-  stringing: Type.Optional(
-    Type.Union([Type.Literal("french"), Type.Literal("italian"), Type.Literal("mixed")])
-  ),
-  // Backward-compatible camelCase aliases for existing callers. Prefer snake_case
-  // at external tool boundaries.
-  chordName: Type.Optional(Type.String({ minLength: 1 })),
-  pitchClasses: Type.Optional(
-    Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), { minItems: 1 })
-  ),
-  chartId: Type.Optional(AlfabetoChartIdSchema),
-  maxFret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
-  includeBarreVariants: Type.Optional(Type.Boolean()),
-});
+export const AlfabetoLookupParamsSchema = Type.Object(
+  {
+    chord_name: Type.Optional(
+      Type.String({
+        minLength: 1,
+        description: 'Chord name to look up, e.g. "G major", "Dm", "Bb".',
+      })
+    ),
+    pitch_classes: Type.Optional(
+      Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
+        minItems: 1,
+        description: "MIDI pitch classes (0-11) to match instead of chord_name.",
+      })
+    ),
+    chart_id: Type.Optional(AlfabetoChartIdSchema),
+    max_fret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
+    include_barre: Type.Optional(Type.Boolean()),
+    stringing: Type.Optional(
+      Type.Union([Type.Literal("french"), Type.Literal("italian"), Type.Literal("mixed")])
+    ),
+    // Backward-compatible camelCase aliases for existing callers. Prefer snake_case
+    // at external tool boundaries.
+    chordName: Type.Optional(Type.String({ minLength: 1 })),
+    pitchClasses: Type.Optional(
+      Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), { minItems: 1 })
+    ),
+    chartId: Type.Optional(AlfabetoChartIdSchema),
+    maxFret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
+    includeBarreVariants: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false }
+);
 
 export type AlfabetoLookupParams = Static<typeof AlfabetoLookupParamsSchema>;
 

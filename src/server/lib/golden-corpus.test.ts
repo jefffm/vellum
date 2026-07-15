@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   goldenGeneratorVisibleInput,
   loadGoldenCorpus,
@@ -6,6 +6,37 @@ import {
   validateGoldenCorpus,
   validatePrivateFixtureExport,
 } from "./golden-corpus.js";
+
+vi.mock("../../lib/tracked-source-quarantine.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../lib/tracked-source-quarantine.js")>();
+  return {
+    ...actual,
+    authorizeTrackedSourceOperation: (
+      request: Parameters<typeof actual.authorizeTrackedSourceOperation>[0]
+    ) => {
+      if (
+        request.artifactId === "fixture.private-substitution-source" &&
+        request.sha256 === "c".repeat(64) &&
+        (request.operation === "export" || request.operation === "fixture") &&
+        request.substitutionId === "substitution.private.exact"
+      ) {
+        return {
+          outcome: "allow" as const,
+          artifactId: request.artifactId,
+          artifactSha256: request.sha256,
+          resolvedArtifactId: "fixture.private-substitution-target",
+          resolvedSha256: "d".repeat(64),
+          operation: request.operation,
+          decisionId: `decision.private.${request.operation}.substitution`,
+          substitutionId: request.substitutionId,
+          provenanceEvidenceRefs: ["provenance.private.substitution"],
+          reasons: [],
+        };
+      }
+      return actual.authorizeTrackedSourceOperation(request);
+    },
+  };
+});
 
 describe("three-target Golden corpus", () => {
   it("retains licensed sources, reviewed truth, Analysis, Plans, invariants, and mutations", () => {
@@ -16,6 +47,7 @@ describe("three-target Golden corpus", () => {
       expect(evaluationCase.source).toMatchObject({
         license: expect.stringMatching(/Public Domain|CC0/),
         sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+        rightsArtifactId: expect.stringMatching(/^fixture\./),
       });
       expect(evaluationCase.reviewedTruth.facts.length).toBeGreaterThan(0);
       expect(evaluationCase.analysis.concepts.length).toBeGreaterThan(0);
@@ -91,9 +123,19 @@ describe("three-target Golden corpus", () => {
     sourceDrift.cases[2]!.source.sha256 = "a".repeat(64);
     expect(() => validateGoldenCorpus(sourceDrift)).toThrow(/digest mismatch/i);
 
-    const privateLeak = structuredClone(corpus);
-    privateLeak.cases[3]!.source.license = "Private workspace export";
-    expect(() => validateGoldenCorpus(privateLeak)).toThrow(/not legally reusable/i);
+    const unauthorized = structuredClone(corpus);
+    unauthorized.cases[3]!.source.license = "Public Domain";
+    unauthorized.cases[3]!.source.rightsArtifactId = "fixture.unknown-license-string-bypass";
+    expect(() => validateGoldenCorpus(unauthorized)).toThrow(/not authorized for fixture/i);
+    expect(() =>
+      (
+        validateGoldenCorpus as unknown as (
+          corpus: typeof unauthorized,
+          projectRoot: string,
+          ignoredOptions: { authorize: () => { outcome: "allow" } }
+        ) => void
+      )(unauthorized, process.cwd(), { authorize: () => ({ outcome: "allow" }) })
+    ).toThrow(/not authorized for fixture/i);
   });
 
   it("keeps held-out truth, Plans, invariants, mutations, and alternatives evaluator-side", () => {
@@ -114,7 +156,7 @@ describe("three-target Golden corpus", () => {
     expect(() =>
       validatePrivateFixtureExport({
         workspaceId: "workspace.private",
-        contentSha256: "a".repeat(64),
+        contentSha256: "c".repeat(64),
         license: "CC0-1.0",
         reviewRef: "review.owner-export.1",
         deliberatelySelected: true,
@@ -123,13 +165,31 @@ describe("three-target Golden corpus", () => {
     expect(
       validatePrivateFixtureExport({
         workspaceId: "workspace.private",
-        contentSha256: "a".repeat(64),
+        contentSha256: "c".repeat(64),
         license: "CC0-1.0",
         reviewRef: "review.owner-export.1",
         deliberatelySelected: true,
         privacyReviewed: true,
+        rightsArtifactId: "fixture.private-substitution-source",
+        rightsSubstitutionId: "substitution.private.exact",
       })
-    ).toMatchObject({ deliberatelySelected: true, privacyReviewed: true });
+    ).toMatchObject({
+      deliberatelySelected: true,
+      privacyReviewed: true,
+      rightsSubstitutionId: "substitution.private.exact",
+    });
+    expect(() =>
+      validatePrivateFixtureExport({
+        workspaceId: "workspace.private",
+        contentSha256: "c".repeat(64),
+        license: "CC0-1.0",
+        reviewRef: "review.owner-export.1",
+        deliberatelySelected: true,
+        privacyReviewed: true,
+        rightsArtifactId: "fixture.private-substitution-source",
+        rightsSubstitutionId: "substitution.private.forged",
+      })
+    ).toThrow(/not authorized for export/);
 
     const corpus = loadGoldenCorpus();
     corpus.cases[0]!.source.origin = "Owner workspace private export";

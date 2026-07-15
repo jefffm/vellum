@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
-import { alfabetoLookup } from "./alfabeto/lookup.js";
+import { lookupAlfabetoChart } from "./alfabeto/lookup.js";
+import { SYNTHETIC_ALFABETO_CHART } from "./alfabeto/__tests__/synthetic-chart.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { loadProfile } from "../server/profiles.js";
 import { engrave } from "../server/lib/engrave.js";
@@ -92,13 +93,15 @@ describe("exact five-course baroque-guitar Instrument Instances", () => {
     expect(frenchModel.soundingRange().lowest).toBe("G3");
     expect(italianModel.soundingRange().lowest).toBe("A2");
 
-    const frenchShape = alfabetoLookup({
+    const frenchShape = lookupAlfabetoChart(SYNTHETIC_ALFABETO_CHART, {
       chordName: "G major",
       instrumentInstance: french,
+      includeBarreVariants: false,
     }).matches[0]!;
-    const italianShape = alfabetoLookup({
+    const italianShape = lookupAlfabetoChart(SYNTHETIC_ALFABETO_CHART, {
       chordName: "G major",
       instrumentInstance: italian,
+      includeBarreVariants: false,
     }).matches[0]!;
     expect(italianShape.letter).toBe(frenchShape.letter);
     expect(italianShape.positions).toEqual(frenchShape.positions);

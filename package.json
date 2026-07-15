@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "node scripts/dev-all.mjs",
-    "server:build": "tsc -p tsconfig.server.json",
+    "server:build": "node scripts/clean-server-build.mjs && tsc -p tsconfig.server.json",
     "server": "node dist-server/server/index.js",
     "build": "vite build",
     "typecheck": "tsc --noEmit",

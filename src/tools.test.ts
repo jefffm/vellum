@@ -131,7 +131,7 @@ describe("instrument browser tools", () => {
     expect(result.details.flagged_bars).toEqual([]);
   });
 
-  it("looks up alfabeto shapes with canonical snake_case params without fetching", async () => {
+  it("fails closed for canonical alfabeto params without fetching or using chart data", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
 
     const result = await alfabetoLookupTool.execute("call-1", {
@@ -139,59 +139,61 @@ describe("instrument browser tools", () => {
       chart_id: "tyler-universal",
     });
 
-    expect(result.details.chartId).toBe("tyler-universal");
-    expect(result.details.matches[0]).toEqual(
-      expect.objectContaining({ letter: "A", chord: "G major", source: "standard" })
-    );
-    expect(result.details.matches[0]?.positions).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ course: 1, fret: 3 }),
-        expect.objectContaining({ course: 5, fret: 2 }),
-      ])
-    );
+    expect(result.details).toMatchObject({
+      status: "review_required",
+      chartId: "tyler-universal",
+      matches: [],
+      reviewRequired: {
+        code: "tracked_source_review_required",
+        artifactId: "tracked.alfabeto-tyler-universal",
+      },
+    });
     expect(result.content[0]?.type).toBe("text");
     if (result.content[0]?.type === "text") {
-      expect(result.content[0].text).toContain("alfabeto match");
-      expect(result.content[0].text).toContain("A — G major");
+      expect(result.content[0].text).toContain("review_required");
+      expect(result.content[0].text).toContain("no alfabeto chart data was used");
     }
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 
-  it("accepts legacy camelCase alfabeto lookup params", async () => {
+  it("does not let legacy camelCase params bypass quarantine", async () => {
     const result = await alfabetoLookupTool.execute("call-1", {
       chordName: "G major",
       chartId: "tyler-universal",
       includeBarreVariants: false,
     });
 
-    expect(result.details.chartId).toBe("tyler-universal");
-    expect(result.details.matches[0]).toEqual(
-      expect.objectContaining({ letter: "A", chord: "G major", source: "standard" })
-    );
+    expect(result.details).toMatchObject({
+      status: "review_required",
+      chartId: "tyler-universal",
+      matches: [],
+    });
   });
 
-  it("selects Foscarini-specific alfabeto matches", async () => {
+  it("fails closed for the Foscarini overlay locator", async () => {
     const result = await alfabetoLookupTool.execute("call-1", {
       chord_name: "Eb minor",
       chart_id: "foscarini",
     });
 
-    expect(result.details.chartId).toBe("foscarini");
-    expect(result.details.matches[0]).toEqual(
-      expect.objectContaining({ letter: "M†", chord: "Eb minor", source: "standard" })
-    );
+    expect(result.details).toMatchObject({
+      status: "review_required",
+      chartId: "foscarini",
+      matches: [],
+      reviewRequired: { artifactId: "tracked.alfabeto-foscarini-overlay" },
+    });
   });
 
-  it("returns an empty alfabeto match list for invalid chords", async () => {
+  it("does not parse invalid musical input before chart authority", async () => {
     const result = await alfabetoLookupTool.execute("call-1", {
       chord_name: "not a real chord",
     });
 
-    expect(result.details.matches).toEqual([]);
+    expect(result.details).toMatchObject({ status: "review_required", matches: [] });
     expect(result.content[0]?.type).toBe("text");
     if (result.content[0]?.type === "text") {
-      expect(result.content[0].text).toContain("No alfabeto matches");
+      expect(result.content[0].text).toContain("review_required");
     }
   });
 

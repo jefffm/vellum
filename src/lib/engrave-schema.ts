@@ -91,53 +91,59 @@ export const RestEventSchema = Type.Object({
 
 export type RestEvent = Static<typeof RestEventSchema>;
 
-export const AlfabetoEventSchema = Type.Object({
-  ...EventIdentityProperties,
-  type: Type.Literal("alfabeto"),
-  duration: Type.String({ minLength: 1 }),
-  chordName: Type.Optional(
-    Type.String({
-      minLength: 1,
-      description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
-    })
-  ),
-  pitchClasses: Type.Optional(
-    Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
-      minItems: 1,
-      description: "MIDI pitch classes (0-11) to resolve through alfabetoLookup.",
-    })
-  ),
-  letter: Type.Optional(
-    Type.String({
-      minLength: 1,
-      description: "Optional alfabeto symbol to select a specific chart shape/match.",
-    })
-  ),
-  chartId: Type.Optional(AlfabetoChartIdSchema),
-  maxFret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
-  includeBarreVariants: Type.Optional(Type.Boolean()),
-  tie: Type.Optional(Type.Boolean()),
-});
+export const AlfabetoEventSchema = Type.Object(
+  {
+    ...EventIdentityProperties,
+    type: Type.Literal("alfabeto"),
+    duration: Type.String({ minLength: 1 }),
+    chordName: Type.Optional(
+      Type.String({
+        minLength: 1,
+        description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
+      })
+    ),
+    pitchClasses: Type.Optional(
+      Type.Array(Type.Integer({ minimum: 0, maximum: 11 }), {
+        minItems: 1,
+        description: "MIDI pitch classes (0-11) to resolve through alfabetoLookup.",
+      })
+    ),
+    letter: Type.Optional(
+      Type.String({
+        minLength: 1,
+        description: "Optional alfabeto symbol to select a specific chart shape/match.",
+      })
+    ),
+    chartId: Type.Optional(AlfabetoChartIdSchema),
+    maxFret: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
+    includeBarreVariants: Type.Optional(Type.Boolean()),
+    tie: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false }
+);
 
 export type AlfabetoEvent = Static<typeof AlfabetoEventSchema>;
 
-export const AlfabetoChordEventSchema = Type.Object({
-  ...EventIdentityProperties,
-  type: Type.Literal("alfabeto_chord"),
-  chord_name: Type.String({
-    minLength: 1,
-    description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
-  }),
-  duration: Type.String({ minLength: 1 }),
-  chart_id: Type.Optional(AlfabetoChartIdSchema),
-  prefer: Type.Optional(
-    Type.String({
+export const AlfabetoChordEventSchema = Type.Object(
+  {
+    ...EventIdentityProperties,
+    type: Type.Literal("alfabeto_chord"),
+    chord_name: Type.String({
       minLength: 1,
-      description: 'Optional preferred alfabeto letter when multiple matches exist, e.g. "A".',
-    })
-  ),
-  tie: Type.Optional(Type.Boolean()),
-});
+      description: 'Chord name to resolve through alfabetoLookup, e.g. "G major", "Dm".',
+    }),
+    duration: Type.String({ minLength: 1 }),
+    chart_id: Type.Optional(AlfabetoChartIdSchema),
+    prefer: Type.Optional(
+      Type.String({
+        minLength: 1,
+        description: 'Optional preferred alfabeto letter when multiple matches exist, e.g. "A".',
+      })
+    ),
+    tie: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false }
+);
 
 export type AlfabetoChordEvent = Static<typeof AlfabetoChordEventSchema>;
 

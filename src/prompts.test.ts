@@ -63,14 +63,15 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("For small edits to an existing LilyPond file");
   });
 
-  it("includes baroque guitar alfabeto workflow", () => {
+  it("includes the fail-closed authorized alfabeto workflow", () => {
     const prompt = buildSystemPrompt([]);
 
-    expect(prompt).toContain("Baroque Guitar Arrangement — Alfabeto Priority");
-    expect(prompt).toContain("standard non-barré match");
-    expect(prompt).toContain("prefer low barré");
-    expect(prompt).toContain("Only fall back to `voicings`");
-    expect(prompt).toContain('chart_id: "foscarini"');
+    expect(prompt).toContain("Baroque Guitar Arrangement — Authorized Alfabeto");
+    expect(prompt).toContain("exact activated chart release");
+    expect(prompt).toContain("`review_required` as a terminal authority result");
+    expect(prompt).toContain("There is no built-in historical chart default");
+    expect(prompt).not.toContain("Tyler Universal chart is the default");
+    expect(prompt).not.toContain('chart_id: "foscarini"');
   });
 
   it("includes profile-scoped continuo reasoning", () => {

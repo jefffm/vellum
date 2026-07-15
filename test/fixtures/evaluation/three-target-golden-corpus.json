@@ -15,7 +15,8 @@
         "mediaType": "text/x-lilypond",
         "origin": "Mutopia 1247, traditional Greensleeves SATB setting",
         "license": "Public Domain",
-        "provenancePath": "test/fixtures/greensleeves/PROVENANCE.md"
+        "provenancePath": "test/fixtures/greensleeves/PROVENANCE.md",
+        "rightsArtifactId": "fixture.greensleeves-satb"
       },
       "reviewedTruth": {
         "reviewStatus": "repository_reviewed",
@@ -117,7 +118,8 @@
         "mediaType": "text/x-lilypond",
         "origin": "Original Vellum transition study",
         "license": "CC0-1.0",
-        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md",
+        "rightsArtifactId": "fixture.baroque-guitar-transition"
       },
       "reviewedTruth": {
         "reviewStatus": "repository_reviewed",
@@ -206,7 +208,8 @@
         "mediaType": "text/x-lilypond",
         "origin": "Original Vellum stopped-course and diapason study",
         "license": "CC0-1.0",
-        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md",
+        "rightsArtifactId": "fixture.baroque-lute-diapason"
       },
       "reviewedTruth": {
         "reviewStatus": "repository_reviewed",
@@ -289,7 +292,8 @@
         "mediaType": "text/x-lilypond",
         "origin": "Original Vellum classical-guitar study",
         "license": "CC0-1.0",
-        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md"
+        "provenancePath": "test/fixtures/evaluation/THREE_TARGET_PROVENANCE.md",
+        "rightsArtifactId": "fixture.classical-polyphony"
       },
       "reviewedTruth": {
         "reviewStatus": "repository_reviewed",

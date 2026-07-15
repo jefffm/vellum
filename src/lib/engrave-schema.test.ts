@@ -191,6 +191,17 @@ describe("engrave-schema — event types", () => {
       };
       expect(Value.Check(AlfabetoEventSchema, event)).toBe(false);
     });
+
+    it("rejects caller-supplied authority fields", () => {
+      expect(
+        Value.Check(AlfabetoEventSchema, {
+          type: "alfabeto",
+          chordName: "G major",
+          duration: "4",
+          authorization: { outcome: "allow" },
+        })
+      ).toBe(false);
+    });
   });
 
   describe("AlfabetoChordEventSchema", () => {
@@ -211,6 +222,17 @@ describe("engrave-schema — event types", () => {
         duration: "4",
       };
       expect(Value.Check(AlfabetoChordEventSchema, event)).toBe(false);
+    });
+
+    it("rejects caller-supplied release or authority claims", () => {
+      expect(
+        Value.Check(AlfabetoChordEventSchema, {
+          type: "alfabeto_chord",
+          chord_name: "G major",
+          duration: "4",
+          chart_release: { outcome: "allow", positions: [] },
+        })
+      ).toBe(false);
     });
   });
 

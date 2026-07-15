@@ -43,9 +43,8 @@ import {
 } from "../../lib/ly-tree.js";
 import {
   alfabetoLookup,
-  getChart,
-  shapeToPositions,
   type AlfabetoMatch,
+  type ReviewRequiredAlfabetoLookupResult,
 } from "../../lib/alfabeto/index.js";
 import { parseTimeSignature, validateKeySignature } from "../../lib/music-utils.js";
 import { loadProfile } from "../profiles.js";
@@ -69,8 +68,20 @@ export type ValidationDetail = {
   bar: number; // 1-based (0 for global/structural errors)
   event?: number; // 1-based within bar
   field?: string;
+  status?: "review_required";
+  code?: string;
+  artifactId?: string;
   message: string;
 };
+
+class AlfabetoReviewRequiredError extends Error {
+  readonly status = "review_required" as const;
+
+  constructor(readonly result: ReviewRequiredAlfabetoLookupResult) {
+    super(`review_required: ${result.reviewRequired.message}`);
+    this.name = "AlfabetoReviewRequiredError";
+  }
+}
 
 // === Duration validation ===
 
@@ -421,6 +432,19 @@ function validateAlfabetoEvent(
       validatePositionEntry(position.course, position.fret, model, barNum, evNum, errors);
     }
   } catch (error) {
+    if (error instanceof AlfabetoReviewRequiredError) {
+      errors.push({
+        bar: barNum,
+        event: evNum,
+        field: "alfabeto",
+        status: "review_required",
+        code: error.result.reviewRequired.code,
+        artifactId: error.result.reviewRequired.artifactId,
+        message: `review_required: ${error.result.reviewRequired.message}`,
+      });
+      return;
+    }
+
     errors.push({
       bar: barNum,
       event: evNum,
@@ -618,25 +642,6 @@ function resolveAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefine
   const request = normalizeAlfabetoEvent(event);
   const chartId = request.chartId ?? "tyler-universal";
 
-  if (request.letter && !request.chordName && !request.pitchClasses) {
-    const shape = getChart(chartId).shapes.find((candidate) => candidate.letter === request.letter);
-
-    if (!shape) {
-      return undefined;
-    }
-
-    return {
-      letter: shape.letter,
-      chord: shape.chord,
-      positions: shapeToPositions(shape),
-      source: "standard",
-    };
-  }
-
-  if (!request.chordName && !request.pitchClasses) {
-    return undefined;
-  }
-
   const result = alfabetoLookup({
     chordName: request.chordName,
     pitchClasses: request.pitchClasses,
@@ -644,6 +649,15 @@ function resolveAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefine
     maxFret: request.maxFret,
     includeBarreVariants: request.includeBarreVariants,
   });
+
+  if (result.status === "review_required") {
+    throw new AlfabetoReviewRequiredError(result);
+  }
+
+  if (!request.chordName && !request.pitchClasses) {
+    return undefined;
+  }
+
   const matches = request.letter
     ? result.matches.filter((match) => match.letter === request.letter)
     : result.matches;
@@ -683,7 +697,7 @@ function describeMissingAlfabetoMatch(event: AnyAlfabetoEvent): string {
   const request = normalizeAlfabetoEvent(event);
 
   if (request.letter && !request.chordName && !request.pitchClasses) {
-    return `No alfabeto chart shape found for letter "${request.letter}" in ${request.chartId ?? "tyler-universal"}`;
+    return `No authorized alfabeto chart shape found for letter "${request.letter}"`;
   }
 
   if (!request.chordName && !request.pitchClasses) {
@@ -692,7 +706,7 @@ function describeMissingAlfabetoMatch(event: AnyAlfabetoEvent): string {
 
   const target = request.chordName ?? `pitch classes ${request.pitchClasses?.join(",")}`;
   const letter = request.letter ? ` and letter "${request.letter}"` : "";
-  return `No alfabeto match found for ${target}${letter} in ${request.chartId ?? "tyler-universal"}`;
+  return `No authorized alfabeto match found for ${target}${letter}`;
 }
 
 function escapeLilyPondString(value: string): string {
