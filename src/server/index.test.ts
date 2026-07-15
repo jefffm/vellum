@@ -82,6 +82,11 @@ describe("server API endpoints", () => {
     ["model action creation", "POST", "/api/workspaces/workspace.1234567890abcdef/model-actions"],
     ["compile tool", "POST", "/api/compile"],
     ["owner state", "GET", "/api/owner"],
+    [
+      "reference-source staging transaction",
+      "POST",
+      "/api/owner/reference-source-staging/transactions",
+    ],
     ["workspace mutation", "POST", "/api/workspaces"],
     ["source upload", "POST", "/api/workspaces/workspace.1234567890abcdef/sources"],
     ["arrangement search", "POST", "/api/workspaces/workspace.1234567890abcdef/arrangements"],

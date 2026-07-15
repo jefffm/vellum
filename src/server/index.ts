@@ -134,6 +134,14 @@ import {
   createOwnerPlaytestCreateRoute,
 } from "./lib/owner-playtest-route.js";
 import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventory-route.js";
+import { OwnerStore } from "./lib/owner-store.js";
+import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
+import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
+import {
+  createReferenceSourceStagingReadRoute,
+  createReferenceSourceStagingSnapshotRoute,
+  createReferenceSourceStagingTransactionRoute,
+} from "./lib/reference-source-staging-route.js";
 import {
   createApiBoundary,
   errorCodeForStatus,
@@ -199,10 +207,17 @@ function requestParserStatus(error: unknown): number {
 
 type ApiRouterOptions = {
   compilerRunner?: Pick<SubprocessRunner, "run">;
+  referenceSourceStagingService?: ReferenceSourceStagingService;
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const router = Router();
+  const referenceSourceStagingService =
+    options.referenceSourceStagingService ??
+    new ReferenceSourceStagingService({
+      store: new ReferenceSourceStagingStore(),
+      listLegacyOwnerReferences: () => new OwnerStore().listReferences(),
+    });
 
   router.get("/", (_request, response) => {
     response.json({ status: "ok" });
@@ -231,6 +246,18 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get("/workspaces", createWorkspaceListRoute());
   router.get("/owner", createOwnerStateRoute());
   router.get("/owner/tracked-source-inventory", createTrackedSourceInventoryRoute());
+  router.get(
+    "/owner/reference-source-staging",
+    createReferenceSourceStagingReadRoute(referenceSourceStagingService)
+  );
+  router.get(
+    "/owner/reference-source-staging/snapshots/:snapshotId",
+    createReferenceSourceStagingSnapshotRoute(referenceSourceStagingService)
+  );
+  router.post(
+    "/owner/reference-source-staging/transactions",
+    createReferenceSourceStagingTransactionRoute(referenceSourceStagingService)
+  );
   router.post("/owner/choices", createOwnerChoiceRoute());
   router.post(
     "/owner/personal-default-candidates/:id/approve",
@@ -505,6 +532,7 @@ function instrumentSummary(profile: InstrumentProfile): InstrumentSummary {
 type CreateAppOptions = {
   security?: RuntimeSecurity;
   compilerRunner?: Pick<SubprocessRunner, "run">;
+  referenceSourceStagingService?: ReferenceSourceStagingService;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -545,7 +573,13 @@ export function createApp(options: CreateAppOptions = {}) {
     response.json(body);
   });
 
-  app.use("/api", createApiRouter({ compilerRunner: options.compilerRunner }));
+  app.use(
+    "/api",
+    createApiRouter({
+      compilerRunner: options.compilerRunner,
+      referenceSourceStagingService: options.referenceSourceStagingService,
+    })
+  );
   app.use(express.static(distPath));
 
   app.use(notFound);
@@ -564,7 +598,11 @@ export function startServer(
 ): Server {
   const security = validateRuntimeSecurity(options.security ?? resolveRuntimeSecurity());
   new WorkspaceStore({ recoverOnStart: true });
-  const app = createApp({ security });
+  const app = createApp({
+    security,
+    compilerRunner: options.compilerRunner,
+    referenceSourceStagingService: options.referenceSourceStagingService,
+  });
   const server = createServer(app);
 
   server.listen(port, security.host, () => {
