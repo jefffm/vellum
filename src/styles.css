@@ -677,6 +677,151 @@ chat-panel > div > div:has(agent-interface) {
   overflow-wrap: anywhere;
 }
 
+.reference-source-lifecycle-planner,
+.reference-source-lifecycle-plan,
+.reference-source-lifecycle-consequences,
+.reference-source-lifecycle-permissions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.reference-source-lifecycle-planner {
+  padding-top: 0.75rem;
+  border-top: 1px solid #d8cfb6;
+}
+
+.reference-source-lifecycle-planner h3,
+.reference-source-lifecycle-plan h4,
+.reference-source-lifecycle-plan h5,
+.reference-source-lifecycle-planner p,
+.reference-source-lifecycle-plan p {
+  margin: 0;
+}
+
+.reference-source-lifecycle-warning {
+  padding: 0.55rem 0.65rem;
+  border-left: 0.25rem solid #9a6a2f;
+  color: #5e4b2e;
+  background: #fff5dc;
+}
+
+.reference-source-lifecycle-inventory,
+.reference-source-lifecycle-status,
+.reference-source-lifecycle-plan-identity,
+.reference-source-lifecycle-aggregate {
+  color: #625744;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.reference-source-lifecycle-form {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(15rem, 1.5fr);
+  gap: 0.55rem 0.75rem;
+  align-items: end;
+  padding: 0.7rem;
+  border: 1px solid #ded8c8;
+  border-radius: 0.45rem;
+  background: #fff;
+}
+
+.reference-source-lifecycle-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: #4f4939;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.reference-source-lifecycle-form label:has(textarea),
+.reference-source-lifecycle-form .reference-source-lifecycle-status {
+  grid-column: 1 / -1;
+}
+
+.reference-source-lifecycle-form select,
+.reference-source-lifecycle-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem;
+  border: 1px solid #bdb49c;
+  border-radius: 0.35rem;
+  color: #302d25;
+  background: #fff;
+  font: inherit;
+}
+
+.reference-source-lifecycle-form button {
+  justify-self: start;
+}
+
+.reference-source-lifecycle-plan {
+  padding: 0.75rem;
+  border: 1px solid #b8c6bd;
+  border-radius: 0.5rem;
+  background: #f9fcfa;
+}
+
+.reference-source-lifecycle-plan-blocked {
+  border-color: #d6b6a9;
+  background: #fff9f6;
+}
+
+.reference-source-lifecycle-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.reference-source-lifecycle-state,
+.reference-source-lifecycle-consequence,
+.reference-source-lifecycle-permission,
+.reference-source-lifecycle-issue {
+  padding: 0.5rem 0.6rem;
+  border-left: 0.22rem solid #66858f;
+  background: #fff;
+}
+
+.reference-source-lifecycle-state {
+  color: #4d4a40;
+  font-size: 0.75rem;
+}
+
+.reference-source-lifecycle-state-accessible {
+  border-left-color: #3d7a57;
+}
+
+.reference-source-lifecycle-state-restricted {
+  border-left-color: #a05c37;
+}
+
+.reference-source-lifecycle-state-tombstone {
+  border-left-color: #75698f;
+}
+
+.reference-source-lifecycle-state-purged {
+  border-left-color: #8c3f3f;
+}
+
+.reference-source-lifecycle-consequence p,
+.reference-source-lifecycle-permission p,
+.reference-source-lifecycle-issue p {
+  color: #555044;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.reference-source-lifecycle-disclosure {
+  color: #7c322f !important;
+  font-weight: 700;
+}
+
+@media (max-width: 46rem) {
+  .reference-source-lifecycle-form,
+  .reference-source-lifecycle-legend {
+    grid-template-columns: 1fr;
+  }
+}
+
 .personal-default-summary {
   flex-basis: 100%;
   color: #5f5f58;

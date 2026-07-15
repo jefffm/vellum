@@ -31,6 +31,7 @@ import {
 } from "./lib/api-contract.js";
 import {
   formatReferenceIdentityConfidence,
+  renderReferenceSourceLifecycleDryRun,
   renderReferenceSourceStagingDiagnostics,
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-diagnostics.js";
@@ -2474,6 +2475,12 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         "/api/owner/reference-source-staging"
       );
       renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, diagnostics);
+      renderReferenceSourceLifecycleDryRun(referenceSourceDiagnostics, diagnostics, (request) =>
+        api("/api/owner/reference-source-staging/lifecycle/plan", {
+          method: "POST",
+          body: JSON.stringify(request),
+        })
+      );
     } catch {
       renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, undefined);
     }
