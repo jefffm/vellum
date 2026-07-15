@@ -70,9 +70,9 @@ describe("local Owner trust boundary", () => {
     expect(promoted.claim).toMatchObject({
       referenceId: reference.id,
       sourceCandidateId: candidate.id,
-      confidence: 1,
       status: "active",
     });
+    expect(promoted.claim.confidence).toBeUndefined();
     expect(promoted.pack).toMatchObject({
       reviewed: true,
       version: 1,

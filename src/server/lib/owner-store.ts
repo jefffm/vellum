@@ -294,7 +294,6 @@ export class OwnerStore {
         referenceId: candidate.referenceId,
         citationLocator: candidate.citationLocator,
         sourceCandidateId: candidate.id,
-        confidence: input.authority === "documented_practice" ? 1 : 0.75,
         status: "active",
         reviewedAt: timestamp,
       }

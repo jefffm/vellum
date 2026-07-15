@@ -9,6 +9,7 @@ import path from "node:path";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { KnowledgeScopeSchema } from "../../lib/owner-domain.js";
+import type { OwnerReference } from "../../lib/owner-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
 import { OwnerStore } from "./owner-store.js";
 import {
@@ -24,7 +25,7 @@ export function createOwnerStateRoute(store = new OwnerStore()): RequestHandler 
     handler: async () => ({
       personalDefaultCandidates: store.listDefaultCandidates(),
       personalDefaults: store.listDefaults(),
-      ownerReferences: store.listReferences(),
+      ownerReferences: store.listReferences().map(ownerReferenceSummary),
       knowledgeCandidates: store.listKnowledgeCandidates(),
       historicalPracticeClaims: store.listClaims(),
       knowledgePacks: store.listPacks(),
@@ -32,6 +33,18 @@ export function createOwnerStateRoute(store = new OwnerStore()): RequestHandler 
       quarantinedBuiltInKnowledgePacks: listQuarantinedBuiltInKnowledgePacks(),
     }),
   });
+}
+
+function ownerReferenceSummary(reference: OwnerReference): Omit<OwnerReference, "storedPath"> {
+  return {
+    id: reference.id,
+    title: reference.title,
+    citation: reference.citation,
+    mimeType: reference.mimeType,
+    sha256: reference.sha256,
+    byteLength: reference.byteLength,
+    createdAt: reference.createdAt,
+  };
 }
 
 export function createOwnerChoiceRoute(store = new OwnerStore()): RequestHandler {
@@ -106,7 +119,7 @@ export function createOwnerReferenceRoute(
   });
   const legacyJsonRoute = createApiRoute<any, unknown>({
     validate: (body) => Value.Decode(Body, body),
-    handler: async (input) => store.addReference(input),
+    handler: async (input) => ownerReferenceSummary(store.addReference(input)),
   });
   return (request, response, next) => {
     if (request.is("application/json")) {
@@ -158,7 +171,7 @@ export function createOwnerReferenceRoute(
           sha256: hash.digest("hex"),
           byteLength,
         });
-        response.status(200).json({ ok: true, data: reference });
+        response.status(200).json({ ok: true, data: ownerReferenceSummary(reference) });
       } catch (error) {
         next(error);
       } finally {

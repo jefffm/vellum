@@ -6,7 +6,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ApiResponse } from "../../lib/api-contract.js";
 import type { OwnerReference } from "../../lib/owner-domain.js";
-import { createOwnerReferenceRoute } from "./owner-route.js";
+import { createOwnerReferenceRoute, createOwnerStateRoute } from "./owner-route.js";
 import { OwnerStore } from "./owner-store.js";
 
 describe("Owner Reference upload", () => {
@@ -46,7 +46,7 @@ describe("Owner Reference upload", () => {
       },
       body: content,
     });
-    const json = (await response.json()) as ApiResponse<OwnerReference>;
+    const json = (await response.json()) as ApiResponse<Omit<OwnerReference, "storedPath">>;
 
     expect(response.status).toBe(200);
     expect(json.ok).toBe(true);
@@ -57,7 +57,9 @@ describe("Owner Reference upload", () => {
       mimeType: "application/pdf",
       byteLength: content.byteLength,
     });
-    expect(readFileSync(path.join(rootDirectory, json.data.storedPath))).toEqual(content);
+    expect(json.data).not.toHaveProperty("storedPath");
+    const stored = store.listReferences()[0];
+    expect(readFileSync(path.join(rootDirectory, stored.storedPath))).toEqual(content);
   });
 
   it("retains the small legacy JSON boundary", async () => {
@@ -72,11 +74,14 @@ describe("Owner Reference upload", () => {
         contentBase64: Buffer.from("A reviewed note").toString("base64"),
       }),
     });
-    const json = (await response.json()) as ApiResponse<OwnerReference>;
+    const json = (await response.json()) as ApiResponse<Omit<OwnerReference, "storedPath">>;
 
     expect(response.status).toBe(200);
     expect(json.ok).toBe(true);
-    if (json.ok) expect(json.data.byteLength).toBe(15);
+    if (json.ok) {
+      expect(json.data.byteLength).toBe(15);
+      expect(json.data).not.toHaveProperty("storedPath");
+    }
   });
 
   it("rejects a streamed reference beyond the configured limit", async () => {
@@ -97,10 +102,31 @@ describe("Owner Reference upload", () => {
     expect(store.listReferences()).toEqual([]);
   });
 
+  it("keeps local storage paths out of the Owner compatibility response", async () => {
+    store.addReference({
+      title: "Private facsimile",
+      citation: "Owner library",
+      mimeType: "application/pdf",
+      contentBase64: Buffer.from("private source bytes").toString("base64"),
+    });
+    const server = await listen(createOwnerStateRoute(store));
+    const response = await fetch(serverUrl(server));
+    const json = (await response.json()) as ApiResponse<{
+      ownerReferences: Array<Record<string, unknown>>;
+    }>;
+
+    expect(response.status).toBe(200);
+    expect(json.ok).toBe(true);
+    if (!json.ok) return;
+    expect(json.data.ownerReferences).toHaveLength(1);
+    expect(json.data.ownerReferences[0]).not.toHaveProperty("storedPath");
+    expect(JSON.stringify(json.data)).not.toContain("references/reference.");
+  });
+
   async function listen(route: express.RequestHandler, parseJson = false): Promise<Server> {
     const app = express();
     if (parseJson) app.use(express.json());
-    app.post("/", route);
+    app.all("/", route);
     app.use(((error, _request, response, _next) => {
       response.status(error.status ?? 500).json({
         ok: false,
