@@ -192,6 +192,199 @@ describe("reference-source authority closure", () => {
     );
   });
 
+  it("discharges a missing facet only through one evidence-backed signed not-applicable entry", () => {
+    const underlying = rights(
+      "rights.underlying_work_status",
+      "underlying_work_status",
+      "permitted"
+    );
+    const assertions = [underlying];
+    const decision = accessDecision("manifestation_use", assertions);
+    const baseReceipt = authorityReceipt(
+      decision,
+      assertions,
+      REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
+    );
+    const notApplicable = {
+      facet: "manifestation_editorial" as const,
+      rationale: "No manifestation-level editorial layer applies to this exact source.",
+      evidenceRefs: [ref("evidence.manifestation-not-applicable", "3")],
+    };
+    const receipt = signedReceipt({
+      ...withoutDigest(baseReceipt),
+      notApplicableFacets: [notApplicable],
+    });
+    const input: ReferenceSourceAuthorityEvaluationInput = {
+      schemaVersion: 1,
+      effectiveAt: NOW,
+      accessDecisionRef: recordRef(decision),
+      accessDecisions: [decision],
+      rightsAssertions: assertions,
+      receipt,
+      verifyServerReceipt: verifier,
+    };
+
+    expect(evaluateReferenceSourceAuthority(input)).toMatchObject({
+      status: "allow",
+      findings: [],
+    });
+
+    const missing = evaluateReferenceSourceAuthority({ ...input, receipt: baseReceipt });
+    expect(missing).toMatchObject({ status: "review_required" });
+    expect(missing.findings).toContainEqual(
+      expect.objectContaining({ code: "facet_missing", facet: "manifestation_editorial" })
+    );
+
+    const noEvidence = signedReceipt({
+      ...withoutDigest(baseReceipt),
+      notApplicableFacets: [{ ...notApplicable, evidenceRefs: [] }],
+    });
+    expect(() => evaluateReferenceSourceAuthority({ ...input, receipt: noEvidence })).toThrow(
+      /closed schema/
+    );
+
+    const tampered = redigestWithoutResigning({
+      ...receipt,
+      notApplicableFacets: [
+        {
+          ...notApplicable,
+          rationale: "Tampered after the server signed the receipt.",
+        },
+      ],
+    });
+    const tamperedResult = evaluateReferenceSourceAuthority({ ...input, receipt: tampered });
+    expect(tamperedResult.status).toBe("review_required");
+    expect(tamperedResult.findings).toContainEqual(
+      expect.objectContaining({ code: "receipt_signature_invalid" })
+    );
+    expect(tamperedResult.findings).not.toContainEqual(
+      expect.objectContaining({ code: "receipt_digest_invalid" })
+    );
+  });
+
+  it("blocks an asserted facet that is also signed as not applicable", () => {
+    const input = completeInput("manifestation_use");
+    const receipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      notApplicableFacets: [
+        {
+          facet: "manifestation_editorial",
+          rationale: "Contradicts the current assertion and therefore cannot discharge it.",
+          evidenceRefs: [ref("evidence.contradictory-not-applicable", "4")],
+        },
+      ],
+    });
+
+    const result = evaluateReferenceSourceAuthority({ ...input, receipt });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        code: "facet_applicability_conflict",
+        facet: "manifestation_editorial",
+      })
+    );
+  });
+
+  it("blocks duplicate and out-of-scope signed not-applicable entries", () => {
+    const underlying = rights(
+      "rights.underlying_work_status",
+      "underlying_work_status",
+      "permitted"
+    );
+    const decision = accessDecision("manifestation_use", [underlying]);
+    const baseReceipt = authorityReceipt(
+      decision,
+      [underlying],
+      REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
+    );
+    const duplicate = {
+      facet: "manifestation_editorial" as const,
+      rationale: "First purported resolution.",
+      evidenceRefs: [ref("evidence.not-applicable-one", "5")],
+    };
+    const duplicateReceipt = signedReceipt({
+      ...withoutDigest(baseReceipt),
+      notApplicableFacets: [
+        duplicate,
+        {
+          ...duplicate,
+          rationale: "Second purported resolution for the same facet.",
+          evidenceRefs: [ref("evidence.not-applicable-two", "6")],
+        },
+      ],
+    });
+    const duplicateResult = evaluateReferenceSourceAuthority({
+      schemaVersion: 1,
+      effectiveAt: NOW,
+      accessDecisionRef: recordRef(decision),
+      accessDecisions: [decision],
+      rightsAssertions: [underlying],
+      receipt: duplicateReceipt,
+      verifyServerReceipt: verifier,
+    });
+    expect(duplicateResult.status).toBe("review_required");
+    expect(duplicateResult.findings).toContainEqual(
+      expect.objectContaining({ code: "facet_applicability_conflict" })
+    );
+
+    const input = completeInput("owner_private_study");
+    const outOfScopeReceipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      notApplicableFacets: [
+        {
+          facet: "export_redistribution",
+          rationale: "This facet is not part of owner-private study authority.",
+          evidenceRefs: [ref("evidence.out-of-scope-not-applicable", "7")],
+        },
+      ],
+    });
+    const outOfScopeResult = evaluateReferenceSourceAuthority({
+      ...input,
+      receipt: outOfScopeReceipt,
+    });
+    expect(outOfScopeResult.status).toBe("review_required");
+    expect(outOfScopeResult.findings).toContainEqual(
+      expect.objectContaining({ code: "facet_applicability_conflict" })
+    );
+  });
+
+  it("covers every server-observation binding field with the receipt signature", () => {
+    const input = completeInput("owner_private_study");
+    const firstObservation = input.receipt.rightsAssertionObservations[0]!;
+    const tamperedReceipts: ReferenceAuthorityVerificationReceipt[] = [
+      redigestWithoutResigning({
+        ...input.receipt,
+        observedSnapshotRef: ref("reference-source-snapshot.substituted", "8"),
+      }),
+      redigestWithoutResigning({
+        ...input.receipt,
+        accessDecisionFirstObservedRevision: input.receipt.accessDecisionFirstObservedRevision + 1,
+      }),
+      redigestWithoutResigning({
+        ...input.receipt,
+        rightsAssertionObservations: [
+          {
+            ...firstObservation,
+            firstObservedRevision: firstObservation.firstObservedRevision + 1,
+          },
+          ...input.receipt.rightsAssertionObservations.slice(1),
+        ],
+      }),
+    ];
+
+    for (const receipt of tamperedReceipts) {
+      const result = evaluateReferenceSourceAuthority({ ...input, receipt });
+      expect(result.status).toBe("review_required");
+      expect(result.findings).toContainEqual(
+        expect.objectContaining({ code: "receipt_signature_invalid" })
+      );
+      expect(result.findings).not.toContainEqual(
+        expect.objectContaining({ code: "receipt_digest_invalid" })
+      );
+    }
+  });
+
   it("binds the receipt and decision to the exact current assertion closure", () => {
     const oldAssertion = rights("rights.export", "export_redistribution", "permitted");
     const restricted = rights("rights.export", "export_redistribution", "restricted", {
@@ -392,8 +585,14 @@ function authorityReceipt(
     recordKind: "reference_authority_verification_receipt",
     schemaVersion: 1,
     id: `authority-receipt.${decision.id}`,
+    observedSnapshotRef: ref("reference-source-snapshot.authority", "2"),
     accessDecisionRef: recordRef(decision),
+    accessDecisionFirstObservedRevision: 1,
     currentRightsAssertionRefs: assertions.map(recordRef),
+    rightsAssertionObservations: assertions.map((assertion) => ({
+      rightsAssertionRef: recordRef(assertion),
+      firstObservedRevision: 1,
+    })),
     authoritySubjectRefs: [SUBJECT_REF],
     verifiedAuthorityRefs: [...decision.authorityRefs],
     requiredFacets: [...requiredFacets],
@@ -444,4 +643,11 @@ function withoutVerifier(input: ReferenceSourceAuthorityEvaluationInput) {
 function withoutDigest(receipt: ReferenceAuthorityVerificationReceipt) {
   const { digest: _digest, ...core } = receipt;
   return core;
+}
+
+function redigestWithoutResigning(
+  receipt: ReferenceAuthorityVerificationReceipt
+): ReferenceAuthorityVerificationReceipt {
+  const { digest: _digest, ...core } = receipt;
+  return { ...core, digest: referenceSourceDigest(core) };
 }
