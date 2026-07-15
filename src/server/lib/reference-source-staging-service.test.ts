@@ -5,16 +5,22 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  referenceSourceDigest,
   withReferenceRecordDigest,
   type ReferenceRecordRef,
+  type ReferenceSourceRecordObservation,
   type ReferenceSourceStagingRecord,
+  type ReferenceSourceStagingSnapshot,
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
 import {
   ReferenceSourceStagingIntegrityError,
   ReferenceSourceStagingStore,
 } from "./reference-source-staging-store.js";
-import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import {
+  ReferenceSourceStagingMigrationRequiredError,
+  ReferenceSourceStagingService,
+} from "./reference-source-staging-service.js";
 
 const ASSERTED_AT = "2026-07-15T12:00:00.000Z";
 const SERVER_TIME = "2026-07-15T13:00:00.000Z";
@@ -233,10 +239,61 @@ describe("ReferenceSourceStagingService integrity", () => {
         evidenceRefs: [ref(graph.rightsB)],
       },
     });
-    current = service.applyTransaction(
-      transaction("policy-authority", [policyAuthority], headRef(current))
+    expect(() =>
+      service.applyTransaction(transaction("policy-authority", [policyAuthority], headRef(current)))
+    ).toThrow(/not authorized by its exact Access Decision/);
+
+    const unscopedRoleBinding = record({
+      ...withoutDigest(graph.substitution),
+      id: "substitution.unscoped-role-binding",
+      roleBindingRef: externalRef("binding.unrelated"),
+    });
+    expect(() =>
+      service.applyTransaction(
+        transaction("unscoped-role-binding", [unscopedRoleBinding], headRef(current))
+      )
+    ).toThrow(/cannot cite a role binding without an Asset Role/);
+
+    const sameAcquisitionDerivation = derivation(
+      "derivation.same-acquisition-relabel",
+      graph.asset,
+      graph.acquisitionA,
+      graph.outputAsset
     );
-    expect(current.snapshot?.records).toContainEqual(policyAuthority);
+    const sameAcquisitionAccess = record({
+      ...withoutDigest(graph.substitutionAccess),
+      id: "access.same-acquisition-relabel",
+      sourceRefs: [ref(graph.acquisitionA), ref(graph.asset)],
+      derivativeRefs: [ref(sameAcquisitionDerivation), ref(graph.outputAsset)],
+      rightsAssertionRefs: [ref(graph.rightsA)],
+    });
+    const sameAcquisitionSubstitution = record({
+      ...withoutDigest(graph.substitution),
+      id: "substitution.same-acquisition-relabel",
+      to: {
+        acquisitionRef: ref(graph.acquisitionA),
+        derivationRef: ref(sameAcquisitionDerivation),
+      },
+      scope: {
+        ...graph.substitution.scope,
+        sourceAndDerivativeRefs: [
+          graph.substitution.from.acquisitionRef,
+          graph.substitution.from.derivationRef,
+          ref(sameAcquisitionDerivation),
+          ref(graph.outputAsset),
+        ],
+      },
+      accessDecisionRef: ref(sameAcquisitionAccess),
+    });
+    expect(() =>
+      service.applyTransaction(
+        transaction(
+          "same-acquisition-relabel",
+          [sameAcquisitionDerivation, sameAcquisitionAccess, sameAcquisitionSubstitution],
+          headRef(current)
+        )
+      )
+    ).toThrow(/must replace the acquisition/);
 
     const omittedEndpoint = record({
       ...withoutDigest(graph.substitution),
@@ -373,7 +430,162 @@ describe("ReferenceSourceStagingService integrity", () => {
     expect(() => service.applyTransaction(extraProperty)).toThrow(/schema validation/);
     expect(service.readCurrent()).toEqual(base);
   });
+
+  it("requires an explicit migration instead of backfilling a nonempty pre-observation snapshot", () => {
+    const { service } = legacyHarness(baseGraph().records);
+    const graph = baseGraph();
+    const before = service.readCurrent();
+
+    const error = captureError(() =>
+      service.applyTransaction(
+        transaction("legacy-observation-gap", [correctedIdentity(graph)], headRef(before))
+      )
+    );
+
+    expect(error).toBeInstanceOf(ReferenceSourceStagingMigrationRequiredError);
+    expect(error).toMatchObject({
+      code: "reference_source_staging_migration_required",
+      migration: "record_observations",
+      snapshotRef: ref(before.snapshot!),
+      snapshotRevision: 1,
+    });
+    expect((error as Error).message).toMatch(/explicit record-observation migration/);
+    expect(service.readCurrent()).toEqual(before);
+  });
+
+  it("does not silently backfill a partially observed legacy history", () => {
+    const graph = baseGraph();
+    const partialObservations: ReferenceSourceRecordObservation[] = [
+      {
+        recordRef: ref(graph.records[0]!),
+        firstObservedRevision: 1,
+        observedAt: SERVER_TIME,
+      },
+    ];
+    const { service } = legacyHarness(graph.records, partialObservations);
+    const before = service.readCurrent();
+
+    expect(
+      captureError(() =>
+        service.applyTransaction(
+          transaction("partial-observation-gap", [correctedIdentity(graph)], headRef(before))
+        )
+      )
+    ).toBeInstanceOf(ReferenceSourceStagingMigrationRequiredError);
+    expect(service.readCurrent()).toEqual(before);
+  });
+
+  it("explicitly migrates legacy history without inventing trusted order, then permits appends", () => {
+    const graph = baseGraph();
+    const partialObservations: ReferenceSourceRecordObservation[] = [
+      {
+        recordRef: ref(graph.records[0]!),
+        firstObservedRevision: 1,
+        observedAt: SERVER_TIME,
+      },
+    ];
+    const { service } = legacyHarness(graph.records, partialObservations);
+    const before = service.readCurrent();
+
+    const migrated = service.migrateLegacyObservationHistory(headRef(before));
+
+    expect(migrated.snapshot).toMatchObject({
+      revision: 2,
+      parentSnapshotRef: ref(before.snapshot!),
+    });
+    expect(migrated.snapshot?.records).toEqual(before.snapshot?.records);
+    expect(migrated.snapshot?.recordObservations).toHaveLength(graph.records.length);
+    expect(
+      migrated.snapshot?.recordObservations?.every(
+        (observation) => observation.orderingTrust === "legacy_unverifiable"
+      )
+    ).toBe(true);
+    expect(migrated.snapshot?.recordObservations?.[0]).toMatchObject(partialObservations[0]!);
+
+    const advanced = service.applyTransaction(
+      transaction("post-migration", [correctedIdentity(graph)], headRef(migrated))
+    );
+    const observations = advanced.snapshot?.recordObservations ?? [];
+    const legacyRefs = new Set(graph.records.map((record) => `${record.id}\u0000${record.digest}`));
+    expect(advanced.snapshot?.revision).toBe(3);
+    expect(
+      observations
+        .filter(({ recordRef }) => legacyRefs.has(`${recordRef.id}\u0000${recordRef.digest}`))
+        .every(({ orderingTrust }) => orderingTrust === "legacy_unverifiable")
+    ).toBe(true);
+    expect(
+      observations
+        .filter(({ recordRef }) => !legacyRefs.has(`${recordRef.id}\u0000${recordRef.digest}`))
+        .every(({ orderingTrust }) => orderingTrust === "server_observed")
+    ).toBe(true);
+  });
+
+  it("refuses a legacy observation migration that would retroactively invalidate retention roots", () => {
+    const records = legacyRetentionOrderingGraph();
+    const { service } = legacyHarness(records);
+    const before = service.readCurrent();
+
+    expect(() => service.migrateLegacyObservationHistory(headRef(before))).toThrow(
+      /exact role-binding retention roots/
+    );
+    expect(service.readCurrent()).toEqual(before);
+  });
+
+  it("can advance an empty legacy snapshot without inventing prior record order", () => {
+    const graph = baseGraph();
+    const { service } = legacyHarness([]);
+    const before = service.readCurrent();
+
+    const advanced = service.applyTransaction(
+      transaction("empty-legacy", graph.records, headRef(before))
+    );
+
+    expect(advanced.snapshot?.revision).toBe(2);
+    expect(advanced.snapshot?.recordObservations).toHaveLength(graph.records.length);
+    expect(
+      advanced.snapshot?.recordObservations?.every(
+        (observation) =>
+          observation.firstObservedRevision === 2 && observation.orderingTrust === "server_observed"
+      )
+    ).toBe(true);
+  });
 });
+
+function legacyHarness(
+  records: ReferenceSourceStagingRecord[],
+  recordObservations?: ReferenceSourceRecordObservation[]
+): { service: ReferenceSourceStagingService } {
+  const root = mkdtempSync(path.join(tmpdir(), "vellum-reference-source-legacy-service-"));
+  roots.push(root);
+  const store = new ReferenceSourceStagingStore({ rootDirectory: root });
+  const snapshotCore: Omit<ReferenceSourceStagingSnapshot, "digest"> = {
+    schemaVersion: 1,
+    id: "reference-source-snapshot.legacy",
+    revision: 1,
+    publicationState: "staging_only",
+    createdAt: SERVER_TIME,
+    ...(recordObservations ? { recordObservations } : {}),
+    records,
+  };
+  store.commit({ ...snapshotCore, digest: referenceSourceDigest(snapshotCore) });
+  let sequence = 0;
+  return {
+    service: new ReferenceSourceStagingService({
+      store,
+      now: () => new Date(SERVER_TIME),
+      createId: () => `legacy-generated-${++sequence}`,
+    }),
+  };
+}
+
+function captureError(operation: () => unknown): unknown {
+  try {
+    operation();
+  } catch (error) {
+    return error;
+  }
+  throw new Error("Expected operation to throw");
+}
 
 function harness(): { service: ReferenceSourceStagingService } {
   const root = mkdtempSync(path.join(tmpdir(), "vellum-reference-source-service-"));
@@ -468,14 +680,14 @@ function baseGraph() {
     version: 1,
     outcome: "allow",
     operation: "repository_inclusion",
-    sourceRefs: [ref(acquisitionA), ref(acquisitionB)],
-    derivativeRefs: [ref(derivationA), ref(derivationB), ref(outputAsset)],
+    sourceRefs: [ref(acquisitionB), ref(asset)],
+    derivativeRefs: [ref(derivationB), ref(outputAsset)],
     destination: { kind: "repository", id: "fixture-repository" },
     purpose: "Substitute one exact acquisition path for another",
     policyRef: externalRef("policy.repository"),
-    rightsAssertionRefs: [ref(rightsA), ref(rightsB)],
+    rightsAssertionRefs: [ref(rightsB)],
     authorityRefs: [externalRef("reviewer.rights")],
-    rationale: "Both paths and the exact output are named",
+    rationale: "The replacement path and exact output are authorized",
     decidedAt: ASSERTED_AT,
   });
   const identityEdge = dependency(
@@ -502,6 +714,7 @@ function baseGraph() {
         ref(derivationA),
         ref(acquisitionB),
         ref(derivationB),
+        ref(outputAsset),
       ],
       destination: substitutionAccess.destination,
       purpose: substitutionAccess.purpose,
@@ -540,6 +753,7 @@ function baseGraph() {
     manifestation,
     exemplar,
     asset,
+    outputAsset,
     acquisitionA,
     acquisitionB,
     rightsA,
@@ -551,6 +765,93 @@ function baseGraph() {
     transitiveEdge,
     substitution,
   };
+}
+
+function legacyRetentionOrderingGraph(): ReferenceSourceStagingRecord[] {
+  const asset = record({
+    recordKind: "digital_asset",
+    id: "asset.legacy-retention-order",
+    sha256: "d".repeat(64),
+    mediaType: "application/pdf",
+    byteLength: 16,
+  });
+  const acquisitionRecord = record({
+    recordKind: "asset_acquisition",
+    id: "acquisition.legacy-retention-order",
+    digitalAssetRef: ref(asset),
+    representedExemplarRefs: [],
+    origin: {
+      sourceKind: "upload",
+      ownerActionRef: externalRef("owner-action.legacy-retention-order"),
+    },
+    acquiredAt: ASSERTED_AT,
+    rightsAssertionRefs: [],
+    processingPolicyRef: externalRef("processing-policy.legacy-retention-order"),
+  });
+  const rights = record({
+    recordKind: "rights_assertion",
+    id: "rights.legacy-retention-order",
+    version: 1,
+    subjectRef: ref(acquisitionRecord),
+    subjectKind: "asset_acquisition",
+    rightsKind: "owner_private_access",
+    status: "permitted",
+    claimant: { kind: "owner", claimantRef: externalRef("owner.local") },
+    evidenceRefs: [externalRef("evidence.legacy-retention-order")],
+    assertedAt: ASSERTED_AT,
+  });
+  const access = record({
+    recordKind: "access_decision",
+    id: "access.legacy-retention-order",
+    version: 1,
+    outcome: "allow",
+    operation: "owner_private_study",
+    sourceRefs: [ref(acquisitionRecord), ref(asset)],
+    derivativeRefs: [],
+    destination: { kind: "local_runtime" },
+    purpose: "Use the exact legacy upload in an arrangement workspace",
+    assetRole: "arrangement_source",
+    policyRef: externalRef("access-policy.legacy-retention-order"),
+    rightsAssertionRefs: [ref(rights)],
+    authorityRefs: [externalRef("owner.local")],
+    rationale: "The Owner authorized this exact local private-study path",
+    decidedAt: ASSERTED_AT,
+  });
+  const binding = record({
+    recordKind: "arrangement_source_binding",
+    id: "binding.legacy-retention-order",
+    digitalAssetRef: ref(asset),
+    acquisitionRefs: [ref(acquisitionRecord)],
+    accessDecisionRefs: [ref(access)],
+    retentionPolicyRef: externalRef("retention-policy.legacy-retention-order"),
+    workspaceRef: externalRef("workspace.legacy-retention-order"),
+    createdAt: SERVER_TIME,
+  });
+  const storage = record({
+    recordKind: "lifecycle_storage_policy",
+    id: "storage.legacy-retention-order",
+    version: 1,
+    subjectRef: ref(asset),
+    subjectKind: "asset_bytes",
+    provenancePaths: [
+      {
+        acquisitionRefs: [ref(acquisitionRecord)],
+        derivationRefs: [],
+        roleBindingRefs: [],
+      },
+    ],
+    policyRef: externalRef("lifecycle-policy.legacy-retention-order"),
+    custody: {
+      kind: "vellum_controlled",
+      storeIds: ["reference-source-staging"],
+      retention: "unretained",
+      tombstonePolicy: "preserve",
+    },
+    replayRequirement: "required",
+    readinessRequirement: "required",
+    createdAt: ASSERTED_AT,
+  });
+  return [asset, acquisitionRecord, rights, access, storage, binding];
 }
 
 function classificationAssertion(

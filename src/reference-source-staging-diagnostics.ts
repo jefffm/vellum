@@ -276,8 +276,8 @@ export function renderReferenceSourceLifecycleDryRun(
     result.replaceChildren();
 
     void submitDryRun(request)
-      .then((plan) => {
-        const parsed = parseLifecyclePlan(plan, expectedHeadRef);
+      .then(async (plan) => {
+        const parsed = await parseLifecyclePlan(plan, expectedHeadRef, request.action);
         if (!parsed) {
           status.textContent =
             "The lifecycle planner returned an unsafe or unrecognized response. Nothing changed.";
@@ -431,6 +431,31 @@ type SafeLifecyclePlan = {
 const LIFECYCLE_STATES = new Set(["accessible", "restricted", "tombstone", "purged"]);
 const REPLAYABILITY_STATES = new Set(["complete", "partial", "unavailable", "legacy_unverifiable"]);
 const READINESS_IMPACTS = new Set(["unchanged", "advisory", "blocked"]);
+const LIFECYCLE_SUBJECT_KINDS = new Set([
+  "asset_acquisition",
+  "asset_bytes",
+  "segment",
+  "crop",
+  "extraction",
+  "transcription",
+  "translation",
+  "candidate",
+  "pack_entry",
+  "fixture",
+  "prompt",
+  "release",
+  "arrangement",
+  "evaluation",
+  "report",
+  "log",
+  "cache",
+  "backup",
+  "managed_export",
+  "unmanaged_disclosure",
+  "provider_payload",
+  "provider_result",
+  "other_derivative",
+]);
 const SOURCE_AVAILABILITY_STATES = new Set([
   "available",
   "partially_reproducible",
@@ -438,14 +463,80 @@ const SOURCE_AVAILABILITY_STATES = new Set([
   "not_reproducible",
 ]);
 const AUTHORIZATION_STATES = new Set(["direct", "provenance_substitution", "none"]);
+const LIFECYCLE_ISSUE_CODES = new Set([
+  "invalid_snapshot_digest",
+  "target_acquisition_not_found",
+  "target_access_decision_not_found",
+  "record_digest_invalid",
+  "duplicate_exact_record",
+  "duplicate_storage_subject",
+  "duplicate_use",
+  "dangling_acquisition_ref",
+  "dangling_derivation_ref",
+  "dangling_access_decision_ref",
+  "derivation_cycle",
+  "invalid_provenance_endpoint",
+  "invalid_substitution_authorization",
+  "invalid_asset_storage_subject",
+  "missing_asset_storage_policy",
+  "missing_derivative_storage_policy",
+  "incomplete_lifecycle_inventory",
+  "invalid_rights_basis",
+  "invalid_role_binding",
+  "superseded_record",
+  "operation_destination_mismatch",
+  "retroactive_provenance",
+  "missing_server_observation",
+  "invalid_timestamp",
+  "incomplete_controlled_store_inventory",
+  "unverified_authority",
+  "unverified_retention_policy",
+  "unverified_preflight_evidence",
+]);
+const ISO_TIMESTAMP_VALUE =
+  /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\.\d{3}Z$/;
 
-function parseLifecyclePlan(
+const LIFECYCLE_PLAN_COMMON_KEYS = [
+  "schemaVersion",
+  "id",
+  "digest",
+  "mode",
+  "baseSnapshotRef",
+  "effectiveAt",
+  "action",
+  "atomicity",
+  "status",
+] as const;
+
+async function parseLifecyclePlan(
   input: unknown,
-  expectedHeadRef: ReferenceSourceLifecycleRef
-): SafeLifecyclePlan | null {
+  expectedHeadRef: ReferenceSourceLifecycleRef,
+  expectedAction: ReferenceSourceLifecycleDryRunRequest["action"]
+): Promise<SafeLifecyclePlan | null> {
   if (!isRecord(input)) return null;
-  const baseSnapshotRef = safeReference(input.baseSnapshotRef);
+  const strictTopLevel =
+    input.status === "ready"
+      ? hasExactKeys(
+          input,
+          [
+            ...LIFECYCLE_PLAN_COMMON_KEYS,
+            "verifiedEvidence",
+            "targetRef",
+            "consequences",
+            "permissions",
+            "aggregate",
+          ],
+          ["targetDigitalAssetRef"]
+        )
+      : input.status === "blocked"
+        ? hasExactKeys(input, [...LIFECYCLE_PLAN_COMMON_KEYS, "issues"], ["verifiedEvidence"])
+        : false;
+  if (!strictTopLevel) return null;
+
+  const baseSnapshotRef = strictReference(input.baseSnapshotRef);
+  const action = parseLifecycleAction(input.action);
   if (
+    input.schemaVersion !== 1 ||
     input.mode !== "dry_run" ||
     input.atomicity !== "all_or_nothing" ||
     typeof input.id !== "string" ||
@@ -455,7 +546,9 @@ function parseLifecyclePlan(
     !baseSnapshotRef ||
     baseSnapshotRef.id !== expectedHeadRef.id ||
     baseSnapshotRef.digest !== expectedHeadRef.digest ||
-    (input.status !== "ready" && input.status !== "blocked")
+    !isCanonicalReferenceSourceInstant(input.effectiveAt) ||
+    !action ||
+    !canonicalValuesEqual(action, expectedAction)
   ) {
     return null;
   }
@@ -464,17 +557,42 @@ function parseLifecyclePlan(
     if (!Array.isArray(input.issues) || input.issues.length === 0) return null;
     const issues = input.issues.map(parseLifecycleIssue);
     if (issues.some((issue) => issue === null)) return null;
+    if (
+      (Object.hasOwn(input, "verifiedEvidence") &&
+        !(await validateLifecycleVerifiedEvidence(input.verifiedEvidence, input.effectiveAt))) ||
+      !(await hasValidCanonicalSeal(input, "reference-lifecycle-plan"))
+    ) {
+      return null;
+    }
     return { ...common, status: "blocked", issues: issues as SafeLifecycleIssue[] };
   }
 
+  const targetRef = strictReference(input.targetRef);
+  const expectedTargetRef =
+    action.kind === "delete_acquisition"
+      ? action.targetAcquisitionRef
+      : action.targetAccessDecisionRef;
+  const targetDigitalAssetRef = Object.hasOwn(input, "targetDigitalAssetRef")
+    ? strictReference(input.targetDigitalAssetRef)
+    : undefined;
   if (!Array.isArray(input.consequences) || !Array.isArray(input.permissions)) return null;
   const consequences = input.consequences.map(parseLifecycleConsequence);
   const permissions = input.permissions.map(parseLifecyclePermission);
   const aggregate = parseLifecycleAggregate(input.aggregate);
   if (
+    !targetRef ||
+    !referencesEqual(targetRef, expectedTargetRef) ||
+    targetDigitalAssetRef === null ||
     consequences.some((consequence) => consequence === null) ||
     permissions.some((permission) => permission === null) ||
-    !aggregate
+    !aggregate ||
+    !lifecycleAggregateMatches(
+      consequences as SafeLifecycleConsequence[],
+      permissions as SafeLifecyclePermission[],
+      aggregate
+    ) ||
+    !(await validateLifecycleVerifiedEvidence(input.verifiedEvidence, input.effectiveAt)) ||
+    !(await hasValidCanonicalSeal(input, "reference-lifecycle-plan"))
   ) {
     return null;
   }
@@ -487,9 +605,120 @@ function parseLifecyclePlan(
   };
 }
 
+function parseLifecycleAction(
+  value: unknown
+): ReferenceSourceLifecycleDryRunRequest["action"] | null {
+  if (!isRecord(value) || typeof value.reason !== "string" || value.reason.length === 0)
+    return null;
+  if (value.kind === "delete_acquisition") {
+    const targetAcquisitionRef = strictReference(value.targetAcquisitionRef);
+    if (!hasExactKeys(value, ["kind", "targetAcquisitionRef", "reason"]) || !targetAcquisitionRef)
+      return null;
+    return { kind: "delete_acquisition", targetAcquisitionRef, reason: value.reason };
+  }
+  if (value.kind === "restrict_access") {
+    const targetAccessDecisionRef = strictReference(value.targetAccessDecisionRef);
+    if (
+      !hasExactKeys(value, ["kind", "targetAccessDecisionRef", "reason"]) ||
+      !targetAccessDecisionRef
+    )
+      return null;
+    return { kind: "restrict_access", targetAccessDecisionRef, reason: value.reason };
+  }
+  return null;
+}
+
+async function validateLifecycleVerifiedEvidence(
+  value: unknown,
+  effectiveAt: string
+): Promise<boolean> {
+  if (
+    !hasExactKeys(value, [
+      "schemaVersion",
+      "id",
+      "digest",
+      "inventoryScope",
+      "validatedAt",
+      "requiredStoreRegistryRef",
+      "inventoryWitnessRef",
+      "stores",
+      "authorityEvaluations",
+      "retentionEvaluations",
+    ]) ||
+    value.schemaVersion !== 1 ||
+    value.inventoryScope !== "reference_source_staging_only" ||
+    typeof value.id !== "string" ||
+    !SAFE_IDENTIFIER_VALUE.test(value.id) ||
+    typeof value.digest !== "string" ||
+    !SAFE_DIGEST_VALUE.test(value.digest) ||
+    value.validatedAt !== effectiveAt ||
+    !isCanonicalReferenceSourceInstant(value.validatedAt) ||
+    !strictReference(value.requiredStoreRegistryRef) ||
+    !strictReference(value.inventoryWitnessRef) ||
+    !Array.isArray(value.stores) ||
+    value.stores.length === 0 ||
+    !value.stores.every(isLifecyclePreflightStore) ||
+    !Array.isArray(value.authorityEvaluations) ||
+    !value.authorityEvaluations.every(isLifecycleAuthorityEvidence) ||
+    !Array.isArray(value.retentionEvaluations) ||
+    !value.retentionEvaluations.every(isLifecycleRetentionEvidence)
+  ) {
+    return false;
+  }
+  return hasValidCanonicalSeal(value, "reference-lifecycle-preflight");
+}
+
+function isLifecyclePreflightStore(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["storeId", "storeGeneration", "storeStateDigest", "enumerationDigest"]) &&
+    typeof value.storeId === "string" &&
+    value.storeId.length > 0 &&
+    Number.isInteger(value.storeGeneration) &&
+    Number(value.storeGeneration) >= 0 &&
+    typeof value.storeStateDigest === "string" &&
+    SAFE_DIGEST_VALUE.test(value.storeStateDigest) &&
+    typeof value.enumerationDigest === "string" &&
+    SAFE_DIGEST_VALUE.test(value.enumerationDigest)
+  );
+}
+
+function isLifecycleAuthorityEvidence(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["accessDecisionRef", "receiptRef", "evaluationDigest"]) &&
+    strictReference(value.accessDecisionRef) !== null &&
+    strictReference(value.receiptRef) !== null &&
+    typeof value.evaluationDigest === "string" &&
+    SAFE_DIGEST_VALUE.test(value.evaluationDigest)
+  );
+}
+
+function isLifecycleRetentionEvidence(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["roleBindingRef", "receiptRef", "outcome", "evaluationDigest"]) &&
+    strictReference(value.roleBindingRef) !== null &&
+    strictReference(value.receiptRef) !== null &&
+    (value.outcome === "retain" || value.outcome === "release") &&
+    typeof value.evaluationDigest === "string" &&
+    SAFE_DIGEST_VALUE.test(value.evaluationDigest)
+  );
+}
+
 function parseLifecycleConsequence(value: unknown): SafeLifecycleConsequence | null {
-  if (!isRecord(value)) return null;
-  const subjectRef = safeReference(value.subjectRef);
+  if (
+    !hasExactKeys(value, [
+      "subjectRef",
+      "subjectKind",
+      "state",
+      "affectedByRefs",
+      "replayability",
+      "readinessImpact",
+      "irreversibleDisclosure",
+      "reason",
+    ])
+  ) {
+    return null;
+  }
+  const subjectRef = strictReference(value.subjectRef);
   const subjectKind = safeEnum(value.subjectKind);
   const state = safeEnum(value.state);
   const replayability = safeEnum(value.replayability);
@@ -497,13 +726,17 @@ function parseLifecycleConsequence(value: unknown): SafeLifecycleConsequence | n
   if (
     !subjectRef ||
     !subjectKind ||
+    !LIFECYCLE_SUBJECT_KINDS.has(subjectKind) ||
     !state ||
     !LIFECYCLE_STATES.has(state) ||
     !replayability ||
     !REPLAYABILITY_STATES.has(replayability) ||
     !readinessImpact ||
     !READINESS_IMPACTS.has(readinessImpact) ||
-    typeof value.irreversibleDisclosure !== "boolean"
+    typeof value.irreversibleDisclosure !== "boolean" ||
+    strictReferenceArray(value.affectedByRefs) === null ||
+    typeof value.reason !== "string" ||
+    value.reason.length === 0
   ) {
     return null;
   }
@@ -519,9 +752,26 @@ function parseLifecycleConsequence(value: unknown): SafeLifecycleConsequence | n
 }
 
 function parseLifecyclePermission(value: unknown): SafeLifecyclePermission | null {
-  if (!isRecord(value)) return null;
+  if (
+    !hasExactKeys(
+      value,
+      [
+        "useId",
+        "subjectRef",
+        "state",
+        "authorization",
+        "replayability",
+        "readinessImpact",
+        "sourceAvailability",
+        "reason",
+      ],
+      ["activeEndpoint", "accessDecisionRef"]
+    )
+  ) {
+    return null;
+  }
   const useId = safeDiagnosticText(value.useId, "identifier");
-  const subjectRef = safeReference(value.subjectRef);
+  const subjectRef = strictReference(value.subjectRef);
   const state = safeEnum(value.state);
   const authorization = safeEnum(value.authorization);
   const replayability = safeEnum(value.replayability);
@@ -538,7 +788,11 @@ function parseLifecyclePermission(value: unknown): SafeLifecyclePermission | nul
     !readinessImpact ||
     !READINESS_IMPACTS.has(readinessImpact) ||
     !sourceAvailability ||
-    !SOURCE_AVAILABILITY_STATES.has(sourceAvailability)
+    !SOURCE_AVAILABILITY_STATES.has(sourceAvailability) ||
+    (Object.hasOwn(value, "activeEndpoint") && !isLifecycleEndpoint(value.activeEndpoint)) ||
+    (Object.hasOwn(value, "accessDecisionRef") && !strictReference(value.accessDecisionRef)) ||
+    typeof value.reason !== "string" ||
+    value.reason.length === 0
   ) {
     return null;
   }
@@ -554,11 +808,29 @@ function parseLifecyclePermission(value: unknown): SafeLifecyclePermission | nul
   };
 }
 
+function isLifecycleEndpoint(value: unknown): boolean {
+  return (
+    hasExactKeys(value, ["acquisitionRefs", "derivationRefs"]) &&
+    strictReferenceArray(value.acquisitionRefs, 1) !== null &&
+    strictReferenceArray(value.derivationRefs) !== null
+  );
+}
+
 function parseLifecycleIssue(value: unknown): SafeLifecycleIssue | null {
-  if (!isRecord(value)) return null;
+  if (!hasExactKeys(value, ["code", "detail"], ["subjectRef"])) return null;
   const code = safeDiagnosticText(value.code, "identifier");
-  const subjectRef = value.subjectRef === undefined ? undefined : safeReference(value.subjectRef);
-  if (!code || subjectRef === null) return null;
+  const subjectRef = Object.hasOwn(value, "subjectRef")
+    ? strictReference(value.subjectRef)
+    : undefined;
+  if (
+    !code ||
+    !LIFECYCLE_ISSUE_CODES.has(code) ||
+    subjectRef === null ||
+    typeof value.detail !== "string" ||
+    value.detail.length === 0
+  ) {
+    return null;
+  }
   return {
     code,
     ...(subjectRef ? { subjectRef } : {}),
@@ -567,7 +839,6 @@ function parseLifecycleIssue(value: unknown): SafeLifecycleIssue | null {
 }
 
 function parseLifecycleAggregate(value: unknown): SafeLifecyclePlan["aggregate"] | null {
-  if (!isRecord(value)) return null;
   const keys = [
     "accessible",
     "restricted",
@@ -576,10 +847,152 @@ function parseLifecycleAggregate(value: unknown): SafeLifecyclePlan["aggregate"]
     "readinessBlocked",
     "irreversibleDisclosures",
   ] as const;
-  if (keys.some((key) => !Number.isInteger(value[key]) || Number(value[key]) < 0)) return null;
+  if (
+    !hasExactKeys(value, keys) ||
+    keys.some((key) => !Number.isInteger(value[key]) || Number(value[key]) < 0)
+  ) {
+    return null;
+  }
   return Object.fromEntries(keys.map((key) => [key, Number(value[key])])) as NonNullable<
     SafeLifecyclePlan["aggregate"]
   >;
+}
+
+function lifecycleAggregateMatches(
+  consequences: SafeLifecycleConsequence[],
+  permissions: SafeLifecyclePermission[],
+  aggregate: NonNullable<SafeLifecyclePlan["aggregate"]>
+): boolean {
+  const allStates = [
+    ...consequences.map(({ state }) => state),
+    ...permissions.map(({ state }) => state),
+  ];
+  return (
+    aggregate.accessible === allStates.filter((state) => state === "accessible").length &&
+    aggregate.restricted === allStates.filter((state) => state === "restricted").length &&
+    aggregate.tombstone === allStates.filter((state) => state === "tombstone").length &&
+    aggregate.purged === allStates.filter((state) => state === "purged").length &&
+    aggregate.readinessBlocked ===
+      [...consequences, ...permissions].filter(
+        ({ readinessImpact }) => readinessImpact === "blocked"
+      ).length &&
+    aggregate.irreversibleDisclosures ===
+      consequences.filter(({ irreversibleDisclosure }) => irreversibleDisclosure).length
+  );
+}
+
+function isCanonicalReferenceSourceInstant(value: unknown): value is string {
+  if (typeof value !== "string" || !ISO_TIMESTAMP_VALUE.test(value)) return false;
+  const epochMilliseconds = Date.parse(value);
+  return Number.isFinite(epochMilliseconds) && new Date(epochMilliseconds).toISOString() === value;
+}
+
+function strictReference(value: unknown): ReferenceSourceLifecycleRef | null {
+  return hasExactKeys(value, ["id", "digest"]) ? safeReference(value) : null;
+}
+
+function strictReferenceArray(
+  value: unknown,
+  minimumLength = 0
+): ReferenceSourceLifecycleRef[] | null {
+  if (!Array.isArray(value) || value.length < minimumLength) return null;
+  const references = value.map(strictReference);
+  return references.some((reference) => reference === null)
+    ? null
+    : (references as ReferenceSourceLifecycleRef[]);
+}
+
+function referencesEqual(
+  left: ReferenceSourceLifecycleRef,
+  right: ReferenceSourceLifecycleRef
+): boolean {
+  return left.id === right.id && left.digest === right.digest;
+}
+
+function hasExactKeys(
+  value: unknown,
+  required: readonly string[],
+  optional: readonly string[] = []
+): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  const allowed = new Set([...required, ...optional]);
+  const actual = Object.keys(value);
+  return (
+    required.every((key) => Object.hasOwn(value, key)) && actual.every((key) => allowed.has(key))
+  );
+}
+
+function canonicalValuesEqual(left: unknown, right: unknown): boolean {
+  try {
+    return canonicalReferenceJson(left) === canonicalReferenceJson(right);
+  } catch {
+    return false;
+  }
+}
+
+async function hasValidCanonicalSeal(
+  value: Record<string, unknown>,
+  idPrefix: string
+): Promise<boolean> {
+  const { id, digest, ...core } = value;
+  if (typeof id !== "string" || typeof digest !== "string") return false;
+  const [seed, expectedDigest] = await Promise.all([
+    canonicalSha256(core),
+    canonicalSha256({ ...core, id }),
+  ]);
+  return (
+    seed !== null &&
+    expectedDigest !== null &&
+    id === `${idPrefix}.${seed.slice(0, 24)}` &&
+    digest === expectedDigest
+  );
+}
+
+async function canonicalSha256(value: unknown): Promise<string | null> {
+  try {
+    const subtle = globalThis.crypto?.subtle;
+    if (!subtle) return null;
+    const bytes = new TextEncoder().encode(canonicalReferenceJson(value));
+    const digest = await subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(
+      ""
+    );
+  } catch {
+    return null;
+  }
+}
+
+function canonicalReferenceJson(value: unknown): string {
+  const serialized = JSON.stringify(canonicalizeReferenceValue(value));
+  if (serialized === undefined) throw new TypeError("Lifecycle plans must contain JSON values");
+  return serialized;
+}
+
+function canonicalizeReferenceValue(value: unknown): unknown {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new TypeError("Lifecycle plan numbers must be finite");
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(canonicalizeReferenceValue);
+  if (!isPlainRecord(value)) throw new TypeError("Lifecycle plans must contain plain JSON values");
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => {
+        const child = value[key];
+        if (child === undefined) {
+          throw new TypeError("Lifecycle plans cannot contain undefined values");
+        }
+        return [key, canonicalizeReferenceValue(child)];
+      })
+  );
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function safeEnum(value: unknown): string | undefined {
@@ -598,8 +1011,14 @@ function renderLifecyclePlan(container: HTMLElement, plan: SafeLifecyclePlan): v
   appendText(
     section,
     "p",
-    `${plan.id} · digest ${abbreviate(plan.digest)} · all or nothing · staging only`,
+    `${plan.id} · digest ${abbreviate(plan.digest)} · all or nothing · staging-controlled store only`,
     ["reference-source-lifecycle-plan-identity"]
+  );
+  appendText(
+    section,
+    "p",
+    "Coverage is limited to the noncanonical reference-source staging store. Legacy Workspace and Owner Reference copies are unchanged and are not claimed as purged.",
+    ["reference-source-lifecycle-scope"]
   );
   renderLifecycleLegend(section);
 
@@ -654,7 +1073,10 @@ function renderLifecycleLegend(container: HTMLElement): void {
     ["accessible", "an exact authorized provenance path remains available"],
     ["restricted", "no applicable authorized path remains; matching bytes never transfer rights"],
     ["tombstone", "content is unavailable while minimum non-sensitive identity remains"],
-    ["purged", "Vellum-controlled bytes or derivatives are removed by the proposed plan"],
+    [
+      "purged",
+      "the registered staging-controlled bytes or derivatives are removed by the proposed plan; legacy copies are outside this preview",
+    ],
   ] as const;
   for (const [state, explanation] of entries) {
     const item = document.createElement("p");

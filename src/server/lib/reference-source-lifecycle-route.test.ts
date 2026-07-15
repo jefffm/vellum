@@ -1,4 +1,7 @@
+// @vitest-environment jsdom
+
 import { createServer, type Server } from "node:http";
+import { createHash } from "node:crypto";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,6 +10,7 @@ import { Value } from "@sinclair/typebox/value";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiErrorCode, ApiResponse } from "../../lib/api-contract.js";
+import { renderReferenceSourceLifecycleDryRun } from "../../reference-source-staging-diagnostics.js";
 import {
   referenceSourceDigest,
   withReferenceRecordDigest,
@@ -22,6 +26,13 @@ import {
 import { createApp } from "../index.js";
 import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
+import type { ReferenceSourceControlledStoreInventoryAdapter } from "./reference-source-inventory-provider.js";
+import {
+  TEST_REFERENCE_AUTHORITY_TRUST,
+  TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+  createTestReferenceSourceLifecycleEvidenceProvider,
+} from "../test-support/reference-source-lifecycle-evidence.js";
 
 const RECORDED_AT = "2026-07-15T12:00:00.000Z";
 const ROUTE = "/api/owner/reference-source-staging/lifecycle";
@@ -46,9 +57,18 @@ describe("reference-source lifecycle HTTP boundary", () => {
     const harness = createHarness(rootDirectory);
     const graph = lifecycleGraph();
     const committed = harness.staging.applyTransaction(transaction("base", graph.records));
+    const controlledStore = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: path.join(rootDirectory, "controlled-artifacts"),
+    });
+    controlledStore.put({
+      artifactRef: ref(graph.asset),
+      sha256: graph.asset.sha256,
+      byteLength: graph.asset.byteLength,
+      bytes: graph.bytes,
+    });
     const stateBefore = harness.store.readCurrentState();
     const diskBefore = snapshotDirectory(rootDirectory);
-    const server = await startServer(harness.staging, servers);
+    const server = await startServer(harness.staging, servers, [controlledStore]);
 
     const plan = await expectSuccess<ReferenceSourceLifecyclePlanResult>(
       await request(serverUrl(server), `${ROUTE}/plan`, {
@@ -79,6 +99,62 @@ describe("reference-source lifecycle HTTP boundary", () => {
     expectPlanSeal(plan);
     expect(harness.store.readCurrentState()).toEqual(stateBefore);
     expect(snapshotDirectory(rootDirectory)).toEqual(diskBefore);
+
+    const container = document.createElement("div");
+    const panel = renderReferenceSourceLifecycleDryRun(
+      container,
+      harness.staging.readCurrent(),
+      async (submitted) => {
+        expect(submitted).toEqual({
+          schemaVersion: 1,
+          expectedHeadRef: headRef(committed),
+          action: plan.action,
+        });
+        return plan;
+      }
+    );
+    expect(panel).not.toBeNull();
+    panel!.querySelector<HTMLTextAreaElement>("textarea[name=lifecycleReason]")!.value =
+      plan.action.reason;
+    panel!
+      .querySelector<HTMLFormElement>("form")!
+      .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(panel!.textContent).toContain("Sealed dry-run plan · Ready"));
+    expect(panel!.textContent).toContain("staging-controlled store only");
+    expect(panel!.textContent).toContain(
+      "Legacy Workspace and Owner Reference copies are unchanged"
+    );
+  });
+
+  it("blocks production planning when staged metadata has no exact persisted bytes", async () => {
+    const harness = createHarness(rootDirectory);
+    const graph = lifecycleGraph();
+    const committed = harness.staging.applyTransaction(transaction("base", graph.records));
+    const emptyControlledStore = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: path.join(rootDirectory, "empty-controlled-artifacts"),
+    });
+    const server = await startServer(harness.staging, servers, [emptyControlledStore]);
+
+    const plan = await expectSuccess<ReferenceSourceLifecyclePlanResult>(
+      await request(serverUrl(server), `${ROUTE}/plan`, {
+        method: "POST",
+        body: {
+          schemaVersion: 1,
+          expectedHeadRef: headRef(committed),
+          action: {
+            kind: "delete_acquisition",
+            targetAcquisitionRef: ref(graph.acquisition),
+            reason: "Refuse to plan over metadata-only storage",
+          },
+        },
+      })
+    );
+
+    expect(plan).toMatchObject({
+      status: "blocked",
+      issues: [expect.objectContaining({ code: "incomplete_controlled_store_inventory" })],
+    });
+    expectPlanSeal(plan);
   });
 
   it("returns closed 400 and 409 envelopes and exposes no lifecycle mutation route", async () => {
@@ -190,6 +266,7 @@ describe("reference-source lifecycle HTTP boundary", () => {
       policyRef: externalRef("policy.lifecycle"),
       custody: {
         kind: "vellum_controlled",
+        storeIds: ["reference-source-staging"],
         retention: "unretained",
         tombstonePolicy: "preserve",
       },
@@ -236,10 +313,11 @@ function createHarness(rootDirectory: string): {
 }
 
 function lifecycleGraph() {
+  const bytes = Buffer.alloc(1024, 0x61);
   const asset = record({
     recordKind: "digital_asset",
     id: "asset.lifecycle-http-source",
-    sha256: "a".repeat(64),
+    sha256: createHash("sha256").update(bytes).digest("hex"),
     mediaType: "application/pdf",
     byteLength: 1024,
   });
@@ -301,10 +379,17 @@ function lifecycleGraph() {
     version: 1,
     subjectRef: ref(asset),
     subjectKind: "asset_bytes",
-    provenancePaths: [{ acquisitionRefs: [ref(acquisition)], derivationRefs: [] }],
+    provenancePaths: [
+      {
+        acquisitionRefs: [ref(acquisition)],
+        derivationRefs: [],
+        roleBindingRefs: [ref(binding)],
+      },
+    ],
     policyRef: externalRef("lifecycle-policy.local-bytes"),
     custody: {
       kind: "vellum_controlled",
+      storeIds: ["reference-source-staging"],
       retention: "unretained",
       tombstonePolicy: "preserve",
     },
@@ -322,6 +407,7 @@ function lifecycleGraph() {
         acquisitionRefs: [ref(acquisition)],
         derivationRefs: [],
         accessDecisionRef: ref(access),
+        roleBindingRef: ref(binding),
       },
     ],
     operation: access.operation,
@@ -336,7 +422,9 @@ function lifecycleGraph() {
 
   return {
     records: [asset, acquisition, rights, access, binding, storage, use],
+    asset,
     acquisition,
+    bytes,
   };
 }
 
@@ -411,9 +499,24 @@ function snapshotDirectory(root: string): Record<string, string> {
 
 async function startServer(
   staging: ReferenceSourceStagingService,
-  servers: Server[]
+  servers: Server[],
+  productionInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[]
 ): Promise<Server> {
-  const server = createServer(createApp({ referenceSourceStagingService: staging }));
+  const server = createServer(
+    createApp({
+      referenceSourceStagingService: staging,
+      ...(productionInventoryAdapters
+        ? {
+            referenceSourceControlledStoreInventoryAdapters: productionInventoryAdapters,
+          }
+        : {
+            referenceSourceLifecycleEvidenceProvider:
+              createTestReferenceSourceLifecycleEvidenceProvider(),
+            referenceSourceAuthorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+            referenceSourceRetentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+          }),
+    })
+  );
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   servers.push(server);
   return server;

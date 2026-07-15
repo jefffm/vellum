@@ -14,7 +14,7 @@ import {
 } from "../../lib/reference-source-domain.js";
 import {
   planReferenceSourceLifecycle,
-  type ReferenceSourceLifecyclePlanResult,
+  type ReferenceSourceLifecycleComputationResult,
   type ReferenceSourceLifecyclePlannerInput,
 } from "../../lib/reference-source-lifecycle.js";
 import {
@@ -25,10 +25,16 @@ import {
 } from "./reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
 import { ReferenceSourceLifecyclePlanningService } from "./reference-source-lifecycle-service.js";
+import {
+  TEST_REFERENCE_AUTHORITY_TRUST,
+  TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+  createTestReferenceSourceLifecycleEvidenceProvider,
+} from "../test-support/reference-source-lifecycle-evidence.js";
 
 const RECORDED_AT = "2026-07-15T12:00:00.000Z";
 const COMMITTED_AT = "2026-07-15T13:00:00.000Z";
 const EFFECTIVE_AT = "2026-07-15T14:00:00.000Z";
+const TEST_EVIDENCE_PROVIDER = createTestReferenceSourceLifecycleEvidenceProvider();
 
 const roots: string[] = [];
 
@@ -49,6 +55,9 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
       store: harness.store,
       now: () => new Date(EFFECTIVE_AT),
       planner: inputSpy,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
     });
     const diskBefore = snapshotDirectory(harness.root);
     const stateBefore = harness.store.readCurrentState();
@@ -67,6 +76,10 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
       mode: "dry_run",
       baseSnapshotRef: expectedHeadRef,
       effectiveAt: EFFECTIVE_AT,
+      verifiedEvidence: expect.objectContaining({
+        validatedAt: EFFECTIVE_AT,
+        authorityEvaluations: [],
+      }),
     });
     expect(inputSpy).toHaveBeenCalledTimes(1);
     expect(inputSpy.mock.calls[0]![0]).toEqual({
@@ -78,6 +91,7 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
         targetAcquisitionRef: ref(graph.acquisition),
         reason: "Owner requested a rights-safe dry run",
       },
+      retentionOutcomes: [{ roleBindingRef: ref(graph.binding), outcome: "retain" }],
     });
     expect(inputSpy.mock.calls[0]![0].baseSnapshot).not.toBe(stateBefore!.snapshot);
     expect(harness.store.readCurrentState()).toEqual(stateBefore);
@@ -93,7 +107,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
     const graph = lifecycleGraph();
     const committed = harness.staging.applyTransaction(transaction("base", graph.records));
     const planner = vi.fn(planReferenceSourceLifecycle);
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -118,7 +138,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
       transaction("advance", [unrelatedAsset("asset.advance", "b")], headRef(base))
     );
     const planner = vi.fn(planReferenceSourceLifecycle);
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -144,7 +170,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
       );
       return planReferenceSourceLifecycle(input);
     });
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -163,7 +195,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
   it("requires an existing staging snapshot", () => {
     const harness = createHarness();
     const planner = vi.fn(planReferenceSourceLifecycle);
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -202,7 +240,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
     };
     const head = harness.store.commit(snapshot);
     const planner = vi.fn(planReferenceSourceLifecycle);
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -225,7 +269,7 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
     const planner = vi.fn((input: ReferenceSourceLifecyclePlannerInput) => {
       const valid = planReferenceSourceLifecycle(input);
       const { id: _id, digest: _digest, ...value } = valid;
-      return sealTestPlan({
+      return sealTestComputation({
         ...value,
         action: {
           kind: "restrict_access",
@@ -234,7 +278,13 @@ describe("ReferenceSourceLifecyclePlanningService", () => {
         },
       });
     });
-    const service = new ReferenceSourceLifecyclePlanningService({ store: harness.store, planner });
+    const service = new ReferenceSourceLifecyclePlanningService({
+      store: harness.store,
+      planner,
+      evidenceProvider: TEST_EVIDENCE_PROVIDER,
+      authorityTrust: TEST_REFERENCE_AUTHORITY_TRUST,
+      retentionAuthorityTrust: TEST_REFERENCE_RETENTION_AUTHORITY_TRUST,
+    });
 
     expect(() =>
       service.planDryRun({
@@ -333,10 +383,17 @@ function lifecycleGraph() {
     version: 1,
     subjectRef: ref(asset),
     subjectKind: "asset_bytes",
-    provenancePaths: [{ acquisitionRefs: [ref(acquisition)], derivationRefs: [] }],
+    provenancePaths: [
+      {
+        acquisitionRefs: [ref(acquisition)],
+        derivationRefs: [],
+        roleBindingRefs: [ref(binding)],
+      },
+    ],
     policyRef: externalRef("policy.lifecycle"),
     custody: {
       kind: "vellum_controlled",
+      storeIds: ["reference-source-staging"],
       retention: "unretained",
       tombstonePolicy: "preserve",
     },
@@ -354,6 +411,7 @@ function lifecycleGraph() {
         acquisitionRefs: [ref(acquisition)],
         derivationRefs: [],
         accessDecisionRef: ref(access),
+        roleBindingRef: ref(binding),
       },
     ],
     operation: access.operation,
@@ -370,6 +428,7 @@ function lifecycleGraph() {
     asset,
     acquisition,
     access,
+    binding,
     storage,
   };
 }
@@ -436,11 +495,13 @@ function withoutDigest<T extends { digest: string }>(value: T): Omit<T, "digest"
   return core;
 }
 
-function sealTestPlan(value: Record<string, unknown>): ReferenceSourceLifecyclePlanResult {
+function sealTestComputation(
+  value: Record<string, unknown>
+): ReferenceSourceLifecycleComputationResult {
   const seed = referenceSourceDigest(value);
   const withId = { ...value, id: `reference-lifecycle-plan.${seed.slice(0, 24)}` };
   return {
     ...withId,
     digest: referenceSourceDigest(withId),
-  } as ReferenceSourceLifecyclePlanResult;
+  } as ReferenceSourceLifecycleComputationResult;
 }

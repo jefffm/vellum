@@ -91,6 +91,38 @@ export function assertReferenceSourceInstantsStrictlyIncreasing(
   }
 }
 
+const REFERENCE_SOURCE_TIMESTAMP_KEYS = new Set([
+  "acquiredAt",
+  "assertedAt",
+  "createdAt",
+  "decidedAt",
+  "disclosedAt",
+  "effectiveAt",
+  "invalidatedAt",
+  "observedAt",
+  "submittedAt",
+  "validFrom",
+  "validUntil",
+]);
+
+/** Validate every timestamp-bearing field in a closed reference-source value. */
+export function assertCanonicalReferenceSourceTimestampFields(value: unknown): void {
+  const visit = (candidate: unknown): void => {
+    if (Array.isArray(candidate)) {
+      for (const item of candidate) visit(item);
+      return;
+    }
+    if (typeof candidate !== "object" || candidate === null) return;
+    for (const [key, item] of Object.entries(candidate)) {
+      if (item !== undefined && REFERENCE_SOURCE_TIMESTAMP_KEYS.has(key)) {
+        decodeReferenceSourceInstant(item);
+      }
+      visit(item);
+    }
+  };
+  visit(value);
+}
+
 function invalidInstant(): ReferenceSourceInstantError {
   return new ReferenceSourceInstantError(
     "Reference-source instant must be a valid canonical UTC millisecond timestamp",

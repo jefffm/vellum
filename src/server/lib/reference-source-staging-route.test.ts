@@ -6,9 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiErrorCode, ApiResponse } from "../../lib/api-contract.js";
 import {
+  referenceSourceDigest,
   withReferenceRecordDigest,
   type ReferenceRecordRef,
   type ReferenceSourceStagingInputRecord,
+  type ReferenceSourceStagingSnapshot,
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
 import { createApp } from "../index.js";
@@ -105,6 +107,97 @@ describe("reference-source staging HTTP boundary", () => {
     expectCoherentCurrent(reloaded);
   });
 
+  it("explicitly repairs legacy observation history over HTTP before accepting normal appends", async () => {
+    const graph = buildCompactGraph();
+    const store = new ReferenceSourceStagingStore({ rootDirectory });
+    const legacyCore: Omit<ReferenceSourceStagingSnapshot, "digest"> = {
+      schemaVersion: 1,
+      id: "reference-source-snapshot.legacy-http",
+      revision: 1,
+      publicationState: "staging_only",
+      createdAt: NOW,
+      records: graph.records,
+    };
+    store.commit({ ...legacyCore, digest: referenceSourceDigest(legacyCore) });
+    let sequence = 0;
+    const service = new ReferenceSourceStagingService({
+      store,
+      now: () => new Date(LATER),
+      createId: () => `http-observation-history-migration-${++sequence}`,
+    });
+    const server = await startServer(rootDirectory, servers, service);
+    const baseUrl = serverUrl(server);
+    const before = await expectSuccess<ReferenceSourceStagingDiagnostics>(
+      await request(baseUrl, ROUTE)
+    );
+
+    const stale = await expectFailure(
+      await request(baseUrl, `${ROUTE}/observation-history-migration`, {
+        method: "POST",
+        body: {
+          schemaVersion: 1,
+          expectedHeadRef: { id: before.head!.snapshotId, digest: "0".repeat(64) },
+        },
+      }),
+      409,
+      "conflict",
+      true
+    );
+    expect(stale.error.details).toEqual({ currentHead: before.head });
+
+    const migrated = await expectSuccess<ReferenceSourceStagingDiagnostics>(
+      await request(baseUrl, `${ROUTE}/observation-history-migration`, {
+        method: "POST",
+        body: { schemaVersion: 1, expectedHeadRef: headRef(before) },
+      })
+    );
+
+    expect(migrated.publicationState).toBe("staging_only");
+    expect(migrated.snapshot).toMatchObject({
+      revision: 2,
+      parentSnapshotRef: ref(before.snapshot!),
+      records: graph.records,
+    });
+    expect(migrated.snapshot?.recordObservations).toHaveLength(graph.records.length);
+    expect(
+      migrated.snapshot?.recordObservations?.every(
+        (observation) => observation.orderingTrust === "legacy_unverifiable"
+      )
+    ).toBe(true);
+
+    const postMigrationRecord = record({
+      recordKind: "digital_asset",
+      id: "asset.post-migration-http",
+      sha256: "e".repeat(64),
+      mediaType: "application/pdf",
+      byteLength: 16,
+    });
+    const advanced = await expectSuccess<ReferenceSourceStagingDiagnostics>(
+      await request(baseUrl, `${ROUTE}/transactions`, {
+        method: "POST",
+        body: transaction("post-migration-http", [postMigrationRecord], headRef(migrated), LATER),
+      })
+    );
+
+    expect(advanced.snapshot?.revision).toBe(3);
+    expect(
+      advanced.snapshot?.recordObservations?.find(
+        ({ recordRef }) =>
+          recordRef.id === postMigrationRecord.id && recordRef.digest === postMigrationRecord.digest
+      )
+    ).toMatchObject({
+      recordRef: ref(postMigrationRecord),
+      firstObservedRevision: 3,
+      orderingTrust: "server_observed",
+    });
+    const legacyRefs = new Set(graph.records.map((value) => `${value.id}\u0000${value.digest}`));
+    expect(
+      advanced.snapshot?.recordObservations
+        ?.filter(({ recordRef }) => legacyRefs.has(`${recordRef.id}\u0000${recordRef.digest}`))
+        .every(({ orderingTrust }) => orderingTrust === "legacy_unverifiable")
+    ).toBe(true);
+  });
+
   it("fails closed for malformed, conflicting, invalid, and forbidden HTTP operations", async () => {
     const graph = buildCompactGraph();
     const server = await startServer(rootDirectory, servers);
@@ -135,6 +228,15 @@ describe("reference-source staging HTTP boundary", () => {
     };
     await expectFailure(
       await request(baseUrl, `${ROUTE}/transactions`, { method: "POST", body: malformed }),
+      400,
+      "invalid_request"
+    );
+
+    await expectFailure(
+      await request(baseUrl, `${ROUTE}/observation-history-migration`, {
+        method: "POST",
+        body: { schemaVersion: 1 },
+      }),
       400,
       "invalid_request"
     );
@@ -170,6 +272,18 @@ describe("reference-source staging HTTP boundary", () => {
       true
     );
     expect(conflict.error.details).toEqual({ currentHead: second.head });
+
+    const alreadyMigrated = await expectFailure(
+      await request(baseUrl, `${ROUTE}/observation-history-migration`, {
+        method: "POST",
+        body: { schemaVersion: 1, expectedHeadRef: headRef(first) },
+      }),
+      422,
+      "unprocessable_content"
+    );
+    expect(alreadyMigrated.error.message).toMatch(
+      /already has complete observation-trust metadata/
+    );
 
     const danglingManifestation = record({
       recordKind: "source_manifestation",
@@ -355,11 +469,14 @@ function expectCoherentCurrent(diagnostics: ReferenceSourceStagingDiagnostics): 
   expect(diagnostics.view).toEqual({ kind: "current" });
 }
 
-async function startServer(rootDirectory: string, servers: Server[]): Promise<Server> {
-  const service = new ReferenceSourceStagingService({
+async function startServer(
+  rootDirectory: string,
+  servers: Server[],
+  service = new ReferenceSourceStagingService({
     store: new ReferenceSourceStagingStore({ rootDirectory }),
     now: () => new Date(NOW),
-  });
+  })
+): Promise<Server> {
   const server = createServer(createApp({ referenceSourceStagingService: service }));
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   servers.push(server);

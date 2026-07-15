@@ -42,7 +42,7 @@ describe("reference-source controlled-store inventory closure", () => {
     expectBoundDigest(primary);
     expectBoundDigest(plan);
     expect(Object.isFrozen(plan)).toBe(true);
-    expect(Object.isFrozen(plan.stores[0]!.artifactRefs)).toBe(true);
+    expect(Object.isFrozen(plan.stores[0]!.artifactBindings)).toBe(true);
   });
 
   it("fails closed for missing, duplicate, and unregistered store enumerations", () => {
@@ -53,7 +53,7 @@ describe("reference-source controlled-store inventory closure", () => {
       storeGeneration: 1,
       storeStateDigest: "9".repeat(64),
       status: "complete",
-      artifactRefs: [],
+      artifactBindings: [],
     });
     const witness = closureWitness(registry, [primary, primary, rogue], "complete");
 
@@ -80,7 +80,7 @@ describe("reference-source controlled-store inventory closure", () => {
           storeStateDigest: registry.stores[1]!.storeStateDigest,
           status: "failed",
           failureCode: "read_error",
-          artifactRefs: [artifact("partial.result", "c")],
+          artifactBindings: [artifact("partial.result", "c")],
         }),
       ],
       "failed"
@@ -182,7 +182,7 @@ describe("reference-source controlled-store inventory closure", () => {
       storeStateDigest: registry.stores[1]!.storeStateDigest,
       status: "failed",
       failureCode: "enumeration_incomplete",
-      artifactRefs: [],
+      artifactBindings: [],
     });
     const inconsistent = closureWitness(
       registry,
@@ -235,14 +235,18 @@ function requiredStoreRegistry(): ReferenceSourceRequiredStoreRegistry {
 
 function completeEnumeration(
   store: ReferenceSourceRequiredStore,
-  artifactRefs: Array<{ id: string; digest: string }>
+  artifactBindings: Array<{
+    artifactRef: { id: string; digest: string };
+    blobSha256: string;
+    byteLength: number;
+  }>
 ): ReferenceSourceStoreEnumeration {
   return bindReferenceSourceStoreEnumeration({
     storeId: store.storeId,
     storeGeneration: store.storeGeneration,
     storeStateDigest: store.storeStateDigest,
     status: "complete",
-    artifactRefs,
+    artifactBindings,
   });
 }
 
@@ -266,8 +270,12 @@ function closureWitness(
   });
 }
 
-function artifact(id: string, digestSeed: string): { id: string; digest: string } {
-  return { id, digest: digestSeed.repeat(64) };
+function artifact(id: string, digestSeed: string) {
+  return {
+    artifactRef: { id, digest: digestSeed.repeat(64) },
+    blobSha256: digestSeed.repeat(64),
+    byteLength: 1,
+  };
 }
 
 function issueKeys(plan: ReferenceSourceInventoryClosurePlan): string[] {

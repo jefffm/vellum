@@ -21,6 +21,8 @@ dist-server/
 
 # Test/tool output
 coverage/
+playwright-report/
+test-results/
 tmp/
 *.tmp
 

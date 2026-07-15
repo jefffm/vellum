@@ -1,14 +1,5 @@
-import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import {
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  readlinkSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { platform, tmpdir } from "node:os";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -115,7 +106,10 @@ describe("ReferenceSourceStagingStore", () => {
   });
 
   it("recovers a valid claim only after its same-machine owner is proven absent", () => {
-    const store = new ReferenceSourceStagingStore({ rootDirectory });
+    const store = new ReferenceSourceStagingStore({
+      rootDirectory,
+      hostIdentity: stableHostIdentity,
+    });
     writeClaim(path.join(rootDirectory, ".head.claim"), 2_147_483_647);
 
     const committed = snapshot({ id: "snapshot.recovered", revision: 1 });
@@ -124,12 +118,53 @@ describe("ReferenceSourceStagingStore", () => {
   });
 
   it("recovers an abandoned recovery guard instead of wedging all future writers", () => {
-    const store = new ReferenceSourceStagingStore({ rootDirectory });
+    const store = new ReferenceSourceStagingStore({
+      rootDirectory,
+      hostIdentity: stableHostIdentity,
+    });
     writeClaim(path.join(rootDirectory, ".head.claim.recovery"), 2_147_483_647);
 
     const committed = snapshot({ id: "snapshot.recovery-guard", revision: 1 });
     expect(store.commit(committed)).toMatchObject({ snapshotId: committed.id });
     expect(readdirSync(path.join(rootDirectory, "recoveries"))).toHaveLength(1);
+  });
+
+  it("commits normally when the environment has no stable host identity", () => {
+    const store = new ReferenceSourceStagingStore({
+      rootDirectory,
+      hostIdentity: () => null,
+    });
+
+    const committed = snapshot({ id: "snapshot.identity-less", revision: 1 });
+    expect(store.commit(committed)).toMatchObject({ snapshotId: committed.id });
+    expect(store.readCurrentSnapshot()).toEqual(committed);
+  });
+
+  it("fails closed instead of recovering a stale claim without stable same-host proof", () => {
+    const store = new ReferenceSourceStagingStore({
+      rootDirectory,
+      hostIdentity: () => null,
+    });
+    writeClaim(path.join(rootDirectory, ".head.claim"), 2_147_483_647);
+
+    expect(() => store.commit(snapshot({ id: "snapshot.no-recovery", revision: 1 }))).toThrow(
+      ReferenceSourceStagingConflictError
+    );
+    expect(store.readHead()).toBeNull();
+  });
+
+  it("never treats an unrecoverable fallback marker as same-host recovery evidence", () => {
+    const store = new ReferenceSourceStagingStore({ rootDirectory });
+    writeClaim(
+      path.join(rootDirectory, ".head.claim"),
+      2_147_483_647,
+      "unrecoverable:00000000-0000-4000-8000-000000000000"
+    );
+
+    expect(() => store.commit(snapshot({ id: "snapshot.fallback-blocked", revision: 1 }))).toThrow(
+      ReferenceSourceStagingConflictError
+    );
+    expect(store.readHead()).toBeNull();
   });
 
   it("keeps a losing writer's immutable orphan unreachable", () => {
@@ -233,14 +268,14 @@ function snapshot(input: {
   return { ...core, digest: referenceSourceDigest(core) };
 }
 
-function writeClaim(file: string, pid: number): void {
+function writeClaim(file: string, pid: number, hostIdentity = stableHostIdentity()): void {
   writeFileSync(
     file,
     `${JSON.stringify({
       schemaVersion: 1,
       token: `claim-${pid}`,
       pid,
-      hostIdentity: stableHostIdentity(),
+      hostIdentity,
       bootIdentity: null,
       processStartIdentity: null,
       claimedAt: "2026-07-15T12:00:00.000Z",
@@ -250,18 +285,5 @@ function writeClaim(file: string, pid: number): void {
 }
 
 function stableHostIdentity(): string {
-  let identity: string;
-  if (platform() === "linux") {
-    identity = `${readFileSync("/etc/machine-id", "utf8").trim()}\u0000${readlinkSync("/proc/self/ns/pid")}`;
-  } else if (platform() === "darwin") {
-    const output = execFileSync("/usr/sbin/ioreg", ["-rd1", "-c", "IOPlatformExpertDevice"], {
-      encoding: "utf8",
-    });
-    const uuid = /"IOPlatformUUID"\s*=\s*"([^"]+)"/.exec(output)?.[1];
-    if (!uuid) throw new Error("Expected IOPlatformUUID");
-    identity = uuid;
-  } else {
-    throw new Error(`Unsupported test platform ${platform()}`);
-  }
-  return createHash("sha256").update(`${platform()}\u0000${identity}`).digest("hex");
+  return "a".repeat(64);
 }

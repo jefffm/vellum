@@ -20,9 +20,11 @@ import {
   type ReferenceRecordRef,
   type ReferenceRightsAssertion,
   type ReferenceSourceStagingRecord,
+  type ReferenceSourceRecordObservation,
   type ReferenceSourceStagingSnapshot,
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
+import { assertCanonicalReferenceSourceTimestampFields } from "../../lib/reference-source-instant.js";
 import {
   ReferenceSourceStagingIntegrityError,
   ReferenceSourceStagingStore,
@@ -74,6 +76,25 @@ export type ReferenceSourceStagingServiceOptions = {
   createId?: () => string;
 };
 
+/**
+ * A pre-observation snapshot cannot be advanced without inventing trusted
+ * arrival order for records that the server did not observe being appended.
+ */
+export class ReferenceSourceStagingMigrationRequiredError extends ReferenceSourceStagingIntegrityError {
+  readonly code = "reference_source_staging_migration_required" as const;
+  readonly migration = "record_observations" as const;
+
+  constructor(
+    readonly snapshotRef: ReferenceRecordRef,
+    readonly snapshotRevision: number
+  ) {
+    super(
+      `Reference-source staging snapshot ${snapshotRef.id} predates complete server observation ordering; appends require an explicit record-observation migration`
+    );
+    this.name = "ReferenceSourceStagingMigrationRequiredError";
+  }
+}
+
 /** Validate one complete immutable staging snapshot before any derived planning. */
 export function assertReferenceSourceStagingSnapshotIntegrity(
   snapshot: ReferenceSourceStagingSnapshot
@@ -92,7 +113,9 @@ export function assertReferenceSourceStagingSnapshotIntegrity(
       `Reference-source staging snapshot digest mismatch for ${decoded.id}`
     );
   }
-  assertRecordGraphIntegrity(decoded.records);
+  assertRecordObservations(decoded);
+  assertRecordGraphIntegrity(decoded.records, observationRevisionMap(decoded));
+  assertCanonicalTimestamps(decoded, `snapshot ${decoded.id}`);
 }
 
 /**
@@ -133,8 +156,10 @@ export class ReferenceSourceStagingService {
         `Reference-source staging transaction failed schema validation: ${errorMessage(error)}`
       );
     }
+    assertCanonicalTimestamps(decodedTransaction, `transaction ${decodedTransaction.id}`);
     const currentState = this.store.readCurrentState();
     const current = currentState?.snapshot ?? null;
+    if (current) assertCompleteObservationHistoryBeforeAppend(current);
     const existing = current?.records ?? [];
     const appended: ReferenceSourceStagingRecord[] = decodedTransaction.operations.map(
       (operation) => operation.record
@@ -147,8 +172,16 @@ export class ReferenceSourceStagingService {
     assertAppendOnlyRecords(existing, appended);
 
     const records = [...existing, ...appended];
-    assertRecordGraphIntegrity(records);
     const committedAt = this.now().toISOString();
+    const revision = (current?.revision ?? 0) + 1;
+    const prospectiveObservationRevisions = new Map(
+      (current?.recordObservations ?? []).map((observation) => [
+        refKey(observation.recordRef),
+        observation.firstObservedRevision,
+      ])
+    );
+    for (const record of appended) prospectiveObservationRevisions.set(refKey(record), revision);
+    assertRecordGraphIntegrity(records, prospectiveObservationRevisions);
     const invalidations = deriveInvalidationOverlays({
       appended,
       allRecords: records,
@@ -156,8 +189,23 @@ export class ReferenceSourceStagingService {
       createId: this.createId,
     });
     const nextRecords = [...records, ...invalidations];
-    assertRecordGraphIntegrity(nextRecords);
-    const revision = (current?.revision ?? 0) + 1;
+    for (const record of invalidations) {
+      prospectiveObservationRevisions.set(refKey(record), revision);
+    }
+    assertRecordGraphIntegrity(nextRecords, prospectiveObservationRevisions);
+    const priorObservations = current?.recordObservations ?? [];
+    const priorObservedRefs = new Set(priorObservations.map(({ recordRef }) => refKey(recordRef)));
+    const recordObservations: ReferenceSourceRecordObservation[] = [
+      ...priorObservations,
+      ...nextRecords
+        .filter((record) => !priorObservedRefs.has(refKey(record)))
+        .map((record) => ({
+          recordRef: refFor(record),
+          firstObservedRevision: revision,
+          observedAt: committedAt,
+          orderingTrust: "server_observed" as const,
+        })),
+    ];
     const snapshotCore: Omit<ReferenceSourceStagingSnapshot, "digest"> = {
       schemaVersion: 1,
       id: `reference-source-snapshot.${this.createId()}`,
@@ -165,6 +213,7 @@ export class ReferenceSourceStagingService {
       ...(current ? { parentSnapshotRef: refFor(current) } : {}),
       publicationState: "staging_only",
       createdAt: committedAt,
+      recordObservations,
       records: nextRecords,
     };
     const snapshot: ReferenceSourceStagingSnapshot = {
@@ -172,6 +221,77 @@ export class ReferenceSourceStagingService {
       digest: referenceSourceDigest(snapshotCore),
     };
     const committedHead = this.store.commit(snapshot, decodedTransaction.expectedHeadRef);
+    return this.diagnostics(snapshot, committedHead);
+  }
+
+  /**
+   * Make a pre-observation snapshot appendable without claiming to know the
+   * arrival order of records that predate server observation metadata.
+   *
+   * This is deliberately explicit and compare-and-swap protected. Historical
+   * observations are preserved where present, missing entries are added only
+   * as legacy-unverifiable facts, and lifecycle authorization continues to
+   * reject every ordering claim that depends on them.
+   */
+  migrateLegacyObservationHistory(
+    expectedHeadRef: ReferenceRecordRef
+  ): ReferenceSourceStagingDiagnostics {
+    const currentState = this.store.readCurrentState();
+    if (!currentState) {
+      throw new ReferenceSourceStagingIntegrityError(
+        "Reference-source staging has no snapshot to migrate"
+      );
+    }
+    const current = currentState.snapshot;
+    assertReferenceSourceStagingSnapshotIntegrity(current);
+    const priorByRef = new Map(
+      (current.recordObservations ?? []).map((observation) => [
+        refKey(observation.recordRef),
+        observation,
+      ])
+    );
+    const needsMigration = current.records.some((record) => {
+      const observation = priorByRef.get(refKey(record));
+      return observation === undefined || observation.orderingTrust === undefined;
+    });
+    if (!needsMigration) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Reference-source staging snapshot ${current.id} already has complete observation-trust metadata`
+      );
+    }
+
+    const migratedAt = this.now().toISOString();
+    const revision = current.revision + 1;
+    const recordObservations: ReferenceSourceRecordObservation[] = current.records.map((record) => {
+      const prior = priorByRef.get(refKey(record));
+      if (prior?.orderingTrust === "server_observed") return prior;
+      return {
+        recordRef: refFor(record),
+        firstObservedRevision: prior?.firstObservedRevision ?? current.revision,
+        observedAt: prior?.observedAt ?? migratedAt,
+        orderingTrust: "legacy_unverifiable",
+      };
+    });
+    const snapshotCore: Omit<ReferenceSourceStagingSnapshot, "digest"> = {
+      schemaVersion: 1,
+      id: `reference-source-snapshot.${this.createId()}`,
+      revision,
+      parentSnapshotRef: refFor(current),
+      publicationState: "staging_only",
+      createdAt: migratedAt,
+      recordObservations,
+      records: current.records,
+    };
+    const snapshot: ReferenceSourceStagingSnapshot = {
+      ...snapshotCore,
+      digest: referenceSourceDigest(snapshotCore),
+    };
+    // Migration changes the ordering semantics used by graph validation. A
+    // legacy snapshot that was valid only under documentary timestamps must
+    // not become current if the conservative observation projection exposes a
+    // missing historical retention root or another ordering-dependent flaw.
+    assertReferenceSourceStagingSnapshotIntegrity(snapshot);
+    const committedHead = this.store.commit(snapshot, expectedHeadRef);
     return this.diagnostics(snapshot, committedHead);
   }
 
@@ -195,6 +315,85 @@ export class ReferenceSourceStagingService {
         canonicalPublication: false,
       },
     };
+  }
+}
+
+function assertCanonicalTimestamps(value: unknown, label: string): void {
+  try {
+    assertCanonicalReferenceSourceTimestampFields(value);
+  } catch {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} contains a noncanonical or impossible timestamp`
+    );
+  }
+}
+
+function assertRecordObservations(snapshot: ReferenceSourceStagingSnapshot): void {
+  if (!snapshot.recordObservations) return;
+  const records = new Map(snapshot.records.map((record) => [refKey(record), record]));
+  const observed = new Set<string>();
+  for (const observation of snapshot.recordObservations) {
+    const key = refKey(observation.recordRef);
+    if (!records.has(key)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Reference-source observation names a record outside snapshot ${snapshot.id}`
+      );
+    }
+    if (observed.has(key)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Reference-source snapshot repeats first-observation metadata for ${observation.recordRef.id}`
+      );
+    }
+    if (observation.firstObservedRevision > snapshot.revision) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Reference-source observation revision exceeds snapshot ${snapshot.id}`
+      );
+    }
+    observed.add(key);
+  }
+}
+
+function observationRevisionMap(
+  snapshot: ReferenceSourceStagingSnapshot
+): ReadonlyMap<string, number> {
+  return new Map(
+    (snapshot.recordObservations ?? []).map((observation) => [
+      refKey(observation.recordRef),
+      observation.firstObservedRevision,
+    ])
+  );
+}
+
+function observedNoLaterThanRecord(
+  candidate: { id: string; digest: string; createdAt: string },
+  container: { id: string; digest: string; createdAt: string },
+  firstObservedRevisions: ReadonlyMap<string, number>
+): boolean {
+  const candidateRevision = firstObservedRevisions.get(refKey(candidate));
+  const containerRevision = firstObservedRevisions.get(refKey(container));
+  if (candidateRevision !== undefined && containerRevision !== undefined) {
+    return candidateRevision <= containerRevision;
+  }
+  return Date.parse(candidate.createdAt) <= Date.parse(container.createdAt);
+}
+
+function assertCompleteObservationHistoryBeforeAppend(
+  snapshot: ReferenceSourceStagingSnapshot
+): void {
+  if (snapshot.records.length === 0) return;
+  const observationsByRef = new Map(
+    (snapshot.recordObservations ?? []).map((observation) => [
+      refKey(observation.recordRef),
+      observation,
+    ])
+  );
+  if (
+    snapshot.records.some((record) => {
+      const observation = observationsByRef.get(refKey(record));
+      return observation === undefined || observation.orderingTrust === undefined;
+    })
+  ) {
+    throw new ReferenceSourceStagingMigrationRequiredError(refFor(snapshot), snapshot.revision);
   }
 }
 
@@ -238,7 +437,10 @@ function assertAppendOnlyRecords(
   }
 }
 
-function assertRecordGraphIntegrity(records: ReferenceSourceStagingRecord[]): void {
+function assertRecordGraphIntegrity(
+  records: ReferenceSourceStagingRecord[],
+  firstObservedRevisions: ReadonlyMap<string, number> = new Map()
+): void {
   const byRef = new Map<string, ReferenceSourceStagingRecord>();
   const assetsBySha256 = new Map<string, ReferenceSourceStagingRecord>();
   const byLogicalVersion = new Set<string>();
@@ -266,14 +468,15 @@ function assertRecordGraphIntegrity(records: ReferenceSourceStagingRecord[]): vo
 
   for (const record of records) {
     assertVersionParent(record, byRef);
-    assertLocalStructuralEdges(record, byRef);
+    assertLocalStructuralEdges(record, byRef, firstObservedRevisions);
   }
   assertDependencyGraphAcyclic(records.filter(isDependencyEdge));
 }
 
 function assertLocalStructuralEdges(
   record: ReferenceSourceStagingRecord,
-  byRef: Map<string, ReferenceSourceStagingRecord>
+  byRef: Map<string, ReferenceSourceStagingRecord>,
+  firstObservedRevisions: ReadonlyMap<string, number>
 ): void {
   switch (record.recordKind) {
     case "identity_assertion": {
@@ -528,7 +731,7 @@ function assertLocalStructuralEdges(
       assertAccessDecisionSemantics(record, byRef);
       return;
     case "lifecycle_storage_policy":
-      assertLifecycleStoragePolicy(record, byRef);
+      assertLifecycleStoragePolicy(record, byRef, firstObservedRevisions);
       return;
     case "lifecycle_use":
       assertLifecycleUse(record, byRef);
@@ -758,6 +961,39 @@ function assertAccessDecisionSemantics(
   assertOpaqueExternalRef(decision.policyRef, byRef, `${decision.id}.policyRef`);
   assertOpaqueExternalRefs(decision.authorityRefs, byRef, `${decision.id}.authorityRefs`);
   assertAccessDestination(decision);
+  const sourceKeys = new Set(decision.sourceRefs.map(refKey));
+  const derivativeKeys = new Set(decision.derivativeRefs.map(refKey));
+  if (
+    sourceKeys.size !== decision.sourceRefs.length ||
+    derivativeKeys.size !== decision.derivativeRefs.length ||
+    [...sourceKeys].some((key) => derivativeKeys.has(key))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Access Decision ${decision.id} requires disjoint, duplicate-free source and derivative sets`
+    );
+  }
+  for (const sourceRef of decision.sourceRefs) {
+    if (byRef.get(refKey(sourceRef))?.recordKind === "source_derivation") {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Access Decision ${decision.id} places a derivation in sourceRefs`
+      );
+    }
+  }
+  for (const derivativeRef of decision.derivativeRefs) {
+    const record = byRef.get(refKey(derivativeRef));
+    const isAcquiredSourceAsset =
+      record?.recordKind === "digital_asset" &&
+      [...byRef.values()].some(
+        (candidate) =>
+          candidate.recordKind === "asset_acquisition" &&
+          refKey(candidate.digitalAssetRef) === refKey(record)
+      );
+    if (record?.recordKind === "asset_acquisition" || isAcquiredSourceAsset) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Access Decision ${decision.id} places source identity in derivativeRefs`
+      );
+    }
+  }
 
   if (decision.validUntil && Date.parse(decision.validUntil) <= Date.parse(decision.decidedAt)) {
     throw new ReferenceSourceStagingIntegrityError(
@@ -903,8 +1139,17 @@ function assertAccessDestination(decision: ReferenceAccessDecision): void {
 
 function assertLifecycleStoragePolicy(
   policy: ReferenceLifecycleStoragePolicy,
-  byRef: Map<string, ReferenceSourceStagingRecord>
+  byRef: Map<string, ReferenceSourceStagingRecord>,
+  firstObservedRevisions: ReadonlyMap<string, number>
 ): void {
+  if (
+    policy.custody.kind === "vellum_controlled" &&
+    new Set(policy.custody.storeIds).size !== policy.custody.storeIds.length
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle storage policy ${policy.id} repeats a controlled store identifier`
+    );
+  }
   const isUnmanaged = policy.custody.kind === "unmanaged_recipient";
   if ((policy.subjectKind === "unmanaged_disclosure") !== isUnmanaged) {
     throw new ReferenceSourceStagingIntegrityError(
@@ -921,6 +1166,21 @@ function assertLifecycleStoragePolicy(
       byRef,
       `${policy.id}.provenancePaths`
     );
+    const expectedRoleBindingRefs = [...byRef.values()]
+      .filter(
+        (record): record is ReferenceAssetRoleBinding =>
+          (record.recordKind === "arrangement_source_binding" ||
+            record.recordKind === "owner_reference_binding" ||
+            record.recordKind === "evaluation_source_binding") &&
+          sameRefSet(record.acquisitionRefs, path.acquisitionRefs) &&
+          observedNoLaterThanRecord(record, policy, firstObservedRevisions)
+      )
+      .map(refFor);
+    if (!sameRefSet(path.roleBindingRefs ?? [], expectedRoleBindingRefs)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle storage policy ${policy.id} must pin the exact role-binding retention roots for each path`
+      );
+    }
   }
   assertUniqueLifecyclePaths(policy.provenancePaths, policy.id);
   assertOpaqueExternalRef(policy.policyRef, byRef, `${policy.id}.policyRef`);
@@ -974,8 +1234,6 @@ function assertLifecycleUse(
       byRef,
       `${use.id}.provenancePaths.accessDecisionRef`
     );
-    const exactRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
-    const authorizedRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
     if (
       decision.operation !== use.operation ||
       decision.destination.kind !== use.destination.kind ||
@@ -983,16 +1241,14 @@ function assertLifecycleUse(
       decision.purpose !== use.purpose ||
       refKey(decision.policyRef) !== refKey(use.policyRef) ||
       decision.assetRole !== use.assetRole ||
-      Date.parse(decision.decidedAt) > Date.parse(use.createdAt) ||
-      exactRefs.some(
-        (ref) => !authorizedRefs.some((authorized) => refKey(authorized) === refKey(ref))
-      )
+      Date.parse(decision.decidedAt) > Date.parse(use.createdAt)
     ) {
       throw new ReferenceSourceStagingIntegrityError(
         `Lifecycle use ${use.id} is not pinned to its Access Decision's exact path, role, operation, destination, purpose, and policy`
       );
     }
-    assertLifecycleRoleBinding(use, decision, path.acquisitionRefs, byRef);
+    assertExactLifecycleDecisionScope(use, decision, path, byRef);
+    assertLifecycleRoleBinding(use, decision, path, byRef);
   }
   assertUniqueLifecyclePaths(use.provenancePaths, use.id);
   assertLifecycleVersionPathChangesReviewed(use, byRef);
@@ -1240,30 +1496,67 @@ function assertNoRetroactiveLifecyclePath(
 function assertLifecycleRoleBinding(
   use: ReferenceLifecycleUse,
   decision: ReferenceAccessDecision,
-  acquisitionRefs: ReferenceRecordRef[],
+  path: ReferenceLifecycleUse["provenancePaths"][number],
   byRef: Map<string, ReferenceSourceStagingRecord>
 ): void {
-  if (!use.assetRole) return;
+  if (!use.assetRole) {
+    if (path.roleBindingRef) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle use ${use.id} cannot cite a role binding without an Asset Role`
+      );
+    }
+    return;
+  }
+  if (!path.roleBindingRef) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle use ${use.id} must pin its exact Asset Role Binding`
+    );
+  }
   const bindingKind =
     use.assetRole === "arrangement_source"
       ? "arrangement_source_binding"
       : use.assetRole === "owner_reference"
         ? "owner_reference_binding"
         : "evaluation_source_binding";
-  const bindings = [...byRef.values()].filter(
-    (record): record is ReferenceAssetRoleBinding => record.recordKind === bindingKind
+  const binding = resolveKind(
+    path.roleBindingRef,
+    bindingKind,
+    byRef,
+    `${use.id}.provenancePaths.roleBindingRef`
   );
-  const decisionRef = refFor(decision);
   if (
-    !bindings.some(
-      (binding) =>
-        acquisitionRefs.every((ref) =>
-          binding.acquisitionRefs.some((bound) => refKey(bound) === refKey(ref))
-        ) && binding.accessDecisionRefs.some((ref) => refKey(ref) === refKey(decisionRef))
-    )
+    !sameRefSet(binding.acquisitionRefs, path.acquisitionRefs) ||
+    !sameRefSet(binding.accessDecisionRefs, [refFor(decision)])
   ) {
     throw new ReferenceSourceStagingIntegrityError(
       `Lifecycle use ${use.id} cannot borrow ${use.assetRole} authority without its exact role binding`
+    );
+  }
+}
+
+function assertExactLifecycleDecisionScope(
+  use: ReferenceLifecycleUse,
+  decision: ReferenceAccessDecision,
+  path: ReferenceLifecycleUse["provenancePaths"][number],
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const acquisitions = path.acquisitionRefs.map((ref) =>
+    resolveKind(ref, "asset_acquisition", byRef, `${use.id}.provenancePaths.acquisitionRefs`)
+  );
+  const sourceRefs = [
+    ...path.acquisitionRefs,
+    ...acquisitions.map((acquisition) => acquisition.digitalAssetRef),
+  ];
+  const derivativeRefs = [
+    ...path.derivationRefs,
+    ...(sourceRefs.some((ref) => refKey(ref) === refKey(use.subjectRef)) ? [] : [use.subjectRef]),
+  ];
+  if (
+    !sameRefSet(decision.sourceRefs, sourceRefs) ||
+    !sameRefSet(decision.derivativeRefs, derivativeRefs)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle use ${use.id} requires exact, disjoint source and derivative decision sets`
     );
   }
 }
@@ -1433,12 +1726,9 @@ function assertProvenanceSubstitution(
       `Provenance substitution ${substitution.id} does not preserve the exact derived artifact`
     );
   }
-  if (
-    refKey(substitution.from.acquisitionRef) === refKey(substitution.to.acquisitionRef) &&
-    refKey(substitution.from.derivationRef) === refKey(substitution.to.derivationRef)
-  ) {
+  if (refKey(substitution.from.acquisitionRef) === refKey(substitution.to.acquisitionRef)) {
     throw new ReferenceSourceStagingIntegrityError(
-      `Provenance substitution ${substitution.id} does not substitute a different exact path`
+      `Provenance substitution ${substitution.id} must replace the acquisition, not merely relabel a derivation`
     );
   }
 
@@ -1464,7 +1754,55 @@ function assertProvenanceSubstitution(
     byRef,
     `${substitution.id}.scope.policyRef`
   );
-  assertSubstitutionAuthorized(substitution, access);
+  assertSubstitutionRoleBinding(substitution, access, toDerivation, byRef);
+  assertSubstitutionAuthorized(substitution, access, toAcquisition, toDerivation, byRef);
+}
+
+function assertSubstitutionRoleBinding(
+  substitution: ReferenceProvenanceSubstitution,
+  access: ReferenceAccessDecision,
+  toDerivation: ReferenceSourceDerivation,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  if (!access.assetRole) {
+    if (substitution.roleBindingRef) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Provenance substitution ${substitution.id} cannot cite a role binding without an Asset Role`
+      );
+    }
+    return;
+  }
+  if (!substitution.roleBindingRef) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Provenance substitution ${substitution.id} must pin its exact replacement Asset Role Binding`
+    );
+  }
+  const bindingKind =
+    access.assetRole === "arrangement_source"
+      ? "arrangement_source_binding"
+      : access.assetRole === "owner_reference"
+        ? "owner_reference_binding"
+        : "evaluation_source_binding";
+  const binding = resolveKind(
+    substitution.roleBindingRef,
+    bindingKind,
+    byRef,
+    `${substitution.id}.roleBindingRef`
+  );
+  const closure = lifecycleDerivationClosure(toDerivation, byRef);
+  const acquisitionRefs = [...closure.acquisitions.values()].map(refFor);
+  if (
+    !sameRefSet(binding.acquisitionRefs, acquisitionRefs) ||
+    !sameRefSet(binding.accessDecisionRefs, [refFor(access)]) ||
+    acquisitionRefs.length === 0 ||
+    [...closure.acquisitions.values()].some(
+      (acquisition) => refKey(acquisition.digitalAssetRef) !== refKey(binding.digitalAssetRef)
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Provenance substitution ${substitution.id} cannot borrow an Asset Role Binding from a different replacement path`
+    );
+  }
 }
 
 function assertRoleBinding(
@@ -1618,22 +1956,33 @@ function assertDerivationUsesAcquisition(
 
 function assertSubstitutionAuthorized(
   substitution: ReferenceProvenanceSubstitution,
-  access: ReferenceAccessDecision
+  access: ReferenceAccessDecision,
+  toAcquisition: Extract<ReferenceSourceStagingRecord, { recordKind: "asset_acquisition" }>,
+  toDerivation: ReferenceSourceDerivation,
+  byRef: Map<string, ReferenceSourceStagingRecord>
 ): void {
-  const authorizedRefs = new Set([...access.sourceRefs, ...access.derivativeRefs].map(refKey));
   const endpointRefs = [
     substitution.from.acquisitionRef,
     substitution.from.derivationRef,
     substitution.to.acquisitionRef,
     substitution.to.derivationRef,
+    toDerivation.derivedRef,
   ];
   const scopedRefs = new Set(substitution.scope.sourceAndDerivativeRefs.map(refKey));
-  const authorityMatches =
-    substitution.authority.kind === "policy"
-      ? refKey(substitution.authority.authorityRef) === refKey(access.policyRef)
-      : access.authorityRefs.some(
-          (ref) => refKey(ref) === refKey(substitution.authority.authorityRef)
-        );
+  const authorityMatches = access.authorityRefs.some(
+    (ref) => refKey(ref) === refKey(substitution.authority.authorityRef)
+  );
+  const replacementClosure = lifecycleDerivationClosure(toDerivation, byRef);
+  const replacementAcquisitions = [...replacementClosure.acquisitions.values()];
+  const replacementDerivations = [...replacementClosure.derivations.values()];
+  const expectedSourceRefs = uniqueRefs([
+    ...replacementAcquisitions.map(refFor),
+    ...replacementAcquisitions.map(({ digitalAssetRef }) => digitalAssetRef),
+  ]);
+  const expectedDerivativeRefs = uniqueRefs([
+    ...replacementDerivations.map(refFor),
+    toDerivation.derivedRef,
+  ]);
   if (
     access.outcome !== "allow" ||
     access.operation !== substitution.scope.operation ||
@@ -1647,8 +1996,9 @@ function assertSubstitutionAuthorized(
       Date.parse(access.validUntil) <= Date.parse(substitution.decidedAt)) ||
     !authorityMatches ||
     endpointRefs.some((ref) => !scopedRefs.has(refKey(ref))) ||
-    endpointRefs.some((ref) => !authorizedRefs.has(refKey(ref))) ||
-    substitution.scope.sourceAndDerivativeRefs.some((ref) => !authorizedRefs.has(refKey(ref)))
+    !replacementAcquisitions.some((item) => refKey(item) === refKey(toAcquisition)) ||
+    !sameRefSet(access.sourceRefs, expectedSourceRefs) ||
+    !sameRefSet(access.derivativeRefs, expectedDerivativeRefs)
   ) {
     throw new ReferenceSourceStagingIntegrityError(
       `Provenance substitution ${substitution.id} is not authorized by its exact Access Decision`
@@ -1836,6 +2186,10 @@ function sameRefSet(left: ReferenceRecordRef[], right: ReferenceRecordRef[]): bo
   if (left.length !== right.length) return false;
   const rightKeys = new Set(right.map(refKey));
   return rightKeys.size === right.length && left.every((ref) => rightKeys.has(refKey(ref)));
+}
+
+function uniqueRefs(refs: ReferenceRecordRef[]): ReferenceRecordRef[] {
+  return [...new Map(refs.map((ref) => [refKey(ref), ref])).values()];
 }
 
 function assertNever(value: never): never {

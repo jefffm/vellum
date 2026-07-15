@@ -25,9 +25,14 @@ import {
   type ReferenceRecordRef,
   type ReferenceRightsAssertion,
   type ReferenceSourceDerivation,
+  type ReferenceSourceRecordObservation,
   type ReferenceSourceStagingRecord,
   type ReferenceSourceStagingSnapshot,
 } from "./reference-source-domain.js";
+import {
+  assertCanonicalReferenceSourceTimestampFields,
+  compareReferenceSourceInstants,
+} from "./reference-source-instant.js";
 
 export {
   ReferenceLifecycleAuthorizedPathSchema,
@@ -48,7 +53,7 @@ const Strict = { additionalProperties: false } as const;
 const IdSchema = Type.String({ minLength: 1 });
 const DigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const IsoTimestampSchema = Type.String({
-  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
 });
 
 export const ReferenceLifecycleStateSchema = Type.Union([
@@ -97,12 +102,84 @@ export const ReferenceSourceLifecycleActionSchema = Type.Union([
 ]);
 export type ReferenceSourceLifecycleAction = Static<typeof ReferenceSourceLifecycleActionSchema>;
 
+const ReferenceSourceLifecyclePreflightStoreSchema = Type.Object(
+  {
+    storeId: IdSchema,
+    storeGeneration: Type.Integer({ minimum: 0 }),
+    storeStateDigest: DigestSchema,
+    enumerationDigest: DigestSchema,
+  },
+  Strict
+);
+
+const ReferenceSourceLifecycleAuthorityEvidenceSchema = Type.Object(
+  {
+    accessDecisionRef: ReferenceRecordRefSchema,
+    receiptRef: ReferenceRecordRefSchema,
+    evaluationDigest: DigestSchema,
+  },
+  Strict
+);
+
+const ReferenceSourceLifecycleRetentionEvidenceSchema = Type.Object(
+  {
+    roleBindingRef: ReferenceRecordRefSchema,
+    receiptRef: ReferenceRecordRefSchema,
+    outcome: Type.Union([Type.Literal("retain"), Type.Literal("release")]),
+    evaluationDigest: DigestSchema,
+  },
+  Strict
+);
+
+/**
+ * Digest-bound evidence that the trusted service boundary attaches while
+ * promoting a computed consequence into a ready plan. The pure planner never
+ * accepts this evidence, because canonical digests authenticate identity and
+ * integrity, not the authority of the caller that supplied the object.
+ */
+export const ReferenceSourceLifecyclePreflightEvidenceSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    id: IdSchema,
+    digest: DigestSchema,
+    inventoryScope: Type.Literal("reference_source_staging_only"),
+    validatedAt: IsoTimestampSchema,
+    requiredStoreRegistryRef: ReferenceRecordRefSchema,
+    inventoryWitnessRef: ReferenceRecordRefSchema,
+    stores: Type.Array(ReferenceSourceLifecyclePreflightStoreSchema, { minItems: 1 }),
+    authorityEvaluations: Type.Array(ReferenceSourceLifecycleAuthorityEvidenceSchema),
+    retentionEvaluations: Type.Array(ReferenceSourceLifecycleRetentionEvidenceSchema),
+  },
+  Strict
+);
+export type ReferenceSourceLifecyclePreflightEvidence = Static<
+  typeof ReferenceSourceLifecyclePreflightEvidenceSchema
+>;
+
+/**
+ * A consequence-calculation assumption, not an authority claim. The trusted
+ * service may derive these values from authenticated retention receipts, but
+ * the pure planner deliberately cannot distinguish that projection from
+ * caller-authored data and therefore can only emit a `computed` result.
+ */
+export const ReferenceSourceLifecycleRetentionOutcomeSchema = Type.Object(
+  {
+    roleBindingRef: ReferenceRecordRefSchema,
+    outcome: Type.Union([Type.Literal("retain"), Type.Literal("release")]),
+  },
+  Strict
+);
+export type ReferenceSourceLifecycleRetentionOutcome = Static<
+  typeof ReferenceSourceLifecycleRetentionOutcomeSchema
+>;
+
 export const ReferenceSourceLifecyclePlannerInputSchema = Type.Object(
   {
     schemaVersion: Type.Literal(1),
     baseSnapshot: ReferenceSourceStagingSnapshotSchema,
     effectiveAt: IsoTimestampSchema,
     action: ReferenceSourceLifecycleActionSchema,
+    retentionOutcomes: Type.Array(ReferenceSourceLifecycleRetentionOutcomeSchema),
   },
   Strict
 );
@@ -133,6 +210,12 @@ const ReferenceLifecycleIssueCodeSchema = Type.Union([
   Type.Literal("superseded_record"),
   Type.Literal("operation_destination_mismatch"),
   Type.Literal("retroactive_provenance"),
+  Type.Literal("missing_server_observation"),
+  Type.Literal("invalid_timestamp"),
+  Type.Literal("incomplete_controlled_store_inventory"),
+  Type.Literal("unverified_authority"),
+  Type.Literal("unverified_retention_policy"),
+  Type.Literal("unverified_preflight_evidence"),
 ]);
 
 const ReferenceLifecyclePlanningIssueSchema = Type.Object(
@@ -206,33 +289,57 @@ const ReferenceSourceLifecyclePlanCore = {
   atomicity: Type.Literal("all_or_nothing"),
 };
 
+const ReferenceSourceLifecycleConsequenceResultCore = {
+  targetRef: ReferenceRecordRefSchema,
+  targetDigitalAssetRef: Type.Optional(ReferenceRecordRefSchema),
+  consequences: Type.Array(ReferenceLifecycleStorageConsequenceSchema),
+  permissions: Type.Array(ReferenceLifecyclePermissionConsequenceSchema),
+  aggregate: Type.Object(
+    {
+      accessible: Type.Integer({ minimum: 0 }),
+      restricted: Type.Integer({ minimum: 0 }),
+      tombstone: Type.Integer({ minimum: 0 }),
+      purged: Type.Integer({ minimum: 0 }),
+      readinessBlocked: Type.Integer({ minimum: 0 }),
+      irreversibleDisclosures: Type.Integer({ minimum: 0 }),
+    },
+    Strict
+  ),
+};
+
 const ReferenceSourceLifecycleReadyPlanSchema = Type.Object(
   {
     ...ReferenceSourceLifecyclePlanCore,
     status: Type.Literal("ready"),
-    targetRef: ReferenceRecordRefSchema,
-    targetDigitalAssetRef: Type.Optional(ReferenceRecordRefSchema),
-    consequences: Type.Array(ReferenceLifecycleStorageConsequenceSchema),
-    permissions: Type.Array(ReferenceLifecyclePermissionConsequenceSchema),
-    aggregate: Type.Object(
-      {
-        accessible: Type.Integer({ minimum: 0 }),
-        restricted: Type.Integer({ minimum: 0 }),
-        tombstone: Type.Integer({ minimum: 0 }),
-        purged: Type.Integer({ minimum: 0 }),
-        readinessBlocked: Type.Integer({ minimum: 0 }),
-        irreversibleDisclosures: Type.Integer({ minimum: 0 }),
-      },
-      Strict
-    ),
+    verifiedEvidence: ReferenceSourceLifecyclePreflightEvidenceSchema,
+    ...ReferenceSourceLifecycleConsequenceResultCore,
   },
   Strict
 );
+
+/**
+ * Deterministic consequence output with no claim that inventory, authority,
+ * or retention assumptions were authenticated. Only the trusted service may
+ * promote this shape into the distinct public `ready` plan contract.
+ */
+export const ReferenceSourceLifecycleComputedPlanSchema = Type.Object(
+  {
+    ...ReferenceSourceLifecyclePlanCore,
+    status: Type.Literal("computed"),
+    retentionOutcomes: Type.Array(ReferenceSourceLifecycleRetentionOutcomeSchema),
+    ...ReferenceSourceLifecycleConsequenceResultCore,
+  },
+  Strict
+);
+export type ReferenceSourceLifecycleComputedPlan = Static<
+  typeof ReferenceSourceLifecycleComputedPlanSchema
+>;
 
 const ReferenceSourceLifecycleBlockedPlanSchema = Type.Object(
   {
     ...ReferenceSourceLifecyclePlanCore,
     status: Type.Literal("blocked"),
+    verifiedEvidence: Type.Optional(ReferenceSourceLifecyclePreflightEvidenceSchema),
     issues: Type.Array(ReferenceLifecyclePlanningIssueSchema, { minItems: 1 }),
   },
   Strict
@@ -246,11 +353,20 @@ export type ReferenceSourceLifecyclePlanResult = Static<
   typeof ReferenceSourceLifecyclePlanResultSchema
 >;
 
+export const ReferenceSourceLifecycleComputationResultSchema = Type.Union([
+  ReferenceSourceLifecycleComputedPlanSchema,
+  ReferenceSourceLifecycleBlockedPlanSchema,
+]);
+export type ReferenceSourceLifecycleComputationResult = Static<
+  typeof ReferenceSourceLifecycleComputationResultSchema
+>;
+
 type LifecycleContext = {
   effectiveAt: string;
   action: ReferenceSourceLifecycleAction;
   records: ReferenceSourceStagingRecord[];
   recordByRef: Map<string, ReferenceSourceStagingRecord>;
+  observationsByRef: Map<string, ReferenceSourceRecordObservation>;
   acquisitions: ReferenceAssetAcquisition[];
   acquisitionByRef: Map<string, ReferenceAssetAcquisition>;
   derivations: ReferenceSourceDerivation[];
@@ -261,6 +377,7 @@ type LifecycleContext = {
   rightsAssertionByRef: Map<string, ReferenceRightsAssertion>;
   substitutions: ReferenceProvenanceSubstitution[];
   roleBindings: ReferenceAssetRoleBinding[];
+  retentionOutcomeByRoleBindingRef: Map<string, "retain" | "release">;
   policies: ReferenceLifecycleStoragePolicy[];
   uses: ReferenceLifecycleUse[];
   invalidatedRefs: Set<string>;
@@ -274,19 +391,34 @@ type ExactClosure = {
 };
 
 /**
- * Produces a deterministic, digest-bound, non-mutating lifecycle plan from one
- * complete immutable staging snapshot. Callers cannot select record arrays.
+ * Produces a deterministic, digest-bound, non-mutating lifecycle consequence
+ * calculation from one complete immutable staging snapshot. Callers cannot
+ * select record arrays, and direct calls can never produce a public ready plan.
  */
 export function planReferenceSourceLifecycle(
   input: ReferenceSourceLifecyclePlannerInput
-): ReferenceSourceLifecyclePlanResult {
+): ReferenceSourceLifecycleComputationResult {
   if (!Value.Check(ReferenceSourceLifecyclePlannerInputSchema, input)) {
     throw new TypeError("Reference-source lifecycle input does not match the closed schema");
   }
 
+  try {
+    assertCanonicalReferenceSourceTimestampFields(input);
+  } catch {
+    throw new TypeError(
+      "Reference-source lifecycle input contains a noncanonical or impossible timestamp"
+    );
+  }
+
   const snapshot = input.baseSnapshot;
   const records = [...snapshot.records].sort(compareRecords);
-  const ctx = buildContext(records, input.effectiveAt, input.action);
+  const ctx = buildContext(
+    snapshot,
+    records,
+    input.effectiveAt,
+    input.action,
+    input.retentionOutcomes
+  );
 
   if (!verifySnapshotDigest(snapshot)) {
     addIssue(
@@ -340,7 +472,7 @@ export function planReferenceSourceLifecycle(
     atomicity: "all_or_nothing" as const,
   };
   if ((!targetAcquisition && !targetDecision) || issues.length > 0) {
-    return sealPlan({ ...base, status: "blocked" as const, issues });
+    return sealComputationResult({ ...base, status: "blocked" as const, issues });
   }
 
   const consequences = buildStorageConsequences(
@@ -359,9 +491,10 @@ export function planReferenceSourceLifecycle(
       ? input.action.targetAcquisitionRef
       : input.action.targetAccessDecisionRef;
 
-  return sealPlan({
+  return sealComputationResult({
     ...base,
-    status: "ready" as const,
+    status: "computed" as const,
+    retentionOutcomes: input.retentionOutcomes,
     targetRef,
     ...(targetAcquisition ? { targetDigitalAssetRef: targetAcquisition.digitalAssetRef } : {}),
     consequences,
@@ -381,20 +514,62 @@ export function planReferenceSourceLifecycle(
   });
 }
 
+/** Seal a fail-closed service preflight result using the lifecycle plan contract. */
+export function blockReferenceSourceLifecyclePlan(
+  input: ReferenceSourceLifecyclePlannerInput,
+  issues: ReferenceLifecyclePlanningIssue[]
+): Extract<ReferenceSourceLifecyclePlanResult, { status: "blocked" }> {
+  if (issues.length === 0) {
+    throw new TypeError("A blocked lifecycle plan requires at least one issue");
+  }
+  const result = sealComputationResult({
+    schemaVersion: 1,
+    mode: "dry_run",
+    baseSnapshotRef: recordRef(input.baseSnapshot),
+    effectiveAt: input.effectiveAt,
+    action: input.action,
+    atomicity: "all_or_nothing",
+    status: "blocked",
+    issues: sortIssues(issues),
+  });
+  if (result.status !== "blocked") {
+    throw new Error("Reference-source lifecycle blocker produced a non-blocked result");
+  }
+  return result;
+}
+
 function buildContext(
+  snapshot: ReferenceSourceStagingSnapshot,
   records: ReferenceSourceStagingRecord[],
   effectiveAt: string,
-  action: ReferenceSourceLifecycleAction
+  action: ReferenceSourceLifecycleAction,
+  retentionOutcomes: ReferenceSourceLifecycleRetentionOutcome[]
 ): LifecycleContext {
   const acquisitions = records.filter(isAssetAcquisition);
   const derivations = records.filter(isSourceDerivation);
   const accessDecisions = records.filter(isAccessDecision);
   const rightsAssertions = records.filter(isRightsAssertion);
+  const invalidatedRefs = new Set(
+    records
+      .filter(
+        (record): record is ReferenceInvalidation =>
+          record.recordKind === "invalidation" &&
+          compareReferenceSourceInstants(record.invalidatedAt, effectiveAt) <= 0
+      )
+      .map((record) => refKey(record.invalidatedRef))
+  );
+  const observationsByRef = new Map(
+    (snapshot.recordObservations ?? []).map((observation) => [
+      refKey(observation.recordRef),
+      observation,
+    ])
+  );
   return {
     effectiveAt,
     action,
     records,
     recordByRef: indexRecords(records),
+    observationsByRef,
     acquisitions,
     acquisitionByRef: indexRecords(acquisitions),
     derivations,
@@ -403,19 +578,31 @@ function buildContext(
     accessDecisionByRef: indexRecords(accessDecisions),
     rightsAssertions,
     rightsAssertionByRef: indexRecords(rightsAssertions),
-    substitutions: records.filter(isProvenanceSubstitution),
-    roleBindings: records.filter(isRoleBinding),
-    policies: selectEffectiveVersions(records.filter(isLifecycleStoragePolicy), effectiveAt),
-    uses: selectEffectiveVersions(records.filter(isLifecycleUse), effectiveAt),
-    invalidatedRefs: new Set(
-      records
-        .filter(
-          (record): record is ReferenceInvalidation =>
-            record.recordKind === "invalidation" &&
-            Date.parse(record.invalidatedAt) <= Date.parse(effectiveAt)
-        )
-        .map((record) => refKey(record.invalidatedRef))
+    substitutions: records
+      .filter(isProvenanceSubstitution)
+      .filter(
+        (record) =>
+          !invalidatedRefs.has(refKey(record)) &&
+          compareReferenceSourceInstants(record.decidedAt, effectiveAt) <= 0 &&
+          observationsByRef.get(refKey(record))?.orderingTrust === "server_observed"
+      ),
+    roleBindings: records
+      .filter(isRoleBinding)
+      .filter(
+        (record) =>
+          !invalidatedRefs.has(refKey(record)) &&
+          compareReferenceSourceInstants(record.createdAt, effectiveAt) <= 0
+      ),
+    retentionOutcomeByRoleBindingRef: new Map(
+      retentionOutcomes.map((evaluation) => [refKey(evaluation.roleBindingRef), evaluation.outcome])
     ),
+    policies: selectEffectiveVersions(records.filter(isLifecycleStoragePolicy), effectiveAt).filter(
+      (record) => !invalidatedRefs.has(refKey(record))
+    ),
+    uses: selectEffectiveVersions(records.filter(isLifecycleUse), effectiveAt).filter(
+      (record) => !invalidatedRefs.has(refKey(record))
+    ),
+    invalidatedRefs,
     issues: [],
   };
 }
@@ -440,6 +627,14 @@ function validateRecordIdentity(ctx: LifecycleContext): void {
         "record_digest_invalid",
         recordRef(record),
         "An immutable snapshot record does not match its canonical digest."
+      );
+    }
+    if (!ctx.observationsByRef.has(key)) {
+      addIssue(
+        ctx,
+        "missing_server_observation",
+        recordRef(record),
+        "Lifecycle planning cannot order a record that lacks server-minted first-observation metadata."
       );
     }
     if ("version" in record) {
@@ -497,13 +692,14 @@ function validateStoragePolicy(
     );
   }
   for (const path of policy.provenancePaths) {
-    exactClosure(
+    const closure = exactClosure(
       ctx,
       policy.subjectRef,
       path.acquisitionRefs,
       path.derivationRefs,
-      policy.createdAt
+      recordRef(policy)
     );
+    if (closure) validateStoragePathRoleBindings(ctx, policy, path, closure);
   }
   if (hasDuplicatePaths(policy.provenancePaths)) {
     addIssue(
@@ -524,8 +720,7 @@ function validateStoragePolicy(
       decision.destination.kind !== "recipient" ||
       decision.destination.id !== policy.custody.recipientRef.id ||
       !containsRef(decision.derivativeRefs, policy.subjectRef) ||
-      Date.parse(decision.decidedAt) > Date.parse(policy.custody.disclosedAt) ||
-      Date.parse(policy.custody.disclosedAt) > Date.parse(policy.createdAt)
+      !observedNoLaterThan(ctx, recordRef(decision), recordRef(policy))
     ) {
       addIssue(
         ctx,
@@ -545,7 +740,7 @@ function validateUse(ctx: LifecycleContext, use: ReferenceLifecycleUse): void {
       use.subjectRef,
       path.acquisitionRefs,
       path.derivationRefs,
-      use.createdAt
+      recordRef(use)
     );
     const decision = ctx.accessDecisionByRef.get(refKey(path.accessDecisionRef));
     if (!decision) {
@@ -565,16 +760,14 @@ function validateUse(ctx: LifecycleContext, use: ReferenceLifecycleUse): void {
         "Access Decision operation and exact destination are incompatible."
       );
     }
-    const requiredRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
-    const authorizedRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
     if (
       decision.operation !== use.operation ||
       !destinationsEqual(decision.destination, use.destination) ||
       decision.purpose !== use.purpose ||
       !refsEqual(decision.policyRef, use.policyRef) ||
       decision.assetRole !== use.assetRole ||
-      Date.parse(decision.decidedAt) > Date.parse(use.createdAt) ||
-      requiredRefs.some((ref) => !containsRef(authorizedRefs, ref))
+      !observedNoLaterThan(ctx, recordRef(decision), recordRef(use)) ||
+      (closure !== null && !decisionScopeMatches(ctx, decision, closure, use.subjectRef))
     ) {
       addIssue(
         ctx,
@@ -583,7 +776,7 @@ function validateUse(ctx: LifecycleContext, use: ReferenceLifecycleUse): void {
         "Lifecycle use is not pinned to its decision's complete path, role, operation, destination, purpose, and policy."
       );
     }
-    if (closure && use.assetRole && !hasExactRoleBinding(ctx, use, decision, closure)) {
+    if (closure && !hasExactRoleBinding(ctx, use, decision, closure, path.roleBindingRef)) {
       addIssue(
         ctx,
         "invalid_role_binding",
@@ -609,7 +802,7 @@ function exactClosure(
   subjectRef: ReferenceRecordRef,
   acquisitionRefs: ReferenceRecordRef[],
   derivationRefs: ReferenceRecordRef[],
-  recordedAt: string
+  recordedRecordRef: ReferenceRecordRef
 ): ExactClosure | null {
   const acquisitions = acquisitionRefs
     .map((ref) => ctx.acquisitionByRef.get(refKey(ref)))
@@ -639,7 +832,7 @@ function exactClosure(
       );
       return null;
     }
-    if (Date.parse(acquisitions[0]!.acquiredAt) > Date.parse(recordedAt)) {
+    if (!observedNoLaterThan(ctx, recordRef(acquisitions[0]!), recordedRecordRef)) {
       addIssue(
         ctx,
         "retroactive_provenance",
@@ -689,10 +882,10 @@ function exactClosure(
   }
   if (
     closure.acquisitions.some(
-      (acquisition) => Date.parse(acquisition.acquiredAt) > Date.parse(recordedAt)
+      (acquisition) => !observedNoLaterThan(ctx, recordRef(acquisition), recordedRecordRef)
     ) ||
     closure.derivations.some(
-      (derivation) => Date.parse(derivation.createdAt) > Date.parse(recordedAt)
+      (derivation) => !observedNoLaterThan(ctx, recordRef(derivation), recordedRecordRef)
     )
   ) {
     addIssue(
@@ -800,7 +993,7 @@ function validateNoRetroactivePath(ctx: LifecycleContext, use: ReferenceLifecycl
       (candidate) =>
         refsEqual(candidate.derivedRef, use.subjectRef) &&
         !refsEqual(recordRef(candidate), recordRef(terminal)) &&
-        Date.parse(candidate.createdAt) < Date.parse(terminal.createdAt)
+        observedBefore(ctx, recordRef(candidate), recordRef(terminal))
     );
     if (earlier.length === 0) continue;
     const priorPaths = earlier
@@ -839,7 +1032,7 @@ function pathHasReviewedSubstitution(
       return prior.acquisitionRefs.some((priorAcquisition) =>
         ctx.substitutions.some(
           (substitution) =>
-            Date.parse(substitution.decidedAt) <= Date.parse(record.createdAt) &&
+            observedNoLaterThan(ctx, recordRef(substitution), recordRef(record)) &&
             refsEqual(substitution.from.acquisitionRef, priorAcquisition) &&
             refsEqual(substitution.from.derivationRef, recordRef(priorTerminal)) &&
             refsEqual(substitution.to.acquisitionRef, nextAcquisition) &&
@@ -912,21 +1105,31 @@ function validateInventoryCompleteness(
   }
 
   for (const binding of ctx.roleBindings) {
-    const relevant =
-      targetAcquisition &&
-      binding.acquisitionRefs.some((ref) => refsEqual(ref, recordRef(targetAcquisition)));
-    if (!relevant) continue;
-    for (const accessDecisionRef of binding.accessDecisionRefs) {
-      if (
-        !ctx.uses.some((use) =>
-          use.provenancePaths.some((path) => refsEqual(path.accessDecisionRef, accessDecisionRef))
-        )
-      ) {
+    for (const acquisitionRef of binding.acquisitionRefs) {
+      if (targetAcquisition && !refsEqual(acquisitionRef, recordRef(targetAcquisition))) continue;
+      for (const accessDecisionRef of binding.accessDecisionRefs) {
+        const hasExactUse = ctx.uses.some((use) =>
+          use.provenancePaths.some(
+            (path) =>
+              path.roleBindingRef !== undefined &&
+              refsEqual(path.roleBindingRef, recordRef(binding)) &&
+              refsEqual(path.accessDecisionRef, accessDecisionRef) &&
+              containsRef(path.acquisitionRefs, acquisitionRef)
+          )
+        );
+        const hasExactStorage = ctx.policies.some((policy) =>
+          policy.provenancePaths.some(
+            (path) =>
+              containsRef(path.acquisitionRefs, acquisitionRef) &&
+              containsRef(path.roleBindingRefs ?? [], recordRef(binding))
+          )
+        );
+        if (hasExactUse && hasExactStorage) continue;
         addIssue(
           ctx,
           "incomplete_lifecycle_inventory",
           recordRef(binding),
-          "Every role-bound access edge affected by deletion must have an immutable lifecycle use."
+          "Every role-binding, acquisition, and access-decision tuple must have exact lifecycle use and retention coverage."
         );
       }
     }
@@ -1003,7 +1206,15 @@ function buildStorageConsequences(
         reason: "No exact storage path depends on the lifecycle action.",
       });
     } else {
-      consequences.push(storageConsequence(policy, affectedByRefs));
+      const roleRetentionRoot = policy.provenancePaths.some(
+        (path, index) =>
+          effects[index]?.affected === true &&
+          (path.roleBindingRefs ?? []).some(
+            (bindingRef) =>
+              ctx.retentionOutcomeByRoleBindingRef.get(refKey(bindingRef)) === "retain"
+          )
+      );
+      consequences.push(storageConsequence(policy, affectedByRefs, roleRetentionRoot));
     }
   }
 
@@ -1055,7 +1266,8 @@ function affectedPathRefs(
 
 function storageConsequence(
   policy: ReferenceLifecycleStoragePolicy,
-  affectedByRefs: ReferenceRecordRef[]
+  affectedByRefs: ReferenceRecordRef[],
+  roleRetentionRoot: boolean
 ): ReferenceLifecycleStorageConsequence {
   if (policy.custody.kind === "unmanaged_recipient") {
     return {
@@ -1067,10 +1279,10 @@ function storageConsequence(
       readinessImpact: readinessImpactFor(policy.readinessRequirement, "tombstone"),
       irreversibleDisclosure: true,
       reason:
-        "Vellum cannot recall an unmanaged disclosure; controlled copies are removed and a minimum disclosure tombstone remains.",
+        "Vellum cannot recall an unmanaged disclosure; registered controlled copies are removed within the dry-run inventory scope and a minimum disclosure tombstone remains.",
     };
   }
-  const retained = policy.custody.retention !== "unretained";
+  const retained = policy.custody.retention !== "unretained" || roleRetentionRoot;
   const state: ReferenceLifecycleState = retained
     ? "restricted"
     : policy.custody.tombstonePolicy === "preserve"
@@ -1085,10 +1297,12 @@ function storageConsequence(
     readinessImpact: readinessImpactFor(policy.readinessRequirement, state),
     irreversibleDisclosure: false,
     reason: retained
-      ? "An explicit encrypted pin or required hold retains bytes without retaining use authority."
+      ? roleRetentionRoot
+        ? "An exact Asset Role Binding retention policy keeps the subject restricted without preserving use authority."
+        : "An explicit encrypted pin or required hold retains bytes without retaining use authority."
       : state === "tombstone"
-        ? "Content bytes are removed while permitted non-sensitive tombstone metadata remains."
-        : "The Vellum-controlled subject is purged because every exact path was affected.",
+        ? "Registered controlled copies are removed within the dry-run inventory scope while permitted non-sensitive tombstone metadata remains."
+        : "The governed subject is marked purged within the dry-run inventory scope because every exact path was affected.",
   };
 }
 
@@ -1224,15 +1438,15 @@ function accessDecisionAllows(
   ctx: LifecycleContext,
   decision: ReferenceAccessDecision,
   use: ReferenceLifecycleUse,
-  path: ReferenceLifecycleAuthorizedPath
+  path: ReferenceLifecycleAuthorizedPath,
+  additionalScopeRefs: ReferenceRecordRef[] = []
 ): boolean {
   if (
     decision.outcome !== "allow" ||
     !isCurrentAccessDecision(ctx, decision) ||
     ctx.invalidatedRefs.has(refKey(decision)) ||
-    Date.parse(decision.decidedAt) > Date.parse(ctx.effectiveAt) ||
     (decision.validUntil !== undefined &&
-      Date.parse(decision.validUntil) <= Date.parse(ctx.effectiveAt)) ||
+      compareReferenceSourceInstants(decision.validUntil, ctx.effectiveAt) <= 0) ||
     decision.operation !== use.operation ||
     !destinationsEqual(decision.destination, use.destination) ||
     !operationDestinationCompatible(decision.operation, decision.destination) ||
@@ -1242,12 +1456,18 @@ function accessDecisionAllows(
   ) {
     return false;
   }
-  const requiredRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
-  const decisionRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
-  if (requiredRefs.some((ref) => !containsRef(decisionRefs, ref))) return false;
   const closure = exactClosureForAuthorization(ctx, use.subjectRef, path);
   if (!closure) return false;
-  if (use.assetRole && !hasExactRoleBinding(ctx, use, decision, closure)) return false;
+  if (
+    closure.acquisitions.some((acquisition) => !acquisitionIsActive(ctx, acquisition)) ||
+    closure.derivations.some((derivation) => ctx.invalidatedRefs.has(refKey(derivation)))
+  ) {
+    return false;
+  }
+  if (!decisionScopeMatches(ctx, decision, closure, use.subjectRef, additionalScopeRefs)) {
+    return false;
+  }
+  if (!hasExactRoleBinding(ctx, use, decision, closure, path.roleBindingRef)) return false;
   return accessDecisionHasCurrentAuthority(ctx, decision);
 }
 
@@ -1264,15 +1484,13 @@ function accessDecisionHasCurrentAuthority(
       !ctx.invalidatedRefs.has(refKey(assertion)) &&
       ["public_domain", "licensed", "permitted"].includes(assertion.status) &&
       rightsKindSupportsOperation(assertion.rightsKind, decision.operation) &&
-      (!assertion.validFrom || Date.parse(assertion.validFrom) <= Date.parse(ctx.effectiveAt)) &&
-      (!assertion.validUntil || Date.parse(assertion.validUntil) > Date.parse(ctx.effectiveAt)) &&
+      (!assertion.validFrom ||
+        compareReferenceSourceInstants(assertion.validFrom, ctx.effectiveAt) <= 0) &&
+      (!assertion.validUntil ||
+        compareReferenceSourceInstants(assertion.validUntil, ctx.effectiveAt) > 0) &&
       rightsAssertionConcernsDecision(ctx, assertion, decision)
   );
-  if (affirmative) return true;
-  const localOnly =
-    decision.destination.kind === "local_runtime" &&
-    ["owner_private_study", "local_extraction"].includes(decision.operation);
-  return localOnly && decision.authorityRefs.length > 0;
+  return affirmative;
 }
 
 function rightsKindSupportsOperation(
@@ -1351,8 +1569,10 @@ function findAuthorizedSubstitution(
 } | null {
   if (ctx.action.kind !== "delete_acquisition") return null;
   for (const substitution of [...ctx.substitutions].sort(compareRecords)) {
+    const substitutionObservation = ctx.observationsByRef.get(refKey(substitution));
     if (
-      Date.parse(substitution.decidedAt) > Date.parse(ctx.effectiveAt) ||
+      ctx.invalidatedRefs.has(refKey(substitution)) ||
+      substitutionObservation?.orderingTrust !== "server_observed" ||
       !removedPaths.some(
         (path) =>
           containsRef(path.acquisitionRefs, substitution.from.acquisitionRef) &&
@@ -1373,12 +1593,14 @@ function findAuthorizedSubstitution(
     if (!closure) continue;
     const decision = ctx.accessDecisionByRef.get(refKey(substitution.accessDecisionRef));
     if (!decision) continue;
+    if (!hasExactRoleBinding(ctx, use, decision, closure, substitution.roleBindingRef)) continue;
     const path: ReferenceLifecycleAuthorizedPath = {
       acquisitionRefs: closure.acquisitions.map(recordRef),
       derivationRefs: closure.derivations.map(recordRef),
       accessDecisionRef: recordRef(decision),
+      ...(substitution.roleBindingRef ? { roleBindingRef: substitution.roleBindingRef } : {}),
     };
-    const requiredRefs = [
+    const mappingRefs = [
       substitution.from.acquisitionRef,
       substitution.from.derivationRef,
       substitution.to.acquisitionRef,
@@ -1387,14 +1609,12 @@ function findAuthorizedSubstitution(
       ...path.derivationRefs,
       use.subjectRef,
     ];
+    const decisionRequiredRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
     const decisionRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
     if (
       !containsRef(path.acquisitionRefs, substitution.to.acquisitionRef) ||
-      requiredRefs.some(
-        (ref) =>
-          !containsRef(substitution.scope.sourceAndDerivativeRefs, ref) ||
-          !containsRef(decisionRefs, ref)
-      ) ||
+      mappingRefs.some((ref) => !containsRef(substitution.scope.sourceAndDerivativeRefs, ref)) ||
+      decisionRequiredRefs.some((ref) => !containsRef(decisionRefs, ref)) ||
       !substitutionAuthorityMatches(substitution, decision) ||
       !accessDecisionAllows(ctx, decision, use, path)
     ) {
@@ -1409,9 +1629,7 @@ function substitutionAuthorityMatches(
   substitution: ReferenceProvenanceSubstitution,
   decision: ReferenceAccessDecision
 ): boolean {
-  return substitution.authority.kind === "policy"
-    ? refsEqual(substitution.authority.authorityRef, substitution.scope.policyRef)
-    : containsRef(decision.authorityRefs, substitution.authority.authorityRef);
+  return containsRef(decision.authorityRefs, substitution.authority.authorityRef);
 }
 
 function exactClosureForAuthorization(
@@ -1449,25 +1667,96 @@ function hasExactRoleBinding(
   ctx: LifecycleContext,
   use: ReferenceLifecycleUse,
   decision: ReferenceAccessDecision,
-  closure: ExactClosure
+  closure: ExactClosure,
+  roleBindingRef: ReferenceRecordRef | undefined
 ): boolean {
-  if (!use.assetRole) return decision.assetRole === undefined;
+  if (!use.assetRole) return decision.assetRole === undefined && roleBindingRef === undefined;
+  if (!roleBindingRef) return false;
+  return exactRoleBindings(ctx, use, decision, closure).some((binding) =>
+    refsEqual(recordRef(binding), roleBindingRef)
+  );
+}
+
+function exactRoleBindings(
+  ctx: LifecycleContext,
+  use: ReferenceLifecycleUse,
+  decision: ReferenceAccessDecision,
+  closure: ExactClosure
+): ReferenceAssetRoleBinding[] {
+  if (!use.assetRole) return [];
   const kind =
     use.assetRole === "arrangement_source"
       ? "arrangement_source_binding"
       : use.assetRole === "owner_reference"
         ? "owner_reference_binding"
         : "evaluation_source_binding";
-  return ctx.roleBindings.some(
+  return ctx.roleBindings.filter(
     (binding) =>
+      !ctx.invalidatedRefs.has(refKey(binding)) &&
       binding.recordKind === kind &&
-      containsRef(binding.accessDecisionRefs, recordRef(decision)) &&
-      closure.acquisitions.every((acquisition) =>
-        containsRef(binding.acquisitionRefs, recordRef(acquisition))
-      ) &&
+      sameRefSet(binding.accessDecisionRefs, [recordRef(decision)]) &&
+      sameRefSet(binding.acquisitionRefs, closure.acquisitions.map(recordRef)) &&
       closure.acquisitions.every((acquisition) =>
         refsEqual(binding.digitalAssetRef, acquisition.digitalAssetRef)
       )
+  );
+}
+
+function validateStoragePathRoleBindings(
+  ctx: LifecycleContext,
+  policy: ReferenceLifecycleStoragePolicy,
+  path: {
+    acquisitionRefs: ReferenceRecordRef[];
+    derivationRefs: ReferenceRecordRef[];
+    roleBindingRefs?: ReferenceRecordRef[];
+  },
+  closure: ExactClosure
+): void {
+  const expected = ctx.roleBindings
+    .filter(
+      (binding) =>
+        sameRefSet(binding.acquisitionRefs, closure.acquisitions.map(recordRef)) &&
+        closure.acquisitions.every((acquisition) =>
+          refsEqual(binding.digitalAssetRef, acquisition.digitalAssetRef)
+        )
+    )
+    .map(recordRef);
+  if (!sameRefSet(path.roleBindingRefs ?? [], expected)) {
+    addIssue(
+      ctx,
+      "invalid_role_binding",
+      policy.subjectRef,
+      "Each storage path must name the exact role bindings whose retention policy covers that acquisition set."
+    );
+  }
+}
+
+function decisionScopeMatches(
+  ctx: LifecycleContext,
+  decision: ReferenceAccessDecision,
+  closure: ExactClosure,
+  subjectRef: ReferenceRecordRef,
+  additionalRefs: ReferenceRecordRef[] = []
+): boolean {
+  const sourceRefs = uniqueSortedRefs([
+    ...closure.acquisitions.map(recordRef),
+    ...closure.acquisitions.map((acquisition) => acquisition.digitalAssetRef),
+  ]);
+  const derivativeRefs = uniqueSortedRefs([
+    ...closure.derivations.map(recordRef),
+    ...(containsRef(sourceRefs, subjectRef) ? [] : [subjectRef]),
+  ]);
+  for (const ref of additionalRefs) {
+    const record = ctx.recordByRef.get(refKey(ref));
+    if (record?.recordKind === "asset_acquisition" || record?.recordKind === "digital_asset") {
+      if (!containsRef(sourceRefs, ref)) sourceRefs.push(ref);
+    } else if (!containsRef(derivativeRefs, ref)) {
+      derivativeRefs.push(ref);
+    }
+  }
+  return (
+    sameRefSet(decision.sourceRefs, sourceRefs) &&
+    sameRefSet(decision.derivativeRefs, derivativeRefs)
   );
 }
 
@@ -1510,7 +1799,7 @@ function isCurrentAccessDecision(
     ctx.accessDecisions.filter(
       (candidate) =>
         candidate.id === decision.id &&
-        Date.parse(candidate.decidedAt) <= Date.parse(ctx.effectiveAt)
+        compareReferenceSourceInstants(candidate.decidedAt, ctx.effectiveAt) <= 0
     )
   );
   return current !== undefined && refsEqual(recordRef(current), recordRef(decision));
@@ -1524,7 +1813,7 @@ function isCurrentRightsAssertion(
     ctx.rightsAssertions.filter(
       (candidate) =>
         candidate.id === assertion.id &&
-        Date.parse(candidate.assertedAt) <= Date.parse(ctx.effectiveAt)
+        compareReferenceSourceInstants(candidate.assertedAt, ctx.effectiveAt) <= 0
     )
   );
   return current !== undefined && refsEqual(recordRef(current), recordRef(assertion));
@@ -1539,18 +1828,20 @@ function acquisitionIsActive(
   ctx: LifecycleContext,
   acquisition: ReferenceAssetAcquisition
 ): boolean {
-  if (Date.parse(acquisition.acquiredAt) > Date.parse(ctx.effectiveAt)) return false;
   if (
-    ctx.action.kind === "delete_acquisition" &&
-    refsEqual(recordRef(acquisition), ctx.action.targetAcquisitionRef)
+    ctx.invalidatedRefs.has(refKey(acquisition)) ||
+    compareReferenceSourceInstants(acquisition.acquiredAt, ctx.effectiveAt) > 0 ||
+    (ctx.action.kind === "delete_acquisition" &&
+      refsEqual(recordRef(acquisition), ctx.action.targetAcquisitionRef))
   ) {
     return false;
   }
   return !ctx.acquisitions.some(
     (candidate) =>
+      !ctx.invalidatedRefs.has(refKey(candidate)) &&
+      compareReferenceSourceInstants(candidate.acquiredAt, ctx.effectiveAt) <= 0 &&
       candidate.supersedesAcquisitionRef !== undefined &&
-      refsEqual(candidate.supersedesAcquisitionRef, recordRef(acquisition)) &&
-      Date.parse(candidate.acquiredAt) <= Date.parse(ctx.effectiveAt)
+      refsEqual(candidate.supersedesAcquisitionRef, recordRef(acquisition))
   );
 }
 
@@ -1596,7 +1887,7 @@ function selectEffectiveVersions<
 >(records: T[], effectiveAt: string): T[] {
   const byId = new Map<string, T>();
   for (const record of records) {
-    if (Date.parse(record.createdAt) > Date.parse(effectiveAt)) continue;
+    if (compareReferenceSourceInstants(record.createdAt, effectiveAt) > 0) continue;
     const current = byId.get(record.id);
     if (
       !current ||
@@ -1620,7 +1911,9 @@ function verifySnapshotDigest(snapshot: ReferenceSourceStagingSnapshot): boolean
   return referenceSourceDigest(core) === digest;
 }
 
-function sealPlan(value: Record<string, unknown>): ReferenceSourceLifecyclePlanResult {
+function sealComputationResult(
+  value: Record<string, unknown>
+): ReferenceSourceLifecycleComputationResult {
   const seed = referenceSourceDigest(value);
   const withId = {
     ...value,
@@ -1630,10 +1923,10 @@ function sealPlan(value: Record<string, unknown>): ReferenceSourceLifecyclePlanR
     ...withId,
     digest: referenceSourceDigest(withId),
   };
-  if (!Value.Check(ReferenceSourceLifecyclePlanResultSchema, result)) {
+  if (!Value.Check(ReferenceSourceLifecycleComputationResultSchema, result)) {
     throw new Error("Reference-source lifecycle planner produced an invalid result");
   }
-  return result as ReferenceSourceLifecyclePlanResult;
+  return result as ReferenceSourceLifecycleComputationResult;
 }
 
 function readinessImpactFor(
@@ -1741,6 +2034,38 @@ function refsEqual(left: ReferenceRecordRef, right: ReferenceRecordRef): boolean
 
 function containsRef(refs: ReferenceRecordRef[], target: ReferenceRecordRef): boolean {
   return refs.some((ref) => refsEqual(ref, target));
+}
+
+function observedNoLaterThan(
+  ctx: LifecycleContext,
+  earlier: ReferenceRecordRef,
+  later: ReferenceRecordRef
+): boolean {
+  const earlierObservation = ctx.observationsByRef.get(refKey(earlier));
+  const laterObservation = ctx.observationsByRef.get(refKey(later));
+  return (
+    earlierObservation !== undefined &&
+    laterObservation !== undefined &&
+    earlierObservation.orderingTrust === "server_observed" &&
+    laterObservation.orderingTrust === "server_observed" &&
+    earlierObservation.firstObservedRevision <= laterObservation.firstObservedRevision
+  );
+}
+
+function observedBefore(
+  ctx: LifecycleContext,
+  earlier: ReferenceRecordRef,
+  later: ReferenceRecordRef
+): boolean {
+  const earlierObservation = ctx.observationsByRef.get(refKey(earlier));
+  const laterObservation = ctx.observationsByRef.get(refKey(later));
+  return (
+    earlierObservation !== undefined &&
+    laterObservation !== undefined &&
+    earlierObservation.orderingTrust === "server_observed" &&
+    laterObservation.orderingTrust === "server_observed" &&
+    earlierObservation.firstObservedRevision < laterObservation.firstObservedRevision
+  );
 }
 
 function uniqueSortedRefs(refs: ReferenceRecordRef[]): ReferenceRecordRef[] {

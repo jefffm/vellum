@@ -2,6 +2,7 @@ import { Value } from "@sinclair/typebox/value";
 import { describe, expect, it } from "vitest";
 
 import {
+  ReferenceSourceLifecycleComputationResultSchema,
   ReferenceSourceLifecyclePlanResultSchema,
   ReferenceSourceLifecyclePlannerInputSchema,
   planReferenceSourceLifecycle,
@@ -38,6 +39,10 @@ function ref(id: string, fill = "e"): ReferenceRecordRef {
 
 function recordRef(record: { id: string; digest: string }): ReferenceRecordRef {
   return { id: record.id, digest: record.digest };
+}
+
+function uniqueRecordRefs(refs: ReferenceRecordRef[]): ReferenceRecordRef[] {
+  return [...new Map(refs.map((item) => [`${item.id}\u0000${item.digest}`, item])).values()];
 }
 
 function asset(id = "asset.shared", fill = "a"): ReferenceDigitalAsset {
@@ -152,7 +157,10 @@ function accessDecision(options: {
     version: 1,
     outcome: "allow",
     operation: options.operation ?? "repository_inclusion",
-    sourceRefs: options.acquisitions.map(recordRef),
+    sourceRefs: uniqueRecordRefs([
+      ...options.acquisitions.map(recordRef),
+      ...options.acquisitions.map((item) => item.digitalAssetRef),
+    ]),
     derivativeRefs: [
       ...(options.derivations ?? []).map(recordRef),
       options.subjectRef ?? SUBJECT_REF,
@@ -190,6 +198,7 @@ function storagePolicy(options: {
       options.custody ??
       ({
         kind: "vellum_controlled",
+        storeIds: ["reference-source-staging"],
         retention: "unretained",
         tombstonePolicy: "discard",
       } as const),
@@ -208,6 +217,7 @@ function lifecycleUse(options: {
   destination?: ReferenceAccessDestination;
   purpose?: string;
   assetRole?: ReferenceAssetRole;
+  roleBindingRef?: ReferenceRecordRef;
   readinessRequirement?: ReferenceLifecycleUse["readinessRequirement"];
 }): ReferenceLifecycleUse {
   return withReferenceRecordDigest({
@@ -219,6 +229,7 @@ function lifecycleUse(options: {
       {
         ...options.path,
         accessDecisionRef: recordRef(options.decision),
+        ...(options.roleBindingRef ? { roleBindingRef: options.roleBindingRef } : {}),
       },
     ],
     operation: options.operation ?? "repository_inclusion",
@@ -253,6 +264,12 @@ function snapshot(records: ReferenceSourceStagingRecord[]): ReferenceSourceStagi
     revision: 1,
     publicationState: "staging_only" as const,
     createdAt: NOW,
+    recordObservations: records.map((record) => ({
+      recordRef: recordRef(record),
+      firstObservedRevision: 1,
+      observedAt: NOW,
+      orderingTrust: "server_observed" as const,
+    })),
     records,
   };
   return { ...core, digest: referenceSourceDigest(core) };
@@ -260,14 +277,54 @@ function snapshot(records: ReferenceSourceStagingRecord[]): ReferenceSourceStagi
 
 function plannerInput(
   records: ReferenceSourceStagingRecord[],
-  action: ReferenceSourceLifecyclePlannerInput["action"]
+  action: ReferenceSourceLifecyclePlannerInput["action"],
+  observedRevisions: Readonly<Record<string, number>> = {}
 ): ReferenceSourceLifecyclePlannerInput {
+  const revision = Math.max(1, ...Object.values(observedRevisions));
+  const baseSnapshot = snapshot(records);
+  const snapshotCore = {
+    ...baseSnapshot,
+    revision,
+    recordObservations: records.map((record) => ({
+      recordRef: recordRef(record),
+      firstObservedRevision: observedRevisions[record.id] ?? 1,
+      observedAt: NOW,
+      orderingTrust: "server_observed" as const,
+    })),
+  };
+  const { digest: _digest, ...core } = snapshotCore;
   return {
     schemaVersion: 1,
-    baseSnapshot: snapshot(records),
+    baseSnapshot: { ...core, digest: referenceSourceDigest(core) },
     effectiveAt: NOW,
     action,
+    retentionOutcomes: [],
   };
+}
+
+function selfAuthoredEvidence() {
+  const core = {
+    schemaVersion: 1 as const,
+    validatedAt: NOW,
+    requiredStoreRegistryRef: ref("registry.test", "1"),
+    inventoryWitnessRef: ref("inventory.test", "2"),
+    stores: [
+      {
+        storeId: "reference-source-staging",
+        storeGeneration: 1,
+        storeStateDigest: "3".repeat(64),
+        enumerationDigest: "4".repeat(64),
+      },
+    ],
+    authorityEvaluations: [],
+    retentionEvaluations: [],
+  };
+  const seed = referenceSourceDigest(core);
+  const identified = {
+    ...core,
+    id: `reference-lifecycle-preflight.${seed.slice(0, 24)}`,
+  };
+  return { ...identified, digest: referenceSourceDigest(identified) };
 }
 
 function deleteAction(
@@ -281,6 +338,33 @@ function deleteAction(
 }
 
 describe("reference-source lifecycle planner", () => {
+  it("cannot be induced to emit a ready plan with self-authored digest-only evidence", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.preflight", asset: digitalAsset });
+    const acquisitionRecord = acquisition({
+      id: "acquisition.preflight",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const input = plannerInput(
+      [digitalAsset, assertion, acquisitionRecord, assetPolicy(digitalAsset, [acquisitionRecord])],
+      deleteAction(acquisitionRecord)
+    );
+    const result = planReferenceSourceLifecycle(input);
+
+    expect((result as { status: string }).status).not.toBe("ready");
+    expect(result.status).toBe("computed");
+    expect("verifiedEvidence" in result).toBe(false);
+    expect(Value.Check(ReferenceSourceLifecycleComputationResultSchema, result)).toBe(true);
+    expect(Value.Check(ReferenceSourceLifecyclePlanResultSchema, result)).toBe(false);
+    expect(() =>
+      planReferenceSourceLifecycle({
+        ...input,
+        verifiedEvidence: selfAuthoredEvidence(),
+      } as ReferenceSourceLifecyclePlannerInput)
+    ).toThrow(/closed schema/);
+  });
+
   it("is closed-schema, digest-bound, deterministic, and non-mutating", () => {
     const digitalAsset = asset();
     const assertion = rights({ id: "rights.asset", asset: digitalAsset });
@@ -292,6 +376,7 @@ describe("reference-source lifecycle planner", () => {
         only,
         assetPolicy(digitalAsset, [only], {
           kind: "vellum_controlled",
+          storeIds: ["reference-source-staging"],
           retention: "unretained",
           tombstonePolicy: "preserve",
         }),
@@ -305,10 +390,10 @@ describe("reference-source lifecycle planner", () => {
     expect(first).toEqual(second);
     expect(first).toMatchObject({
       mode: "dry_run",
-      status: "ready",
+      status: "computed",
       atomicity: "all_or_nothing",
     });
-    expect(Value.Check(ReferenceSourceLifecyclePlanResultSchema, first)).toBe(true);
+    expect(Value.Check(ReferenceSourceLifecycleComputationResultSchema, first)).toBe(true);
     const { digest, ...sealed } = first;
     expect(referenceSourceDigest(sealed)).toBe(digest);
     expect(input).toEqual(before);
@@ -407,9 +492,9 @@ describe("reference-source lifecycle planner", () => {
       )
     );
 
-    expect(removedFirst.status).toBe("ready");
-    expect(siblingFirst.status).toBe("ready");
-    if (removedFirst.status !== "ready" || siblingFirst.status !== "ready") return;
+    expect(removedFirst.status).toBe("computed");
+    expect(siblingFirst.status).toBe("computed");
+    if (removedFirst.status !== "computed" || siblingFirst.status !== "computed") return;
     expect(removedFirst.consequences).toEqual(siblingFirst.consequences);
     expect(removedFirst.permissions).toEqual(siblingFirst.permissions);
     expect(removedFirst.permissions).toMatchObject([
@@ -426,9 +511,277 @@ describe("reference-source lifecycle planner", () => {
       )
     );
     expect(deleteSibling).toMatchObject({
-      status: "ready",
+      status: "computed",
       permissions: [{ useId: "use.repository", state: "accessible", authorization: "direct" }],
     });
+  });
+
+  it("uses only an observed reviewed substitution with the exact replacement role binding", () => {
+    const digitalAsset = asset();
+    const assertion = rights({
+      id: "rights.owner-private-substitution",
+      asset: digitalAsset,
+      kind: "owner_private_access",
+    });
+    const removed = acquisition({
+      id: "acquisition.substitution.removed",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const replacement = acquisition({
+      id: "acquisition.substitution.replacement",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const removedDerivation = derivation({
+      id: "derivation.substitution.removed",
+      acquisitions: [removed],
+    });
+    const replacementDerivation = derivation({
+      id: "derivation.substitution.replacement",
+      acquisitions: [replacement],
+    });
+    const purpose = "Use an exact Owner-reviewed local replacement path";
+    const removedDecision = accessDecision({
+      id: "access.substitution.removed",
+      rights: [assertion],
+      acquisitions: [removed],
+      derivations: [removedDerivation],
+      operation: "owner_private_study",
+      destination: { kind: "local_runtime" },
+      purpose,
+      assetRole: "owner_reference",
+    });
+    const replacementDecision = accessDecision({
+      id: "access.substitution.replacement",
+      rights: [assertion],
+      acquisitions: [replacement],
+      derivations: [replacementDerivation],
+      operation: "owner_private_study",
+      destination: { kind: "local_runtime" },
+      purpose,
+      assetRole: "owner_reference",
+    });
+    const removedBinding = withReferenceRecordDigest({
+      recordKind: "owner_reference_binding",
+      id: "binding.substitution.removed",
+      digitalAssetRef: recordRef(digitalAsset),
+      acquisitionRefs: [recordRef(removed)],
+      accessDecisionRefs: [recordRef(removedDecision)],
+      retentionPolicyRef: ref("retention.substitution.removed"),
+      ownerLibraryRef: ref("owner-library.substitution"),
+      createdAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const replacementBinding = withReferenceRecordDigest({
+      recordKind: "owner_reference_binding",
+      id: "binding.substitution.replacement",
+      digitalAssetRef: recordRef(digitalAsset),
+      acquisitionRefs: [recordRef(replacement)],
+      accessDecisionRefs: [recordRef(replacementDecision)],
+      retentionPolicyRef: ref("retention.substitution.replacement"),
+      ownerLibraryRef: ref("owner-library.substitution"),
+      createdAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const substitution = withReferenceRecordDigest({
+      recordKind: "provenance_substitution",
+      id: "substitution.reviewed-role-path",
+      from: {
+        acquisitionRef: recordRef(removed),
+        derivationRef: recordRef(removedDerivation),
+      },
+      to: {
+        acquisitionRef: recordRef(replacement),
+        derivationRef: recordRef(replacementDerivation),
+      },
+      scope: {
+        operation: "owner_private_study",
+        sourceAndDerivativeRefs: [
+          recordRef(removed),
+          recordRef(removedDerivation),
+          recordRef(replacement),
+          recordRef(replacementDerivation),
+          SUBJECT_REF,
+        ],
+        destination: { kind: "local_runtime" },
+        purpose,
+        policyRef: POLICY_REF,
+      },
+      accessDecisionRef: recordRef(replacementDecision),
+      roleBindingRef: recordRef(replacementBinding),
+      authority: {
+        kind: "owner",
+        authorityRef: ref("reviewer.rights"),
+        evidenceRefs: [recordRef(assertion)],
+      },
+      rationale: "The exact replacement path and its role binding were reviewed",
+      decidedAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const assetStorage = storagePolicy({
+      id: "storage.substitution.asset",
+      subjectRef: recordRef(digitalAsset),
+      subjectKind: "asset_bytes",
+      paths: [
+        { ...closurePath([removed], []), roleBindingRefs: [recordRef(removedBinding)] },
+        {
+          ...closurePath([replacement], []),
+          roleBindingRefs: [recordRef(replacementBinding)],
+        },
+      ],
+    });
+    const derivativeStorage = storagePolicy({
+      id: "storage.substitution.derivative",
+      subjectRef: SUBJECT_REF,
+      subjectKind: "extraction",
+      paths: [
+        {
+          ...closurePath([removed], [removedDerivation]),
+          roleBindingRefs: [recordRef(removedBinding)],
+        },
+        {
+          ...closurePath([replacement], [replacementDerivation]),
+          roleBindingRefs: [recordRef(replacementBinding)],
+        },
+      ],
+    });
+    const use = lifecycleUse({
+      id: "use.substitution.removed",
+      subjectRef: SUBJECT_REF,
+      path: closurePath([removed], [removedDerivation]),
+      decision: removedDecision,
+      operation: "owner_private_study",
+      destination: { kind: "local_runtime" },
+      purpose,
+      assetRole: "owner_reference",
+      roleBindingRef: recordRef(removedBinding),
+    });
+    const records = [
+      digitalAsset,
+      assertion,
+      removed,
+      replacement,
+      removedDerivation,
+      replacementDerivation,
+      removedDecision,
+      replacementDecision,
+      removedBinding,
+      replacementBinding,
+      substitution,
+      assetStorage,
+      derivativeStorage,
+      use,
+    ];
+
+    const reviewed = planReferenceSourceLifecycle(plannerInput(records, deleteAction(removed)));
+    expect(reviewed).toMatchObject({
+      status: "computed",
+      permissions: [
+        {
+          useId: "use.substitution.removed",
+          state: "accessible",
+          authorization: "provenance_substitution",
+          accessDecisionRef: recordRef(replacementDecision),
+        },
+      ],
+    });
+
+    const {
+      digest: _substitutionDigest,
+      roleBindingRef: _roleBindingRef,
+      ...withoutBinding
+    } = substitution as Extract<
+      ReferenceSourceStagingRecord,
+      { recordKind: "provenance_substitution" }
+    >;
+    const unboundSubstitution = withReferenceRecordDigest(
+      withoutBinding
+    ) as ReferenceSourceStagingRecord;
+    const unbound = planReferenceSourceLifecycle(
+      plannerInput(
+        records.map((record) => (record.id === substitution.id ? unboundSubstitution : record)),
+        deleteAction(removed)
+      )
+    );
+    expect(unbound).toMatchObject({
+      status: "computed",
+      permissions: [{ state: "restricted", authorization: "none" }],
+    });
+
+    const legacyInput = plannerInput(records, deleteAction(removed));
+    const legacyCore = {
+      ...legacyInput.baseSnapshot,
+      recordObservations: legacyInput.baseSnapshot.recordObservations?.map((observation) =>
+        observation.recordRef.id === substitution.id
+          ? { ...observation, orderingTrust: "legacy_unverifiable" as const }
+          : observation
+      ),
+    };
+    const { digest: _legacyDigest, ...legacySnapshotCore } = legacyCore;
+    const legacy = planReferenceSourceLifecycle({
+      ...legacyInput,
+      baseSnapshot: {
+        ...legacySnapshotCore,
+        digest: referenceSourceDigest(legacySnapshotCore),
+      },
+    });
+    expect(legacy).toMatchObject({
+      status: "computed",
+      permissions: [{ state: "restricted", authorization: "none" }],
+    });
+
+    const substitutionEdge = withReferenceRecordDigest({
+      recordKind: "dependency_edge",
+      id: "dependency.substitution-authority",
+      dependencyRef: recordRef(assertion),
+      dependentRef: recordRef(substitution),
+      scope: "rights",
+      reason: "The reviewed mapping depends on its exact authority evidence",
+      createdAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const invalidatedSubstitution = withReferenceRecordDigest({
+      recordKind: "invalidation",
+      id: "invalidation.reviewed-substitution",
+      triggerRef: recordRef(assertion),
+      invalidatedRef: recordRef(substitution),
+      dependencyEdgeRefs: [recordRef(substitutionEdge)],
+      dependencyPath: [recordRef(assertion), recordRef(substitution)],
+      scope: "rights",
+      reason: "The reviewed substitution authority was withdrawn",
+      invalidatedAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const invalidSubstitutionResult = planReferenceSourceLifecycle(
+      plannerInput([...records, substitutionEdge, invalidatedSubstitution], deleteAction(removed))
+    );
+    expect(invalidSubstitutionResult).toMatchObject({
+      status: "computed",
+      permissions: [{ state: "restricted", authorization: "none" }],
+    });
+
+    const bindingEdge = withReferenceRecordDigest({
+      recordKind: "dependency_edge",
+      id: "dependency.substitution-role-binding",
+      dependencyRef: recordRef(assertion),
+      dependentRef: recordRef(replacementBinding),
+      scope: "rights",
+      reason: "The replacement role binding depends on current rights",
+      createdAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const invalidatedBinding = withReferenceRecordDigest({
+      recordKind: "invalidation",
+      id: "invalidation.substitution-role-binding",
+      triggerRef: recordRef(assertion),
+      invalidatedRef: recordRef(replacementBinding),
+      dependencyEdgeRefs: [recordRef(bindingEdge)],
+      dependencyPath: [recordRef(assertion), recordRef(replacementBinding)],
+      scope: "rights",
+      reason: "The exact replacement role binding was invalidated",
+      invalidatedAt: NOW,
+    }) as ReferenceSourceStagingRecord;
+    const invalidBindingResult = planReferenceSourceLifecycle(
+      plannerInput([...records, bindingEdge, invalidatedBinding], deleteAction(removed))
+    );
+    expect(invalidBindingResult.status).toBe("blocked");
+    if (invalidBindingResult.status !== "blocked") return;
+    expect(invalidBindingResult.issues.map(({ code }) => code)).toContain("invalid_role_binding");
   });
 
   it("blocks a multi-source derivative whose declared path omits one source", () => {
@@ -536,7 +889,7 @@ describe("reference-source lifecycle planner", () => {
     );
 
     expect(result).toMatchObject({
-      status: "ready",
+      status: "computed",
       permissions: [{ state: "restricted", authorization: "none" }],
     });
   });
@@ -611,8 +964,8 @@ describe("reference-source lifecycle planner", () => {
     );
     const result = planReferenceSourceLifecycle(input);
 
-    expect(result.status).toBe("ready");
-    if (result.status !== "ready") return;
+    expect(result.status).toBe("computed");
+    if (result.status !== "computed") return;
     expect(result.permissions).toMatchObject([
       { useId: "use.local", state: "accessible", authorization: "direct" },
       { useId: "use.repo", state: "restricted", authorization: "none" },
@@ -671,6 +1024,7 @@ describe("reference-source lifecycle planner", () => {
     const policies: ReferenceLifecycleStorageSubject[] = [
       assetPolicy(digitalAsset, [source], {
         kind: "vellum_controlled",
+        storeIds: ["reference-source-staging"],
         retention: "unretained",
         tombstonePolicy: "preserve",
       }),
@@ -687,6 +1041,7 @@ describe("reference-source lifecycle planner", () => {
         paths: [closurePath([source], [root, report])],
         custody: {
           kind: "vellum_controlled",
+          storeIds: ["reference-source-staging"],
           retention: "unretained",
           tombstonePolicy: "preserve",
         },
@@ -698,6 +1053,7 @@ describe("reference-source lifecycle planner", () => {
         paths: [closurePath([source], [root, report, backup])],
         custody: {
           kind: "vellum_controlled",
+          storeIds: ["reference-source-staging"],
           retention: "encrypted_local_pin",
           tombstonePolicy: "preserve",
         },
@@ -735,8 +1091,8 @@ describe("reference-source lifecycle planner", () => {
       )
     );
 
-    expect(result.status).toBe("ready");
-    if (result.status !== "ready") return;
+    expect(result.status).toBe("computed");
+    if (result.status !== "computed") return;
     const states = Object.fromEntries(
       result.consequences.map((item) => [item.subjectKind, item.state])
     );
@@ -859,13 +1215,134 @@ describe("reference-source lifecycle planner", () => {
             decision,
           }),
         ],
-        deleteAction(oldAcquisition)
+        deleteAction(oldAcquisition),
+        {
+          [newAcquisition.id]: 2,
+          [newDerivation.id]: 2,
+          [decision.id]: 2,
+          "storage.asset.shared": 2,
+          "storage.arrangement": 2,
+          "use.new": 2,
+        }
       )
     );
 
     expect(result.status).toBe("blocked");
     if (result.status !== "blocked") return;
     expect(result.issues.some((issue) => issue.code === "retroactive_provenance")).toBe(true);
+  });
+
+  it("never uses migrated legacy observations to authorize lifecycle ordering", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.legacy-order", asset: digitalAsset });
+    const source = acquisition({
+      id: "acquisition.legacy-order",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const input = plannerInput(
+      [digitalAsset, assertion, source, assetPolicy(digitalAsset, [source])],
+      deleteAction(source)
+    );
+    const snapshotWithoutTrustedSourceOrder = {
+      ...input.baseSnapshot,
+      recordObservations: input.baseSnapshot.recordObservations?.map((observation) =>
+        observation.recordRef.id === source.id
+          ? { ...observation, orderingTrust: "legacy_unverifiable" as const }
+          : observation
+      ),
+    };
+    const { digest: _digest, ...snapshotCore } = snapshotWithoutTrustedSourceOrder;
+    const result = planReferenceSourceLifecycle({
+      ...input,
+      baseSnapshot: {
+        ...snapshotCore,
+        digest: referenceSourceDigest(snapshotCore),
+      },
+    });
+
+    expect(result.status).toBe("blocked");
+    if (result.status !== "blocked") return;
+    expect(result.issues.some((issue) => issue.code === "retroactive_provenance")).toBe(true);
+  });
+
+  it("does not let future decision or rights generations supersede the effective present", () => {
+    const digitalAsset = asset();
+    const currentRights = rights({ id: "rights.future-generation", asset: digitalAsset });
+    const source = acquisition({
+      id: "acquisition.future-generation.source",
+      asset: digitalAsset,
+      rights: currentRights,
+    });
+    const target = acquisition({
+      id: "acquisition.future-generation.target",
+      asset: digitalAsset,
+      rights: currentRights,
+    });
+    const extracted = derivation({
+      id: "derivation.future-generation",
+      acquisitions: [source],
+    });
+    const currentDecision = accessDecision({
+      id: "access.future-generation",
+      rights: [currentRights],
+      acquisitions: [source],
+      derivations: [extracted],
+    });
+    const futureRights = rights({
+      id: currentRights.id,
+      asset: digitalAsset,
+      version: 2,
+      parent: currentRights,
+      status: "restricted",
+      assertedAt: "2026-07-16T00:00:00.000Z",
+    });
+    const { digest: _decisionDigest, ...decisionCore } = currentDecision;
+    const futureDecision = withReferenceRecordDigest({
+      ...decisionCore,
+      version: 2,
+      parentVersionRef: {
+        ...recordRef(currentDecision),
+        version: currentDecision.version,
+      },
+      outcome: "deny",
+      rightsAssertionRefs: [recordRef(futureRights)],
+      rationale: "This future generation is not effective yet",
+      decidedAt: "2026-07-16T00:00:00.000Z",
+    }) as ReferenceAccessDecision;
+    const result = planReferenceSourceLifecycle(
+      plannerInput(
+        [
+          digitalAsset,
+          currentRights,
+          futureRights,
+          source,
+          target,
+          extracted,
+          currentDecision,
+          futureDecision,
+          assetPolicy(digitalAsset, [source, target]),
+          storagePolicy({
+            id: "storage.future-generation",
+            subjectRef: SUBJECT_REF,
+            subjectKind: "extraction",
+            paths: [closurePath([source], [extracted])],
+          }),
+          lifecycleUse({
+            id: "use.future-generation",
+            subjectRef: SUBJECT_REF,
+            path: closurePath([source], [extracted]),
+            decision: currentDecision,
+          }),
+        ],
+        deleteAction(target)
+      )
+    );
+
+    expect(result).toMatchObject({
+      status: "computed",
+      permissions: [{ state: "accessible", authorization: "direct" }],
+    });
   });
 
   it("treats validUntil equal to effectiveAt as expired", () => {
@@ -917,7 +1394,7 @@ describe("reference-source lifecycle planner", () => {
     );
 
     expect(result).toMatchObject({
-      status: "ready",
+      status: "computed",
       permissions: [{ state: "restricted", authorization: "none" }],
     });
   });

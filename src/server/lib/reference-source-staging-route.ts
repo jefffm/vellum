@@ -2,7 +2,10 @@ import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
 
-import { ReferenceSourceStagingTransactionSchema } from "../../lib/reference-source-domain.js";
+import {
+  ReferenceRecordRefSchema,
+  ReferenceSourceStagingTransactionSchema,
+} from "../../lib/reference-source-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
 import {
   ReferenceSourceStagingService,
@@ -21,6 +24,14 @@ const SnapshotParamsSchema = Type.Object(
       maxLength: 256,
       pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*$",
     }),
+  },
+  { additionalProperties: false }
+);
+
+const ObservationHistoryMigrationRequestSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    expectedHeadRef: ReferenceRecordRefSchema,
   },
   { additionalProperties: false }
 );
@@ -51,6 +62,24 @@ export function createReferenceSourceStagingTransactionRoute(
     validate: (body) => Value.Decode(ReferenceSourceStagingTransactionSchema, body),
     handler: async (transaction) =>
       translateReferenceSourceStagingErrors(() => service.applyTransaction(transaction)),
+  });
+}
+
+/**
+ * Explicit repair for snapshots written before server-minted observation trust.
+ *
+ * This advances only the staging-only generation. It cannot publish, migrate,
+ * canonicalize, or activate source records.
+ */
+export function createReferenceSourceObservationHistoryMigrationRoute(
+  service = new ReferenceSourceStagingService()
+): RequestHandler {
+  return createApiRoute({
+    validate: (body) => Value.Decode(ObservationHistoryMigrationRequestSchema, body),
+    handler: async ({ expectedHeadRef }) =>
+      translateReferenceSourceStagingErrors(() =>
+        service.migrateLegacyObservationHistory(expectedHeadRef)
+      ),
   });
 }
 

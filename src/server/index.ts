@@ -137,9 +137,20 @@ import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventor
 import { OwnerStore } from "./lib/owner-store.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
-import { ReferenceSourceLifecyclePlanningService } from "./lib/reference-source-lifecycle-service.js";
+import {
+  ReferenceSourceLifecyclePlanningService,
+  type ReferenceSourceAuthorityTrust,
+  type ReferenceSourceLifecycleEvidenceProvider,
+  type ReferenceSourceRetentionAuthorityTrust,
+} from "./lib/reference-source-lifecycle-service.js";
+import { createReferenceSourceLifecycleSecurityBundle } from "./lib/reference-source-lifecycle-security.js";
+import { ReferenceSourceControlledArtifactStore } from "./lib/reference-source-controlled-artifact-store.js";
+import { createReferenceSourceControlledAssetUploadRoute } from "./lib/reference-source-controlled-asset-route.js";
+import { ReferenceSourceControlledAssetIngestionService } from "./lib/reference-source-controlled-asset-service.js";
+import type { ReferenceSourceControlledStoreInventoryAdapter } from "./lib/reference-source-inventory-provider.js";
 import { createReferenceSourceLifecyclePlanRoute } from "./lib/reference-source-lifecycle-route.js";
 import {
+  createReferenceSourceObservationHistoryMigrationRoute,
   createReferenceSourceStagingReadRoute,
   createReferenceSourceStagingSnapshotRoute,
   createReferenceSourceStagingTransactionRoute,
@@ -210,18 +221,72 @@ function requestParserStatus(error: unknown): number {
 type ApiRouterOptions = {
   compilerRunner?: Pick<SubprocessRunner, "run">;
   referenceSourceStagingService?: ReferenceSourceStagingService;
+  referenceSourceLifecycleEvidenceProvider?: ReferenceSourceLifecycleEvidenceProvider;
+  referenceSourceAuthorityTrust?: ReferenceSourceAuthorityTrust;
+  referenceSourceRetentionAuthorityTrust?: ReferenceSourceRetentionAuthorityTrust;
+  referenceSourceControlledArtifactStore?: ReferenceSourceControlledArtifactStore;
+  referenceSourceControlledStoreInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[];
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const router = Router();
+  let referenceSourceControlledArtifactStore =
+    options.referenceSourceControlledArtifactStore ??
+    options.referenceSourceControlledStoreInventoryAdapters?.find(
+      (adapter): adapter is ReferenceSourceControlledArtifactStore =>
+        adapter instanceof ReferenceSourceControlledArtifactStore
+    );
+  const getReferenceSourceControlledArtifactStore = () =>
+    (referenceSourceControlledArtifactStore ??= new ReferenceSourceControlledArtifactStore());
+  const getReferenceSourceInventoryAdapters = () =>
+    options.referenceSourceControlledStoreInventoryAdapters
+      ? referenceSourceControlledArtifactStore
+        ? options.referenceSourceControlledStoreInventoryAdapters.includes(
+            referenceSourceControlledArtifactStore
+          )
+          ? options.referenceSourceControlledStoreInventoryAdapters
+          : [
+              referenceSourceControlledArtifactStore,
+              ...options.referenceSourceControlledStoreInventoryAdapters,
+            ]
+        : [
+            getReferenceSourceControlledArtifactStore(),
+            ...options.referenceSourceControlledStoreInventoryAdapters,
+          ]
+      : [getReferenceSourceControlledArtifactStore()];
+  const referenceSourceLifecycleSecurity =
+    options.referenceSourceLifecycleEvidenceProvider &&
+    options.referenceSourceAuthorityTrust &&
+    options.referenceSourceRetentionAuthorityTrust
+      ? undefined
+      : createReferenceSourceLifecycleSecurityBundle({
+          inventoryAdapters: getReferenceSourceInventoryAdapters(),
+        });
   const referenceSourceStagingService =
     options.referenceSourceStagingService ??
     new ReferenceSourceStagingService({
       store: new ReferenceSourceStagingStore(),
       listLegacyOwnerReferences: () => new OwnerStore().listReferences(),
     });
+  let referenceSourceControlledAssetIngestionService:
+    | ReferenceSourceControlledAssetIngestionService
+    | undefined;
+  const getReferenceSourceControlledAssetIngestionService = () =>
+    (referenceSourceControlledAssetIngestionService ??=
+      new ReferenceSourceControlledAssetIngestionService({
+        stagingService: referenceSourceStagingService,
+        controlledStore: getReferenceSourceControlledArtifactStore(),
+      }));
   const referenceSourceLifecyclePlanningService = new ReferenceSourceLifecyclePlanningService({
     store: referenceSourceStagingService.store,
+    evidenceProvider:
+      options.referenceSourceLifecycleEvidenceProvider ??
+      referenceSourceLifecycleSecurity!.evidenceProvider,
+    authorityTrust:
+      options.referenceSourceAuthorityTrust ?? referenceSourceLifecycleSecurity!.authorityTrust,
+    retentionAuthorityTrust:
+      options.referenceSourceRetentionAuthorityTrust ??
+      referenceSourceLifecycleSecurity!.retentionAuthorityTrust,
   });
 
   router.get("/", (_request, response) => {
@@ -260,8 +325,18 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createReferenceSourceStagingSnapshotRoute(referenceSourceStagingService)
   );
   router.post(
+    "/owner/reference-source-staging/assets",
+    createReferenceSourceControlledAssetUploadRoute(
+      getReferenceSourceControlledAssetIngestionService
+    )
+  );
+  router.post(
     "/owner/reference-source-staging/transactions",
     createReferenceSourceStagingTransactionRoute(referenceSourceStagingService)
+  );
+  router.post(
+    "/owner/reference-source-staging/observation-history-migration",
+    createReferenceSourceObservationHistoryMigrationRoute(referenceSourceStagingService)
   );
   router.post(
     "/owner/reference-source-staging/lifecycle/plan",
@@ -542,6 +617,11 @@ type CreateAppOptions = {
   security?: RuntimeSecurity;
   compilerRunner?: Pick<SubprocessRunner, "run">;
   referenceSourceStagingService?: ReferenceSourceStagingService;
+  referenceSourceLifecycleEvidenceProvider?: ReferenceSourceLifecycleEvidenceProvider;
+  referenceSourceAuthorityTrust?: ReferenceSourceAuthorityTrust;
+  referenceSourceRetentionAuthorityTrust?: ReferenceSourceRetentionAuthorityTrust;
+  referenceSourceControlledArtifactStore?: ReferenceSourceControlledArtifactStore;
+  referenceSourceControlledStoreInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[];
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -564,8 +644,11 @@ export function createApp(options: CreateAppOptions = {}) {
       limit: "4mb",
       type: (request) => {
         const requestPath = request.url?.split("?", 1)[0] ?? "";
+        const isRawUpload =
+          /^\/api\/workspaces\/[^/]+\/sources$/.test(requestPath) ||
+          requestPath === "/api/owner/reference-source-staging/assets";
         return (
-          !/^\/api\/workspaces\/[^/]+\/sources$/.test(requestPath) &&
+          !isRawUpload &&
           /^application\/json(?:;|$)/i.test(String(request.headers["content-type"] ?? ""))
         );
       },
@@ -587,6 +670,12 @@ export function createApp(options: CreateAppOptions = {}) {
     createApiRouter({
       compilerRunner: options.compilerRunner,
       referenceSourceStagingService: options.referenceSourceStagingService,
+      referenceSourceLifecycleEvidenceProvider: options.referenceSourceLifecycleEvidenceProvider,
+      referenceSourceAuthorityTrust: options.referenceSourceAuthorityTrust,
+      referenceSourceRetentionAuthorityTrust: options.referenceSourceRetentionAuthorityTrust,
+      referenceSourceControlledArtifactStore: options.referenceSourceControlledArtifactStore,
+      referenceSourceControlledStoreInventoryAdapters:
+        options.referenceSourceControlledStoreInventoryAdapters,
     })
   );
   app.use(express.static(distPath));
@@ -611,6 +700,12 @@ export function startServer(
     security,
     compilerRunner: options.compilerRunner,
     referenceSourceStagingService: options.referenceSourceStagingService,
+    referenceSourceLifecycleEvidenceProvider: options.referenceSourceLifecycleEvidenceProvider,
+    referenceSourceAuthorityTrust: options.referenceSourceAuthorityTrust,
+    referenceSourceRetentionAuthorityTrust: options.referenceSourceRetentionAuthorityTrust,
+    referenceSourceControlledArtifactStore: options.referenceSourceControlledArtifactStore,
+    referenceSourceControlledStoreInventoryAdapters:
+      options.referenceSourceControlledStoreInventoryAdapters,
   });
   const server = createServer(app);
 

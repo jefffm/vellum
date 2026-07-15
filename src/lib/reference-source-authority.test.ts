@@ -9,6 +9,7 @@ import {
   evaluateReferenceSourceAuthority,
   referenceAuthorityReceiptSigningPayload,
   type ReferenceAuthorityFacet,
+  type ReferenceAuthoritySubjectFacetRequirement,
   type ReferenceAuthorityVerificationReceipt,
   type ReferenceSourceAuthorityEvaluationInput,
 } from "./reference-source-authority.js";
@@ -25,6 +26,7 @@ const NOW = "2026-07-15T16:00:00.000Z";
 const EARLIER = "2026-07-15T15:00:00.000Z";
 const SECRET = "authority-test-key";
 const SUBJECT_REF = ref("asset.authority", "a");
+const UPSTREAM_SUBJECT_REF = ref("manifestation.authority", "9");
 const AUTHORITY_REF = ref("authority.owner-reviewed", "b");
 const POLICY_REF = ref("policy.authority", "c");
 
@@ -80,6 +82,231 @@ describe("reference-source authority closure", () => {
       [...REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.repository_inclusion].sort()
     );
     expect(withoutVerifier(input)).toEqual(before);
+  });
+
+  it("allows closure subjects for which the caller-derived applicability map requires no facet", () => {
+    const assertion = rights("rights.asset.owner-private", "owner_private_access", "permitted");
+    const decision = accessDecision("owner_private_study", [assertion], {
+      sourceRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+    });
+    const requirements = requirementsFor(SUBJECT_REF, ["owner_private_access"]);
+    const receipt = signedReceipt({
+      ...withoutDigest(authorityReceipt(decision, [assertion], ["owner_private_access"])),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+    });
+
+    const result = evaluateReferenceSourceAuthority({
+      schemaVersion: 1,
+      effectiveAt: NOW,
+      accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+      accessDecisions: [decision],
+      rightsAssertions: [assertion],
+      receipt,
+      verifyServerReceipt: verifier,
+    });
+
+    expect(result).toMatchObject({ status: "allow", findings: [] });
+  });
+
+  it("does not let one subject's affirmative assertion satisfy the same required facet for another subject", () => {
+    const assertion = rights("rights.asset.owner-private", "owner_private_access", "permitted");
+    const decision = accessDecision("owner_private_study", [assertion], {
+      sourceRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+    });
+    const requirements = [
+      ...requirementsFor(SUBJECT_REF, ["owner_private_access"]),
+      ...requirementsFor(UPSTREAM_SUBJECT_REF, ["owner_private_access"]),
+    ];
+    const receipt = signedReceipt({
+      ...withoutDigest(authorityReceipt(decision, [assertion], ["owner_private_access"])),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+    });
+
+    const result = evaluateReferenceSourceAuthority({
+      schemaVersion: 1,
+      effectiveAt: NOW,
+      accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+      accessDecisions: [decision],
+      rightsAssertions: [assertion],
+      receipt,
+      verifyServerReceipt: verifier,
+    });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        code: "facet_missing",
+        facet: "owner_private_access",
+        refs: [UPSTREAM_SUBJECT_REF],
+      })
+    );
+  });
+
+  it("does not let a signed not-applicable resolution float to another subject", () => {
+    const decision = accessDecision("owner_private_study", [], {
+      sourceRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+    });
+    const requirements = [
+      ...requirementsFor(SUBJECT_REF, ["owner_private_access"]),
+      ...requirementsFor(UPSTREAM_SUBJECT_REF, ["owner_private_access"]),
+    ];
+    const receipt = signedReceipt({
+      ...withoutDigest(authorityReceipt(decision, [], ["owner_private_access"])),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+      notApplicableFacets: [
+        {
+          subjectRef: SUBJECT_REF,
+          facet: "owner_private_access",
+          rationale: "This exact subject has no private-access layer.",
+          evidenceRefs: [ref("evidence.subject-not-applicable", "8")],
+        },
+      ],
+    });
+
+    const result = evaluateReferenceSourceAuthority({
+      schemaVersion: 1,
+      effectiveAt: NOW,
+      accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirements,
+      accessDecisions: [decision],
+      rightsAssertions: [],
+      receipt,
+      verifyServerReceipt: verifier,
+    });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        code: "facet_missing",
+        facet: "owner_private_access",
+        refs: [UPSTREAM_SUBJECT_REF],
+      })
+    );
+    expect(result.findings).not.toContainEqual(
+      expect.objectContaining({ code: "facet_missing", refs: [SUBJECT_REF] })
+    );
+  });
+
+  it("rejects duplicate subject-facet requirements even when caller and receipt repeat the same pair", () => {
+    const input = completeInput("owner_private_study");
+    const duplicateRequirements = [...input.requiredSubjectFacets, ...input.requiredSubjectFacets];
+    const receipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      requiredSubjectFacets: duplicateRequirements,
+    });
+
+    const result = evaluateReferenceSourceAuthority({
+      ...input,
+      requiredSubjectFacets: duplicateRequirements,
+      receipt,
+    });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "subject_facet_requirements_invalid" }),
+        expect.objectContaining({ code: "receipt_subject_facets_mismatch" }),
+      ])
+    );
+  });
+
+  it("requires the signed subject-facet requirements to exactly equal the caller-derived set", () => {
+    const input = completeInput("manifestation_use");
+    const receipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      requiredSubjectFacets: input.receipt.requiredSubjectFacets.filter(
+        ({ facet }) => facet !== "manifestation_editorial"
+      ),
+    });
+
+    const result = evaluateReferenceSourceAuthority({ ...input, receipt });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ code: "receipt_subject_facets_mismatch" })
+    );
+  });
+
+  it("does not let a receipt-chosen narrow scope hide an upstream restrictive assertion", () => {
+    const input = completeInput("repository_inclusion");
+    const upstreamRestricted = rights(
+      "rights.upstream.export_redistribution",
+      "export_redistribution",
+      "restricted",
+      {
+        subjectRef: UPSTREAM_SUBJECT_REF,
+        subjectKind: "source_manifestation",
+      }
+    );
+
+    const result = evaluateReferenceSourceAuthority({
+      ...input,
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: [
+        ...input.requiredSubjectFacets,
+        { subjectRef: UPSTREAM_SUBJECT_REF, facet: "export_redistribution" },
+      ],
+      rightsAssertions: [...input.rightsAssertions, upstreamRestricted],
+    });
+
+    expect(result.status).toBe("deny");
+    expect(result.currentRightsAssertionRefs).toContainEqual(recordRef(upstreamRestricted));
+    expect(result.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "receipt_scope_mismatch" }),
+        expect.objectContaining({ code: "receipt_rights_mismatch" }),
+        expect.objectContaining({ code: "rights_assertion_scope_missing" }),
+        expect.objectContaining({ code: "facet_restricted" }),
+      ])
+    );
+  });
+
+  it("requires receipt scope to equal, not merely cover, the caller-derived closure", () => {
+    const input = completeInput("owner_private_study");
+    const widenedReceipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      authoritySubjectRefs: [SUBJECT_REF, UPSTREAM_SUBJECT_REF],
+    });
+
+    const result = evaluateReferenceSourceAuthority({ ...input, receipt: widenedReceipt });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ code: "receipt_scope_mismatch" })
+    );
+  });
+
+  it("rejects a caller-derived closure that omits a decision subject even when the receipt matches", () => {
+    const input = completeInput("owner_private_study");
+    const narrowedReceipt = signedReceipt({
+      ...withoutDigest(input.receipt),
+      authoritySubjectRefs: [UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(UPSTREAM_SUBJECT_REF, input.receipt.requiredFacets),
+    });
+
+    const result = evaluateReferenceSourceAuthority({
+      ...input,
+      authoritySubjectRefs: [UPSTREAM_SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(UPSTREAM_SUBJECT_REF, input.receipt.requiredFacets),
+      receipt: narrowedReceipt,
+    });
+
+    expect(result.status).toBe("review_required");
+    expect(result.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "receipt_scope_mismatch" }),
+        expect.objectContaining({ code: "receipt_rights_mismatch" }),
+        expect.objectContaining({ code: "rights_assertion_scope_missing" }),
+      ])
+    );
   });
 
   it("does not treat opaque authority refs or a receipt-shaped object as verification", () => {
@@ -177,6 +404,11 @@ describe("reference-source authority closure", () => {
       schemaVersion: 1,
       effectiveAt: NOW,
       accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(
+        SUBJECT_REF,
+        REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
+      ),
       accessDecisions: [decision],
       rightsAssertions: assertions,
       receipt,
@@ -206,6 +438,7 @@ describe("reference-source authority closure", () => {
       REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
     );
     const notApplicable = {
+      subjectRef: SUBJECT_REF,
       facet: "manifestation_editorial" as const,
       rationale: "No manifestation-level editorial layer applies to this exact source.",
       evidenceRefs: [ref("evidence.manifestation-not-applicable", "3")],
@@ -218,6 +451,11 @@ describe("reference-source authority closure", () => {
       schemaVersion: 1,
       effectiveAt: NOW,
       accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(
+        SUBJECT_REF,
+        REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
+      ),
       accessDecisions: [decision],
       rightsAssertions: assertions,
       receipt,
@@ -268,6 +506,7 @@ describe("reference-source authority closure", () => {
       ...withoutDigest(input.receipt),
       notApplicableFacets: [
         {
+          subjectRef: SUBJECT_REF,
           facet: "manifestation_editorial",
           rationale: "Contradicts the current assertion and therefore cannot discharge it.",
           evidenceRefs: [ref("evidence.contradictory-not-applicable", "4")],
@@ -299,6 +538,7 @@ describe("reference-source authority closure", () => {
       REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
     );
     const duplicate = {
+      subjectRef: SUBJECT_REF,
       facet: "manifestation_editorial" as const,
       rationale: "First purported resolution.",
       evidenceRefs: [ref("evidence.not-applicable-one", "5")],
@@ -318,6 +558,11 @@ describe("reference-source authority closure", () => {
       schemaVersion: 1,
       effectiveAt: NOW,
       accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(
+        SUBJECT_REF,
+        REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.manifestation_use
+      ),
       accessDecisions: [decision],
       rightsAssertions: [underlying],
       receipt: duplicateReceipt,
@@ -333,6 +578,7 @@ describe("reference-source authority closure", () => {
       ...withoutDigest(input.receipt),
       notApplicableFacets: [
         {
+          subjectRef: SUBJECT_REF,
           facet: "export_redistribution",
           rationale: "This facet is not part of owner-private study authority.",
           evidenceRefs: [ref("evidence.out-of-scope-not-applicable", "7")],
@@ -407,6 +653,11 @@ describe("reference-source authority closure", () => {
       schemaVersion: 1,
       effectiveAt: NOW,
       accessDecisionRef: recordRef(decision),
+      authoritySubjectRefs: [SUBJECT_REF],
+      requiredSubjectFacets: requirementsFor(
+        SUBJECT_REF,
+        REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.export
+      ),
       accessDecisions: [decision],
       rightsAssertions: [...staleAssertions, restricted],
       receipt: staleReceipt,
@@ -499,6 +750,8 @@ function completeInput(
     schemaVersion: 1,
     effectiveAt: NOW,
     accessDecisionRef: recordRef(decision),
+    authoritySubjectRefs: [SUBJECT_REF],
+    requiredSubjectFacets: requirementsFor(SUBJECT_REF, required),
     accessDecisions: [decision],
     rightsAssertions: assertions,
     receipt: authorityReceipt(decision, assertions, required),
@@ -515,6 +768,8 @@ function rights(
     parent?: ReferenceRightsAssertion;
     assertedAt?: string;
     evidenceRefs?: ReferenceRecordRef[];
+    subjectRef?: ReferenceRecordRef;
+    subjectKind?: ReferenceRightsAssertion["subjectKind"];
   } = {}
 ): ReferenceRightsAssertion {
   return withReferenceRecordDigest({
@@ -529,8 +784,8 @@ function rights(
           },
         }
       : {}),
-    subjectRef: SUBJECT_REF,
-    subjectKind: "digital_asset",
+    subjectRef: options.subjectRef ?? SUBJECT_REF,
+    subjectKind: options.subjectKind ?? "digital_asset",
     rightsKind: facet,
     status,
     claimant: { kind: "owner", claimantRef: ref(`claimant.${id}`, "d") },
@@ -542,7 +797,8 @@ function rights(
 
 function accessDecision(
   operation: ReferenceAccessOperation,
-  assertions: ReferenceRightsAssertion[]
+  assertions: ReferenceRightsAssertion[],
+  options: { sourceRefs?: ReferenceRecordRef[] } = {}
 ): ReferenceAccessDecision {
   return withReferenceRecordDigest({
     recordKind: "access_decision",
@@ -550,7 +806,7 @@ function accessDecision(
     version: 1,
     outcome: "allow",
     operation,
-    sourceRefs: [SUBJECT_REF],
+    sourceRefs: options.sourceRefs ?? [SUBJECT_REF],
     derivativeRefs: [],
     destination: destination(operation),
     purpose: `Exercise exact ${operation} authority`,
@@ -576,6 +832,13 @@ function destination(operation: ReferenceAccessOperation): ReferenceAccessDecisi
   return { kind: "local_runtime" };
 }
 
+function requirementsFor(
+  subjectRef: ReferenceRecordRef,
+  facets: readonly ReferenceAuthorityFacet[]
+): ReferenceAuthoritySubjectFacetRequirement[] {
+  return facets.map((facet) => ({ subjectRef, facet }));
+}
+
 function authorityReceipt(
   decision: ReferenceAccessDecision,
   assertions: ReferenceRightsAssertion[],
@@ -588,6 +851,7 @@ function authorityReceipt(
     observedSnapshotRef: ref("reference-source-snapshot.authority", "2"),
     accessDecisionRef: recordRef(decision),
     accessDecisionFirstObservedRevision: 1,
+    reviewedProvenanceSubstitutionRefs: [],
     currentRightsAssertionRefs: assertions.map(recordRef),
     rightsAssertionObservations: assertions.map((assertion) => ({
       rightsAssertionRef: recordRef(assertion),
@@ -596,6 +860,7 @@ function authorityReceipt(
     authoritySubjectRefs: [SUBJECT_REF],
     verifiedAuthorityRefs: [...decision.authorityRefs],
     requiredFacets: [...requiredFacets],
+    requiredSubjectFacets: requirementsFor(SUBJECT_REF, requiredFacets),
     verifierRef: ref("verifier.reference-authority", "f"),
     verifierPolicyRef: ref("verifier-policy.reference-authority", "1"),
     verifiedAt: EARLIER,

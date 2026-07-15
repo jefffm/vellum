@@ -2,12 +2,13 @@ import { Type, type Static, type TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 
 import { ReferenceRecordRefSchema, referenceSourceDigest } from "./reference-source-domain.js";
+import { isReferenceSourceInstant } from "./reference-source-instant.js";
 
 const Strict = { additionalProperties: false } as const;
 const IdentifierSchema = Type.String({ pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$" });
 const DigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const IsoTimestampSchema = Type.String({
-  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
 });
 
 export const ReferenceSourceRequiredStoreSchema = Type.Object(
@@ -37,13 +38,25 @@ export type ReferenceSourceRequiredStoreRegistry = Static<
   typeof ReferenceSourceRequiredStoreRegistrySchema
 >;
 
+export const ReferenceSourceControlledArtifactBindingSchema = Type.Object(
+  {
+    artifactRef: ReferenceRecordRefSchema,
+    blobSha256: DigestSchema,
+    byteLength: Type.Integer({ minimum: 0 }),
+  },
+  Strict
+);
+export type ReferenceSourceControlledArtifactBinding = Static<
+  typeof ReferenceSourceControlledArtifactBindingSchema
+>;
+
 const ReferenceSourceCompleteStoreEnumerationCoreSchema = Type.Object(
   {
     storeId: IdentifierSchema,
     storeGeneration: Type.Integer({ minimum: 0 }),
     storeStateDigest: DigestSchema,
     status: Type.Literal("complete"),
-    artifactRefs: Type.Array(ReferenceRecordRefSchema),
+    artifactBindings: Type.Array(ReferenceSourceControlledArtifactBindingSchema),
   },
   Strict
 );
@@ -61,7 +74,7 @@ const ReferenceSourceFailedStoreEnumerationCoreSchema = Type.Object(
       Type.Literal("state_digest_changed"),
       Type.Literal("enumeration_incomplete"),
     ]),
-    artifactRefs: Type.Array(ReferenceRecordRefSchema),
+    artifactBindings: Type.Array(ReferenceSourceControlledArtifactBindingSchema),
   },
   Strict
 );
@@ -162,7 +175,7 @@ const ReferenceSourceValidatedStoreSchema = Type.Object(
     storeGeneration: Type.Integer({ minimum: 0 }),
     storeStateDigest: DigestSchema,
     enumerationDigest: DigestSchema,
-    artifactRefs: Type.Array(ReferenceRecordRefSchema),
+    artifactBindings: Type.Array(ReferenceSourceControlledArtifactBindingSchema),
   },
   Strict
 );
@@ -272,6 +285,9 @@ export function planReferenceSourceInventoryClosure(input: {
   if (!witness) {
     return blockedPlan([{ code: "invalid_inventory_witness" }], registryRef);
   }
+  if (!isReferenceSourceInstant(witness.producedAt)) {
+    return blockedPlan([{ code: "invalid_inventory_witness" }], registryRef);
+  }
   if (!verifyBoundDigest(witness)) {
     return blockedPlan([{ code: "invalid_inventory_witness_digest" }], registryRef);
   }
@@ -341,8 +357,8 @@ export function planReferenceSourceInventoryClosure(input: {
       addIssue(issues, "stale_store_enumeration", enumeration.storeId);
     }
     const artifactKeys = new Set<string>();
-    for (const artifactRef of enumeration.artifactRefs) {
-      const key = `${artifactRef.id}:${artifactRef.digest}`;
+    for (const binding of enumeration.artifactBindings) {
+      const key = `${binding.artifactRef.id}:${binding.artifactRef.digest}`;
       if (artifactKeys.has(key)) {
         addIssue(issues, "duplicate_artifact_ref", enumeration.storeId);
       }
@@ -366,11 +382,11 @@ export function planReferenceSourceInventoryClosure(input: {
         storeGeneration: required.storeGeneration,
         storeStateDigest: required.storeStateDigest,
         enumerationDigest: enumeration.digest,
-        artifactRefs: enumeration.artifactRefs,
+        artifactBindings: enumeration.artifactBindings,
       };
     })
     .sort((left, right) => left.storeId.localeCompare(right.storeId));
-  const artifactCount = stores.reduce((count, store) => count + store.artifactRefs.length, 0);
+  const artifactCount = stores.reduce((count, store) => count + store.artifactBindings.length, 0);
   return finalizePlan({
     schemaVersion: 1,
     mode: "inventory_closure_validation",

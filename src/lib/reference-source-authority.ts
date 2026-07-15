@@ -13,12 +13,13 @@ import {
   type ReferenceRecordRef,
   type ReferenceRightsAssertion,
 } from "./reference-source-domain.js";
+import { isReferenceSourceInstant } from "./reference-source-instant.js";
 
 const Strict = { additionalProperties: false } as const;
 const IdSchema = Type.String({ minLength: 1 });
 const DigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const IsoTimestampSchema = Type.String({
-  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
 });
 
 export const ReferenceAuthorityFacetSchema = Type.Union([
@@ -35,6 +36,17 @@ export const ReferenceAuthorityFacetSchema = Type.Union([
   Type.Literal("attribution"),
 ]);
 export type ReferenceAuthorityFacet = Static<typeof ReferenceAuthorityFacetSchema>;
+
+export const ReferenceAuthoritySubjectFacetRequirementSchema = Type.Object(
+  {
+    subjectRef: ReferenceRecordRefSchema,
+    facet: ReferenceAuthorityFacetSchema,
+  },
+  Strict
+);
+export type ReferenceAuthoritySubjectFacetRequirement = Static<
+  typeof ReferenceAuthoritySubjectFacetRequirementSchema
+>;
 
 /**
  * Required rights facets are conjunctive. A facet can be discharged only by a
@@ -162,11 +174,39 @@ export const ReferenceAuthorityVerificationReceiptSchema = Type.Object(
     recordKind: Type.Literal("reference_authority_verification_receipt"),
     schemaVersion: Type.Literal(1),
     id: IdSchema,
+    observedSnapshotRef: ReferenceRecordRefSchema,
     accessDecisionRef: ReferenceRecordRefSchema,
+    accessDecisionFirstObservedRevision: Type.Integer({ minimum: 1 }),
+    reviewedProvenanceSubstitutionRefs: Type.Array(ReferenceRecordRefSchema),
     currentRightsAssertionRefs: Type.Array(ReferenceRecordRefSchema),
+    rightsAssertionObservations: Type.Array(
+      Type.Object(
+        {
+          rightsAssertionRef: ReferenceRecordRefSchema,
+          firstObservedRevision: Type.Integer({ minimum: 1 }),
+        },
+        Strict
+      )
+    ),
     authoritySubjectRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
     verifiedAuthorityRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
     requiredFacets: Type.Array(ReferenceAuthorityFacetSchema, { minItems: 1 }),
+    requiredSubjectFacets: Type.Array(ReferenceAuthoritySubjectFacetRequirementSchema, {
+      minItems: 1,
+    }),
+    notApplicableFacets: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            subjectRef: ReferenceRecordRefSchema,
+            facet: ReferenceAuthorityFacetSchema,
+            rationale: Type.String({ minLength: 1 }),
+            evidenceRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
+          },
+          Strict
+        )
+      )
+    ),
     verifierRef: ReferenceRecordRefSchema,
     verifierPolicyRef: ReferenceRecordRefSchema,
     verifiedAt: IsoTimestampSchema,
@@ -185,6 +225,10 @@ export const ReferenceSourceAuthorityEvaluationDataSchema = Type.Object(
     schemaVersion: Type.Literal(1),
     effectiveAt: IsoTimestampSchema,
     accessDecisionRef: ReferenceRecordRefSchema,
+    authoritySubjectRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
+    requiredSubjectFacets: Type.Array(ReferenceAuthoritySubjectFacetRequirementSchema, {
+      minItems: 1,
+    }),
     accessDecisions: Type.Array(ReferenceAccessDecisionSchema, { minItems: 1 }),
     rightsAssertions: Type.Array(ReferenceRightsAssertionSchema),
     receipt: ReferenceAuthorityVerificationReceiptSchema,
@@ -223,7 +267,9 @@ export type ReferenceAuthorityFindingCode =
   | "receipt_rights_mismatch"
   | "receipt_authority_mismatch"
   | "receipt_scope_mismatch"
-  | "receipt_facets_mismatch";
+  | "receipt_facets_mismatch"
+  | "subject_facet_requirements_invalid"
+  | "receipt_subject_facets_mismatch";
 
 export type ReferenceAuthorityFinding = {
   code: ReferenceAuthorityFindingCode;
@@ -288,21 +334,21 @@ export function evaluateReferenceSourceAuthority(
   ].sort();
   validateDecisionCurrent(decision, decisions, data.effectiveAt, findings);
 
-  const scopeRefs = uniqueRefs(data.receipt.authoritySubjectRefs);
+  const scopeRefs = [...data.authoritySubjectRefs].sort(compareRefs);
+  const requiredSubjectFacets = [...data.requiredSubjectFacets].sort(compareSubjectFacets);
   const decisionRefs = uniqueRefs([...decision.sourceRefs, ...decision.derivativeRefs]);
   if (!decisionRefs.every((ref) => containsRef(scopeRefs, ref))) {
     finding(
       findings,
       "receipt_scope_mismatch",
-      "The verified authority scope does not cover every exact source and derivative ref.",
-      decisionRefs
+      "The caller-derived authority-subject closure does not cover every exact source and derivative ref.",
+      [...scopeRefs, ...decisionRefs]
     );
   }
-
+  validateRequiredSubjectFacets(requiredSubjectFacets, scopeRefs, requiredFacets, findings);
   const currentAssertions = currentApplicableAssertions(
     data.rightsAssertions,
-    requiredFacets,
-    scopeRefs,
+    requiredSubjectFacets,
     data.effectiveAt,
     findings
   );
@@ -311,14 +357,22 @@ export function evaluateReferenceSourceAuthority(
   validateReceipt(
     data.receipt,
     decision,
+    scopeRefs,
     requiredFacets,
+    requiredSubjectFacets,
     currentAssertionRefs,
     data.effectiveAt,
     verifyServerReceipt,
     findings
   );
   validateDecisionAssertionClosure(decision, currentAssertionRefs, findings);
-  evaluateFacets(requiredFacets, currentAssertions, data.effectiveAt, findings);
+  evaluateFacets(
+    requiredSubjectFacets,
+    currentAssertions,
+    data.receipt.notApplicableFacets ?? [],
+    data.effectiveAt,
+    findings
+  );
 
   if (decision.outcome === "deny") {
     finding(
@@ -401,8 +455,7 @@ function validateDecisionCurrent(
 
 function currentApplicableAssertions(
   assertions: ReferenceRightsAssertion[],
-  requiredFacets: ReferenceAuthorityFacet[],
-  scopeRefs: ReferenceRecordRef[],
+  requiredSubjectFacets: ReferenceAuthoritySubjectFacetRequirement[],
   effectiveAt: string,
   findings: ReferenceAuthorityFinding[]
 ): ReferenceRightsAssertion[] {
@@ -436,18 +489,48 @@ function currentApplicableAssertions(
   }
 
   return [...currentById.values()]
-    .filter(
-      (assertion) =>
-        requiredFacets.includes(assertion.rightsKind) &&
-        containsRef(scopeRefs, assertion.subjectRef)
+    .filter((assertion) =>
+      requiredSubjectFacets.some(
+        (requirement) =>
+          requirement.facet === assertion.rightsKind &&
+          refsEqual(requirement.subjectRef, assertion.subjectRef)
+      )
     )
     .sort(compareVersionedRecords);
+}
+
+function validateRequiredSubjectFacets(
+  requirements: ReferenceAuthoritySubjectFacetRequirement[],
+  authoritySubjectRefs: ReferenceRecordRef[],
+  requiredFacets: ReferenceAuthorityFacet[],
+  findings: ReferenceAuthorityFinding[]
+): void {
+  const keys = requirements.map(subjectFacetKey);
+  const duplicate = new Set(keys).size !== keys.length;
+  const outOfScope = requirements.some(
+    (requirement) =>
+      !containsRef(authoritySubjectRefs, requirement.subjectRef) ||
+      !requiredFacets.includes(requirement.facet)
+  );
+  const coveredFacets = [...new Set(requirements.map(({ facet }) => facet))];
+  const incompleteMatrix = !sameStringSet(coveredFacets, requiredFacets);
+
+  if (duplicate || outOfScope || incompleteMatrix) {
+    finding(
+      findings,
+      "subject_facet_requirements_invalid",
+      "Caller-derived subject-facet requirements must be duplicate-free, stay inside the exact authority scope and operation matrix, and cover every required operation facet.",
+      requirements.map(({ subjectRef }) => subjectRef)
+    );
+  }
 }
 
 function validateReceipt(
   receipt: ReferenceAuthorityVerificationReceipt,
   decision: ReferenceAccessDecision,
+  authoritySubjectRefs: ReferenceRecordRef[],
   requiredFacets: ReferenceAuthorityFacet[],
+  requiredSubjectFacets: ReferenceAuthoritySubjectFacetRequirement[],
   currentAssertionRefs: ReferenceRecordRef[],
   effectiveAt: string,
   verifyServerReceipt: ReferenceAuthorityReceiptVerifier,
@@ -484,6 +567,14 @@ function validateReceipt(
       [receipt.accessDecisionRef, recordRef(decision)]
     );
   }
+  if (!sameRefSet(receipt.authoritySubjectRefs, authoritySubjectRefs)) {
+    finding(
+      findings,
+      "receipt_scope_mismatch",
+      "Authority receipt scope does not equal the exact caller-derived authority-subject closure.",
+      [...receipt.authoritySubjectRefs, ...authoritySubjectRefs]
+    );
+  }
   if (!sameRefSet(receipt.currentRightsAssertionRefs, currentAssertionRefs)) {
     finding(
       findings,
@@ -508,6 +599,37 @@ function validateReceipt(
       findings,
       "receipt_facets_mismatch",
       "Authority receipt does not bind the operation's complete conjunctive facet set.",
+      [recordRef(receipt)]
+    );
+  }
+  if (!sameSubjectFacetSet(receipt.requiredSubjectFacets, requiredSubjectFacets)) {
+    finding(
+      findings,
+      "receipt_subject_facets_mismatch",
+      "Authority receipt does not bind the exact duplicate-free caller-derived subject-facet requirements.",
+      [
+        recordRef(receipt),
+        ...receipt.requiredSubjectFacets.map(({ subjectRef }) => subjectRef),
+        ...requiredSubjectFacets.map(({ subjectRef }) => subjectRef),
+      ]
+    );
+  }
+  const notApplicable = receipt.notApplicableFacets ?? [];
+  const notApplicableKeys = notApplicable.map(subjectFacetKey);
+  if (
+    new Set(notApplicableKeys).size !== notApplicableKeys.length ||
+    notApplicable.some(
+      (entry) =>
+        !requiredSubjectFacets.some(
+          (requirement) =>
+            requirement.facet === entry.facet && refsEqual(requirement.subjectRef, entry.subjectRef)
+        )
+    )
+  ) {
+    finding(
+      findings,
+      "facet_applicability_conflict",
+      "Authority receipt has duplicate or out-of-scope subject-bound not-applicable facet resolutions.",
       [recordRef(receipt)]
     );
   }
@@ -543,19 +665,43 @@ function validateDecisionAssertionClosure(
 }
 
 function evaluateFacets(
-  facets: ReferenceAuthorityFacet[],
+  requirements: ReferenceAuthoritySubjectFacetRequirement[],
   assertions: ReferenceRightsAssertion[],
+  notApplicableFacets: Array<{
+    subjectRef: ReferenceRecordRef;
+    facet: ReferenceAuthorityFacet;
+    rationale: string;
+    evidenceRefs: ReferenceRecordRef[];
+  }>,
   effectiveAt: string,
   findings: ReferenceAuthorityFinding[]
 ): void {
-  for (const facet of facets) {
-    const candidates = assertions.filter((assertion) => assertion.rightsKind === facet);
+  for (const { subjectRef, facet } of requirements) {
+    const candidates = assertions.filter(
+      (assertion) => assertion.rightsKind === facet && refsEqual(assertion.subjectRef, subjectRef)
+    );
+    const receiptNotApplicable = notApplicableFacets.filter(
+      (entry) => entry.facet === facet && refsEqual(entry.subjectRef, subjectRef)
+    );
+    if (candidates.length > 0 && receiptNotApplicable.length > 0) {
+      finding(
+        findings,
+        "facet_applicability_conflict",
+        `Required authority facet ${facet} for subject ${subjectRef.id} is both asserted and marked not applicable.`,
+        [subjectRef, ...candidates.map(recordRef)],
+        facet
+      );
+      continue;
+    }
     if (candidates.length === 0) {
+      if (receiptNotApplicable.length === 1 && receiptNotApplicable[0]!.evidenceRefs.length > 0) {
+        continue;
+      }
       finding(
         findings,
         "facet_missing",
-        `Required authority facet ${facet} is missing.`,
-        [],
+        `Required authority facet ${facet} is missing for subject ${subjectRef.id}.`,
+        [subjectRef],
         facet
       );
       continue;
@@ -572,8 +718,8 @@ function evaluateFacets(
         finding(
           findings,
           "rights_assertion_time_invalid",
-          `Rights Assertion for ${facet} is outside its valid interval or has an invalid boundary.`,
-          [recordRef(assertion)],
+          `Rights Assertion for ${facet} on subject ${subjectRef.id} is outside its valid interval or has an invalid boundary.`,
+          [subjectRef, recordRef(assertion)],
           facet
         );
       }
@@ -581,8 +727,8 @@ function evaluateFacets(
         finding(
           findings,
           "rights_assertion_evidence_missing",
-          `Rights Assertion for ${facet} is not evidence-bearing.`,
-          [recordRef(assertion)],
+          `Rights Assertion for ${facet} on subject ${subjectRef.id} is not evidence-bearing.`,
+          [subjectRef, recordRef(assertion)],
           facet
         );
         return false;
@@ -593,8 +739,11 @@ function evaluateFacets(
       finding(
         findings,
         "facet_restricted",
-        `Required authority facet ${facet} is restricted.`,
-        usable.filter((assertion) => assertion.status === "restricted").map(recordRef),
+        `Required authority facet ${facet} is restricted for subject ${subjectRef.id}.`,
+        [
+          subjectRef,
+          ...usable.filter((assertion) => assertion.status === "restricted").map(recordRef),
+        ],
         facet
       );
       continue;
@@ -603,8 +752,11 @@ function evaluateFacets(
       finding(
         findings,
         "facet_conflicting",
-        `Required authority facet ${facet} is conflicting.`,
-        usable.filter((assertion) => assertion.status === "conflicting").map(recordRef),
+        `Required authority facet ${facet} is conflicting for subject ${subjectRef.id}.`,
+        [
+          subjectRef,
+          ...usable.filter((assertion) => assertion.status === "conflicting").map(recordRef),
+        ],
         facet
       );
       continue;
@@ -613,8 +765,11 @@ function evaluateFacets(
       finding(
         findings,
         "facet_unknown",
-        `Required authority facet ${facet} is unknown.`,
-        usable.filter((assertion) => assertion.status === "unknown").map(recordRef),
+        `Required authority facet ${facet} is unknown for subject ${subjectRef.id}.`,
+        [
+          subjectRef,
+          ...usable.filter((assertion) => assertion.status === "unknown").map(recordRef),
+        ],
         facet
       );
       continue;
@@ -627,16 +782,16 @@ function evaluateFacets(
       finding(
         findings,
         "facet_applicability_conflict",
-        `Required authority facet ${facet} is both applicable and not applicable.`,
-        usable.map(recordRef),
+        `Required authority facet ${facet} for subject ${subjectRef.id} is both applicable and not applicable.`,
+        [subjectRef, ...usable.map(recordRef)],
         facet
       );
     } else if (!affirmative && !notApplicable) {
       finding(
         findings,
         "facet_unknown",
-        `Required authority facet ${facet} has no affirmative or evidence-backed not-applicable result.`,
-        usable.map(recordRef),
+        `Required authority facet ${facet} for subject ${subjectRef.id} has no affirmative or evidence-backed not-applicable result.`,
+        [subjectRef, ...usable.map(recordRef)],
         facet
       );
     }
@@ -706,14 +861,7 @@ function findingPrecedence(finding: ReferenceAuthorityFinding): number {
 }
 
 function isSemanticIsoTimestamp(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)) return false;
-  const milliseconds = Date.parse(value);
-  if (!Number.isFinite(milliseconds)) return false;
-  const canonical = new Date(milliseconds).toISOString();
-  return (
-    value === canonical ||
-    (canonical.endsWith(".000Z") && value === canonical.replace(".000Z", "Z"))
-  );
+  return isReferenceSourceInstant(value);
 }
 
 function recordRef(record: { id: string; digest: string }): ReferenceRecordRef {
@@ -754,6 +902,31 @@ function sameStringSet(left: string[], right: string[]): boolean {
     left.length === right.length &&
     left.every((value) => right.includes(value))
   );
+}
+
+function subjectFacetKey(requirement: ReferenceAuthoritySubjectFacetRequirement): string {
+  return `${refKey(requirement.subjectRef)}\u0000${requirement.facet}`;
+}
+
+function sameSubjectFacetSet(
+  left: ReferenceAuthoritySubjectFacetRequirement[],
+  right: ReferenceAuthoritySubjectFacetRequirement[]
+): boolean {
+  const leftKeys = new Set(left.map(subjectFacetKey));
+  const rightKeys = new Set(right.map(subjectFacetKey));
+  return (
+    leftKeys.size === left.length &&
+    rightKeys.size === right.length &&
+    leftKeys.size === rightKeys.size &&
+    [...leftKeys].every((key) => rightKeys.has(key))
+  );
+}
+
+function compareSubjectFacets(
+  left: ReferenceAuthoritySubjectFacetRequirement,
+  right: ReferenceAuthoritySubjectFacetRequirement
+): number {
+  return compareRefs(left.subjectRef, right.subjectRef) || left.facet.localeCompare(right.facet);
 }
 
 function compareRefs(left: ReferenceRecordRef, right: ReferenceRecordRef): number {

@@ -72,6 +72,24 @@ describe("reference-source domain", () => {
     expect(verifyReferenceRecordDigest({ ...first, byteLength: 43 })).toBe(false);
   });
 
+  it("uses the same bounded identifier contract as the Workbench", () => {
+    const asset = withReferenceRecordDigest({
+      recordKind: "digital_asset",
+      id: "asset.safe-1",
+      sha256: HEX_A,
+      mediaType: "application/pdf",
+      byteLength: 42,
+    });
+
+    expect(Value.Check(ReferenceDigitalAssetSchema, asset)).toBe(true);
+    for (const id of ["asset with spaces", "asset:colon", "éditions.asset", "../asset"]) {
+      expect(Value.Check(ReferenceDigitalAssetSchema, { ...asset, id })).toBe(false);
+    }
+    expect(
+      Value.Check(ReferenceDigitalAssetSchema, { ...asset, id: `asset.${"a".repeat(251)}` })
+    ).toBe(false);
+  });
+
   it("requires explicit unknown or evidence-based assessed identity confidence", () => {
     const unknown = identityAssertion();
     const assessed = identityAssertion({

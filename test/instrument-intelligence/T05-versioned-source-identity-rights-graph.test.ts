@@ -346,7 +346,7 @@ describe("T05 versioned source identity and rights graph", () => {
     expectCoherentDiagnostics(coherent);
   });
 
-  it("enforces compare-and-swap and exposes no publish, migrate, canonicalize, or activate path", async () => {
+  it("enforces compare-and-swap and exposes no canonical publish, migration, or activation path", async () => {
     const service = createService();
     const graph = buildFixtureGraph();
     const first = service.applyTransaction(transaction("first", graph.records));
@@ -378,8 +378,10 @@ describe("T05 versioned source identity and rights graph", () => {
     expect(service.readCurrent()).toEqual(second);
 
     expect(
-      Object.getOwnPropertyNames(ReferenceSourceStagingService.prototype).filter((name) =>
-        /publish|migrat|canonical|activat/i.test(name)
+      Object.getOwnPropertyNames(ReferenceSourceStagingService.prototype).filter(
+        (name) =>
+          /publish|canonical|activat/i.test(name) ||
+          (/migrat/i.test(name) && name !== "migrateLegacyObservationHistory")
       )
     ).toEqual([]);
     expect(
@@ -692,14 +694,14 @@ function buildFixtureGraph() {
     version: 1,
     outcome: "allow",
     operation: "repository_inclusion",
-    sourceRefs: [ref(restrictedAcquisition), ref(permittedAcquisition)],
-    derivativeRefs: [ref(restrictedDerivation), ref(permittedDerivation), ref(fixtureAsset)],
+    sourceRefs: [ref(permittedAcquisition), ref(asset)],
+    derivativeRefs: [ref(permittedDerivation), ref(fixtureAsset)],
     destination: { kind: "repository", id: "vellum-development-fixtures" },
     purpose: "Replace the restricted fixture provenance with the reviewed path",
     policyRef: externalRef("policy.fixture-rights"),
-    rightsAssertionRefs: [ref(restrictedRights), ref(permittedRights)],
+    rightsAssertionRefs: [ref(permittedRights)],
     authorityRefs: [externalRef("reviewer.fixture-rights")],
-    rationale: "The decision names both exact paths and authorizes only the replacement",
+    rationale: "The decision authorizes only the exact replacement path",
     decidedAt: NOW,
   });
   const evaluationAccess = record({
@@ -806,6 +808,7 @@ function buildFixtureGraph() {
         ref(restrictedDerivation),
         ref(permittedAcquisition),
         ref(permittedDerivation),
+        ref(fixtureAsset),
       ],
       destination: substitutionAccess.destination,
       purpose: substitutionAccess.purpose,

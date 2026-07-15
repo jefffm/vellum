@@ -3,13 +3,13 @@ import { createHash } from "node:crypto";
 import { Type, type Static } from "@sinclair/typebox";
 
 const Strict = { additionalProperties: false } as const;
-const IdSchema = Type.String({ minLength: 1 });
+const IdSchema = Type.String({ pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$" });
 const VersionSchema = Type.Integer({ minimum: 1 });
 const RevisionSchema = Type.Integer({ minimum: 0 });
 const Sha256Schema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const DigestSchema = Sha256Schema;
 const IsoTimestampSchema = Type.String({
-  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
+  pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
 });
 
 export const ReferenceRecordRefSchema = Type.Object({ id: IdSchema, digest: DigestSchema }, Strict);
@@ -574,6 +574,7 @@ export const ReferenceLifecycleProvenancePathSchema = Type.Object(
   {
     acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
     derivationRefs: Type.Array(ReferenceRecordRefSchema),
+    roleBindingRefs: Type.Optional(Type.Array(ReferenceRecordRefSchema)),
   },
   Strict
 );
@@ -586,6 +587,7 @@ export const ReferenceLifecycleAuthorizedPathSchema = Type.Object(
     acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
     derivationRefs: Type.Array(ReferenceRecordRefSchema),
     accessDecisionRef: ReferenceRecordRefSchema,
+    roleBindingRef: Type.Optional(ReferenceRecordRefSchema),
   },
   Strict
 );
@@ -596,6 +598,7 @@ export type ReferenceLifecycleAuthorizedPath = Static<
 const ReferenceLifecycleControlledCustodySchema = Type.Object(
   {
     kind: Type.Literal("vellum_controlled"),
+    storeIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
     retention: Type.Union([
       Type.Literal("unretained"),
       Type.Literal("encrypted_local_pin"),
@@ -790,6 +793,7 @@ export const ReferenceProvenanceSubstitutionSchema = Type.Object(
     to: ProvenanceEndpointSchema,
     scope: ProvenanceSubstitutionScopeSchema,
     accessDecisionRef: ReferenceRecordRefSchema,
+    roleBindingRef: Type.Optional(ReferenceRecordRefSchema),
     authority: Type.Object(
       {
         kind: Type.Union([
@@ -911,6 +915,30 @@ export type ReferenceSourceStagingTransaction = Static<
   typeof ReferenceSourceStagingTransactionSchema
 >;
 
+/**
+ * Server-minted first-observation metadata. Client-authored event timestamps
+ * remain useful documentary claims, but lifecycle ordering is derived only
+ * from this snapshot-bound append generation.
+ */
+export const ReferenceSourceRecordObservationSchema = Type.Object(
+  {
+    recordRef: ReferenceRecordRefSchema,
+    firstObservedRevision: Type.Integer({ minimum: 1 }),
+    observedAt: IsoTimestampSchema,
+    // Optional on the wire solely so snapshots written before observation-trust
+    // metadata remain readable by the explicit migration path. Every new or
+    // migrated snapshot writes this field, and missing values never authorize
+    // lifecycle ordering.
+    orderingTrust: Type.Optional(
+      Type.Union([Type.Literal("server_observed"), Type.Literal("legacy_unverifiable")])
+    ),
+  },
+  Strict
+);
+export type ReferenceSourceRecordObservation = Static<
+  typeof ReferenceSourceRecordObservationSchema
+>;
+
 export const ReferenceSourceStagingSnapshotSchema = Type.Object(
   {
     schemaVersion: Type.Literal(1),
@@ -919,6 +947,7 @@ export const ReferenceSourceStagingSnapshotSchema = Type.Object(
     parentSnapshotRef: Type.Optional(ReferenceRecordRefSchema),
     publicationState: Type.Literal("staging_only"),
     createdAt: IsoTimestampSchema,
+    recordObservations: Type.Optional(Type.Array(ReferenceSourceRecordObservationSchema)),
     records: Type.Array(ReferenceSourceStagingRecordSchema),
     digest: DigestSchema,
   },

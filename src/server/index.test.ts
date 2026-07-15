@@ -66,7 +66,7 @@ describe("server API endpoints", () => {
         Origin: "http://127.0.0.1:5173",
         "Access-Control-Request-Method": "POST",
         "Access-Control-Request-Headers":
-          "content-type,x-source-filename,x-reference-title,x-reference-citation",
+          "content-type,x-source-filename,x-reference-title,x-reference-citation,x-reference-acquisition-key,x-reference-expected-head-id,x-reference-expected-head-digest",
       },
     });
     expect(response.status).toBe(204);
@@ -74,6 +74,9 @@ describe("server API endpoints", () => {
     expect(response.headers.get("vary")).toContain("Origin");
     expect(response.headers.get("access-control-allow-credentials")).toBeNull();
     expect(response.headers.get("access-control-allow-headers")).toContain("x-reference-title");
+    expect(response.headers.get("access-control-allow-headers")).toContain(
+      "x-reference-acquisition-key"
+    );
     expect(response.headers.get("access-control-allow-headers")).not.toContain("*");
   });
 
@@ -86,6 +89,11 @@ describe("server API endpoints", () => {
       "reference-source staging transaction",
       "POST",
       "/api/owner/reference-source-staging/transactions",
+    ],
+    [
+      "reference-source controlled asset upload",
+      "POST",
+      "/api/owner/reference-source-staging/assets",
     ],
     [
       "reference-source lifecycle planning",

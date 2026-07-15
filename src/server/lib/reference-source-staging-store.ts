@@ -34,6 +34,8 @@ export type ReferenceSourceStagingHead = {
 export type ReferenceSourceStagingStoreOptions = {
   rootDirectory?: string;
   now?: () => Date;
+  /** Test seam for platforms or containers without a stable machine identity. */
+  hostIdentity?: () => string | null;
 };
 
 export type ReferenceSourceStagingState = {
@@ -68,12 +70,14 @@ type HeadClaim = {
 export class ReferenceSourceStagingStore {
   readonly rootDirectory: string;
   private readonly now: () => Date;
+  private readonly hostIdentity: () => string | null;
 
   constructor(options: ReferenceSourceStagingStoreOptions = {}) {
     this.rootDirectory =
       options.rootDirectory ??
       path.join(process.env.HOME ?? process.cwd(), ".vellum", "owner", "reference-source-staging");
     this.now = options.now ?? (() => new Date());
+    this.hostIdentity = options.hostIdentity ?? currentHostIdentity;
   }
 
   readHead(): ReferenceSourceStagingHead | null {
@@ -287,11 +291,17 @@ export class ReferenceSourceStagingStore {
   private createOwnedClaim(filePath: string): HeadClaim {
     const file = openSync(filePath, "wx", 0o600);
     try {
+      const stableHostIdentity = this.hostIdentity();
+      if (stableHostIdentity !== null && !isStableHostIdentity(stableHostIdentity)) {
+        throw new ReferenceSourceStagingIntegrityError(
+          "Stable staging-claim host identity must be a SHA-256 digest"
+        );
+      }
       const receipt: HeadClaimReceipt = {
         schemaVersion: 1,
         token: randomUUID(),
         pid: process.pid,
-        hostIdentity: currentHostIdentity(),
+        hostIdentity: stableHostIdentity ?? unrecoverableHostClaimMarker,
         bootIdentity: currentBootIdentity(),
         processStartIdentity: processStartIdentity(process.pid),
         claimedAt: this.now().toISOString(),
@@ -317,7 +327,7 @@ export class ReferenceSourceStagingStore {
       throw error;
     }
     const receipt = decodeHeadClaim(JSON.parse(originalBytes));
-    if (!headClaimOwnerIsProvablyAbsent(receipt)) return false;
+    if (!headClaimOwnerIsProvablyAbsent(receipt, this.hostIdentity)) return false;
     try {
       if (readFileSync(filePath, "utf8") !== originalBytes) return false;
     } catch (error) {
@@ -594,7 +604,9 @@ function decodeHeadClaim(value: unknown): HeadClaimReceipt {
     !Number.isInteger(value.pid) ||
     Number(value.pid) < 1 ||
     typeof value.hostIdentity !== "string" ||
-    !/^[a-f0-9]{64}$/.test(value.hostIdentity) ||
+    !(
+      isStableHostIdentity(value.hostIdentity) || isUnrecoverableHostClaimMarker(value.hostIdentity)
+    ) ||
     !(value.bootIdentity === null || typeof value.bootIdentity === "string") ||
     !(value.processStartIdentity === null || typeof value.processStartIdentity === "string") ||
     typeof value.claimedAt !== "string"
@@ -606,8 +618,15 @@ function decodeHeadClaim(value: unknown): HeadClaimReceipt {
   return value as HeadClaimReceipt;
 }
 
-function headClaimOwnerIsProvablyAbsent(receipt: HeadClaimReceipt): boolean {
-  if (receipt.hostIdentity !== currentHostIdentity()) return false;
+function headClaimOwnerIsProvablyAbsent(
+  receipt: HeadClaimReceipt,
+  getCurrentHostIdentity: () => string | null
+): boolean {
+  // An unrecoverable marker permits normal ownership and release in environments
+  // without a stable machine identity, but can never establish same-host recovery.
+  if (!isStableHostIdentity(receipt.hostIdentity)) return false;
+  const hostIdentity = getCurrentHostIdentity();
+  if (!hostIdentity || receipt.hostIdentity !== hostIdentity) return false;
   const bootIdentity = currentBootIdentity();
   if (receipt.bootIdentity && bootIdentity && receipt.bootIdentity !== bootIdentity) return true;
   if (!processExists(receipt.pid)) return true;
@@ -617,7 +636,7 @@ function headClaimOwnerIsProvablyAbsent(receipt: HeadClaimReceipt): boolean {
   );
 }
 
-function currentHostIdentity(): string {
+function currentHostIdentity(): string | null {
   let stableMachineIdentity: string;
   try {
     if (platform() === "linux") {
@@ -636,12 +655,23 @@ function currentHostIdentity(): string {
     } else {
       throw new Error(`unsupported platform ${platform()}`);
     }
-  } catch (error) {
-    throw new ReferenceSourceStagingIntegrityError(
-      `Cannot establish stable machine identity for staging claim recovery: ${errorMessage(error)}`
-    );
+  } catch {
+    // Claim acquisition remains available, but recovery must fail closed.
+    return null;
   }
   return createHash("sha256").update(`${platform()}\u0000${stableMachineIdentity}`).digest("hex");
+}
+
+const unrecoverableHostClaimMarker = `unrecoverable:${randomUUID()}`;
+
+function isStableHostIdentity(value: string): boolean {
+  return /^[a-f0-9]{64}$/.test(value);
+}
+
+function isUnrecoverableHostClaimMarker(value: string): boolean {
+  return /^unrecoverable:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(
+    value
+  );
 }
 
 function currentBootIdentity(): string | null {
