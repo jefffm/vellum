@@ -1,0 +1,11 @@
+{
+  "artifactId": "t01_gate_06",
+  "blocked": 0,
+  "commandDigest": "16c0e4305ac213dff39fc82b69b6e08aeeb8758e33cd72d7c409752a70e9f054",
+  "failed": 0,
+  "incomplete": 0,
+  "passed": 1,
+  "schemaId": "vellum.test-report.v1",
+  "skipped": 0,
+  "status": "pass"
+}
