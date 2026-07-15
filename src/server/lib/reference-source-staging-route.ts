@@ -30,7 +30,7 @@ export function createReferenceSourceStagingReadRoute(
 ): RequestHandler {
   return createApiRoute<undefined, ReferenceSourceStagingDiagnostics>({
     validate: () => undefined,
-    handler: async () => translateServiceErrors(() => service.readCurrent()),
+    handler: async () => translateReferenceSourceStagingErrors(() => service.readCurrent()),
   });
 }
 
@@ -40,7 +40,7 @@ export function createReferenceSourceStagingSnapshotRoute(
   return createApiRoute<{ snapshotId: string }, ReferenceSourceStagingDiagnostics>({
     validate: (_body, request) => Value.Decode(SnapshotParamsSchema, request.params),
     handler: async ({ snapshotId }) =>
-      translateServiceErrors(() => service.readSnapshot(snapshotId)),
+      translateReferenceSourceStagingErrors(() => service.readSnapshot(snapshotId)),
   });
 }
 
@@ -50,11 +50,11 @@ export function createReferenceSourceStagingTransactionRoute(
   return createApiRoute({
     validate: (body) => Value.Decode(ReferenceSourceStagingTransactionSchema, body),
     handler: async (transaction) =>
-      translateServiceErrors(() => service.applyTransaction(transaction)),
+      translateReferenceSourceStagingErrors(() => service.applyTransaction(transaction)),
   });
 }
 
-function translateServiceErrors<T>(operation: () => T): T {
+export function translateReferenceSourceStagingErrors<T>(operation: () => T): T {
   try {
     return operation();
   } catch (error) {

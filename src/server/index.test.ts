@@ -87,6 +87,11 @@ describe("server API endpoints", () => {
       "POST",
       "/api/owner/reference-source-staging/transactions",
     ],
+    [
+      "reference-source lifecycle planning",
+      "POST",
+      "/api/owner/reference-source-staging/lifecycle/plan",
+    ],
     ["workspace mutation", "POST", "/api/workspaces"],
     ["source upload", "POST", "/api/workspaces/workspace.1234567890abcdef/sources"],
     ["arrangement search", "POST", "/api/workspaces/workspace.1234567890abcdef/arrangements"],

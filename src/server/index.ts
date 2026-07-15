@@ -137,6 +137,8 @@ import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventor
 import { OwnerStore } from "./lib/owner-store.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
+import { ReferenceSourceLifecyclePlanningService } from "./lib/reference-source-lifecycle-service.js";
+import { createReferenceSourceLifecyclePlanRoute } from "./lib/reference-source-lifecycle-route.js";
 import {
   createReferenceSourceStagingReadRoute,
   createReferenceSourceStagingSnapshotRoute,
@@ -218,6 +220,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
       store: new ReferenceSourceStagingStore(),
       listLegacyOwnerReferences: () => new OwnerStore().listReferences(),
     });
+  const referenceSourceLifecyclePlanningService = new ReferenceSourceLifecyclePlanningService({
+    store: referenceSourceStagingService.store,
+  });
 
   router.get("/", (_request, response) => {
     response.json({ status: "ok" });
@@ -257,6 +262,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/owner/reference-source-staging/transactions",
     createReferenceSourceStagingTransactionRoute(referenceSourceStagingService)
+  );
+  router.post(
+    "/owner/reference-source-staging/lifecycle/plan",
+    createReferenceSourceLifecyclePlanRoute(referenceSourceLifecyclePlanningService)
   );
   router.post("/owner/choices", createOwnerChoiceRoute());
   router.post(
