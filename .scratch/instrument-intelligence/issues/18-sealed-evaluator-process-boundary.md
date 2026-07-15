@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Generator/evaluator separation; enforced isolation; Slice 4
 
-Requirement families touched: II-EVAL-002, II-EXEC-004A, II-MC-026, II-NG-001
+Requirement families touched: II-EVAL-002, II-EXEC-004A, II-MC-026, II-NG-001, II-EXEC-004D
 
 ## What to build
 

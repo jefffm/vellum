@@ -12,7 +12,7 @@ User stories: U10
 
 SPEC coverage: Explicit provisional stopping point
 
-Requirement families touched: II-EXEC-014C, II-RC-011
+Requirement families touched: II-EXEC-014C, II-RC-011, II-NG-010
 
 ## What to build
 

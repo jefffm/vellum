@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vellum.local/instrument-intelligence/start-receipt.v1.schema.json",
+  "title": "Vellum Instrument Intelligence Start Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaId",
+    "start",
+    "definition",
+    "authoritySnapshot",
+    "registry",
+    "predecessors",
+    "predicateWitnesses",
+    "publication",
+    "execution"
+  ],
+  "properties": {
+    "schemaId": {
+      "const": "vellum.instrument-intelligence.start-receipt.v1"
+    },
+    "start": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracerId", "generation", "startedAt"],
+      "properties": {
+        "tracerId": { "$ref": "#/$defs/tracerId" },
+        "generation": { "$ref": "#/$defs/positiveInteger" },
+        "startedAt": { "$ref": "#/$defs/isoInstant" }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "gateMatrixDigest", "completionSemantics"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repositoryPath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "gateMatrixDigest": { "$ref": "#/$defs/sha256" },
+        "completionSemantics": {
+          "enum": [
+            "implementation-pass",
+            "attempt-finalized",
+            "decision-recorded",
+            "closure-pass-required"
+          ]
+        }
+      }
+    },
+    "authoritySnapshot": { "$ref": "#/$defs/authoritySnapshot" },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "baseWaveHighestId", "registryHead", "tombstoneSetDigest"],
+      "properties": {
+        "generation": { "$ref": "#/$defs/positiveInteger" },
+        "baseWaveHighestId": { "$ref": "#/$defs/positiveInteger" },
+        "registryHead": { "$ref": "#/$defs/sha256" },
+        "tombstoneSetDigest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "predecessors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/predecessor" }
+    },
+    "predicateWitnesses": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/predicateWitness" }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remote",
+        "remoteIdentity",
+        "branch",
+        "repository",
+        "checkpoint",
+        "fetchedHead",
+        "graphQlHead",
+        "remoteProtectionAssumed",
+        "observedAt"
+      ],
+      "properties": {
+        "remote": { "const": "origin" },
+        "remoteIdentity": { "const": "github.com/jefffm/vellum" },
+        "branch": { "const": "refs/heads/main" },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["nodeId", "databaseId", "nameWithOwner"],
+          "properties": {
+            "nodeId": { "const": "R_kgDOSNEx6w" },
+            "databaseId": { "const": 1221669355 },
+            "nameWithOwner": { "const": "jefffm/vellum" }
+          }
+        },
+        "checkpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bootstrapAnchor", "trustPolicy", "trustedMain"],
+          "properties": {
+            "bootstrapAnchor": {
+              "$ref": "#/$defs/bootstrapAnchorCheckpoint"
+            },
+            "trustPolicy": {
+              "$ref": "#/$defs/trustPolicyCheckpoint"
+            },
+            "trustedMain": {
+              "$ref": "#/$defs/trustedMainCheckpoint"
+            }
+          }
+        },
+        "fetchedHead": { "$ref": "#/$defs/gitObject" },
+        "graphQlHead": { "$ref": "#/$defs/gitObject" },
+        "remoteProtectionAssumed": { "const": false },
+        "observedAt": { "$ref": "#/$defs/isoInstant" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseCommit", "productTreeDigest", "generationSystem", "subjects"],
+      "properties": {
+        "baseCommit": { "$ref": "#/$defs/gitObject" },
+        "productTreeDigest": { "$ref": "#/$defs/sha256" },
+        "generationSystem": { "$ref": "#/$defs/generationSystem" },
+        "subjects": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/subject" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "gitObject": {
+      "type": "string",
+      "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "tracerId": {
+      "type": "string",
+      "pattern": "^T(?:0[1-9]|[1-9][0-9]*)$"
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "isoInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^(?!/)(?!~)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)(?!.*(?:^|/)(?:Users|Volumes|home|private|vault|heldout|reserve)(?:/|$))[^\\u0000]+$"
+    },
+    "pathDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/repositoryPath" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authoritySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaId", "authoritySetDigest", "pathDigests"],
+      "properties": {
+        "schemaId": {
+          "const": "vellum.instrument-intelligence.authority-snapshot.v1"
+        },
+        "authoritySetDigest": { "$ref": "#/$defs/sha256" },
+        "pathDigests": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/pathDigest" }
+        }
+      }
+    },
+    "predecessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracerId", "generation", "receiptCommit"],
+      "properties": {
+        "tracerId": { "$ref": "#/$defs/tracerId" },
+        "generation": { "$ref": "#/$defs/positiveInteger" },
+        "receiptCommit": { "$ref": "#/$defs/gitObject" }
+      }
+    },
+    "typedScalar": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "const": "token" },
+            "value": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "const": "integer" },
+            "value": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "const": "boolean" },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "const": "null" },
+            "value": { "type": "null" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "const": "absent" },
+            "value": { "type": "null" }
+          }
+        }
+      ]
+    },
+    "predicateTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceTracerId",
+        "generationSelector",
+        "sourceGeneration",
+        "sourceReceiptCommit",
+        "field",
+        "operator",
+        "expected",
+        "observed"
+      ],
+      "properties": {
+        "sourceTracerId": { "$ref": "#/$defs/tracerId" },
+        "generationSelector": { "enum": ["current", "latest_or_absent"] },
+        "sourceGeneration": {
+          "oneOf": [{ "$ref": "#/$defs/positiveInteger" }, { "type": "null" }]
+        },
+        "sourceReceiptCommit": {
+          "oneOf": [{ "$ref": "#/$defs/gitObject" }, { "type": "null" }]
+        },
+        "field": {
+          "enum": [
+            "issueCompletion",
+            "productAcceptance",
+            "applicability",
+            "comparison",
+            "freshness",
+            "compatibility",
+            "authorityValidity",
+            "resultCode"
+          ]
+        },
+        "operator": { "enum": ["equals", "not_equals"] },
+        "expected": { "$ref": "#/$defs/typedScalar" },
+        "observed": { "$ref": "#/$defs/typedScalar" }
+      }
+    },
+    "predicateBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branchId", "satisfied", "terms"],
+      "properties": {
+        "branchId": { "$ref": "#/$defs/identifier" },
+        "satisfied": { "type": "boolean" },
+        "terms": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/predicateTerm" }
+        }
+      }
+    },
+    "predicateWitness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicateId", "predicateDigest", "mode", "branches", "satisfiedBranchIds"],
+      "properties": {
+        "predicateId": { "$ref": "#/$defs/identifier" },
+        "predicateDigest": { "$ref": "#/$defs/sha256" },
+        "mode": { "enum": ["all", "any"] },
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/predicateBranch" }
+        },
+        "satisfiedBranchIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "checkpointBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "object"],
+      "properties": {
+        "ref": { "type": "string" },
+        "object": { "$ref": "#/$defs/gitObject" }
+      }
+    },
+    "bootstrapAnchorCheckpoint": {
+      "allOf": [
+        { "$ref": "#/$defs/checkpointBase" },
+        {
+          "properties": {
+            "ref": {
+              "const": "refs/vellum/instrument-intelligence/bootstrap-anchor"
+            }
+          }
+        }
+      ]
+    },
+    "trustPolicyCheckpoint": {
+      "allOf": [
+        { "$ref": "#/$defs/checkpointBase" },
+        {
+          "properties": {
+            "ref": {
+              "const": "refs/vellum/instrument-intelligence/trust-policy"
+            }
+          }
+        }
+      ]
+    },
+    "trustedMainCheckpoint": {
+      "allOf": [
+        { "$ref": "#/$defs/checkpointBase" },
+        {
+          "properties": {
+            "ref": {
+              "const": "refs/vellum/instrument-intelligence/trusted-main"
+            }
+          }
+        }
+      ]
+    },
+    "generationSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "digest"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "version": { "$ref": "#/$defs/identifier" },
+        "digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "version", "digest"],
+      "properties": {
+        "kind": {
+          "enum": ["system", "package", "component", "artifact", "profile"]
+        },
+        "id": { "$ref": "#/$defs/identifier" },
+        "version": { "$ref": "#/$defs/identifier" },
+        "digest": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

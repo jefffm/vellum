@@ -12,7 +12,7 @@ User stories: U2, U5, U8, U10
 
 SPEC coverage: Slice 14 thirteen-course lute idiom and historical authority
 
-Requirement families touched: II-BL-001–006, II-RC-001, II-RC-004, II-RC-008
+Requirement families touched: II-BL-001–006, II-RC-001, II-RC-004, II-RC-008, II-EXEC-014D, II-NG-010
 
 ## What to build
 

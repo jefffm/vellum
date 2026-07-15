@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Evaluation layers; hard-gate/acceptance status; Slice 0 and Slice 4
 
-Requirement families touched: II-EVAL-001, II-EVAL-003, II-EXEC-000, II-EXEC-004A, II-MC-030–031
+Requirement families touched: II-EVAL-001, II-EVAL-003, II-EXEC-000, II-EXEC-004A, II-MC-030–031, II-EXEC-004C
 
 ## What to build
 

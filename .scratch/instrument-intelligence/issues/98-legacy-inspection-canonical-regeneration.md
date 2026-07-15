@@ -12,7 +12,7 @@ User stories: U1, U2, U9
 
 SPEC coverage: Legacy compatibility, immutable lineage, and Workbench regeneration; Slice 11
 
-Requirement families touched: II-KNW-005–007, II-UX-002–004, II-EXEC-011, II-MC-002, II-MC-035–036
+Requirement families touched: II-KNW-005–007, II-UX-002–004, II-EXEC-011, II-MC-002, II-MC-035–036, II-EXEC-011E
 
 ## What to build
 

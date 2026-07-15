@@ -12,7 +12,7 @@ User stories: U1, U8, U9
 
 SPEC coverage: Resumable Workbench lifecycle and performance checkpoints; Slice 11
 
-Requirement families touched: II-UX-003–004, II-OPS-001, II-EXEC-011, II-MC-033–036
+Requirement families touched: II-UX-003–004, II-OPS-001, II-EXEC-011, II-MC-033–036, II-EXEC-011D
 
 ## What to build
 

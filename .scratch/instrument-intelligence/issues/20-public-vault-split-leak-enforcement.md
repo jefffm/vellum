@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Evaluation isolation; held-out acceptance; Slice 4 public ledger/Vault split
 
-Requirement families touched: II-EVAL-002, II-EVAL-010, II-EXEC-004B, II-MC-026–027, II-NG-009
+Requirement families touched: II-EVAL-002, II-EVAL-010, II-EXEC-004B, II-MC-026–027, II-NG-009, II-EXEC-004D
 
 ## What to build
 

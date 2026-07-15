@@ -12,7 +12,7 @@ User stories: U3, U8, U10
 
 SPEC coverage: Independent observable framework; required synthetic mutations; Slice 4
 
-Requirement families touched: II-EVAL-001, II-EVAL-007, II-EXEC-004B
+Requirement families touched: II-EVAL-001, II-EVAL-007, II-EXEC-004B, II-EXEC-004G, II-NG-010, II-AUTH-001, II-BND-002, II-BND-006, II-EVAL-003, II-EXEC-000B, II-EXEC-000C, II-EXEC-000D, II-EXEC-002, II-EXEC-002B, II-EXEC-003B, II-EXEC-003D, II-EXEC-003E, II-EXEC-004C, II-EXEC-004F, II-EXEC-006A, II-EXEC-006C, II-EXEC-007A, II-EXEC-007B, II-EXEC-008A, II-EXEC-008C, II-EXEC-008D, II-EXEC-009A, II-EXEC-009C, II-EXEC-009D, II-EXEC-010A, II-EXEC-010C, II-EXEC-011A, II-EXEC-011B, II-EXEC-011C, II-EXEC-011D, II-EXEC-011E, II-EXEC-011F, II-EXEC-013A, II-EXEC-013B, II-EXEC-013C, II-EXEC-013D, II-EXEC-013E, II-EXEC-013F, II-EXEC-013G, II-EXEC-014A, II-EXEC-014B, II-EXEC-014C, II-EXEC-014E, II-EXEC-014F, II-LEARN-001, II-MUS-001, II-MUS-010, II-MUS-011, II-MUS-012, II-MUS-013, II-NG-002, II-NG-003, II-NG-004, II-NG-005, II-NG-006, II-NG-007, II-NG-011, II-NG-012, II-NG-014, II-OUT-001, II-OUT-002, II-SEED-005, II-SRC-007, II-SRC-008, II-SRC-009
 
 ## What to build
 
@@ -25,6 +25,7 @@ Build the shared evaluator protocol and synthetic contract harness for independe
 - [ ] The synthetic mutation registry changes one controlled observable at a time, proves the corresponding evaluator recomputes rather than trusts a declaration, and cannot contaminate generation.
 - [ ] Shared status semantics preserve unavailable required input as blocked/incomplete and require an explicit profile rationale for `not_applicable`; unknown never becomes zero, neutral, or pass.
 - [ ] Dependency changes stale the right Card and trigger deterministic recomputation without rewriting prior Cards; real Source Voice, harmonic, transposition, figure, lyric, spanner, constituent-attack, notation, playback, and target evaluators are explicitly deferred to their owning verticals.
+- [ ] T35's broad independent evidence-contributor role is a late, rerunnable aggregation, not prospective evidence authority: it may claim a mapped clause only after the exact current implementation-owner generation exists and only by recomputing the registered target evaluators against that generation's canonical outputs and inputs.
 
 ## Gate matrix
 

@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Owner Evaluation Vault; Slice 4
 
-Requirement families touched: II-EVAL-002, II-EXEC-004B, II-MC-027, II-NG-009
+Requirement families touched: II-EVAL-002, II-EXEC-004B, II-MC-027, II-NG-009, II-EXEC-004D
 
 ## What to build
 

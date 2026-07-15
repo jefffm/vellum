@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U8
 
 SPEC coverage: Candidate output; search selection versus evaluation; Slice 4 canonical contracts
 
-Requirement families touched: II-MUS-014–015, II-EVAL-001, II-EXEC-004A, II-MC-032
+Requirement families touched: II-MUS-014–015, II-EVAL-001, II-EXEC-004A, II-MC-032, II-EXEC-004F
 
 ## What to build
 

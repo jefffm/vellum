@@ -12,7 +12,7 @@ User stories: U1, U2, U7
 
 SPEC coverage: Shared Italian keyboard Continuo seed; first extraction fixture
 
-Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-004
+Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-004, II-EXEC-002B
 
 ## What to build
 

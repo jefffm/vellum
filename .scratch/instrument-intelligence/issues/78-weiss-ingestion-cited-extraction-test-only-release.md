@@ -12,7 +12,7 @@ User stories: U1, U2, U5
 
 SPEC coverage: Baroque-lute descriptive repertoire seed; first extraction fixture
 
-Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-002
+Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-002, II-EXEC-002C
 
 ## What to build
 

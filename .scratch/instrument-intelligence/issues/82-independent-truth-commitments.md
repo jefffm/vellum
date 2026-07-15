@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 13 independent truth review
 
-Requirement families touched: II-EVAL-004–005, II-EXEC-013B, II-MC-027–028
+Requirement families touched: II-EVAL-004–005, II-EXEC-013B, II-MC-027–028, II-NG-010
 
 ## What to build
 

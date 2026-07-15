@@ -12,7 +12,7 @@ User stories: U1, U2, U9
 
 SPEC coverage: Workbench selection-aware feedback and manual versioning; Slice 11
 
-Requirement families touched: II-UX-002–004, II-OUT-003, II-EXEC-011, II-MC-035–036
+Requirement families touched: II-UX-002–004, II-OUT-003, II-EXEC-011, II-MC-035–036, II-EXEC-011F
 
 ## What to build
 

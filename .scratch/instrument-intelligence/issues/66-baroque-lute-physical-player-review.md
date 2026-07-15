@@ -12,7 +12,7 @@ User stories: U5, U8, U10
 
 SPEC coverage: Slice 14 target-player physical playtest; Release Complete target/course-13 clauses
 
-Requirement families touched: II-BL-006, II-RC-002–003
+Requirement families touched: II-BL-006, II-RC-002–003, II-EXEC-014D, II-NG-010
 
 ## What to build
 

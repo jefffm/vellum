@@ -12,7 +12,7 @@ User stories: U1, U2, U9
 
 SPEC coverage: Release/attestation/advisory visibility; Knowledge Workbench; Slice 11
 
-Requirement families touched: II-KNW-007, II-UX-002, II-EXEC-011, II-MC-036
+Requirement families touched: II-KNW-007, II-UX-002, II-EXEC-011, II-MC-036, II-EXEC-011B
 
 ## What to build
 

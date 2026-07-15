@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 14 Source Voice, Harmonic, Relationship, Transposition, and spanner exact-artifact review
 
-Requirement families touched: II-MUS-002, II-MUS-004–008, II-RC-012
+Requirement families touched: II-MUS-002, II-MUS-004–008, II-RC-012, II-EXEC-014D
 
 ## What to build
 

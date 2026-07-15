@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 5,
-  "status": "bootstrap_pending",
+  "schemaVersion": 6,
+  "status": "preregistered",
   "objective": "Release Complete Vellum Instrument Intelligence",
   "authorities": {
     "specification": {
       "path": "SPEC.md",
-      "digest": "c794002889ba4e0c6c93a75c4515ca3c8fbf413b5640ddb60a4faba4b0ce7517"
+      "digest": "005d39f55a680e31837d654462e7d10e2c8c12739d0b08893d0145e7683fa99e"
     },
     "plan": {
       "path": ".scratch/instrument-intelligence/PLAN.md",
@@ -14,23 +14,55 @@
     },
     "requirementFamilyIndex": {
       "path": ".scratch/instrument-intelligence/REQUIREMENTS.md",
-      "digest": "4c422ad25dff303ed2940b7fd04d6ddb5a62888c6dddbe6f1f8179799f4788e2",
-      "clauseLedgerStatus": "bootstrap_pending_T01"
+      "digest": "23e83b2d3d9a92194159908832d3b11e3906190045a347ef554020ca88fe3803",
+      "clauseLedgerStatus": "active_v1"
+    },
+    "requirementClauseLedger": {
+      "path": ".scratch/instrument-intelligence/clause-ledger.json",
+      "digest": "b909da896d847626d6dca2393e1e233a742c2fd7d652141adfaadc17cb285d3b",
+      "schemaPath": "schemas/instrument-intelligence/clause-ledger.schema.json",
+      "schemaDigest": "58b7990fee771c0edf36ea62de2170f6143984ea71e48387f2b0c6a798689c5a",
+      "clauseCount": 1258
+    },
+    "protocolSchemas": {
+      "paths": [
+        "schemas/instrument-intelligence/clause-ledger.schema.json",
+        "schemas/instrument-intelligence/evidence.v2.schema.json",
+        "schemas/instrument-intelligence/start-receipt.v1.schema.json"
+      ],
+      "digest": "54d939a137113b7245e15bf2ea9fa546cdab4da9ee0fdd0ae9c7b10185d40d2f",
+      "evidenceSchemaId": "vellum.instrument-intelligence.evidence.v2",
+      "startReceiptSchemaId": "vellum.instrument-intelligence.start-receipt.v1",
+      "authoritySnapshotSchemaId": "vellum.instrument-intelligence.authority-snapshot.v1"
+    },
+    "resultPolicy": {
+      "digest": "7592544080cbddcbbaa314b7189a0cc2618c576dcdbbc980c6712585768a27b5",
+      "remediationLedgerSchemaId": "vellum.remediation-obligation-ledger.v1"
     },
     "verifier": {
       "paths": [
-        "package.json",
-        "package-lock.json",
         ".prettierrc",
+        ".scratch/instrument-intelligence/review-authority-catalog.json",
         "flake.nix",
         "flake.lock",
         "scripts/nix-podman",
         "scripts/lib/instrument-intelligence-trust.mjs",
+        "scripts/lib/instrument-intelligence-clause-ledger.mjs",
+        "scripts/lib/instrument-intelligence-receipts.mjs",
+        "scripts/lib/instrument-intelligence-results.mjs",
+        "scripts/generate-instrument-intelligence-clause-ledger.mjs",
         "scripts/verify-current-spec.mjs",
         "scripts/verify-instrument-intelligence-plan.mjs",
-        "test/instrument-intelligence/bootstrap-trust-policy.test.ts"
+        "schemas/instrument-intelligence/clause-ledger.schema.json",
+        "schemas/instrument-intelligence/evidence.v2.schema.json",
+        "schemas/instrument-intelligence/start-receipt.v1.schema.json",
+        "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+        "test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts",
+        "test/instrument-intelligence/T01-clause-ledger.test.ts",
+        "test/instrument-intelligence/receipt-contract.test.ts",
+        "test/instrument-intelligence/result-contract.test.ts"
       ],
-      "digest": "2bb2cc66e61a79357958ef3c3266ba89d11731fcca466001456fffd2c56d2527"
+      "digest": "b1294b5b51fc061f1b63e556f4eb9e7a298f1d5a2beabd7e0676a5363fd6a02f"
     },
     "domainModel": {
       "paths": [
@@ -67,6 +99,231 @@
       "digest": "56291e60ad06d2b7d400075ed6b4dc407c8696132658f668ec6e5ed06217db4e"
     }
   },
+  "authorityHistory": {
+    "schemaId": "vellum.instrument-intelligence.authority-history.v1",
+    "currentAuthoritySetDigest": "1dd469561a59c61956a52db7a0efabf035c7e7b47059d737456984bbd8e1cfb9",
+    "authoritySets": [
+      {
+        "schemaId": "vellum.instrument-intelligence.authority-snapshot.v1",
+        "authoritySetDigest": "1dd469561a59c61956a52db7a0efabf035c7e7b47059d737456984bbd8e1cfb9",
+        "pathDigests": [
+          {
+            "path": ".prettierrc",
+            "sha256": "824c8c55a71bac12cf3c013657ecb8f06fbd6eaa4c1c3e725a80507c59ca1ad7"
+          },
+          {
+            "path": ".scratch/README.md",
+            "sha256": "f83f03ffe2359a697d4e5d282f61d24ae14b265f03efa9b117bf0590a6294919"
+          },
+          {
+            "path": ".scratch/instrument-intelligence/PLAN.md",
+            "sha256": "f9e028dce7934c5913696434f7a753f3f62c308feb1db8bb76565a042868ea7a"
+          },
+          {
+            "path": ".scratch/instrument-intelligence/README.md",
+            "sha256": "a56a3d4f65b0771662d632cf5222fd21fea7538b83b2873ff07f55d718d23ed6"
+          },
+          {
+            "path": ".scratch/instrument-intelligence/REQUIREMENTS.md",
+            "sha256": "23e83b2d3d9a92194159908832d3b11e3906190045a347ef554020ca88fe3803"
+          },
+          {
+            "path": ".scratch/instrument-intelligence/clause-ledger.json",
+            "sha256": "b909da896d847626d6dca2393e1e233a742c2fd7d652141adfaadc17cb285d3b"
+          },
+          {
+            "path": ".scratch/instrument-intelligence/review-authority-catalog.json",
+            "sha256": "c45387ae1cba82c494fad09e60475639511d2bbe19b3b72e1566df32b69dba66"
+          },
+          {
+            "path": "AGENTS.md",
+            "sha256": "afd766a3a176ee85b68e220f89672f7f0416f603de9bce512431e8865ff2db6b"
+          },
+          {
+            "path": "CONTEXT.md",
+            "sha256": "f4bc8ee624b3f6a6be6be2338a2d5242677c077364a88d848285759c915449a0"
+          },
+          {
+            "path": "SPEC.md",
+            "sha256": "005d39f55a680e31837d654462e7d10e2c8c12739d0b08893d0145e7683fa99e"
+          },
+          {
+            "path": "docs/adr/0001-hybrid-musicological-engine.md",
+            "sha256": "104b4526e4fe340d2d08092e846b6fd59d0dd100f8689885e4d9d13e7a738215"
+          },
+          {
+            "path": "docs/adr/0002-separate-project-state-from-reviewed-knowledge.md",
+            "sha256": "dbfc934c2849955f06b488a5c7d250b35b475e9e610adb23849443d470299982"
+          },
+          {
+            "path": "docs/adr/0003-local-first-single-owner-runtime.md",
+            "sha256": "5f37ab66d17fcc48345983b7c8e03cc7f171599032c8325baaed9c944528e923"
+          },
+          {
+            "path": "docs/adr/0004-own-the-model-provider-connection.md",
+            "sha256": "cfbdf023b3906c2e98ba19c9d18aeff5ea015faea223f58be95af3231842e53a"
+          },
+          {
+            "path": "docs/adr/0005-version-musical-lineage.md",
+            "sha256": "ea4434919a19fe1ac55995d6a32a18aaddaad3cc2f02d5cf3fd7595d31403054"
+          },
+          {
+            "path": "docs/adr/0006-require-preservation-audits.md",
+            "sha256": "68f03391a4600fbea498b3d09bde5405e763e45a926cc3a312fbdc3a48aa89c1"
+          },
+          {
+            "path": "docs/adr/0007-scope-musical-validation-by-context.md",
+            "sha256": "b802f9db43e171cdcb97b7dadb76ad982622f2bfdc57f21f653cf733df46cc71"
+          },
+          {
+            "path": "docs/adr/0008-search-over-arrangement-candidates.md",
+            "sha256": "0a4c79014fc1dfe50d0a2c425afe99df281849267facb1d2874b4a924cf5ccc7"
+          },
+          {
+            "path": "docs/adr/0009-preserve-omr-evidence-behind-adapters.md",
+            "sha256": "1383a52716c3f65e08b090429827306c992dfa5cdc560bf46569d4bcbc5c27aa"
+          },
+          {
+            "path": "docs/adr/0010-use-performed-form-for-playback.md",
+            "sha256": "f281f840df77ac2ed97c7800b5fc180b20d1634004e36af1554f0095bbfdc0a3"
+          },
+          {
+            "path": "docs/adr/0011-name-continuo-disposition-honestly.md",
+            "sha256": "4afdcf915e663537f8f8e8f3e623d4e19701d3eac7d34484980de61fb23ca5ff"
+          },
+          {
+            "path": "docs/adr/0012-version-families-and-deliverables.md",
+            "sha256": "7e78f22d5824341b9979380f6f53d88f7636e744efc9aa19dabcb21726d42476"
+          },
+          {
+            "path": "docs/adr/0013-treat-edits-as-versioned-commitments.md",
+            "sha256": "252d092e3820410b38b34aaaa2b854dbd5e39ad781058a49657a771c86a5ba41"
+          },
+          {
+            "path": "docs/adr/0014-make-preservation-policy-an-executable-choice.md",
+            "sha256": "3d30db02eb163559b8b6d75dc5173829440293503a4b899e728a1e94a66091e6"
+          },
+          {
+            "path": "docs/adr/0015-separate-source-adapters-and-owner-knowledge.md",
+            "sha256": "ba2868add35c8c09998eed74742e64c4e4d10570471f38cd1b7fbb7f07fa1881"
+          },
+          {
+            "path": "docs/adr/0016-converge-source-truth-by-purpose.md",
+            "sha256": "c6dfb64ca2efc4f149b38c03d4bf88b679451773cf2505da660734f393404d4e"
+          },
+          {
+            "path": "docs/adr/0017-version-briefs-and-proportional-plans.md",
+            "sha256": "a221dbf40a5a0da62b144dd0922b72860dc1132cc51b5c2fd44798be34378c9a"
+          },
+          {
+            "path": "docs/adr/0018-bind-arrangements-to-instrument-instances.md",
+            "sha256": "70a9e935fb8902dce8ad0a3c571b18b5f1f90cb5f9ab543e0dd5ad0d3f1f059c"
+          },
+          {
+            "path": "docs/adr/0019-search-serializable-constraints-and-report-outcomes.md",
+            "sha256": "5ba146cfd59ac499bb622ef86225b10516b27fbff7394f38e79f9ce6fdb291b1"
+          },
+          {
+            "path": "docs/adr/0020-version-evaluation-manifests-baselines-and-promotion.md",
+            "sha256": "9f681313a0b843dcc13ad100fae0ee201df772d33ca031c7366acb4fe54d8e74"
+          },
+          {
+            "path": "docs/adr/0021-learn-only-from-reviewed-playtest-evidence.md",
+            "sha256": "13871424e69f606b8731d7ade5a0a55a25940142f4c0168ba64e9a4fd7390695"
+          },
+          {
+            "path": "docs/adr/0022-govern-reviewed-knowledge-library.md",
+            "sha256": "1b02d4ab352a33c85c5804753511d8b154a3ccfe205e3c4f3a252dddcb2ab134"
+          },
+          {
+            "path": "docs/agents/domain.md",
+            "sha256": "84b2aaa5fafef9d7cecd0c0f3f9ddd77f6b52933f1601313a4f417549e6cd7b2"
+          },
+          {
+            "path": "docs/agents/issue-tracker.md",
+            "sha256": "0d851477520478ce48067d383643d742303d9bc0506993fd380b6c51bdfabdf2"
+          },
+          {
+            "path": "docs/agents/triage-labels.md",
+            "sha256": "0a02e58d03bc30e4824655a78eb0060d9db5b9ddc167f82501b9c89ef537a6eb"
+          },
+          {
+            "path": "flake.lock",
+            "sha256": "047784f0e6724b378d389f299f2447eca140bace0bf3ee5a1bafe8225a6f58a3"
+          },
+          {
+            "path": "flake.nix",
+            "sha256": "256721fb3e31c8c185909d8c20f3b83c0e09bd80b69527122f7959ef18defbb8"
+          },
+          {
+            "path": "schemas/instrument-intelligence/clause-ledger.schema.json",
+            "sha256": "58b7990fee771c0edf36ea62de2170f6143984ea71e48387f2b0c6a798689c5a"
+          },
+          {
+            "path": "schemas/instrument-intelligence/evidence.v2.schema.json",
+            "sha256": "8dfea3cf14d40118991ae0c25f7e38e8361f3353b2a9a3dc9ec03e51a9e3c553"
+          },
+          {
+            "path": "schemas/instrument-intelligence/start-receipt.v1.schema.json",
+            "sha256": "b9bb336c9aee4685597288473c8059e7e2050846a8e16666896d6b0da2a8f371"
+          },
+          {
+            "path": "scripts/generate-instrument-intelligence-clause-ledger.mjs",
+            "sha256": "6facd8859093e82b96664087d6335e71326a51b5dce84aaab5329a9dc233d586"
+          },
+          {
+            "path": "scripts/lib/instrument-intelligence-clause-ledger.mjs",
+            "sha256": "0cf1e186b3b286d70b9b9de9c9751f9d2667b68d4bbc6da85e37c5964edbad7e"
+          },
+          {
+            "path": "scripts/lib/instrument-intelligence-receipts.mjs",
+            "sha256": "54132851d07c160f368bb9ddbc6860bf9cea6fa7ee6ba6ac00e3d27ecce69765"
+          },
+          {
+            "path": "scripts/lib/instrument-intelligence-results.mjs",
+            "sha256": "e7575cc927f7134eaaf419d9affdf6969fbb5ba280ac32f0d48739e362d05c2e"
+          },
+          {
+            "path": "scripts/lib/instrument-intelligence-trust.mjs",
+            "sha256": "9215a0ba5778d39b760a771119f12b699bd839d03350ac7ce7be737d962f889b"
+          },
+          {
+            "path": "scripts/nix-podman",
+            "sha256": "841878e34e8017ff7b97cf1206beb65f1d10fb94d7480d5175347297a85f0e93"
+          },
+          {
+            "path": "scripts/verify-current-spec.mjs",
+            "sha256": "cd19473b63726189c536248ac04ff479d5add5b64f54da998dc2e09537638925"
+          },
+          {
+            "path": "scripts/verify-instrument-intelligence-plan.mjs",
+            "sha256": "64048a05b8b91c7bbad34a902380fc7206d0fb32d8c4c18cf21eba69620a8d5b"
+          },
+          {
+            "path": "test/instrument-intelligence/T01-clause-ledger.test.ts",
+            "sha256": "79e41e865bd5c3e8cf5c416dcca0caa6dce6cbb9a0b35656dde5e29583475a7f"
+          },
+          {
+            "path": "test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts",
+            "sha256": "3007fe6195c1a9a7c080085df1eaa63e41474de8b58a78be988a80be74773bc7"
+          },
+          {
+            "path": "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+            "sha256": "fe1f79956aba2cdb5551fea26c0e9059e4bd79859b930c62344c2e1a0d89771d"
+          },
+          {
+            "path": "test/instrument-intelligence/receipt-contract.test.ts",
+            "sha256": "5332e9811b5778eddebbb106c8fd0e3fa872f81c5475bdb6b6be5baf12c95f59"
+          },
+          {
+            "path": "test/instrument-intelligence/result-contract.test.ts",
+            "sha256": "361bbb3b931f9c1c7d748cbc4c7228e17a73e114c57e5018db0eb2f9290539e1"
+          }
+        ]
+      }
+    ],
+    "migrations": []
+  },
   "publicationTrust": {
     "mode": "owner_local_monotonic_publication_v2",
     "remote": "origin",
@@ -87,6 +344,743 @@
     "destructiveRemoteOperations": "forbidden",
     "divergenceDisposition": "ready_for_human"
   },
+  "protocolCatalog": {
+    "resultContracts": {
+      "63": {
+        "pre_hitl_ready": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        }
+      },
+      "64": {
+        "curation_sufficient": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "curation_insufficient": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "curation_declined": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        }
+      },
+      "65": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "66": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "67": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "68": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "69": {
+        "review_round_passed": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "review_round_failed": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "review_round_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "successor",
+          "productAcceptance": "blocked"
+        },
+        "review_round_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "successor",
+          "productAcceptance": "incomplete"
+        },
+        "review_round_applicability_invalid": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        }
+      },
+      "81": {
+        "review_package_ready": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        }
+      },
+      "82": {
+        "truth_sufficient": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "truth_insufficient": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "truth_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "truth_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "83": {
+        "attempt_pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "attempt_fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "attempt_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "attempt_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "84": {
+        "qualification_passed_no_open_repairs": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "qualification_failed_repair_dispatched": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "qualification_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "blocked"
+        },
+        "qualification_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        },
+        "qualification_invalid_fixture_replacement_required": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "85": {
+        "machine_complete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "machine_closure_failed_repair_dispatched": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "machine_closure_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "blocked"
+        },
+        "machine_closure_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "86": {
+        "provisional_stop_current": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "provisional_stop",
+          "productAcceptance": "blocked"
+        },
+        "provisional_stop_resumed": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        }
+      },
+      "87": {
+        "release_complete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "release_closure_failed_repair_dispatched": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "release_closure_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "blocked"
+        },
+        "release_closure_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "88": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "89": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "90": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "91": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "92": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "93": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "94": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "95": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "100": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "101": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "102": {
+        "maintainer_decisions_finalized": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "103": {
+        "freeze_complete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "truth_verification_failed_repair_dispatched": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "truth_verification_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "blocked"
+        },
+        "truth_verification_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        },
+        "successor_truth_review_required": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "successor",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "104": {
+        "pass": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "fail": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "105": {
+        "activation_approved": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "pass"
+        },
+        "activation_rejected": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "fail"
+        },
+        "activation_changes_requested": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        },
+        "activation_invalid": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        }
+      },
+      "106": {
+        "precommit_ready": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "pass"
+        },
+        "precommit_failed_repair_dispatched": {
+          "applicability": "applicable",
+          "dispatchPolicy": "required",
+          "disposition": "repair_dispatch",
+          "productAcceptance": "fail"
+        },
+        "precommit_blocked": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "blocked"
+        },
+        "precommit_incomplete": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "retry",
+          "productAcceptance": "incomplete"
+        },
+        "successor_decision_required": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "successor",
+          "productAcceptance": "incomplete"
+        }
+      },
+      "107": {
+        "lyrics_applicable": {
+          "applicability": "applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "unlock",
+          "productAcceptance": "incomplete"
+        },
+        "lyrics_not_applicable": {
+          "applicability": "not_applicable",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        },
+        "lyrics_applicability_blocked": {
+          "applicability": "not_claimed",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "blocked"
+        },
+        "lyrics_applicability_incomplete": {
+          "applicability": "not_claimed",
+          "dispatchPolicy": "forbidden",
+          "disposition": "adjudicate",
+          "productAcceptance": "incomplete"
+        }
+      }
+    },
+    "unresolvedRemediationObligationIds": []
+  },
   "idPolicy": {
     "kind": "append_only_stable_numeric_locators",
     "registeredTracerIds": [
@@ -99,9 +1093,9 @@
     "highestAllocatedId": 107,
     "baseWaveHighestId": 107,
     "nextDynamicTracerId": 108,
-    "registryGeneration": 1,
-    "previousRegistryHead": null,
-    "registryHead": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e",
+    "registryGeneration": 2,
+    "previousRegistryHead": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e",
+    "registryHead": "ae406fcb587ec80a3685ee0f46f9695137ba2c24dbda3574e5f03ac0d5217e61",
     "registryEvents": [
       {
         "generation": 1,
@@ -538,6 +1532,339 @@
         ],
         "tombstonesAdded": [],
         "head": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e"
+      },
+      {
+        "generation": 2,
+        "previousHead": "6b65c556845abdd04aca47a023daf46b89d3e6cafbb97cbdccca1e4bbcb0cb4e",
+        "addedDefinitions": [],
+        "tombstonesAdded": [],
+        "revisedDefinitions": [
+          {
+            "id": 1,
+            "previousDefinitionDigest": "83b9b8b9396c0f33216be38c455a8c1a3e48538159995bac8ddd42d3f75dedd3",
+            "definitionDigest": "ad52f62cb267aeebe97263aa7cde3f068369d29e73ce7fb93490b32e52cb04cc",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 2,
+            "previousDefinitionDigest": "2c31320588baf4b9b3fab85a3861ebbb1f12ca768f4307ec5ff1060c578bc452",
+            "definitionDigest": "364541cbbbed389814bb90596847179cf9a52a350082e3661cf10dcf95120219",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 3,
+            "previousDefinitionDigest": "2ba414c09c15231a5cc17769023163a2b424248ea55b88530b19114ad594d3ac",
+            "definitionDigest": "d868f31a234fc7a6d97407bdbfa5e2439cd8196475ba13f7129e60441da903da",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 4,
+            "previousDefinitionDigest": "f37e5df6c9a5d46b80698e8a2604f763f4b82fe8d083c7b8395a7aed6b80fdce",
+            "definitionDigest": "de6f4ff07170f6499c61d01f0e220eb6d1dcea287b7eb84369a8ec1618e64447",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 17,
+            "previousDefinitionDigest": "ef7db06e48c692cbd388974f94e549a8141787241e6d610318ed93431d83dd1c",
+            "definitionDigest": "4d24e1a16317588b5f6e6f0dc4af4f1c235de50c32bdbcf774e0a5f442ed3221",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 18,
+            "previousDefinitionDigest": "fddbdef6f267be76632c83fba532645dd4070a5af4835b93414715b0652c9951",
+            "definitionDigest": "00b8c7130c9b987b6751804854e9e98291f8dfdce39edb3de954aaf56ad408f1",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 19,
+            "previousDefinitionDigest": "dc25b9e43b5ed787e3798222e9cfe7fd7ae87a5a1759bdcede33b05f48f26585",
+            "definitionDigest": "6d413344e4488d471cb0949ccbea35859f4410cee4a9f78b82781b318d0da104",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 20,
+            "previousDefinitionDigest": "bc09262344b9c835854d6c1cb2282cc4e2780e2038329d2e0b67b660c5d90d95",
+            "definitionDigest": "470b81d8df75095af7262255733c98a4f89ca913e9bf02b1fbbf6c34ea7b2230",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 21,
+            "previousDefinitionDigest": "551effac17c649cffe70db70b9b139f2125638c1e8fb4fb8be5fec03e8949b09",
+            "definitionDigest": "affe58db61d77a22bc4955291dd2fccc98a15fa66ff2f289da6c86297dbfb17b",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 22,
+            "previousDefinitionDigest": "e7c7302ca1cf42d5b93c0e399c7112e4b4f425730f175fcc9a10b9214ab92e0e",
+            "definitionDigest": "08abd7a60a34f05eb813b750714e760fcd5ce194ddf27eb60197302c46e3d619",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 35,
+            "previousDefinitionDigest": "6f109aac7b335456adee46285f31c499f9cee74cdb5939a41c824f68bddf67cb",
+            "definitionDigest": "5bd70e27bd945f34525909bd41f4278dac2bc92db1bb3674a001bf1ead341b1d",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 57,
+            "previousDefinitionDigest": "0d5c884dbb9bb63d9b2eaa537e36a610396b726f40f44428bf243ebf1a36dbf6",
+            "definitionDigest": "29f0d3089ff4ea0b7e2ed207137ecee31c971c7238948072c546e7cd34925548",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 58,
+            "previousDefinitionDigest": "c12e96c1478c23df5ee632dc9f354b2e9445f90f6889368f6cb6c2f97d9add20",
+            "definitionDigest": "eccb1e98ec1d81606733cd0483428b72df1687912a60b4b690ca9d4d0d423b32",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 60,
+            "previousDefinitionDigest": "bcbbf832806de8b6df277b3bc49917f5af9051a09ac56a9a02a78143f5f1d958",
+            "definitionDigest": "a0b89fd19c6282e39b468191f8e68c05fb06a008c807cecf4ff6579e5ba8155c",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 63,
+            "previousDefinitionDigest": "e0d56a31aa735ff2e00819b95cf72ac7531174d74f990409dab110ee291884cd",
+            "definitionDigest": "7926a382786b14a9fd2c54de0a0dd5fa747e274a8dc77022a94ef73b7a208427",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 64,
+            "previousDefinitionDigest": "91ebff5d056e44db1cfcb280ba27568415003d7f1add600cd78d2fb3ec7d69b0",
+            "definitionDigest": "37f173e62a0814783fb16f1f67960ce93292fa2862e1538ce577857d63a23f57",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 65,
+            "previousDefinitionDigest": "3a0f4873c0f4aad175f5f6b98ec5bb8c1e1a47b24f6f545b80b6254d4cb92562",
+            "definitionDigest": "6763d5ba4670ef706b72c87a64cefcd4fa70e32c8630fd18dbdb53221a412c2f",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 66,
+            "previousDefinitionDigest": "9c2cc7a022802cad4cc081b6f9dea2c3507c18dc784d860be5fce560a10e4326",
+            "definitionDigest": "97b44992d4e34776a3b1e509dccb7c29151b29774bf75f546fa2ae34314ac81f",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 67,
+            "previousDefinitionDigest": "207eeb3777ab4a9b205d262ec8d831fc4b504a277d03d7ddf5e99fbc91280a42",
+            "definitionDigest": "f78327f1f6cd09156ab65fc187f8cf1c573997fd6ea6261c73814c3779f3d709",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 68,
+            "previousDefinitionDigest": "6dac05b5b24d8b42cbaa24b2e95347408876723585dc0034b4702fd4cd82981c",
+            "definitionDigest": "6232999002c6a7b59ff436524e09595e54fc0bf312fe84b0eda1f2a904968099",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 69,
+            "previousDefinitionDigest": "958f955854ef100f18d6729cdae44869681da31a8758194dfddbea5166cce75a",
+            "definitionDigest": "d549d5c0de346f1036f286edf9340b2bea6d37d59c6de9bf82ed92682434cf47",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 70,
+            "previousDefinitionDigest": "845cbe61765a98eaa5ce151dc26f0c0f9ee143c85c0861c8864286ef942268f8",
+            "definitionDigest": "690c6d95876a1c0d26fff9265730ebfed1e364cdf518b018fe5e2ce4c1cac59a",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 71,
+            "previousDefinitionDigest": "3b8366e4071e4e9bf46310f98e26a946a1d1b5e08387d6c439fa92753b8b6124",
+            "definitionDigest": "60a02cd1188ef3f8de166e93b49ade5e3b133c70f374ac7329cebe481d36659a",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 72,
+            "previousDefinitionDigest": "fa7fcfbf6425f5c68d34c980e39729d19015aa8149660a568e818b7ea742bc48",
+            "definitionDigest": "704d793f1a8322c397e104ece5706969fdd9e9b58b877f3ab4fbb9fcbf65de5f",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 73,
+            "previousDefinitionDigest": "997c0b792acd38a527451af92da3828dae0f9ed82644eda7b065ddf46e87128a",
+            "definitionDigest": "6af35ea496000ef667379f8980ebde880d6a6bfe74f7f94335e061c8f7987231",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 74,
+            "previousDefinitionDigest": "b9e63d768ee8d530c45650fb498485ef855f45c13acdbeceb430772c41ef1d25",
+            "definitionDigest": "cee150ef0bc9cd88e1a5c30ebfa74d2cb26d923bee316cc0d23c744c2a4148a5",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 75,
+            "previousDefinitionDigest": "5769dd8d904d55b1abdb2169a22c736aae8a0b987de0c4c93e6b92df47009998",
+            "definitionDigest": "b9d45034c1ce15e47a63b73e8980f3a990bc40cefa218a37579be6a8b6b1a95f",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 76,
+            "previousDefinitionDigest": "508dad55f450f979fa4433007f8e082f0f504d0ddaab62df8cf52c8fc4770cf0",
+            "definitionDigest": "b3184b720df2ed75df746ba33da98362f777896c6d3fd267d917a8748128ffa0",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 77,
+            "previousDefinitionDigest": "4ce06037861651bb17dcd34f3d16b257df99aeb9807265623000d63944334a6d",
+            "definitionDigest": "26d0abc0c76e0b5d54c5fc096368520a7008db2eb4fa2b9a3576f766ff1eddb4",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 78,
+            "previousDefinitionDigest": "0c034c2180c67104b64a1933b6350a38a86028bd0aaa8f9dcc3466190425c0b8",
+            "definitionDigest": "fe9208b5632f7c643fa534ce6f824fbaa4f1d74d7c6c4890a3bab2a8bc56f88c",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 79,
+            "previousDefinitionDigest": "d4a104e020fcb60ca17fda12ff20b03bb3d54532df1df82c9d99cec30b047c7a",
+            "definitionDigest": "7741adcd5f2bc73f16ba25e843244834462e41326c7bf6c7cceaeacae809be20",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 80,
+            "previousDefinitionDigest": "25d2f429dfcb60c90e302bd5f09d16b528ed27f892b890b25776e5d843a40b79",
+            "definitionDigest": "87f1b5a3dc52ed499ef7626ed580a69223e6e29217e43fd9c856c9c0fce87e6c",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 81,
+            "previousDefinitionDigest": "6ac54c9fc57b67a9f9f6b6f85da01152d447cc9d03807a4b6ca1b85f7d8220c0",
+            "definitionDigest": "9a672bbc3fbe28869ed2da676ede5999ed8ea21f655a912d5b52ceeca0385f8e",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 82,
+            "previousDefinitionDigest": "03cb9f38d31e26c5203f0233e3adcfd389b3433706379e1e700b34ede13d1d16",
+            "definitionDigest": "e156969810de2c50f0efd9ab6849b824247a7bf390dead672d249c62ba3a2af0",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 83,
+            "previousDefinitionDigest": "af8e6610762685641dc3f891958239d18471d5814bc58cb874caafc1d603eedf",
+            "definitionDigest": "9275d468dce81bdf528dc6d737a2e8c427b1b3fdba77ae5a42de64abb2e4fb20",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 84,
+            "previousDefinitionDigest": "dfd6d2f55eb5126f1afc492b8da83b0e3d9048e9f72670be1a5bc4ffdf5c301c",
+            "definitionDigest": "9e6d3d03b2c1febd51d5367d0ee0cf113ca1077603ea87aaffdc7e3402dd6786",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 85,
+            "previousDefinitionDigest": "dc11ae4db50870df963e676281be9483494976e642b5f7c8a9cf8e1994fd62b5",
+            "definitionDigest": "feb6a4d6c1c33af6ab9b4a115190f99b494728051b009304f7fedd950f736c79",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 86,
+            "previousDefinitionDigest": "742541ce79f695033fb9672413c75858f103a5ad3341de35e20c1744b110b3cc",
+            "definitionDigest": "fbd61377a01577d7779e113533a9462232007dabbcdeeea135f23a01a6dde8ac",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 87,
+            "previousDefinitionDigest": "7174659773cc72821e8a063161e08d0e527c67301b55e42daa660bb831a3021a",
+            "definitionDigest": "dcc396eabd713eefffefee9ca119afa7850e6628d50799f797a3bafee1960c49",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 88,
+            "previousDefinitionDigest": "8bc0e1c1d0765362f72c94d4c43dcef5227d615c6d524f96e4130fe9c34da5c1",
+            "definitionDigest": "3a022485adc85bf359fd4b4492208d7c8d5b6921a22cdf2fbd64a6da3f5dadf5",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 89,
+            "previousDefinitionDigest": "be22edd8ade493a8bd836272a13ac4ef01d03ce5df700b03d983a15b2b65fbea",
+            "definitionDigest": "3e14f560342e8692c8eb2e947ce6efecef7e323e142000a2cfd46c3686428d74",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 90,
+            "previousDefinitionDigest": "625598ffd8415c717d71eb7425a89d8af279337b942d3332322eaabca8ab4fea",
+            "definitionDigest": "a23f5f8880ad7f2c5a682e73df62f0ea83426c9116323c514a9f13241721f747",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 91,
+            "previousDefinitionDigest": "ef852e4aba06a9ac4455e042f3d9c852eda0774b3745e02c2f286443b8d1280c",
+            "definitionDigest": "f08e5730a3adb09a94a253ccd3fcbe7d4c1ba8ed61be6d67ad3fe9f6f38aff08",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 92,
+            "previousDefinitionDigest": "3f28f008d88c6f1b7467ab477267ba3d8ea2962adfbf7e694e1849518fff5ab1",
+            "definitionDigest": "aa162e84712e934c97455cfe61ef633569bac068d62f26ba3296d876ab550b8d",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 93,
+            "previousDefinitionDigest": "b487b94d3c5d490f9a551e1740ba53c11e79d13c410e5a80abc8470fc8d6c6c2",
+            "definitionDigest": "cd0642ea57aa86aada13c96db1de200b03f0a7942763470cb4c0ed113db4850e",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 94,
+            "previousDefinitionDigest": "91b2143b1e043db549484e245022d859110219df8248ac9ca41fbca1c012f95e",
+            "definitionDigest": "81170f105ae60202331fb49f32c18837cf8c8801ccaa34f8c6d2eeeaa09bcad0",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 95,
+            "previousDefinitionDigest": "04ef00b4b6611a90598da22e21da3c4347b0b812a3d8d92e0f505fe7e1983750",
+            "definitionDigest": "628e3d36b0b157e8254b33ce17f178fc3f119f04c603204d112a10bf357c698f",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 96,
+            "previousDefinitionDigest": "f578d97b4c407348175d8f226310048b43b80e9833c39a6c11945b1be5283f43",
+            "definitionDigest": "45cde805cb7efdb90e6df68a140b1cb756bd92855bbea65065a4316454a6b255",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 97,
+            "previousDefinitionDigest": "d09a7c528a09f463fee8643351567a97e36846bc3ed78c6919efc0b97cb577ae",
+            "definitionDigest": "424d1a1a83e8afd78876c7850856c2536b87c7ab32539c7e6a27b47afd581af9",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 98,
+            "previousDefinitionDigest": "2c1d60a709ad5c585b0866e93841b821ef65272bd46a9f8394e98fe9946371d2",
+            "definitionDigest": "9e2b1fdf390c61b7ea55ba9473528d6e8d356b0312f361ac9962c7380d1bc6d2",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 99,
+            "previousDefinitionDigest": "2503dde6305a305800833d7ab08ec98a255d892ad40ea0e3356c64764209e429",
+            "definitionDigest": "2d5db232e133b41a9a49848f95967b61a72b1d89fd2bd5af53a9824756939c30",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 100,
+            "previousDefinitionDigest": "544808631a87c823728737925c87e075caf58ecfeaf74e5c2be4fa5e1b16e129",
+            "definitionDigest": "c8bbbfa3820d6f6c5a291972b9795f232c5b4271f1b3c50e098fcde3ecebe666",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 101,
+            "previousDefinitionDigest": "02895f1bb73f1868984be3cffbb8f1d121597c8a1f4c924a8dea6443e9b9ea05",
+            "definitionDigest": "1e9a7ecf6bb9b5f0da329d87cabc1e0248eea25d148ee2f2897530dfad1e89e7",
+            "reason": "t01_clause_role_preregistration"
+          },
+          {
+            "id": 104,
+            "previousDefinitionDigest": "263b94817f7bcde3257067087addba51db8b1634b5f2e78bb91357dcbb6f258c",
+            "definitionDigest": "aace4b7e3fa0f9ccbd467a0ff58ed2a163346c95e06d2cd0d68dcc453b7982e5",
+            "reason": "t01_clause_role_preregistration"
+          }
+        ],
+        "head": "ae406fcb587ec80a3685ee0f46f9695137ba2c24dbda3574e5f03ac0d5217e61"
       }
     ],
     "tombstones": [],
@@ -546,7 +1873,7 @@
     "executionOrderSource": "typed_dependency_result_and_temporal_generation_graphs"
   },
   "stateModel": {
-    "executionProtocol": "bootstrap_locked_T01",
+    "executionProtocol": "governed_receipts_v2",
     "issueCompletion": ["open", "in_progress", "complete", "invalidated", "superseded"],
     "productAcceptance": ["pass", "fail", "blocked", "incomplete"],
     "applicability": ["applicable", "not_applicable", "not_claimed"],
@@ -557,6 +1884,7 @@
     "closureEvidence": ["pending", "pass", "invalidated"],
     "waveClosure": [
       "bootstrap_pending",
+      "preregistered",
       "active",
       "machine_complete",
       "release_complete",
@@ -565,16 +1893,38 @@
     "goalSatisfiedOnlyBy": "release_complete"
   },
   "privacyPolicy": {
-    "publicReceiptFields": {
+    "caseCommitmentFields": {
       "opaque_case_id": "random non-resolving identifier",
-      "coverage_class": "value from the public precommitted coverage taxonomy",
+      "coverage_class": "allowlisted precommitted coverage class",
       "vault_commitment": "keyed non-resolving commitment; never a direct hidden-source or truth digest",
-      "public_artifact_digest": "digest only of bytes already authorized for public disclosure",
+      "stable_case_outcome": "forbidden"
+    },
+    "aggregateFields": {
       "aggregate_status": "bounded enum with minimum aggregation cardinality",
+      "minimum_cardinality": 3,
+      "case_ids": "forbidden"
+    },
+    "publicArtifactFields": {
+      "public_artifact_digest": "digest only of bytes already authorized for public disclosure",
       "requirement_ids": "known public requirement-family identifiers only",
       "typed_redaction_receipt": "schema-bounded fields; never free-form text or arbitrary nesting"
     },
-    "evidenceSchema": "vellum.instrument-intelligence-verification.v1-closed",
+    "coverageClasses": [
+      "baroque_guitar_capability",
+      "baroque_lute_capability",
+      "classical_guitar_capability",
+      "cross_target_holdout",
+      "cross_target_parity",
+      "historical_idiom",
+      "mechanical_playability",
+      "notation_rendering",
+      "playback_alignment",
+      "rights_privacy",
+      "source_import_omr",
+      "voice_coherence",
+      "workflow_ux"
+    ],
+    "evidenceSchema": "vellum.instrument-intelligence.evidence.v2",
     "unknownFields": "rejected recursively",
     "unlistedEvidenceFiles": "rejected",
     "privateClasses": [
@@ -601,7 +1951,14 @@
       "initialEligibility": "eligible",
       "completionSemantics": "implementation-pass",
       "stories": "U10",
-      "requirementIds": ["II-AUTH-001", "II-EXEC-000", "II-EXEC-000D", "II-RC-011"],
+      "requirementIds": [
+        "II-AUTH-001",
+        "II-EXEC-000",
+        "II-EXEC-000D",
+        "II-RC-011",
+        "II-EXEC-000A",
+        "II-NG-014"
+      ],
       "blockedBy": [],
       "dependencyPredicate": { "all": [] },
       "resultPredicate": null,
@@ -622,10 +1979,10 @@
         ],
         "conditional": []
       },
-      "definitionDigest": "83b9b8b9396c0f33216be38c455a8c1a3e48538159995bac8ddd42d3f75dedd3",
+      "definitionDigest": "ad52f62cb267aeebe97263aa7cde3f068369d29e73ce7fb93490b32e52cb04cc",
       "eligibilityPredicate": { "all": [] },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -650,7 +2007,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U1, U10",
-      "requirementIds": ["II-SRC-002", "II-EXEC-000", "II-MC-003", "II-NG-001"],
+      "requirementIds": ["II-SRC-002", "II-EXEC-000", "II-MC-003", "II-NG-001", "II-EXEC-000A"],
       "blockedBy": [1],
       "dependencyPredicate": {
         "all": [
@@ -683,7 +2040,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T02-server-minted-provider-boundary.spec.ts"
         ]
       },
-      "definitionDigest": "2c31320588baf4b9b3fab85a3861ebbb1f12ca768f4307ec5ff1060c578bc452",
+      "definitionDigest": "364541cbbbed389814bb90596847179cf9a52a350082e3661cf10dcf95120219",
       "eligibilityPredicate": {
         "all": [
           {
@@ -700,7 +2057,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -732,7 +2089,8 @@
         "II-MC-004",
         "II-NG-005",
         "II-NG-006",
-        "II-NG-007"
+        "II-NG-007",
+        "II-EXEC-000A"
       ],
       "blockedBy": [1],
       "dependencyPredicate": {
@@ -764,7 +2122,7 @@
         ],
         "conditional": []
       },
-      "definitionDigest": "2ba414c09c15231a5cc17769023163a2b424248ea55b88530b19114ad594d3ac",
+      "definitionDigest": "d868f31a234fc7a6d97407bdbfa5e2439cd8196475ba13f7129e60441da903da",
       "eligibilityPredicate": {
         "all": [
           {
@@ -781,7 +2139,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -806,7 +2164,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U10",
-      "requirementIds": ["II-OPS-001", "II-EXEC-000", "II-MC-034", "II-MC-037"],
+      "requirementIds": ["II-OPS-001", "II-EXEC-000", "II-MC-034", "II-MC-037", "II-EXEC-000A"],
       "blockedBy": [1],
       "dependencyPredicate": {
         "all": [
@@ -837,7 +2195,7 @@
         ],
         "conditional": []
       },
-      "definitionDigest": "f37e5df6c9a5d46b80698e8a2604f763f4b82fe8d083c7b8395a7aed6b80fdce",
+      "definitionDigest": "de6f4ff07170f6499c61d01f0e220eb6d1dcea287b7eb84369a8ec1618e64447",
       "eligibilityPredicate": {
         "all": [
           {
@@ -854,7 +2212,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -943,7 +2301,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1025,7 +2383,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1100,7 +2458,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1173,7 +2531,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1288,7 +2646,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1384,7 +2742,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1499,7 +2857,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1589,7 +2947,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1665,7 +3023,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1780,7 +3138,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1877,7 +3235,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1953,7 +3311,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -1984,7 +3342,8 @@
         "II-EXEC-000",
         "II-EXEC-004A",
         "II-MC-030",
-        "II-MC-031"
+        "II-MC-031",
+        "II-EXEC-004C"
       ],
       "blockedBy": [1, 7, 71],
       "dependencyPredicate": {
@@ -2033,7 +3392,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "ef7db06e48c692cbd388974f94e549a8141787241e6d610318ed93431d83dd1c",
+      "definitionDigest": "4d24e1a16317588b5f6e6f0dc4af4f1c235de50c32bdbcf774e0a5f442ed3221",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2064,7 +3423,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2089,7 +3448,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U8, U10",
-      "requirementIds": ["II-EVAL-002", "II-EXEC-004A", "II-MC-026", "II-NG-001"],
+      "requirementIds": ["II-EVAL-002", "II-EXEC-004A", "II-MC-026", "II-NG-001", "II-EXEC-004D"],
       "blockedBy": [2, 17, 71],
       "dependencyPredicate": {
         "all": [
@@ -2134,7 +3493,7 @@
         ],
         "conditional": ["npm run eval:fast"]
       },
-      "definitionDigest": "fddbdef6f267be76632c83fba532645dd4070a5af4835b93414715b0652c9951",
+      "definitionDigest": "00b8c7130c9b987b6751804854e9e98291f8dfdce39edb3de954aaf56ad408f1",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2165,7 +3524,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2190,7 +3549,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U8, U10",
-      "requirementIds": ["II-EVAL-002", "II-EXEC-004B", "II-MC-027", "II-NG-009"],
+      "requirementIds": ["II-EVAL-002", "II-EXEC-004B", "II-MC-027", "II-NG-009", "II-EXEC-004D"],
       "blockedBy": [7, 18, 71],
       "dependencyPredicate": {
         "all": [
@@ -2235,7 +3594,7 @@
         ],
         "conditional": ["npm run eval:fast"]
       },
-      "definitionDigest": "dc25b9e43b5ed787e3798222e9cfe7fd7ae87a5a1759bdcede33b05f48f26585",
+      "definitionDigest": "6d413344e4488d471cb0949ccbea35859f4410cee4a9f78b82781b318d0da104",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2266,7 +3625,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2297,7 +3656,8 @@
         "II-EXEC-004B",
         "II-MC-026",
         "II-MC-027",
-        "II-NG-009"
+        "II-NG-009",
+        "II-EXEC-004D"
       ],
       "blockedBy": [19, 71],
       "dependencyPredicate": {
@@ -2336,7 +3696,7 @@
         ],
         "conditional": ["npm run eval:fast"]
       },
-      "definitionDigest": "bc09262344b9c835854d6c1cb2282cc4e2780e2038329d2e0b67b660c5d90d95",
+      "definitionDigest": "470b81d8df75095af7262255733c98a4f89ca913e9bf02b1fbbf6c34ea7b2230",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2360,7 +3720,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2393,7 +3753,8 @@
         "II-EXEC-004B",
         "II-MC-027",
         "II-MC-028",
-        "II-MC-029"
+        "II-MC-029",
+        "II-EXEC-004E"
       ],
       "blockedBy": [17, 19, 20],
       "dependencyPredicate": {
@@ -2439,7 +3800,7 @@
         ],
         "conditional": ["npm run eval:fast"]
       },
-      "definitionDigest": "551effac17c649cffe70db70b9b139f2125638c1e8fb4fb8be5fec03e8949b09",
+      "definitionDigest": "affe58db61d77a22bc4955291dd2fccc98a15fa66ff2f289da6c86297dbfb17b",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2470,7 +3831,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2502,7 +3863,8 @@
         "II-MC-019",
         "II-MC-020",
         "II-MC-028",
-        "II-MC-029"
+        "II-MC-029",
+        "II-EXEC-004E"
       ],
       "blockedBy": [13, 21],
       "dependencyPredicate": {
@@ -2544,7 +3906,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "e7c7302ca1cf42d5b93c0e399c7112e4b4f425730f175fcc9a10b9214ab92e0e",
+      "definitionDigest": "08abd7a60a34f05eb813b750714e760fcd5ce194ddf27eb60197302c46e3d619",
       "eligibilityPredicate": {
         "all": [
           {
@@ -2568,7 +3930,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2672,7 +4034,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2749,7 +4111,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2825,7 +4187,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -2916,7 +4278,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3007,7 +4369,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3084,7 +4446,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3174,7 +4536,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3250,7 +4612,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3327,7 +4689,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3417,7 +4779,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3564,7 +4926,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3675,7 +5037,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3700,7 +5062,78 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U3, U8, U10",
-      "requirementIds": ["II-EVAL-001", "II-EVAL-007", "II-EXEC-004B"],
+      "requirementIds": [
+        "II-EVAL-001",
+        "II-EVAL-007",
+        "II-EXEC-004B",
+        "II-EXEC-004G",
+        "II-NG-010",
+        "II-AUTH-001",
+        "II-BND-002",
+        "II-BND-006",
+        "II-EVAL-003",
+        "II-EXEC-000B",
+        "II-EXEC-000C",
+        "II-EXEC-000D",
+        "II-EXEC-002",
+        "II-EXEC-002B",
+        "II-EXEC-003B",
+        "II-EXEC-003D",
+        "II-EXEC-003E",
+        "II-EXEC-004C",
+        "II-EXEC-004F",
+        "II-EXEC-006A",
+        "II-EXEC-006C",
+        "II-EXEC-007A",
+        "II-EXEC-007B",
+        "II-EXEC-008A",
+        "II-EXEC-008C",
+        "II-EXEC-008D",
+        "II-EXEC-009A",
+        "II-EXEC-009C",
+        "II-EXEC-009D",
+        "II-EXEC-010A",
+        "II-EXEC-010C",
+        "II-EXEC-011A",
+        "II-EXEC-011B",
+        "II-EXEC-011C",
+        "II-EXEC-011D",
+        "II-EXEC-011E",
+        "II-EXEC-011F",
+        "II-EXEC-013A",
+        "II-EXEC-013B",
+        "II-EXEC-013C",
+        "II-EXEC-013D",
+        "II-EXEC-013E",
+        "II-EXEC-013F",
+        "II-EXEC-013G",
+        "II-EXEC-014A",
+        "II-EXEC-014B",
+        "II-EXEC-014C",
+        "II-EXEC-014E",
+        "II-EXEC-014F",
+        "II-LEARN-001",
+        "II-MUS-001",
+        "II-MUS-010",
+        "II-MUS-011",
+        "II-MUS-012",
+        "II-MUS-013",
+        "II-NG-002",
+        "II-NG-003",
+        "II-NG-004",
+        "II-NG-005",
+        "II-NG-006",
+        "II-NG-007",
+        "II-NG-011",
+        "II-NG-012",
+        "II-NG-014",
+        "II-OUT-001",
+        "II-OUT-002",
+        "II-SEED-005",
+        "II-SRC-007",
+        "II-SRC-008",
+        "II-SRC-009"
+      ],
       "blockedBy": [20, 22, 72],
       "dependencyPredicate": {
         "all": [
@@ -3748,7 +5181,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "6f109aac7b335456adee46285f31c499f9cee74cdb5939a41c824f68bddf67cb",
+      "definitionDigest": "5bd70e27bd945f34525909bd41f4278dac2bc92db1bb3674a001bf1ead341b1d",
       "eligibilityPredicate": {
         "all": [
           {
@@ -3779,7 +5212,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3858,7 +5291,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -3992,7 +5425,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4083,7 +5516,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4175,7 +5608,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4295,7 +5728,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4387,7 +5820,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4500,7 +5933,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4610,7 +6043,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4702,7 +6135,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4780,7 +6213,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4872,7 +6305,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -4971,7 +6404,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5086,7 +6519,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5219,7 +6652,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5310,7 +6743,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5409,7 +6842,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5495,7 +6928,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5610,7 +7043,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5743,7 +7176,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5829,7 +7262,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5929,7 +7362,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -5954,7 +7387,14 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U2, U8, U9",
-      "requirementIds": ["II-KNW-007", "II-LEARN-001", "II-EXEC-011", "II-MC-001", "II-MC-036"],
+      "requirementIds": [
+        "II-KNW-007",
+        "II-LEARN-001",
+        "II-EXEC-011",
+        "II-MC-001",
+        "II-MC-036",
+        "II-EXEC-011A"
+      ],
       "blockedBy": [15, 16, 21, 34, 47, 52, 56],
       "dependencyPredicate": {
         "all": [
@@ -6030,7 +7470,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "0d5c884dbb9bb63d9b2eaa537e36a610396b726f40f44428bf243ebf1a36dbf6",
+      "definitionDigest": "29f0d3089ff4ea0b7e2ed207137ecee31c971c7238948072c546e7cd34925548",
       "eligibilityPredicate": {
         "all": [
           {
@@ -6089,7 +7529,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -6114,7 +7554,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U1, U2, U9",
-      "requirementIds": ["II-KNW-007", "II-UX-002", "II-EXEC-011", "II-MC-036"],
+      "requirementIds": ["II-KNW-007", "II-UX-002", "II-EXEC-011", "II-MC-036", "II-EXEC-011B"],
       "blockedBy": [6, 10, 57],
       "dependencyPredicate": {
         "all": [
@@ -6160,7 +7600,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "c12e96c1478c23df5ee632dc9f354b2e9445f90f6889368f6cb6c2f97d9add20",
+      "definitionDigest": "eccb1e98ec1d81606733cd0483428b72df1687912a60b4b690ca9d4d0d423b32",
       "eligibilityPredicate": {
         "all": [
           {
@@ -6191,7 +7631,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -6376,7 +7816,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -6409,6 +7849,7 @@
         "II-EVAL-008",
         "II-EVAL-009",
         "II-EXEC-012",
+        "II-EXEC-004G",
         "II-MC-014",
         "II-MC-015",
         "II-MC-016",
@@ -6424,7 +7865,8 @@
         "II-MC-030",
         "II-MC-031",
         "II-MC-032",
-        "II-NG-011"
+        "II-NG-011",
+        "II-NG-010"
       ],
       "blockedBy": [21, 22, 25, 26, 39, 41, 47, 52, 56],
       "dependencyPredicate": {
@@ -6518,7 +7960,7 @@
           "npm run eval:parity"
         ]
       },
-      "definitionDigest": "bcbbf832806de8b6df277b3bc49917f5af9051a09ac56a9a02a78143f5f1d958",
+      "definitionDigest": "a0b89fd19c6282e39b468191f8e68c05fb06a008c807cecf4ff6579e5ba8155c",
       "eligibilityPredicate": {
         "all": [
           {
@@ -6591,7 +8033,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -6724,7 +8166,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -6944,7 +8386,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7100,7 +8542,7 @@
           "npm run perf:instrument-intelligence"
         ]
       },
-      "definitionDigest": "e0d56a31aa735ff2e00819b95cf72ac7531174d74f990409dab110ee291884cd",
+      "definitionDigest": "7926a382786b14a9fd2c54de0a0dd5fa747e274a8dc77022a94ef73b7a208427",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7194,7 +8636,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7219,7 +8661,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "decision-recorded",
       "stories": "U4, U5, U6, U7, U8, U10",
-      "requirementIds": ["II-EVAL-004", "II-EXEC-013A", "II-MC-026"],
+      "requirementIds": ["II-EVAL-004", "II-EXEC-013A", "II-MC-026", "II-NG-010"],
       "blockedBy": [63],
       "dependencyPredicate": {
         "all": [
@@ -7262,7 +8704,7 @@
         ],
         "conditional": ["npm run review:validate"]
       },
-      "definitionDigest": "91ebff5d056e44db1cfcb280ba27568415003d7f1add600cd78d2fb3ec7d69b0",
+      "definitionDigest": "37f173e62a0814783fb16f1f67960ce93292fa2862e1538ce577857d63a23f57",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7290,7 +8732,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7315,7 +8757,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U4, U8, U10",
-      "requirementIds": ["II-BG-007", "II-RC-002", "II-RC-003"],
+      "requirementIds": ["II-BG-007", "II-RC-002", "II-RC-003", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -7361,7 +8803,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T65-baroque-guitar-physical-player-review.spec.ts"
         ]
       },
-      "definitionDigest": "3a0f4873c0f4aad175f5f6b98ec5bb8c1e1a47b24f6f545b80b6254d4cb92562",
+      "definitionDigest": "6763d5ba4670ef706b72c87a64cefcd4fa70e32c8630fd18dbdb53221a412c2f",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7389,7 +8831,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7414,7 +8856,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U5, U8, U10",
-      "requirementIds": ["II-BL-006", "II-RC-002", "II-RC-003"],
+      "requirementIds": ["II-BL-006", "II-RC-002", "II-RC-003", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -7460,7 +8902,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T66-baroque-lute-physical-player-review.spec.ts"
         ]
       },
-      "definitionDigest": "9c2cc7a022802cad4cc081b6f9dea2c3507c18dc784d860be5fce560a10e4326",
+      "definitionDigest": "97b44992d4e34776a3b1e509dccb7c29151b29774bf75f546fa2ae34314ac81f",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7488,7 +8930,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7513,7 +8955,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U6, U8, U10",
-      "requirementIds": ["II-CG-006", "II-RC-002", "II-RC-003"],
+      "requirementIds": ["II-CG-006", "II-RC-002", "II-RC-003", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -7559,7 +9001,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T67-classical-guitar-physical-player-review.spec.ts"
         ]
       },
-      "definitionDigest": "207eeb3777ab4a9b205d262ec8d831fc4b504a277d03d7ddf5e99fbc91280a42",
+      "definitionDigest": "f78327f1f6cd09156ab65fc187f8cf1c573997fd6ea6261c73814c3779f3d709",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7587,7 +9029,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7612,7 +9054,14 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U1, U2, U3, U8, U10",
-      "requirementIds": ["II-SRC-001", "II-SRC-002", "II-BND-008", "II-RC-013"],
+      "requirementIds": [
+        "II-SRC-001",
+        "II-SRC-002",
+        "II-BND-008",
+        "II-RC-013",
+        "II-EXEC-014D",
+        "II-NG-010"
+      ],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -7653,7 +9102,7 @@
         ],
         "conditional": ["npm run review:validate"]
       },
-      "definitionDigest": "6dac05b5b24d8b42cbaa24b2e95347408876723585dc0034b4702fd4cd82981c",
+      "definitionDigest": "6232999002c6a7b59ff436524e09595e54fc0bf312fe84b0eda1f2a904968099",
       "eligibilityPredicate": {
         "all": [
           {
@@ -7681,7 +9130,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -7722,7 +9171,8 @@
         "II-RC-012",
         "II-RC-013",
         "II-RC-014",
-        "II-RC-015"
+        "II-RC-015",
+        "II-NG-010"
       ],
       "blockedBy": [65, 66, 67, 68, 88, 89, 90, 91, 92, 93, 95, 100, 101, 104, 107],
       "dependencyPredicate": {
@@ -7908,7 +9358,7 @@
         ],
         "conditional": ["npm run review:validate", "npm run eval:fast"]
       },
-      "definitionDigest": "958f955854ef100f18d6729cdae44869681da31a8758194dfddbea5166cce75a",
+      "definitionDigest": "d549d5c0de346f1036f286edf9340b2bea6d37d59c6de9bf82ed92682434cf47",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8077,7 +9527,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8102,7 +9552,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U10",
-      "requirementIds": ["II-OPS-001", "II-EXEC-000", "II-MC-034", "II-MC-037"],
+      "requirementIds": ["II-OPS-001", "II-EXEC-000", "II-MC-034", "II-MC-037", "II-EXEC-000B"],
       "blockedBy": [4],
       "dependencyPredicate": {
         "all": [
@@ -8133,7 +9583,7 @@
         ],
         "conditional": ["npm run perf:instrument-intelligence"]
       },
-      "definitionDigest": "845cbe61765a98eaa5ce151dc26f0c0f9ee143c85c0861c8864286ef942268f8",
+      "definitionDigest": "690c6d95876a1c0d26fff9265730ebfed1e364cdf518b018fe5e2ce4c1cac59a",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8150,7 +9600,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8183,7 +9633,9 @@
         "II-MC-003",
         "II-MC-026",
         "II-MC-027",
-        "II-NG-009"
+        "II-NG-009",
+        "II-EXEC-000C",
+        "II-EXEC-004D"
       ],
       "blockedBy": [1],
       "dependencyPredicate": {
@@ -8215,7 +9667,7 @@
         ],
         "conditional": []
       },
-      "definitionDigest": "3b8366e4071e4e9bf46310f98e26a946a1d1b5e08387d6c439fa92753b8b6124",
+      "definitionDigest": "60a02cd1188ef3f8de166e93b49ade5e3b133c70f374ac7329cebe481d36659a",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8232,7 +9684,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8257,7 +9709,14 @@
       "initialEligibility": "blocked",
       "completionSemantics": "implementation-pass",
       "stories": "U3, U4, U5, U6, U8",
-      "requirementIds": ["II-MUS-014", "II-MUS-015", "II-EVAL-001", "II-EXEC-004A", "II-MC-032"],
+      "requirementIds": [
+        "II-MUS-014",
+        "II-MUS-015",
+        "II-EVAL-001",
+        "II-EXEC-004A",
+        "II-MC-032",
+        "II-EXEC-004F"
+      ],
       "blockedBy": [17, 22],
       "dependencyPredicate": {
         "all": [
@@ -8298,7 +9757,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "fa7fcfbf6425f5c68d34c980e39729d19015aa8149660a568e818b7ea742bc48",
+      "definitionDigest": "704d793f1a8322c397e104ece5706969fdd9e9b58b877f3ab4fbb9fcbf65de5f",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8322,7 +9781,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8358,7 +9817,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-001"
+        "II-SEED-001",
+        "II-EXEC-002A"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8394,7 +9854,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "997c0b792acd38a527451af92da3828dae0f9ed82644eda7b065ddf46e87128a",
+      "definitionDigest": "6af35ea496000ef667379f8980ebde880d6a6bfe74f7f94335e061c8f7987231",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8411,7 +9871,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8447,7 +9907,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-001"
+        "II-SEED-001",
+        "II-EXEC-002A"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8483,7 +9944,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "b9e63d768ee8d530c45650fb498485ef855f45c13acdbeceb430772c41ef1d25",
+      "definitionDigest": "cee150ef0bc9cd88e1a5c30ebfa74d2cb26d923bee316cc0d23c744c2a4148a5",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8500,7 +9961,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8536,7 +9997,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-004"
+        "II-SEED-004",
+        "II-EXEC-002B"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8572,7 +10034,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "5769dd8d904d55b1abdb2169a22c736aae8a0b987de0c4c93e6b92df47009998",
+      "definitionDigest": "b9d45034c1ce15e47a63b73e8980f3a990bc40cefa218a37579be6a8b6b1a95f",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8589,7 +10051,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8625,7 +10087,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-002"
+        "II-SEED-002",
+        "II-EXEC-002C"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8660,7 +10123,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "508dad55f450f979fa4433007f8e082f0f504d0ddaab62df8cf52c8fc4770cf0",
+      "definitionDigest": "b3184b720df2ed75df746ba33da98362f777896c6d3fd267d917a8748128ffa0",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8677,7 +10140,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8713,7 +10176,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-002"
+        "II-SEED-002",
+        "II-EXEC-002C"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8749,7 +10213,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "4ce06037861651bb17dcd34f3d16b257df99aeb9807265623000d63944334a6d",
+      "definitionDigest": "26d0abc0c76e0b5d54c5fc096368520a7008db2eb4fa2b9a3576f766ff1eddb4",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8766,7 +10230,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8802,7 +10266,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-002"
+        "II-SEED-002",
+        "II-EXEC-002C"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8838,7 +10303,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "0c034c2180c67104b64a1933b6350a38a86028bd0aaa8f9dcc3466190425c0b8",
+      "definitionDigest": "fe9208b5632f7c643fa534ce6f824fbaa4f1d74d7c6c4890a3bab2a8bc56f88c",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8855,7 +10320,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8891,7 +10356,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-003"
+        "II-SEED-003",
+        "II-EXEC-002D"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -8927,7 +10393,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "d4a104e020fcb60ca17fda12ff20b03bb3d54532df1df82c9d99cec30b047c7a",
+      "definitionDigest": "7741adcd5f2bc73f16ba25e843244834462e41326c7bf6c7cceaeacae809be20",
       "eligibilityPredicate": {
         "all": [
           {
@@ -8944,7 +10410,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -8980,7 +10446,8 @@
         "II-KNW-002",
         "II-KNW-003",
         "II-KNW-004",
-        "II-SEED-003"
+        "II-SEED-003",
+        "II-EXEC-002D"
       ],
       "blockedBy": [13],
       "dependencyPredicate": {
@@ -9016,7 +10483,7 @@
           "npm run eval:omr"
         ]
       },
-      "definitionDigest": "25d2f429dfcb60c90e302bd5f09d16b528ed27f892b890b25776e5d843a40b79",
+      "definitionDigest": "87f1b5a3dc52ed499ef7626ed580a69223e6e29217e43fd9c856c9c0fce87e6c",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9033,7 +10500,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9118,7 +10585,7 @@
           "npm run eval:playback"
         ]
       },
-      "definitionDigest": "6ac54c9fc57b67a9f9f6b6f85da01152d447cc9d03807a4b6ca1b85f7d8220c0",
+      "definitionDigest": "9a672bbc3fbe28869ed2da676ede5999ed8ea21f655a912d5b52ceeca0385f8e",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9146,7 +10613,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9171,7 +10638,14 @@
       "initialEligibility": "blocked",
       "completionSemantics": "decision-recorded",
       "stories": "U3, U4, U5, U6, U7, U8, U10",
-      "requirementIds": ["II-EVAL-004", "II-EVAL-005", "II-EXEC-013B", "II-MC-027", "II-MC-028"],
+      "requirementIds": [
+        "II-EVAL-004",
+        "II-EVAL-005",
+        "II-EXEC-013B",
+        "II-MC-027",
+        "II-MC-028",
+        "II-NG-010"
+      ],
       "blockedBy": [106],
       "dependencyPredicate": {
         "all": [
@@ -9217,7 +10691,7 @@
           "npm run review:validate"
         ]
       },
-      "definitionDigest": "03cb9f38d31e26c5203f0233e3adcfd389b3433706379e1e700b34ede13d1d16",
+      "definitionDigest": "e156969810de2c50f0efd9ab6849b824247a7bf390dead672d249c62ba3a2af0",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9245,7 +10719,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9278,7 +10752,8 @@
         "II-MC-029",
         "II-MC-030",
         "II-MC-031",
-        "II-MC-032"
+        "II-MC-032",
+        "II-NG-010"
       ],
       "blockedBy": [61, 103],
       "dependencyPredicate": {
@@ -9338,7 +10813,7 @@
           "nix develop --command bash -c 'npm run sandbox:lilypond:verify && npm run eval:render && npm run eval:playback'"
         ]
       },
-      "definitionDigest": "af8e6610762685641dc3f891958239d18471d5814bc58cb874caafc1d603eedf",
+      "definitionDigest": "9275d468dce81bdf528dc6d737a2e8c427b1b3fdba77ae5a42de64abb2e4fb20",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9373,7 +10848,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9407,7 +10882,8 @@
         "II-MC-020",
         "II-MC-030",
         "II-MC-031",
-        "II-MC-032"
+        "II-MC-032",
+        "II-NG-010"
       ],
       "blockedBy": [83],
       "dependencyPredicate": {
@@ -9451,7 +10927,7 @@
         ],
         "conditional": ["npm run eval:fast", "npm run perf:instrument-intelligence"]
       },
-      "definitionDigest": "dfd6d2f55eb5126f1afc492b8da83b0e3d9048e9f72670be1a5bc4ffdf5c301c",
+      "definitionDigest": "9e6d3d03b2c1febd51d5367d0ee0cf113ca1077603ea87aaffdc7e3402dd6786",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9484,7 +10960,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9546,7 +11022,9 @@
         "II-MC-034",
         "II-MC-035",
         "II-MC-036",
-        "II-MC-037"
+        "II-MC-037",
+        "II-EXEC-013E",
+        "II-NG-010"
       ],
       "blockedBy": [84],
       "dependencyPredicate": {
@@ -9598,7 +11076,7 @@
           "npm run perf:instrument-intelligence"
         ]
       },
-      "definitionDigest": "dc11ae4db50870df963e676281be9483494976e642b5f7c8a9cf8e1994fd62b5",
+      "definitionDigest": "feb6a4d6c1c33af6ab9b4a115190f99b494728051b009304f7fedd950f736c79",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9626,7 +11104,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9651,7 +11129,7 @@
       "initialEligibility": "conditional",
       "completionSemantics": "decision-recorded",
       "stories": "U10",
-      "requirementIds": ["II-EXEC-014C", "II-RC-011"],
+      "requirementIds": ["II-EXEC-014C", "II-RC-011", "II-NG-010"],
       "blockedBy": [81, 85],
       "dependencyPredicate": {
         "all": [
@@ -9705,7 +11183,7 @@
           "npm run review:validate"
         ]
       },
-      "definitionDigest": "742541ce79f695033fb9672413c75858f103a5ad3341de35e20c1744b110b3cc",
+      "definitionDigest": "fbd61377a01577d7779e113533a9462232007dabbcdeeea135f23a01a6dde8ac",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9740,7 +11218,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9780,7 +11258,9 @@
         "II-RC-012",
         "II-RC-013",
         "II-RC-014",
-        "II-RC-015"
+        "II-RC-015",
+        "II-EXEC-014E",
+        "II-NG-010"
       ],
       "blockedBy": [69, 85],
       "dependencyPredicate": {
@@ -9846,7 +11326,7 @@
         ],
         "conditional": ["npm run review:validate", "npm run eval:fast"]
       },
-      "definitionDigest": "7174659773cc72821e8a063161e08d0e527c67301b55e42daa660bb831a3021a",
+      "definitionDigest": "dcc396eabd713eefffefee9ca119afa7850e6628d50799f797a3bafee1960c49",
       "eligibilityPredicate": {
         "all": [
           {
@@ -9895,7 +11375,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -9929,7 +11409,9 @@
         "II-BG-006",
         "II-BG-007",
         "II-RC-001",
-        "II-RC-004"
+        "II-RC-004",
+        "II-EXEC-014D",
+        "II-NG-010"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -9976,7 +11458,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T88-baroque-guitar-idiom-historical-review.spec.ts"
         ]
       },
-      "definitionDigest": "8bc0e1c1d0765362f72c94d4c43dcef5227d615c6d524f96e4130fe9c34da5c1",
+      "definitionDigest": "3a022485adc85bf359fd4b4492208d7c8d5b6921a22cdf2fbd64a6da3f5dadf5",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10004,7 +11486,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10038,7 +11520,9 @@
         "II-BL-006",
         "II-RC-001",
         "II-RC-004",
-        "II-RC-008"
+        "II-RC-008",
+        "II-EXEC-014D",
+        "II-NG-010"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -10085,7 +11569,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T89-baroque-lute-idiom-historical-review.spec.ts"
         ]
       },
-      "definitionDigest": "be22edd8ade493a8bd836272a13ac4ef01d03ce5df700b03d983a15b2b65fbea",
+      "definitionDigest": "3e14f560342e8692c8eb2e947ce6efecef7e323e142000a2cfd46c3686428d74",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10113,7 +11597,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10146,7 +11630,9 @@
         "II-CG-005",
         "II-CG-006",
         "II-RC-001",
-        "II-RC-004"
+        "II-RC-004",
+        "II-EXEC-014D",
+        "II-NG-010"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -10193,7 +11679,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T90-classical-guitar-idiom-review.spec.ts"
         ]
       },
-      "definitionDigest": "625598ffd8415c717d71eb7425a89d8af279337b942d3332322eaabca8ab4fea",
+      "definitionDigest": "a23f5f8880ad7f2c5a682e73df62f0ea83426c9116323c514a9f13241721f747",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10221,7 +11707,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10246,7 +11732,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U3, U7, U8, U10",
-      "requirementIds": ["II-MUS-009", "II-RC-001", "II-RC-005"],
+      "requirementIds": ["II-MUS-009", "II-RC-001", "II-RC-005", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -10294,7 +11780,7 @@
           "npm run eval:playback"
         ]
       },
-      "definitionDigest": "ef852e4aba06a9ac4455e042f3d9c852eda0774b3745e02c2f286443b8d1280c",
+      "definitionDigest": "f08e5730a3adb09a94a253ccd3fcbe7d4c1ba8ed61be6d67ad3fe9f6f38aff08",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10322,7 +11808,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10347,7 +11833,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U3, U8, U10",
-      "requirementIds": ["II-MUS-008", "II-RC-001", "II-RC-005"],
+      "requirementIds": ["II-MUS-008", "II-RC-001", "II-RC-005", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -10395,7 +11881,7 @@
           "npm run eval:playback"
         ]
       },
-      "definitionDigest": "3f28f008d88c6f1b7467ab477267ba3d8ea2962adfbf7e694e1849518fff5ab1",
+      "definitionDigest": "aa162e84712e934c97455cfe61ef633569bac068d62f26ba3296d876ab550b8d",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10423,7 +11909,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10448,7 +11934,7 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U4, U5, U6, U7, U8, U10",
-      "requirementIds": ["II-MUS-005", "II-RC-007"],
+      "requirementIds": ["II-MUS-005", "II-RC-007", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -10495,7 +11981,7 @@
           "nix develop --command bash -c 'npm run sandbox:lilypond:verify && npm run eval:render && npm run eval:playback'"
         ]
       },
-      "definitionDigest": "b487b94d3c5d490f9a551e1740ba53c11e79d13c410e5a80abc8470fc8d6c6c2",
+      "definitionDigest": "cd0642ea57aa86aada13c96db1de200b03f0a7942763470cb4c0ed113db4850e",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10523,7 +12009,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10548,7 +12034,7 @@
       "initialEligibility": "conditional",
       "completionSemantics": "attempt-finalized",
       "stories": "U3, U8, U10",
-      "requirementIds": ["II-MUS-003", "II-RC-006"],
+      "requirementIds": ["II-MUS-003", "II-RC-006", "II-EXEC-014D", "II-NG-010"],
       "blockedBy": [107],
       "dependencyPredicate": {
         "all": [
@@ -10594,7 +12080,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T94-conditional-lyric-underlay-review.spec.ts"
         ]
       },
-      "definitionDigest": "91b2143b1e043db549484e245022d859110219df8248ac9ca41fbca1c012f95e",
+      "definitionDigest": "81170f105ae60202331fb49f32c18837cf8c8801ccaa34f8c6d2eeeaa09bcad0",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10622,7 +12108,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10647,7 +12133,15 @@
       "initialEligibility": "blocked",
       "completionSemantics": "attempt-finalized",
       "stories": "U1, U2, U4, U5, U6, U8, U9, U10",
-      "requirementIds": ["II-UX-001", "II-UX-002", "II-UX-003", "II-UX-004", "II-RC-007"],
+      "requirementIds": [
+        "II-UX-001",
+        "II-UX-002",
+        "II-UX-003",
+        "II-UX-004",
+        "II-RC-007",
+        "II-EXEC-014D",
+        "II-NG-010"
+      ],
       "blockedBy": [81],
       "dependencyPredicate": {
         "all": [
@@ -10693,7 +12187,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T95-owner-cross-target-usefulness-review.spec.ts"
         ]
       },
-      "definitionDigest": "04ef00b4b6611a90598da22e21da3c4347b0b812a3d8d92e0f505fe7e1983750",
+      "definitionDigest": "628e3d36b0b157e8254b33ce17f178fc3f119f04c603204d112a10bf357c698f",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10721,7 +12215,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10759,7 +12253,8 @@
         "II-MC-004",
         "II-MC-005",
         "II-MC-035",
-        "II-MC-036"
+        "II-MC-036",
+        "II-EXEC-011C"
       ],
       "blockedBy": [6, 19, 20, 58],
       "dependencyPredicate": {
@@ -10814,7 +12309,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T96-rights-deletion-derivative-purge.spec.ts"
         ]
       },
-      "definitionDigest": "f578d97b4c407348175d8f226310048b43b80e9833c39a6c11945b1be5283f43",
+      "definitionDigest": "45cde805cb7efdb90e6df68a140b1cb756bd92855bbea65065a4316454a6b255",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10852,7 +12347,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -10885,7 +12380,8 @@
         "II-MC-033",
         "II-MC-034",
         "II-MC-035",
-        "II-MC-036"
+        "II-MC-036",
+        "II-EXEC-011D"
       ],
       "blockedBy": [10, 21, 33, 58],
       "dependencyPredicate": {
@@ -10941,7 +12437,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "d09a7c528a09f463fee8643351567a97e36846bc3ed78c6919efc0b97cb577ae",
+      "definitionDigest": "424d1a1a83e8afd78876c7850856c2536b87c7ab32539c7e6a27b47afd581af9",
       "eligibilityPredicate": {
         "all": [
           {
@@ -10979,7 +12475,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11014,7 +12510,8 @@
         "II-EXEC-011",
         "II-MC-002",
         "II-MC-035",
-        "II-MC-036"
+        "II-MC-036",
+        "II-EXEC-011E"
       ],
       "blockedBy": [6, 10, 14, 34, 58],
       "dependencyPredicate": {
@@ -11076,7 +12573,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T98-legacy-inspection-canonical-regeneration.spec.ts"
         ]
       },
-      "definitionDigest": "2c1d60a709ad5c585b0866e93841b821ef65272bd46a9f8394e98fe9946371d2",
+      "definitionDigest": "9e2b1fdf390c61b7ea55ba9473528d6e8d356b0312f361ac9962c7380d1bc6d2",
       "eligibilityPredicate": {
         "all": [
           {
@@ -11121,7 +12618,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11153,7 +12650,8 @@
         "II-OUT-003",
         "II-EXEC-011",
         "II-MC-035",
-        "II-MC-036"
+        "II-MC-036",
+        "II-EXEC-011F"
       ],
       "blockedBy": [2, 10, 34],
       "dependencyPredicate": {
@@ -11202,7 +12700,7 @@
           "npm run eval:fast"
         ]
       },
-      "definitionDigest": "2503dde6305a305800833d7ab08ec98a255d892ad40ea0e3356c64764209e429",
+      "definitionDigest": "2d5db232e133b41a9a49848f95967b61a72b1d89fd2bd5af53a9824756939c30",
       "eligibilityPredicate": {
         "all": [
           {
@@ -11233,7 +12731,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11268,7 +12766,9 @@
         "II-SRC-007",
         "II-SRC-008",
         "II-SRC-009",
-        "II-RC-014"
+        "II-RC-014",
+        "II-EXEC-014D",
+        "II-NG-010"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -11317,7 +12817,7 @@
           "npm test -- src/server/lib/omr.real-smoke.test.ts"
         ]
       },
-      "definitionDigest": "544808631a87c823728737925c87e075caf58ecfeaf74e5c2be4fa5e1b16e129",
+      "definitionDigest": "c8bbbfa3820d6f6c5a291972b9795f232c5b4271f1b3c50e098fcde3ecebe666",
       "eligibilityPredicate": {
         "all": [
           {
@@ -11345,7 +12845,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11379,7 +12879,9 @@
         "II-KNW-006",
         "II-KNW-007",
         "II-RC-001",
-        "II-RC-015"
+        "II-RC-015",
+        "II-EXEC-014D",
+        "II-NG-010"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -11426,7 +12928,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T101-historical-claim-pack-profile-review.spec.ts"
         ]
       },
-      "definitionDigest": "02895f1bb73f1868984be3cffbb8f1d121597c8a1f4c924a8dea6443e9b9ea05",
+      "definitionDigest": "1e9a7ecf6bb9b5f0da329d87cabc1e0248eea25d148ee2f2897530dfad1e89e7",
       "eligibilityPredicate": {
         "all": [
           {
@@ -11454,7 +12956,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11561,7 +13063,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11709,7 +13211,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11741,7 +13243,8 @@
         "II-MUS-006",
         "II-MUS-007",
         "II-MUS-008",
-        "II-RC-012"
+        "II-RC-012",
+        "II-EXEC-014D"
       ],
       "blockedBy": [81],
       "dependencyPredicate": {
@@ -11788,7 +13291,7 @@
           "npm run test:browser -- test/browser/instrument-intelligence/T104-source-structure-musical-fidelity-review.spec.ts"
         ]
       },
-      "definitionDigest": "263b94817f7bcde3257067087addba51db8b1634b5f2e78bb91357dcbb6f258c",
+      "definitionDigest": "aace4b7e3fa0f9ccbd467a0ff58ed2a163346c95e06d2cd0d68dcc453b7982e5",
       "eligibilityPredicate": {
         "all": [
           {
@@ -11816,7 +13319,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -11923,7 +13426,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -12068,7 +13571,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -12164,7 +13667,7 @@
         ]
       },
       "implementationCommit": null,
-      "remoteReachabilityReceipt": null,
+      "remotePublicationReceipt": null,
       "issueCompletion": "open",
       "productAcceptance": null,
       "applicability": "not_claimed",
@@ -12183,5 +13686,11 @@
   ],
   "executionGenerations": [],
   "stateEdges": [],
-  "requirementEvidence": {}
+  "requirementEvidence": {},
+  "clauseEvidence": {},
+  "remediationObligations": {
+    "schemaId": "vellum.remediation-obligation-ledger.v1",
+    "obligations": [],
+    "events": []
+  }
 }

@@ -27,6 +27,7 @@ Exhaust pre-HITL machine-executable work, audit its requirements and gates, enum
 - [ ] Package contains no preselected held-out Work, truth, mutation, invalidation, reserve order/seed, or diagnostic in public storage.
 - [ ] Technical interlock proves no real attempt can begin before T64 records the independent curator commitment, T102 records maintainer decisions, T105/T106 verify and adjudicate them, T82 records separate truth-review commitments, and T103 completes the selected-system freeze in the Vault.
 - [ ] One typed `pre_hitl_ready` result is emitted only when the audit, curation/truth package, every separately scoped maintainer package, and the technical interlock are all current and passing; partial package readiness cannot unlock either human lane.
+- [ ] Public evidence includes one closed `review-role-package.v1` entry for T64, authored from the exact curation package and current predecessor Generation System rather than from the later reviewer statement; it binds the opaque package ID/digest, complete sorted public output digest set, system ID/digest, exact system generation/receipt commit, and sorted opaque disqualified-reviewer subject IDs derived from contributor/operator conflicts so T64 cannot select its own subjects or independence state.
 
 ## Gate matrix
 

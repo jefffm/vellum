@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vellum.local/schemas/instrument-intelligence/clause-ledger.schema.json",
+  "title": "Vellum Instrument Intelligence clause ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "source", "requirementIndex", "families", "clauses"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "source": {
+      "$ref": "#/$defs/sourceAuthority"
+    },
+    "requirementIndex": {
+      "$ref": "#/$defs/requirementIndex"
+    },
+    "families": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/family"
+      }
+    },
+    "clauses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/clause"
+      }
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "clauseId": {
+      "type": "string",
+      "pattern": "^II-CLAUSE-[0-9]{4}$"
+    },
+    "familyId": {
+      "type": "string",
+      "pattern": "^II-[A-Z]+-[0-9]+[A-Z]?$"
+    },
+    "tracerId": {
+      "type": "string",
+      "pattern": "^T[0-9]{2,3}$"
+    },
+    "sourceAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "boundedStartHeading", "boundedEndHeadingExclusive", "contentDigest"],
+      "properties": {
+        "path": {
+          "const": "SPEC.md"
+        },
+        "boundedStartHeading": {
+          "const": "Authority and reading order"
+        },
+        "boundedEndHeadingExclusive": {
+          "const": "Research questions that do not block the substrate"
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "requirementIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "contentDigest"],
+      "properties": {
+        "path": {
+          "const": ".scratch/instrument-intelligence/REQUIREMENTS.md"
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "tracerIds", "clauseIds"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/familyId"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tracerIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/tracerId"
+              },
+              {
+                "const": "dynamic-remediation"
+              }
+            ]
+          }
+        },
+        "clauseIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/clauseId"
+          }
+        }
+      }
+    },
+    "clauseSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "marker",
+        "headingPath",
+        "statementOrdinal",
+        "fragmentOrdinal",
+        "startLine",
+        "endLine"
+      ],
+      "properties": {
+        "path": {
+          "const": "SPEC.md"
+        },
+        "marker": {
+          "$ref": "#/$defs/clauseId"
+        },
+        "headingPath": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "statementOrdinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fragmentOrdinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "appliesTo"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "governance",
+            "product",
+            "execution",
+            "machine_complete",
+            "release_complete",
+            "boundary"
+          ]
+        },
+        "appliesTo": {
+          "const": "instrument-intelligence-wave"
+        }
+      }
+    },
+    "stalenessPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceDigestChange", "familyMappingChange", "dependencyChange"],
+      "properties": {
+        "sourceDigestChange": {
+          "const": "stale"
+        },
+        "familyMappingChange": {
+          "const": "stale"
+        },
+        "dependencyChange": {
+          "const": "stale"
+        }
+      }
+    },
+    "clause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "classification",
+        "normalizedText",
+        "contentDigest",
+        "source",
+        "familyId",
+        "implementationOwner",
+        "evidenceContributors",
+        "closureVerifier",
+        "dependencies",
+        "dependencyDigest",
+        "scope",
+        "stalenessPolicy"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/clauseId"
+        },
+        "classification": {
+          "enum": [
+            "normative",
+            "execution",
+            "machine_complete",
+            "release_complete",
+            "non_goal",
+            "guardrail"
+          ]
+        },
+        "normalizedText": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contentDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "source": {
+          "$ref": "#/$defs/clauseSource"
+        },
+        "familyId": {
+          "$ref": "#/$defs/familyId"
+        },
+        "implementationOwner": {
+          "$ref": "#/$defs/tracerId"
+        },
+        "evidenceContributors": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tracerId"
+          }
+        },
+        "closureVerifier": {
+          "enum": ["T85", "T87"]
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/clauseId"
+          }
+        },
+        "dependencyDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "stalenessPolicy": {
+          "$ref": "#/$defs/stalenessPolicy"
+        }
+      }
+    }
+  }
+}

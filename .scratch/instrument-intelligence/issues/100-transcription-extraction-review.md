@@ -12,7 +12,7 @@ User stories: U1, U3, U8, U10
 
 SPEC coverage: Slice 14 source transcription/extraction review
 
-Requirement families touched: II-SRC-001–009, II-RC-014
+Requirement families touched: II-SRC-001–009, II-RC-014, II-EXEC-014D, II-NG-010
 
 ## What to build
 

@@ -12,7 +12,7 @@ User stories: U1, U2, U10
 
 SPEC coverage: Authority lanes; seed source program; Slice 0 tracked-source inventory; non-goals
 
-Requirement families touched: II-BND-001, II-SRC-002, II-SEED-001, II-MC-004, II-NG-005–007
+Requirement families touched: II-BND-001, II-SRC-002, II-SEED-001, II-MC-004, II-NG-005–007, II-EXEC-000A
 
 ## What to build
 

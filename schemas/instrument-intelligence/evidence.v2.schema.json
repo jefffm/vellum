@@ -1,0 +1,1095 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.vellum.local/instrument-intelligence/evidence.v2.schema.json",
+  "title": "Vellum Instrument Intelligence Evidence Receipt v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaId",
+    "startReceipt",
+    "finishedAt",
+    "outcome",
+    "gates",
+    "toolchains",
+    "artifacts",
+    "claims",
+    "privacy",
+    "mediaSanitization"
+  ],
+  "properties": {
+    "schemaId": { "const": "vellum.instrument-intelligence.evidence.v2" },
+    "startReceipt": {
+      "$ref": "https://schemas.vellum.local/instrument-intelligence/start-receipt.v1.schema.json"
+    },
+    "finishedAt": { "$ref": "#/$defs/isoInstant" },
+    "outcome": { "$ref": "#/$defs/outcome" },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/gate" }
+    },
+    "toolchains": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/toolchain" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "privacy": { "$ref": "#/$defs/privacy" },
+    "mediaSanitization": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/mediaSanitization" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "lowerIdentifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "requirementId": {
+      "type": "string",
+      "pattern": "^II-[A-Z0-9]+-[A-Z0-9]+$"
+    },
+    "isoInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^(?!/)(?!~)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)(?!.*(?:^|/)(?:Users|Volumes|home|private|vault|heldout|reserve)(?:/|$))[^\\u0000]+$"
+    },
+    "requirementIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/requirementId" }
+    },
+    "generationReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracerId", "generation"],
+      "properties": {
+        "tracerId": { "type": "integer", "minimum": 1 },
+        "generation": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "stateEdgeReasonCode": {
+      "enum": [
+        "definition_changed",
+        "evidence_stale",
+        "qualification_failure",
+        "review_finding",
+        "rights_change",
+        "repair_rerun",
+        "decision_superseded",
+        "governed_reassessment"
+      ]
+    },
+    "invalidationScope": {
+      "enum": [
+        "issue",
+        "evidence",
+        "requirements",
+        "machine_closure",
+        "release_closure",
+        "provisional_stop"
+      ]
+    },
+    "supersessionEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reasonCode", "target"],
+      "properties": {
+        "reasonCode": { "$ref": "#/$defs/stateEdgeReasonCode" },
+        "target": { "$ref": "#/$defs/generationReference" }
+      }
+    },
+    "invalidationEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reasonCode", "scopes", "target"],
+      "properties": {
+        "reasonCode": { "$ref": "#/$defs/stateEdgeReasonCode" },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/invalidationScope" }
+        },
+        "target": { "$ref": "#/$defs/generationReference" }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issueCompletion",
+        "productAcceptance",
+        "applicability",
+        "comparison",
+        "freshness",
+        "compatibility",
+        "authorityValidity",
+        "supersedes",
+        "invalidates",
+        "resultDisposition"
+      ],
+      "properties": {
+        "issueCompletion": {
+          "enum": ["open", "in_progress", "complete", "invalidated", "superseded"]
+        },
+        "productAcceptance": { "enum": ["pass", "fail", "blocked", "incomplete"] },
+        "applicability": { "enum": ["applicable", "not_applicable", "not_claimed"] },
+        "comparison": { "enum": ["comparable", "incomparable", "not_required", "unknown"] },
+        "freshness": { "enum": ["current", "stale", "unknown"] },
+        "compatibility": { "enum": ["compatible", "incompatible", "unknown"] },
+        "authorityValidity": { "enum": ["valid", "invalid", "not_required", "unknown"] },
+        "supersedes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/supersessionEdge" }
+        },
+        "invalidates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/invalidationEdge" }
+        },
+        "resultDisposition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "disposition", "dispatchArtifactIds"],
+          "properties": {
+            "code": { "$ref": "#/$defs/identifier" },
+            "disposition": {
+              "enum": [
+                "unlock",
+                "adjudicate",
+                "repair_dispatch",
+                "retry",
+                "successor",
+                "provisional_stop"
+              ]
+            },
+            "dispatchArtifactIds": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/lowerIdentifier" }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": { "disposition": { "const": "repair_dispatch" } },
+                "required": ["disposition"]
+              },
+              "then": { "properties": { "dispatchArtifactIds": { "minItems": 1 } } },
+              "else": { "properties": { "dispatchArtifactIds": { "maxItems": 0 } } }
+            }
+          ]
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "skipped", "blocked", "incomplete"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "incomplete": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gateId",
+        "group",
+        "command",
+        "commandDigest",
+        "profile",
+        "status",
+        "counts",
+        "reportArtifactId"
+      ],
+      "properties": {
+        "gateId": { "$ref": "#/$defs/lowerIdentifier" },
+        "group": { "enum": ["focused", "base", "conditional"] },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^(?!.*\\/(?:Users|Volumes|home|private|vault|heldout|reserve)\\/)[^\\r\\n\\u0000]+$"
+        },
+        "commandDigest": { "$ref": "#/$defs/sha256" },
+        "profile": {
+          "enum": ["host", "nix", "nix_nested_podman", "host_audiveris", "host_browser"]
+        },
+        "status": { "enum": ["pass", "fail", "blocked", "incomplete"] },
+        "counts": { "$ref": "#/$defs/counts" },
+        "reportArtifactId": { "$ref": "#/$defs/lowerIdentifier" }
+      }
+    },
+    "toolchain": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["component", "applicability", "version", "executableDigest"],
+          "properties": {
+            "component": { "$ref": "#/$defs/lowerIdentifier" },
+            "applicability": { "const": "present" },
+            "version": { "$ref": "#/$defs/identifier" },
+            "executableDigest": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["component", "applicability", "reasonCode"],
+          "properties": {
+            "component": { "$ref": "#/$defs/lowerIdentifier" },
+            "applicability": { "const": "not_applicable" },
+            "reasonCode": {
+              "enum": ["gate_not_selected", "profile_not_required", "component_not_used"]
+            }
+          }
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "schemaId",
+        "mediaType",
+        "publicPath",
+        "sha256",
+        "classification",
+        "requirementIds",
+        "sanitizationId"
+      ],
+      "properties": {
+        "artifactId": { "$ref": "#/$defs/lowerIdentifier" },
+        "schemaId": {
+          "enum": [
+            "vellum.sanitized-gate-log.v1",
+            "vellum.test-report.v1",
+            "vellum.public-musical-artifact.v1",
+            "vellum.public-review-receipt.v1",
+            "vellum.review-role-package.v1",
+            "vellum.remediation-dispatch.v1",
+            "vellum.redaction-receipt.v1"
+          ]
+        },
+        "mediaType": {
+          "enum": [
+            "application/json",
+            "application/pdf",
+            "application/vnd.recordare.musicxml+xml",
+            "audio/midi",
+            "audio/wav",
+            "image/png",
+            "image/svg+xml"
+          ]
+        },
+        "publicPath": { "$ref": "#/$defs/repositoryPath" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "classification": { "const": "rights_approved_public" },
+        "requirementIds": { "$ref": "#/$defs/requirementIds" },
+        "sanitizationId": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/lowerIdentifier" }]
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clauseId",
+        "requirementId",
+        "clauseDigest",
+        "contributor",
+        "evidenceArtifactIds"
+      ],
+      "properties": {
+        "clauseId": { "type": "string", "pattern": "^II-CLAUSE-[0-9]{4}$" },
+        "requirementId": { "$ref": "#/$defs/requirementId" },
+        "clauseDigest": { "$ref": "#/$defs/sha256" },
+        "contributor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subjectId", "role"],
+          "properties": {
+            "subjectId": { "$ref": "#/$defs/identifier" },
+            "role": { "const": "evidence_contributor" }
+          }
+        },
+        "evidenceArtifactIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/lowerIdentifier" }
+        }
+      }
+    },
+    "caseCommitment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseId", "coverageClass", "vaultCommitment", "requirementIds"],
+      "properties": {
+        "caseId": { "type": "string", "pattern": "^case_[a-f0-9]{32,64}$" },
+        "coverageClass": { "$ref": "#/$defs/coverageClass" },
+        "vaultCommitment": {
+          "type": "string",
+          "pattern": "^hmac-sha256:v1:[a-z0-9][a-z0-9_-]{0,31}:[A-Za-z0-9_-]{43}$"
+        },
+        "requirementIds": { "$ref": "#/$defs/requirementIds" }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregateId",
+        "coverageClass",
+        "minimumCardinality",
+        "observedCardinality",
+        "status",
+        "requirementIds"
+      ],
+      "properties": {
+        "aggregateId": { "$ref": "#/$defs/lowerIdentifier" },
+        "coverageClass": { "$ref": "#/$defs/coverageClass" },
+        "minimumCardinality": { "type": "integer", "minimum": 3 },
+        "observedCardinality": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["pass", "fail", "blocked", "incomplete"] },
+        "requirementIds": { "$ref": "#/$defs/requirementIds" }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fieldClass", "status", "receiptArtifactId"],
+      "properties": {
+        "fieldClass": {
+          "enum": [
+            "heldout_identity_or_asset",
+            "truth_or_expected_observation",
+            "forbidden_outcome_or_mutation",
+            "invalidation_or_reserve_state",
+            "per_attempt_diagnostic",
+            "owner_private_source_identity_path_metadata_or_content"
+          ]
+        },
+        "status": { "const": "withheld" },
+        "receiptArtifactId": { "$ref": "#/$defs/lowerIdentifier" }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caseCommitments", "aggregates", "redactions"],
+      "properties": {
+        "caseCommitments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/caseCommitment" }
+        },
+        "aggregates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/aggregate" }
+        },
+        "redactions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/redaction" }
+        }
+      }
+    },
+    "mediaSanitization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sanitizationId", "artifactId", "profile", "checks", "status"],
+      "properties": {
+        "sanitizationId": { "$ref": "#/$defs/lowerIdentifier" },
+        "artifactId": { "$ref": "#/$defs/lowerIdentifier" },
+        "profile": {
+          "enum": ["pdf-v1", "musicxml-v1", "midi-v1", "audio-v1", "raster-image-v1", "svg-v1"]
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/lowerIdentifier" }
+        },
+        "status": { "const": "pass" }
+      }
+    },
+    "exactDigestRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest"],
+      "properties": {
+        "id": { "$ref": "#/$defs/lowerIdentifier" },
+        "digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "authoritySubjects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "outputs", "system"],
+      "properties": {
+        "package": { "$ref": "#/$defs/exactDigestRef" },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/exactDigestRef" }
+        },
+        "system": { "$ref": "#/$defs/exactDigestRef" }
+      }
+    },
+    "credentialType": {
+      "enum": [
+        "institutional_registry",
+        "openpgp",
+        "owner_local",
+        "specialist_registry",
+        "ssh",
+        "webauthn",
+        "x509"
+      ]
+    },
+    "reviewerCredential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["credentialId", "credentialType"],
+      "properties": {
+        "credentialId": { "$ref": "#/$defs/lowerIdentifier" },
+        "credentialType": { "$ref": "#/$defs/credentialType" }
+      }
+    },
+    "humanReviewRole": {
+      "enum": [
+        "baroque_guitar_historical_idiom_reviewer",
+        "baroque_guitar_target_player",
+        "baroque_lute_historical_idiom_reviewer",
+        "baroque_lute_target_player",
+        "classical_guitar_idiom_reviewer",
+        "classical_guitar_target_player",
+        "continuo_reviewer",
+        "curator",
+        "engraving_playback_editor",
+        "historical_claim_pack_profile_reviewer",
+        "imitative_intabulation_reviewer",
+        "lyric_underlay_reviewer",
+        "maintainer_nonhistorical_reviewer",
+        "metadata_rights_reviewer",
+        "owner_usefulness_reviewer",
+        "source_structure_fidelity_reviewer",
+        "transcription_extraction_reviewer",
+        "truth_reviewer"
+      ]
+    },
+    "authorityDomain": {
+      "enum": [
+        "continuo_realization",
+        "engraving_playback",
+        "historical_claim_pack_profile",
+        "heldout_curation",
+        "historical_idiom",
+        "instrumental_idiom",
+        "lyric_underlay",
+        "maintainer_nonhistorical_activation",
+        "metadata_rights",
+        "owner_usefulness",
+        "physical_playability",
+        "provisional_control",
+        "source_structure_fidelity",
+        "transcription_extraction",
+        "truth_commitment"
+      ]
+    },
+    "authorityTarget": {
+      "enum": [
+        "baroque_guitar",
+        "baroque_lute",
+        "classical_guitar",
+        "cross_target",
+        "harpsichord_continuo",
+        "knowledge_library",
+        "six_course_lute",
+        "source_material"
+      ]
+    },
+    "claimScopeDimension": {
+      "enum": [
+        "case_curation",
+        "continuo_realization",
+        "coverage_design",
+        "cross_target_usefulness",
+        "editorial_default",
+        "extraction",
+        "harmonic_fidelity",
+        "historical_practice",
+        "imitative_counterpoint",
+        "knowledge_claim",
+        "lyric_underlay",
+        "mechanical_playability",
+        "metadata",
+        "notation",
+        "ornament_fidelity",
+        "pack_profile",
+        "playback",
+        "relationship_fidelity",
+        "reserve_control",
+        "release_state",
+        "review_state",
+        "rights",
+        "software_default",
+        "source_transcription",
+        "spanner_fidelity",
+        "target_idiom",
+        "transposition_fidelity",
+        "truth_commitment",
+        "voice_fidelity"
+      ]
+    },
+    "claimScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scopeId", "authorityDomain", "targets", "dimensions", "digest"],
+      "properties": {
+        "scopeId": { "$ref": "#/$defs/lowerIdentifier" },
+        "authorityDomain": { "$ref": "#/$defs/authorityDomain" },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/authorityTarget" }
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimScopeDimension" }
+        },
+        "digest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "signatureEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "credentialId", "signedPayloadDigest", "signature"],
+      "properties": {
+        "algorithm": {
+          "enum": ["ed25519", "openpgp_ed25519", "ssh_ed25519", "webauthn_es256", "x509_es256"]
+        },
+        "credentialId": { "$ref": "#/$defs/lowerIdentifier" },
+        "signedPayloadDigest": { "$ref": "#/$defs/sha256" },
+        "signature": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      }
+    },
+    "conflictRole": {
+      "enum": [
+        "authority_verifier",
+        "baroque_guitar_historical_idiom_reviewer",
+        "baroque_guitar_target_player",
+        "baroque_lute_historical_idiom_reviewer",
+        "baroque_lute_target_player",
+        "classical_guitar_idiom_reviewer",
+        "classical_guitar_target_player",
+        "continuo_reviewer",
+        "curator",
+        "engraving_playback_editor",
+        "evaluator_calibrator",
+        "evaluator_implementer",
+        "generation_system_developer",
+        "historical_claim_pack_profile_reviewer",
+        "imitative_intabulation_reviewer",
+        "lyric_underlay_reviewer",
+        "maintainer_nonhistorical_reviewer",
+        "metadata_rights_reviewer",
+        "owner_usefulness_reviewer",
+        "pack_author",
+        "run_operator",
+        "source_structure_fidelity_reviewer",
+        "transcription_extraction_reviewer",
+        "truth_reviewer"
+      ]
+    },
+    "authorityConflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "kind"],
+      "properties": {
+        "role": { "$ref": "#/$defs/conflictRole" },
+        "kind": {
+          "enum": [
+            "authored_subject",
+            "calibrated_evaluator",
+            "curated_case",
+            "evaluated_subject",
+            "financial_interest",
+            "implemented_subject",
+            "same_subject",
+            "supervisory_relationship"
+          ]
+        }
+      }
+    },
+    "sha256List": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha256" }
+    },
+    "authorityVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verificationId",
+        "reviewerStatementDigest",
+        "signatureStatus",
+        "credential",
+        "verifier",
+        "authorization",
+        "independence",
+        "validity",
+        "result"
+      ],
+      "properties": {
+        "verificationId": { "$ref": "#/$defs/lowerIdentifier" },
+        "reviewerStatementDigest": { "$ref": "#/$defs/sha256" },
+        "signatureStatus": { "enum": ["invalid", "unverified", "valid"] },
+        "credential": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subjectId", "credentialId", "credentialType"],
+          "properties": {
+            "subjectId": { "$ref": "#/$defs/lowerIdentifier" },
+            "credentialId": { "$ref": "#/$defs/lowerIdentifier" },
+            "credentialType": { "$ref": "#/$defs/credentialType" }
+          }
+        },
+        "verifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subjectId", "role", "credentialId", "credentialType", "policyDigest"],
+          "properties": {
+            "subjectId": { "$ref": "#/$defs/lowerIdentifier" },
+            "role": { "const": "authority_verifier" },
+            "credentialId": { "$ref": "#/$defs/lowerIdentifier" },
+            "credentialType": { "$ref": "#/$defs/credentialType" },
+            "policyDigest": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "authorization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evaluatedClaimScopeDigests",
+            "intersectionClaimScopeDigests",
+            "authorizedClaimScopeDigests",
+            "status"
+          ],
+          "properties": {
+            "evaluatedClaimScopeDigests": { "$ref": "#/$defs/sha256List" },
+            "intersectionClaimScopeDigests": { "$ref": "#/$defs/sha256List" },
+            "authorizedClaimScopeDigests": { "$ref": "#/$defs/sha256List" },
+            "status": { "enum": ["authorized", "out_of_scope", "unverified"] }
+          }
+        },
+        "independence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["conflictPolicyDigest", "conflicts", "status"],
+          "properties": {
+            "conflictPolicyDigest": { "$ref": "#/$defs/sha256" },
+            "conflicts": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/authorityConflict" }
+            },
+            "status": { "enum": ["conflicted", "independent", "unverified"] }
+          }
+        },
+        "validity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "credentialIssuedAt",
+            "credentialExpiresAt",
+            "evaluatedAt",
+            "freshness",
+            "revocation"
+          ],
+          "properties": {
+            "credentialIssuedAt": { "$ref": "#/$defs/isoInstant" },
+            "credentialExpiresAt": { "$ref": "#/$defs/isoInstant" },
+            "evaluatedAt": { "$ref": "#/$defs/isoInstant" },
+            "freshness": { "enum": ["current", "expired"] },
+            "revocation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checkedAt", "sourceDigest", "status"],
+              "properties": {
+                "checkedAt": { "$ref": "#/$defs/isoInstant" },
+                "sourceDigest": { "$ref": "#/$defs/sha256" },
+                "status": { "enum": ["clear", "revoked", "unknown"] }
+              }
+            }
+          }
+        },
+        "result": {
+          "enum": [
+            "conflicted",
+            "expired",
+            "invalid_signature",
+            "out_of_scope",
+            "revoked",
+            "unverified",
+            "verified"
+          ]
+        }
+      }
+    },
+    "humanReviewResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resultCode", "productAcceptance", "findingCodes"],
+      "properties": {
+        "resultCode": { "enum": ["pass", "fail", "blocked", "incomplete"] },
+        "productAcceptance": { "enum": ["pass", "fail", "blocked", "incomplete"] },
+        "findingCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "authority_unverified",
+              "credential_failure",
+              "harmonic_fidelity_failure",
+              "historical_support_failure",
+              "idiom_failure",
+              "independence_failure",
+              "insufficient_evidence",
+              "none",
+              "notation_failure",
+              "playability_failure",
+              "playback_failure",
+              "review_blocked",
+              "review_incomplete",
+              "rights_failure",
+              "scope_failure",
+              "stale_subject",
+              "transcription_failure",
+              "underlay_failure",
+              "usefulness_failure",
+              "voice_fidelity_failure"
+            ]
+          }
+        }
+      }
+    },
+    "generationBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracerId", "generation", "receiptCommit", "artifactDigest"],
+      "properties": {
+        "tracerId": { "enum": ["T81", "T85"] },
+        "generation": { "type": "integer", "minimum": 1 },
+        "receiptCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}([a-f0-9]{24})?$"
+        },
+        "artifactDigest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "priorOwnerDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracerId", "generation", "receiptCommit", "decisionDigest"],
+      "properties": {
+        "tracerId": { "const": "T86" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "receiptCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}([a-f0-9]{24})?$"
+        },
+        "decisionDigest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "ownerDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "resultCode",
+        "productAcceptance",
+        "reviewState",
+        "reasonCodes",
+        "machineClosure",
+        "reviewPackage",
+        "reviewSnapshotDigest",
+        "priorDecision",
+        "releaseCompleteState",
+        "releaseCompleteRevocation"
+      ],
+      "properties": {
+        "action": { "enum": ["stop", "resume"] },
+        "resultCode": {
+          "enum": ["provisional_stop_current", "provisional_stop_resumed"]
+        },
+        "productAcceptance": { "enum": ["blocked", "pass"] },
+        "reviewState": {
+          "enum": ["blocked", "deferred", "failed", "incomplete", "resumed"]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "authority_stale",
+              "owner_requested_pause",
+              "package_stale",
+              "release_complete_revoked",
+              "review_blocked",
+              "review_deferred",
+              "review_failed",
+              "review_incomplete",
+              "review_resumed"
+            ]
+          }
+        },
+        "machineClosure": { "$ref": "#/$defs/generationBinding" },
+        "reviewPackage": { "$ref": "#/$defs/generationBinding" },
+        "reviewSnapshotDigest": { "$ref": "#/$defs/sha256" },
+        "priorDecision": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/priorOwnerDecision" }]
+        },
+        "releaseCompleteState": { "enum": ["current", "not_complete"] },
+        "releaseCompleteRevocation": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["transitionId", "digest"],
+              "properties": {
+                "transitionId": { "$ref": "#/$defs/lowerIdentifier" },
+                "digest": { "$ref": "#/$defs/sha256" }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "stop" } } },
+          "then": {
+            "properties": {
+              "resultCode": { "const": "provisional_stop_current" },
+              "productAcceptance": { "const": "blocked" },
+              "reviewState": { "enum": ["blocked", "deferred", "failed", "incomplete"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "action": { "const": "resume" } } },
+          "then": {
+            "properties": {
+              "resultCode": { "const": "provisional_stop_resumed" },
+              "productAcceptance": { "const": "pass" },
+              "reviewState": { "const": "resumed" },
+              "reasonCodes": {
+                "prefixItems": [{ "const": "review_resumed" }],
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "priorDecision": { "$ref": "#/$defs/priorOwnerDecision" },
+              "releaseCompleteState": { "const": "not_complete" },
+              "releaseCompleteRevocation": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "humanReviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subjectId", "role", "credential"],
+      "properties": {
+        "subjectId": { "$ref": "#/$defs/lowerIdentifier" },
+        "role": { "$ref": "#/$defs/humanReviewRole" },
+        "credential": { "$ref": "#/$defs/reviewerCredential" }
+      }
+    },
+    "ownerReviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subjectId", "role", "credential"],
+      "properties": {
+        "subjectId": { "$ref": "#/$defs/lowerIdentifier" },
+        "role": { "const": "owner" },
+        "credential": { "$ref": "#/$defs/reviewerCredential" }
+      }
+    },
+    "humanReviewStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityReceiptId",
+        "issuedAt",
+        "reviewer",
+        "subjects",
+        "claimScopes",
+        "review"
+      ],
+      "properties": {
+        "authorityReceiptId": { "$ref": "#/$defs/lowerIdentifier" },
+        "issuedAt": { "$ref": "#/$defs/isoInstant" },
+        "reviewer": { "$ref": "#/$defs/humanReviewer" },
+        "subjects": { "$ref": "#/$defs/authoritySubjects" },
+        "claimScopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/claimScope" }
+        },
+        "review": { "$ref": "#/$defs/humanReviewResult" }
+      }
+    },
+    "ownerDecisionStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityReceiptId",
+        "issuedAt",
+        "reviewer",
+        "subjects",
+        "claimScopes",
+        "decision"
+      ],
+      "properties": {
+        "authorityReceiptId": { "$ref": "#/$defs/lowerIdentifier" },
+        "issuedAt": { "$ref": "#/$defs/isoInstant" },
+        "reviewer": { "$ref": "#/$defs/ownerReviewer" },
+        "subjects": { "$ref": "#/$defs/authoritySubjects" },
+        "claimScopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              { "$ref": "#/$defs/claimScope" },
+              {
+                "properties": {
+                  "authorityDomain": { "const": "provisional_control" },
+                  "targets": {
+                    "prefixItems": [{ "const": "cross_target" }],
+                    "minItems": 1,
+                    "maxItems": 1
+                  },
+                  "dimensions": {
+                    "prefixItems": [{ "const": "release_state" }, { "const": "review_state" }],
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "decision": { "$ref": "#/$defs/ownerDecision" }
+      }
+    },
+    "humanReviewAuthorityReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "receiptKind",
+        "statement",
+        "reviewerSignature",
+        "authorityVerification",
+        "verifierSignature"
+      ],
+      "properties": {
+        "schemaId": { "const": "vellum.public-review-receipt.v1" },
+        "receiptKind": { "const": "human_review" },
+        "statement": { "$ref": "#/$defs/humanReviewStatement" },
+        "reviewerSignature": { "$ref": "#/$defs/signatureEnvelope" },
+        "authorityVerification": { "$ref": "#/$defs/authorityVerification" },
+        "verifierSignature": { "$ref": "#/$defs/signatureEnvelope" }
+      }
+    },
+    "ownerDecisionAuthorityReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "receiptKind",
+        "statement",
+        "reviewerSignature",
+        "authorityVerification",
+        "verifierSignature"
+      ],
+      "properties": {
+        "schemaId": { "const": "vellum.public-review-receipt.v1" },
+        "receiptKind": { "const": "owner_provisional_decision" },
+        "statement": { "$ref": "#/$defs/ownerDecisionStatement" },
+        "reviewerSignature": { "$ref": "#/$defs/signatureEnvelope" },
+        "authorityVerification": { "$ref": "#/$defs/authorityVerification" },
+        "verifierSignature": { "$ref": "#/$defs/signatureEnvelope" }
+      }
+    },
+    "publicReviewReceipt": {
+      "$anchor": "publicReviewReceipt",
+      "oneOf": [
+        { "$ref": "#/$defs/humanReviewAuthorityReceipt" },
+        { "$ref": "#/$defs/ownerDecisionAuthorityReceipt" }
+      ]
+    },
+    "coverageClass": {
+      "enum": [
+        "baroque_guitar_capability",
+        "baroque_lute_capability",
+        "classical_guitar_capability",
+        "cross_target_holdout",
+        "cross_target_parity",
+        "historical_idiom",
+        "mechanical_playability",
+        "notation_rendering",
+        "playback_alignment",
+        "rights_privacy",
+        "source_import_omr",
+        "voice_coherence",
+        "workflow_ux"
+      ]
+    }
+  }
+}

@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Readiness tiers; dataset assignments; provider exposure; Slice 4
 
-Requirement families touched: II-BND-003, II-EVAL-006, II-EXEC-004B, II-MC-019–020, II-MC-028–029
+Requirement families touched: II-BND-003, II-EVAL-006, II-EXEC-004B, II-MC-019–020, II-MC-028–029, II-EXEC-004E
 
 ## What to build
 

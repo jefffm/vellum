@@ -12,7 +12,7 @@ User stories: U1, U2, U9
 
 SPEC coverage: Rights/deletion lifecycle and complete derivative graph; Slice 11
 
-Requirement families touched: II-BND-002–008, II-KNW-007, II-EXEC-011, II-MC-004–005, II-MC-035–036
+Requirement families touched: II-BND-002–008, II-KNW-007, II-EXEC-011, II-MC-004–005, II-MC-035–036, II-EXEC-011C
 
 ## What to build
 

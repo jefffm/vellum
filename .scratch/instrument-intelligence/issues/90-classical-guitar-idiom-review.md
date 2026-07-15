@@ -12,7 +12,7 @@ User stories: U2, U6, U8, U10
 
 SPEC coverage: Slice 14 classical-guitar idiom and voice-leading authority
 
-Requirement families touched: II-CG-001–006, II-RC-001, II-RC-004
+Requirement families touched: II-CG-001–006, II-RC-001, II-RC-004, II-EXEC-014D, II-NG-010
 
 ## What to build
 

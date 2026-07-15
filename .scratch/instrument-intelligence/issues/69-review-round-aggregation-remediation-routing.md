@@ -12,7 +12,7 @@ User stories: U1, U2, U3, U4, U5, U6, U7, U8, U9, U10
 
 SPEC coverage: Slice 14 review aggregation and remediation loop
 
-Requirement families touched: II-EXEC-014B, II-RC-001–015
+Requirement families touched: II-EXEC-014B, II-RC-001–015, II-NG-010
 
 ## What to build
 

@@ -12,7 +12,7 @@ User stories: U2, U4, U8, U10
 
 SPEC coverage: Slice 14 baroque-guitar idiom and historical authority
 
-Requirement families touched: II-BG-001–007, II-RC-001, II-RC-004
+Requirement families touched: II-BG-001–007, II-RC-001, II-RC-004, II-EXEC-014D, II-NG-010
 
 ## What to build
 

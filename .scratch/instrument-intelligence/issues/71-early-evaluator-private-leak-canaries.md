@@ -12,7 +12,7 @@ User stories: U1, U8, U10
 
 SPEC coverage: Slice 0 evaluator-input and public-repository canary guard
 
-Requirement families touched: II-SRC-002, II-EVAL-002, II-EVAL-010, II-EXEC-000, II-MC-003, II-MC-026–027, II-NG-009
+Requirement families touched: II-SRC-002, II-EVAL-002, II-EVAL-010, II-EXEC-000, II-MC-003, II-MC-026–027, II-NG-009, II-EXEC-000C, II-EXEC-004D
 
 ## What to build
 

@@ -12,7 +12,7 @@ User stories: U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 14 engraving-editor and playback review
 
-Requirement families touched: II-MUS-005, II-RC-007
+Requirement families touched: II-MUS-005, II-RC-007, II-EXEC-014D, II-NG-010
 
 ## What to build
 

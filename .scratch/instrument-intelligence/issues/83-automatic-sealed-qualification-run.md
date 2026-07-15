@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 13 automatic sealed execution
 
-Requirement families touched: II-EVAL-005–006, II-EXEC-013C, II-MC-028–032
+Requirement families touched: II-EVAL-005–006, II-EXEC-013C, II-MC-028–032, II-NG-010
 
 ## What to build
 

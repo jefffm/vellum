@@ -26,6 +26,7 @@ After Machine Complete, generate and validate the exact artifact packages that e
 - [ ] Exact held-out assets, truth, expectations, diagnostics, private rights evidence, and private review forms are written only to capability-scoped Vault/private review storage. Public output uses opaque package IDs, keyed non-resolving Vault commitments, public-artifact digests, role classes, and scope.
 - [ ] A clean authorized reviewer can open, verify, inspect, play, and submit against the exact package after reload without receiving any other role's private notes or Vault reserve access.
 - [ ] Successful generation emits `review_package_ready` for the exact package generation; any package change or invalidation removes that current result before reviewers can proceed.
+- [ ] Public evidence includes a closed `review-role-package.v1` index with exactly one entry for every consuming late-review tracer. Each predecessor-authored entry binds its opaque package ID/digest, complete sorted public output digest set, system ID/digest, exact current T85 generation/evidence digest/first receipt commit, and sorted opaque disqualified-reviewer subject IDs derived from package authors, evaluators, calibrators, and operators; later reviewer/Owner statements cannot choose or substitute their own subjects or independence state.
 
 ## Gate matrix
 

@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 13 qualification adjudication, inherited failures, and remediation
 
-Requirement families touched: II-EVAL-009–010, II-EXEC-013D, II-MC-018–020, II-MC-030–032
+Requirement families touched: II-EVAL-009–010, II-EXEC-013D, II-MC-018–020, II-MC-030–032, II-NG-010
 
 ## What to build
 

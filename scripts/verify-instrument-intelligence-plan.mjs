@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createPublicKey, verify as verifySignatureBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
   closeSync,
@@ -13,6 +13,31 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { format, resolveConfig } from "prettier";
+import {
+  assertCanonicalClauseLedgerJson,
+  assertMarkerBijection,
+  buildClauseLedger,
+  canonicalClauseLedgerJson,
+  loadClauseLedgerInputs,
+} from "./lib/instrument-intelligence-clause-ledger.mjs";
+import {
+  AUTHORITY_SNAPSHOT_SCHEMA_ID,
+  EVIDENCE_RECEIPT_SCHEMA_ID,
+  HUMAN_REVIEW_ROLES,
+  PUBLIC_COVERAGE_CLASSES,
+  START_RECEIPT_SCHEMA_ID,
+  compileCanonicalPredicateWitness,
+  validateAuthoritySnapshot as validateAuthoritySnapshotV2,
+  validateAuthorityArtifactPayload,
+  validateEvidenceReceipt as validateEvidenceReceiptV2,
+  validateStartReceipt as validateStartReceiptV1,
+} from "./lib/instrument-intelligence-receipts.mjs";
+import {
+  REMEDIATION_LEDGER_SCHEMA_ID,
+  TRACER_RESULT_CONTRACTS,
+  validateRemediationObligationLedger,
+  validateResultDisposition,
+} from "./lib/instrument-intelligence-results.mjs";
 import {
   INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF,
   INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY,
@@ -36,24 +61,58 @@ const waveRoot = path.join(root, ".scratch/instrument-intelligence");
 const issueRoot = path.join(waveRoot, "issues");
 const manifestPath = path.join(waveRoot, "completion-manifest.json");
 const manifestRepoPath = ".scratch/instrument-intelligence/completion-manifest.json";
+const clauseLedgerRepoPath = ".scratch/instrument-intelligence/clause-ledger.json";
+const reviewAuthorityCatalogRepoPath =
+  ".scratch/instrument-intelligence/review-authority-catalog.json";
+const clauseLedgerSchemaRepoPath = "schemas/instrument-intelligence/clause-ledger.schema.json";
+const evidenceSchemaRepoPath = "schemas/instrument-intelligence/evidence.v2.schema.json";
+const startReceiptSchemaRepoPath = "schemas/instrument-intelligence/start-receipt.v1.schema.json";
+const protocolSchemaPaths = [
+  clauseLedgerSchemaRepoPath,
+  evidenceSchemaRepoPath,
+  startReceiptSchemaRepoPath,
+];
 const manifestLockPath = `${manifestPath}.lock`;
+const BOOTSTRAP_MANIFEST_SCHEMA = 5;
+const CURRENT_MANIFEST_SCHEMA = 6;
 const writeManifest = process.argv.includes("--write-manifest");
 const draftMode = writeManifest || process.argv.includes("--draft");
+const verifyPendingEvidence = process.argv.includes("--verify-pending");
+const observePublishedEvidence = process.argv.includes("--observe-published-evidence");
+const recordPublishedEvidence = process.argv.includes("--record-published-evidence");
 const trustBootstrap = process.argv.includes("--trust-bootstrap");
-if (trustBootstrap && draftMode) {
-  fail("--trust-bootstrap is a strict one-time Owner ceremony, not a draft/write option");
+if (
+  [
+    draftMode,
+    verifyPendingEvidence,
+    observePublishedEvidence,
+    recordPublishedEvidence,
+    trustBootstrap,
+  ].filter(Boolean).length > 1
+) {
+  fail("choose exactly one verifier mode");
 }
 const verificationAuthorityPaths = [
-  "package.json",
-  "package-lock.json",
   ".prettierrc",
+  reviewAuthorityCatalogRepoPath,
   "flake.nix",
   "flake.lock",
   "scripts/nix-podman",
   "scripts/lib/instrument-intelligence-trust.mjs",
+  "scripts/lib/instrument-intelligence-clause-ledger.mjs",
+  "scripts/lib/instrument-intelligence-receipts.mjs",
+  "scripts/lib/instrument-intelligence-results.mjs",
+  "scripts/generate-instrument-intelligence-clause-ledger.mjs",
   "scripts/verify-current-spec.mjs",
   "scripts/verify-instrument-intelligence-plan.mjs",
+  clauseLedgerSchemaRepoPath,
+  evidenceSchemaRepoPath,
+  startReceiptSchemaRepoPath,
   "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+  "test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts",
+  "test/instrument-intelligence/T01-clause-ledger.test.ts",
+  "test/instrument-intelligence/receipt-contract.test.ts",
+  "test/instrument-intelligence/result-contract.test.ts",
 ];
 const preTrustCorrectionAllowedPaths = Object.freeze([
   manifestRepoPath,
@@ -76,6 +135,79 @@ const requiredPreTrustCorrectionPaths = Object.freeze([
   "scripts/lib/instrument-intelligence-trust.mjs",
   "scripts/verify-instrument-intelligence-plan.mjs",
   "test/instrument-intelligence/bootstrap-trust-policy.test.ts",
+]);
+const t01PreregistrationAllowedPaths = Object.freeze([
+  manifestRepoPath,
+  "SPEC.md",
+  ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  reviewAuthorityCatalogRepoPath,
+  ".scratch/instrument-intelligence/issues/01-governing-contract-baseline-guard.md",
+  ".scratch/instrument-intelligence/issues/02-server-minted-provider-boundary.md",
+  ".scratch/instrument-intelligence/issues/03-rights-safe-tracked-source-quarantine.md",
+  ".scratch/instrument-intelligence/issues/04-release-floor-profile-gate-matrix.md",
+  ".scratch/instrument-intelligence/issues/100-transcription-extraction-review.md",
+  ".scratch/instrument-intelligence/issues/101-historical-claim-pack-profile-review.md",
+  ".scratch/instrument-intelligence/issues/104-source-structure-musical-fidelity-review.md",
+  ".scratch/instrument-intelligence/issues/17-evaluation-status-comparison-migration.md",
+  ".scratch/instrument-intelligence/issues/18-sealed-evaluator-process-boundary.md",
+  ".scratch/instrument-intelligence/issues/19-encrypted-evaluation-vault-lifecycle.md",
+  ".scratch/instrument-intelligence/issues/20-public-vault-split-leak-enforcement.md",
+  ".scratch/instrument-intelligence/issues/21-split-manifest-attempt-ledger-inherited-regressions.md",
+  ".scratch/instrument-intelligence/issues/22-qualification-scopes-roles-provider-policy.md",
+  ".scratch/instrument-intelligence/issues/35-independent-observable-evaluator-contracts.md",
+  ".scratch/instrument-intelligence/issues/57-reassessment-governed-learning-proposals.md",
+  ".scratch/instrument-intelligence/issues/58-workbench-advisory-deletion-resume-regeneration.md",
+  ".scratch/instrument-intelligence/issues/60-cross-domain-evaluator-parity-closure.md",
+  ".scratch/instrument-intelligence/issues/63-pre-hitl-audit-curation-package-interlock.md",
+  ".scratch/instrument-intelligence/issues/64-independent-curator-precommit.md",
+  ".scratch/instrument-intelligence/issues/65-baroque-guitar-physical-player-review.md",
+  ".scratch/instrument-intelligence/issues/66-baroque-lute-physical-player-review.md",
+  ".scratch/instrument-intelligence/issues/67-classical-guitar-physical-player-review.md",
+  ".scratch/instrument-intelligence/issues/68-metadata-rights-review.md",
+  ".scratch/instrument-intelligence/issues/69-review-round-aggregation-remediation-routing.md",
+  ".scratch/instrument-intelligence/issues/70-clean-baseline-release-floor-publication.md",
+  ".scratch/instrument-intelligence/issues/71-early-evaluator-private-leak-canaries.md",
+  ".scratch/instrument-intelligence/issues/72-search-measurement-selection-adoption-foundation.md",
+  ".scratch/instrument-intelligence/issues/73-sanz-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/74-corbetta-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/75-gasparini-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/76-baron-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/77-perrine-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/78-weiss-ingestion-cited-extraction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/79-sor-text-plates-ingestion-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/80-carulli-aligned-reduction-test-only-release.md",
+  ".scratch/instrument-intelligence/issues/81-post-qualification-exact-artifact-package.md",
+  ".scratch/instrument-intelligence/issues/82-independent-truth-commitments.md",
+  ".scratch/instrument-intelligence/issues/83-automatic-sealed-qualification-run.md",
+  ".scratch/instrument-intelligence/issues/84-qualification-adjudication-remediation-dispatch.md",
+  ".scratch/instrument-intelligence/issues/85-machine-complete-aggregator.md",
+  ".scratch/instrument-intelligence/issues/86-optional-provisional-stop-decision.md",
+  ".scratch/instrument-intelligence/issues/87-release-complete-aggregator.md",
+  ".scratch/instrument-intelligence/issues/88-baroque-guitar-idiom-historical-review.md",
+  ".scratch/instrument-intelligence/issues/89-baroque-lute-idiom-historical-review.md",
+  ".scratch/instrument-intelligence/issues/90-classical-guitar-idiom-review.md",
+  ".scratch/instrument-intelligence/issues/91-continuo-exact-artifact-review.md",
+  ".scratch/instrument-intelligence/issues/92-imitative-intabulation-exact-artifact-review.md",
+  ".scratch/instrument-intelligence/issues/93-engraving-playback-editorial-review.md",
+  ".scratch/instrument-intelligence/issues/94-conditional-lyric-underlay-review.md",
+  ".scratch/instrument-intelligence/issues/95-owner-cross-target-usefulness-review.md",
+  ".scratch/instrument-intelligence/issues/96-rights-deletion-derivative-purge.md",
+  ".scratch/instrument-intelligence/issues/97-interruption-reload-resume.md",
+  ".scratch/instrument-intelligence/issues/98-legacy-inspection-canonical-regeneration.md",
+  ".scratch/instrument-intelligence/issues/99-interactive-selection-prompt-edit-versioning.md",
+  clauseLedgerRepoPath,
+  "scripts/lib/instrument-intelligence-clause-ledger.mjs",
+  "scripts/lib/instrument-intelligence-receipts.mjs",
+  "scripts/lib/instrument-intelligence-results.mjs",
+  "scripts/generate-instrument-intelligence-clause-ledger.mjs",
+  "scripts/verify-instrument-intelligence-plan.mjs",
+  clauseLedgerSchemaRepoPath,
+  evidenceSchemaRepoPath,
+  startReceiptSchemaRepoPath,
+  "test/instrument-intelligence/T01-clause-ledger.test.ts",
+  "test/instrument-intelligence/T01-governing-contract-baseline-guard.test.ts",
+  "test/instrument-intelligence/receipt-contract.test.ts",
+  "test/instrument-intelligence/result-contract.test.ts",
 ]);
 const domainAdrFiles = readdirSync(path.join(root, "docs/adr"))
   .filter((name) => name.endsWith(".md"))
@@ -174,6 +306,13 @@ function validDigest(value) {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 }
 
+function supportedManifest(value) {
+  return (
+    value?.schemaVersion === BOOTSTRAP_MANIFEST_SCHEMA ||
+    value?.schemaVersion === CURRENT_MANIFEST_SCHEMA
+  );
+}
+
 function planNarrativeDigestFor(markdown) {
   return digest(
     markdown
@@ -195,6 +334,7 @@ function gitBytesAt(ref, file, { required = true } = {}) {
       cwd: root,
       encoding: null,
       stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 16 * 1024 * 1024,
     });
   } catch {
     if (required) fail(`${ref} does not contain required committed path ${file}`);
@@ -278,6 +418,33 @@ function gitFilesUnder(ref, directory) {
   }
 }
 
+function projectedProductTreeDigestAt(ref) {
+  let output;
+  try {
+    output = execFileSync("git", ["ls-tree", "-r", "-z", "--full-tree", ref], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    fail(`cannot inspect the projected product tree at ${ref}`);
+  }
+  const records = output
+    .split("\0")
+    .filter(Boolean)
+    .map((record) => {
+      const match = record.match(/^(\d+)\s+(\w+)\s+([a-f0-9]+)\t(.+)$/);
+      if (!match) fail(`cannot parse projected product tree record at ${ref}`);
+      return { mode: match[1], type: match[2], object: match[3], path: match[4] };
+    })
+    .filter(
+      (entry) =>
+        entry.path !== manifestRepoPath &&
+        !entry.path.startsWith(".scratch/instrument-intelligence/evidence/")
+    );
+  return digest(JSON.stringify(records));
+}
+
 function recursiveFiles(directory) {
   const output = [];
   for (const name of readdirSync(directory)) {
@@ -297,6 +464,9 @@ function manifestHasMutableProgress(value) {
     (value.executionGenerations ?? []).length ||
     (value.idPolicy?.tombstones ?? []).length ||
     Object.keys(value.requirementEvidence ?? {}).length ||
+    Object.keys(value.clauseEvidence ?? {}).length ||
+    (value.remediationObligations?.obligations ?? []).length ||
+    (value.remediationObligations?.events ?? []).length ||
     value.closureState?.machineComplete === "pass" ||
     value.closureState?.releaseComplete === "pass" ||
     value.closureState?.provisionalStopped === true ||
@@ -305,7 +475,7 @@ function manifestHasMutableProgress(value) {
     (value.tracers ?? []).some(
       (tracer) =>
         tracer.implementationCommit ||
-        tracer.remoteReachabilityReceipt ||
+        tracer.remotePublicationReceipt ||
         tracer.evidenceGeneration > 0 ||
         tracer.currentExecutionGeneration != null ||
         tracer.issueCompletion === "complete" ||
@@ -574,6 +744,21 @@ function manifestChangingCommits(ref) {
   }
 }
 
+function manifestCommitAtOrBefore(commit) {
+  if (!commit) return null;
+  try {
+    return (
+      execFileSync("git", ["rev-list", "--first-parent", "-1", commit, "--", manifestRepoPath], {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim() || null
+    );
+  } catch {
+    fail(`cannot locate the governed manifest at or before ${commit}`);
+  }
+}
+
 const publicationTrustAtRead = originRemoteUrls();
 const expectedTrustPolicyObject = hashGitObject(canonicalPublicationTrustBytes());
 const trustedOriginCommitAtRead = optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF);
@@ -628,7 +813,7 @@ const originManifestBytes = gitBytesAt("origin/main", manifestRepoPath, { requir
 const originManifest = originManifestBytes
   ? gitJsonAt("origin/main", manifestRepoPath, { required: true })
   : null;
-const compatibleOriginManifest = originManifest?.schemaVersion === 5 ? originManifest : null;
+const compatibleOriginManifest = supportedManifest(originManifest) ? originManifest : null;
 if (!compatibleOriginManifest && manifestHasMutableProgress(originManifest)) {
   fail("origin/main has mutable evidence in an unsupported manifest schema; migrate it explicitly");
 }
@@ -644,16 +829,35 @@ if (
 const priorOriginManifest = priorManifestChangingCommit
   ? gitJsonAt(priorManifestChangingCommit, manifestRepoPath, { required: true })
   : null;
-const rawTransitionAnchorManifest = draftMode ? originManifest : priorOriginManifest;
-const compatibleTransitionAnchorManifest =
-  rawTransitionAnchorManifest?.schemaVersion === 5 ? rawTransitionAnchorManifest : null;
+const checkpointSteadyAtRead = Boolean(
+  checkpointEstablishedAtRead && trustedOriginCommitAtRead === originMainCommitAtRead
+);
+const trustedManifestCommitAtRead = checkpointEstablishedAtRead
+  ? manifestCommitAtOrBefore(trustedOriginCommitAtRead)
+  : null;
+if (checkpointEstablishedAtRead && trustedManifestCommitAtRead !== trustedOriginCommitAtRead) {
+  fail("trusted-main must identify the exact strictly verified manifest transaction");
+}
+const transitionAnchorCommit = draftMode
+  ? originMainCommitAtRead
+  : checkpointEstablishedAtRead
+    ? trustedOriginCommitAtRead
+    : priorManifestChangingCommit;
+const rawTransitionAnchorManifest = transitionAnchorCommit
+  ? gitJsonAt(transitionAnchorCommit, manifestRepoPath, { required: true })
+  : null;
+const compatibleTransitionAnchorManifest = supportedManifest(rawTransitionAnchorManifest)
+  ? rawTransitionAnchorManifest
+  : null;
 if (
   rawTransitionAnchorManifest &&
   !compatibleTransitionAnchorManifest &&
   (rawTransitionAnchorManifest.schemaVersion !== 1 ||
     manifestHasMutableProgress(rawTransitionAnchorManifest))
 ) {
-  fail("the trusted transition anchor is neither schema 5 nor an unprogressed schema-1 bootstrap");
+  fail(
+    "the trusted transition anchor is neither a supported manifest nor an unprogressed schema-1 bootstrap"
+  );
 }
 
 function scalar(markdown, label) {
@@ -926,6 +1130,7 @@ const strictGovernedPaths = new Set([
   "SPEC.md",
   ".scratch/instrument-intelligence/PLAN.md",
   ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  clauseLedgerRepoPath,
   ".scratch/instrument-intelligence/evidence/.gitkeep",
   manifestRepoPath,
   ...verificationAuthorityPaths,
@@ -1012,6 +1217,47 @@ for (const issue of issues) {
   }
 }
 
+const clauseLedgerRaw = text(clauseLedgerRepoPath);
+let clauseLedger;
+try {
+  clauseLedger = assertCanonicalClauseLedgerJson(clauseLedgerRaw);
+  const regeneratedClauseLedger = buildClauseLedger({
+    ...loadClauseLedgerInputs(root),
+    previousLedger: clauseLedger,
+    requireMarkers: true,
+  });
+  if (canonicalClauseLedgerJson(regeneratedClauseLedger) !== clauseLedgerRaw) {
+    fail("the committed clause ledger is stale against SPEC, REQUIREMENTS, or issue mappings");
+  }
+  assertMarkerBijection(text("SPEC.md"), clauseLedger);
+} catch (error) {
+  if (error?.message?.startsWith("Instrument Intelligence plan verification failed:")) {
+    throw error;
+  }
+  fail(`closed clause-ledger validation failed: ${error.message}`);
+}
+const clauseById = new Map(clauseLedger.clauses.map((clause) => [clause.id, clause]));
+for (const clause of clauseLedger.clauses) {
+  const family = requirementRows.get(clause.familyId);
+  const roleTracerIds = [clause.implementationOwner, ...clause.evidenceContributors].map((tracer) =>
+    Number(tracer.slice(1))
+  );
+  if (
+    !family ||
+    roleTracerIds.some((tracerId) => !family.ids.includes(tracerId)) ||
+    !["T85", "T87"].includes(clause.closureVerifier) ||
+    clause.evidenceContributors.includes(clause.closureVerifier) ||
+    clause.implementationOwner === clause.closureVerifier
+  ) {
+    fail(`${clause.id} has a non-bidirectional or role-conflicted clause assignment`);
+  }
+  for (const dependencyId of clause.dependencies) {
+    if (!clauseById.has(dependencyId) || dependencyId === clause.id) {
+      fail(`${clause.id} has an unknown or self-referential clause dependency`);
+    }
+  }
+}
+
 const planMarkdown = text(".scratch/instrument-intelligence/PLAN.md");
 const planRows = new Map();
 for (const [index, line] of planMarkdown.split("\n").entries()) {
@@ -1069,8 +1315,31 @@ const existingManifest = existsSync(manifestPath)
 const existingManifestDigestAtRead = existingManifest
   ? digest(JSON.stringify(existingManifest))
   : null;
-const compatibleExistingManifest =
-  existingManifest?.schemaVersion === 5 ? existingManifest : undefined;
+const compatibleExistingManifest = supportedManifest(existingManifest)
+  ? existingManifest
+  : undefined;
+const t01PreregistrationTransition = Boolean(
+  !draftMode &&
+  checkpointEstablishedAtRead &&
+  !checkpointSteadyAtRead &&
+  compatibleTransitionAnchorManifest?.schemaVersion === BOOTSTRAP_MANIFEST_SCHEMA &&
+  compatibleExistingManifest?.schemaVersion === CURRENT_MANIFEST_SCHEMA
+);
+if (
+  compatibleTransitionAnchorManifest?.schemaVersion === CURRENT_MANIFEST_SCHEMA &&
+  compatibleExistingManifest?.schemaVersion !== CURRENT_MANIFEST_SCHEMA
+) {
+  fail("the Instrument Intelligence manifest cannot downgrade after T01 pre-registration");
+}
+if (
+  !draftMode &&
+  checkpointEstablishedAtRead &&
+  !checkpointSteadyAtRead &&
+  compatibleTransitionAnchorManifest?.schemaVersion === BOOTSTRAP_MANIFEST_SCHEMA &&
+  compatibleExistingManifest?.schemaVersion !== CURRENT_MANIFEST_SCHEMA
+) {
+  fail("the sole post-bootstrap schema-5 transition must be T01 schema-6 pre-registration");
+}
 const staticBaseWaveHighestId =
   compatibleTransitionAnchorManifest?.idPolicy?.baseWaveHighestId ??
   Math.max(...issues.map((issue) => issue.id));
@@ -1149,6 +1418,30 @@ if (compatibleTransitionAnchorManifest) {
     compatibleTransitionAnchorManifest.requirementEvidence ?? {},
     compatibleExistingManifest.requirementEvidence ?? {}
   );
+  assertRequirementEvidenceExtension(
+    compatibleTransitionAnchorManifest.clauseEvidence ?? {},
+    compatibleExistingManifest.clauseEvidence ?? {}
+  );
+  assertJsonPrefix(
+    compatibleTransitionAnchorManifest.authorityHistory?.authoritySets ?? [],
+    compatibleExistingManifest.authorityHistory?.authoritySets ?? [],
+    "authorityHistory.authoritySets"
+  );
+  assertJsonPrefix(
+    compatibleTransitionAnchorManifest.authorityHistory?.migrations ?? [],
+    compatibleExistingManifest.authorityHistory?.migrations ?? [],
+    "authorityHistory.migrations"
+  );
+  assertJsonPrefix(
+    compatibleTransitionAnchorManifest.remediationObligations?.obligations ?? [],
+    compatibleExistingManifest.remediationObligations?.obligations ?? [],
+    "remediationObligations.obligations"
+  );
+  assertJsonPrefix(
+    compatibleTransitionAnchorManifest.remediationObligations?.events ?? [],
+    compatibleExistingManifest.remediationObligations?.events ?? [],
+    "remediationObligations.events"
+  );
   if (
     compatibleExistingManifest.idPolicy?.baseWaveHighestId !==
     compatibleTransitionAnchorManifest.idPolicy?.baseWaveHighestId
@@ -1200,12 +1493,16 @@ if (sortedPreviousIds.join(",") !== previousIdList.join(",")) {
 const maximumPreviousId = previousIds.size ? Math.max(...previousIds) : 0;
 
 function registryEventPayload(event) {
-  return {
+  const payload = {
     generation: event.generation,
     previousHead: event.previousHead,
     addedDefinitions: event.addedDefinitions,
     tombstonesAdded: event.tombstonesAdded,
   };
+  if (Object.hasOwn(event, "revisedDefinitions")) {
+    payload.revisedDefinitions = event.revisedDefinitions;
+  }
+  return payload;
 }
 
 function replayRegistryEvents(events) {
@@ -1215,11 +1512,15 @@ function replayRegistryEvents(events) {
   let generation = 0;
   let highest = 0;
   for (const event of events) {
-    exactKeys(
-      event,
-      ["addedDefinitions", "generation", "head", "previousHead", "tombstonesAdded"],
-      `registry event ${event?.generation}`
-    );
+    const eventKeys = [
+      "addedDefinitions",
+      "generation",
+      "head",
+      "previousHead",
+      "tombstonesAdded",
+      ...(Object.hasOwn(event ?? {}, "revisedDefinitions") ? ["revisedDefinitions"] : []),
+    ];
+    exactKeys(event, eventKeys, `registry event ${event?.generation}`);
     if (
       !event ||
       typeof event !== "object" ||
@@ -1227,6 +1528,7 @@ function replayRegistryEvents(events) {
       event.generation !== generation + 1 ||
       event.previousHead !== head ||
       !Array.isArray(event.addedDefinitions) ||
+      (Object.hasOwn(event, "revisedDefinitions") && !Array.isArray(event.revisedDefinitions)) ||
       !Array.isArray(event.tombstonesAdded) ||
       !/^[a-f0-9]{64}$/.test(event.head ?? "")
     ) {
@@ -1258,6 +1560,27 @@ function replayRegistryEvents(events) {
         fail(`registry event has an invalid tombstone transition for T${tombstone?.id}`);
       }
       replayedTombstones.set(tombstone.id, tombstone);
+    }
+    const revisedIds = new Set();
+    for (const revision of event.revisedDefinitions ?? []) {
+      exactKeys(
+        revision,
+        ["definitionDigest", "id", "previousDefinitionDigest", "reason"],
+        "registry definition revision"
+      );
+      if (
+        !definitions.has(revision?.id) ||
+        replayedTombstones.has(revision.id) ||
+        revisedIds.has(revision.id) ||
+        definitions.get(revision.id) !== revision.previousDefinitionDigest ||
+        !validDigest(revision.definitionDigest) ||
+        revision.definitionDigest === revision.previousDefinitionDigest ||
+        revision.reason !== "t01_clause_role_preregistration"
+      ) {
+        fail(`registry event has an invalid T01 definition revision for T${revision?.id}`);
+      }
+      revisedIds.add(revision.id);
+      definitions.set(revision.id, revision.definitionDigest);
     }
     for (const definition of event.addedDefinitions) {
       exactKeys(definition, ["definitionDigest", "id"], "registry definition append");
@@ -1470,9 +1793,28 @@ const authorityInputs = {
   requirementFamilyIndex: {
     path: ".scratch/instrument-intelligence/REQUIREMENTS.md",
     digest: digest(requirementMarkdown),
-    clauseLedgerStatus:
-      compatibleTransitionAnchorManifest?.authorities?.requirementFamilyIndex?.clauseLedgerStatus ??
-      "bootstrap_pending_T01",
+    clauseLedgerStatus: existsSync(path.join(root, clauseLedgerRepoPath))
+      ? "active_v1"
+      : (compatibleTransitionAnchorManifest?.authorities?.requirementFamilyIndex
+          ?.clauseLedgerStatus ?? "bootstrap_pending_T01"),
+  },
+  requirementClauseLedger: {
+    path: clauseLedgerRepoPath,
+    digest: digest(clauseLedgerRaw),
+    schemaPath: clauseLedgerSchemaRepoPath,
+    schemaDigest: digest(readLocalBytes(clauseLedgerSchemaRepoPath)),
+    clauseCount: clauseLedger.clauses.length,
+  },
+  protocolSchemas: {
+    paths: protocolSchemaPaths,
+    digest: authorityBundleDigest(protocolSchemaPaths, readLocalBytes),
+    evidenceSchemaId: EVIDENCE_RECEIPT_SCHEMA_ID,
+    startReceiptSchemaId: START_RECEIPT_SCHEMA_ID,
+    authoritySnapshotSchemaId: AUTHORITY_SNAPSHOT_SCHEMA_ID,
+  },
+  resultPolicy: {
+    digest: digest(JSON.stringify(TRACER_RESULT_CONTRACTS)),
+    remediationLedgerSchemaId: REMEDIATION_LEDGER_SCHEMA_ID,
   },
   verifier: {
     paths: verificationAuthorityPaths,
@@ -1483,6 +1825,31 @@ const authorityInputs = {
     digest: authorityBundleDigest(domainAuthorityPaths, readLocalBytes),
   },
 };
+const currentAuthorityPaths = [
+  "SPEC.md",
+  ".scratch/instrument-intelligence/PLAN.md",
+  ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  clauseLedgerRepoPath,
+  ...verificationAuthorityPaths,
+  ...domainAuthorityPaths,
+]
+  .filter((value, index, values) => values.indexOf(value) === index)
+  .sort();
+const currentAuthorityPathDigests = currentAuthorityPaths.map((governedPath) => ({
+  path: governedPath,
+  sha256: digest(readLocalBytes(governedPath)),
+}));
+const currentAuthoritySetDigest = digest(JSON.stringify(currentAuthorityPathDigests));
+const currentAuthoritySet = {
+  schemaId: AUTHORITY_SNAPSHOT_SCHEMA_ID,
+  authoritySetDigest: currentAuthoritySetDigest,
+  pathDigests: currentAuthorityPathDigests,
+};
+try {
+  validateAuthoritySnapshotV2(currentAuthoritySet, "current authority set");
+} catch (error) {
+  fail(error.message);
+}
 if (
   authorityInputs.requirementFamilyIndex.clauseLedgerStatus === "bootstrap_pending_T01" &&
   rawExistingHasProgress
@@ -1521,6 +1888,25 @@ const requirementIndexChanged = Boolean(
   compatibleTransitionAnchorManifest.authorities?.requirementFamilyIndex?.digest !==
     authorityInputs.requirementFamilyIndex.digest
 );
+const clauseLedgerChanged = Boolean(
+  compatibleTransitionAnchorManifest &&
+  (compatibleTransitionAnchorManifest.authorities?.requirementClauseLedger?.digest !==
+    authorityInputs.requirementClauseLedger.digest ||
+    compatibleTransitionAnchorManifest.authorities?.requirementClauseLedger?.schemaDigest !==
+      authorityInputs.requirementClauseLedger.schemaDigest)
+);
+const protocolSchemasChanged = Boolean(
+  compatibleTransitionAnchorManifest &&
+  (compatibleTransitionAnchorManifest.authorities?.protocolSchemas?.digest !==
+    authorityInputs.protocolSchemas.digest ||
+    JSON.stringify(compatibleTransitionAnchorManifest.authorities?.protocolSchemas?.paths) !==
+      JSON.stringify(authorityInputs.protocolSchemas.paths))
+);
+const resultPolicyChanged = Boolean(
+  compatibleTransitionAnchorManifest &&
+  compatibleTransitionAnchorManifest.authorities?.resultPolicy?.digest !==
+    authorityInputs.resultPolicy.digest
+);
 const verifierChanged = Boolean(
   compatibleTransitionAnchorManifest &&
   (JSON.stringify(compatibleTransitionAnchorManifest.authorities?.verifier?.paths) !==
@@ -1539,6 +1925,9 @@ const authorityChanged =
   specificationChanged ||
   planChanged ||
   requirementIndexChanged ||
+  clauseLedgerChanged ||
+  protocolSchemasChanged ||
+  resultPolicyChanged ||
   verifierChanged ||
   domainModelChanged;
 const definitionChanged = issues.some(
@@ -1588,20 +1977,63 @@ const dynamicTombstoneOnlyChange = Boolean(
 );
 const governedRegistryTailChange = dynamicAppendOnlyChange || dynamicTombstoneOnlyChange;
 const hasMutableProgress = manifestHasMutableProgress(compatibleTransitionAnchorManifest);
-if (hasMutableProgress && (authorityChanged || definitionChanged) && !governedRegistryTailChange) {
+const anchoredAuthorityHistory = compatibleTransitionAnchorManifest?.authorityHistory;
+const declaredAuthorityHistory = compatibleExistingManifest?.authorityHistory;
+const anchoredAuthoritySetCount = anchoredAuthorityHistory?.authoritySets?.length ?? 0;
+const anchoredAuthorityMigrationCount = anchoredAuthorityHistory?.migrations?.length ?? 0;
+const appendedAuthoritySets = (declaredAuthorityHistory?.authoritySets ?? []).slice(
+  anchoredAuthoritySetCount
+);
+const appendedAuthorityMigrations = (declaredAuthorityHistory?.migrations ?? []).slice(
+  anchoredAuthorityMigrationCount
+);
+const declaredGovernedAuthorityMigration = Boolean(
+  hasMutableProgress &&
+  authorityChanged &&
+  anchoredAuthorityHistory &&
+  declaredAuthorityHistory &&
+  appendedAuthoritySets.length === 1 &&
+  appendedAuthorityMigrations.length === 1 &&
+  appendedAuthorityMigrations[0]?.fromAuthoritySetDigest ===
+    anchoredAuthorityHistory.currentAuthoritySetDigest &&
+  appendedAuthorityMigrations[0]?.toAuthoritySetDigest === currentAuthoritySetDigest &&
+  appendedAuthoritySets[0]?.authoritySetDigest === currentAuthoritySetDigest &&
+  declaredAuthorityHistory.currentAuthoritySetDigest === currentAuthoritySetDigest
+);
+if (hasMutableProgress && authorityChanged && !declaredGovernedAuthorityMigration) {
   fail(
-    "authority or existing tracer definitions changed after evidence existed; only one governed dynamic append or exact tombstone transaction may preserve history"
+    "authority changed after evidence existed without exactly one adjacent typed authority migration from the trusted set to the current set"
   );
 }
+if (hasMutableProgress && definitionChanged) {
+  fail("an existing registered tracer definition cannot change after execution begins");
+}
 
-const registryDefinitionsChanged =
-  !registryHistoryMissing &&
-  issues.some(
-    (issue) =>
-      previousIds.has(issue.id) &&
-      replayedRegistry.definitions.get(issue.id) !== issue.definitionDigest
-  );
-const registryNeedsRebaseline = registryHistoryMissing || registryDefinitionsChanged;
+const revisedDefinitions = registryHistoryMissing
+  ? []
+  : issues
+      .filter(
+        (issue) =>
+          previousIds.has(issue.id) &&
+          replayedRegistry.definitions.get(issue.id) !== issue.definitionDigest
+      )
+      .map((issue) => ({
+        id: issue.id,
+        previousDefinitionDigest: replayedRegistry.definitions.get(issue.id),
+        definitionDigest: issue.definitionDigest,
+        reason: "t01_clause_role_preregistration",
+      }));
+const t01PreregistrationWorktree = Boolean(
+  checkpointEstablishedAtRead &&
+  compatibleTransitionAnchorManifest?.schemaVersion === BOOTSTRAP_MANIFEST_SCHEMA &&
+  existsSync(path.join(root, clauseLedgerRepoPath)) &&
+  !manifestHasMutableProgress(compatibleTransitionAnchorManifest) &&
+  !rawExistingHasProgress
+);
+if (revisedDefinitions.length && !t01PreregistrationWorktree) {
+  fail("registered definition bytes can change only in the one-time T01 pre-registration");
+}
+const registryNeedsRebaseline = registryHistoryMissing;
 if (compatibleTransitionAnchorManifest && registryNeedsRebaseline && !preTrustCorrectionCandidate) {
   fail("an origin-anchored registry genesis cannot be rebaselined");
 }
@@ -1623,7 +2055,10 @@ const newlyAddedTombstones = registryNeedsRebaseline
   ? []
   : tombstones.filter((tombstone) => !replayedRegistry.replayedTombstones.has(tombstone.id));
 const registryChanged =
-  registryNeedsRebaseline || newlyAddedDefinitions.length > 0 || newlyAddedTombstones.length > 0;
+  registryNeedsRebaseline ||
+  newlyAddedDefinitions.length > 0 ||
+  revisedDefinitions.length > 0 ||
+  newlyAddedTombstones.length > 0;
 let registryEvents = priorRegistryEvents;
 if (registryChanged) {
   const eventPayload = {
@@ -1631,15 +2066,32 @@ if (registryChanged) {
     previousHead: previousRegistryHead,
     addedDefinitions: newlyAddedDefinitions,
     tombstonesAdded: newlyAddedTombstones,
+    ...(revisedDefinitions.length ? { revisedDefinitions } : {}),
   };
   registryEvents = [
     ...priorRegistryEvents,
-    { ...eventPayload, head: digest(JSON.stringify(eventPayload)) },
+    {
+      ...eventPayload,
+      head: digest(JSON.stringify(registryEventPayload(eventPayload))),
+    },
   ];
 }
 const finalRegistry = replayRegistryEvents(registryEvents);
 const registryGeneration = finalRegistry.generation;
 const registryHead = finalRegistry.head;
+const currentExecutionAuthoritySnapshot = {
+  authoritySetDigest: currentAuthoritySetDigest,
+  clauseLedgerDigest: authorityInputs.requirementClauseLedger.digest,
+  domainModelDigest: authorityInputs.domainModel.digest,
+  planDigest: authorityInputs.plan.digest,
+  planNarrativeDigest: authorityInputs.plan.narrativeDigest,
+  registryHead,
+  requirementFamilyIndexDigest: authorityInputs.requirementFamilyIndex.digest,
+  schemaRegistryDigest: authorityInputs.protocolSchemas.digest,
+  specificationDigest: authorityInputs.specification.digest,
+  tombstoneSetDigest,
+  verifierDigest: authorityInputs.verifier.digest,
+};
 const highestAllocatedId = Math.max(previousHighest, ...issues.map((issue) => issue.id));
 const registeredTracerIds = [
   ...new Set([...issues.map((issue) => issue.id), ...tombstoneIds]),
@@ -1676,7 +2128,7 @@ function defaultIssueCompletion(status) {
 const canPreserveGlobalState = Boolean(
   compatibleExistingManifest &&
   compatibleTransitionAnchorManifest &&
-  ((!authorityChanged && !definitionChanged) || governedRegistryTailChange)
+  ((!authorityChanged && !definitionChanged) || declaredGovernedAuthorityMigration)
 );
 const executionGenerations = canPreserveGlobalState
   ? (compatibleExistingManifest.executionGenerations ?? [])
@@ -1775,27 +2227,58 @@ function validCommit(value) {
   return typeof value === "string" && /^[a-f0-9]{40}$/.test(value);
 }
 
-function validReachabilityReceipt(value, implementationCommit) {
+function validPublicationReceipt(value, implementationCommit) {
   return (
     value &&
     typeof value === "object" &&
     !Array.isArray(value) &&
     Object.keys(value).sort().join(",") ===
-      ["branch", "checkedAt", "commit", "reachable", "remote"].sort().join(",") &&
+      [
+        "bootstrapAnchor",
+        "branch",
+        "checkedAt",
+        "commit",
+        "fetchedHead",
+        "graphQlHead",
+        "remote",
+        "remoteIdentity",
+        "remoteProtectionAssumed",
+        "repositoryDatabaseId",
+        "repositoryNameWithOwner",
+        "repositoryNodeId",
+        "schemaId",
+        "trustedMainAtStart",
+        "trustPolicyObject",
+      ]
+        .sort()
+        .join(",") &&
+    value.schemaId === "vellum.instrument-intelligence.publication-receipt.v1" &&
     value.remote === "origin" &&
-    value.branch === "main" &&
+    value.remoteIdentity === INSTRUMENT_INTELLIGENCE_PUBLICATION_TRUST.remoteIdentity &&
+    value.branch === INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.branch &&
+    value.repositoryNodeId === INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.nodeId &&
+    value.repositoryDatabaseId === INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.databaseId &&
+    value.repositoryNameWithOwner === INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.nameWithOwner &&
+    value.remoteProtectionAssumed === false &&
     value.commit === implementationCommit &&
-    value.reachable === true &&
+    value.fetchedHead === implementationCommit &&
+    value.graphQlHead === implementationCommit &&
+    validCommit(value.bootstrapAnchor) &&
+    validCommit(value.trustedMainAtStart) &&
+    /^[a-f0-9]{40}$/.test(value.trustPolicyObject ?? "") &&
     validIsoInstant(value.checkedAt)
   );
 }
 
 const authoritySnapshotKeys = [
+  "authoritySetDigest",
+  "clauseLedgerDigest",
   "domainModelDigest",
   "planDigest",
   "planNarrativeDigest",
   "registryHead",
   "requirementFamilyIndexDigest",
+  "schemaRegistryDigest",
   "specificationDigest",
   "tombstoneSetDigest",
   "verifierDigest",
@@ -1808,6 +2291,7 @@ const publicArtifactSchemas = new Set([
   "vellum.test-report.v1",
   "vellum.public-musical-artifact.v1",
   "vellum.public-review-receipt.v1",
+  "vellum.review-role-package.v1",
   "vellum.remediation-dispatch.v1",
   "vellum.redaction-receipt.v1",
 ]);
@@ -1862,7 +2346,182 @@ function validIsoInstant(value) {
   );
 }
 
-function validatePublicArtifactPayload(artifact, bytes, context) {
+const reviewCredentialTypes = new Set([
+  "institutional_registry",
+  "openpgp",
+  "owner_local",
+  "specialist_registry",
+  "ssh",
+  "webauthn",
+  "x509",
+]);
+const reviewAuthorityRoles = new Set([...HUMAN_REVIEW_ROLES, "owner", "authority_verifier"]);
+
+function validateReviewAuthorityCatalog(value, context) {
+  exactKeys(
+    value,
+    ["conflictPolicy", "credentials", "policy", "policyDigest", "revocations", "schemaId"],
+    context
+  );
+  if (
+    value.schemaId !== "vellum.instrument-intelligence.review-authority-catalog.v1" ||
+    !Array.isArray(value.credentials) ||
+    !Array.isArray(value.revocations)
+  ) {
+    fail(`${context} has an invalid closed root`);
+  }
+  exactKeys(value.conflictPolicy, ["policyId", "prohibitedRolePairs"], `${context}.conflictPolicy`);
+  if (
+    !/^[a-z][a-z0-9._-]{0,127}$/.test(value.conflictPolicy.policyId ?? "") ||
+    !Array.isArray(value.conflictPolicy.prohibitedRolePairs) ||
+    JSON.stringify(value.conflictPolicy.prohibitedRolePairs) !==
+      JSON.stringify([...new Set(value.conflictPolicy.prohibitedRolePairs)].sort())
+  ) {
+    fail(`${context}.conflictPolicy is invalid or unsorted`);
+  }
+  const conflictPolicyDigest = digest(JSON.stringify(value.conflictPolicy));
+  exactKeys(
+    value.policy,
+    ["algorithms", "clockSkewSeconds", "conflictPolicyDigest", "policyId"],
+    `${context}.policy`
+  );
+  if (
+    JSON.stringify(value.policy.algorithms) !== JSON.stringify(["ed25519"]) ||
+    !Number.isInteger(value.policy.clockSkewSeconds) ||
+    value.policy.clockSkewSeconds < 0 ||
+    value.policy.clockSkewSeconds > 600 ||
+    value.policy.conflictPolicyDigest !== conflictPolicyDigest ||
+    !/^[a-z][a-z0-9._-]{0,127}$/.test(value.policy.policyId ?? "") ||
+    value.policyDigest !== digest(JSON.stringify(value.policy))
+  ) {
+    fail(`${context}.policy does not bind its exact algorithm, clock, and conflict policy`);
+  }
+  const credentialIds = new Set();
+  for (const [index, credential] of value.credentials.entries()) {
+    const credentialContext = `${context}.credentials[${index}]`;
+    exactKeys(
+      credential,
+      [
+        "algorithm",
+        "authorizedClaimScopeDigests",
+        "credentialId",
+        "credentialType",
+        "expiresAt",
+        "issuedAt",
+        "publicKeySpki",
+        "registration",
+        "role",
+        "subjectId",
+      ],
+      credentialContext
+    );
+    exactKeys(
+      credential.registration,
+      ["artifactDigest", "generation", "receiptCommit", "tracerId"],
+      `${credentialContext}.registration`
+    );
+    if (
+      !/^[a-z0-9][a-z0-9._-]{0,127}$/.test(credential.credentialId ?? "") ||
+      credentialIds.has(credential.credentialId) ||
+      !reviewCredentialTypes.has(credential.credentialType) ||
+      !reviewAuthorityRoles.has(credential.role) ||
+      !/^[a-z0-9][a-z0-9._-]{0,127}$/.test(credential.subjectId ?? "") ||
+      credential.algorithm !== "ed25519" ||
+      !/^[A-Za-z0-9_-]{40,1024}$/.test(credential.publicKeySpki ?? "") ||
+      !validIsoInstant(credential.issuedAt) ||
+      !validIsoInstant(credential.expiresAt) ||
+      Date.parse(credential.expiresAt) <= Date.parse(credential.issuedAt) ||
+      !Array.isArray(credential.authorizedClaimScopeDigests) ||
+      JSON.stringify(credential.authorizedClaimScopeDigests) !==
+        JSON.stringify([...new Set(credential.authorizedClaimScopeDigests)].sort()) ||
+      credential.authorizedClaimScopeDigests.some((scopeDigest) => !validDigest(scopeDigest)) ||
+      !Number.isInteger(credential.registration.tracerId) ||
+      credential.registration.tracerId < 1 ||
+      !Number.isInteger(credential.registration.generation) ||
+      credential.registration.generation < 1 ||
+      !validCommit(credential.registration.receiptCommit) ||
+      !validDigest(credential.registration.artifactDigest)
+    ) {
+      fail(`${credentialContext} is invalid, duplicated, or not canonically ordered`);
+    }
+    credentialIds.add(credential.credentialId);
+  }
+  const sortedCredentialIds = value.credentials.map(({ credentialId }) => credentialId);
+  if (JSON.stringify(sortedCredentialIds) !== JSON.stringify([...sortedCredentialIds].sort())) {
+    fail(`${context}.credentials must be sorted by credentialId`);
+  }
+  const revocationKeys = new Set();
+  for (const [index, revocation] of value.revocations.entries()) {
+    const revocationContext = `${context}.revocations[${index}]`;
+    exactKeys(
+      revocation,
+      ["credentialId", "reasonCode", "revocationDigest", "revokedAt", "source"],
+      revocationContext
+    );
+    exactKeys(
+      revocation.source,
+      ["evidenceDigest", "generation", "receiptCommit", "tracerId"],
+      `${revocationContext}.source`
+    );
+    const projection = {
+      credentialId: revocation.credentialId,
+      reasonCode: revocation.reasonCode,
+      revokedAt: revocation.revokedAt,
+      source: revocation.source,
+    };
+    const revocationKey = `${revocation.credentialId}:${revocation.revokedAt}`;
+    if (
+      !credentialIds.has(revocation.credentialId) ||
+      revocationKeys.has(revocationKey) ||
+      !/^[a-z][a-z0-9_]{0,63}$/.test(revocation.reasonCode ?? "") ||
+      !validIsoInstant(revocation.revokedAt) ||
+      revocation.revocationDigest !== digest(JSON.stringify(projection)) ||
+      !Number.isInteger(revocation.source.tracerId) ||
+      revocation.source.tracerId < 1 ||
+      !Number.isInteger(revocation.source.generation) ||
+      revocation.source.generation < 1 ||
+      !validCommit(revocation.source.receiptCommit) ||
+      !validDigest(revocation.source.evidenceDigest)
+    ) {
+      fail(`${revocationContext} is invalid or duplicated`);
+    }
+    revocationKeys.add(revocationKey);
+  }
+  const sortedRevocationKeys = value.revocations.map(
+    ({ credentialId, revokedAt }) => `${credentialId}:${revokedAt}`
+  );
+  if (JSON.stringify(sortedRevocationKeys) !== JSON.stringify([...sortedRevocationKeys].sort())) {
+    fail(`${context}.revocations must be canonically sorted`);
+  }
+  return value;
+}
+
+const reviewAuthorityCatalogCache = new Map();
+function reviewAuthorityCatalogAt(ref) {
+  if (reviewAuthorityCatalogCache.has(ref)) return reviewAuthorityCatalogCache.get(ref);
+  let value;
+  try {
+    const bytes =
+      ref === "WORKTREE"
+        ? readLocalBytes(reviewAuthorityCatalogRepoPath)
+        : gitBytesAt(ref, reviewAuthorityCatalogRepoPath);
+    value = validateReviewAuthorityCatalog(
+      JSON.parse(bytes.toString("utf8")),
+      `${ref}:${reviewAuthorityCatalogRepoPath}`
+    );
+  } catch (error) {
+    if (error?.message?.startsWith("Instrument Intelligence plan verification failed:")) {
+      throw error;
+    }
+    fail(`${ref}:${reviewAuthorityCatalogRepoPath} is not valid canonical JSON`);
+  }
+  reviewAuthorityCatalogCache.set(ref, value);
+  return value;
+}
+
+reviewAuthorityCatalogAt("WORKTREE");
+
+function validatePublicArtifactPayload(artifact, bytes, context, authorityOptions = null) {
   if (artifact.schemaId === "vellum.public-musical-artifact.v1") {
     if (artifact.mediaType === "application/json") {
       fail(`${context} musical artifacts cannot use an untyped JSON payload`);
@@ -1881,51 +2540,205 @@ function validatePublicArtifactPayload(artifact, bytes, context) {
   if (artifact.schemaId === "vellum.sanitized-gate-log.v1") {
     exactKeys(
       payload,
-      ["artifactId", "commandDigest", "outputDigest", "schemaId", "status"],
-      context
-    );
-    if (!validDigest(payload.commandDigest) || !validDigest(payload.outputDigest)) {
-      fail(`${context} gate-log digests are invalid`);
-    }
-  } else if (artifact.schemaId === "vellum.test-report.v1") {
-    exactKeys(
-      payload,
-      ["artifactId", "failed", "outputDigest", "passed", "schemaId", "skipped", "status"],
-      context
-    );
-    if (
-      !validDigest(payload.outputDigest) ||
-      ![payload.passed, payload.failed, payload.skipped].every(
-        (count) => Number.isInteger(count) && count >= 0
-      ) ||
-      (payload.status === "pass" && (payload.failed !== 0 || payload.passed < 1)) ||
-      (payload.status === "fail" && payload.failed < 1)
-    ) {
-      fail(`${context} test-report counts/status/digest are invalid`);
-    }
-  } else if (artifact.schemaId === "vellum.public-review-receipt.v1") {
-    exactKeys(payload, ["artifactId", "outputDigest", "schemaId", "status"], context);
-    if (!validDigest(payload.outputDigest)) fail(`${context} review output digest is invalid`);
-  } else if (artifact.schemaId === "vellum.remediation-dispatch.v1") {
-    exactKeys(
-      payload,
       [
         "artifactId",
-        "closureTargets",
-        "findingId",
-        "invalidations",
-        "outputDigest",
-        "rejoinAt",
-        "repairTracerId",
+        "blocked",
+        "commandDigest",
+        "failed",
+        "incomplete",
+        "passed",
         "schemaId",
+        "skipped",
         "status",
       ],
       context
     );
     if (
-      !validDigest(payload.outputDigest) ||
+      !validDigest(payload.commandDigest) ||
+      ![payload.passed, payload.failed, payload.skipped, payload.blocked, payload.incomplete].every(
+        (count) => Number.isInteger(count) && count >= 0
+      )
+    ) {
+      fail(`${context} gate-log command/count proof is invalid`);
+    }
+  } else if (artifact.schemaId === "vellum.test-report.v1") {
+    exactKeys(
+      payload,
+      [
+        "artifactId",
+        "blocked",
+        "commandDigest",
+        "failed",
+        "incomplete",
+        "passed",
+        "schemaId",
+        "skipped",
+        "status",
+      ],
+      context
+    );
+    if (
+      !validDigest(payload.commandDigest) ||
+      ![payload.passed, payload.failed, payload.skipped, payload.blocked, payload.incomplete].every(
+        (count) => Number.isInteger(count) && count >= 0
+      ) ||
+      (payload.status === "pass" &&
+        (payload.failed !== 0 ||
+          payload.blocked !== 0 ||
+          payload.incomplete !== 0 ||
+          payload.passed < 1)) ||
+      (payload.status === "fail" && payload.failed < 1) ||
+      (payload.status === "blocked" && payload.blocked < 1) ||
+      (payload.status === "incomplete" && payload.incomplete < 1)
+    ) {
+      fail(`${context} test-report counts/status/digest are invalid`);
+    }
+  } else if (artifact.schemaId === "vellum.review-role-package.v1") {
+    exactKeys(payload, ["artifactId", "consumers", "outputDigest", "schemaId", "status"], context);
+    if (
       payload.status !== "pass" ||
-      !/^finding_[a-f0-9]{16,64}$/.test(payload.findingId ?? "") ||
+      !Array.isArray(payload.consumers) ||
+      !payload.consumers.length ||
+      payload.outputDigest !== digest(JSON.stringify(payload.consumers))
+    ) {
+      fail(`${context} review-role package root is invalid`);
+    }
+    const consumerIds = new Set();
+    const validateDigestRef = (reference, referenceContext) => {
+      exactKeys(reference, ["digest", "id"], referenceContext);
+      if (
+        !/^[a-z0-9][a-z0-9._-]{0,127}$/.test(reference.id ?? "") ||
+        !validDigest(reference.digest)
+      ) {
+        fail(`${referenceContext} is invalid`);
+      }
+    };
+    for (const [index, consumer] of payload.consumers.entries()) {
+      const consumerContext = `${context}.consumers[${index}]`;
+      exactKeys(
+        consumer,
+        [
+          "disqualifiedReviewerSubjectIds",
+          "outputs",
+          "package",
+          "system",
+          "systemGeneration",
+          "tracerId",
+        ],
+        consumerContext
+      );
+      if (
+        !/^T(?:0[1-9]|[1-9][0-9]*)$/.test(consumer.tracerId ?? "") ||
+        consumerIds.has(consumer.tracerId)
+      ) {
+        fail(`${consumerContext}.tracerId is invalid or duplicated`);
+      }
+      consumerIds.add(consumer.tracerId);
+      if (
+        !Array.isArray(consumer.disqualifiedReviewerSubjectIds) ||
+        JSON.stringify(consumer.disqualifiedReviewerSubjectIds) !==
+          JSON.stringify([...new Set(consumer.disqualifiedReviewerSubjectIds)].sort()) ||
+        consumer.disqualifiedReviewerSubjectIds.some(
+          (subjectId) => !/^[a-z0-9][a-z0-9._-]{0,127}$/.test(subjectId)
+        )
+      ) {
+        fail(`${consumerContext}.disqualifiedReviewerSubjectIds is invalid or unsorted`);
+      }
+      validateDigestRef(consumer.package, `${consumerContext}.package`);
+      validateDigestRef(consumer.system, `${consumerContext}.system`);
+      if (
+        !Array.isArray(consumer.outputs) ||
+        !consumer.outputs.length ||
+        JSON.stringify(consumer.outputs.map(({ id }) => id)) !==
+          JSON.stringify([...new Set(consumer.outputs.map(({ id }) => id))].sort())
+      ) {
+        fail(`${consumerContext}.outputs must be a sorted unique nonempty set`);
+      }
+      for (const [outputIndex, output] of consumer.outputs.entries()) {
+        validateDigestRef(output, `${consumerContext}.outputs[${outputIndex}]`);
+      }
+      exactKeys(
+        consumer.systemGeneration,
+        ["artifactDigest", "generation", "receiptCommit", "tracerId"],
+        `${consumerContext}.systemGeneration`
+      );
+      if (
+        !/^T(?:0[1-9]|[1-9][0-9]*)$/.test(consumer.systemGeneration.tracerId ?? "") ||
+        !Number.isInteger(consumer.systemGeneration.generation) ||
+        consumer.systemGeneration.generation < 1 ||
+        !validCommit(consumer.systemGeneration.receiptCommit) ||
+        !validDigest(consumer.systemGeneration.artifactDigest)
+      ) {
+        fail(`${consumerContext}.systemGeneration is invalid`);
+      }
+    }
+    if (
+      JSON.stringify(payload.consumers.map(({ tracerId }) => tracerId)) !==
+      JSON.stringify([...payload.consumers.map(({ tracerId }) => tracerId)].sort())
+    ) {
+      fail(`${context}.consumers must be sorted by tracerId`);
+    }
+  } else if (artifact.schemaId === "vellum.public-review-receipt.v1") {
+    if (!authorityOptions) fail(`${context} lacks an exact-base authority verification context`);
+    try {
+      validateAuthorityArtifactPayload(payload, {
+        context,
+        expectedSubjects: authorityOptions.expectedSubjects,
+        expectedVerifierPolicyDigest: authorityOptions.catalog.policyDigest,
+        requireGrant: true,
+        verifySignature: authorityOptions.verifySignature,
+      });
+      validateAuthorityReceiptAgainstCatalog(payload, authorityOptions, context);
+    } catch (error) {
+      fail(error.message);
+    }
+    const status =
+      payload.receiptKind === "human_review"
+        ? payload.statement.review.productAcceptance
+        : payload.statement.decision.productAcceptance;
+    if (payload.statement.authorityReceiptId !== artifact.artifactId) {
+      fail(`${context} authority receipt identity differs from its artifact receipt`);
+    }
+    return {
+      ...payload,
+      artifactId: artifact.artifactId,
+      outputDigest: artifact.sha256,
+      status,
+    };
+  } else if (artifact.schemaId === "vellum.remediation-dispatch.v1") {
+    exactKeys(
+      payload,
+      [
+        "affectedClauseIds",
+        "artifactId",
+        "closureTargets",
+        "expectedAllocation",
+        "findingId",
+        "inheritedCommitment",
+        "invalidatesMachineComplete",
+        "invalidationScopes",
+        "invalidations",
+        "obligationId",
+        "outputDigest",
+        "rejoinAt",
+        "repairContract",
+        "repairDefinitionDigest",
+        "repairTracerId",
+        "schemaId",
+        "source",
+        "status",
+        "transfersFrom",
+      ],
+      context
+    );
+    if (
+      !validDigest(payload.outputDigest) ||
+      !validDigest(payload.repairDefinitionDigest) ||
+      payload.status !== "pass" ||
+      !/^[a-z][a-z0-9_]{0,127}$/.test(payload.findingId ?? "") ||
+      !/^[a-z][a-z0-9_]{0,127}$/.test(payload.obligationId ?? "") ||
+      (payload.transfersFrom !== null &&
+        !/^[a-z][a-z0-9_]{0,127}$/.test(payload.transfersFrom ?? "")) ||
       !Number.isInteger(payload.repairTracerId) ||
       payload.repairTracerId < 1
     ) {
@@ -1942,6 +2755,54 @@ function validatePublicArtifactPayload(artifact, bytes, context) {
         fail(`${targetContext} is invalid`);
       }
     };
+    exactKeys(payload.source, ["generation", "resultCode", "tracerId"], `${context}.source`);
+    if (
+      !Number.isInteger(payload.source.tracerId) ||
+      payload.source.tracerId < 1 ||
+      !Number.isInteger(payload.source.generation) ||
+      payload.source.generation < 1 ||
+      !/^[a-z][a-z0-9_]{0,63}$/.test(payload.source.resultCode ?? "")
+    ) {
+      fail(`${context}.source.resultCode is invalid`);
+    }
+    exactKeys(
+      payload.expectedAllocation,
+      ["registryHead", "tracerId"],
+      `${context}.expectedAllocation`
+    );
+    if (
+      payload.expectedAllocation.tracerId !== payload.repairTracerId ||
+      !validDigest(payload.expectedAllocation.registryHead)
+    ) {
+      fail(`${context}.expectedAllocation does not bind the repair tracer and registry`);
+    }
+    exactKeys(payload.repairContract, ["completionSemantics", "type"], `${context}.repairContract`);
+    if (
+      payload.repairContract.type !== "AFK" ||
+      payload.repairContract.completionSemantics !== "implementation-pass"
+    ) {
+      fail(`${context}.repairContract is invalid`);
+    }
+    if (
+      !Array.isArray(payload.affectedClauseIds) ||
+      !payload.affectedClauseIds.length ||
+      JSON.stringify(payload.affectedClauseIds) !==
+        JSON.stringify([...new Set(payload.affectedClauseIds)].sort()) ||
+      payload.affectedClauseIds.some((clauseId) => !/^II-CLAUSE-\d{4}$/.test(clauseId))
+    ) {
+      fail(`${context}.affectedClauseIds is not a sorted nonempty clause set`);
+    }
+    exactKeys(
+      payload.inheritedCommitment,
+      ["regressionLedgerHead", "reserveCursorCommitment"],
+      `${context}.inheritedCommitment`
+    );
+    if (
+      !validDigest(payload.inheritedCommitment.regressionLedgerHead) ||
+      !validDigest(payload.inheritedCommitment.reserveCursorCommitment)
+    ) {
+      fail(`${context}.inheritedCommitment is invalid`);
+    }
     validateTarget(payload.rejoinAt, `${context}.rejoinAt`);
     if (!Array.isArray(payload.invalidations) || !payload.invalidations.length) {
       fail(`${context}.invalidations must be nonempty`);
@@ -1963,6 +2824,16 @@ function validatePublicArtifactPayload(artifact, bytes, context) {
       }
       invalidationTargets.add(targetKey);
     }
+    const derivedInvalidationScopes = [
+      ...new Set(payload.invalidations.flatMap(({ scopes }) => scopes)),
+    ].sort();
+    if (
+      !Array.isArray(payload.invalidationScopes) ||
+      JSON.stringify(payload.invalidationScopes) !== JSON.stringify(derivedInvalidationScopes) ||
+      payload.invalidatesMachineComplete !== derivedInvalidationScopes.includes("machine_closure")
+    ) {
+      fail(`${context} invalidation summary contradicts its exact edges`);
+    }
     if (!Array.isArray(payload.closureTargets) || !payload.closureTargets.length) {
       fail(`${context}.closureTargets must be nonempty`);
     }
@@ -1973,6 +2844,12 @@ function validatePublicArtifactPayload(artifact, bytes, context) {
         fail(`${context} contains an invalid or duplicate closure target`);
       }
       closureTargetIds.add(target.tracerId);
+    }
+    if (
+      !closureTargetIds.has(87) ||
+      closureTargetIds.has(85) !== payload.invalidatesMachineComplete
+    ) {
+      fail(`${context}.closureTargets contradict the derived Machine impact`);
     }
   } else if (artifact.schemaId === "vellum.redaction-receipt.v1") {
     exactKeys(
@@ -1998,7 +2875,7 @@ function validatePublicArtifactPayload(artifact, bytes, context) {
   return payload;
 }
 
-function validateEvidenceReceipt(evidenceBytes, generation, definition) {
+function validateLegacyEvidenceReceipt(evidenceBytes, generation, definition) {
   let evidence;
   try {
     evidence = JSON.parse(evidenceBytes.toString("utf8"));
@@ -2253,7 +3130,14 @@ function validateEvidenceReceipt(evidenceBytes, generation, definition) {
     if (digest(committedArtifactBytes) !== artifact.sha256) {
       fail(`${artifact.path} differs from its implementation commit`);
     }
-    const payload = validatePublicArtifactPayload(artifact, committedArtifactBytes, artifact.path);
+    const payload = validatePublicArtifactPayload(
+      artifact,
+      committedArtifactBytes,
+      artifact.path,
+      artifact.schemaId === "vellum.public-review-receipt.v1"
+        ? reviewAuthorityOptionsFor(generation)
+        : null
+    );
     artifactPayloads.set(artifact.artifactId, payload);
     artifactReceipts.set(artifact.artifactId, { artifact, payload });
     allowedCommittedFiles.add(artifact.path);
@@ -2324,6 +3208,199 @@ function validateEvidenceReceipt(evidenceBytes, generation, definition) {
   return { evidence, artifactReceipts };
 }
 
+function validateEvidenceReceipt(evidenceBytes, generation, definition) {
+  let evidence;
+  try {
+    evidence = JSON.parse(evidenceBytes.toString("utf8"));
+  } catch {
+    fail(`${definition.evidencePath} must contain canonical typed JSON`);
+  }
+  try {
+    validateEvidenceReceiptV2(evidence, definition.evidencePath);
+  } catch (error) {
+    fail(error.message);
+  }
+
+  const tracerTag = `T${String(generation.tracerId).padStart(2, "0")}`;
+  if (
+    evidence.schemaId !== EVIDENCE_RECEIPT_SCHEMA_ID ||
+    evidence.startReceipt.start.tracerId !== tracerTag ||
+    evidence.startReceipt.start.generation !== generation.generation ||
+    evidence.startReceipt.definition.path !== generation.definitionPath ||
+    evidence.startReceipt.definition.sha256 !== generation.definitionDigest ||
+    evidence.startReceipt.definition.gateMatrixDigest !== definition.gateMatrixDigest ||
+    evidence.startReceipt.definition.completionSemantics !== definition.completionSemantics ||
+    JSON.stringify(evidence.startReceipt) !== JSON.stringify(generation.startReceipt)
+  ) {
+    fail(`${definition.evidencePath} start receipt differs from its immutable generation binding`);
+  }
+
+  const disposition = generation.resultDisposition;
+  const expectedDispatchArtifactIds =
+    disposition.disposition === "repair_dispatch"
+      ? evidence.outcome.resultDisposition.dispatchArtifactIds
+      : [];
+  if (
+    evidence.outcome.issueCompletion !== generation.issueCompletion ||
+    evidence.outcome.productAcceptance !== generation.productAcceptance ||
+    evidence.outcome.applicability !== generation.applicability ||
+    evidence.outcome.comparison !== generation.comparison ||
+    evidence.outcome.freshness !== generation.freshness ||
+    evidence.outcome.compatibility !== generation.compatibility ||
+    evidence.outcome.authorityValidity !== generation.authorityValidity ||
+    JSON.stringify(evidence.outcome.supersedes) !== JSON.stringify(generation.supersedes) ||
+    JSON.stringify(evidence.outcome.invalidates) !== JSON.stringify(generation.invalidates) ||
+    evidence.outcome.resultDisposition.code !== generation.resultCode ||
+    evidence.outcome.resultDisposition.disposition !== disposition.disposition ||
+    (disposition.disposition !== "repair_dispatch" &&
+      evidence.outcome.resultDisposition.dispatchArtifactIds.length !== 0) ||
+    disposition.dispatchCount !== expectedDispatchArtifactIds.length
+  ) {
+    fail(`${definition.evidencePath} outcome differs from its typed generation disposition`);
+  }
+
+  const receivedCommands = { focused: [], base: [], conditional: [] };
+  const gateByArtifactId = new Map();
+  for (const gate of evidence.gates) {
+    receivedCommands[gate.group].push(gate.command);
+    if (gateByArtifactId.has(gate.reportArtifactId)) {
+      fail(`${definition.evidencePath} reuses one gate artifact across multiple commands`);
+    }
+    gateByArtifactId.set(gate.reportArtifactId, gate);
+  }
+  for (const group of ["focused", "base"]) {
+    if (
+      JSON.stringify(receivedCommands[group]) !==
+      JSON.stringify(definition.expectedGateCommands[group])
+    ) {
+      fail(`${definition.evidencePath} lacks exact ordered ${group} gate coverage`);
+    }
+  }
+  const conditionalApplicable = generation.applicability === "applicable";
+  const expectedConditionalCommands = conditionalApplicable
+    ? definition.expectedGateCommands.conditional
+    : [];
+  if (
+    JSON.stringify(receivedCommands.conditional) !== JSON.stringify(expectedConditionalCommands)
+  ) {
+    fail(`${definition.evidencePath} conditional gate coverage contradicts applicability`);
+  }
+  if (
+    generation.issueCompletion === "complete" &&
+    evidence.gates.some((gate) => gate.status !== "pass")
+  ) {
+    fail(`${definition.evidencePath} cannot complete with a nonpassing gate`);
+  }
+
+  const artifactReceipts = new Map();
+  const allowedCommittedFiles = new Set([definition.evidencePath]);
+  const evidenceDirectory = path.posix.dirname(definition.evidencePath);
+  for (const artifact of evidence.artifacts) {
+    if (artifact.requirementIds.some((requirementId) => !requirementRows.has(requirementId))) {
+      fail(`${artifact.publicPath} names an unknown requirement family`);
+    }
+    requireCommittedRegularFile(generation.implementationCommit, artifact.publicPath);
+    const artifactBytes = gitBytesAt(generation.implementationCommit, artifact.publicPath);
+    if (digest(artifactBytes) !== artifact.sha256) {
+      fail(`${artifact.publicPath} differs from its implementation commit receipt`);
+    }
+    const compatibilityArtifact = { ...artifact, path: artifact.publicPath };
+    const payload = validatePublicArtifactPayload(
+      compatibilityArtifact,
+      artifactBytes,
+      artifact.publicPath,
+      artifact.schemaId === "vellum.public-review-receipt.v1"
+        ? reviewAuthorityOptionsFor(generation)
+        : null
+    );
+    artifactReceipts.set(artifact.artifactId, {
+      artifact: compatibilityArtifact,
+      payload,
+    });
+    allowedCommittedFiles.add(artifact.publicPath);
+  }
+
+  for (const [artifactId, gate] of gateByArtifactId) {
+    const receipt = artifactReceipts.get(artifactId);
+    const payload = receipt?.payload;
+    if (
+      !receipt ||
+      !new Set(["vellum.test-report.v1", "vellum.sanitized-gate-log.v1"]).has(
+        receipt.artifact.schemaId
+      ) ||
+      payload?.status !== gate.status ||
+      payload?.commandDigest !== gate.commandDigest ||
+      payload?.passed !== gate.counts.passed ||
+      payload?.failed !== gate.counts.failed ||
+      payload?.skipped !== gate.counts.skipped ||
+      payload?.blocked !== gate.counts.blocked ||
+      payload?.incomplete !== gate.counts.incomplete
+    ) {
+      fail(`${definition.evidencePath} gate ${gate.gateId} lacks an exact typed report artifact`);
+    }
+  }
+
+  if (JSON.stringify(evidence.claims) !== JSON.stringify(generation.clauseClaims)) {
+    fail(`${definition.evidencePath} clause claims differ from the generation receipt`);
+  }
+  let historicalClauseLedger;
+  try {
+    historicalClauseLedger = assertCanonicalClauseLedgerJson(
+      gitBytesAt(generation.implementationCommit, clauseLedgerRepoPath).toString("utf8")
+    );
+  } catch (error) {
+    fail(`${definition.evidencePath} historical clause ledger is invalid: ${error.message}`);
+  }
+  const clausesById = new Map(historicalClauseLedger.clauses.map((clause) => [clause.id, clause]));
+  const clauseRecords = [];
+  for (const claim of evidence.claims) {
+    const clause = clausesById.get(claim.clauseId);
+    if (
+      !clause ||
+      clause.contentDigest !== claim.clauseDigest ||
+      clause.familyId !== claim.requirementId ||
+      claim.contributor.subjectId !== tracerTag ||
+      claim.contributor.role !== "evidence_contributor" ||
+      !clause.evidenceContributors.includes(tracerTag) ||
+      clause.implementationOwner === tracerTag ||
+      clause.closureVerifier === tracerTag
+    ) {
+      fail(`${definition.evidencePath} contains an unauthorized or role-conflicted clause claim`);
+    }
+    clauseRecords.push({ clauseId: clause.id, claim });
+  }
+
+  const referencedArtifacts = new Set();
+  for (const gate of evidence.gates) referencedArtifacts.add(gate.reportArtifactId);
+  for (const claim of evidence.claims) {
+    for (const artifactId of claim.evidenceArtifactIds) referencedArtifacts.add(artifactId);
+  }
+  for (const redaction of evidence.privacy.redactions) {
+    referencedArtifacts.add(redaction.receiptArtifactId);
+  }
+  for (const receipt of evidence.mediaSanitization) referencedArtifacts.add(receipt.artifactId);
+  for (const artifactId of expectedDispatchArtifactIds) referencedArtifacts.add(artifactId);
+  for (const artifact of evidence.artifacts) {
+    if (!referencedArtifacts.has(artifact.artifactId)) {
+      fail(`${definition.evidencePath} lists unreferenced artifact ${artifact.artifactId}`);
+    }
+  }
+  for (const expectedDispatchArtifactId of expectedDispatchArtifactIds) {
+    const dispatch = artifactReceipts.get(expectedDispatchArtifactId);
+    if (dispatch?.artifact.schemaId !== "vellum.remediation-dispatch.v1") {
+      fail(`${definition.evidencePath} repair disposition lacks its typed dispatch artifact`);
+    }
+  }
+
+  for (const committedPath of gitFilesUnder(generation.implementationCommit, evidenceDirectory)) {
+    requireCommittedRegularFile(generation.implementationCommit, committedPath);
+    if (!allowedCommittedFiles.has(committedPath)) {
+      fail(`${committedPath} is unlisted public evidence and may leak private data`);
+    }
+  }
+  return { evidence, artifactReceipts, clauseRecords };
+}
+
 const validatedEvidenceByGeneration = new Map();
 function validateCommittedExecutionBinding(generation, definition) {
   const key = `${generation.tracerId}:${generation.generation}`;
@@ -2346,27 +3423,48 @@ function validateCommittedExecutionBinding(generation, definition) {
     }
     fail(`${key} implementation commit lineage is unavailable`);
   }
+  const startReceipt = generation.startReceipt;
+  const historicalAuthorityPaths = startReceipt.authoritySnapshot.pathDigests.map(
+    (entry) => entry.path
+  );
+  const historicalAuthorityDigestByPath = new Map(
+    startReceipt.authoritySnapshot.pathDigests.map((entry) => [entry.path, entry.sha256])
+  );
+  if (
+    startReceipt.publication.checkpoint.bootstrapAnchor.object !== bootstrapAnchorAtRead ||
+    startReceipt.publication.checkpoint.trustPolicy.object !== trustPolicyObjectAtRead ||
+    startReceipt.publication.checkpoint.trustedMain.object !== parentCommit ||
+    startReceipt.publication.fetchedHead !== parentCommit ||
+    startReceipt.publication.graphQlHead !== parentCommit ||
+    startReceipt.execution.baseCommit !== parentCommit ||
+    startReceipt.execution.productTreeDigest !== projectedProductTreeDigestAt(parentCommit)
+  ) {
+    fail(`${key} start receipt does not bind the exact trusted base and projected product tree`);
+  }
+  if (
+    generation.remotePublicationReceipt.bootstrapAnchor !==
+      startReceipt.publication.checkpoint.bootstrapAnchor.object ||
+    generation.remotePublicationReceipt.trustPolicyObject !==
+      startReceipt.publication.checkpoint.trustPolicy.object ||
+    generation.remotePublicationReceipt.trustedMainAtStart !== parentCommit ||
+    generation.remotePublicationReceipt.fetchedHead !== generation.implementationCommit ||
+    generation.remotePublicationReceipt.graphQlHead !== generation.implementationCommit
+  ) {
+    fail(`${key} publication receipt does not close the exact start checkpoint and pushed commit`);
+  }
   const committedPaths = [
     definition.evidencePath,
     generation.definitionPath,
-    "SPEC.md",
-    ".scratch/instrument-intelligence/PLAN.md",
-    ".scratch/instrument-intelligence/REQUIREMENTS.md",
     manifestRepoPath,
-    ...verificationAuthorityPaths,
-    ...domainAuthorityPaths,
+    ...historicalAuthorityPaths,
   ];
   for (const committedPath of committedPaths) {
     requireCommittedRegularFile(generation.implementationCommit, committedPath);
   }
   for (const immutablePath of [
     generation.definitionPath,
-    "SPEC.md",
-    ".scratch/instrument-intelligence/PLAN.md",
-    ".scratch/instrument-intelligence/REQUIREMENTS.md",
     manifestRepoPath,
-    ...verificationAuthorityPaths,
-    ...domainAuthorityPaths,
+    ...historicalAuthorityPaths,
   ]) {
     requireCommittedRegularFile(parentCommit, immutablePath);
     if (
@@ -2375,6 +3473,14 @@ function validateCommittedExecutionBinding(generation, definition) {
       )
     ) {
       fail(`${key} changed ${immutablePath} during implementation instead of pre-registering it`);
+    }
+  }
+  for (const [governedPath, expectedDigest] of historicalAuthorityDigestByPath) {
+    if (
+      digest(gitBytesAt(generation.implementationCommit, governedPath)) !== expectedDigest ||
+      digest(gitBytesAt(parentCommit, governedPath)) !== expectedDigest
+    ) {
+      fail(`${key} historical authority path ${governedPath} differs from its start receipt`);
     }
   }
   const committedEvidenceBytes = gitBytesAt(
@@ -2399,12 +3505,17 @@ function validateCommittedExecutionBinding(generation, definition) {
     generation.implementationCommit,
     ".scratch/instrument-intelligence/REQUIREMENTS.md"
   );
-  const committedVerifierDigest = authorityBundleDigest(
-    verificationAuthorityPaths,
-    (governedPath) => gitBytesAt(generation.implementationCommit, governedPath)
-  );
-  const committedDomainModelDigest = authorityBundleDigest(domainAuthorityPaths, (governedPath) =>
+  const committedManifest = gitJsonAt(generation.implementationCommit, manifestRepoPath, {
+    required: true,
+  });
+  const committedVerifierPaths = committedManifest.authorities?.verifier?.paths ?? [];
+  const committedDomainModelPaths = committedManifest.authorities?.domainModel?.paths ?? [];
+  const committedVerifierDigest = authorityBundleDigest(committedVerifierPaths, (governedPath) =>
     gitBytesAt(generation.implementationCommit, governedPath)
+  );
+  const committedDomainModelDigest = authorityBundleDigest(
+    committedDomainModelPaths,
+    (governedPath) => gitBytesAt(generation.implementationCommit, governedPath)
   );
   const snapshot = generation.authoritySnapshot;
   if (
@@ -2412,30 +3523,37 @@ function validateCommittedExecutionBinding(generation, definition) {
     digest(committedPlan) !== snapshot.planDigest ||
     planNarrativeDigestFor(committedPlan.toString("utf8")) !== snapshot.planNarrativeDigest ||
     digest(committedRequirements) !== snapshot.requirementFamilyIndexDigest ||
+    digest(gitBytesAt(generation.implementationCommit, clauseLedgerRepoPath)) !==
+      snapshot.clauseLedgerDigest ||
+    committedManifest.authorities?.protocolSchemas?.digest !== snapshot.schemaRegistryDigest ||
     committedVerifierDigest !== snapshot.verifierDigest ||
-    committedDomainModelDigest !== snapshot.domainModelDigest
+    committedDomainModelDigest !== snapshot.domainModelDigest ||
+    startReceipt.authoritySnapshot.authoritySetDigest !== snapshot.authoritySetDigest
   ) {
     fail(`${key} authoritySnapshot does not match its implementation commit`);
   }
-  const committedManifest = gitJsonAt(generation.implementationCommit, manifestRepoPath, {
-    required: true,
-  });
   const committedTracer = committedManifest?.tracers?.find(
     (tracer) => tracer.id === generation.tracerId
   );
   if (
-    committedManifest?.schemaVersion !== 5 ||
+    !supportedManifest(committedManifest) ||
     committedManifest.authorities?.specification?.digest !== snapshot.specificationDigest ||
     committedManifest.authorities?.plan?.digest !== snapshot.planDigest ||
     committedManifest.authorities?.plan?.narrativeDigest !== snapshot.planNarrativeDigest ||
     committedManifest.authorities?.requirementFamilyIndex?.digest !==
       snapshot.requirementFamilyIndexDigest ||
+    committedManifest.authorities?.requirementClauseLedger?.digest !==
+      snapshot.clauseLedgerDigest ||
+    committedManifest.authorities?.protocolSchemas?.digest !== snapshot.schemaRegistryDigest ||
     committedManifest.authorities?.verifier?.digest !== snapshot.verifierDigest ||
-    JSON.stringify(committedManifest.authorities?.verifier?.paths) !==
-      JSON.stringify(verificationAuthorityPaths) ||
     committedManifest.authorities?.domainModel?.digest !== snapshot.domainModelDigest ||
-    JSON.stringify(committedManifest.authorities?.domainModel?.paths) !==
-      JSON.stringify(domainAuthorityPaths) ||
+    committedManifest.authorityHistory?.currentAuthoritySetDigest !== snapshot.authoritySetDigest ||
+    !committedManifest.authorityHistory?.authoritySets?.some(
+      (authoritySet) =>
+        authoritySet.authoritySetDigest === snapshot.authoritySetDigest &&
+        JSON.stringify(authoritySet.pathDigests) ===
+          JSON.stringify(startReceipt.authoritySnapshot.pathDigests)
+    ) ||
     committedManifest.idPolicy?.registryHead !== snapshot.registryHead ||
     committedManifest.idPolicy?.tombstoneSetDigest !== snapshot.tombstoneSetDigest ||
     committedTracer?.definitionDigest !== generation.definitionDigest ||
@@ -2453,6 +3571,20 @@ function validateCommittedExecutionBinding(generation, definition) {
       fail(`${key} predecessor was not anchored before its implementation commit`);
     }
   }
+  for (const predecessor of startReceipt.predecessors) {
+    const predecessorManifest = gitJsonAt(predecessor.receiptCommit, manifestRepoPath, {
+      required: true,
+    });
+    const predecessorKey = `${Number(predecessor.tracerId.slice(1))}:${predecessor.generation}`;
+    if (
+      !isFirstParentAncestor(predecessor.receiptCommit, parentCommit) ||
+      !(predecessorManifest.executionGenerations ?? []).some(
+        (receipt) => `${receipt.tracerId}:${receipt.generation}` === predecessorKey
+      )
+    ) {
+      fail(`${key} predecessor start witness is not an exact pushed ancestor receipt commit`);
+    }
+  }
   if (!registryEvents.some((event) => event.head === snapshot.registryHead)) {
     fail(`${key} authoritySnapshot registry head is not an ancestor of the current registry`);
   }
@@ -2467,8 +3599,8 @@ function validateCommittedExecutionBinding(generation, definition) {
   );
   if (
     Date.parse(validatedEvidence.evidence.finishedAt) > committedAt ||
-    Date.parse(generation.remoteReachabilityReceipt.checkedAt) < committedAt ||
-    Date.parse(generation.remoteReachabilityReceipt.checkedAt) > Date.now() + 5 * 60 * 1000
+    Date.parse(generation.remotePublicationReceipt.checkedAt) < committedAt ||
+    Date.parse(generation.remotePublicationReceipt.checkedAt) > Date.now() + 5 * 60 * 1000
   ) {
     fail(`${key} evidence/remote timestamps contradict commit and reachability order`);
   }
@@ -2504,6 +3636,7 @@ const baseExecutionGenerationKeys = [
   "authorityValidity",
   "comparison",
   "compatibility",
+  "clauseClaims",
   "definitionDigest",
   "definitionPath",
   "evidenceDigest",
@@ -2515,8 +3648,10 @@ const baseExecutionGenerationKeys = [
   "issueCompletion",
   "predecessors",
   "productAcceptance",
-  "remoteReachabilityReceipt",
+  "remotePublicationReceipt",
   "resultCode",
+  "resultDisposition",
+  "startReceipt",
   "supersedes",
   "tracerId",
 ];
@@ -2526,6 +3661,7 @@ const dynamicExecutionGenerationKeys = [
   "dispatch",
   "invalidatesMachineComplete",
   "invalidationScopes",
+  "remediationObligationId",
   "rejoinAt",
 ];
 for (const generation of executionGenerations) {
@@ -2548,6 +3684,74 @@ for (const generation of executionGenerations) {
   if (generationKeys.has(key)) fail(`duplicate execution generation ${key}`);
   generationKeys.add(key);
   const tracerDefinition = registeredDefinition(generation.tracerId);
+  try {
+    validateStartReceiptV1(generation.startReceipt, `execution generation ${key}.startReceipt`);
+  } catch (error) {
+    fail(error.message);
+  }
+  const boundRegistryEvent = registryEvents.find(
+    (event) => event.head === generation.authoritySnapshot?.registryHead
+  );
+  if (
+    generation.startReceipt.start.tracerId !== `T${String(generation.tracerId).padStart(2, "0")}` ||
+    generation.startReceipt.start.generation !== generation.generation ||
+    generation.startReceipt.definition.path !== generation.definitionPath ||
+    generation.startReceipt.definition.sha256 !== generation.definitionDigest ||
+    generation.startReceipt.definition.gateMatrixDigest !== tracerDefinition?.gateMatrixDigest ||
+    generation.startReceipt.authoritySnapshot.authoritySetDigest !==
+      generation.authoritySnapshot.authoritySetDigest ||
+    generation.startReceipt.registry.generation !== boundRegistryEvent?.generation ||
+    generation.startReceipt.registry.registryHead !== generation.authoritySnapshot.registryHead ||
+    generation.startReceipt.registry.tombstoneSetDigest !==
+      generation.authoritySnapshot.tombstoneSetDigest ||
+    generation.startReceipt.registry.baseWaveHighestId !== baseWaveHighestId
+  ) {
+    fail(`execution generation ${key} start receipt differs from its immutable generation binding`);
+  }
+  const startPredecessors = generation.startReceipt.predecessors.map((predecessor) => ({
+    tracerId: Number(predecessor.tracerId.slice(1)),
+    generation: predecessor.generation,
+  }));
+  if (JSON.stringify(startPredecessors) !== JSON.stringify(generation.predecessors)) {
+    fail(`execution generation ${key} predecessor list differs from its start receipt`);
+  }
+  exactKeys(
+    generation.resultDisposition,
+    [
+      "applicability",
+      "dispatchCount",
+      "disposition",
+      "productAcceptance",
+      "resultCode",
+      "tracerId",
+    ],
+    `execution generation ${key}.resultDisposition`
+  );
+  if (
+    generation.resultDisposition.tracerId !== generation.tracerId ||
+    generation.resultDisposition.resultCode !== generation.resultCode ||
+    generation.resultDisposition.productAcceptance !== generation.productAcceptance ||
+    generation.resultDisposition.applicability !== generation.applicability
+  ) {
+    fail(`execution generation ${key} result disposition contradicts its outcome axes`);
+  }
+  if (TRACER_RESULT_CONTRACTS[generation.tracerId]) {
+    try {
+      validateResultDisposition(generation.resultDisposition);
+    } catch (error) {
+      fail(error.message);
+    }
+  } else if (
+    generation.resultCode !== "implementation_passed" ||
+    generation.productAcceptance !== "pass" ||
+    generation.resultDisposition.disposition !== "unlock" ||
+    generation.resultDisposition.dispatchCount !== 0
+  ) {
+    fail(`execution generation ${key} lacks the exact ordinary implementation-pass disposition`);
+  }
+  if (!Array.isArray(generation.clauseClaims)) {
+    fail(`execution generation ${key}.clauseClaims must be an array`);
+  }
   if (generation.definitionDigest !== tracerDefinition.definitionDigest) {
     fail(`execution generation ${key} does not bind its current immutable definition`);
   }
@@ -2571,7 +3775,7 @@ for (const generation of executionGenerations) {
     fail(`execution generation ${key} lacks a full implementation commit`);
   }
   if (
-    !validReachabilityReceipt(generation.remoteReachabilityReceipt, generation.implementationCommit)
+    !validPublicationReceipt(generation.remotePublicationReceipt, generation.implementationCommit)
   ) {
     fail(`execution generation ${key} lacks an origin/main reachability receipt`);
   }
@@ -2788,7 +3992,6 @@ for (const generation of executionGenerations) {
     if (
       !generationByKey.has(targetKey) ||
       !isStrictTemporalDescendant(sourceKey, targetKey) ||
-      invalidatedGenerationKeys.has(targetKey) ||
       seenTargets.has(targetKey) ||
       invalidation.target.tracerId > baseWaveHighestId ||
       !Array.isArray(invalidation.scopes) ||
@@ -2828,23 +4031,523 @@ function currentGenerationFor(tracerId) {
   return generationsByTracer.get(tracerId)?.at(-1) ?? null;
 }
 
-for (const definition of issues) {
-  const currentGeneration = currentGenerationFor(definition.id);
-  if (currentGeneration == null) continue;
-  const currentKey = `${definition.id}:${currentGeneration}`;
-  if (!generationIsActive(currentKey)) continue;
-  const receipt = generationByKey.get(currentKey);
-  if (
-    receipt.authoritySnapshot.specificationDigest !== authorityInputs.specification.digest ||
-    receipt.authoritySnapshot.planNarrativeDigest !== authorityInputs.plan.narrativeDigest ||
-    receipt.authoritySnapshot.requirementFamilyIndexDigest !==
-      authorityInputs.requirementFamilyIndex.digest ||
-    receipt.authoritySnapshot.verifierDigest !== authorityInputs.verifier.digest ||
-    receipt.authoritySnapshot.domainModelDigest !== authorityInputs.domainModel.digest ||
-    !registryEvents.some((event) => event.head === receipt.authoritySnapshot.registryHead)
-  ) {
-    fail(`${currentKey} is active under a stale authority or non-ancestor registry snapshot`);
+const manifestAtCommitCache = new Map();
+const receiptCommitIndexCache = new Map();
+
+function manifestAtCommit(commit) {
+  if (!manifestAtCommitCache.has(commit)) {
+    manifestAtCommitCache.set(commit, gitJsonAt(commit, manifestRepoPath, { required: true }));
   }
+  return manifestAtCommitCache.get(commit);
+}
+
+function receiptCommitIndexAt(baseCommit) {
+  if (receiptCommitIndexCache.has(baseCommit)) return receiptCommitIndexCache.get(baseCommit);
+  const index = new Map();
+  for (const receiptCommit of [...manifestChangingCommits(baseCommit)].reverse()) {
+    const historicalManifest = manifestAtCommit(receiptCommit);
+    for (const generation of historicalManifest?.executionGenerations ?? []) {
+      const key = `${generation.tracerId}:${generation.generation}`;
+      if (index.has(key)) continue;
+      const receiptParent = singleParent(receiptCommit, `${key} receipt-manifest commit`);
+      if (
+        generation.implementationCommit !== receiptParent ||
+        JSON.stringify(changedPaths(receiptCommit)) !== JSON.stringify([manifestRepoPath])
+      ) {
+        fail(`${key} was not first recorded by one manifest-only receipt commit`);
+      }
+      index.set(key, receiptCommit);
+    }
+  }
+  receiptCommitIndexCache.set(baseCommit, index);
+  return index;
+}
+
+function usableGenerationAtBase(baseManifest, tracerId) {
+  const tracer = baseManifest?.tracers?.find((candidate) => candidate.id === tracerId);
+  const generationNumber = tracer?.currentExecutionGeneration;
+  if (!Number.isInteger(generationNumber) || generationNumber < 1) return null;
+  const generation = (baseManifest.executionGenerations ?? []).find(
+    (candidate) => candidate.tracerId === tracerId && candidate.generation === generationNumber
+  );
+  if (
+    !generation ||
+    tracer.issueCompletion !== "complete" ||
+    generation.issueCompletion !== "complete" ||
+    generation.freshness !== "current" ||
+    generation.compatibility !== "compatible" ||
+    !["valid", "not_required"].includes(generation.authorityValidity)
+  ) {
+    return null;
+  }
+  return generation;
+}
+
+function exactStartPredecessorMap(startReceipt, context) {
+  return new Map(
+    startReceipt.predecessors.map((predecessor) => [
+      `${Number(predecessor.tracerId.slice(1))}:${predecessor.generation}`,
+      predecessor.receiptCommit,
+    ])
+  );
+}
+
+function validateExactStartWitnesses(generation, definition) {
+  const key = `${generation.tracerId}:${generation.generation}`;
+  const baseCommit = generation.startReceipt.execution.baseCommit;
+  const baseManifest = manifestAtCommit(baseCommit);
+  const receiptCommits = receiptCommitIndexAt(baseCommit);
+  const predecessors = exactStartPredecessorMap(generation.startReceipt, `${key} start receipt`);
+  const baseGenerationByKey = new Map(
+    (baseManifest.executionGenerations ?? []).map((candidate) => [
+      `${candidate.tracerId}:${candidate.generation}`,
+      candidate,
+    ])
+  );
+  const startDescendsFrom = (targetKey) => {
+    const queue = [...predecessors.keys()];
+    const seen = new Set();
+    while (queue.length) {
+      const candidateKey = queue.shift();
+      if (candidateKey === targetKey) return true;
+      if (seen.has(candidateKey)) continue;
+      seen.add(candidateKey);
+      for (const predecessor of baseGenerationByKey.get(candidateKey)?.predecessors ?? []) {
+        queue.push(`${predecessor.tracerId}:${predecessor.generation}`);
+      }
+    }
+    return false;
+  };
+
+  const requirePredecessor = (sourceGeneration, reason) => {
+    const sourceKey = `${sourceGeneration.tracerId}:${sourceGeneration.generation}`;
+    const receiptCommit = receiptCommits.get(sourceKey);
+    if (!receiptCommit || predecessors.get(sourceKey) !== receiptCommit) {
+      fail(`${key} lacks the exact first receipt commit for ${reason} ${sourceKey}`);
+    }
+  };
+
+  for (const dependencyId of definition.blockedBy ?? []) {
+    const dependency = usableGenerationAtBase(baseManifest, dependencyId);
+    if (!dependency) fail(`${key} started before dependency T${dependencyId} was usable`);
+    requirePredecessor(dependency, "dependency");
+  }
+  if (generation.generation > 1) {
+    const prior = (baseManifest.executionGenerations ?? []).find(
+      (candidate) =>
+        candidate.tracerId === generation.tracerId &&
+        candidate.generation === generation.generation - 1
+    );
+    if (!prior) fail(`${key} started without its prior tracer generation at the base`);
+    requirePredecessor(prior, "prior tracer generation");
+    if (
+      !generation.supersedes.some(
+        ({ target }) =>
+          target.tracerId === generation.tracerId && target.generation === generation.generation - 1
+      )
+    ) {
+      fail(`${key} rerun does not supersede its immediately prior tracer generation`);
+    }
+  } else if (generation.supersedes.length !== 0) {
+    fail(`${key} first generation cannot supersede a prior run`);
+  }
+
+  for (const edge of [...generation.supersedes, ...generation.invalidates]) {
+    const targetKey = `${edge.target.tracerId}:${edge.target.generation}`;
+    if (!baseGenerationByKey.has(targetKey) || !startDescendsFrom(targetKey)) {
+      fail(`${key} state edge does not descend from base generation ${targetKey}`);
+    }
+  }
+
+  const expectedPredicateWitnesses = [];
+  if (definition.resultPredicate) {
+    expectedPredicateWitnesses.push(
+      compileCanonicalPredicateWitness(
+        definition.resultPredicate,
+        ({ sourceTracer, generation: selector, field }) => {
+          const source = baseManifest.tracers?.find((candidate) => candidate.id === sourceTracer);
+          const sourceGenerationNumber = source?.currentExecutionGeneration;
+          if (!Number.isInteger(sourceGenerationNumber) || sourceGenerationNumber < 1) {
+            return {
+              observed: undefined,
+              sourceGeneration: null,
+              sourceReceiptCommit: null,
+              usable: selector === "latest_or_absent",
+            };
+          }
+          const sourceGeneration = (baseManifest.executionGenerations ?? []).find(
+            (candidate) =>
+              candidate.tracerId === sourceTracer && candidate.generation === sourceGenerationNumber
+          );
+          const sourceKey = `${sourceTracer}:${sourceGenerationNumber}`;
+          const sourceReceiptCommit = receiptCommits.get(sourceKey);
+          if (!sourceGeneration || !sourceReceiptCommit) {
+            fail(`${key} cannot resolve predicate source ${sourceKey} at its exact base`);
+          }
+          const usable = Boolean(
+            source?.issueCompletion === "complete" &&
+            sourceGeneration.issueCompletion === "complete" &&
+            (field === "freshness" || sourceGeneration.freshness === "current") &&
+            (field === "compatibility" || sourceGeneration.compatibility === "compatible") &&
+            (field === "authorityValidity" ||
+              ["valid", "not_required"].includes(sourceGeneration.authorityValidity))
+          );
+          return {
+            observed: sourceGeneration[field],
+            sourceGeneration: sourceGenerationNumber,
+            sourceReceiptCommit,
+            usable,
+          };
+        },
+        `${key} resultPredicate`
+      )
+    );
+  }
+  if (
+    JSON.stringify(generation.startReceipt.predicateWitnesses) !==
+    JSON.stringify(expectedPredicateWitnesses)
+  ) {
+    fail(`${key} start receipt does not contain the one canonical exact-base predicate witness`);
+  }
+
+  for (const claim of generation.clauseClaims) {
+    const clause = clauseById.get(claim.clauseId);
+    if (!clause) fail(`${key} claims unknown clause ${claim.clauseId}`);
+    const ownerId = Number(clause.implementationOwner.slice(1));
+    const owner = usableGenerationAtBase(baseManifest, ownerId);
+    if (!owner) {
+      fail(`${key} claims ${claim.clauseId} before owner ${clause.implementationOwner} is usable`);
+    }
+    requirePredecessor(owner, `${claim.clauseId} implementation owner`);
+  }
+}
+
+function reviewAuthorityOptionsFor(generation) {
+  const key = `${generation.tracerId}:${generation.generation}`;
+  const baseCommit = generation.startReceipt.execution.baseCommit;
+  const baseManifest = manifestAtCommit(baseCommit);
+  const receiptCommits = receiptCommitIndexAt(baseCommit);
+  const predecessors = exactStartPredecessorMap(generation.startReceipt, `${key} start receipt`);
+  const catalog = reviewAuthorityCatalogAt(baseCommit);
+  const catalogBytes = gitBytesAt(baseCommit, reviewAuthorityCatalogRepoPath);
+  const catalogPathDigest = generation.startReceipt.authoritySnapshot.pathDigests.find(
+    ({ path: governedPath }) => governedPath === reviewAuthorityCatalogRepoPath
+  )?.sha256;
+  if (catalogPathDigest !== digest(catalogBytes)) {
+    fail(`${key} authority catalog differs from its exact start authority snapshot`);
+  }
+  const validateCatalogSource = (source, expectedEvidenceDigest, sourceContext) => {
+    const sourceKey = `${source.tracerId}:${source.generation}`;
+    const sourceGeneration = (baseManifest.executionGenerations ?? []).find(
+      (candidate) => `${candidate.tracerId}:${candidate.generation}` === sourceKey
+    );
+    if (
+      !sourceGeneration ||
+      sourceGeneration.evidenceDigest !== expectedEvidenceDigest ||
+      receiptCommits.get(sourceKey) !== source.receiptCommit
+    ) {
+      fail(`${sourceContext} is not an exact historical receipt generation`);
+    }
+  };
+  for (const credential of catalog.credentials) {
+    validateCatalogSource(
+      credential.registration,
+      credential.registration.artifactDigest,
+      `${key} credential ${credential.credentialId} registration`
+    );
+  }
+  for (const revocation of catalog.revocations) {
+    validateCatalogSource(
+      revocation.source,
+      revocation.source.evidenceDigest,
+      `${key} credential ${revocation.credentialId} revocation`
+    );
+  }
+
+  const consumerTag = `T${String(generation.tracerId).padStart(2, "0")}`;
+  const matchingConsumers = [];
+  for (const [predecessorKey] of predecessors) {
+    const predecessor = (baseManifest.executionGenerations ?? []).find(
+      (candidate) => `${candidate.tracerId}:${candidate.generation}` === predecessorKey
+    );
+    const predecessorTracer = baseManifest.tracers?.find(
+      (candidate) => candidate.id === predecessor?.tracerId
+    );
+    const usablePredecessor = predecessor
+      ? usableGenerationAtBase(baseManifest, predecessor.tracerId)
+      : null;
+    if (
+      !predecessor ||
+      usablePredecessor?.generation !== predecessor.generation ||
+      predecessorTracer?.currentExecutionGeneration !== predecessor.generation
+    ) {
+      continue;
+    }
+    let predecessorEvidence;
+    try {
+      predecessorEvidence = JSON.parse(
+        gitBytesAt(predecessor.implementationCommit, predecessorTracer.evidencePath).toString(
+          "utf8"
+        )
+      );
+      validateEvidenceReceiptV2(
+        predecessorEvidence,
+        `${predecessorKey} predecessor review-package evidence`
+      );
+    } catch (error) {
+      if (error?.message?.startsWith("Instrument Intelligence plan verification failed:")) {
+        throw error;
+      }
+      fail(`${predecessorKey} predecessor evidence cannot supply review subjects`);
+    }
+    for (const descriptor of predecessorEvidence.artifacts.filter(
+      ({ schemaId }) => schemaId === "vellum.review-role-package.v1"
+    )) {
+      const rolePackageBytes = gitBytesAt(predecessor.implementationCommit, descriptor.publicPath);
+      if (digest(rolePackageBytes) !== descriptor.sha256) {
+        fail(`${descriptor.publicPath} role-package bytes differ from their descriptor`);
+      }
+      const rolePackage = validatePublicArtifactPayload(
+        { ...descriptor, path: descriptor.publicPath },
+        rolePackageBytes,
+        descriptor.publicPath
+      );
+      for (const consumer of rolePackage.consumers.filter(
+        ({ tracerId }) => tracerId === consumerTag
+      )) {
+        matchingConsumers.push({ consumer, predecessor, predecessorEvidence, predecessorKey });
+      }
+    }
+  }
+  if (matchingConsumers.length !== 1) {
+    fail(`${key} requires exactly one predecessor-authored role package for ${consumerTag}`);
+  }
+  const {
+    consumer,
+    predecessor: packageProducer,
+    predecessorEvidence: packageProducerEvidence,
+  } = matchingConsumers[0];
+  if (
+    (generation.tracerId === 64 && packageProducer.tracerId !== 63) ||
+    (generation.tracerId !== 64 && packageProducer.tracerId !== 81)
+  ) {
+    fail(`${key} role package comes from the wrong governed package producer`);
+  }
+  const producerArtifactById = new Map(
+    packageProducerEvidence.artifacts.map((descriptor) => [descriptor.artifactId, descriptor])
+  );
+  for (const reference of [consumer.package, ...consumer.outputs]) {
+    const descriptor = producerArtifactById.get(reference.id);
+    if (
+      !descriptor ||
+      descriptor.sha256 !== reference.digest ||
+      digest(gitBytesAt(packageProducer.implementationCommit, descriptor.publicPath)) !==
+        reference.digest
+    ) {
+      fail(`${key} role package references uncommitted or mismatched artifact ${reference.id}`);
+    }
+  }
+  if (consumer.outputs.some(({ id }) => id === consumer.package.id)) {
+    fail(`${key} role package cannot reuse its package receipt as a reviewed output`);
+  }
+  const systemTracerId = Number(consumer.systemGeneration.tracerId.slice(1));
+  const systemKey = `${systemTracerId}:${consumer.systemGeneration.generation}`;
+  const systemGeneration = (baseManifest.executionGenerations ?? []).find(
+    (candidate) => `${candidate.tracerId}:${candidate.generation}` === systemKey
+  );
+  const currentSystemGeneration = usableGenerationAtBase(baseManifest, systemTracerId);
+  if (
+    !systemGeneration ||
+    currentSystemGeneration?.generation !== systemGeneration.generation ||
+    receiptCommits.get(systemKey) !== consumer.systemGeneration.receiptCommit ||
+    predecessors.get(systemKey) !== consumer.systemGeneration.receiptCommit ||
+    systemGeneration.evidenceDigest !== consumer.systemGeneration.artifactDigest ||
+    (generation.tracerId !== 64 && systemTracerId !== 85)
+  ) {
+    fail(`${key} role package does not bind its exact current system generation`);
+  }
+  const systemSubject = systemGeneration.startReceipt.execution.subjects.find(
+    ({ kind, id }) => kind === "system" && id === consumer.system.id
+  );
+  if (systemSubject?.digest !== consumer.system.digest) {
+    fail(`${key} role package system subject differs from its exact system generation`);
+  }
+
+  const credentialById = new Map(
+    catalog.credentials.map((credential) => [credential.credentialId, credential])
+  );
+  return {
+    catalog,
+    baseManifest,
+    baseCommit,
+    executionStartedAt: generation.startReceipt.start.startedAt,
+    receiptCommits,
+    expectedSubjects: {
+      outputs: consumer.outputs,
+      package: consumer.package,
+      system: consumer.system,
+    },
+    packageProducerBinding: {
+      artifactDigest: packageProducer.evidenceDigest,
+      generation: packageProducer.generation,
+      receiptCommit: receiptCommits.get(
+        `${packageProducer.tracerId}:${packageProducer.generation}`
+      ),
+      tracerId: `T${String(packageProducer.tracerId).padStart(2, "0")}`,
+    },
+    systemGenerationBinding: consumer.systemGeneration,
+    disqualifiedReviewerSubjectIds: consumer.disqualifiedReviewerSubjectIds,
+    verifySignature: ({
+      algorithm,
+      credentialId,
+      credentialType,
+      signature,
+      signedPayloadDigest,
+      signerKind,
+      subjectId,
+      verifierPolicyDigest,
+    }) => {
+      const credential = credentialById.get(credentialId);
+      if (
+        !credential ||
+        algorithm !== credential.algorithm ||
+        credentialType !== credential.credentialType ||
+        subjectId !== credential.subjectId ||
+        (signerKind === "authority_verifier") !== (credential.role === "authority_verifier") ||
+        (signerKind === "authority_verifier" && verifierPolicyDigest !== catalog.policyDigest)
+      ) {
+        return false;
+      }
+      try {
+        const publicKey = createPublicKey({
+          key: Buffer.from(credential.publicKeySpki, "base64url"),
+          format: "der",
+          type: "spki",
+        });
+        return verifySignatureBytes(
+          null,
+          Buffer.from(signedPayloadDigest, "hex"),
+          publicKey,
+          Buffer.from(signature, "base64url")
+        );
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
+function validateAuthorityReceiptAgainstCatalog(payload, options, context) {
+  const {
+    catalog,
+    baseManifest,
+    disqualifiedReviewerSubjectIds,
+    executionStartedAt,
+    packageProducerBinding,
+    receiptCommits,
+    systemGenerationBinding,
+  } = options;
+  const credentialById = new Map(
+    catalog.credentials.map((credential) => [credential.credentialId, credential])
+  );
+  const reviewer = payload.statement.reviewer;
+  const reviewerCredential = credentialById.get(reviewer.credential.credentialId);
+  const verifier = payload.authorityVerification.verifier;
+  const verifierCredential = credentialById.get(verifier.credentialId);
+  const verifyRegistration = (credential, credentialContext) => {
+    const registration = (baseManifest.executionGenerations ?? []).find(
+      (candidate) =>
+        candidate.tracerId === credential?.registration.tracerId &&
+        candidate.generation === credential?.registration.generation
+    );
+    if (
+      !registration ||
+      registration.evidenceDigest !== credential.registration.artifactDigest ||
+      receiptCommits.get(
+        `${credential.registration.tracerId}:${credential.registration.generation}`
+      ) !== credential.registration.receiptCommit
+    ) {
+      fail(`${credentialContext} lacks its exact historical registration generation`);
+    }
+  };
+  if (
+    !reviewerCredential ||
+    reviewerCredential.subjectId !== reviewer.subjectId ||
+    reviewerCredential.credentialType !== reviewer.credential.credentialType ||
+    reviewerCredential.role !== reviewer.role
+  ) {
+    fail(`${context} reviewer identity, role, and credential are not catalog-authorized`);
+  }
+  if (
+    !verifierCredential ||
+    verifierCredential.subjectId !== verifier.subjectId ||
+    verifierCredential.credentialType !== verifier.credentialType ||
+    verifierCredential.role !== "authority_verifier"
+  ) {
+    fail(`${context} authority verifier is not the exact catalog-authorized verifier`);
+  }
+  verifyRegistration(reviewerCredential, `${context} reviewer credential`);
+  verifyRegistration(verifierCredential, `${context} verifier credential`);
+  const evaluatedScopeDigests = payload.statement.claimScopes
+    .map(({ digest: scopeDigest }) => scopeDigest)
+    .sort();
+  if (
+    evaluatedScopeDigests.some(
+      (scopeDigest) => !reviewerCredential.authorizedClaimScopeDigests.includes(scopeDigest)
+    ) ||
+    payload.authorityVerification.validity.credentialIssuedAt !== reviewerCredential.issuedAt ||
+    payload.authorityVerification.validity.credentialExpiresAt !== reviewerCredential.expiresAt ||
+    payload.authorityVerification.independence.conflictPolicyDigest !==
+      catalog.policy.conflictPolicyDigest
+  ) {
+    fail(`${context} authority scope, validity, or conflict policy is self-asserted`);
+  }
+  const evaluatedAt = Date.parse(payload.authorityVerification.validity.evaluatedAt);
+  const startedAt = Date.parse(payload.statement.issuedAt);
+  const executionStartedAtValue = Date.parse(executionStartedAt);
+  if (
+    evaluatedAt < startedAt ||
+    evaluatedAt > executionStartedAtValue + catalog.policy.clockSkewSeconds * 1000
+  ) {
+    fail(`${context} authority evaluation violates the catalog clock policy`);
+  }
+  const revocations = catalog.revocations.filter(
+    ({ credentialId }) => credentialId === reviewerCredential.credentialId
+  );
+  const revoked = revocations.some(({ revokedAt }) => Date.parse(revokedAt) <= evaluatedAt);
+  const verifierRevoked = catalog.revocations.some(
+    ({ credentialId, revokedAt }) =>
+      credentialId === verifierCredential.credentialId && Date.parse(revokedAt) <= evaluatedAt
+  );
+  const revocationReceipt = payload.authorityVerification.validity.revocation;
+  if (
+    revocationReceipt.sourceDigest !== digest(JSON.stringify(catalog.revocations)) ||
+    revocationReceipt.status !== (revoked ? "revoked" : "clear") ||
+    evaluatedAt < Date.parse(verifierCredential.issuedAt) ||
+    evaluatedAt >= Date.parse(verifierCredential.expiresAt) ||
+    verifierRevoked
+  ) {
+    fail(`${context} reviewer/verifier validity is not derived from the exact base catalog`);
+  }
+  const expectedIndependence = disqualifiedReviewerSubjectIds.includes(reviewer.subjectId)
+    ? "conflicted"
+    : "independent";
+  if (payload.authorityVerification.independence.status !== expectedIndependence) {
+    fail(`${context} reviewer conflict status differs from the predecessor role package`);
+  }
+  if (
+    payload.receiptKind === "owner_provisional_decision" &&
+    (JSON.stringify(payload.statement.decision.machineClosure) !==
+      JSON.stringify(systemGenerationBinding) ||
+      JSON.stringify(payload.statement.decision.reviewPackage) !==
+        JSON.stringify(packageProducerBinding))
+  ) {
+    fail(`${context} Owner decision does not bind the exact T85 and T81 role-package generations`);
+  }
+}
+
+for (const generation of executionGenerations) {
+  validateExactStartWitnesses(generation, registeredDefinition(generation.tracerId));
 }
 
 for (const generation of executionGenerations.filter((receipt) => receipt.tracerId === 86)) {
@@ -2958,7 +4661,7 @@ for (const repairReceipt of executionGenerations.filter(
   const repairKey = `${repairReceipt.tracerId}:${repairReceipt.generation}`;
   exactKeys(
     repairReceipt.dispatch,
-    ["artifactDigest", "artifactId", "findingId", "source"],
+    ["artifactDigest", "artifactId", "findingId", "obligationId", "source"],
     `${repairKey} dispatch`
   );
   exactKeys(
@@ -2984,6 +4687,8 @@ for (const repairReceipt of executionGenerations.filter(
     dispatchArtifact?.artifact.schemaId !== "vellum.remediation-dispatch.v1" ||
     dispatchArtifact.artifact.sha256 !== repairReceipt.dispatch.artifactDigest ||
     dispatchPayload?.findingId !== repairReceipt.dispatch.findingId ||
+    dispatchPayload?.obligationId !== repairReceipt.dispatch.obligationId ||
+    repairReceipt.dispatch.obligationId !== repairReceipt.remediationObligationId ||
     dispatchPayload?.repairTracerId !== repairReceipt.tracerId
   ) {
     fail(`${repairKey} is not bound to an exact nonpassing dispatcher finding receipt`);
@@ -3106,17 +4811,17 @@ for (const [repairKey, contract] of dynamicRemediationContracts) {
   }
 }
 
-const requirementEvidence = canPreserveGlobalState
+const declaredRequirementEvidence = canPreserveGlobalState
   ? (compatibleExistingManifest.requirementEvidence ?? {})
   : {};
 if (
-  !requirementEvidence ||
-  typeof requirementEvidence !== "object" ||
-  Array.isArray(requirementEvidence)
+  !declaredRequirementEvidence ||
+  typeof declaredRequirementEvidence !== "object" ||
+  Array.isArray(declaredRequirementEvidence)
 ) {
   fail("requirementEvidence must be an object of append-only record arrays");
 }
-for (const [requirementId, records] of Object.entries(requirementEvidence)) {
+for (const [requirementId, records] of Object.entries(declaredRequirementEvidence)) {
   if (!requirementRows.has(requirementId) || !Array.isArray(records)) {
     fail(`requirementEvidence.${requirementId} is unknown or not an array`);
   }
@@ -3143,6 +4848,38 @@ for (const [requirementId, records] of Object.entries(requirementEvidence)) {
     }
   }
 }
+const requirementEvidence = {};
+for (const generation of executionGenerations) {
+  const generationKey = `${generation.tracerId}:${generation.generation}`;
+  const validated = validatedEvidenceByGeneration.get(generationKey);
+  if (!validated) fail(`${generationKey} lacks validated requirement evidence`);
+  const claimedFamilies = [
+    ...new Set(validated.evidence.claims.map((claim) => claim.requirementId)),
+  ].sort();
+  for (const requirementId of claimedFamilies) {
+    const records = requirementEvidence[requirementId] ?? [];
+    records.push({
+      generation: records.length + 1,
+      previousRecordDigest: records.length === 0 ? null : digest(JSON.stringify(records.at(-1))),
+      tracerId: generation.tracerId,
+      executionGeneration: generation.generation,
+      evidenceDigest: generation.evidenceDigest,
+    });
+    requirementEvidence[requirementId] = records;
+  }
+}
+for (const [requirementId, anchoredRecords] of Object.entries(
+  compatibleTransitionAnchorManifest?.requirementEvidence ?? {}
+)) {
+  if (!Object.hasOwn(requirementEvidence, requirementId)) {
+    fail(`requirementEvidence removed anchored ${requirementId}`);
+  }
+  assertJsonPrefix(
+    anchoredRecords,
+    requirementEvidence[requirementId],
+    `requirementEvidence.${requirementId}`
+  );
+}
 
 function currentRequirementWitnesses(requirementId) {
   return (requirementEvidence[requirementId] ?? []).filter((record) => {
@@ -3159,6 +4896,65 @@ function currentRequirementWitnesses(requirementId) {
       ["valid", "not_required"].includes(receipt.authorityValidity)
     );
   });
+}
+
+function currentClauseWitnesses(clauseId) {
+  const clause = clauseById.get(clauseId);
+  if (!clause) return [];
+  return (clauseEvidence[clauseId] ?? []).filter((record) => {
+    const key = `${record.tracerId}:${record.executionGeneration}`;
+    const receipt = generationByKey.get(key);
+    return Boolean(
+      receipt &&
+      generationHasCurrentClauseEvidence(key, clauseId) &&
+      currentGenerationFor(record.tracerId) === record.executionGeneration &&
+      receipt.evidenceDigest === record.evidenceDigest &&
+      receipt.authoritySnapshot.authoritySetDigest === record.authoritySetDigest &&
+      authoritySetCompatibleForClause(record.authoritySetDigest, clauseId) &&
+      record.clauseDigest === clause.contentDigest &&
+      record.contributor?.role === "evidence_contributor" &&
+      record.contributor?.subjectId === `T${String(record.tracerId).padStart(2, "0")}` &&
+      clause.evidenceContributors.includes(record.contributor.subjectId) &&
+      receipt.issueCompletion === "complete" &&
+      receipt.freshness === "current" &&
+      receipt.compatibility === "compatible" &&
+      ["valid", "not_required"].includes(receipt.authorityValidity)
+    );
+  });
+}
+
+function clauseWitnessDependenciesHold(clause, witnessRecord, visitingClauses = new Set()) {
+  if (visitingClauses.has(clause.id)) return false;
+  const nextVisiting = new Set([...visitingClauses, clause.id]);
+  const witnessKey = `${witnessRecord.tracerId}:${witnessRecord.executionGeneration}`;
+  for (const dependencyId of clause.dependencies) {
+    const dependency = clauseById.get(dependencyId);
+    const satisfied = currentClauseWitnesses(dependencyId).some((dependencyRecord) => {
+      const dependencyKey = `${dependencyRecord.tracerId}:${dependencyRecord.executionGeneration}`;
+      return (
+        (dependencyKey === witnessKey || isStrictTemporalDescendant(witnessKey, dependencyKey)) &&
+        clauseWitnessDependenciesHold(dependency, dependencyRecord, nextVisiting)
+      );
+    });
+    if (!satisfied) return false;
+  }
+  return true;
+}
+
+function closureHasCurrentClauseCoverage(closureVerifier, closureKey) {
+  for (const clause of clauseLedger.clauses.filter(
+    (candidate) => candidate.closureVerifier === closureVerifier
+  )) {
+    const covered = currentClauseWitnesses(clause.id).some((record) => {
+      const witnessKey = `${record.tracerId}:${record.executionGeneration}`;
+      return (
+        isStrictTemporalDescendant(closureKey, witnessKey) &&
+        clauseWitnessDependenciesHold(clause, record)
+      );
+    });
+    if (!covered) return false;
+  }
+  return true;
 }
 
 function closureHasCurrentRequirementCoverage(prefix, closureKey) {
@@ -3216,12 +5012,652 @@ function closureRespectsInvalidations(closureKey, closureScope) {
   return true;
 }
 
+const specificationPolicyAuthorityPaths = new Set([
+  "SPEC.md",
+  ".scratch/instrument-intelligence/PLAN.md",
+  ".scratch/instrument-intelligence/REQUIREMENTS.md",
+  clauseLedgerRepoPath,
+]);
+const knownVerifierAuthorityPaths = new Set([
+  ...verificationAuthorityPaths,
+  ...(compatibleTransitionAnchorManifest?.authorities?.verifier?.paths ?? []),
+  ...(compatibleExistingManifest?.authorities?.verifier?.paths ?? []),
+]);
+const knownDomainAuthorityPaths = new Set([
+  ...domainAuthorityPaths,
+  ...(compatibleTransitionAnchorManifest?.authorities?.domainModel?.paths ?? []),
+  ...(compatibleExistingManifest?.authorities?.domainModel?.paths ?? []),
+]);
+
+function changedAuthorityPathsBetween(fromAuthoritySet, toAuthoritySet) {
+  const fromPaths = new Map(
+    fromAuthoritySet.pathDigests.map(({ path: governedPath, sha256 }) => [governedPath, sha256])
+  );
+  const toPaths = new Map(
+    toAuthoritySet.pathDigests.map(({ path: governedPath, sha256 }) => [governedPath, sha256])
+  );
+  return [...new Set([...fromPaths.keys(), ...toPaths.keys()])]
+    .filter((governedPath) => fromPaths.get(governedPath) !== toPaths.get(governedPath))
+    .sort();
+}
+
+function authorityPathCategory(governedPath) {
+  if (specificationPolicyAuthorityPaths.has(governedPath)) return "specification_policy";
+  if (knownVerifierAuthorityPaths.has(governedPath)) return "verifier";
+  if (knownDomainAuthorityPaths.has(governedPath)) return "domain";
+  fail(`authority migration changes unclassified historical authority path ${governedPath}`);
+}
+
+const authorityMigrationReasonCodes = new Set([
+  "compatible_registry_tail_change",
+  "governed_specification_change",
+  "governed_verifier_change",
+  "governed_domain_authority_change",
+  "rights_or_policy_change",
+]);
+
+function validateAuthorityMigrationReason(migration, changedPaths, context, { historical }) {
+  if (changedPaths.length === 0) {
+    fail(`${context} does not change any authority path bytes`);
+  }
+  if (!authorityMigrationReasonCodes.has(migration.reasonCode)) {
+    fail(`${context}.reasonCode is not in the closed authority-migration vocabulary`);
+  }
+  if (migration.reasonCode === "compatible_registry_tail_change") {
+    if (
+      JSON.stringify(changedPaths) !==
+        JSON.stringify([".scratch/instrument-intelligence/PLAN.md"]) ||
+      migration.affectedClauseIds.length !== 0
+    ) {
+      fail(`${context} registry-tail compatibility must change only the PLAN table tail`);
+    }
+    return;
+  }
+  if (historical) return;
+  const categories = [...new Set(changedPaths.map(authorityPathCategory))].sort();
+  if (categories.length !== 1) {
+    fail(`${context} mixes authority categories; migrate each category in its own transaction`);
+  }
+  const expectedReason =
+    categories[0] === "verifier"
+      ? "governed_verifier_change"
+      : categories[0] === "domain"
+        ? "governed_domain_authority_change"
+        : changedPaths.includes("SPEC.md")
+          ? "governed_specification_change"
+          : "rights_or_policy_change";
+  if (migration.reasonCode !== expectedReason) {
+    fail(`${context}.reasonCode does not match its actual ${categories[0]} path change`);
+  }
+}
+
+function validateAuthorityHistory(value, previousValue) {
+  exactKeys(
+    value,
+    ["authoritySets", "currentAuthoritySetDigest", "migrations", "schemaId"],
+    "authorityHistory"
+  );
+  if (
+    value.schemaId !== "vellum.instrument-intelligence.authority-history.v1" ||
+    !Array.isArray(value.authoritySets) ||
+    value.authoritySets.length === 0 ||
+    !Array.isArray(value.migrations)
+  ) {
+    fail("authorityHistory has an invalid closed root");
+  }
+  if (previousValue) {
+    assertJsonPrefix(
+      previousValue.authoritySets,
+      value.authoritySets,
+      "authorityHistory.authoritySets"
+    );
+    assertJsonPrefix(previousValue.migrations, value.migrations, "authorityHistory.migrations");
+    const appendedSetCount = value.authoritySets.length - previousValue.authoritySets.length;
+    const appendedMigrationCount = value.migrations.length - previousValue.migrations.length;
+    const currentChanged =
+      value.currentAuthoritySetDigest !== previousValue.currentAuthoritySetDigest;
+    if (
+      (currentChanged && (appendedSetCount !== 1 || appendedMigrationCount !== 1)) ||
+      (!currentChanged && (appendedSetCount !== 0 || appendedMigrationCount !== 0))
+    ) {
+      fail("authorityHistory must append exactly one set and migration per authority transition");
+    }
+  }
+  const seen = new Set();
+  for (const [index, authoritySet] of value.authoritySets.entries()) {
+    try {
+      validateAuthoritySnapshotV2(authoritySet, `authorityHistory.authoritySets[${index}]`);
+    } catch (error) {
+      fail(error.message);
+    }
+    if (seen.has(authoritySet.authoritySetDigest)) {
+      fail("authorityHistory repeats an authority set");
+    }
+    seen.add(authoritySet.authoritySetDigest);
+  }
+  if (
+    value.currentAuthoritySetDigest !== value.authoritySets.at(-1).authoritySetDigest ||
+    !seen.has(value.currentAuthoritySetDigest)
+  ) {
+    fail("authorityHistory currentAuthoritySetDigest is not its append-only tail");
+  }
+  for (const [index, migration] of value.migrations.entries()) {
+    const fromAuthoritySet = value.authoritySets[index];
+    const toAuthoritySet = value.authoritySets[index + 1];
+    exactKeys(
+      migration,
+      [
+        "affectedClauseIds",
+        "fromAuthoritySetDigest",
+        "invalidationGeneration",
+        "reasonCode",
+        "sequence",
+        "toAuthoritySetDigest",
+      ],
+      `authorityHistory.migrations[${index}]`
+    );
+    const context = `authorityHistory.migrations[${index}]`;
+    const affectedClauseIds = migration.affectedClauseIds;
+    if (
+      migration.sequence !== index + 1 ||
+      migration.fromAuthoritySetDigest !== fromAuthoritySet?.authoritySetDigest ||
+      migration.toAuthoritySetDigest !== toAuthoritySet?.authoritySetDigest ||
+      !Array.isArray(affectedClauseIds) ||
+      JSON.stringify(affectedClauseIds) !==
+        JSON.stringify([...new Set(affectedClauseIds)].sort()) ||
+      affectedClauseIds.some((id) => !/^II-CLAUSE-\d{4}$/.test(id)) ||
+      !migration.invalidationGeneration ||
+      !Number.isInteger(migration.invalidationGeneration.tracerId) ||
+      migration.invalidationGeneration.tracerId < 1 ||
+      !Number.isInteger(migration.invalidationGeneration.generation) ||
+      migration.invalidationGeneration.generation < 1
+    ) {
+      fail(`authorityHistory.migrations[${index}] is invalid or not append-only`);
+    }
+    if (
+      migration.reasonCode !== "compatible_registry_tail_change" &&
+      affectedClauseIds.length === 0
+    ) {
+      fail(`${context}.affectedClauseIds must be nonempty for a semantic authority change`);
+    }
+    validateAuthorityMigrationReason(
+      migration,
+      changedAuthorityPathsBetween(fromAuthoritySet, toAuthoritySet),
+      context,
+      { historical: index < (previousValue?.migrations?.length ?? 0) }
+    );
+    const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
+    const sourceGeneration = generationByKey.get(sourceKey);
+    if (
+      !sourceGeneration ||
+      sourceGeneration.authoritySnapshot.authoritySetDigest !== migration.fromAuthoritySetDigest ||
+      sourceGeneration.issueCompletion !== "complete" ||
+      sourceGeneration.freshness !== "current" ||
+      sourceGeneration.compatibility !== "compatible" ||
+      !["valid", "not_required"].includes(sourceGeneration.authorityValidity)
+    ) {
+      fail(`${context}.invalidationGeneration is not a valid generation under its from-set`);
+    }
+  }
+  if (value.migrations.length !== value.authoritySets.length - 1) {
+    fail("every successor authority set requires exactly one typed migration");
+  }
+  return {
+    authoritySetIndexByDigest: new Map(
+      value.authoritySets.map((authoritySet, index) => [authoritySet.authoritySetDigest, index])
+    ),
+  };
+}
+
+let authorityHistory = compatibleExistingManifest?.authorityHistory;
+if (!authorityHistory) {
+  authorityHistory = {
+    schemaId: "vellum.instrument-intelligence.authority-history.v1",
+    currentAuthoritySetDigest,
+    authoritySets: [currentAuthoritySet],
+    migrations: [],
+  };
+}
+const authorityHistoryState = validateAuthorityHistory(
+  authorityHistory,
+  compatibleTransitionAnchorManifest?.authorityHistory
+);
+if (authorityHistory.currentAuthoritySetDigest !== currentAuthoritySetDigest) {
+  fail("current authority bytes require a typed authority migration before execution can continue");
+}
+
+function authoritySetReaches(fromAuthoritySetDigest, toAuthoritySetDigest) {
+  const fromIndex = authorityHistoryState.authoritySetIndexByDigest.get(fromAuthoritySetDigest);
+  const toIndex = authorityHistoryState.authoritySetIndexByDigest.get(toAuthoritySetDigest);
+  return Number.isInteger(fromIndex) && Number.isInteger(toIndex) && fromIndex <= toIndex;
+}
+
+function authoritySetCompatibleForClause(
+  fromAuthoritySetDigest,
+  clauseId,
+  toAuthoritySetDigest = currentAuthoritySetDigest
+) {
+  const fromIndex = authorityHistoryState.authoritySetIndexByDigest.get(fromAuthoritySetDigest);
+  const toIndex = authorityHistoryState.authoritySetIndexByDigest.get(toAuthoritySetDigest);
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex) || fromIndex > toIndex) {
+    return false;
+  }
+  return authorityHistory.migrations
+    .slice(fromIndex, toIndex)
+    .every((migration) => !migration.affectedClauseIds.includes(clauseId));
+}
+
+const semanticAuthorityMigrationBySourceKey = new Map();
+for (const migration of authorityHistory.migrations) {
+  if (migration.reasonCode === "compatible_registry_tail_change") continue;
+  const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
+  if (semanticAuthorityMigrationBySourceKey.has(sourceKey)) {
+    fail(`authority migrations reuse invalidation source ${sourceKey}`);
+  }
+  semanticAuthorityMigrationBySourceKey.set(sourceKey, migration);
+}
+
+function generationHasCurrentClauseEvidence(key, clauseId) {
+  if (supersededGenerationKeys.has(key)) return false;
+  for (const source of invalidatedByGeneration.get(key) ?? []) {
+    const sourceKey = `${source.tracerId}:${source.generation}`;
+    const migration = semanticAuthorityMigrationBySourceKey.get(sourceKey);
+    if (!migration || migration.affectedClauseIds.includes(clauseId)) return false;
+  }
+  return true;
+}
+
+for (const definition of issues) {
+  const currentGeneration = currentGenerationFor(definition.id);
+  if (currentGeneration == null) continue;
+  const currentKey = `${definition.id}:${currentGeneration}`;
+  if (!generationIsActive(currentKey)) continue;
+  const receipt = generationByKey.get(currentKey);
+  if (
+    !authoritySetReaches(receipt.authoritySnapshot.authoritySetDigest, currentAuthoritySetDigest) ||
+    !registryEvents.some((event) => event.head === receipt.authoritySnapshot.registryHead)
+  ) {
+    fail(`${currentKey} is active under an unregistered authority or non-ancestor registry`);
+  }
+}
+const remediationObligations = compatibleExistingManifest?.remediationObligations ?? {
+  schemaId: REMEDIATION_LEDGER_SCHEMA_ID,
+  obligations: [],
+  events: [],
+};
+const firstDynamicRegistryEventIndex = registryEvents.findIndex((event) =>
+  event.addedDefinitions.some((definition) => definition.id > baseWaveHighestId)
+);
+const baseWaveRegistryEvents =
+  firstDynamicRegistryEventIndex === -1
+    ? registryEvents
+    : registryEvents.slice(0, firstDynamicRegistryEventIndex);
+const baseWaveRegistryHead = baseWaveRegistryEvents.at(-1)?.head ?? null;
+if (!validDigest(baseWaveRegistryHead)) {
+  fail("the base-wave registry head is unavailable for remediation allocation");
+}
+let remediationLedgerState;
+try {
+  remediationLedgerState = validateRemediationObligationLedger(remediationObligations, {
+    previousLedger: compatibleTransitionAnchorManifest?.remediationObligations,
+    initialNextTracerId: baseWaveHighestId + 1,
+    initialRegistryHead: baseWaveRegistryHead,
+  });
+} catch (error) {
+  fail(`remediation obligation ledger is invalid: ${error.message}`);
+}
+const remediationObligationById = new Map(
+  remediationObligations.obligations.map((obligation) => [obligation.obligationId, obligation])
+);
+const remediationObligationsBySource = new Map();
+for (const obligation of remediationObligations.obligations) {
+  if (!clauseById.has(obligation.affectedClauseIds[0])) {
+    fail(`${obligation.obligationId} does not bind known affected clauses`);
+  }
+  for (const clauseId of obligation.affectedClauseIds) {
+    if (!clauseById.has(clauseId)) fail(`${obligation.obligationId} names unknown ${clauseId}`);
+  }
+  const sourceKey = `${obligation.source.tracerId}:${obligation.source.generation}`;
+  const sources = remediationObligationsBySource.get(sourceKey) ?? [];
+  sources.push(obligation);
+  remediationObligationsBySource.set(sourceKey, sources);
+}
+
+function remediationDispatchContract(obligation) {
+  return {
+    affectedClauseIds: obligation.affectedClauseIds,
+    closureTargets: obligation.closureTargets,
+    expectedAllocation: obligation.expectedAllocation,
+    findingId: obligation.findingId,
+    inheritedCommitment: obligation.inheritedCommitment,
+    invalidatesMachineComplete: obligation.invalidatesMachineComplete,
+    invalidationScopes: obligation.invalidationScopes,
+    invalidations: obligation.invalidations.map(({ reasonCode, scopes, target }) => ({
+      reasonCode,
+      scopes,
+      target,
+    })),
+    obligationId: obligation.obligationId,
+    rejoinAt: obligation.rejoinAt,
+    repairContract: obligation.repairContract,
+    repairDefinitionDigest: obligation.repairDefinitionDigest,
+    repairTracerId: obligation.expectedAllocation.tracerId,
+    source: obligation.source,
+    transfersFrom: obligation.transfersFrom,
+  };
+}
+
+for (const generation of executionGenerations) {
+  const key = `${generation.tracerId}:${generation.generation}`;
+  const obligations = remediationObligationsBySource.get(key) ?? [];
+  const requiresDispatch = generation.resultDisposition.disposition === "repair_dispatch";
+  const validatedGenerationEvidence = validatedEvidenceByGeneration.get(key);
+  const dispatchArtifactIds =
+    validatedGenerationEvidence?.evidence.outcome.resultDisposition.dispatchArtifactIds ?? [];
+  const dispatchPayloads = dispatchArtifactIds.map(
+    (artifactId) => validatedGenerationEvidence.artifactReceipts.get(artifactId)?.payload
+  );
+  if (
+    (requiresDispatch && obligations.length !== generation.resultDisposition.dispatchCount) ||
+    (!requiresDispatch && obligations.length !== 0) ||
+    dispatchPayloads.some((payload) => !payload) ||
+    new Set(dispatchPayloads.map((payload) => payload.obligationId)).size !==
+      dispatchPayloads.length
+  ) {
+    fail(`${key} result disposition and remediation obligations are not one-to-one`);
+  }
+  const dispatchPayloadByObligation = new Map(
+    dispatchPayloads.map((payload) => [payload.obligationId, payload])
+  );
+  for (const obligation of obligations) {
+    const obligationGenerationInvalidations = obligation.invalidations.map(
+      ({ reasonCode, source, target, scopes }) => {
+        if (
+          source.tracerId !== generation.tracerId ||
+          source.generation !== generation.generation
+        ) {
+          fail(`${obligation.obligationId} invalidation source differs from its dispatcher`);
+        }
+        return { reasonCode, scopes, target };
+      }
+    );
+    const expectedDispatchContract = remediationDispatchContract(obligation);
+    const dispatchPayload = dispatchPayloadByObligation.get(obligation.obligationId);
+    const receivedDispatchContract = dispatchPayload
+      ? Object.fromEntries(
+          Object.keys(expectedDispatchContract).map((field) => [field, dispatchPayload[field]])
+        )
+      : null;
+    if (
+      obligation.source.resultCode !== generation.resultCode ||
+      JSON.stringify(obligationGenerationInvalidations) !==
+        JSON.stringify(generation.invalidates) ||
+      JSON.stringify(receivedDispatchContract) !== JSON.stringify(expectedDispatchContract) ||
+      dispatchPayload.outputDigest !== digest(JSON.stringify(expectedDispatchContract))
+    ) {
+      fail(`${obligation.obligationId} contradicts its exact dispatcher result or invalidations`);
+    }
+  }
+  if (generation.tracerId > baseWaveHighestId) {
+    const obligation = remediationObligationById.get(generation.remediationObligationId);
+    const registration = remediationObligations.events.find(
+      (event) =>
+        event.type === "registered" && event.obligationId === generation.remediationObligationId
+    );
+    if (
+      !obligation ||
+      obligation.expectedAllocation.tracerId !== generation.tracerId ||
+      registration?.tracerId !== generation.tracerId ||
+      registration.definitionDigest !== generation.definitionDigest
+    ) {
+      fail(`${key} does not consume exactly one registered remediation obligation`);
+    }
+  }
+}
+const declaredClauseEvidence = compatibleExistingManifest?.clauseEvidence ?? {};
+if (
+  !declaredClauseEvidence ||
+  typeof declaredClauseEvidence !== "object" ||
+  Array.isArray(declaredClauseEvidence)
+) {
+  fail("clauseEvidence must be a closed append-only object");
+}
+for (const [clauseId, records] of Object.entries(declaredClauseEvidence)) {
+  if (!clauseById.has(clauseId) || !Array.isArray(records)) {
+    fail(`clauseEvidence.${clauseId} is unknown or not an array`);
+  }
+}
+const clauseEvidence = {};
+for (const generation of executionGenerations) {
+  const generationKey = `${generation.tracerId}:${generation.generation}`;
+  const validated = validatedEvidenceByGeneration.get(generationKey);
+  if (!validated) fail(`${generationKey} lacks validated clause-claim evidence`);
+  for (const { clauseId, claim } of validated.clauseRecords) {
+    const records = clauseEvidence[clauseId] ?? [];
+    const record = {
+      generation: records.length + 1,
+      previousRecordDigest: records.length === 0 ? null : digest(JSON.stringify(records.at(-1))),
+      tracerId: generation.tracerId,
+      executionGeneration: generation.generation,
+      evidenceDigest: generation.evidenceDigest,
+      authoritySetDigest: generation.authoritySnapshot.authoritySetDigest,
+      clauseDigest: claim.clauseDigest,
+      contributor: claim.contributor,
+      evidenceArtifactIds: claim.evidenceArtifactIds,
+    };
+    records.push(record);
+    clauseEvidence[clauseId] = records;
+  }
+}
+for (const [clauseId, anchoredRecords] of Object.entries(
+  compatibleTransitionAnchorManifest?.clauseEvidence ?? {}
+)) {
+  if (!Object.hasOwn(clauseEvidence, clauseId)) {
+    fail(`clauseEvidence removed anchored ${clauseId}`);
+  }
+  assertJsonPrefix(anchoredRecords, clauseEvidence[clauseId], `clauseEvidence.${clauseId}`);
+}
+
+function semanticClauseProjection(clause) {
+  if (!clause) return null;
+  return {
+    id: clause.id,
+    contentDigest: clause.contentDigest,
+    familyId: clause.familyId,
+    implementationOwner: clause.implementationOwner,
+    evidenceContributors: clause.evidenceContributors,
+    closureVerifier: clause.closureVerifier,
+    dependencies: clause.dependencies,
+  };
+}
+
+function generationPublishedNoLaterThan(candidate, source) {
+  return (
+    candidate.implementationCommit === source.implementationCommit ||
+    isFirstParentAncestor(candidate.implementationCommit, source.implementationCommit)
+  );
+}
+
+function generationWasStaleBeforeSource(targetKey, sourceKey) {
+  for (const generation of executionGenerations) {
+    const candidateSourceKey = `${generation.tracerId}:${generation.generation}`;
+    if (candidateSourceKey === sourceKey) continue;
+    const sourceGeneration = generationByKey.get(sourceKey);
+    if (!sourceGeneration || !generationPublishedNoLaterThan(generation, sourceGeneration)) {
+      continue;
+    }
+    const superseded = generation.supersedes.some(
+      ({ target }) => `${target.tracerId}:${target.generation}` === targetKey
+    );
+    const invalidated = generation.invalidates.some(
+      ({ target }) => `${target.tracerId}:${target.generation}` === targetKey
+    );
+    if (superseded || invalidated) return true;
+  }
+  return false;
+}
+
+function clauseWitnessesImmediatelyBeforeMigration(clauseId, migration, historicalClause) {
+  const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
+  const sourceGeneration = generationByKey.get(sourceKey);
+  if (!sourceGeneration) return [];
+  return (clauseEvidence[clauseId] ?? []).filter((record) => {
+    const key = `${record.tracerId}:${record.executionGeneration}`;
+    const receipt = generationByKey.get(key);
+    if (
+      !receipt ||
+      key === sourceKey ||
+      !generationPublishedNoLaterThan(receipt, sourceGeneration) ||
+      !isStrictTemporalDescendant(sourceKey, key) ||
+      generationWasStaleBeforeSource(key, sourceKey) ||
+      receipt.evidenceDigest !== record.evidenceDigest ||
+      receipt.authoritySnapshot.authoritySetDigest !== record.authoritySetDigest ||
+      !authoritySetCompatibleForClause(
+        record.authoritySetDigest,
+        clauseId,
+        migration.fromAuthoritySetDigest
+      ) ||
+      record.clauseDigest !== historicalClause?.contentDigest ||
+      receipt.issueCompletion !== "complete" ||
+      receipt.freshness !== "current" ||
+      receipt.compatibility !== "compatible" ||
+      !["valid", "not_required"].includes(receipt.authorityValidity)
+    ) {
+      return false;
+    }
+    const laterGenerationBeforeSource = (generationsByTracer.get(record.tracerId) ?? []).some(
+      (generationNumber) => {
+        if (generationNumber <= record.executionGeneration) return false;
+        const candidate = generationByKey.get(`${record.tracerId}:${generationNumber}`);
+        return candidate && generationPublishedNoLaterThan(candidate, sourceGeneration);
+      }
+    );
+    return !laterGenerationBeforeSource;
+  });
+}
+
+if (declaredGovernedAuthorityMigration) {
+  const migration = appendedAuthorityMigrations[0];
+  const fromAuthoritySet = anchoredAuthorityHistory.authoritySets.find(
+    (authoritySet) =>
+      authoritySet.authoritySetDigest === anchoredAuthorityHistory.currentAuthoritySetDigest
+  );
+  const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
+  const sourceGeneration = generationByKey.get(sourceKey);
+  const anchoredSourceGeneration = (
+    compatibleTransitionAnchorManifest.executionGenerations ?? []
+  ).find(
+    (generation) =>
+      generation.tracerId === migration.invalidationGeneration.tracerId &&
+      generation.generation === migration.invalidationGeneration.generation
+  );
+  if (
+    JSON.stringify(fromAuthoritySet) !== JSON.stringify(authorityHistory.authoritySets.at(-2)) ||
+    JSON.stringify(appendedAuthoritySets[0]) !== JSON.stringify(currentAuthoritySet) ||
+    !sourceGeneration ||
+    !anchoredSourceGeneration ||
+    currentGenerationFor(sourceGeneration.tracerId) !== sourceGeneration.generation ||
+    !generationIsActive(sourceKey)
+  ) {
+    fail(
+      "the appended authority migration is not bound to the exact trusted/current sets and active anchored source generation"
+    );
+  }
+  if (
+    sourceGeneration.clauseClaims.some((claim) =>
+      migration.affectedClauseIds.includes(claim.clauseId)
+    )
+  ) {
+    fail("an authority-migration source cannot self-certify a clause that its migration stales");
+  }
+  if (
+    (governedRegistryTailChange && migration.reasonCode !== "compatible_registry_tail_change") ||
+    (!governedRegistryTailChange && migration.reasonCode === "compatible_registry_tail_change")
+  ) {
+    fail(
+      "registry-tail compatibility is available only for the exact append-only PLAN-table transaction"
+    );
+  }
+
+  let historicalClauseLedger;
+  try {
+    historicalClauseLedger = assertCanonicalClauseLedgerJson(
+      gitBytesAt(transitionAnchorCommit, clauseLedgerRepoPath).toString("utf8")
+    );
+  } catch (error) {
+    fail(`cannot validate the migration's historical clause ledger: ${error.message}`);
+  }
+  const historicalClausesById = new Map(
+    historicalClauseLedger.clauses.map((clause) => [clause.id, clause])
+  );
+  const allClauseIds = [...new Set([...historicalClausesById.keys(), ...clauseById.keys()])].sort();
+  const changedClauseIds = allClauseIds.filter(
+    (clauseId) =>
+      JSON.stringify(semanticClauseProjection(historicalClausesById.get(clauseId))) !==
+      JSON.stringify(semanticClauseProjection(clauseById.get(clauseId)))
+  );
+  const affectedClauseIds = new Set(migration.affectedClauseIds);
+  for (const clauseId of changedClauseIds) {
+    if (!affectedClauseIds.has(clauseId)) {
+      fail(`authority migration omits semantically changed ${clauseId}`);
+    }
+  }
+
+  const requiredInvalidationTargets = new Set();
+  for (const clauseId of migration.affectedClauseIds) {
+    const historicalClause = historicalClausesById.get(clauseId);
+    if (!historicalClause && !clauseById.has(clauseId)) {
+      fail(`authority migration names unknown ${clauseId}`);
+    }
+    const witnesses = clauseWitnessesImmediatelyBeforeMigration(
+      clauseId,
+      migration,
+      historicalClause
+    );
+    if (!changedClauseIds.includes(clauseId) && witnesses.length === 0) {
+      fail(`authority migration cannot justify unaffected, unwitnessed ${clauseId}`);
+    }
+    for (const witness of witnesses) {
+      requiredInvalidationTargets.add(`${witness.tracerId}:${witness.executionGeneration}`);
+    }
+  }
+  const actualInvalidationTargets = new Set(
+    sourceGeneration.invalidates
+      .filter((invalidation) => invalidation.scopes.includes("evidence"))
+      .map(({ target }) => `${target.tracerId}:${target.generation}`)
+  );
+  for (const targetKey of requiredInvalidationTargets) {
+    if (!actualInvalidationTargets.has(targetKey)) {
+      fail(`authority migration source ${sourceKey} does not stale affected evidence ${targetKey}`);
+    }
+  }
+  if (
+    migration.reasonCode !== "compatible_registry_tail_change" &&
+    JSON.stringify([...actualInvalidationTargets].sort()) !==
+      JSON.stringify([...requiredInvalidationTargets].sort())
+  ) {
+    fail(
+      `authority migration source ${sourceKey} mixes clause migration with unrelated evidence invalidations`
+    );
+  }
+}
+
+const outputManifestSchema =
+  compatibleExistingManifest?.schemaVersion === CURRENT_MANIFEST_SCHEMA ||
+  existsSync(path.join(root, clauseLedgerRepoPath))
+    ? CURRENT_MANIFEST_SCHEMA
+    : BOOTSTRAP_MANIFEST_SCHEMA;
 const manifest = {
-  schemaVersion: 5,
+  schemaVersion: outputManifestSchema,
   status: "bootstrap_pending",
   objective: "Release Complete Vellum Instrument Intelligence",
   authorities: authorityInputs,
+  authorityHistory,
   publicationTrust: publicationTrustAtRead,
+  protocolCatalog: {
+    resultContracts: TRACER_RESULT_CONTRACTS,
+    unresolvedRemediationObligationIds: remediationLedgerState.unresolvedObligationIds,
+  },
   idPolicy: {
     kind: "append_only_stable_numeric_locators",
     registeredTracerIds,
@@ -3239,9 +5675,9 @@ const manifest = {
   },
   stateModel: {
     executionProtocol:
-      authorityInputs.requirementFamilyIndex.clauseLedgerStatus === "bootstrap_pending_T01"
+      outputManifestSchema === BOOTSTRAP_MANIFEST_SCHEMA
         ? "bootstrap_locked_T01"
-        : "governed_receipts_active",
+        : "governed_receipts_v2",
     issueCompletion: ["open", "in_progress", "complete", "invalidated", "superseded"],
     productAcceptance: ["pass", "fail", "blocked", "incomplete"],
     applicability: ["applicable", "not_applicable", "not_claimed"],
@@ -3252,6 +5688,7 @@ const manifest = {
     closureEvidence: ["pending", "pass", "invalidated"],
     waveClosure: [
       "bootstrap_pending",
+      "preregistered",
       "active",
       "machine_complete",
       "release_complete",
@@ -3260,17 +5697,25 @@ const manifest = {
     goalSatisfiedOnlyBy: "release_complete",
   },
   privacyPolicy: {
-    publicReceiptFields: {
+    caseCommitmentFields: {
       opaque_case_id: "random non-resolving identifier",
-      coverage_class: "value from the public precommitted coverage taxonomy",
+      coverage_class: "allowlisted precommitted coverage class",
       vault_commitment:
         "keyed non-resolving commitment; never a direct hidden-source or truth digest",
-      public_artifact_digest: "digest only of bytes already authorized for public disclosure",
+      stable_case_outcome: "forbidden",
+    },
+    aggregateFields: {
       aggregate_status: "bounded enum with minimum aggregation cardinality",
+      minimum_cardinality: 3,
+      case_ids: "forbidden",
+    },
+    publicArtifactFields: {
+      public_artifact_digest: "digest only of bytes already authorized for public disclosure",
       requirement_ids: "known public requirement-family identifiers only",
       typed_redaction_receipt: "schema-bounded fields; never free-form text or arbitrary nesting",
     },
-    evidenceSchema: "vellum.instrument-intelligence-verification.v1-closed",
+    coverageClasses: PUBLIC_COVERAGE_CLASSES,
+    evidenceSchema: EVIDENCE_RECEIPT_SCHEMA_ID,
     unknownFields: "rejected recursively",
     unlistedEvidenceFiles: "rejected",
     privateClasses: [
@@ -3303,7 +5748,7 @@ const manifest = {
         ],
       },
       implementationCommit: currentReceipt ? currentReceipt.implementationCommit : null,
-      remoteReachabilityReceipt: currentReceipt ? currentReceipt.remoteReachabilityReceipt : null,
+      remotePublicationReceipt: currentReceipt ? currentReceipt.remotePublicationReceipt : null,
       issueCompletion: currentReceipt
         ? supersededGenerationKeys.has(currentKey)
           ? "superseded"
@@ -3328,6 +5773,8 @@ const manifest = {
   executionGenerations,
   stateEdges,
   requirementEvidence,
+  clauseEvidence,
+  remediationObligations,
 };
 
 function compare(actual, operator, expected) {
@@ -3410,7 +5857,7 @@ function currentClosureReceipt(tracerId, expectedResultCode, { requirePass = tru
     receipt.evidenceGeneration < 1 ||
     !/^[a-f0-9]{64}$/.test(receipt.evidenceDigest ?? "") ||
     !validCommit(receipt.implementationCommit) ||
-    !validReachabilityReceipt(receipt.remoteReachabilityReceipt, receipt.implementationCommit) ||
+    !validPublicationReceipt(receipt.remotePublicationReceipt, receipt.implementationCommit) ||
     !existsSync(path.join(root, tracer.evidencePath)) ||
     digest(readLocalBytes(tracer.evidencePath)) !== receipt.evidenceDigest ||
     (requirePass && receipt.productAcceptance !== "pass")
@@ -3524,11 +5971,17 @@ const releaseKey = Number.isInteger(releaseTracer?.currentExecutionGeneration)
 const stopKey = Number.isInteger(stopTracer?.currentExecutionGeneration)
   ? `86:${stopTracer.currentExecutionGeneration}`
   : null;
+const unresolvedRemediationObligationIds = new Set(remediationLedgerState.unresolvedObligationIds);
+const unresolvedMachineRemediation = [...unresolvedRemediationObligationIds].some(
+  (obligationId) => remediationObligationById.get(obligationId)?.invalidatesMachineComplete
+);
 const machinePass = Boolean(
   machineKey &&
   machineTracer?.computedEligibility === "eligible" &&
   machineReceipt &&
+  closureHasCurrentClauseCoverage("T85", machineKey) &&
   closureHasCurrentRequirementCoverage("II-MC-", machineKey) &&
+  !unresolvedMachineRemediation &&
   closureRespectsInvalidations(machineKey, "machine_closure") &&
   dynamicMachineContractsSatisfied(machineKey)
 );
@@ -3537,7 +5990,9 @@ const releasePass = Boolean(
   releaseKey &&
   releaseTracer?.computedEligibility === "eligible" &&
   releaseReceipt &&
+  closureHasCurrentClauseCoverage("T87", releaseKey) &&
   closureHasCurrentRequirementCoverage("II-RC-", releaseKey) &&
+  unresolvedRemediationObligationIds.size === 0 &&
   closureRespectsInvalidations(releaseKey, "release_closure") &&
   dynamicReleaseContractsSatisfied(releaseKey) &&
   isStrictTemporalDescendant(releaseKey, machineKey)
@@ -3578,7 +6033,9 @@ manifest.status = releasePass
       ? "machine_complete"
       : executionGenerations.length
         ? "active"
-        : "bootstrap_pending";
+        : outputManifestSchema === CURRENT_MANIFEST_SCHEMA
+          ? "preregistered"
+          : "bootstrap_pending";
 
 for (const [tracerId, generations] of generationsByTracer) {
   const currentGeneration = generations.at(-1);
@@ -3604,6 +6061,410 @@ const serialized = await format(JSON.stringify(manifest), {
   filepath: manifestPath,
   parser: "json",
 });
+
+const publicEvidenceRoot = ".scratch/instrument-intelligence/evidence";
+
+function cleanWorktreeStatus(context) {
+  try {
+    return execFileSync("git", ["status", "--porcelain=v1", "--untracked-files=all"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    fail(`cannot inspect the ${context} worktree`);
+  }
+}
+
+function changedPathRows(commit) {
+  try {
+    return execFileSync(
+      "git",
+      ["diff-tree", "--no-commit-id", "--name-status", "--no-renames", "-r", commit],
+      {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((row) => {
+        const separator = row.indexOf("\t");
+        if (separator < 1) fail(`cannot parse changed path row for ${commit}`);
+        return { status: row.slice(0, separator), path: row.slice(separator + 1) };
+      });
+  } catch (error) {
+    if (error?.message?.startsWith("Instrument Intelligence plan verification failed:")) {
+      throw error;
+    }
+    fail(`cannot inspect changed paths for ${commit}`);
+  }
+}
+
+function assertModePublicationStable(expectedRemoteCommit) {
+  refreshOriginMain();
+  const fetchedAtEnd = originMainCommit();
+  const attestedAtEnd = githubPublicationHead();
+  try {
+    assertStablePublicationObservation({
+      commitAtRead: expectedRemoteCommit,
+      commitAtEnd: fetchedAtEnd,
+      attestedCommitAtRead: attestedOriginMainAtRead,
+      attestedCommitAtEnd: attestedAtEnd,
+      trustAtRead: publicationTrustAtRead,
+      trustAtEnd: originRemoteUrls(),
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+  if (
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF) !== trustedOriginCommitAtRead ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF) !== bootstrapAnchorAtRead ||
+    optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUST_POLICY_REF) !== trustPolicyObjectAtRead
+  ) {
+    fail("the Owner-local publication checkpoint changed during evidence validation");
+  }
+}
+
+function validateUnreceiptedImplementationCommit({ expectedRemoteCommit, mode }) {
+  if (!checkpointEstablishedAtRead || !trustedOriginCommitAtRead) {
+    fail(`${mode} requires the complete Owner-local publication checkpoint`);
+  }
+  const implementationCommit = optionalRefCommit("HEAD");
+  if (!implementationCommit || cleanWorktreeStatus(`${mode} evidence`)) {
+    fail(`${mode} requires a committed HEAD and completely clean worktree`);
+  }
+  if (
+    singleParent(implementationCommit, `${mode} implementation/evidence commit`) !==
+    trustedOriginCommitAtRead
+  ) {
+    fail(`${mode} HEAD must be one non-merge direct child of trusted-main`);
+  }
+  if (
+    originMainCommitAtRead !== expectedRemoteCommit ||
+    attestedOriginMainAtRead !== expectedRemoteCommit
+  ) {
+    fail(`${mode} fetched and GraphQL publication heads do not match the required phase`);
+  }
+
+  const baseManifest = gitJsonAt(trustedOriginCommitAtRead, manifestRepoPath, { required: true });
+  if (
+    baseManifest?.schemaVersion !== CURRENT_MANIFEST_SCHEMA ||
+    baseManifest.stateModel?.executionProtocol !== "governed_receipts_v2" ||
+    manifestCommitAtOrBefore(trustedOriginCommitAtRead) !== trustedOriginCommitAtRead ||
+    !gitBytesAt(trustedOriginCommitAtRead, manifestRepoPath).equals(
+      gitBytesAt(implementationCommit, manifestRepoPath)
+    ) ||
+    !gitBytesAt(implementationCommit, manifestRepoPath).equals(Buffer.from(serialized))
+  ) {
+    fail(`${mode} requires the unchanged canonical next-schema manifest from trusted-main`);
+  }
+
+  const baseAuthoritySet = baseManifest.authorityHistory?.authoritySets?.find(
+    (authoritySet) =>
+      authoritySet.authoritySetDigest === baseManifest.authorityHistory?.currentAuthoritySetDigest
+  );
+  if (JSON.stringify(baseAuthoritySet) !== JSON.stringify(currentAuthoritySet)) {
+    fail(`${mode} current authority set differs from the exact trusted-main authority set`);
+  }
+  const immutableRunPaths = [
+    manifestRepoPath,
+    ...currentAuthorityPaths,
+    ...issues.map((issue) => issue.file),
+  ].filter((value, index, values) => values.indexOf(value) === index);
+  for (const governedPath of immutableRunPaths) {
+    requireCommittedRegularFile(trustedOriginCommitAtRead, governedPath);
+    requireCommittedRegularFile(implementationCommit, governedPath);
+    if (
+      !gitBytesAt(trustedOriginCommitAtRead, governedPath).equals(
+        gitBytesAt(implementationCommit, governedPath)
+      )
+    ) {
+      fail(`${mode} implementation/evidence commit changed governed path ${governedPath}`);
+    }
+  }
+
+  const evidenceChanges = changedPathRows(implementationCommit).filter(({ path: changedPath }) =>
+    changedPath.startsWith(`${publicEvidenceRoot}/`)
+  );
+  if (!evidenceChanges.length) {
+    fail(`${mode} implementation/evidence commit contains no public evidence`);
+  }
+  if (evidenceChanges.some(({ status }) => status !== "A")) {
+    fail(`${mode} public evidence is append-only; every changed evidence file must be new`);
+  }
+  const changedEvidenceDirectories = new Set();
+  for (const { path: changedPath } of evidenceChanges) {
+    const match = changedPath.match(
+      /^\.scratch\/instrument-intelligence\/evidence\/(T(?:0[1-9]|[1-9][0-9]*))\/(.+)$/
+    );
+    if (!match) fail(`${mode} found a noncanonical changed evidence path ${changedPath}`);
+    changedEvidenceDirectories.add(`${publicEvidenceRoot}/${match[1]}`);
+  }
+  if (changedEvidenceDirectories.size !== 1) {
+    fail(`${mode} requires exactly one changed evidence/TNN directory`);
+  }
+  const evidenceDirectory = [...changedEvidenceDirectories][0];
+  const tracerTag = path.posix.basename(evidenceDirectory);
+  const tracerId = Number(tracerTag.slice(1));
+  const verificationPath = `${evidenceDirectory}/verification.json`;
+  if (!evidenceChanges.some(({ path: changedPath }) => changedPath === verificationPath)) {
+    fail(`${mode} changed evidence directory lacks its one verification.json receipt`);
+  }
+
+  const definition = byId.get(tracerId);
+  if (!definition || definition.evidencePath !== verificationPath) {
+    fail(`${mode} evidence directory does not match one registered tracer definition`);
+  }
+  const evidenceBytes = gitBytesAt(implementationCommit, verificationPath);
+  let evidence;
+  try {
+    evidence = JSON.parse(evidenceBytes.toString("utf8"));
+    validateEvidenceReceiptV2(evidence, verificationPath);
+  } catch (error) {
+    fail(error.message);
+  }
+  const startReceipt = evidence.startReceipt;
+  const priorTracerGenerations = (baseManifest.executionGenerations ?? [])
+    .filter((generation) => generation.tracerId === tracerId)
+    .sort((left, right) => left.generation - right.generation);
+  const expectedGeneration = (priorTracerGenerations.at(-1)?.generation ?? 0) + 1;
+  const expectedEvidenceGeneration = (priorTracerGenerations.at(-1)?.evidenceGeneration ?? 0) + 1;
+  const baseTracer = manifest.tracers.find((tracer) => tracer.id === tracerId);
+  if (
+    startReceipt.start.tracerId !== tracerTag ||
+    startReceipt.start.generation !== expectedGeneration ||
+    startReceipt.definition.path !== definition.file ||
+    startReceipt.definition.sha256 !== definition.definitionDigest ||
+    startReceipt.definition.gateMatrixDigest !== definition.gateMatrixDigest ||
+    startReceipt.definition.completionSemantics !== definition.completionSemantics ||
+    !new Set(["eligible", "conditional_ready"]).has(baseTracer?.computedEligibility) ||
+    (baseManifest.executionGenerations ?? []).some(
+      (generation) => generation.implementationCommit === implementationCommit
+    )
+  ) {
+    fail(`${mode} evidence does not reserve one fresh eligible tracer/generation identity`);
+  }
+  if (
+    JSON.stringify(startReceipt.authoritySnapshot) !== JSON.stringify(currentAuthoritySet) ||
+    startReceipt.registry.generation !== baseManifest.idPolicy?.registryGeneration ||
+    startReceipt.registry.registryHead !== baseManifest.idPolicy?.registryHead ||
+    startReceipt.registry.tombstoneSetDigest !== baseManifest.idPolicy?.tombstoneSetDigest ||
+    startReceipt.registry.baseWaveHighestId !== baseManifest.idPolicy?.baseWaveHighestId
+  ) {
+    fail(`${mode} start receipt does not bind the exact trusted authority and registry state`);
+  }
+  if (
+    startReceipt.publication.checkpoint.bootstrapAnchor.object !== bootstrapAnchorAtRead ||
+    startReceipt.publication.checkpoint.trustPolicy.object !== trustPolicyObjectAtRead ||
+    startReceipt.publication.checkpoint.trustedMain.object !== trustedOriginCommitAtRead ||
+    startReceipt.publication.fetchedHead !== trustedOriginCommitAtRead ||
+    startReceipt.publication.graphQlHead !== trustedOriginCommitAtRead ||
+    startReceipt.execution.baseCommit !== trustedOriginCommitAtRead ||
+    startReceipt.execution.productTreeDigest !==
+      projectedProductTreeDigestAt(trustedOriginCommitAtRead)
+  ) {
+    fail(`${mode} start receipt does not bind the exact dual-observed trusted execution base`);
+  }
+  for (const predecessor of startReceipt.predecessors) {
+    const predecessorTracerId = Number(predecessor.tracerId.slice(1));
+    const predecessorManifest = gitJsonAt(predecessor.receiptCommit, manifestRepoPath, {
+      required: true,
+    });
+    if (
+      !isFirstParentAncestor(predecessor.receiptCommit, trustedOriginCommitAtRead) ||
+      !(predecessorManifest.executionGenerations ?? []).some(
+        (generation) =>
+          generation.tracerId === predecessorTracerId &&
+          generation.generation === predecessor.generation
+      )
+    ) {
+      fail(`${mode} start predecessor is not an exact pushed ancestor receipt generation`);
+    }
+  }
+
+  const evidenceDisposition = evidence.outcome.resultDisposition;
+  const resultDisposition = {
+    tracerId,
+    resultCode: evidenceDisposition.code,
+    productAcceptance: evidence.outcome.productAcceptance,
+    applicability: evidence.outcome.applicability,
+    disposition: evidenceDisposition.disposition,
+    dispatchCount: evidenceDisposition.dispatchArtifactIds.length,
+  };
+  if (TRACER_RESULT_CONTRACTS[tracerId]) {
+    try {
+      validateResultDisposition(resultDisposition);
+    } catch (error) {
+      fail(error.message);
+    }
+  } else if (
+    resultDisposition.resultCode !== "implementation_passed" ||
+    resultDisposition.productAcceptance !== "pass" ||
+    resultDisposition.disposition !== "unlock" ||
+    resultDisposition.dispatchCount !== 0
+  ) {
+    fail(`${mode} ordinary tracer lacks its exact implementation-pass disposition`);
+  }
+  if (
+    evidence.outcome.issueCompletion !== "complete" ||
+    evidence.outcome.freshness !== "current" ||
+    evidence.outcome.compatibility !== "compatible" ||
+    !new Set(["valid", "not_required"]).has(evidence.outcome.authorityValidity) ||
+    (["implementation-pass", "closure-pass-required"].includes(definition.completionSemantics) &&
+      evidence.outcome.productAcceptance !== "pass")
+  ) {
+    fail(`${mode} evidence does not close its declared completion semantics`);
+  }
+
+  const generation = {
+    tracerId,
+    generation: expectedGeneration,
+    evidenceGeneration: expectedEvidenceGeneration,
+    definitionPath: definition.file,
+    definitionDigest: definition.definitionDigest,
+    startReceipt,
+    authoritySnapshot: currentExecutionAuthoritySnapshot,
+    implementationCommit,
+    evidenceDigest: digest(evidenceBytes),
+    predecessors: startReceipt.predecessors.map((predecessor) => ({
+      tracerId: Number(predecessor.tracerId.slice(1)),
+      generation: predecessor.generation,
+    })),
+    clauseClaims: evidence.claims,
+    issueCompletion: evidence.outcome.issueCompletion,
+    productAcceptance: evidence.outcome.productAcceptance,
+    applicability: evidence.outcome.applicability,
+    comparison: evidence.outcome.comparison,
+    freshness: evidence.outcome.freshness,
+    compatibility: evidence.outcome.compatibility,
+    authorityValidity: evidence.outcome.authorityValidity,
+    resultCode: evidenceDisposition.code,
+    resultDisposition,
+    supersedes: evidence.outcome.supersedes,
+    invalidates: evidence.outcome.invalidates,
+  };
+  validateExactStartWitnesses(generation, definition);
+  const validated = validateEvidenceReceipt(evidenceBytes, generation, definition);
+  const committedAt = Date.parse(
+    execFileSync("git", ["show", "-s", "--format=%cI", implementationCommit], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim()
+  );
+  if (Date.parse(validated.evidence.finishedAt) > committedAt) {
+    fail(`${mode} evidence finished after its implementation/evidence commit`);
+  }
+  assertLocalReadSetUnchanged(issueFiles);
+  if (optionalRefCommit("HEAD") !== implementationCommit || cleanWorktreeStatus(`${mode} end`)) {
+    fail(`${mode} worktree changed during validation`);
+  }
+  return { evidence, generation, implementationCommit, tracerTag, validatedEvidence: validated };
+}
+
+function canonicalRemotePublicationReceipt(implementationCommit) {
+  const receipt = {
+    schemaId: "vellum.instrument-intelligence.publication-receipt.v1",
+    remote: "origin",
+    remoteIdentity: INSTRUMENT_INTELLIGENCE_PUBLICATION_TRUST.remoteIdentity,
+    branch: INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.branch,
+    repositoryNodeId: INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.nodeId,
+    repositoryDatabaseId: INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.databaseId,
+    repositoryNameWithOwner: INSTRUMENT_INTELLIGENCE_GITHUB_REPOSITORY.nameWithOwner,
+    remoteProtectionAssumed: false,
+    bootstrapAnchor: bootstrapAnchorAtRead,
+    trustPolicyObject: trustPolicyObjectAtRead,
+    trustedMainAtStart: trustedOriginCommitAtRead,
+    commit: implementationCommit,
+    fetchedHead: implementationCommit,
+    graphQlHead: implementationCommit,
+    checkedAt: new Date().toISOString(),
+  };
+  if (!validPublicationReceipt(receipt, implementationCommit)) {
+    fail("cannot construct the closed canonical remote publication receipt");
+  }
+  return receipt;
+}
+
+function remediationObligationFromDispatchPayload(payload) {
+  return {
+    schemaId: "vellum.remediation-obligation.v1",
+    obligationId: payload.obligationId,
+    findingId: payload.findingId,
+    transfersFrom: payload.transfersFrom,
+    source: payload.source,
+    expectedAllocation: payload.expectedAllocation,
+    repairDefinitionDigest: payload.repairDefinitionDigest,
+    repairContract: payload.repairContract,
+    affectedClauseIds: payload.affectedClauseIds,
+    inheritedCommitment: payload.inheritedCommitment,
+    invalidations: payload.invalidations.map((edge) => ({
+      source: { tracerId: payload.source.tracerId, generation: payload.source.generation },
+      ...edge,
+    })),
+    invalidationScopes: payload.invalidationScopes,
+    invalidatesMachineComplete: payload.invalidatesMachineComplete,
+    rejoinAt: payload.rejoinAt,
+    closureTargets: payload.closureTargets,
+  };
+}
+
+function writePublishedEvidenceReceiptManifest(validated) {
+  if (validated.generation.tracerId > baseWaveHighestId) {
+    fail("dynamic remediation receipt recording requires its registered obligation transaction");
+  }
+  const publicationReceipt = canonicalRemotePublicationReceipt(validated.implementationCommit);
+  const completedGeneration = {
+    ...validated.generation,
+    remotePublicationReceipt: publicationReceipt,
+  };
+  const baseManifest = manifestAtCommit(trustedOriginCommitAtRead);
+  const candidateManifest = structuredClone(baseManifest);
+  candidateManifest.executionGenerations = [
+    ...(candidateManifest.executionGenerations ?? []),
+    completedGeneration,
+  ];
+  const dispatchIds = validated.evidence.outcome.resultDisposition.dispatchArtifactIds;
+  const dispatchedObligations = dispatchIds.map((artifactId) => {
+    const payload = validated.validatedEvidence.artifactReceipts.get(artifactId)?.payload;
+    if (!payload || payload.schemaId !== "vellum.remediation-dispatch.v1") {
+      fail(`cannot materialize remediation obligation from dispatch artifact ${artifactId}`);
+    }
+    return remediationObligationFromDispatchPayload(payload);
+  });
+  candidateManifest.remediationObligations = {
+    ...(candidateManifest.remediationObligations ?? {
+      schemaId: REMEDIATION_LEDGER_SCHEMA_ID,
+      events: [],
+      obligations: [],
+    }),
+    obligations: [
+      ...(candidateManifest.remediationObligations?.obligations ?? []),
+      ...dispatchedObligations,
+    ],
+  };
+
+  const originalBytes = readFileSync(manifestPath);
+  try {
+    writeFileSync(manifestPath, `${JSON.stringify(candidateManifest, null, 2)}\n`);
+    execFileSync(process.execPath, [process.argv[1], "--write-manifest"], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 120_000,
+      maxBuffer: 16 * 1024 * 1024,
+    });
+  } catch (error) {
+    writeFileSync(manifestPath, originalBytes);
+    const details = error?.stderr?.trim() || error?.stdout?.trim() || error?.message;
+    fail(`could not write the canonical published-evidence receipt manifest: ${details}`);
+  }
+  return { completedGeneration, publicationReceipt };
+}
+
 let lockFd;
 let temporaryManifestPath;
 function cleanup() {
@@ -3640,7 +6501,7 @@ if (writeManifest) {
     renameSync(temporaryManifestPath, manifestPath);
     temporaryManifestPath = undefined;
     console.log(
-      `Wrote execution-locked schema-5 bootstrap ${path.relative(root, manifestPath)} with ${issues.length} registered tracers; commit and push it before strict verification.`
+      `Wrote canonical schema-${outputManifestSchema} ${path.relative(root, manifestPath)} with ${issues.length} registered tracers; commit and push it before strict verification.`
     );
   } finally {
     cleanup();
@@ -3652,12 +6513,40 @@ if (writeManifest) {
   }
   assertLocalReadSetUnchanged(issueFiles);
   console.log(
-    `Instrument Intelligence bootstrap draft verified: ${issues.length} stable tracers, typed acyclic predicates, no mutable progress, and no public evidence.`
+    `Instrument Intelligence schema-${outputManifestSchema} draft verified: ${issues.length} stable tracers and a canonical governed execution state.`
+  );
+} else if (verifyPendingEvidence) {
+  const validated = validateUnreceiptedImplementationCommit({
+    expectedRemoteCommit: trustedOriginCommitAtRead,
+    mode: "pending-evidence validation",
+  });
+  assertModePublicationStable(trustedOriginCommitAtRead);
+  console.log(
+    `Pending evidence verified before first push: ${validated.tracerTag}:${validated.generation.generation} is reserved by ${validated.implementationCommit}; trusted-main was not advanced.`
+  );
+} else if (observePublishedEvidence) {
+  const localHead = optionalRefCommit("HEAD");
+  const validated = validateUnreceiptedImplementationCommit({
+    expectedRemoteCommit: localHead,
+    mode: "published-evidence observation",
+  });
+  assertModePublicationStable(validated.implementationCommit);
+  console.log(JSON.stringify(canonicalRemotePublicationReceipt(validated.implementationCommit)));
+} else if (recordPublishedEvidence) {
+  const localHead = optionalRefCommit("HEAD");
+  const validated = validateUnreceiptedImplementationCommit({
+    expectedRemoteCommit: localHead,
+    mode: "published-evidence receipt recording",
+  });
+  assertModePublicationStable(validated.implementationCommit);
+  const recorded = writePublishedEvidenceReceiptManifest(validated);
+  console.log(
+    `Recorded ${validated.tracerTag}:${recorded.completedGeneration.generation} in the canonical manifest; commit only ${manifestRepoPath} as the receipt transaction.`
   );
 } else {
   if (!compatibleOriginManifest) {
     fail(
-      "strict verification requires the schema-5 bootstrap manifest on origin/main; write, commit, and push the draft first"
+      "strict verification requires a supported governed manifest on origin/main; write, commit, and push the draft first"
     );
   }
   if (currentManifestChangingCommit !== originMainCommitAtRead) {
@@ -3755,7 +6644,11 @@ if (writeManifest) {
   if (preTrustCorrectionCandidate && !preTrustCorrectionTransition) {
     fail("the sole pre-trust correction does not satisfy its closed path and lineage contract");
   }
-  if (bootstrapTransition) {
+  if (checkpointSteadyAtRead) {
+    if (trustBootstrap) {
+      fail("--trust-bootstrap cannot replace an existing Owner-local trust checkpoint");
+    }
+  } else if (bootstrapTransition) {
     const bootstrapParent = singleParent(originMainCommitAtRead, "schema-5 bootstrap commit");
     const bootstrapParentIssuePaths = gitFilesUnder(
       bootstrapParent,
@@ -3785,7 +6678,131 @@ if (writeManifest) {
       );
     }
   } else if (!preTrustCorrectionTransition) {
-    if (governedRegistryTailChange) {
+    if (t01PreregistrationTransition) {
+      const expectedPaths = [...t01PreregistrationAllowedPaths].sort();
+      const schema6HistoryCount = originManifestChangingCommits
+        .map((commit) => gitJsonAt(commit, manifestRepoPath, { required: true }))
+        .filter((candidate) => candidate?.schemaVersion === CURRENT_MANIFEST_SCHEMA).length;
+      const publicEvidenceFiles = gitFilesUnder(
+        originMainCommitAtRead,
+        ".scratch/instrument-intelligence/evidence"
+      ).sort();
+      const anchor = compatibleTransitionAnchorManifest;
+      const candidate = compatibleExistingManifest;
+      const anchorRegistryEvents = anchor.idPolicy?.registryEvents ?? [];
+      const candidateRegistryEvents = candidate.idPolicy?.registryEvents ?? [];
+      const revisionEvent = candidateRegistryEvents.at(-1);
+      const revisions = revisionEvent?.revisedDefinitions ?? [];
+      const revisionById = new Map(revisions.map((revision) => [revision.id, revision]));
+      const expectedRevisionIds = t01PreregistrationAllowedPaths
+        .filter((governedPath) =>
+          governedPath.startsWith(".scratch/instrument-intelligence/issues/")
+        )
+        .map((governedPath) => Number(path.posix.basename(governedPath).match(/^\d+/)?.[0]))
+        .sort((left, right) => left - right);
+      const anchorTracerById = new Map((anchor.tracers ?? []).map((tracer) => [tracer.id, tracer]));
+      const candidateTracerById = new Map(
+        (candidate.tracers ?? []).map((tracer) => [tracer.id, tracer])
+      );
+      const normalizeT01TracerSchema = (tracer) => {
+        if (!tracer) return tracer;
+        const { remoteReachabilityReceipt, remotePublicationReceipt, ...stable } = tracer;
+        return {
+          ...stable,
+          remotePublicationReceipt:
+            remotePublicationReceipt !== undefined
+              ? remotePublicationReceipt
+              : remoteReachabilityReceipt,
+        };
+      };
+      const tracerRevisionIsExact = [...candidateTracerById].every(([id, tracer]) => {
+        const previous = anchorTracerById.get(id);
+        const revision = revisionById.get(id);
+        if (!revision) {
+          return (
+            JSON.stringify(normalizeT01TracerSchema(tracer)) ===
+            JSON.stringify(normalizeT01TracerSchema(previous))
+          );
+        }
+        if (
+          !previous ||
+          revision.previousDefinitionDigest !== previous.definitionDigest ||
+          revision.definitionDigest !== tracer.definitionDigest
+        ) {
+          return false;
+        }
+        const previousStable = {
+          ...normalizeT01TracerSchema(previous),
+          requirementIds: undefined,
+          definitionDigest: undefined,
+        };
+        const candidateStable = {
+          ...normalizeT01TracerSchema(tracer),
+          requirementIds: undefined,
+          definitionDigest: undefined,
+        };
+        return JSON.stringify(previousStable) === JSON.stringify(candidateStable);
+      });
+      const anchorStaticIdPolicy = {
+        ...anchor.idPolicy,
+        registryGeneration: undefined,
+        previousRegistryHead: undefined,
+        registryHead: undefined,
+        registryEvents: undefined,
+      };
+      const candidateStaticIdPolicy = {
+        ...candidate.idPolicy,
+        registryGeneration: undefined,
+        previousRegistryHead: undefined,
+        registryHead: undefined,
+        registryEvents: undefined,
+      };
+      if (
+        singleParent(originMainCommitAtRead, "T01 governance pre-registration") !==
+          trustedOriginCommitAtRead ||
+        JSON.stringify(strictCommitPaths) !== JSON.stringify(expectedPaths) ||
+        schema6HistoryCount !== 1 ||
+        manifestHasMutableProgress(anchor) ||
+        manifestHasMutableProgress(candidate) ||
+        JSON.stringify(candidateStaticIdPolicy) !== JSON.stringify(anchorStaticIdPolicy) ||
+        candidateRegistryEvents.length !== anchorRegistryEvents.length + 1 ||
+        JSON.stringify(candidateRegistryEvents.slice(0, -1)) !==
+          JSON.stringify(anchorRegistryEvents) ||
+        revisionEvent?.generation !== (anchor.idPolicy?.registryGeneration ?? 0) + 1 ||
+        revisionEvent?.previousHead !== anchor.idPolicy?.registryHead ||
+        revisionEvent?.head !== candidate.idPolicy?.registryHead ||
+        candidate.idPolicy?.registryGeneration !== revisionEvent?.generation ||
+        candidate.idPolicy?.previousRegistryHead !== revisionEvent?.previousHead ||
+        (revisionEvent?.addedDefinitions ?? []).length !== 0 ||
+        (revisionEvent?.tombstonesAdded ?? []).length !== 0 ||
+        revisions.length === 0 ||
+        revisionById.size !== revisions.length ||
+        JSON.stringify([...revisionById.keys()].sort((left, right) => left - right)) !==
+          JSON.stringify(expectedRevisionIds) ||
+        candidateTracerById.size !== anchorTracerById.size ||
+        !tracerRevisionIsExact ||
+        (candidate.executionGenerations ?? []).length !== 0 ||
+        (candidate.stateEdges ?? []).length !== 0 ||
+        Object.keys(candidate.requirementEvidence ?? {}).length !== 0 ||
+        Object.keys(candidate.clauseEvidence ?? {}).length !== 0 ||
+        (candidate.remediationObligations?.obligations ?? []).length !== 0 ||
+        (candidate.remediationObligations?.events ?? []).length !== 0 ||
+        candidate.authorityHistory?.authoritySets?.length !== 1 ||
+        candidate.authorityHistory?.migrations?.length !== 0 ||
+        (candidate.idPolicy?.tombstones ?? []).length !== 0 ||
+        candidate.closureState?.machineComplete !== "pending" ||
+        candidate.closureState?.releaseComplete !== "pending" ||
+        candidate.closureState?.provisionalStopped !== false ||
+        candidate.status !== "preregistered" ||
+        JSON.stringify(candidate.publicationTrust) !== JSON.stringify(anchor.publicationTrust) ||
+        JSON.stringify(publicEvidenceFiles) !==
+          JSON.stringify([".scratch/instrument-intelligence/evidence/.gitkeep"])
+      ) {
+        fail(
+          "T01 schema-6 pre-registration must be the sole direct, evidence-empty, immutable-registry governance transaction"
+        );
+      }
+    } else if (governedRegistryTailChange) {
       const expectedRegistryPaths = new Set([
         manifestRepoPath,
         ".scratch/instrument-intelligence/PLAN.md",
@@ -3794,8 +6811,36 @@ if (writeManifest) {
       for (const id of removedLiveIds) {
         expectedRegistryPaths.add(oldTracers.get(id).file);
       }
-      if (JSON.stringify(strictCommitPaths) !== JSON.stringify([...expectedRegistryPaths].sort())) {
+      if (
+        !declaredGovernedAuthorityMigration ||
+        singleParent(originMainCommitAtRead, "governed registry-tail migration") !==
+          trustedOriginCommitAtRead ||
+        newlyAppendedExecutionGenerations.length !== 0 ||
+        JSON.stringify(strictCommitPaths) !== JSON.stringify([...expectedRegistryPaths].sort())
+      ) {
         fail("a registry transaction changed paths outside its manifest/PLAN/one-definition scope");
+      }
+    } else if (declaredGovernedAuthorityMigration) {
+      const migration = appendedAuthorityMigrations[0];
+      const fromAuthoritySet = authorityHistory.authoritySets.find(
+        (authoritySet) => authoritySet.authoritySetDigest === migration.fromAuthoritySetDigest
+      );
+      const toAuthoritySet = authorityHistory.authoritySets.find(
+        (authoritySet) => authoritySet.authoritySetDigest === migration.toAuthoritySetDigest
+      );
+      const expectedMigrationPaths = [
+        manifestRepoPath,
+        ...changedAuthorityPathsBetween(fromAuthoritySet, toAuthoritySet),
+      ].sort();
+      if (
+        singleParent(originMainCommitAtRead, "governed authority migration") !==
+          trustedOriginCommitAtRead ||
+        newlyAppendedExecutionGenerations.length !== 0 ||
+        JSON.stringify(strictCommitPaths) !== JSON.stringify(expectedMigrationPaths)
+      ) {
+        fail(
+          "a governed authority migration must be one direct manifest/changed-authority transaction with no appended execution generation"
+        );
       }
     } else if (!hasMutableProgress && (authorityChanged || definitionChanged)) {
       if (!checkpointEstablishedAtRead) {
@@ -3903,12 +6948,14 @@ if (writeManifest) {
   } else if (trustBootstrap) {
     fail("--trust-bootstrap cannot replace an existing Owner-local trust checkpoint");
   }
-  advanceTrustedPublicationCheckpoint({
-    newCommit: originMainCommitAtRead,
-    oldCommit: trustedOriginCommitAtRead,
-    bootstrapAnchor: bootstrapAnchorAtRead,
-    policyObject: trustPolicyObjectAtRead,
-  });
+  if (!checkpointSteadyAtRead) {
+    advanceTrustedPublicationCheckpoint({
+      newCommit: originMainCommitAtRead,
+      oldCommit: trustedOriginCommitAtRead,
+      bootstrapAnchor: bootstrapAnchorAtRead,
+      policyObject: trustPolicyObjectAtRead,
+    });
+  }
   if (
     optionalRefCommit(INSTRUMENT_INTELLIGENCE_TRUSTED_MAIN_REF) !== originMainCommitAtRead ||
     optionalRefCommit(INSTRUMENT_INTELLIGENCE_BOOTSTRAP_ANCHOR_REF) !==
@@ -3918,6 +6965,6 @@ if (writeManifest) {
     fail("the atomic Owner-local publication checkpoint transaction did not persist exactly");
   }
   console.log(
-    `Instrument Intelligence schema-5 bootstrap strictly verified at the pinned origin/main publication head: ${issues.length} stable tracers, execution locked pending T01, remote protection not assumed, and Owner-local trust checkpoint advanced.`
+    `Instrument Intelligence schema-${outputManifestSchema} strictly verified at the pinned origin/main publication head: ${issues.length} stable tracers, remote protection not assumed, and the Owner-local trust checkpoint is current.`
   );
 }

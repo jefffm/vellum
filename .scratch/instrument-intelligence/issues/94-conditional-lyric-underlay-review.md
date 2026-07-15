@@ -12,7 +12,7 @@ User stories: U3, U8, U10
 
 SPEC coverage: Slice 14 lyric review where claimed
 
-Requirement families touched: II-MUS-003, II-RC-006
+Requirement families touched: II-MUS-003, II-RC-006, II-EXEC-014D, II-NG-010
 
 ## What to build
 

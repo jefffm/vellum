@@ -12,7 +12,7 @@ User stories: U1, U2, U3, U8, U10
 
 SPEC coverage: Slice 14 metadata and rights review
 
-Requirement families touched: II-SRC-001–002, II-BND-008, II-RC-013
+Requirement families touched: II-SRC-001–002, II-BND-008, II-RC-013, II-EXEC-014D, II-NG-010
 
 ## What to build
 

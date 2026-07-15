@@ -12,7 +12,7 @@ User stories: U3, U8, U10
 
 SPEC coverage: Slice 14 imitative-intabulation review
 
-Requirement families touched: II-MUS-008, II-RC-001, II-RC-005
+Requirement families touched: II-MUS-008, II-RC-001, II-RC-005, II-EXEC-014D, II-NG-010
 
 ## What to build
 

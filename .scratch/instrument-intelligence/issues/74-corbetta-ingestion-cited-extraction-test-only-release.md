@@ -12,7 +12,7 @@ User stories: U1, U2, U4
 
 SPEC coverage: Five-course baroque-guitar seed source; first extraction fixture
 
-Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-001
+Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-001, II-EXEC-002A
 
 ## What to build
 

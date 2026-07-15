@@ -12,7 +12,7 @@ User stories: U2, U3, U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 14 historical-claim and Knowledge Pack profile review
 
-Requirement families touched: II-KNW-001–007, II-RC-001, II-RC-015
+Requirement families touched: II-KNW-001–007, II-RC-001, II-RC-015, II-EXEC-014D, II-NG-010
 
 ## What to build
 

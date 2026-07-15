@@ -12,7 +12,7 @@ User stories: U8, U10
 
 SPEC coverage: Dataset assignments/contamination; content-addressed regressions; held-out acceptance; Slice 4
 
-Requirement families touched: II-EVAL-004–005, II-EVAL-009–010, II-EXEC-004B, II-MC-027–029
+Requirement families touched: II-EVAL-004–005, II-EVAL-009–010, II-EXEC-004B, II-MC-027–029, II-EXEC-004E
 
 ## What to build
 

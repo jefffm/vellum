@@ -1,0 +1,22 @@
+{
+  "schemaId": "vellum.instrument-intelligence.review-authority-catalog.v1",
+  "policy": {
+    "algorithms": ["ed25519"],
+    "clockSkewSeconds": 300,
+    "conflictPolicyDigest": "fbdd151cad618e57680eeddfbd46ab8434356564015ff288be46260aa1178818",
+    "policyId": "vellum-owner-local-review-authority-v1"
+  },
+  "policyDigest": "bd3071bff5d2982e38328443a35ad1e61c8aab8919eccd5b2ae13f2d53c9d1c7",
+  "conflictPolicy": {
+    "policyId": "vellum-review-independence-v1",
+    "prohibitedRolePairs": [
+      "artifact_author:reviewer",
+      "credential_subject:authority_verifier",
+      "evaluator_calibrator:reviewer",
+      "evaluator_implementer:reviewer",
+      "run_operator:reviewer"
+    ]
+  },
+  "credentials": [],
+  "revocations": []
+}

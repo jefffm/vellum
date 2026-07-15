@@ -12,7 +12,7 @@ User stories: U3, U4, U5, U6, U7, U8
 
 SPEC coverage: Evaluation/grading; required mutations; coequal Golden fixtures; Slice 12
 
-Requirement families touched: II-OUT-002, II-SEED-005, II-EVAL-001, II-EVAL-007–009, II-EXEC-012, II-MC-014–025, II-MC-030–032, II-NG-011
+Requirement families touched: II-OUT-002, II-SEED-005, II-EVAL-001, II-EVAL-007–009, II-EXEC-012, II-EXEC-004G, II-MC-014–025, II-MC-030–032, II-NG-011, II-NG-010
 
 ## What to build
 

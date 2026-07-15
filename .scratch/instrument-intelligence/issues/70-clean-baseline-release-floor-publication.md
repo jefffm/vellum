@@ -12,7 +12,7 @@ User stories: U10
 
 SPEC coverage: Performance and operability acceptance; Slice 0 clean-baseline derivation
 
-Requirement families touched: II-OPS-001, II-EXEC-000, II-MC-034, II-MC-037
+Requirement families touched: II-OPS-001, II-EXEC-000, II-MC-034, II-MC-037, II-EXEC-000B
 
 ## What to build
 

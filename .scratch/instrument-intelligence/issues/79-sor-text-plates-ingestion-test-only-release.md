@@ -12,7 +12,7 @@ User stories: U1, U2, U6
 
 SPEC coverage: Classical-guitar seed source; first extraction fixture
 
-Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-003
+Requirement families touched: II-SRC-001–006, II-KNW-001–004, II-SEED-003, II-EXEC-002D
 
 ## What to build
 

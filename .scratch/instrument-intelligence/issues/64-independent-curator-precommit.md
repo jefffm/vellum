@@ -12,7 +12,7 @@ User stories: U4, U5, U6, U7, U8, U10
 
 SPEC coverage: Slice 13 independent curation commitment
 
-Requirement families touched: II-EVAL-004, II-EXEC-013A, II-MC-026
+Requirement families touched: II-EVAL-004, II-EXEC-013A, II-MC-026, II-NG-010
 
 ## What to build
 

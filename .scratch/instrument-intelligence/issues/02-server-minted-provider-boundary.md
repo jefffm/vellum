@@ -12,7 +12,7 @@ User stories: U1, U10
 
 SPEC coverage: Rights, access, processing, and egress; Slice 0 provider guard; Machine Complete egress clause
 
-Requirement families touched: II-SRC-002, II-EXEC-000, II-MC-003, II-NG-001
+Requirement families touched: II-SRC-002, II-EXEC-000, II-MC-003, II-NG-001, II-EXEC-000A
 
 ## What to build
 
