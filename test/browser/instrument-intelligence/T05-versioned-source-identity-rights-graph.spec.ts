@@ -40,24 +40,33 @@ test("Workbench exposes a redacted, read-only staging view without inventing con
       contentType: "application/json",
       body: json({
         publicationState: "staging_only",
+        view: { kind: "current" },
         head: {
           snapshotId: "reference-source-snapshot.1111111111111111",
           digest: "b".repeat(64),
           revision: 1,
         },
         snapshot: {
-          records: {
-            identityAssertions: [
-              {
-                id: "identity-assertion.1111111111111111",
-                identityConfidence: { kind: "unknown" },
-                conflictState: "unresolved",
-                storedPath: "/Users/owner/STAGED-PRIVATE-PATH-CANARY",
-                retrievalUri: "file:///Users/owner/STAGED-PRIVATE-PATH-CANARY",
-                bytes: "STAGED-PRIVATE-BYTES-CANARY",
+          records: [
+            {
+              recordKind: "identity_assertion",
+              id: "file:///Users/owner/ALLOWED-ID-PRIVATE-PATH-CANARY.pdf",
+              title: "ALLOWED-TITLE-PRIVATE-BYTES-CANARY",
+              identityConfidence: { kind: "unknown" },
+              confidence: {
+                kind: "assessed",
+                value: 0.72,
+                basis: "file:///Users/owner/ALLOWED-BASIS-PRIVATE-PATH-CANARY.pdf",
               },
-            ],
-          },
+              conflictState: "unresolved",
+              reason: "/Users/owner/ALLOWED-REASON-PRIVATE-PATH-CANARY.pdf",
+              rationale: "ALLOWED-RATIONALE-PRIVATE-BYTES-CANARY",
+              sha256: "ALLOWED-DIGEST-PRIVATE-BYTES-CANARY",
+              storedPath: "/Users/owner/STAGED-PRIVATE-PATH-CANARY",
+              retrievalUri: "file:///Users/owner/STAGED-PRIVATE-PATH-CANARY",
+              bytes: "STAGED-PRIVATE-BYTES-CANARY",
+            },
+          ],
         },
         legacyProjection: {
           ownerReferences: [

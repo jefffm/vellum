@@ -1,5 +1,11 @@
 export type ReferenceSourceStagingDiagnostics = {
   publicationState: "staging_only";
+  view:
+    | { kind: "current" }
+    | {
+        kind: "historical";
+        viewedSnapshotRef: { id: string; digest: string };
+      };
   head: {
     snapshotId: string;
     digest: string;
@@ -20,6 +26,7 @@ export type ReferenceSourceStagingDiagnostics = {
 
 const SAFE_TEXT_FIELDS = new Set([
   "id",
+  "recordKind",
   "kind",
   "type",
   "title",
@@ -49,6 +56,12 @@ const SAFE_TEXT_FIELDS = new Set([
 
 const NEVER_RENDER_FIELDS =
   /(?:stored|local|absolute|retrieval|download|source)?(?:path|uri|url)$|^(?:bytes|content|buffer|payload|data)$/i;
+
+const SAFE_IDENTIFIER_VALUE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/;
+const SAFE_DIGEST_VALUE = /^[a-f0-9]{64}$/;
+const UNSAFE_DIAGNOSTIC_VALUE =
+  /(?:\b(?:file|https?|ftp|data|blob):(?:\/\/)?|(?:^|[\s("'=])(?:~\/|\/[A-Za-z0-9._~-]+\/|[A-Za-z]:[\\/]|\\\\)|\b(?:stored[_ ]?path|retrieval[_ ]?(?:uri|url)|content[_ ]?base64|evaluation[_ ]?vault[_ ]?ref)\b|\b(?:raw|private|source|binary)[\s_-]*(?:bytes|content)(?:[\s_-]*canary)?\b)/i;
+const MAX_DIAGNOSTIC_TEXT_LENGTH = 500;
 
 /**
  * Paints a compatibility view of the source graph without trusting the API to
@@ -85,13 +98,21 @@ export function renderReferenceSourceStagingDiagnostics(
     appendText(
       container,
       "p",
-      `Current snapshot ${response.head.snapshotId} · revision ${response.head.revision} · digest ${abbreviate(response.head.digest)}`,
+      `Current CAS head ${response.head.snapshotId} · revision ${response.head.revision} · digest ${abbreviate(response.head.digest)}`,
       ["reference-source-staging-head"]
     );
   } else {
     appendText(container, "p", "No current staging snapshot exists yet.", [
       "reference-source-staging-empty",
     ]);
+  }
+  if (response.view.kind === "historical") {
+    appendText(
+      container,
+      "p",
+      `Viewed historical snapshot ${response.view.viewedSnapshotRef.id} · digest ${abbreviate(response.view.viewedSnapshotRef.digest)}`,
+      ["reference-source-staging-head"]
+    );
   }
 
   renderSnapshotCollections(container, response.snapshot);
@@ -106,16 +127,35 @@ function parseDiagnostics(input: unknown): ReferenceSourceStagingDiagnostics | n
   if (input.publicationState !== "staging_only") return null;
   if (!isRecord(input.capabilities) || input.capabilities.canonicalPublication !== false)
     return null;
+  if (!isView(input.view)) return null;
   if (input.head !== null && !isHead(input.head)) return null;
   return input as ReferenceSourceStagingDiagnostics;
+}
+
+function isView(value: unknown): value is ReferenceSourceStagingDiagnostics["view"] {
+  if (!isRecord(value)) return false;
+  if (value.kind === "current") return Object.keys(value).length === 1;
+  return (
+    value.kind === "historical" &&
+    Object.keys(value).length === 2 &&
+    isRecord(value.viewedSnapshotRef) &&
+    Object.keys(value.viewedSnapshotRef).length === 2 &&
+    typeof value.viewedSnapshotRef.id === "string" &&
+    SAFE_IDENTIFIER_VALUE.test(value.viewedSnapshotRef.id) &&
+    typeof value.viewedSnapshotRef.digest === "string" &&
+    SAFE_DIGEST_VALUE.test(value.viewedSnapshotRef.digest)
+  );
 }
 
 function isHead(value: unknown): value is NonNullable<ReferenceSourceStagingDiagnostics["head"]> {
   return (
     isRecord(value) &&
     typeof value.snapshotId === "string" &&
+    SAFE_IDENTIFIER_VALUE.test(value.snapshotId) &&
     typeof value.digest === "string" &&
-    Number.isInteger(value.revision)
+    SAFE_DIGEST_VALUE.test(value.digest) &&
+    Number.isInteger(value.revision) &&
+    Number(value.revision) >= 0
   );
 }
 
@@ -155,7 +195,7 @@ function collectRecordCollections(
     if (Array.isArray(value)) {
       const records = value.filter(isRecord);
       if (value.length === 0 || records.length === value.length) {
-        collections.push({ label: key, records });
+        collections.push(...groupRecordCollection(key, records));
       }
       continue;
     }
@@ -164,17 +204,34 @@ function collectRecordCollections(
       if (NEVER_RENDER_FIELDS.test(nestedKey) || !Array.isArray(nestedValue)) continue;
       const records = nestedValue.filter(isRecord);
       if (nestedValue.length === 0 || records.length === nestedValue.length) {
-        collections.push({ label: nestedKey, records });
+        collections.push(...groupRecordCollection(nestedKey, records));
       }
     }
   }
   return collections;
 }
 
+function groupRecordCollection(
+  label: string,
+  records: Record<string, unknown>[]
+): Array<{ label: string; records: Record<string, unknown>[] }> {
+  if (label !== "records" || records.length === 0) return [{ label, records }];
+  const byKind = new Map<string, Record<string, unknown>[]>();
+  for (const record of records) {
+    const kind = typeof record.recordKind === "string" ? record.recordKind : "unclassified";
+    const group = byKind.get(kind) ?? [];
+    group.push(record);
+    byKind.set(kind, group);
+  }
+  return [...byKind.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([kind, groupedRecords]) => ({ label: `${kind} records`, records: groupedRecords }));
+}
+
 function renderSafeRecord(record: Record<string, unknown>): HTMLElement {
   const row = document.createElement("article");
   row.className = "reference-source-staging-record";
-  const title = firstString(record, ["title", "label", "name", "statement", "id"]);
+  const title = firstSafeString(record, ["title", "label", "name", "statement", "id"]);
   appendText(row, "strong", title ?? "Unlabelled staged record");
 
   const facts: string[] = [];
@@ -185,7 +242,7 @@ function renderSafeRecord(record: Record<string, unknown>): HTMLElement {
       continue;
     }
     if (!isSafeField(key)) continue;
-    const formatted = formatSafeValue(value);
+    const formatted = formatSafeValue(key, value);
     if (formatted !== null) facts.push(`${humanize(key)} ${formatted}`);
   }
   appendText(row, "p", facts.length > 0 ? facts.join(" · ") : "No further safe details.");
@@ -211,7 +268,7 @@ function renderLegacyProjection(container: HTMLElement, records: unknown[]): voi
   for (const record of safeRecords) {
     const row = document.createElement("article");
     row.className = "reference-source-staging-record";
-    appendText(row, "strong", firstString(record, ["title", "id"]) ?? "Legacy reference");
+    appendText(row, "strong", firstSafeString(record, ["title", "id"]) ?? "Legacy reference");
     const facts = [
       safeFact("ID", record.id),
       safeFact("citation", record.citation),
@@ -236,11 +293,19 @@ function isSafeField(key: string): boolean {
   );
 }
 
-function formatSafeValue(value: unknown): string | null {
-  if (typeof value === "string") return value;
+function formatSafeValue(key: string, value: unknown): string | null {
+  if (typeof value === "string") {
+    if (key === "sha256" || /(?:Digest|Digests)$/.test(key)) {
+      return SAFE_DIGEST_VALUE.test(value) ? abbreviate(value) : null;
+    }
+    const kind = /(?:^id$|Id$|Ids$|Ref$|Refs$)/.test(key) ? "identifier" : "text";
+    return safeDiagnosticText(value, kind) ?? null;
+  }
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
-    return value.join(", ");
+    const kind = /(?:Ids|Refs)$/.test(key) ? "identifier" : "text";
+    const items = value.map((item) => safeDiagnosticText(item, kind));
+    return items.every((item): item is string => item !== undefined) ? items.join(", ") : null;
   }
   return null;
 }
@@ -253,14 +318,19 @@ function formatConfidence(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) return `${Math.round(value * 100)}%`;
   if (!isRecord(value) || value.kind === "unknown") return "unassessed";
   if (typeof value.value === "number" && Number.isFinite(value.value)) {
-    const basis = typeof value.basis === "string" ? ` (${value.basis})` : "";
+    const safeBasis = safeDiagnosticText(value.basis, "text");
+    const basis = safeBasis ? ` (${safeBasis})` : "";
     return `${Math.round(value.value * 100)}%${basis}`;
   }
   return "unassessed";
 }
 
-function firstString(record: Record<string, unknown>, keys: string[]): string | undefined {
-  for (const key of keys) if (typeof record[key] === "string") return record[key];
+function firstSafeString(record: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const kind = key === "id" ? "identifier" : "text";
+    const value = safeDiagnosticText(record[key], kind);
+    if (value) return value;
+  }
   return undefined;
 }
 
@@ -271,7 +341,18 @@ function formatByteLength(value: unknown): string | undefined {
 }
 
 function safeFact(label: string, value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? `${label} ${value}` : undefined;
+  const kind = label === "ID" ? "identifier" : "text";
+  const safeValue = safeDiagnosticText(value, kind);
+  return safeValue ? `${label} ${safeValue}` : undefined;
+}
+
+function safeDiagnosticText(value: unknown, kind: "identifier" | "text"): string | undefined {
+  if (typeof value !== "string" || value.length === 0) return undefined;
+  if (value.length > MAX_DIAGNOSTIC_TEXT_LENGTH || /[\u0000-\u001f\u007f]/.test(value)) {
+    return undefined;
+  }
+  if (kind === "identifier" && !SAFE_IDENTIFIER_VALUE.test(value)) return undefined;
+  return UNSAFE_DIAGNOSTIC_VALUE.test(value) ? undefined : value;
 }
 
 function abbreviate(value: string): string {
