@@ -1,7 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 
-import bundledInventoryJson from "../../tracked-sources/inventory.v1.json" with { type: "json" };
+import bundledInventoryJson from "./data/tracked-source-inventory.v1.json" with { type: "json" };
 
 const Sha256Schema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 

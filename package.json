@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "node scripts/dev-all.mjs",
-    "server:build": "node scripts/clean-server-build.mjs && tsc -p tsconfig.server.json",
+    "server:build": "node scripts/clean-server-build.mjs && tsc -p tsconfig.server.json && node scripts/verify-server-build.mjs",
     "server": "node dist-server/server/index.js",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node scripts/run-tests.mjs",
     "test:browser": "playwright test",
     "test:watch": "vitest",
     "format": "prettier --write .",

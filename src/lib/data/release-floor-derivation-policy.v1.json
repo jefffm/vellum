@@ -1,0 +1,299 @@
+{
+  "schemaId": "vellum.instrument-intelligence.release-floor-derivation-policy.v1",
+  "policyId": "release-floor-derivation-policy.v1",
+  "workloads": [
+    {
+      "id": "short-interactive-three-target",
+      "kind": "reference",
+      "description": "Short PDF review excerpt through baroque guitar, 13-course baroque lute, and classical guitar siblings",
+      "generator": {
+        "kind": "tracked-fixture",
+        "identity": "fixture.greensleeves-source-pdf",
+        "version": 1,
+        "sourceSha256": "41242dae463d8fefbfa3a11cefe78ea025f7649f4e8b631329e4904989fc5348",
+        "requirements": ["exact-source-bytes", "pdf-review", "three-target-siblings"]
+      },
+      "stages": [
+        "pdf-ingest",
+        "omr-review",
+        "source-model",
+        "arrangement-search",
+        "validation",
+        "engraving",
+        "playback",
+        "persistence"
+      ]
+    },
+    {
+      "id": "multipage-satb-three-target",
+      "kind": "reference",
+      "description": "Multi-page SATB source with context changes, repeats, lyrics when present, and all three targets",
+      "generator": {
+        "kind": "deterministic-generator",
+        "identity": "generator.multipage-satb-context-v1",
+        "version": 1,
+        "requirements": [
+          "fixed-seed",
+          "multiple-pages",
+          "four-independent-voices",
+          "key-and-meter-changes",
+          "repeats",
+          "lyrics",
+          "three-target-siblings"
+        ]
+      },
+      "stages": [
+        "pdf-ingest",
+        "omr-review",
+        "source-model",
+        "arrangement-search",
+        "validation",
+        "engraving",
+        "playback",
+        "persistence"
+      ]
+    },
+    {
+      "id": "complete-work-resume",
+      "kind": "reference",
+      "description": "Complete representative work with section backtracking, interruption, checkpoint, reload, and resume",
+      "generator": {
+        "kind": "deterministic-generator",
+        "identity": "generator.complete-work-resume-v1",
+        "version": 1,
+        "requirements": [
+          "fixed-seed",
+          "complete-form",
+          "multiple-sections",
+          "bounded-backtracking",
+          "interrupt-after-checkpoint",
+          "reload-and-resume"
+        ]
+      },
+      "stages": [
+        "pdf-ingest",
+        "omr-review",
+        "source-model",
+        "arrangement-search",
+        "validation",
+        "checkpoint",
+        "reload-resume",
+        "engraving",
+        "playback",
+        "persistence"
+      ]
+    },
+    {
+      "id": "mature-reviewed-library",
+      "kind": "reference",
+      "description": "Reviewed Knowledge Library with releases, profiles, conflicts, advisories, and inapplicable entries",
+      "generator": {
+        "kind": "deterministic-generator",
+        "identity": "generator.mature-reviewed-library-v1",
+        "version": 1,
+        "requirements": [
+          "fixed-seed",
+          "released-and-provisional-records",
+          "profile-conflicts",
+          "advisories",
+          "inapplicable-entries",
+          "complete-enumeration"
+        ]
+      },
+      "stages": ["catalog-load", "authority-resolution", "applicability-resolution", "persistence"]
+    },
+    {
+      "id": "adversarial-dense-passage",
+      "kind": "stress",
+      "description": "High-density passage that exercises bounded search and actionable budget exhaustion",
+      "generator": {
+        "kind": "deterministic-generator",
+        "identity": "generator.adversarial-dense-passage-v1",
+        "version": 1,
+        "requirements": [
+          "fixed-seed",
+          "high-event-density",
+          "large-candidate-frontier",
+          "budget-exhaustion",
+          "retained-alternatives",
+          "actionable-conflict"
+        ]
+      },
+      "stages": ["arrangement-search", "validation", "cancellation", "checkpoint", "reload-resume"]
+    },
+    {
+      "id": "oversized-reviewed-library",
+      "kind": "stress",
+      "description": "Oversized library that exercises complete enumeration and may exhaust a declared budget",
+      "generator": {
+        "kind": "deterministic-generator",
+        "identity": "generator.oversized-reviewed-library-v1",
+        "version": 1,
+        "requirements": [
+          "fixed-seed",
+          "oversized-catalog",
+          "deep-conflict-graph",
+          "complete-enumeration",
+          "budget-exhaustion",
+          "actionable-conflict"
+        ]
+      },
+      "stages": [
+        "catalog-load",
+        "authority-resolution",
+        "applicability-resolution",
+        "cancellation",
+        "checkpoint",
+        "reload-resume"
+      ]
+    }
+  ],
+  "cleanState": {
+    "steps": [
+      "verify-clean-worktree-and-pinned-policy-digest",
+      "stop-vellum-owned-processes-and-prove-their-owners-absent",
+      "acquire-all-declared-resource-leases-in-lexical-order",
+      "remove-only-run-scoped-generated-output-and-caches",
+      "create-new-empty-run-scoped-mutable-store",
+      "record-toolchain-hardware-os-and-fixture-identities",
+      "run-warmups-without-retaining-observations",
+      "run-measured-repetitions-with-monotonic-clock-and-peak-rss-sampling",
+      "release-leases-after-artifact-digests-and-cleanup-receipt-are-durable"
+    ],
+    "forbidSharedWarmCaches": true,
+    "requireFreshMutableStore": true,
+    "requireOrphanAbsenceProof": true,
+    "requireCleanRerunAfterOrphanCleanup": true
+  },
+  "hardwareClasses": [
+    {
+      "id": "darwin-arm64-local",
+      "os": "darwin",
+      "architecture": "arm64",
+      "comparison": "exact-recorded-host"
+    },
+    {
+      "id": "linux-x64-nix",
+      "os": "linux",
+      "architecture": "x64",
+      "comparison": "exact-recorded-host"
+    },
+    {
+      "id": "linux-arm64-nix",
+      "os": "linux",
+      "architecture": "arm64",
+      "comparison": "exact-recorded-host"
+    }
+  ],
+  "toolchainRequirements": [
+    { "component": "node", "applicability": "required" },
+    { "component": "npm", "applicability": "required" },
+    { "component": "nix", "applicability": "required" },
+    { "component": "lilypond", "applicability": "required" },
+    { "component": "operating-system", "applicability": "required" },
+    { "component": "workload-generator", "applicability": "required" },
+    { "component": "resource-lease", "applicability": "required" },
+    { "component": "audiveris", "applicability": "conditional" },
+    { "component": "model-provider", "applicability": "conditional" }
+  ],
+  "measurement": {
+    "warmupRepetitions": 1,
+    "measuredRepetitions": 5,
+    "aggregation": "median",
+    "clock": "monotonic",
+    "memory": "peak-rss-sampled",
+    "filesystem": "before-after-byte-accounting",
+    "rounding": "ceil",
+    "requireCompleteRepetitionSet": true
+  },
+  "metricFamilies": [
+    { "id": "stage-time", "unit": "ms", "safetyMargin": { "numerator": 3, "denominator": 2 } },
+    { "id": "peak-rss", "unit": "bytes", "safetyMargin": { "numerator": 5, "denominator": 4 } },
+    {
+      "id": "persisted-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "inventory-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "catalog-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "manifest-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "frontier-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "checkpoint-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 5, "denominator": 4 }
+    },
+    {
+      "id": "cancellation-response",
+      "unit": "ms",
+      "safetyMargin": { "numerator": 3, "denominator": 2 }
+    },
+    {
+      "id": "checkpoint-interval",
+      "unit": "ms",
+      "safetyMargin": { "numerator": 3, "denominator": 2 }
+    },
+    { "id": "resume-overhead", "unit": "ms", "safetyMargin": { "numerator": 3, "denominator": 2 } },
+    {
+      "id": "redacted-diagnostic-bytes",
+      "unit": "bytes",
+      "safetyMargin": { "numerator": 1, "denominator": 1 }
+    }
+  ],
+  "diagnostics": {
+    "contentPolicy": "bounded-redacted-tail-only",
+    "forbidPrivatePaths": true,
+    "forbidSourceBytes": true,
+    "forbidProviderPayloads": true,
+    "thresholdFamily": "redacted-diagnostic-bytes"
+  },
+  "resourceClasses": [
+    "podman-vm",
+    "audiveris",
+    "fixed-port",
+    "mutable-store",
+    "vault-writer",
+    "performance-hardware"
+  ],
+  "resourceCommandMatchers": [
+    { "resource": "podman-vm", "tokens": ["podman", "nix-podman"] },
+    { "resource": "audiveris", "tokens": ["audiveris"] },
+    { "resource": "fixed-port", "tokens": ["test:browser", "playwright"] },
+    { "resource": "mutable-store", "tokens": ["mutable-store", "migration"] },
+    { "resource": "vault-writer", "tokens": ["vault"] },
+    { "resource": "performance-hardware", "tokens": ["perf:release-floor", "performance-profile"] }
+  ],
+  "resultRules": {
+    "unsupportedHardware": "blocked",
+    "differentRecordedHost": "incomparable",
+    "toolchainMismatch": "incomparable",
+    "missingMetric": "blocked",
+    "referenceBudgetExhaustion": "fail",
+    "stressBudgetExhaustion": "actionable-only"
+  },
+  "replacementRules": {
+    "identity": "immutable-content-digest",
+    "requireNewPolicyIdentity": true,
+    "requireOwnerApprovedSpecificationDecision": true,
+    "preservePriorMeasurementsAndFailures": true,
+    "invalidateBroaderClaims": true,
+    "forbidThresholdLooseningInPlace": true,
+    "forbidNarrowerProfileAsReleaseFloorReplacement": true
+  }
+}

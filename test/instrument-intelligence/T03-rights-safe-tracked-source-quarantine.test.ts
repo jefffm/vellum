@@ -89,7 +89,7 @@ describe("T03 rights-safe tracked-source quarantine", () => {
       scripts: Record<string, string>;
     };
     expect(packageJson.scripts["server:build"]).toMatch(
-      /^node scripts\/clean-server-build\.mjs && tsc /
+      /^node scripts\/clean-server-build\.mjs && tsc .* && node scripts\/verify-server-build\.mjs$/
     );
   });
 
