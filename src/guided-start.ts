@@ -35,6 +35,10 @@ import {
   renderReferenceSourceStagingDiagnostics,
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-diagnostics.js";
+import {
+  renderKnowledgePublicationWorkbench,
+  type KnowledgePublicationWorkbenchState,
+} from "./knowledge-publication-workbench.js";
 
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
@@ -2483,6 +2487,30 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
       );
     } catch {
       renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, undefined);
+    }
+    const publicationGenerations = section("Knowledge library — transactional publications");
+    publicationGenerations.className = "knowledge-publication-section";
+    const publicationWorkbench = document.createElement("div");
+    publicationGenerations.append(publicationWorkbench);
+    try {
+      const publicationState = await api<KnowledgePublicationWorkbenchState>(
+        "/api/owner/knowledge-publication"
+      );
+      renderKnowledgePublicationWorkbench(
+        publicationWorkbench,
+        publicationState,
+        async (generationId) => {
+          await api(`/api/owner/knowledge-publication/orphans/${generationId}`, {
+            method: "DELETE",
+          });
+          await refresh();
+        }
+      );
+    } catch (error) {
+      publicationWorkbench.textContent =
+        error instanceof Error
+          ? `Publication generations unavailable: ${error.message}`
+          : "Publication generations unavailable.";
     }
   };
   launcher.addEventListener("click", () => {

@@ -345,6 +345,9 @@ describe("Owner Knowledge workbench", () => {
     expect(implementation).toContain("Release claim");
     expect(implementation).toContain("Reference sources — staging diagnostics");
     expect(implementation).toContain("/api/owner/reference-source-staging");
+    expect(implementation).toContain("Knowledge library — transactional publications");
+    expect(implementation).toContain("/api/owner/knowledge-publication");
+    expect(implementation).toContain("renderKnowledgePublicationWorkbench");
     expect(implementation).not.toContain("confidence ?? 0.75");
   });
 

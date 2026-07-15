@@ -100,6 +100,7 @@ describe("server API endpoints", () => {
       "POST",
       "/api/owner/reference-source-staging/lifecycle/plan",
     ],
+    ["knowledge publication generation", "POST", "/api/owner/knowledge-publication/generations"],
     ["workspace mutation", "POST", "/api/workspaces"],
     ["source upload", "POST", "/api/workspaces/workspace.1234567890abcdef/sources"],
     ["arrangement search", "POST", "/api/workspaces/workspace.1234567890abcdef/arrangements"],
@@ -136,6 +137,25 @@ describe("server API endpoints", () => {
       headers: { "Content-Type": "application/json" },
       body: "{}",
     });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: { code: "not_found" },
+    });
+  });
+
+  it("does not expose an untyped canonical knowledge publication writer", async () => {
+    const server = await listen();
+    servers.push(server);
+    const response = await fetch(
+      `${serverUrl(server)}/api/owner/knowledge-publication/generations`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      }
+    );
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toMatchObject({

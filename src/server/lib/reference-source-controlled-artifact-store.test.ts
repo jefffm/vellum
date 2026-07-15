@@ -260,6 +260,25 @@ describe("reference-source controlled artifact store", () => {
     expect(existsSync(path.join(foreignRoot, ".catalog.claim"))).toBe(true);
   });
 
+  it("does not mistake an abandoned pre-publication claim temporary for an owned claim", () => {
+    const root = temporaryRoot();
+    const hostIdentity = "e".repeat(64);
+    new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+      hostIdentity: () => hostIdentity,
+    });
+    const abandonedTemporary = path.join(root, `.catalog-claim.${randomUUID()}.tmp`);
+    writeFileSync(abandonedTemporary, '{"schemaVersion":1');
+
+    const restarted = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+      hostIdentity: () => hostIdentity,
+    });
+
+    expect(restarted.observe()).toMatchObject({ status: "complete" });
+    expect(existsSync(path.join(root, ".catalog.claim"))).toBe(false);
+  });
+
   it("enumerates recovery receipts and fails closed on unrecognized recovery bytes", () => {
     const root = temporaryRoot();
     const hostIdentity = "c".repeat(64);

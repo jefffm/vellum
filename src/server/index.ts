@@ -150,6 +150,14 @@ import { ReferenceSourceControlledAssetIngestionService } from "./lib/reference-
 import type { ReferenceSourceControlledStoreInventoryAdapter } from "./lib/reference-source-inventory-provider.js";
 import { createReferenceSourceLifecyclePlanRoute } from "./lib/reference-source-lifecycle-route.js";
 import {
+  createKnowledgePublicationCurrentRoute,
+  createKnowledgePublicationGenerationRoute,
+  createKnowledgePublicationOrphanReclaimRoute,
+  createKnowledgePublicationOrphansRoute,
+  createKnowledgePublicationPublishRoute,
+} from "./lib/knowledge-publication-route.js";
+import { KnowledgePublicationStore } from "./lib/knowledge-publication-store.js";
+import {
   createReferenceSourceObservationHistoryMigrationRoute,
   createReferenceSourceStagingReadRoute,
   createReferenceSourceStagingSnapshotRoute,
@@ -226,10 +234,15 @@ type ApiRouterOptions = {
   referenceSourceRetentionAuthorityTrust?: ReferenceSourceRetentionAuthorityTrust;
   referenceSourceControlledArtifactStore?: ReferenceSourceControlledArtifactStore;
   referenceSourceControlledStoreInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[];
+  knowledgePublicationStore?: KnowledgePublicationStore;
+  /** Installed only by a later typed canonical writer or an explicit test harness. */
+  knowledgePublicationWriter?: Pick<KnowledgePublicationStore, "publish">;
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const router = Router();
+  const knowledgePublicationStore =
+    options.knowledgePublicationStore ?? new KnowledgePublicationStore();
   let referenceSourceControlledArtifactStore =
     options.referenceSourceControlledArtifactStore ??
     options.referenceSourceControlledStoreInventoryAdapters?.find(
@@ -341,6 +354,28 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/owner/reference-source-staging/lifecycle/plan",
     createReferenceSourceLifecyclePlanRoute(referenceSourceLifecyclePlanningService)
+  );
+  router.get(
+    "/owner/knowledge-publication",
+    createKnowledgePublicationCurrentRoute(knowledgePublicationStore)
+  );
+  if (options.knowledgePublicationWriter) {
+    router.post(
+      "/owner/knowledge-publication/generations",
+      createKnowledgePublicationPublishRoute(options.knowledgePublicationWriter)
+    );
+  }
+  router.get(
+    "/owner/knowledge-publication/generations/:generationId",
+    createKnowledgePublicationGenerationRoute(knowledgePublicationStore)
+  );
+  router.get(
+    "/owner/knowledge-publication/orphans",
+    createKnowledgePublicationOrphansRoute(knowledgePublicationStore)
+  );
+  router.delete(
+    "/owner/knowledge-publication/orphans/:generationId",
+    createKnowledgePublicationOrphanReclaimRoute(knowledgePublicationStore)
   );
   router.post("/owner/choices", createOwnerChoiceRoute());
   router.post(
@@ -622,6 +657,8 @@ type CreateAppOptions = {
   referenceSourceRetentionAuthorityTrust?: ReferenceSourceRetentionAuthorityTrust;
   referenceSourceControlledArtifactStore?: ReferenceSourceControlledArtifactStore;
   referenceSourceControlledStoreInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[];
+  knowledgePublicationStore?: KnowledgePublicationStore;
+  knowledgePublicationWriter?: Pick<KnowledgePublicationStore, "publish">;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -676,6 +713,8 @@ export function createApp(options: CreateAppOptions = {}) {
       referenceSourceControlledArtifactStore: options.referenceSourceControlledArtifactStore,
       referenceSourceControlledStoreInventoryAdapters:
         options.referenceSourceControlledStoreInventoryAdapters,
+      knowledgePublicationStore: options.knowledgePublicationStore,
+      knowledgePublicationWriter: options.knowledgePublicationWriter,
     })
   );
   app.use(express.static(distPath));
@@ -706,6 +745,8 @@ export function startServer(
     referenceSourceControlledArtifactStore: options.referenceSourceControlledArtifactStore,
     referenceSourceControlledStoreInventoryAdapters:
       options.referenceSourceControlledStoreInventoryAdapters,
+    knowledgePublicationStore: options.knowledgePublicationStore,
+    knowledgePublicationWriter: options.knowledgePublicationWriter,
   });
   const server = createServer(app);
 

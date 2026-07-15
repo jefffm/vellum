@@ -677,6 +677,70 @@ chat-panel > div > div:has(agent-interface) {
   overflow-wrap: anywhere;
 }
 
+.knowledge-publication-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #b8c7bd;
+  border-radius: 0.55rem;
+  background: #f8fcf8;
+}
+
+.knowledge-publication-section > summary {
+  color: #2f4937;
+  font-weight: 750;
+}
+
+.knowledge-publication-workbench,
+.knowledge-publication-current,
+.knowledge-publication-record,
+.knowledge-publication-orphan {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.knowledge-publication-workbench {
+  margin-top: 0.75rem;
+}
+
+.knowledge-publication-workbench h3,
+.knowledge-publication-workbench h4,
+.knowledge-publication-workbench p {
+  margin: 0;
+}
+
+.knowledge-publication-boundary {
+  padding: 0.65rem;
+  border-left: 0.25rem solid #4f765c;
+  color: #3f5b47;
+  background: #edf7ef;
+  font-size: 0.8rem;
+}
+
+.knowledge-publication-head,
+.knowledge-publication-lineage,
+.knowledge-publication-record p,
+.knowledge-publication-orphan p,
+.knowledge-publication-empty {
+  overflow-wrap: anywhere;
+  color: #526259;
+  font-size: 0.75rem;
+}
+
+.knowledge-publication-record,
+.knowledge-publication-orphan {
+  margin-top: 0.4rem;
+  padding: 0.55rem;
+  border-left: 0.2rem solid #668a70;
+  background: #fff;
+}
+
+.knowledge-publication-orphans > summary,
+.knowledge-publication-current details > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .reference-source-lifecycle-planner,
 .reference-source-lifecycle-plan,
 .reference-source-lifecycle-consequences,

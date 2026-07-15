@@ -411,7 +411,9 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
       }))
       .sort((left, right) => left.name.localeCompare(right.name));
     const unexpectedRootEntries = observedRootEntries.filter(
-      (entry) => !expectedRootEntries.has(entry.name)
+      (entry) =>
+        !expectedRootEntries.has(entry.name) &&
+        !(entry.kind === "file" && /^\.catalog-claim\.[0-9a-f-]{36}\.tmp$/.test(entry.name))
     );
     if (unexpectedRootEntries.length > 0) issues.add("orphan");
     if (
@@ -905,31 +907,52 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
   }
 
   private createOwnedClaim(filePath: string): CatalogClaim {
-    const descriptor = openSync(filePath, "wx", 0o600);
+    const stableHostIdentity = this.hostIdentity();
+    if (stableHostIdentity !== null && !isStableHostIdentity(stableHostIdentity)) {
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Stable controlled-artifact host identity must be a SHA-256 digest"
+      );
+    }
+    const receipt: CatalogClaimReceipt = {
+      schemaVersion: 1,
+      token: randomUUID(),
+      pid: process.pid,
+      hostIdentity: stableHostIdentity ?? unrecoverableHostClaimMarker,
+      bootIdentity: currentBootIdentity(),
+      processStartIdentity: processStartIdentity(process.pid),
+      claimedAt: this.now().toISOString(),
+    };
+    const serialized = `${canonicalReferenceJson(receipt)}\n`;
+    const temporary = path.join(this.rootDirectory, `.catalog-claim.${randomUUID()}.tmp`);
+    let descriptor: number | undefined;
+    let published = false;
     try {
-      const stableHostIdentity = this.hostIdentity();
-      if (stableHostIdentity !== null && !isStableHostIdentity(stableHostIdentity)) {
+      descriptor = openSync(
+        temporary,
+        fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW,
+        0o600
+      );
+      if (!fstatSync(descriptor).isFile()) {
         throw new ReferenceSourceControlledArtifactStoreIntegrityError(
-          "Stable controlled-artifact host identity must be a SHA-256 digest"
+          "Controlled-artifact claim temporary target is not a regular file"
         );
       }
-      const receipt: CatalogClaimReceipt = {
-        schemaVersion: 1,
-        token: randomUUID(),
-        pid: process.pid,
-        hostIdentity: stableHostIdentity ?? unrecoverableHostClaimMarker,
-        bootIdentity: currentBootIdentity(),
-        processStartIdentity: processStartIdentity(process.pid),
-        claimedAt: this.now().toISOString(),
-      };
-      const serialized = `${canonicalReferenceJson(receipt)}\n`;
       writeFileSync(descriptor, serialized);
       fsyncSync(descriptor);
+      // Publish a complete durable receipt with one atomic no-replace link.
+      linkSync(temporary, filePath);
+      published = true;
+      fsyncDirectory(this.rootDirectory);
+      unlinkSync(temporary);
       fsyncDirectory(this.rootDirectory);
       return { descriptor, path: filePath, receipt, serialized };
     } catch (error) {
-      closeSync(descriptor);
-      rmSync(filePath, { force: true });
+      if (published && descriptor !== undefined && pathMatchesDescriptor(filePath, descriptor)) {
+        unlinkSync(filePath);
+        fsyncDirectory(this.rootDirectory);
+      }
+      if (descriptor !== undefined) closeSync(descriptor);
+      rmSync(temporary, { force: true });
       throw error;
     }
   }
@@ -993,15 +1016,17 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
   }
 
   private releaseOwnedClaim(claim: CatalogClaim): void {
-    closeSync(claim.descriptor);
     if (
       !pathEntryExists(claim.path) ||
+      !pathMatchesDescriptor(claim.path, claim.descriptor) ||
       readRegularTextFile(claim.path, "controlled-artifact owned claim") !== claim.serialized
     ) {
+      closeSync(claim.descriptor);
       throw new ReferenceSourceControlledArtifactStoreIntegrityError(
         "Controlled-artifact catalog claim ownership changed during the operation"
       );
     }
+    closeSync(claim.descriptor);
     unlinkSync(claim.path);
     fsyncDirectory(this.rootDirectory);
   }
@@ -1212,6 +1237,22 @@ function fsyncDirectory(directory: string): void {
     fsyncSync(descriptor);
   } finally {
     closeSync(descriptor);
+  }
+}
+
+function pathMatchesDescriptor(file: string, descriptor: number): boolean {
+  try {
+    const opened = fstatSync(descriptor);
+    const named = lstatSync(file);
+    return (
+      opened.isFile() &&
+      named.isFile() &&
+      !named.isSymbolicLink() &&
+      opened.dev === named.dev &&
+      opened.ino === named.ino
+    );
+  } catch {
+    return false;
   }
 }
 
