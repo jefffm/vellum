@@ -36,6 +36,7 @@ describe("Reference source staging diagnostics", () => {
             },
             conflictState: "unresolved",
             reason: "/Users/owner/ALLOWED-REASON-PRIVATE-PATH-CANARY.pdf",
+            statement: "/single-component-private.pdf",
             rationale: "ALLOWED-RATIONALE-PRIVATE-BYTES-CANARY",
             sha256: "ALLOWED-DIGEST-PRIVATE-BYTES-CANARY",
             storedPath: "/Users/owner/private/never-render-this.pdf",
@@ -90,6 +91,7 @@ describe("Reference source staging diagnostics", () => {
     expect(container.textContent).not.toContain("ALLOWED-ID-");
     expect(container.textContent).not.toContain("ALLOWED-TITLE-");
     expect(container.textContent).not.toContain("ALLOWED-REASON-");
+    expect(container.textContent).not.toContain("single-component-private");
     expect(container.textContent).not.toContain("ALLOWED-RATIONALE-");
     expect(container.textContent).not.toContain("ALLOWED-DIGEST-");
     expect(container.textContent).not.toContain("ALLOWED-LEGACY-");

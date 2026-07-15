@@ -60,7 +60,7 @@ const NEVER_RENDER_FIELDS =
 const SAFE_IDENTIFIER_VALUE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/;
 const SAFE_DIGEST_VALUE = /^[a-f0-9]{64}$/;
 const UNSAFE_DIAGNOSTIC_VALUE =
-  /(?:\b(?:file|https?|ftp|data|blob):(?:\/\/)?|(?:^|[\s("'=])(?:~\/|\/[A-Za-z0-9._~-]+\/|[A-Za-z]:[\\/]|\\\\)|\b(?:stored[_ ]?path|retrieval[_ ]?(?:uri|url)|content[_ ]?base64|evaluation[_ ]?vault[_ ]?ref)\b|\b(?:raw|private|source|binary)[\s_-]*(?:bytes|content)(?:[\s_-]*canary)?\b)/i;
+  /(?:\b(?:file|https?|ftp|data|blob):(?:\/\/)?|(?:^|[\s("'=])(?:~[\\/]|\/|[A-Za-z]:[\\/]|\\\\)|\b(?:stored[_ ]?path|retrieval[_ ]?(?:uri|url)|content[_ ]?base64|evaluation[_ ]?vault[_ ]?ref)\b|\b(?:raw|private|source|binary)[\s_-]*(?:bytes|content)(?:[\s_-]*canary)?\b)/i;
 const MAX_DIAGNOSTIC_TEXT_LENGTH = 500;
 
 /**

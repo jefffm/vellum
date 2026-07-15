@@ -246,21 +246,59 @@ export const ReferenceDigitalAssetSchema = Type.Object(
 );
 export type ReferenceDigitalAsset = Static<typeof ReferenceDigitalAssetSchema>;
 
-const AcquisitionOriginSchema = Type.Object(
-  {
-    sourceKind: Type.Union([
-      Type.Literal("upload"),
-      Type.Literal("stable_url"),
-      Type.Literal("iiif"),
-      Type.Literal("library_object"),
-      Type.Literal("private_scan"),
-    ]),
-    providerRef: Type.Optional(ReferenceRecordRefSchema),
-    providerObjectId: Type.Optional(Type.String({ minLength: 1 })),
-    ownerActionRef: Type.Optional(ReferenceRecordRefSchema),
-  },
-  Strict
-);
+const RedactedRetrievalUriSchema = Type.String({
+  pattern: "^urn:vellum:redacted-retrieval:[A-Za-z0-9][A-Za-z0-9._~-]*$",
+});
+
+/**
+ * Acquisition provenance is deliberately discriminated. A source kind cannot
+ * be asserted without the minimum durable evidence needed to identify that
+ * exact acquisition, and URL-bearing origins retain only a non-resolving
+ * redacted locator in this graph.
+ */
+export const ReferenceAcquisitionOriginSchema = Type.Union([
+  Type.Object(
+    {
+      sourceKind: Type.Literal("upload"),
+      ownerActionRef: ReferenceRecordRefSchema,
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      sourceKind: Type.Literal("private_scan"),
+      ownerActionRef: ReferenceRecordRefSchema,
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      sourceKind: Type.Literal("stable_url"),
+      providerRef: ReferenceRecordRefSchema,
+      providerObjectId: Type.String({ minLength: 1 }),
+      redactedRetrievalUri: RedactedRetrievalUriSchema,
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      sourceKind: Type.Literal("iiif"),
+      providerRef: ReferenceRecordRefSchema,
+      providerObjectId: Type.String({ minLength: 1 }),
+      redactedRetrievalUri: RedactedRetrievalUriSchema,
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      sourceKind: Type.Literal("library_object"),
+      providerRef: ReferenceRecordRefSchema,
+      providerObjectId: Type.String({ minLength: 1 }),
+    },
+    Strict
+  ),
+]);
+export type ReferenceAcquisitionOrigin = Static<typeof ReferenceAcquisitionOriginSchema>;
 
 export const ReferenceAssetAcquisitionSchema = Type.Object(
   {
@@ -268,7 +306,7 @@ export const ReferenceAssetAcquisitionSchema = Type.Object(
     id: IdSchema,
     digitalAssetRef: ReferenceRecordRefSchema,
     representedExemplarRefs: Type.Array(ReferenceRecordRefSchema),
-    origin: AcquisitionOriginSchema,
+    origin: ReferenceAcquisitionOriginSchema,
     acquiredAt: IsoTimestampSchema,
     rightsAssertionRefs: Type.Array(ReferenceRecordRefSchema),
     processingPolicyRef: ReferenceRecordRefSchema,
@@ -451,6 +489,13 @@ export const ReferenceAccessDestinationSchema = Type.Object(
 );
 export type ReferenceAccessDestination = Static<typeof ReferenceAccessDestinationSchema>;
 
+export const ReferenceAssetRoleSchema = Type.Union([
+  Type.Literal("arrangement_source"),
+  Type.Literal("owner_reference"),
+  Type.Literal("evaluation_source"),
+]);
+export type ReferenceAssetRole = Static<typeof ReferenceAssetRoleSchema>;
+
 export const ReferenceAccessDecisionSchema = Type.Object(
   {
     recordKind: Type.Literal("access_decision"),
@@ -467,6 +512,7 @@ export const ReferenceAccessDecisionSchema = Type.Object(
     derivativeRefs: Type.Array(ReferenceRecordRefSchema),
     destination: ReferenceAccessDestinationSchema,
     purpose: Type.String({ minLength: 1 }),
+    assetRole: Type.Optional(ReferenceAssetRoleSchema),
     policyRef: ReferenceRecordRefSchema,
     rightsAssertionRefs: Type.Array(ReferenceRecordRefSchema),
     authorityRefs: Type.Array(ReferenceRecordRefSchema),
@@ -513,11 +559,40 @@ export const EvaluationSourceBindingSchema = Type.Object(
   {
     recordKind: Type.Literal("evaluation_source_binding"),
     ...RoleBindingCommon,
-    evaluationVaultRef: ReferenceRecordRefSchema,
+    evaluationContext: Type.Object(
+      {
+        kind: Type.Literal("disclosed_development_fixture"),
+        evaluationFixtureRef: ReferenceRecordRefSchema,
+      },
+      Strict
+    ),
   },
   Strict
 );
+
 export type EvaluationSourceBinding = Static<typeof EvaluationSourceBindingSchema>;
+
+export const ReferenceEvaluationSourceBindingCommitmentSchema = Type.Object(
+  {
+    recordKind: Type.Literal("evaluation_source_binding_commitment"),
+    id: IdSchema,
+    evaluationContext: Type.Object(
+      {
+        kind: Type.Literal("vault_commitment"),
+        algorithm: Type.Literal("hmac-sha256"),
+        keyId: Type.String({ minLength: 1 }),
+        commitment: DigestSchema,
+      },
+      Strict
+    ),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceEvaluationSourceBindingCommitment = Static<
+  typeof ReferenceEvaluationSourceBindingCommitmentSchema
+>;
 
 export const ReferenceAssetRoleBindingSchema = Type.Union([
   ArrangementSourceBindingSchema,
@@ -637,7 +712,7 @@ export const ReferenceInvalidationSchema = Type.Object(
 );
 export type ReferenceInvalidation = Static<typeof ReferenceInvalidationSchema>;
 
-export const ReferenceSourceStagingRecordSchema = Type.Union([
+const ReferenceSourceStagingInputRecordSchemas = [
   ReferenceSourceIdentityAssertionSchema,
   ReferenceWorkSchema,
   ReferenceSourceManifestationSchema,
@@ -651,9 +726,21 @@ export const ReferenceSourceStagingRecordSchema = Type.Union([
   ArrangementSourceBindingSchema,
   OwnerReferenceBindingSchema,
   EvaluationSourceBindingSchema,
+  ReferenceEvaluationSourceBindingCommitmentSchema,
   ReferenceIdentityRedirectSchema,
   ReferenceProvenanceSubstitutionSchema,
   ReferenceDependencyEdgeSchema,
+] as const;
+
+export const ReferenceSourceStagingInputRecordSchema = Type.Union([
+  ...ReferenceSourceStagingInputRecordSchemas,
+]);
+export type ReferenceSourceStagingInputRecord = Static<
+  typeof ReferenceSourceStagingInputRecordSchema
+>;
+
+export const ReferenceSourceStagingRecordSchema = Type.Union([
+  ...ReferenceSourceStagingInputRecordSchemas,
   ReferenceInvalidationSchema,
 ]);
 export type ReferenceSourceStagingRecord = Static<typeof ReferenceSourceStagingRecordSchema>;
@@ -661,7 +748,7 @@ export type ReferenceSourceStagingRecord = Static<typeof ReferenceSourceStagingR
 export const ReferenceSourceStagingOperationSchema = Type.Object(
   {
     type: Type.Literal("append_record"),
-    record: ReferenceSourceStagingRecordSchema,
+    record: ReferenceSourceStagingInputRecordSchema,
   },
   Strict
 );

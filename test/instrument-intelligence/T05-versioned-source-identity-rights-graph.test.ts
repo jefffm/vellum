@@ -135,7 +135,7 @@ describe("T05 versioned source identity and rights graph", () => {
       sourceRefs: [ref(graph.restrictedAcquisition)],
     });
     expect(
-      created.snapshot!.records.find(({ id }) => id === "access.permitted-local")
+      created.snapshot!.records.find(({ id }) => id === "access.arrangement-source")
     ).toMatchObject({ outcome: "allow", sourceRefs: [ref(graph.permittedAcquisition)] });
     expect(
       created.snapshot!.records.find(({ id }) => id === graph.titleAssertion.id)
@@ -269,7 +269,11 @@ describe("T05 versioned source identity and rights graph", () => {
 
     const firstSnapshot = createService().readSnapshot(base.snapshot!.id);
     expect(firstSnapshot.snapshot).toEqual(base.snapshot);
-    expect(firstSnapshot.head).toEqual(base.head);
+    expect(firstSnapshot.head).toEqual(corrected.head);
+    expect(firstSnapshot.view).toEqual({
+      kind: "historical",
+      viewedSnapshotRef: ref(base.snapshot!),
+    });
   });
 
   it("deduplicates DigitalAsset identity while preserving distinct acquisitions", () => {
@@ -574,6 +578,7 @@ function buildFixtureGraph() {
       sourceKind: "stable_url",
       providerRef: externalRef("provider.restricted-catalog"),
       providerObjectId: "object-1",
+      redactedRetrievalUri: "urn:vellum:redacted-retrieval:restricted-object-1",
     },
     acquiredAt: NOW,
     rightsAssertionRefs: [],
@@ -658,19 +663,28 @@ function buildFixtureGraph() {
   });
   const permittedAccess = record({
     recordKind: "access_decision",
-    id: "access.permitted-local",
+    id: "access.arrangement-source",
     version: 1,
     outcome: "allow",
     operation: "owner_private_study",
     sourceRefs: [ref(permittedAcquisition)],
     derivativeRefs: [],
     destination: { kind: "local_runtime" },
-    purpose: "Arrange and inspect the local source",
+    purpose: "Bind source to arrangement workspace",
+    assetRole: "arrangement_source",
     policyRef: externalRef("policy.local-study"),
     rightsAssertionRefs: [ref(permittedRights)],
     authorityRefs: [externalRef("owner.local")],
     rationale: "The rights-reviewed fixture permits local development use",
     decidedAt: NOW,
+  });
+  const ownerAccess = record({
+    ...withoutDigest(permittedAccess),
+    id: "access.owner-reference",
+    purpose: "Bind source to Owner Reference Library",
+    assetRole: "owner_reference",
+    policyRef: externalRef("policy.owner-reference"),
+    rationale: "The Owner explicitly retains this acquisition in the reference library",
   });
   const substitutionAccess = record({
     recordKind: "access_decision",
@@ -697,7 +711,8 @@ function buildFixtureGraph() {
     sourceRefs: [ref(permittedAcquisition), ref(asset)],
     derivativeRefs: [ref(permittedDerivation), ref(fixtureAsset)],
     destination: { kind: "repository", id: "vellum-development-fixtures" },
-    purpose: "Use the rights-approved disclosed fixture in development evaluation",
+    purpose: "Bind disclosed development fixture to evaluation",
+    assetRole: "evaluation_source",
     policyRef: externalRef("policy.fixture-rights"),
     rightsAssertionRefs: [ref(permittedRights)],
     authorityRefs: [externalRef("reviewer.fixture-rights")],
@@ -737,7 +752,7 @@ function buildFixtureGraph() {
     id: "binding.owner-reference",
     digitalAssetRef: ref(asset),
     acquisitionRefs: [ref(permittedAcquisition)],
-    accessDecisionRefs: [ref(permittedAccess)],
+    accessDecisionRefs: [ref(ownerAccess)],
     retentionPolicyRef: externalRef("retention.owner-library"),
     ownerLibraryRef: externalRef("owner-library.local"),
     createdAt: NOW,
@@ -822,6 +837,7 @@ function buildFixtureGraph() {
       permittedDerivation,
       restrictedAccess,
       permittedAccess,
+      ownerAccess,
       substitutionAccess,
       evaluationAccess,
       segment,
@@ -845,6 +861,7 @@ function buildFixtureGraph() {
     permittedDerivation,
     restrictedAccess,
     permittedAccess,
+    ownerAccess,
     substitutionAccess,
     evaluationAccess,
     arrangementBinding,

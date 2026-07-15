@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   ReferenceAssetAcquisitionSchema,
+  ReferenceAssetRoleBindingSchema,
   ReferenceDigitalAssetSchema,
+  ReferenceEvaluationSourceBindingCommitmentSchema,
   ReferenceProvenanceSubstitutionSchema,
   ReferenceSourceIdentityAssertionSchema,
+  ReferenceSourceStagingOperationSchema,
   ReferenceSourceStagingSnapshotSchema,
   canonicalReferenceJson,
   verifyReferenceRecordDigest,
@@ -129,7 +132,10 @@ describe("reference-source domain", () => {
       recordKind: "asset_acquisition",
       digitalAssetRef: ref(asset.id, asset.digest),
       representedExemplarRefs: [],
-      origin: { sourceKind: "upload" },
+      origin: {
+        sourceKind: "upload",
+        ownerActionRef: ref("owner-action.source-upload"),
+      },
       acquiredAt: NOW,
       rightsAssertionRefs: [],
       processingPolicyRef: ref("processing.local"),
@@ -154,6 +160,34 @@ describe("reference-source domain", () => {
         retrievalUri: "https://example.invalid/private.pdf",
       })
     ).toBe(false);
+    expect(
+      Value.Check(ReferenceAssetAcquisitionSchema, {
+        ...first,
+        origin: { sourceKind: "upload" },
+      })
+    ).toBe(false);
+    expect(
+      Value.Check(ReferenceAssetAcquisitionSchema, {
+        ...first,
+        origin: {
+          sourceKind: "stable_url",
+          providerRef: ref("provider.catalog"),
+          providerObjectId: "object-1",
+          redactedRetrievalUri: "https://example.invalid/private.pdf",
+        },
+      })
+    ).toBe(false);
+    expect(
+      Value.Check(ReferenceAssetAcquisitionSchema, {
+        ...first,
+        origin: {
+          sourceKind: "stable_url",
+          providerRef: ref("provider.catalog"),
+          providerObjectId: "object-1",
+          redactedRetrievalUri: "urn:vellum:redacted-retrieval:provider-object-1",
+        },
+      })
+    ).toBe(true);
   });
 
   it("binds provenance substitution to exact paths, authority, decision, and scope", () => {
@@ -221,6 +255,53 @@ describe("reference-source domain", () => {
       Value.Check(ReferenceSourceStagingSnapshotSchema, {
         ...snapshot,
         publicationState: "canonical",
+      })
+    ).toBe(false);
+
+    const clientInvalidation = withReferenceRecordDigest({
+      recordKind: "invalidation",
+      id: "invalidation.forged",
+      triggerRef: ref("rights.1"),
+      invalidatedRef: ref("binding.1"),
+      dependencyEdgeRefs: [ref("edge.1")],
+      dependencyPath: [ref("rights.1"), ref("binding.1")],
+      scope: "rights",
+      reason: "client must not mint this",
+      invalidatedAt: NOW,
+    });
+    expect(
+      Value.Check(ReferenceSourceStagingOperationSchema, {
+        type: "append_record",
+        record: clientInvalidation,
+      })
+    ).toBe(false);
+  });
+
+  it("represents evaluation bindings without disclosing a hidden Vault reference", () => {
+    const commitment = withReferenceRecordDigest({
+      recordKind: "evaluation_source_binding_commitment",
+      id: "evaluation-binding.1",
+      evaluationContext: {
+        kind: "vault_commitment",
+        algorithm: "hmac-sha256",
+        keyId: "vault-key.local-1",
+        commitment: HEX_C,
+      },
+      createdAt: NOW,
+    });
+
+    expect(Value.Check(ReferenceEvaluationSourceBindingCommitmentSchema, commitment)).toBe(true);
+    expect(Value.Check(ReferenceAssetRoleBindingSchema, commitment)).toBe(false);
+    expect(commitment).not.toHaveProperty("digitalAssetRef");
+    expect(commitment).not.toHaveProperty("acquisitionRefs");
+    expect(commitment).not.toHaveProperty("accessDecisionRefs");
+    expect(
+      Value.Check(ReferenceEvaluationSourceBindingCommitmentSchema, {
+        ...commitment,
+        digitalAssetRef: ref("asset.private"),
+        acquisitionRefs: [ref("acquisition.private")],
+        accessDecisionRefs: [ref("access.private")],
+        evaluationVaultRef: ref("private-vault.case"),
       })
     ).toBe(false);
   });

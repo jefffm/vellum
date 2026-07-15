@@ -74,7 +74,6 @@ export class ReferenceSourceStagingStore {
       options.rootDirectory ??
       path.join(process.env.HOME ?? process.cwd(), ".vellum", "owner", "reference-source-staging");
     this.now = options.now ?? (() => new Date());
-    mkdirSync(this.snapshotsDirectory(), { recursive: true, mode: 0o700 });
   }
 
   readHead(): ReferenceSourceStagingHead | null {
@@ -130,7 +129,10 @@ export class ReferenceSourceStagingStore {
       visited.add(cursor.id);
       if (cursor.id === snapshotId) {
         return {
-          head: { snapshotId: cursor.id, digest: cursor.digest, revision: cursor.revision },
+          // `head` always means the live compare-and-swap head. The requested
+          // historical snapshot is carried separately and must never masquerade
+          // as the current generation.
+          head: current.head,
           snapshot: cursor,
         };
       }
@@ -188,10 +190,25 @@ export class ReferenceSourceStagingStore {
     const file = this.snapshotPath(snapshot.id);
     const serialized = `${canonicalReferenceJson(snapshot)}\n`;
     mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    let created = false;
     try {
-      writeFileSync(file, serialized, { encoding: "utf8", flag: "wx", mode: 0o600 });
+      const descriptor = openSync(file, "wx", 0o600);
+      created = true;
+      try {
+        writeFileSync(descriptor, serialized);
+        fsyncSync(descriptor);
+      } finally {
+        closeSync(descriptor);
+      }
+      fsyncDirectory(path.dirname(file));
     } catch (error) {
-      if (!isFileExistsError(error)) throw error;
+      if (!isFileExistsError(error)) {
+        if (created) {
+          rmSync(file, { force: true });
+          fsyncDirectory(path.dirname(file));
+        }
+        throw error;
+      }
       const existing = readFileSync(file, "utf8");
       if (existing !== serialized) {
         throw new ReferenceSourceStagingIntegrityError(
@@ -522,14 +539,26 @@ function writeJsonAtomic(file: string, value: unknown): void {
   mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
   const temporary = `${file}.${randomUUID()}.tmp`;
   try {
-    writeFileSync(temporary, `${canonicalReferenceJson(value)}\n`, {
-      encoding: "utf8",
-      flag: "wx",
-      mode: 0o600,
-    });
+    const descriptor = openSync(temporary, "wx", 0o600);
+    try {
+      writeFileSync(descriptor, `${canonicalReferenceJson(value)}\n`);
+      fsyncSync(descriptor);
+    } finally {
+      closeSync(descriptor);
+    }
     renameSync(temporary, file);
+    fsyncDirectory(path.dirname(file));
   } finally {
     rmSync(temporary, { force: true });
+  }
+}
+
+function fsyncDirectory(directory: string): void {
+  const descriptor = openSync(directory, "r");
+  try {
+    fsyncSync(descriptor);
+  } finally {
+    closeSync(descriptor);
   }
 }
 

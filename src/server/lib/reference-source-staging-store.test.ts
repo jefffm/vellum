@@ -52,7 +52,7 @@ describe("ReferenceSourceStagingStore", () => {
     expect(store.readCurrentSnapshot()).toEqual(second);
     expect(store.readSnapshot(first.id)).toEqual(first);
     expect(store.readSnapshotState(first.id)).toEqual({
-      head: { snapshotId: first.id, digest: first.digest, revision: first.revision },
+      head: { snapshotId: second.id, digest: second.digest, revision: second.revision },
       snapshot: first,
     });
   });
