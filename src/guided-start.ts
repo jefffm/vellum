@@ -29,6 +29,11 @@ import {
   VellumApiError,
   type ApiResponse,
 } from "./lib/api-contract.js";
+import {
+  formatReferenceIdentityConfidence,
+  renderReferenceSourceStagingDiagnostics,
+  type ReferenceSourceStagingDiagnostics,
+} from "./reference-source-staging-diagnostics.js";
 
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
@@ -2372,7 +2377,7 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
       const reference = state.ownerReferences.find((item) => item.id === claim.referenceId);
       const row = ownerRecord(
         claim.statement,
-        `${claim.authority} · confidence ${((claim.confidence ?? 0.75) * 100).toFixed(0)}% · ${claim.status ?? "active"} · scope ${JSON.stringify(claim.scope)} · ${reference?.title ?? claim.referenceId}, ${claim.citationLocator} · ${reference?.citation ?? "citation unavailable"}`
+        `${claim.authority} · confidence ${formatReferenceIdentityConfidence(claim.confidence)} · ${claim.status ?? "active"} · scope ${JSON.stringify(claim.scope)} · ${reference?.title ?? claim.referenceId}, ${claim.citationLocator} · ${reference?.citation ?? "citation unavailable"}`
       );
       if ((claim.status ?? "active") === "active")
         row.append(
@@ -2459,6 +2464,18 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
           )
         );
       defaults.append(row);
+    }
+    const referenceSources = section("Reference sources — staging diagnostics");
+    referenceSources.className = "reference-source-staging-section";
+    const referenceSourceDiagnostics = document.createElement("div");
+    referenceSources.append(referenceSourceDiagnostics);
+    try {
+      const diagnostics = await api<ReferenceSourceStagingDiagnostics>(
+        "/api/owner/reference-source-staging"
+      );
+      renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, diagnostics);
+    } catch {
+      renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, undefined);
     }
   };
   launcher.addEventListener("click", () => {

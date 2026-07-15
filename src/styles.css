@@ -601,6 +601,82 @@ chat-panel > div > div:has(agent-interface) {
   overflow-wrap: anywhere;
 }
 
+.reference-source-staging-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #c6bca0;
+  border-radius: 0.55rem;
+  background: #fffdf5;
+}
+
+.reference-source-staging-section > summary {
+  color: #413a23;
+  font-weight: 750;
+}
+
+.reference-source-staging-diagnostics {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.reference-source-staging-diagnostics h3,
+.reference-source-staging-diagnostics p {
+  margin: 0;
+}
+
+.reference-source-staging-boundary {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  border-left: 0.25rem solid #9a6a2f;
+  background: #fff5dc;
+}
+
+.reference-source-staging-boundary p,
+.reference-source-staging-head,
+.reference-source-staging-counts,
+.reference-source-staging-empty,
+.reference-source-staging-unavailable,
+.reference-source-staging-legacy > p {
+  color: #625744;
+  font-size: 0.78rem;
+}
+
+.reference-source-staging-graph,
+.reference-source-staging-legacy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.reference-source-staging-graph > details {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #ded8c8;
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+.reference-source-staging-graph > details > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.reference-source-staging-record {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  border-left: 0.2rem solid #66858f;
+  background: #f4fafb;
+}
+
+.reference-source-staging-record p {
+  color: #4c6268;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
 .personal-default-summary {
   flex-basis: 100%;
   color: #5f5f58;

@@ -343,6 +343,9 @@ describe("Owner Knowledge workbench", () => {
     expect(implementation).toContain("Reject");
     expect(implementation).toContain("Release default");
     expect(implementation).toContain("Release claim");
+    expect(implementation).toContain("Reference sources — staging diagnostics");
+    expect(implementation).toContain("/api/owner/reference-source-staging");
+    expect(implementation).not.toContain("confidence ?? 0.75");
   });
 
   it("proposes a scoped default from Selection Context without approving it", () => {
