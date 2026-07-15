@@ -4,13 +4,18 @@ import { Value } from "@sinclair/typebox/value";
 
 import {
   ReferenceSourceStagingTransactionSchema,
+  ReferenceSourceStagingSnapshotSchema,
   referenceSourceDigest,
   verifyReferenceRecordDigest,
   withReferenceRecordDigest,
   type ReferenceAccessDecision,
+  type ReferenceAssetRoleBinding,
   type ReferenceDependencyEdge,
   type ReferenceSourceIdentityAssertion,
+  type ReferenceSourceDerivation,
   type ReferenceInvalidation,
+  type ReferenceLifecycleStoragePolicy,
+  type ReferenceLifecycleUse,
   type ReferenceProvenanceSubstitution,
   type ReferenceRecordRef,
   type ReferenceRightsAssertion,
@@ -68,6 +73,27 @@ export type ReferenceSourceStagingServiceOptions = {
   now?: () => Date;
   createId?: () => string;
 };
+
+/** Validate one complete immutable staging snapshot before any derived planning. */
+export function assertReferenceSourceStagingSnapshotIntegrity(
+  snapshot: ReferenceSourceStagingSnapshot
+): void {
+  let decoded: ReferenceSourceStagingSnapshot;
+  try {
+    decoded = Value.Decode(ReferenceSourceStagingSnapshotSchema, snapshot);
+  } catch (error) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source staging snapshot failed schema validation: ${errorMessage(error)}`
+    );
+  }
+  const { digest, ...core } = decoded;
+  if (referenceSourceDigest(core) !== digest) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source staging snapshot digest mismatch for ${decoded.id}`
+    );
+  }
+  assertRecordGraphIntegrity(decoded.records);
+}
 
 /**
  * A deliberately noncanonical transaction boundary for the reference identity graph.
@@ -501,6 +527,12 @@ function assertLocalStructuralEdges(
       }
       assertAccessDecisionSemantics(record, byRef);
       return;
+    case "lifecycle_storage_policy":
+      assertLifecycleStoragePolicy(record, byRef);
+      return;
+    case "lifecycle_use":
+      assertLifecycleUse(record, byRef);
+      return;
     case "arrangement_source_binding":
       assertRoleBinding(record, byRef);
       assertOpaqueExternalRef(record.retentionPolicyRef, byRef, `${record.id}.retentionPolicyRef`);
@@ -829,51 +861,409 @@ function rightsAssertionConcernsDecision(
 }
 
 function assertAccessDestination(decision: ReferenceAccessDecision): void {
-  const providerOperations = new Set([
-    "provider_ocr",
-    "provider_omr",
-    "provider_translation",
-    "provider_model_processing",
-  ]);
-  if (providerOperations.has(decision.operation)) {
-    if (decision.destination.kind !== "provider" || !decision.destination.id) {
+  const exactIdKinds = new Set(["provider", "repository", "export", "recipient"]);
+  if (exactIdKinds.has(decision.destination.kind) && !decision.destination.id) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Access Decision ${decision.id} must name its exact ${decision.destination.kind} destination`
+    );
+  }
+  if (decision.destination.kind === "local_runtime" && decision.destination.id !== undefined) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Access Decision ${decision.id} cannot smuggle a remote identity into local_runtime`
+    );
+  }
+
+  const permittedDestinations: Record<
+    ReferenceAccessDecision["operation"],
+    readonly ReferenceAccessDecision["destination"]["kind"][]
+  > = {
+    underlying_work_use: ["local_runtime"],
+    manifestation_use: ["local_runtime"],
+    exemplar_access: ["local_runtime"],
+    scan_provider_use: ["local_runtime"],
+    owner_private_study: ["local_runtime"],
+    local_extraction: ["local_runtime"],
+    provider_ocr: ["provider"],
+    provider_omr: ["provider"],
+    provider_translation: ["provider"],
+    provider_model_processing: ["provider"],
+    pack_citation: ["repository"],
+    pack_excerpt: ["repository"],
+    fixture_inclusion: ["repository"],
+    repository_inclusion: ["repository"],
+    export: ["export", "recipient"],
+    redistribution: ["recipient", "repository", "export"],
+  };
+  if (!permittedDestinations[decision.operation].includes(decision.destination.kind)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Access Decision ${decision.id} has an incompatible ${decision.operation}/${decision.destination.kind} scope`
+    );
+  }
+}
+
+function assertLifecycleStoragePolicy(
+  policy: ReferenceLifecycleStoragePolicy,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const isUnmanaged = policy.custody.kind === "unmanaged_recipient";
+  if ((policy.subjectKind === "unmanaged_disclosure") !== isUnmanaged) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle storage policy ${policy.id} must model unmanaged disclosure with unmanaged custody and nothing else`
+    );
+  }
+
+  for (const path of policy.provenancePaths) {
+    assertExactLifecycleProvenancePath(
+      policy.subjectRef,
+      path.acquisitionRefs,
+      path.derivationRefs,
+      policy.createdAt,
+      byRef,
+      `${policy.id}.provenancePaths`
+    );
+  }
+  assertUniqueLifecyclePaths(policy.provenancePaths, policy.id);
+  assertOpaqueExternalRef(policy.policyRef, byRef, `${policy.id}.policyRef`);
+
+  if (policy.custody.kind === "unmanaged_recipient") {
+    assertOpaqueExternalRef(
+      policy.custody.recipientRef,
+      byRef,
+      `${policy.id}.custody.recipientRef`
+    );
+    const disclosureDecision = resolveKind(
+      policy.custody.disclosureAccessDecisionRef,
+      "access_decision",
+      byRef,
+      `${policy.id}.custody.disclosureAccessDecisionRef`
+    );
+    if (
+      disclosureDecision.outcome !== "allow" ||
+      !["export", "redistribution"].includes(disclosureDecision.operation) ||
+      disclosureDecision.destination.kind !== "recipient" ||
+      disclosureDecision.destination.id !== policy.custody.recipientRef.id ||
+      !disclosureDecision.derivativeRefs.some((ref) => refKey(ref) === refKey(policy.subjectRef)) ||
+      Date.parse(disclosureDecision.decidedAt) > Date.parse(policy.custody.disclosedAt) ||
+      Date.parse(policy.custody.disclosedAt) > Date.parse(policy.createdAt)
+    ) {
       throw new ReferenceSourceStagingIntegrityError(
-        `Access Decision ${decision.id} must name its exact provider destination`
+        `Lifecycle storage policy ${policy.id} lacks an exact prior disclosure authorization`
+      );
+    }
+  }
+
+  assertLifecycleVersionPathChangesReviewed(policy, byRef);
+}
+
+function assertLifecycleUse(
+  use: ReferenceLifecycleUse,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  for (const path of use.provenancePaths) {
+    assertExactLifecycleProvenancePath(
+      use.subjectRef,
+      path.acquisitionRefs,
+      path.derivationRefs,
+      use.createdAt,
+      byRef,
+      `${use.id}.provenancePaths`
+    );
+    const decision = resolveKind(
+      path.accessDecisionRef,
+      "access_decision",
+      byRef,
+      `${use.id}.provenancePaths.accessDecisionRef`
+    );
+    const exactRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
+    const authorizedRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
+    if (
+      decision.operation !== use.operation ||
+      decision.destination.kind !== use.destination.kind ||
+      decision.destination.id !== use.destination.id ||
+      decision.purpose !== use.purpose ||
+      refKey(decision.policyRef) !== refKey(use.policyRef) ||
+      decision.assetRole !== use.assetRole ||
+      Date.parse(decision.decidedAt) > Date.parse(use.createdAt) ||
+      exactRefs.some(
+        (ref) => !authorizedRefs.some((authorized) => refKey(authorized) === refKey(ref))
+      )
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle use ${use.id} is not pinned to its Access Decision's exact path, role, operation, destination, purpose, and policy`
+      );
+    }
+    assertLifecycleRoleBinding(use, decision, path.acquisitionRefs, byRef);
+  }
+  assertUniqueLifecyclePaths(use.provenancePaths, use.id);
+  assertLifecycleVersionPathChangesReviewed(use, byRef);
+  assertNoRetroactiveLifecyclePath(use, byRef);
+}
+
+function assertExactLifecycleProvenancePath(
+  subjectRef: ReferenceRecordRef,
+  acquisitionRefs: ReferenceRecordRef[],
+  derivationRefs: ReferenceRecordRef[],
+  recordedAt: string,
+  byRef: Map<string, ReferenceSourceStagingRecord>,
+  label: string
+): void {
+  const acquisitions = acquisitionRefs.map((ref) =>
+    resolveKind(ref, "asset_acquisition", byRef, `${label}.acquisitionRefs`)
+  );
+  if (derivationRefs.length === 0) {
+    const subject = resolveKind(subjectRef, "digital_asset", byRef, `${label}.subjectRef`);
+    if (
+      acquisitions.length !== 1 ||
+      refKey(acquisitions[0]!.digitalAssetRef) !== refKey(subject) ||
+      Date.parse(acquisitions[0]!.acquiredAt) > Date.parse(recordedAt)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle path ${label} without derivations must name one exact acquisition of its Digital Asset`
       );
     }
     return;
   }
-  if (decision.operation === "fixture_inclusion" || decision.operation === "repository_inclusion") {
-    if (decision.destination.kind !== "repository" || !decision.destination.id) {
-      throw new ReferenceSourceStagingIntegrityError(
-        `Access Decision ${decision.id} must name its exact repository destination`
-      );
-    }
-    return;
+
+  const declaredDerivations = derivationRefs.map((ref) =>
+    resolveKind(ref, "source_derivation", byRef, `${label}.derivationRefs`)
+  );
+  const terminals = declaredDerivations.filter(
+    (derivation) => refKey(derivation.derivedRef) === refKey(subjectRef)
+  );
+  if (terminals.length !== 1) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle path ${label} must end in exactly one derivation of its exact subject`
+    );
   }
-  if (decision.operation === "owner_private_study" || decision.operation === "local_extraction") {
-    if (decision.destination.kind !== "local_runtime") {
-      throw new ReferenceSourceStagingIntegrityError(
-        `Access Decision ${decision.id} must remain inside the local runtime`
-      );
-    }
-    return;
-  }
+  const closure = lifecycleDerivationClosure(terminals[0]!, byRef);
   if (
-    decision.operation === "export" &&
-    decision.destination.kind !== "export" &&
-    decision.destination.kind !== "recipient"
+    !sameRefSet(derivationRefs, [...closure.derivations.values()].map(refFor)) ||
+    !sameRefSet(acquisitionRefs, [...closure.acquisitions.values()].map(refFor))
   ) {
     throw new ReferenceSourceStagingIntegrityError(
-      `Access Decision ${decision.id} has an incompatible export destination`
+      `Lifecycle path ${label} must pin the complete transitive acquisition and derivation closure`
     );
   }
   if (
-    decision.operation === "redistribution" &&
-    !["recipient", "repository", "export"].includes(decision.destination.kind)
+    [...closure.derivations.values()].some(
+      (derivation) => Date.parse(derivation.createdAt) > Date.parse(recordedAt)
+    ) ||
+    [...closure.acquisitions.values()].some(
+      (acquisition) => Date.parse(acquisition.acquiredAt) > Date.parse(recordedAt)
+    )
   ) {
     throw new ReferenceSourceStagingIntegrityError(
-      `Access Decision ${decision.id} has an incompatible redistribution destination`
+      `Lifecycle path ${label} cannot cite provenance created after the lifecycle record`
+    );
+  }
+}
+
+function lifecycleDerivationClosure(
+  terminal: ReferenceSourceDerivation,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): {
+  acquisitions: Map<
+    string,
+    Extract<ReferenceSourceStagingRecord, { recordKind: "asset_acquisition" }>
+  >;
+  derivations: Map<string, ReferenceSourceDerivation>;
+} {
+  const acquisitions = new Map<
+    string,
+    Extract<ReferenceSourceStagingRecord, { recordKind: "asset_acquisition" }>
+  >();
+  const derivations = new Map<string, ReferenceSourceDerivation>();
+  const visiting = new Set<string>();
+  const visit = (derivation: ReferenceSourceDerivation): void => {
+    const key = refKey(derivation);
+    if (visiting.has(key)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle provenance reaches cyclic derivation ${derivation.id}`
+      );
+    }
+    if (derivations.has(key)) return;
+    visiting.add(key);
+    derivations.set(key, derivation);
+    for (const acquisitionRef of derivation.sourceAcquisitionRefs) {
+      const acquisition = resolveKind(
+        acquisitionRef,
+        "asset_acquisition",
+        byRef,
+        `${derivation.id}.sourceAcquisitionRefs`
+      );
+      acquisitions.set(refKey(acquisition), acquisition);
+    }
+    for (const sourceRef of derivation.sourceDerivationRefs) {
+      visit(
+        resolveKind(sourceRef, "source_derivation", byRef, `${derivation.id}.sourceDerivationRefs`)
+      );
+    }
+    visiting.delete(key);
+  };
+  visit(terminal);
+  return { acquisitions, derivations };
+}
+
+function assertUniqueLifecyclePaths(
+  paths: Array<{ acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] }>,
+  id: string
+): void {
+  const keys = paths.map(lifecyclePathKey);
+  if (new Set(keys).size !== keys.length) {
+    throw new ReferenceSourceStagingIntegrityError(`Lifecycle record ${id} repeats an exact path`);
+  }
+}
+
+function lifecyclePathKey(path: {
+  acquisitionRefs: ReferenceRecordRef[];
+  derivationRefs: ReferenceRecordRef[];
+}): string {
+  return `${path.acquisitionRefs.map(refKey).sort().join("\u0001")}\u0000${path.derivationRefs
+    .map(refKey)
+    .sort()
+    .join("\u0001")}`;
+}
+
+function assertLifecycleVersionPathChangesReviewed(
+  record: ReferenceLifecycleStoragePolicy | ReferenceLifecycleUse,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  if (!record.parentVersionRef) return;
+  const parent = resolveKind(
+    record.parentVersionRef,
+    record.recordKind,
+    byRef,
+    `${record.id}.parentVersionRef`
+  ) as ReferenceLifecycleStoragePolicy | ReferenceLifecycleUse;
+  const priorKeys = new Set(parent.provenancePaths.map(lifecyclePathKey));
+  for (const path of record.provenancePaths) {
+    if (priorKeys.has(lifecyclePathKey(path))) continue;
+    if (!lifecyclePathHasReviewedSubstitution(path, parent.provenancePaths, record, byRef)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle record ${record.id} cannot add provenance to an existing subject without an exact reviewed substitution`
+      );
+    }
+  }
+}
+
+function lifecyclePathHasReviewedSubstitution(
+  next: { acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] },
+  priorPaths: Array<{
+    acquisitionRefs: ReferenceRecordRef[];
+    derivationRefs: ReferenceRecordRef[];
+  }>,
+  record: ReferenceLifecycleStoragePolicy | ReferenceLifecycleUse,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): boolean {
+  const nextTerminal = terminalDerivationRef(next, record.subjectRef, byRef);
+  if (!nextTerminal) return false;
+  const substitutions = [...byRef.values()].filter(
+    (item): item is ReferenceProvenanceSubstitution =>
+      item.recordKind === "provenance_substitution" &&
+      Date.parse(item.decidedAt) <= Date.parse(record.createdAt)
+  );
+  return next.acquisitionRefs.every((nextAcquisition) =>
+    priorPaths.some((prior) => {
+      const priorTerminal = terminalDerivationRef(prior, record.subjectRef, byRef);
+      return (
+        priorTerminal !== undefined &&
+        prior.acquisitionRefs.some((priorAcquisition) =>
+          substitutions.some(
+            (substitution) =>
+              refKey(substitution.from.acquisitionRef) === refKey(priorAcquisition) &&
+              refKey(substitution.from.derivationRef) === refKey(priorTerminal) &&
+              refKey(substitution.to.acquisitionRef) === refKey(nextAcquisition) &&
+              refKey(substitution.to.derivationRef) === refKey(nextTerminal) &&
+              refKey(substitution.scope.policyRef) === refKey(record.policyRef) &&
+              (record.recordKind === "lifecycle_storage_policy" ||
+                (substitution.scope.operation === record.operation &&
+                  substitution.scope.destination.kind === record.destination.kind &&
+                  substitution.scope.destination.id === record.destination.id &&
+                  substitution.scope.purpose === record.purpose)) &&
+              substitution.scope.sourceAndDerivativeRefs.some(
+                (ref) => refKey(ref) === refKey(record.subjectRef)
+              )
+          )
+        )
+      );
+    })
+  );
+}
+
+function terminalDerivationRef(
+  path: { derivationRefs: ReferenceRecordRef[] },
+  subjectRef: ReferenceRecordRef,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): ReferenceRecordRef | undefined {
+  return path.derivationRefs.find((ref) => {
+    const record = byRef.get(refKey(ref));
+    return (
+      record?.recordKind === "source_derivation" && refKey(record.derivedRef) === refKey(subjectRef)
+    );
+  });
+}
+
+function assertNoRetroactiveLifecyclePath(
+  use: ReferenceLifecycleUse,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const allDerivations = [...byRef.values()].filter(
+    (record): record is ReferenceSourceDerivation => record.recordKind === "source_derivation"
+  );
+  for (const path of use.provenancePaths) {
+    const terminalRef = terminalDerivationRef(path, use.subjectRef, byRef);
+    if (!terminalRef) continue;
+    const terminal = resolveKind(terminalRef, "source_derivation", byRef, `${use.id}.terminal`);
+    const earlierAlternatives = allDerivations.filter(
+      (candidate) =>
+        refKey(candidate.derivedRef) === refKey(use.subjectRef) &&
+        refKey(candidate) !== refKey(terminal) &&
+        Date.parse(candidate.createdAt) < Date.parse(terminal.createdAt)
+    );
+    if (earlierAlternatives.length === 0) continue;
+    const priorPaths = earlierAlternatives.map((candidate) => ({
+      acquisitionRefs: lifecycleDerivationClosure(candidate, byRef).acquisitions.size
+        ? [...lifecycleDerivationClosure(candidate, byRef).acquisitions.values()].map(refFor)
+        : [],
+      derivationRefs: [...lifecycleDerivationClosure(candidate, byRef).derivations.values()].map(
+        refFor
+      ),
+    }));
+    if (!lifecyclePathHasReviewedSubstitution(path, priorPaths, use, byRef)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Lifecycle use ${use.id} cannot retroactively authorize an existing derivative through a later acquisition`
+      );
+    }
+  }
+}
+
+function assertLifecycleRoleBinding(
+  use: ReferenceLifecycleUse,
+  decision: ReferenceAccessDecision,
+  acquisitionRefs: ReferenceRecordRef[],
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  if (!use.assetRole) return;
+  const bindingKind =
+    use.assetRole === "arrangement_source"
+      ? "arrangement_source_binding"
+      : use.assetRole === "owner_reference"
+        ? "owner_reference_binding"
+        : "evaluation_source_binding";
+  const bindings = [...byRef.values()].filter(
+    (record): record is ReferenceAssetRoleBinding => record.recordKind === bindingKind
+  );
+  const decisionRef = refFor(decision);
+  if (
+    !bindings.some(
+      (binding) =>
+        acquisitionRefs.every((ref) =>
+          binding.acquisitionRefs.some((bound) => refKey(bound) === refKey(ref))
+        ) && binding.accessDecisionRefs.some((ref) => refKey(ref) === refKey(decisionRef))
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Lifecycle use ${use.id} cannot borrow ${use.assetRole} authority without its exact role binding`
     );
   }
 }

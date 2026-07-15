@@ -2,24 +2,51 @@ import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 
 import {
-  ReferenceAccessDecisionSchema,
-  ReferenceAccessDestinationSchema,
-  ReferenceAccessOperationSchema,
-  ReferenceAssetAcquisitionSchema,
-  ReferenceProvenanceSubstitutionSchema,
+  ReferenceLifecycleAuthorizedPathSchema,
+  ReferenceLifecycleReplayabilitySchema,
+  ReferenceLifecycleStoragePolicySchema,
+  ReferenceLifecycleStorageSubjectKindSchema,
+  ReferenceLifecycleUseSchema,
   ReferenceRecordRefSchema,
-  ReferenceSourceDerivationSchema,
+  ReferenceSourceStagingSnapshotSchema,
+  referenceSourceDigest,
   verifyReferenceRecordDigest,
   type ReferenceAccessDecision,
   type ReferenceAccessDestination,
   type ReferenceAssetAcquisition,
+  type ReferenceAssetRoleBinding,
+  type ReferenceLifecycleAuthorizedPath,
+  type ReferenceLifecycleReplayability,
+  type ReferenceLifecycleStoragePolicy,
+  type ReferenceLifecycleStorageSubjectKind,
+  type ReferenceLifecycleUse,
+  type ReferenceInvalidation,
   type ReferenceProvenanceSubstitution,
   type ReferenceRecordRef,
+  type ReferenceRightsAssertion,
   type ReferenceSourceDerivation,
+  type ReferenceSourceStagingRecord,
+  type ReferenceSourceStagingSnapshot,
 } from "./reference-source-domain.js";
+
+export {
+  ReferenceLifecycleAuthorizedPathSchema,
+  ReferenceLifecycleReplayabilitySchema,
+  ReferenceLifecycleStoragePolicySchema as ReferenceLifecycleStorageSubjectSchema,
+  ReferenceLifecycleStorageSubjectKindSchema,
+  ReferenceLifecycleUseSchema,
+};
+export type {
+  ReferenceLifecycleAuthorizedPath,
+  ReferenceLifecycleReplayability,
+  ReferenceLifecycleStoragePolicy as ReferenceLifecycleStorageSubject,
+  ReferenceLifecycleStorageSubjectKind,
+  ReferenceLifecycleUse,
+};
 
 const Strict = { additionalProperties: false } as const;
 const IdSchema = Type.String({ minLength: 1 });
+const DigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const IsoTimestampSchema = Type.String({
   pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
 });
@@ -32,14 +59,6 @@ export const ReferenceLifecycleStateSchema = Type.Union([
 ]);
 export type ReferenceLifecycleState = Static<typeof ReferenceLifecycleStateSchema>;
 
-export const ReferenceLifecycleReplayabilitySchema = Type.Union([
-  Type.Literal("complete"),
-  Type.Literal("partial"),
-  Type.Literal("unavailable"),
-  Type.Literal("legacy_unverifiable"),
-]);
-export type ReferenceLifecycleReplayability = Static<typeof ReferenceLifecycleReplayabilitySchema>;
-
 export const ReferenceLifecycleReadinessImpactSchema = Type.Union([
   Type.Literal("unchanged"),
   Type.Literal("advisory"),
@@ -51,124 +70,39 @@ export type ReferenceLifecycleReadinessImpact = Static<
 
 const ReferenceLifecycleEndpointSchema = Type.Object(
   {
-    acquisitionRef: ReferenceRecordRefSchema,
-    derivationRef: Type.Optional(ReferenceRecordRefSchema),
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
+    derivationRefs: Type.Array(ReferenceRecordRefSchema),
   },
   Strict
 );
 export type ReferenceLifecycleEndpoint = Static<typeof ReferenceLifecycleEndpointSchema>;
 
-const ReferenceLifecycleAuthorizedPathSchema = Type.Object(
-  {
-    acquisitionRef: ReferenceRecordRefSchema,
-    derivationRef: Type.Optional(ReferenceRecordRefSchema),
-    accessDecisionRef: ReferenceRecordRefSchema,
-  },
-  Strict
-);
-export type ReferenceLifecycleAuthorizedPath = Static<
-  typeof ReferenceLifecycleAuthorizedPathSchema
->;
-
-export const ReferenceLifecycleUseSchema = Type.Object(
-  {
-    id: IdSchema,
-    subjectRef: ReferenceRecordRefSchema,
-    provenancePaths: Type.Array(ReferenceLifecycleAuthorizedPathSchema, { minItems: 1 }),
-    operation: ReferenceAccessOperationSchema,
-    destination: ReferenceAccessDestinationSchema,
-    purpose: Type.String({ minLength: 1 }),
-    policyRef: ReferenceRecordRefSchema,
-    baselineReplayability: ReferenceLifecycleReplayabilitySchema,
-    readinessRequirement: Type.Union([
-      Type.Literal("required"),
-      Type.Literal("advisory"),
-      Type.Literal("none"),
-    ]),
-  },
-  Strict
-);
-export type ReferenceLifecycleUse = Static<typeof ReferenceLifecycleUseSchema>;
-
-export const ReferenceLifecycleStorageSubjectKindSchema = Type.Union([
-  Type.Literal("asset_bytes"),
-  Type.Literal("segment"),
-  Type.Literal("extraction"),
-  Type.Literal("candidate"),
-  Type.Literal("release"),
-  Type.Literal("fixture"),
-  Type.Literal("arrangement"),
-  Type.Literal("evaluation"),
-  Type.Literal("report"),
-  Type.Literal("cache"),
-  Type.Literal("backup"),
-  Type.Literal("managed_export"),
-  Type.Literal("unmanaged_disclosure"),
-  Type.Literal("other_derivative"),
+export const ReferenceSourceLifecycleActionSchema = Type.Union([
+  Type.Object(
+    {
+      kind: Type.Literal("delete_acquisition"),
+      targetAcquisitionRef: ReferenceRecordRefSchema,
+      reason: Type.String({ minLength: 1 }),
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("restrict_access"),
+      targetAccessDecisionRef: ReferenceRecordRefSchema,
+      reason: Type.String({ minLength: 1 }),
+    },
+    Strict
+  ),
 ]);
-export type ReferenceLifecycleStorageSubjectKind = Static<
-  typeof ReferenceLifecycleStorageSubjectKindSchema
->;
-
-const ReferenceLifecycleStorageProvenancePathSchema = Type.Object(
-  {
-    acquisitionRefs: Type.Array(ReferenceRecordRefSchema),
-    derivationRefs: Type.Array(ReferenceRecordRefSchema),
-  },
-  Strict
-);
-
-export const ReferenceLifecycleStorageSubjectSchema = Type.Object(
-  {
-    subjectRef: ReferenceRecordRefSchema,
-    subjectKind: ReferenceLifecycleStorageSubjectKindSchema,
-    provenancePaths: Type.Array(ReferenceLifecycleStorageProvenancePathSchema, { minItems: 1 }),
-    control: Type.Union([Type.Literal("vellum_controlled"), Type.Literal("unmanaged_recipient")]),
-    retention: Type.Union([
-      Type.Literal("unretained"),
-      Type.Literal("encrypted_local_pin"),
-      Type.Literal("required_hold"),
-    ]),
-    tombstonePolicy: Type.Union([Type.Literal("preserve"), Type.Literal("discard")]),
-    replayRequirement: Type.Union([
-      Type.Literal("required"),
-      Type.Literal("optional"),
-      Type.Literal("none"),
-    ]),
-    readinessRequirement: Type.Union([
-      Type.Literal("required"),
-      Type.Literal("advisory"),
-      Type.Literal("none"),
-    ]),
-  },
-  Strict
-);
-export type ReferenceLifecycleStorageSubject = Static<
-  typeof ReferenceLifecycleStorageSubjectSchema
->;
-
-export const ReferenceSourceLifecycleActionSchema = Type.Object(
-  {
-    kind: Type.Union([Type.Literal("restrict_acquisition"), Type.Literal("delete_acquisition")]),
-    targetAcquisitionRef: ReferenceRecordRefSchema,
-    reason: Type.String({ minLength: 1 }),
-  },
-  Strict
-);
 export type ReferenceSourceLifecycleAction = Static<typeof ReferenceSourceLifecycleActionSchema>;
 
 export const ReferenceSourceLifecyclePlannerInputSchema = Type.Object(
   {
     schemaVersion: Type.Literal(1),
-    baseSnapshotRef: ReferenceRecordRefSchema,
+    baseSnapshot: ReferenceSourceStagingSnapshotSchema,
     effectiveAt: IsoTimestampSchema,
     action: ReferenceSourceLifecycleActionSchema,
-    acquisitions: Type.Array(ReferenceAssetAcquisitionSchema, { minItems: 1 }),
-    derivations: Type.Array(ReferenceSourceDerivationSchema),
-    accessDecisions: Type.Array(ReferenceAccessDecisionSchema),
-    substitutions: Type.Array(ReferenceProvenanceSubstitutionSchema),
-    storageSubjects: Type.Array(ReferenceLifecycleStorageSubjectSchema),
-    uses: Type.Array(ReferenceLifecycleUseSchema),
   },
   Strict
 );
@@ -177,7 +111,9 @@ export type ReferenceSourceLifecyclePlannerInput = Static<
 >;
 
 const ReferenceLifecycleIssueCodeSchema = Type.Union([
+  Type.Literal("invalid_snapshot_digest"),
   Type.Literal("target_acquisition_not_found"),
+  Type.Literal("target_access_decision_not_found"),
   Type.Literal("record_digest_invalid"),
   Type.Literal("duplicate_exact_record"),
   Type.Literal("duplicate_storage_subject"),
@@ -191,6 +127,12 @@ const ReferenceLifecycleIssueCodeSchema = Type.Union([
   Type.Literal("invalid_asset_storage_subject"),
   Type.Literal("missing_asset_storage_policy"),
   Type.Literal("missing_derivative_storage_policy"),
+  Type.Literal("incomplete_lifecycle_inventory"),
+  Type.Literal("invalid_rights_basis"),
+  Type.Literal("invalid_role_binding"),
+  Type.Literal("superseded_record"),
+  Type.Literal("operation_destination_mismatch"),
+  Type.Literal("retroactive_provenance"),
 ]);
 
 const ReferenceLifecyclePlanningIssueSchema = Type.Object(
@@ -255,6 +197,8 @@ export type ReferenceLifecyclePermissionConsequence = Static<
 
 const ReferenceSourceLifecyclePlanCore = {
   schemaVersion: Type.Literal(1),
+  id: IdSchema,
+  digest: DigestSchema,
   mode: Type.Literal("dry_run"),
   baseSnapshotRef: ReferenceRecordRefSchema,
   effectiveAt: IsoTimestampSchema,
@@ -266,7 +210,8 @@ const ReferenceSourceLifecycleReadyPlanSchema = Type.Object(
   {
     ...ReferenceSourceLifecyclePlanCore,
     status: Type.Literal("ready"),
-    targetDigitalAssetRef: ReferenceRecordRefSchema,
+    targetRef: ReferenceRecordRefSchema,
+    targetDigitalAssetRef: Type.Optional(ReferenceRecordRefSchema),
     consequences: Type.Array(ReferenceLifecycleStorageConsequenceSchema),
     permissions: Type.Array(ReferenceLifecyclePermissionConsequenceSchema),
     aggregate: Type.Object(
@@ -301,13 +246,36 @@ export type ReferenceSourceLifecyclePlanResult = Static<
   typeof ReferenceSourceLifecyclePlanResultSchema
 >;
 
+type LifecycleContext = {
+  effectiveAt: string;
+  action: ReferenceSourceLifecycleAction;
+  records: ReferenceSourceStagingRecord[];
+  recordByRef: Map<string, ReferenceSourceStagingRecord>;
+  acquisitions: ReferenceAssetAcquisition[];
+  acquisitionByRef: Map<string, ReferenceAssetAcquisition>;
+  derivations: ReferenceSourceDerivation[];
+  derivationByRef: Map<string, ReferenceSourceDerivation>;
+  accessDecisions: ReferenceAccessDecision[];
+  accessDecisionByRef: Map<string, ReferenceAccessDecision>;
+  rightsAssertions: ReferenceRightsAssertion[];
+  rightsAssertionByRef: Map<string, ReferenceRightsAssertion>;
+  substitutions: ReferenceProvenanceSubstitution[];
+  roleBindings: ReferenceAssetRoleBinding[];
+  policies: ReferenceLifecycleStoragePolicy[];
+  uses: ReferenceLifecycleUse[];
+  invalidatedRefs: Set<string>;
+  issues: ReferenceLifecyclePlanningIssue[];
+};
+
+type ExactClosure = {
+  acquisitions: ReferenceAssetAcquisition[];
+  derivations: ReferenceSourceDerivation[];
+  terminal: ReferenceSourceDerivation | null;
+};
+
 /**
- * Build a deterministic, non-mutating deletion/restriction plan.
- *
- * Authorization is deliberately path-based. The planner never reads a content
- * hash and never treats two acquisitions of one DigitalAsset as interchangeable.
- * A use survives only through an already-authorized exact path or an exact,
- * scope-matched provenance-substitution record.
+ * Produces a deterministic, digest-bound, non-mutating lifecycle plan from one
+ * complete immutable staging snapshot. Callers cannot select record arrays.
  */
 export function planReferenceSourceLifecycle(
   input: ReferenceSourceLifecyclePlannerInput
@@ -316,134 +284,86 @@ export function planReferenceSourceLifecycle(
     throw new TypeError("Reference-source lifecycle input does not match the closed schema");
   }
 
-  const acquisitions = [...input.acquisitions].sort(compareRecords);
-  const derivations = [...input.derivations].sort(compareRecords);
-  const accessDecisions = [...input.accessDecisions].sort(compareRecords);
-  const substitutions = [...input.substitutions].sort(compareRecords);
-  const storageSubjects = [...input.storageSubjects].sort((left, right) =>
-    compareRefs(left.subjectRef, right.subjectRef)
-  );
-  const uses = [...input.uses].sort((left, right) => left.id.localeCompare(right.id));
+  const snapshot = input.baseSnapshot;
+  const records = [...snapshot.records].sort(compareRecords);
+  const ctx = buildContext(records, input.effectiveAt, input.action);
 
-  const acquisitionByRef = indexRecords(acquisitions);
-  const derivationByRef = indexRecords(derivations);
-  const accessDecisionByRef = indexRecords(accessDecisions);
-  const substitutionByRef = indexRecords(substitutions);
-  const issues: ReferenceLifecyclePlanningIssue[] = [];
+  if (!verifySnapshotDigest(snapshot)) {
+    addIssue(
+      ctx,
+      "invalid_snapshot_digest",
+      recordRef(snapshot),
+      "The complete base snapshot does not match its canonical digest."
+    );
+  }
+  validateRecordIdentity(ctx);
+  validateLifecycleInventory(ctx);
 
-  collectDuplicateExactRecordIssues(
-    [acquisitions, derivations, accessDecisions, substitutions],
-    issues
-  );
-  collectDigestIssues([acquisitions, derivations, accessDecisions, substitutions], issues);
-  collectDuplicateSubjectIssues(storageSubjects, uses, issues);
-  collectGraphIssues(
-    acquisitions,
-    derivations,
-    accessDecisions,
-    substitutions,
-    storageSubjects,
-    uses,
-    acquisitionByRef,
-    derivationByRef,
-    accessDecisionByRef,
-    issues
-  );
+  const targetAcquisition =
+    input.action.kind === "delete_acquisition"
+      ? ctx.acquisitionByRef.get(refKey(input.action.targetAcquisitionRef))
+      : undefined;
+  const targetDecision =
+    input.action.kind === "restrict_access"
+      ? ctx.accessDecisionByRef.get(refKey(input.action.targetAccessDecisionRef))
+      : undefined;
 
-  const target = acquisitionByRef.get(refKey(input.action.targetAcquisitionRef));
-  if (!target) {
-    issues.push({
-      code: "target_acquisition_not_found",
-      subjectRef: input.action.targetAcquisitionRef,
-      detail: "The exact target acquisition id and digest are not present in the planning graph.",
-    });
+  if (input.action.kind === "delete_acquisition" && !targetAcquisition) {
+    addIssue(
+      ctx,
+      "target_acquisition_not_found",
+      input.action.targetAcquisitionRef,
+      "The exact target acquisition is not present in the complete base snapshot."
+    );
+  }
+  if (input.action.kind === "restrict_access" && !targetDecision) {
+    addIssue(
+      ctx,
+      "target_access_decision_not_found",
+      input.action.targetAccessDecisionRef,
+      "The exact target Access Decision is not present in the complete base snapshot."
+    );
   }
 
-  const targetAssetRef = target?.digitalAssetRef;
-  const impactedDerivationKeys = target
-    ? collectImpactedDerivations(input.action.targetAcquisitionRef, derivations)
+  const impactedDerivations = targetAcquisition
+    ? collectImpactedDerivations(recordRef(targetAcquisition), ctx.derivations)
     : new Set<string>();
-  if (targetAssetRef) {
-    const hasSurvivingAcquisition = acquisitions.some(
-      (acquisition) =>
-        !refsEqual(recordRef(acquisition), input.action.targetAcquisitionRef) &&
-        refsEqual(acquisition.digitalAssetRef, targetAssetRef)
-    );
-    const assetPolicies = storageSubjects.filter(
-      (subject) =>
-        subject.subjectKind === "asset_bytes" && refsEqual(subject.subjectRef, targetAssetRef)
-    );
-    if (!hasSurvivingAcquisition && assetPolicies.length === 0) {
-      issues.push({
-        code: "missing_asset_storage_policy",
-        subjectRef: targetAssetRef,
-        detail:
-          "The last acquisition cannot be removed without an explicit asset-byte retention and tombstone policy.",
-      });
-    }
-    for (const derivation of derivations) {
-      const derivationRef = recordRef(derivation);
-      if (
-        impactedDerivationKeys.has(refKey(derivationRef)) &&
-        !storageSubjects.some((subject) =>
-          subject.provenancePaths.some((path) => containsRef(path.derivationRefs, derivationRef))
-        )
-      ) {
-        issues.push({
-          code: "missing_derivative_storage_policy",
-          subjectRef: derivationRef,
-          detail:
-            "Every affected derivation must be covered by an explicit controlled, pinned, tombstone, or disclosure lifecycle path.",
-        });
-      }
-    }
-  }
+  validateInventoryCompleteness(ctx, targetAcquisition, targetDecision, impactedDerivations);
 
-  const sortedIssues = sortIssues(issues);
-  if (!target || sortedIssues.length > 0) {
-    return checkedResult({
-      schemaVersion: 1,
-      mode: "dry_run",
-      baseSnapshotRef: input.baseSnapshotRef,
-      effectiveAt: input.effectiveAt,
-      action: input.action,
-      atomicity: "all_or_nothing",
-      status: "blocked",
-      issues: sortedIssues,
-    });
+  const issues = sortIssues(ctx.issues);
+  const base = {
+    schemaVersion: 1 as const,
+    mode: "dry_run" as const,
+    baseSnapshotRef: recordRef(snapshot),
+    effectiveAt: input.effectiveAt,
+    action: input.action,
+    atomicity: "all_or_nothing" as const,
+  };
+  if ((!targetAcquisition && !targetDecision) || issues.length > 0) {
+    return sealPlan({ ...base, status: "blocked" as const, issues });
   }
 
   const consequences = buildStorageConsequences(
-    input,
-    target,
-    acquisitions,
-    storageSubjects,
-    impactedDerivationKeys
+    ctx,
+    targetAcquisition,
+    targetDecision,
+    impactedDerivations
   );
-  const permissions = buildPermissionConsequences(
-    input,
-    uses,
-    acquisitionByRef,
-    derivationByRef,
-    accessDecisionByRef,
-    substitutionByRef,
-    impactedDerivationKeys,
-    consequences
-  );
+  const permissions = buildPermissionConsequences(ctx, impactedDerivations, consequences);
   const allStates = [
     ...consequences.map((consequence) => consequence.state),
     ...permissions.map((permission) => permission.state),
   ];
+  const targetRef =
+    input.action.kind === "delete_acquisition"
+      ? input.action.targetAcquisitionRef
+      : input.action.targetAccessDecisionRef;
 
-  return checkedResult({
-    schemaVersion: 1,
-    mode: "dry_run",
-    baseSnapshotRef: input.baseSnapshotRef,
-    effectiveAt: input.effectiveAt,
-    action: input.action,
-    atomicity: "all_or_nothing",
-    status: "ready",
-    targetDigitalAssetRef: target.digitalAssetRef,
+  return sealPlan({
+    ...base,
+    status: "ready" as const,
+    targetRef,
+    ...(targetAcquisition ? { targetDigitalAssetRef: targetAcquisition.digitalAssetRef } : {}),
     consequences,
     permissions,
     aggregate: {
@@ -461,646 +381,1176 @@ export function planReferenceSourceLifecycle(
   });
 }
 
-function collectDuplicateExactRecordIssues(
-  groups: Array<Array<{ id: string; digest: string }>>,
-  issues: ReferenceLifecyclePlanningIssue[]
-): void {
-  for (const records of groups) {
-    const seen = new Set<string>();
-    for (const record of records) {
-      const key = refKey(recordRef(record));
-      if (seen.has(key)) {
-        issues.push({
-          code: "duplicate_exact_record",
-          subjectRef: recordRef(record),
-          detail: "The same exact immutable record appears more than once.",
-        });
-      }
-      seen.add(key);
-    }
-  }
+function buildContext(
+  records: ReferenceSourceStagingRecord[],
+  effectiveAt: string,
+  action: ReferenceSourceLifecycleAction
+): LifecycleContext {
+  const acquisitions = records.filter(isAssetAcquisition);
+  const derivations = records.filter(isSourceDerivation);
+  const accessDecisions = records.filter(isAccessDecision);
+  const rightsAssertions = records.filter(isRightsAssertion);
+  return {
+    effectiveAt,
+    action,
+    records,
+    recordByRef: indexRecords(records),
+    acquisitions,
+    acquisitionByRef: indexRecords(acquisitions),
+    derivations,
+    derivationByRef: indexRecords(derivations),
+    accessDecisions,
+    accessDecisionByRef: indexRecords(accessDecisions),
+    rightsAssertions,
+    rightsAssertionByRef: indexRecords(rightsAssertions),
+    substitutions: records.filter(isProvenanceSubstitution),
+    roleBindings: records.filter(isRoleBinding),
+    policies: selectEffectiveVersions(records.filter(isLifecycleStoragePolicy), effectiveAt),
+    uses: selectEffectiveVersions(records.filter(isLifecycleUse), effectiveAt),
+    invalidatedRefs: new Set(
+      records
+        .filter(
+          (record): record is ReferenceInvalidation =>
+            record.recordKind === "invalidation" &&
+            Date.parse(record.invalidatedAt) <= Date.parse(effectiveAt)
+        )
+        .map((record) => refKey(record.invalidatedRef))
+    ),
+    issues: [],
+  };
 }
 
-function collectDigestIssues(
-  groups: Array<Array<{ id: string; digest: string }>>,
-  issues: ReferenceLifecyclePlanningIssue[]
-): void {
-  for (const record of groups.flat()) {
+function validateRecordIdentity(ctx: LifecycleContext): void {
+  const exact = new Set<string>();
+  const logicalVersions = new Set<string>();
+  for (const record of ctx.records) {
+    const key = refKey(record);
+    if (exact.has(key)) {
+      addIssue(
+        ctx,
+        "duplicate_exact_record",
+        recordRef(record),
+        "The complete snapshot repeats an exact immutable record."
+      );
+    }
+    exact.add(key);
     if (!verifyReferenceRecordDigest(record)) {
-      issues.push({
-        code: "record_digest_invalid",
-        subjectRef: recordRef(record),
-        detail: "An immutable lifecycle input record does not match its canonical digest.",
-      });
+      addIssue(
+        ctx,
+        "record_digest_invalid",
+        recordRef(record),
+        "An immutable snapshot record does not match its canonical digest."
+      );
+    }
+    if ("version" in record) {
+      const logical = record.recordKind + "\u0000" + record.id + "\u0000" + record.version;
+      if (logicalVersions.has(logical)) {
+        addIssue(
+          ctx,
+          "duplicate_exact_record",
+          recordRef(record),
+          "The snapshot contains two records for one logical version."
+        );
+      }
+      logicalVersions.add(logical);
     }
   }
 }
 
-function collectDuplicateSubjectIssues(
-  subjects: ReferenceLifecycleStorageSubject[],
-  uses: ReferenceLifecycleUse[],
-  issues: ReferenceLifecyclePlanningIssue[]
-): void {
-  const subjectKeys = new Set<string>();
-  for (const subject of subjects) {
-    const key = refKey(subject.subjectRef);
-    if (subjectKeys.has(key)) {
-      issues.push({
-        code: "duplicate_storage_subject",
-        subjectRef: subject.subjectRef,
-        detail: "A storage subject must have one unambiguous lifecycle policy.",
-      });
+function validateLifecycleInventory(ctx: LifecycleContext): void {
+  const subjects = new Set<string>();
+  for (const policy of ctx.policies) {
+    const subjectKey = refKey(policy.subjectRef);
+    if (subjects.has(subjectKey)) {
+      addIssue(
+        ctx,
+        "duplicate_storage_subject",
+        policy.subjectRef,
+        "One effective storage subject has more than one lifecycle policy."
+      );
     }
-    subjectKeys.add(key);
+    subjects.add(subjectKey);
+    validateStoragePolicy(ctx, policy);
   }
 
   const useIds = new Set<string>();
-  for (const use of uses) {
+  for (const use of ctx.uses) {
     if (useIds.has(use.id)) {
-      issues.push({
-        code: "duplicate_use",
-        subjectRef: use.subjectRef,
-        detail: `Lifecycle use ${use.id} appears more than once.`,
-      });
+      addIssue(ctx, "duplicate_use", use.subjectRef, "One effective lifecycle use is ambiguous.");
     }
     useIds.add(use.id);
+    validateUse(ctx, use);
   }
 }
 
-function collectGraphIssues(
-  acquisitions: ReferenceAssetAcquisition[],
-  derivations: ReferenceSourceDerivation[],
-  accessDecisions: ReferenceAccessDecision[],
-  substitutions: ReferenceProvenanceSubstitution[],
-  storageSubjects: ReferenceLifecycleStorageSubject[],
-  uses: ReferenceLifecycleUse[],
-  acquisitionByRef: Map<string, ReferenceAssetAcquisition>,
-  derivationByRef: Map<string, ReferenceSourceDerivation>,
-  accessDecisionByRef: Map<string, ReferenceAccessDecision>,
-  issues: ReferenceLifecyclePlanningIssue[]
+function validateStoragePolicy(
+  ctx: LifecycleContext,
+  policy: ReferenceLifecycleStoragePolicy
 ): void {
-  for (const derivation of derivations) {
-    for (const acquisitionRef of derivation.sourceAcquisitionRefs) {
-      requireRef(acquisitionByRef, acquisitionRef, "dangling_acquisition_ref", issues);
-    }
-    for (const derivationRef of derivation.sourceDerivationRefs) {
-      requireRef(derivationByRef, derivationRef, "dangling_derivation_ref", issues);
+  const unmanaged = policy.custody.kind === "unmanaged_recipient";
+  if ((policy.subjectKind === "unmanaged_disclosure") !== unmanaged) {
+    addIssue(
+      ctx,
+      "invalid_provenance_endpoint",
+      policy.subjectRef,
+      "Unmanaged disclosure requires unmanaged custody, and unmanaged custody is disclosure-only."
+    );
+  }
+  for (const path of policy.provenancePaths) {
+    exactClosure(
+      ctx,
+      policy.subjectRef,
+      path.acquisitionRefs,
+      path.derivationRefs,
+      policy.createdAt
+    );
+  }
+  if (hasDuplicatePaths(policy.provenancePaths)) {
+    addIssue(
+      ctx,
+      "invalid_provenance_endpoint",
+      policy.subjectRef,
+      "Lifecycle storage policy repeats an exact provenance path."
+    );
+  }
+  if (policy.custody.kind === "unmanaged_recipient") {
+    const decision = ctx.accessDecisionByRef.get(
+      refKey(policy.custody.disclosureAccessDecisionRef)
+    );
+    if (
+      !decision ||
+      decision.outcome !== "allow" ||
+      !["export", "redistribution"].includes(decision.operation) ||
+      decision.destination.kind !== "recipient" ||
+      decision.destination.id !== policy.custody.recipientRef.id ||
+      !containsRef(decision.derivativeRefs, policy.subjectRef) ||
+      Date.parse(decision.decidedAt) > Date.parse(policy.custody.disclosedAt) ||
+      Date.parse(policy.custody.disclosedAt) > Date.parse(policy.createdAt)
+    ) {
+      addIssue(
+        ctx,
+        "invalid_rights_basis",
+        policy.subjectRef,
+        "Unmanaged disclosure is not pinned to its exact prior authorized recipient decision."
+      );
     }
   }
-  collectDerivationCycleIssues(derivations, derivationByRef, issues);
+  validateVersionPathEvolution(ctx, policy);
+}
 
-  for (const use of uses) {
-    for (const path of use.provenancePaths) {
-      const acquisition = requireRef(
-        acquisitionByRef,
-        path.acquisitionRef,
-        "dangling_acquisition_ref",
-        issues
-      );
-      const derivation = path.derivationRef
-        ? requireRef(derivationByRef, path.derivationRef, "dangling_derivation_ref", issues)
-        : undefined;
-      requireRef(
-        accessDecisionByRef,
-        path.accessDecisionRef,
+function validateUse(ctx: LifecycleContext, use: ReferenceLifecycleUse): void {
+  for (const path of use.provenancePaths) {
+    const closure = exactClosure(
+      ctx,
+      use.subjectRef,
+      path.acquisitionRefs,
+      path.derivationRefs,
+      use.createdAt
+    );
+    const decision = ctx.accessDecisionByRef.get(refKey(path.accessDecisionRef));
+    if (!decision) {
+      addIssue(
+        ctx,
         "dangling_access_decision_ref",
-        issues
+        path.accessDecisionRef,
+        "Lifecycle use references an Access Decision outside the complete snapshot."
       );
-      if (
-        acquisition &&
-        derivation &&
-        !derivationDependsOnAcquisition(derivation, path.acquisitionRef, derivationByRef, new Set())
-      ) {
-        issues.push({
-          code: "invalid_provenance_endpoint",
-          subjectRef: use.subjectRef,
-          detail: `Use ${use.id} pairs an acquisition with a derivation that does not descend from it.`,
-        });
+      continue;
+    }
+    if (!operationDestinationCompatible(decision.operation, decision.destination)) {
+      addIssue(
+        ctx,
+        "operation_destination_mismatch",
+        recordRef(decision),
+        "Access Decision operation and exact destination are incompatible."
+      );
+    }
+    const requiredRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
+    const authorizedRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
+    if (
+      decision.operation !== use.operation ||
+      !destinationsEqual(decision.destination, use.destination) ||
+      decision.purpose !== use.purpose ||
+      !refsEqual(decision.policyRef, use.policyRef) ||
+      decision.assetRole !== use.assetRole ||
+      Date.parse(decision.decidedAt) > Date.parse(use.createdAt) ||
+      requiredRefs.some((ref) => !containsRef(authorizedRefs, ref))
+    ) {
+      addIssue(
+        ctx,
+        "invalid_provenance_endpoint",
+        use.subjectRef,
+        "Lifecycle use is not pinned to its decision's complete path, role, operation, destination, purpose, and policy."
+      );
+    }
+    if (closure && use.assetRole && !hasExactRoleBinding(ctx, use, decision, closure)) {
+      addIssue(
+        ctx,
+        "invalid_role_binding",
+        use.subjectRef,
+        "Lifecycle use cannot borrow authority from another Asset Role Binding."
+      );
+    }
+  }
+  if (hasDuplicatePaths(use.provenancePaths)) {
+    addIssue(
+      ctx,
+      "invalid_provenance_endpoint",
+      use.subjectRef,
+      "Lifecycle use repeats an exact provenance path."
+    );
+  }
+  validateVersionPathEvolution(ctx, use);
+  validateNoRetroactivePath(ctx, use);
+}
+
+function exactClosure(
+  ctx: LifecycleContext,
+  subjectRef: ReferenceRecordRef,
+  acquisitionRefs: ReferenceRecordRef[],
+  derivationRefs: ReferenceRecordRef[],
+  recordedAt: string
+): ExactClosure | null {
+  const acquisitions = acquisitionRefs
+    .map((ref) => ctx.acquisitionByRef.get(refKey(ref)))
+    .filter((record): record is ReferenceAssetAcquisition => record !== undefined);
+  if (acquisitions.length !== acquisitionRefs.length) {
+    const missing = acquisitionRefs.find((ref) => !ctx.acquisitionByRef.has(refKey(ref)));
+    addIssue(
+      ctx,
+      "dangling_acquisition_ref",
+      missing,
+      "Lifecycle path references an acquisition outside the complete snapshot."
+    );
+    return null;
+  }
+  if (derivationRefs.length === 0) {
+    const subject = ctx.recordByRef.get(refKey(subjectRef));
+    if (
+      subject?.recordKind !== "digital_asset" ||
+      acquisitions.length !== 1 ||
+      !refsEqual(acquisitions[0]!.digitalAssetRef, subjectRef)
+    ) {
+      addIssue(
+        ctx,
+        "invalid_asset_storage_subject",
+        subjectRef,
+        "A direct lifecycle path must name one exact acquisition of its Digital Asset."
+      );
+      return null;
+    }
+    if (Date.parse(acquisitions[0]!.acquiredAt) > Date.parse(recordedAt)) {
+      addIssue(
+        ctx,
+        "retroactive_provenance",
+        subjectRef,
+        "Lifecycle provenance cannot predate its acquisition."
+      );
+    }
+    return { acquisitions, derivations: [], terminal: null };
+  }
+
+  const declared = derivationRefs
+    .map((ref) => ctx.derivationByRef.get(refKey(ref)))
+    .filter((record): record is ReferenceSourceDerivation => record !== undefined);
+  if (declared.length !== derivationRefs.length) {
+    const missing = derivationRefs.find((ref) => !ctx.derivationByRef.has(refKey(ref)));
+    addIssue(
+      ctx,
+      "dangling_derivation_ref",
+      missing,
+      "Lifecycle path references a derivation outside the complete snapshot."
+    );
+    return null;
+  }
+  const terminals = declared.filter((derivation) => refsEqual(derivation.derivedRef, subjectRef));
+  if (terminals.length !== 1) {
+    addIssue(
+      ctx,
+      "invalid_provenance_endpoint",
+      subjectRef,
+      "Lifecycle path must end in exactly one derivation of its exact subject."
+    );
+    return null;
+  }
+  const closure = deriveClosure(ctx, terminals[0]!, new Set<string>());
+  if (!closure) return null;
+  if (
+    !sameRefSet(acquisitionRefs, closure.acquisitions.map(recordRef)) ||
+    !sameRefSet(derivationRefs, closure.derivations.map(recordRef))
+  ) {
+    addIssue(
+      ctx,
+      "invalid_provenance_endpoint",
+      subjectRef,
+      "Lifecycle path must pin its complete transitive acquisition and derivation closure."
+    );
+    return null;
+  }
+  if (
+    closure.acquisitions.some(
+      (acquisition) => Date.parse(acquisition.acquiredAt) > Date.parse(recordedAt)
+    ) ||
+    closure.derivations.some(
+      (derivation) => Date.parse(derivation.createdAt) > Date.parse(recordedAt)
+    )
+  ) {
+    addIssue(
+      ctx,
+      "retroactive_provenance",
+      subjectRef,
+      "Lifecycle provenance cannot cite a source or derivation created later."
+    );
+  }
+  return closure;
+}
+
+function deriveClosure(
+  ctx: LifecycleContext,
+  terminal: ReferenceSourceDerivation,
+  visiting: Set<string>
+): ExactClosure | null {
+  const key = refKey(terminal);
+  if (visiting.has(key)) {
+    addIssue(
+      ctx,
+      "derivation_cycle",
+      recordRef(terminal),
+      "Lifecycle provenance contains a derivation cycle."
+    );
+    return null;
+  }
+  visiting.add(key);
+  const acquisitions = new Map<string, ReferenceAssetAcquisition>();
+  const derivations = new Map<string, ReferenceSourceDerivation>([[key, terminal]]);
+  for (const acquisitionRef of terminal.sourceAcquisitionRefs) {
+    const acquisition = ctx.acquisitionByRef.get(refKey(acquisitionRef));
+    if (!acquisition) {
+      addIssue(
+        ctx,
+        "dangling_acquisition_ref",
+        acquisitionRef,
+        "Source Derivation references an acquisition outside the complete snapshot."
+      );
+      return null;
+    }
+    acquisitions.set(refKey(acquisition), acquisition);
+  }
+  for (const sourceRef of terminal.sourceDerivationRefs) {
+    const source = ctx.derivationByRef.get(refKey(sourceRef));
+    if (!source) {
+      addIssue(
+        ctx,
+        "dangling_derivation_ref",
+        sourceRef,
+        "Source Derivation references a predecessor outside the complete snapshot."
+      );
+      return null;
+    }
+    const nested = deriveClosure(ctx, source, new Set(visiting));
+    if (!nested) return null;
+    for (const acquisition of nested.acquisitions) {
+      acquisitions.set(refKey(acquisition), acquisition);
+    }
+    for (const derivation of nested.derivations) {
+      derivations.set(refKey(derivation), derivation);
+    }
+  }
+  return {
+    acquisitions: [...acquisitions.values()].sort(compareRecords),
+    derivations: [...derivations.values()].sort(compareRecords),
+    terminal,
+  };
+}
+
+function validateVersionPathEvolution(
+  ctx: LifecycleContext,
+  record: ReferenceLifecycleStoragePolicy | ReferenceLifecycleUse
+): void {
+  if (!record.parentVersionRef) return;
+  const parent = ctx.recordByRef.get(refKey(record.parentVersionRef));
+  if (!parent || parent.recordKind !== record.recordKind || parent.id !== record.id) {
+    addIssue(
+      ctx,
+      "retroactive_provenance",
+      recordRef(record),
+      "Lifecycle version does not resolve its exact same-kind parent."
+    );
+    return;
+  }
+  const priorKeys = new Set(parent.provenancePaths.map(pathKey));
+  for (const path of record.provenancePaths) {
+    if (priorKeys.has(pathKey(path))) continue;
+    if (!pathHasReviewedSubstitution(ctx, path, parent.provenancePaths, record)) {
+      addIssue(
+        ctx,
+        "retroactive_provenance",
+        record.subjectRef,
+        "A lifecycle version cannot add provenance without an exact reviewed substitution."
+      );
+    }
+  }
+}
+
+function validateNoRetroactivePath(ctx: LifecycleContext, use: ReferenceLifecycleUse): void {
+  for (const path of use.provenancePaths) {
+    const terminal = terminalForPath(ctx, path, use.subjectRef);
+    if (!terminal) continue;
+    const earlier = ctx.derivations.filter(
+      (candidate) =>
+        refsEqual(candidate.derivedRef, use.subjectRef) &&
+        !refsEqual(recordRef(candidate), recordRef(terminal)) &&
+        Date.parse(candidate.createdAt) < Date.parse(terminal.createdAt)
+    );
+    if (earlier.length === 0) continue;
+    const priorPaths = earlier
+      .map((candidate) => deriveClosure(ctx, candidate, new Set<string>()))
+      .filter((closure): closure is ExactClosure => closure !== null)
+      .map((closure) => ({
+        acquisitionRefs: closure.acquisitions.map(recordRef),
+        derivationRefs: closure.derivations.map(recordRef),
+      }));
+    if (!pathHasReviewedSubstitution(ctx, path, priorPaths, use)) {
+      addIssue(
+        ctx,
+        "retroactive_provenance",
+        use.subjectRef,
+        "A later acquisition cannot retroactively authorize an existing exact derivative."
+      );
+    }
+  }
+}
+
+function pathHasReviewedSubstitution(
+  ctx: LifecycleContext,
+  next: { acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] },
+  priorPaths: Array<{
+    acquisitionRefs: ReferenceRecordRef[];
+    derivationRefs: ReferenceRecordRef[];
+  }>,
+  record: ReferenceLifecycleStoragePolicy | ReferenceLifecycleUse
+): boolean {
+  const nextTerminal = terminalForPath(ctx, next, record.subjectRef);
+  if (!nextTerminal) return false;
+  return next.acquisitionRefs.every((nextAcquisition) =>
+    priorPaths.some((prior) => {
+      const priorTerminal = terminalForPath(ctx, prior, record.subjectRef);
+      if (!priorTerminal) return false;
+      return prior.acquisitionRefs.some((priorAcquisition) =>
+        ctx.substitutions.some(
+          (substitution) =>
+            Date.parse(substitution.decidedAt) <= Date.parse(record.createdAt) &&
+            refsEqual(substitution.from.acquisitionRef, priorAcquisition) &&
+            refsEqual(substitution.from.derivationRef, recordRef(priorTerminal)) &&
+            refsEqual(substitution.to.acquisitionRef, nextAcquisition) &&
+            refsEqual(substitution.to.derivationRef, recordRef(nextTerminal)) &&
+            refsEqual(substitution.scope.policyRef, record.policyRef) &&
+            containsRef(substitution.scope.sourceAndDerivativeRefs, record.subjectRef) &&
+            (record.recordKind === "lifecycle_storage_policy" ||
+              (substitution.scope.operation === record.operation &&
+                destinationsEqual(substitution.scope.destination, record.destination) &&
+                substitution.scope.purpose === record.purpose))
+        )
+      );
+    })
+  );
+}
+
+function validateInventoryCompleteness(
+  ctx: LifecycleContext,
+  targetAcquisition: ReferenceAssetAcquisition | undefined,
+  targetDecision: ReferenceAccessDecision | undefined,
+  impactedDerivations: Set<string>
+): void {
+  if (targetAcquisition) {
+    const assetPolicies = ctx.policies.filter(
+      (policy) =>
+        policy.subjectKind === "asset_bytes" &&
+        refsEqual(policy.subjectRef, targetAcquisition.digitalAssetRef)
+    );
+    if (assetPolicies.length !== 1) {
+      addIssue(
+        ctx,
+        "missing_asset_storage_policy",
+        targetAcquisition.digitalAssetRef,
+        "Deletion requires one complete effective policy for the shared Digital Asset bytes."
+      );
+    }
+    for (const derivation of ctx.derivations) {
+      if (!impactedDerivations.has(refKey(derivation))) continue;
+      const represented = ctx.policies.some(
+        (policy) =>
+          refsEqual(policy.subjectRef, derivation.derivedRef) &&
+          policy.provenancePaths.some((path) =>
+            containsRef(path.derivationRefs, recordRef(derivation))
+          )
+      );
+      if (!represented) {
+        addIssue(
+          ctx,
+          "missing_derivative_storage_policy",
+          recordRef(derivation),
+          "Every affected derivative must have an exact lifecycle storage policy."
+        );
       }
     }
   }
 
-  for (const substitution of substitutions) {
-    const fromAcquisition = requireRef(
-      acquisitionByRef,
-      substitution.from.acquisitionRef,
-      "dangling_acquisition_ref",
-      issues
+  const decision = targetDecision;
+  if (
+    decision &&
+    !ctx.uses.some((use) =>
+      use.provenancePaths.some((path) => refsEqual(path.accessDecisionRef, recordRef(decision)))
+    )
+  ) {
+    addIssue(
+      ctx,
+      "incomplete_lifecycle_inventory",
+      recordRef(decision),
+      "Restricting an Access Decision requires every exact recorded use in the snapshot inventory."
     );
-    const toAcquisition = requireRef(
-      acquisitionByRef,
-      substitution.to.acquisitionRef,
-      "dangling_acquisition_ref",
-      issues
-    );
-    const fromDerivation = requireRef(
-      derivationByRef,
-      substitution.from.derivationRef,
-      "dangling_derivation_ref",
-      issues
-    );
-    const toDerivation = requireRef(
-      derivationByRef,
-      substitution.to.derivationRef,
-      "dangling_derivation_ref",
-      issues
-    );
-    const substitutionDecision = requireRef(
-      accessDecisionByRef,
-      substitution.accessDecisionRef,
-      "dangling_access_decision_ref",
-      issues
-    );
-
-    if (
-      substitutionDecision &&
-      !accessDecisionAuthorizesSubstitution(substitutionDecision, substitution)
-    ) {
-      issues.push({
-        code: "invalid_substitution_authorization",
-        subjectRef: recordRef(substitution),
-        detail:
-          "The substitution's Access Decision or authority does not authorize its exact endpoints and scope.",
-      });
-    }
-
-    if (
-      fromAcquisition &&
-      fromDerivation &&
-      !derivationDependsOnAcquisition(
-        fromDerivation,
-        substitution.from.acquisitionRef,
-        derivationByRef,
-        new Set()
-      )
-    ) {
-      issues.push({
-        code: "invalid_provenance_endpoint",
-        subjectRef: recordRef(substitution),
-        detail: "The substitution's from endpoint is not an exact acquisition/derivation path.",
-      });
-    }
-    if (
-      toAcquisition &&
-      toDerivation &&
-      !derivationDependsOnAcquisition(
-        toDerivation,
-        substitution.to.acquisitionRef,
-        derivationByRef,
-        new Set()
-      )
-    ) {
-      issues.push({
-        code: "invalid_provenance_endpoint",
-        subjectRef: recordRef(substitution),
-        detail: "The substitution's to endpoint is not an exact acquisition/derivation path.",
-      });
-    }
-    if (
-      fromAcquisition &&
-      toAcquisition &&
-      (!refsEqual(fromAcquisition.digitalAssetRef, toAcquisition.digitalAssetRef) ||
-        (fromDerivation &&
-          toDerivation &&
-          !refsEqual(fromDerivation.derivedRef, toDerivation.derivedRef)))
-    ) {
-      issues.push({
-        code: "invalid_provenance_endpoint",
-        subjectRef: recordRef(substitution),
-        detail:
-          "A provenance substitution must preserve the exact DigitalAsset and derived subject identities.",
-      });
-    }
   }
 
-  for (const subject of storageSubjects) {
-    for (const path of subject.provenancePaths) {
-      if (path.acquisitionRefs.length === 0 && path.derivationRefs.length === 0) {
-        issues.push({
-          code: "invalid_provenance_endpoint",
-          subjectRef: subject.subjectRef,
-          detail:
-            "Every storage provenance path must name exact acquisition or derivation provenance.",
-        });
-      }
-      for (const acquisitionRef of path.acquisitionRefs) {
-        requireRef(acquisitionByRef, acquisitionRef, "dangling_acquisition_ref", issues);
-      }
-      for (const derivationRef of path.derivationRefs) {
-        requireRef(derivationByRef, derivationRef, "dangling_derivation_ref", issues);
-      }
+  for (const binding of ctx.roleBindings) {
+    const relevant =
+      targetAcquisition &&
+      binding.acquisitionRefs.some((ref) => refsEqual(ref, recordRef(targetAcquisition)));
+    if (!relevant) continue;
+    for (const accessDecisionRef of binding.accessDecisionRefs) {
       if (
-        path.derivationRefs.length > 0 &&
-        path.acquisitionRefs.some((acquisitionRef) =>
-          path.derivationRefs.every((derivationRef) => {
-            const derivation = derivationByRef.get(refKey(derivationRef));
-            return (
-              derivation === undefined ||
-              !derivationDependsOnAcquisition(
-                derivation,
-                acquisitionRef,
-                derivationByRef,
-                new Set()
-              )
-            );
-          })
+        !ctx.uses.some((use) =>
+          use.provenancePaths.some((path) => refsEqual(path.accessDecisionRef, accessDecisionRef))
         )
       ) {
-        issues.push({
-          code: "invalid_provenance_endpoint",
-          subjectRef: subject.subjectRef,
-          detail:
-            "A storage path pairs an acquisition with derivations that do not descend from it.",
-        });
-      }
-    }
-    if (subject.subjectKind === "asset_bytes") {
-      const valid =
-        subject.provenancePaths.length > 0 &&
-        subject.provenancePaths.every(
-          (path) =>
-            path.derivationRefs.length === 0 &&
-            path.acquisitionRefs.length > 0 &&
-            path.acquisitionRefs.every((acquisitionRef) => {
-              const acquisition = acquisitionByRef.get(refKey(acquisitionRef));
-              return acquisition && refsEqual(acquisition.digitalAssetRef, subject.subjectRef);
-            })
+        addIssue(
+          ctx,
+          "incomplete_lifecycle_inventory",
+          recordRef(binding),
+          "Every role-bound access edge affected by deletion must have an immutable lifecycle use."
         );
-      if (!valid) {
-        issues.push({
-          code: "invalid_asset_storage_subject",
-          subjectRef: subject.subjectRef,
-          detail:
-            "Asset-byte storage policy must name only exact acquisitions of that DigitalAsset and no derivations.",
-        });
       }
     }
   }
-
-  // Keep the parameter semantically visible: an empty set of Access Decisions is
-  // valid, but every referenced decision was checked above.
-  void acquisitions;
-  void accessDecisions;
-}
-
-function collectDerivationCycleIssues(
-  derivations: ReferenceSourceDerivation[],
-  derivationByRef: Map<string, ReferenceSourceDerivation>,
-  issues: ReferenceLifecyclePlanningIssue[]
-): void {
-  const complete = new Set<string>();
-  const visiting = new Set<string>();
-
-  const visit = (derivation: ReferenceSourceDerivation): void => {
-    const key = refKey(recordRef(derivation));
-    if (complete.has(key)) return;
-    if (visiting.has(key)) {
-      issues.push({
-        code: "derivation_cycle",
-        subjectRef: recordRef(derivation),
-        detail: "The source-derivation graph contains a cycle.",
-      });
-      return;
-    }
-    visiting.add(key);
-    for (const sourceRef of derivation.sourceDerivationRefs) {
-      const source = derivationByRef.get(refKey(sourceRef));
-      if (source) visit(source);
-    }
-    visiting.delete(key);
-    complete.add(key);
-  };
-
-  for (const derivation of derivations) visit(derivation);
 }
 
 function buildStorageConsequences(
-  input: ReferenceSourceLifecyclePlannerInput,
-  target: ReferenceAssetAcquisition,
-  acquisitions: ReferenceAssetAcquisition[],
-  storageSubjects: ReferenceLifecycleStorageSubject[],
-  impactedDerivationKeys: Set<string>
+  ctx: LifecycleContext,
+  targetAcquisition: ReferenceAssetAcquisition | undefined,
+  targetDecision: ReferenceAccessDecision | undefined,
+  impactedDerivations: Set<string>
 ): ReferenceLifecycleStorageConsequence[] {
   const consequences: ReferenceLifecycleStorageConsequence[] = [];
-  consequences.push({
-    subjectRef: recordRef(target),
-    subjectKind: "asset_acquisition",
-    state: input.action.kind === "delete_acquisition" ? "tombstone" : "restricted",
-    affectedByRefs: [input.action.targetAcquisitionRef],
-    replayability: input.action.kind === "delete_acquisition" ? "unavailable" : "partial",
-    readinessImpact: "advisory",
-    irreversibleDisclosure: false,
-    reason:
-      input.action.kind === "delete_acquisition"
-        ? "The acquisition edge is removed while its minimum immutable deletion metadata remains."
-        : "The acquisition edge remains recorded but cannot authorize current processing.",
-  });
-
-  const assetPolicy = storageSubjects.find(
-    (subject) =>
-      subject.subjectKind === "asset_bytes" && refsEqual(subject.subjectRef, target.digitalAssetRef)
-  );
-  const survivingAcquisition = acquisitions.some(
-    (acquisition) =>
-      !refsEqual(recordRef(acquisition), input.action.targetAcquisitionRef) &&
-      refsEqual(acquisition.digitalAssetRef, target.digitalAssetRef)
-  );
-  if (survivingAcquisition) {
+  if (targetAcquisition) {
     consequences.push({
-      subjectRef: target.digitalAssetRef,
-      subjectKind: "asset_bytes",
-      state: "accessible",
-      affectedByRefs: [input.action.targetAcquisitionRef],
-      replayability: "complete",
-      readinessImpact: "unchanged",
+      subjectRef: recordRef(targetAcquisition),
+      subjectKind: "asset_acquisition",
+      state: "tombstone",
+      affectedByRefs: [recordRef(targetAcquisition)],
+      replayability: "unavailable",
+      readinessImpact: "advisory",
       irreversibleDisclosure: false,
       reason:
-        "Shared bytes remain stored because a distinct exact acquisition edge survives; this does not transfer that edge's permissions.",
+        "The acquisition edge is deleted while minimum non-sensitive deletion metadata remains.",
     });
-  } else if (assetPolicy) {
-    consequences.push(storageConsequence(assetPolicy, [input.action.targetAcquisitionRef]));
   }
 
-  for (const subject of storageSubjects) {
-    if (subject.subjectKind === "asset_bytes") continue;
-    const pathEffects = subject.provenancePaths.map((path) => ({
-      affected:
-        path.acquisitionRefs.some((ref) => refsEqual(ref, input.action.targetAcquisitionRef)) ||
-        path.derivationRefs.some((ref) => impactedDerivationKeys.has(refKey(ref))),
-      refs: uniqueSortedRefs([
-        ...(path.acquisitionRefs.some((ref) => refsEqual(ref, input.action.targetAcquisitionRef))
-          ? [input.action.targetAcquisitionRef]
-          : []),
-        ...path.derivationRefs.filter((ref) => impactedDerivationKeys.has(refKey(ref))),
-      ]),
+  for (const policy of ctx.policies) {
+    const effects = policy.provenancePaths.map((path) => ({
+      affected: storagePathAffected(
+        ctx,
+        policy,
+        path,
+        targetAcquisition,
+        targetDecision,
+        impactedDerivations
+      ),
+      refs: affectedPathRefs(path, targetAcquisition, targetDecision, impactedDerivations),
+      survives:
+        !storagePathAffected(
+          ctx,
+          policy,
+          path,
+          targetAcquisition,
+          targetDecision,
+          impactedDerivations
+        ) && path.acquisitionRefs.every((ref) => acquisitionRefIsActive(ctx, ref)),
     }));
-    const affectedByRefs = uniqueSortedRefs(pathEffects.flatMap((effect) => effect.refs));
-    if (pathEffects.every((effect) => !effect.affected)) {
+    const affectedByRefs = uniqueSortedRefs(effects.flatMap((effect) => effect.refs));
+    const irreversible =
+      policy.custody.kind === "unmanaged_recipient" && effects.some((effect) => effect.affected);
+    if (effects.some((effect) => effect.survives)) {
       consequences.push({
-        subjectRef: subject.subjectRef,
-        subjectKind: subject.subjectKind,
+        subjectRef: policy.subjectRef,
+        subjectKind: policy.subjectKind,
+        state: "accessible",
+        affectedByRefs,
+        replayability: "complete",
+        readinessImpact: "unchanged",
+        irreversibleDisclosure: irreversible,
+        reason: irreversible
+          ? "An independent path survives, but Vellum cannot recall the affected prior disclosure."
+          : "At least one independently recorded exact storage path survives.",
+      });
+    } else if (effects.every((effect) => !effect.affected)) {
+      consequences.push({
+        subjectRef: policy.subjectRef,
+        subjectKind: policy.subjectKind,
         state: "accessible",
         affectedByRefs: [],
         replayability: "complete",
         readinessImpact: "unchanged",
         irreversibleDisclosure: false,
-        reason:
-          "No exact provenance path for this stored subject depends on the target acquisition.",
-      });
-    } else if (pathEffects.some((effect) => !effect.affected)) {
-      consequences.push({
-        subjectRef: subject.subjectRef,
-        subjectKind: subject.subjectKind,
-        state: "accessible",
-        affectedByRefs,
-        replayability: "complete",
-        readinessImpact: "unchanged",
-        irreversibleDisclosure: false,
-        reason:
-          "At least one independently recorded storage provenance path survives; operation-specific permission is evaluated separately.",
+        reason: "No exact storage path depends on the lifecycle action.",
       });
     } else {
-      consequences.push(storageConsequence(subject, affectedByRefs));
+      consequences.push(storageConsequence(policy, affectedByRefs));
     }
   }
 
+  if (targetAcquisition) {
+    preserveAssetForRetentionRoots(ctx, targetAcquisition, consequences);
+  }
   return consequences.sort((left, right) => {
     const byRef = compareRefs(left.subjectRef, right.subjectRef);
     return byRef || left.subjectKind.localeCompare(right.subjectKind);
   });
 }
 
+function storagePathAffected(
+  ctx: LifecycleContext,
+  policy: ReferenceLifecycleStoragePolicy,
+  path: { acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] },
+  targetAcquisition: ReferenceAssetAcquisition | undefined,
+  targetDecision: ReferenceAccessDecision | undefined,
+  impactedDerivations: Set<string>
+): boolean {
+  if (
+    targetDecision &&
+    policy.custody.kind === "unmanaged_recipient" &&
+    refsEqual(policy.custody.disclosureAccessDecisionRef, recordRef(targetDecision))
+  ) {
+    return true;
+  }
+  if (!targetAcquisition) return false;
+  return (
+    containsRef(path.acquisitionRefs, recordRef(targetAcquisition)) ||
+    path.derivationRefs.some((ref) => impactedDerivations.has(refKey(ref)))
+  );
+}
+
+function affectedPathRefs(
+  path: { acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] },
+  targetAcquisition: ReferenceAssetAcquisition | undefined,
+  targetDecision: ReferenceAccessDecision | undefined,
+  impactedDerivations: Set<string>
+): ReferenceRecordRef[] {
+  return uniqueSortedRefs([
+    ...(targetAcquisition && containsRef(path.acquisitionRefs, recordRef(targetAcquisition))
+      ? [recordRef(targetAcquisition)]
+      : []),
+    ...path.derivationRefs.filter((ref) => impactedDerivations.has(refKey(ref))),
+    ...(targetDecision ? [recordRef(targetDecision)] : []),
+  ]);
+}
+
 function storageConsequence(
-  subject: ReferenceLifecycleStorageSubject,
+  policy: ReferenceLifecycleStoragePolicy,
   affectedByRefs: ReferenceRecordRef[]
 ): ReferenceLifecycleStorageConsequence {
-  let state: ReferenceLifecycleState;
-  let reason: string;
-  const irreversibleDisclosure = subject.control === "unmanaged_recipient";
-
-  if (irreversibleDisclosure) {
-    state = "tombstone";
-    reason =
-      "Vellum cannot recall an unmanaged disclosure; controlled copies are removed and a minimum disclosure tombstone remains.";
-  } else if (subject.retention !== "unretained") {
-    state = "restricted";
-    reason =
-      "Bytes remain under an explicit encrypted pin or required hold, but the removed provenance path cannot authorize use.";
-  } else if (subject.tombstonePolicy === "preserve") {
-    state = "tombstone";
-    reason =
-      "Content bytes are removed while non-sensitive provenance and deletion metadata remain.";
-  } else {
-    state = "purged";
-    reason =
-      "The Vellum-controlled subject is purged because its authorization depended on the removed path.";
+  if (policy.custody.kind === "unmanaged_recipient") {
+    return {
+      subjectRef: policy.subjectRef,
+      subjectKind: policy.subjectKind,
+      state: "tombstone",
+      affectedByRefs,
+      replayability: "unavailable",
+      readinessImpact: readinessImpactFor(policy.readinessRequirement, "tombstone"),
+      irreversibleDisclosure: true,
+      reason:
+        "Vellum cannot recall an unmanaged disclosure; controlled copies are removed and a minimum disclosure tombstone remains.",
+    };
   }
-
+  const retained = policy.custody.retention !== "unretained";
+  const state: ReferenceLifecycleState = retained
+    ? "restricted"
+    : policy.custody.tombstonePolicy === "preserve"
+      ? "tombstone"
+      : "purged";
   return {
-    subjectRef: subject.subjectRef,
-    subjectKind: subject.subjectKind,
+    subjectRef: policy.subjectRef,
+    subjectKind: policy.subjectKind,
     state,
     affectedByRefs,
-    replayability: state === "restricted" ? "partial" : "unavailable",
-    readinessImpact: readinessImpactFor(subject.readinessRequirement, state),
-    irreversibleDisclosure,
-    reason,
+    replayability: retained && policy.replayRequirement !== "none" ? "partial" : "unavailable",
+    readinessImpact: readinessImpactFor(policy.readinessRequirement, state),
+    irreversibleDisclosure: false,
+    reason: retained
+      ? "An explicit encrypted pin or required hold retains bytes without retaining use authority."
+      : state === "tombstone"
+        ? "Content bytes are removed while permitted non-sensitive tombstone metadata remains."
+        : "The Vellum-controlled subject is purged because every exact path was affected.",
   };
 }
 
+function preserveAssetForRetentionRoots(
+  ctx: LifecycleContext,
+  target: ReferenceAssetAcquisition,
+  consequences: ReferenceLifecycleStorageConsequence[]
+): void {
+  const asset = consequences.find(
+    (consequence) =>
+      consequence.subjectKind === "asset_bytes" &&
+      refsEqual(consequence.subjectRef, target.digitalAssetRef)
+  );
+  if (!asset || asset.state === "accessible" || asset.state === "restricted") return;
+  const retainedRoot = ctx.policies.some((policy) => {
+    if (
+      policy.subjectKind === "asset_bytes" ||
+      policy.custody.kind !== "vellum_controlled" ||
+      policy.custody.retention === "unretained" ||
+      policy.replayRequirement !== "required"
+    ) {
+      return false;
+    }
+    return (
+      policy.provenancePaths.some((path) => containsRef(path.acquisitionRefs, recordRef(target))) &&
+      consequences.some(
+        (consequence) =>
+          refsEqual(consequence.subjectRef, policy.subjectRef) && consequence.state === "restricted"
+      )
+    );
+  });
+  if (retainedRoot) {
+    asset.state = "restricted";
+    asset.replayability = "partial";
+    asset.readinessImpact = "advisory";
+    asset.reason =
+      "Shared bytes remain restricted because an explicit retained replay root still pins them.";
+  }
+}
+
 function buildPermissionConsequences(
-  input: ReferenceSourceLifecyclePlannerInput,
-  uses: ReferenceLifecycleUse[],
-  acquisitionByRef: Map<string, ReferenceAssetAcquisition>,
-  derivationByRef: Map<string, ReferenceSourceDerivation>,
-  accessDecisionByRef: Map<string, ReferenceAccessDecision>,
-  substitutionByRef: Map<string, ReferenceProvenanceSubstitution>,
-  impactedDerivationKeys: Set<string>,
+  ctx: LifecycleContext,
+  impactedDerivations: Set<string>,
   storageConsequences: ReferenceLifecycleStorageConsequence[]
 ): ReferenceLifecyclePermissionConsequence[] {
-  const substitutions = [...substitutionByRef.values()].sort(compareRecords);
+  return [...ctx.uses]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((use) => {
+      const paths = [...use.provenancePaths].sort(compareAuthorizedPaths);
+      const direct = paths.find((path) => {
+        const decision = ctx.accessDecisionByRef.get(refKey(path.accessDecisionRef));
+        return (
+          !authorizedPathAffected(ctx, path, impactedDerivations) &&
+          decision !== undefined &&
+          accessDecisionAllows(ctx, decision, use, path)
+        );
+      });
+      if (direct) {
+        return {
+          useId: use.id,
+          subjectRef: use.subjectRef,
+          state: "accessible" as const,
+          authorization: "direct" as const,
+          activeEndpoint: endpointOf(direct),
+          accessDecisionRef: direct.accessDecisionRef,
+          replayability: use.baselineReplayability,
+          readinessImpact: "unchanged" as const,
+          sourceAvailability: "available" as const,
+          reason: "An independently allowed exact complete provenance path survives.",
+        };
+      }
 
-  return uses.map((use) => {
-    const sortedPaths = [...use.provenancePaths].sort(compareAuthorizedPaths);
-    const direct = sortedPaths.find((path) => {
-      const decision = accessDecisionByRef.get(refKey(path.accessDecisionRef));
-      return (
-        endpointSurvives(path, input.action.targetAcquisitionRef, impactedDerivationKeys) &&
-        decision !== undefined &&
-        accessDecisionAllows(decision, use, path, input.effectiveAt)
-      );
-    });
-    if (direct) {
+      const substitution = findAuthorizedSubstitution(ctx, use, paths, impactedDerivations);
+      if (substitution) {
+        return {
+          useId: use.id,
+          subjectRef: use.subjectRef,
+          state: "accessible" as const,
+          authorization: "provenance_substitution" as const,
+          activeEndpoint: endpointOf(substitution.path),
+          accessDecisionRef: substitution.path.accessDecisionRef,
+          replayability: degradeReplayability(use.baselineReplayability),
+          readinessImpact: "advisory" as const,
+          sourceAvailability: "partially_reproducible" as const,
+          reason:
+            "An exact reviewed substitution authorizes the complete replacement provenance path.",
+        };
+      }
+
+      const subjectState = storageConsequences.find((consequence) =>
+        refsEqual(consequence.subjectRef, use.subjectRef)
+      )?.state;
       return {
         useId: use.id,
         subjectRef: use.subjectRef,
-        state: "accessible" as const,
-        authorization: "direct" as const,
-        activeEndpoint: endpointOf(direct),
-        accessDecisionRef: direct.accessDecisionRef,
-        replayability: use.baselineReplayability,
-        readinessImpact: "unchanged" as const,
-        sourceAvailability: "available" as const,
+        state: "restricted" as const,
+        authorization: "none" as const,
+        replayability:
+          use.baselineReplayability === "legacy_unverifiable"
+            ? "legacy_unverifiable"
+            : "unavailable",
+        readinessImpact:
+          use.readinessRequirement === "required"
+            ? ("blocked" as const)
+            : use.readinessRequirement === "advisory"
+              ? ("advisory" as const)
+              : ("unchanged" as const),
+        sourceAvailability:
+          subjectState === "purged" || subjectState === "tombstone"
+            ? ("not_reproducible" as const)
+            : ("source_unavailable" as const),
         reason:
-          "An independently allowed exact acquisition/derivation path survives for this operation and destination.",
+          "No independently allowed complete path or scope-matched reviewed substitution survives.",
       };
-    }
-
-    const removedPaths = sortedPaths.filter((path) =>
-      endpointAffected(path, input.action.targetAcquisitionRef, impactedDerivationKeys)
-    );
-    const substitution = substitutions.find((candidate) => {
-      if (Date.parse(candidate.decidedAt) > Date.parse(input.effectiveAt)) return false;
-      if (!removedPaths.some((path) => endpointsEqual(path, candidate.from))) return false;
-      if (!substitutionScopeMatches(candidate, use)) return false;
-      if (
-        !endpointSurvives(candidate.to, input.action.targetAcquisitionRef, impactedDerivationKeys)
-      ) {
-        return false;
-      }
-      if (
-        !acquisitionByRef.has(refKey(candidate.to.acquisitionRef)) ||
-        !derivationByRef.has(refKey(candidate.to.derivationRef))
-      ) {
-        return false;
-      }
-      const decision = accessDecisionByRef.get(refKey(candidate.accessDecisionRef));
-      return (
-        decision !== undefined &&
-        accessDecisionAllows(decision, use, candidate.to, input.effectiveAt) &&
-        substitutionCoversExactRefs(candidate, use.subjectRef, decision)
-      );
     });
-    if (substitution) {
-      return {
-        useId: use.id,
-        subjectRef: use.subjectRef,
-        state: "accessible" as const,
-        authorization: "provenance_substitution" as const,
-        activeEndpoint: substitution.to,
-        accessDecisionRef: substitution.accessDecisionRef,
-        replayability: degradeReplayability(use.baselineReplayability),
-        readinessImpact: "advisory" as const,
-        sourceAvailability: "partially_reproducible" as const,
-        reason:
-          "A reviewed substitution authorizes this exact replacement path, operation, destination, purpose, and policy.",
-      };
-    }
+}
 
-    const subjectState = storageConsequences.find((consequence) =>
-      refsEqual(consequence.subjectRef, use.subjectRef)
-    )?.state;
-    return {
-      useId: use.id,
-      subjectRef: use.subjectRef,
-      state: "restricted" as const,
-      authorization: "none" as const,
-      replayability:
-        use.baselineReplayability === "legacy_unverifiable" ? "legacy_unverifiable" : "unavailable",
-      readinessImpact:
-        use.readinessRequirement === "required"
-          ? ("blocked" as const)
-          : use.readinessRequirement === "advisory"
-            ? ("advisory" as const)
-            : ("unchanged" as const),
-      sourceAvailability:
-        subjectState === "purged" || subjectState === "tombstone"
-          ? ("not_reproducible" as const)
-          : ("source_unavailable" as const),
-      reason:
-        "No independently allowed surviving exact path or scope-matched provenance substitution exists; shared bytes do not transfer permission.",
-    };
-  });
+function authorizedPathAffected(
+  ctx: LifecycleContext,
+  path: ReferenceLifecycleAuthorizedPath,
+  impactedDerivations: Set<string>
+): boolean {
+  if (ctx.action.kind === "restrict_access") {
+    return refsEqual(path.accessDecisionRef, ctx.action.targetAccessDecisionRef);
+  }
+  return (
+    containsRef(path.acquisitionRefs, ctx.action.targetAcquisitionRef) ||
+    path.derivationRefs.some((ref) => impactedDerivations.has(refKey(ref)))
+  );
 }
 
 function accessDecisionAllows(
+  ctx: LifecycleContext,
   decision: ReferenceAccessDecision,
   use: ReferenceLifecycleUse,
-  endpoint: ReferenceLifecycleEndpoint,
-  effectiveAt: string
-): boolean {
-  if (decision.outcome !== "allow") return false;
-  if (Date.parse(decision.decidedAt) > Date.parse(effectiveAt)) return false;
-  if (decision.operation !== use.operation) return false;
-  if (!destinationsEqual(decision.destination, use.destination)) return false;
-  if (decision.purpose !== use.purpose || !refsEqual(decision.policyRef, use.policyRef)) {
-    return false;
-  }
-  if (decision.validUntil && Date.parse(decision.validUntil) < Date.parse(effectiveAt))
-    return false;
-
-  const coveredRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
-  const requiredRefs = [use.subjectRef, endpoint.acquisitionRef];
-  if (endpoint.derivationRef) requiredRefs.push(endpoint.derivationRef);
-  return requiredRefs.every((requiredRef) => containsRef(coveredRefs, requiredRef));
-}
-
-function accessDecisionAuthorizesSubstitution(
-  decision: ReferenceAccessDecision,
-  substitution: ReferenceProvenanceSubstitution
+  path: ReferenceLifecycleAuthorizedPath
 ): boolean {
   if (
     decision.outcome !== "allow" ||
-    decision.operation !== substitution.scope.operation ||
-    !destinationsEqual(decision.destination, substitution.scope.destination) ||
-    decision.purpose !== substitution.scope.purpose ||
-    !refsEqual(decision.policyRef, substitution.scope.policyRef)
+    !isCurrentAccessDecision(ctx, decision) ||
+    ctx.invalidatedRefs.has(refKey(decision)) ||
+    Date.parse(decision.decidedAt) > Date.parse(ctx.effectiveAt) ||
+    (decision.validUntil !== undefined &&
+      Date.parse(decision.validUntil) <= Date.parse(ctx.effectiveAt)) ||
+    decision.operation !== use.operation ||
+    !destinationsEqual(decision.destination, use.destination) ||
+    !operationDestinationCompatible(decision.operation, decision.destination) ||
+    decision.purpose !== use.purpose ||
+    !refsEqual(decision.policyRef, use.policyRef) ||
+    decision.assetRole !== use.assetRole
   ) {
     return false;
   }
-
-  const endpointRefs = [
-    substitution.from.acquisitionRef,
-    substitution.from.derivationRef,
-    substitution.to.acquisitionRef,
-    substitution.to.derivationRef,
-  ];
+  const requiredRefs = [...path.acquisitionRefs, ...path.derivationRefs, use.subjectRef];
   const decisionRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
-  if (
-    !endpointRefs.every((endpointRef) =>
-      containsRef(substitution.scope.sourceAndDerivativeRefs, endpointRef)
-    ) ||
-    !substitution.scope.sourceAndDerivativeRefs.every((scopeRef) =>
-      containsRef(decisionRefs, scopeRef)
-    )
-  ) {
-    return false;
-  }
+  if (requiredRefs.some((ref) => !containsRef(decisionRefs, ref))) return false;
+  const closure = exactClosureForAuthorization(ctx, use.subjectRef, path);
+  if (!closure) return false;
+  if (use.assetRole && !hasExactRoleBinding(ctx, use, decision, closure)) return false;
+  return accessDecisionHasCurrentAuthority(ctx, decision);
+}
 
+function accessDecisionHasCurrentAuthority(
+  ctx: LifecycleContext,
+  decision: ReferenceAccessDecision
+): boolean {
+  const assertions = decision.rightsAssertionRefs
+    .map((ref) => ctx.rightsAssertionByRef.get(refKey(ref)))
+    .filter((record): record is ReferenceRightsAssertion => record !== undefined);
+  const affirmative = assertions.some(
+    (assertion) =>
+      isCurrentRightsAssertion(ctx, assertion) &&
+      !ctx.invalidatedRefs.has(refKey(assertion)) &&
+      ["public_domain", "licensed", "permitted"].includes(assertion.status) &&
+      rightsKindSupportsOperation(assertion.rightsKind, decision.operation) &&
+      (!assertion.validFrom || Date.parse(assertion.validFrom) <= Date.parse(ctx.effectiveAt)) &&
+      (!assertion.validUntil || Date.parse(assertion.validUntil) > Date.parse(ctx.effectiveAt)) &&
+      rightsAssertionConcernsDecision(ctx, assertion, decision)
+  );
+  if (affirmative) return true;
+  const localOnly =
+    decision.destination.kind === "local_runtime" &&
+    ["owner_private_study", "local_extraction"].includes(decision.operation);
+  return localOnly && decision.authorityRefs.length > 0;
+}
+
+function rightsKindSupportsOperation(
+  rightsKind: ReferenceRightsAssertion["rightsKind"],
+  operation: ReferenceAccessDecision["operation"]
+): boolean {
+  const required: Record<
+    ReferenceAccessDecision["operation"],
+    readonly ReferenceRightsAssertion["rightsKind"][]
+  > = {
+    underlying_work_use: ["underlying_work_status"],
+    manifestation_use: ["manifestation_editorial"],
+    exemplar_access: ["exemplar_restriction"],
+    scan_provider_use: ["scan_provider_terms"],
+    owner_private_study: ["owner_private_access"],
+    local_extraction: ["local_extraction"],
+    provider_ocr: ["named_provider_processing"],
+    provider_omr: ["named_provider_processing"],
+    provider_translation: ["named_provider_processing", "translation"],
+    provider_model_processing: ["named_provider_processing"],
+    pack_citation: ["pack_citation_excerpt"],
+    pack_excerpt: ["pack_citation_excerpt"],
+    fixture_inclusion: ["pack_citation_excerpt", "export_redistribution"],
+    repository_inclusion: ["pack_citation_excerpt", "export_redistribution"],
+    export: ["export_redistribution"],
+    redistribution: ["export_redistribution"],
+  };
+  return required[operation].includes(rightsKind);
+}
+
+function rightsAssertionConcernsDecision(
+  ctx: LifecycleContext,
+  assertion: ReferenceRightsAssertion,
+  decision: ReferenceAccessDecision
+): boolean {
+  const authorizedRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
+  if (containsRef(authorizedRefs, assertion.subjectRef)) return true;
+  for (const authorizedRef of authorizedRefs) {
+    const record = ctx.recordByRef.get(refKey(authorizedRef));
+    if (
+      record?.recordKind === "asset_acquisition" &&
+      assertion.subjectKind === "digital_asset" &&
+      refsEqual(record.digitalAssetRef, assertion.subjectRef)
+    ) {
+      return true;
+    }
+    if (record?.recordKind === "source_derivation") {
+      if (
+        assertion.subjectKind === "asset_acquisition" &&
+        containsRef(record.sourceAcquisitionRefs, assertion.subjectRef)
+      ) {
+        return true;
+      }
+      if (
+        assertion.subjectKind === "digital_asset" &&
+        record.sourceAcquisitionRefs.some((ref) => {
+          const acquisition = ctx.acquisitionByRef.get(refKey(ref));
+          return acquisition && refsEqual(acquisition.digitalAssetRef, assertion.subjectRef);
+        })
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function findAuthorizedSubstitution(
+  ctx: LifecycleContext,
+  use: ReferenceLifecycleUse,
+  removedPaths: ReferenceLifecycleAuthorizedPath[],
+  impactedDerivations: Set<string>
+): {
+  substitution: ReferenceProvenanceSubstitution;
+  path: ReferenceLifecycleAuthorizedPath;
+} | null {
+  if (ctx.action.kind !== "delete_acquisition") return null;
+  for (const substitution of [...ctx.substitutions].sort(compareRecords)) {
+    if (
+      Date.parse(substitution.decidedAt) > Date.parse(ctx.effectiveAt) ||
+      !removedPaths.some(
+        (path) =>
+          containsRef(path.acquisitionRefs, substitution.from.acquisitionRef) &&
+          containsRef(path.derivationRefs, substitution.from.derivationRef) &&
+          authorizedPathAffected(ctx, path, impactedDerivations)
+      ) ||
+      substitution.scope.operation !== use.operation ||
+      !destinationsEqual(substitution.scope.destination, use.destination) ||
+      substitution.scope.purpose !== use.purpose ||
+      !refsEqual(substitution.scope.policyRef, use.policyRef) ||
+      !containsRef(substitution.scope.sourceAndDerivativeRefs, use.subjectRef)
+    ) {
+      continue;
+    }
+    const terminal = ctx.derivationByRef.get(refKey(substitution.to.derivationRef));
+    if (!terminal || !refsEqual(terminal.derivedRef, use.subjectRef)) continue;
+    const closure = deriveClosure(ctx, terminal, new Set<string>());
+    if (!closure) continue;
+    const decision = ctx.accessDecisionByRef.get(refKey(substitution.accessDecisionRef));
+    if (!decision) continue;
+    const path: ReferenceLifecycleAuthorizedPath = {
+      acquisitionRefs: closure.acquisitions.map(recordRef),
+      derivationRefs: closure.derivations.map(recordRef),
+      accessDecisionRef: recordRef(decision),
+    };
+    const requiredRefs = [
+      substitution.from.acquisitionRef,
+      substitution.from.derivationRef,
+      substitution.to.acquisitionRef,
+      substitution.to.derivationRef,
+      ...path.acquisitionRefs,
+      ...path.derivationRefs,
+      use.subjectRef,
+    ];
+    const decisionRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
+    if (
+      !containsRef(path.acquisitionRefs, substitution.to.acquisitionRef) ||
+      requiredRefs.some(
+        (ref) =>
+          !containsRef(substitution.scope.sourceAndDerivativeRefs, ref) ||
+          !containsRef(decisionRefs, ref)
+      ) ||
+      !substitutionAuthorityMatches(substitution, decision) ||
+      !accessDecisionAllows(ctx, decision, use, path)
+    ) {
+      continue;
+    }
+    return { substitution, path };
+  }
+  return null;
+}
+
+function substitutionAuthorityMatches(
+  substitution: ReferenceProvenanceSubstitution,
+  decision: ReferenceAccessDecision
+): boolean {
   return substitution.authority.kind === "policy"
     ? refsEqual(substitution.authority.authorityRef, substitution.scope.policyRef)
     : containsRef(decision.authorityRefs, substitution.authority.authorityRef);
 }
 
-function substitutionScopeMatches(
-  substitution: ReferenceProvenanceSubstitution,
-  use: ReferenceLifecycleUse
+function exactClosureForAuthorization(
+  ctx: LifecycleContext,
+  subjectRef: ReferenceRecordRef,
+  path: ReferenceLifecycleAuthorizedPath
+): ExactClosure | null {
+  if (path.derivationRefs.length === 0) {
+    const acquisition = ctx.acquisitionByRef.get(refKey(path.acquisitionRefs[0]!));
+    return acquisition &&
+      path.acquisitionRefs.length === 1 &&
+      refsEqual(acquisition.digitalAssetRef, subjectRef)
+      ? { acquisitions: [acquisition], derivations: [], terminal: null }
+      : null;
+  }
+  const terminals = path.derivationRefs
+    .map((ref) => ctx.derivationByRef.get(refKey(ref)))
+    .filter(
+      (record): record is ReferenceSourceDerivation =>
+        record !== undefined && refsEqual(record.derivedRef, subjectRef)
+    );
+  if (terminals.length !== 1) return null;
+  const closure = deriveClosure(ctx, terminals[0]!, new Set<string>());
+  if (
+    !closure ||
+    !sameRefSet(path.acquisitionRefs, closure.acquisitions.map(recordRef)) ||
+    !sameRefSet(path.derivationRefs, closure.derivations.map(recordRef))
+  ) {
+    return null;
+  }
+  return closure;
+}
+
+function hasExactRoleBinding(
+  ctx: LifecycleContext,
+  use: ReferenceLifecycleUse,
+  decision: ReferenceAccessDecision,
+  closure: ExactClosure
 ): boolean {
-  return (
-    substitution.scope.operation === use.operation &&
-    destinationsEqual(substitution.scope.destination, use.destination) &&
-    substitution.scope.purpose === use.purpose &&
-    refsEqual(substitution.scope.policyRef, use.policyRef) &&
-    containsRef(substitution.scope.sourceAndDerivativeRefs, use.subjectRef)
+  if (!use.assetRole) return decision.assetRole === undefined;
+  const kind =
+    use.assetRole === "arrangement_source"
+      ? "arrangement_source_binding"
+      : use.assetRole === "owner_reference"
+        ? "owner_reference_binding"
+        : "evaluation_source_binding";
+  return ctx.roleBindings.some(
+    (binding) =>
+      binding.recordKind === kind &&
+      containsRef(binding.accessDecisionRefs, recordRef(decision)) &&
+      closure.acquisitions.every((acquisition) =>
+        containsRef(binding.acquisitionRefs, recordRef(acquisition))
+      ) &&
+      closure.acquisitions.every((acquisition) =>
+        refsEqual(binding.digitalAssetRef, acquisition.digitalAssetRef)
+      )
   );
 }
 
-function substitutionCoversExactRefs(
-  substitution: ReferenceProvenanceSubstitution,
-  subjectRef: ReferenceRecordRef,
+function operationDestinationCompatible(
+  operation: ReferenceAccessDecision["operation"],
+  destination: ReferenceAccessDestination
+): boolean {
+  if (destination.kind === "local_runtime" ? destination.id !== undefined : !destination.id) {
+    return false;
+  }
+  const permitted: Record<
+    ReferenceAccessDecision["operation"],
+    readonly ReferenceAccessDestination["kind"][]
+  > = {
+    underlying_work_use: ["local_runtime"],
+    manifestation_use: ["local_runtime"],
+    exemplar_access: ["local_runtime"],
+    scan_provider_use: ["local_runtime"],
+    owner_private_study: ["local_runtime"],
+    local_extraction: ["local_runtime"],
+    provider_ocr: ["provider"],
+    provider_omr: ["provider"],
+    provider_translation: ["provider"],
+    provider_model_processing: ["provider"],
+    pack_citation: ["repository"],
+    pack_excerpt: ["repository"],
+    fixture_inclusion: ["repository"],
+    repository_inclusion: ["repository"],
+    export: ["export", "recipient"],
+    redistribution: ["recipient", "repository", "export"],
+  };
+  return permitted[operation].includes(destination.kind);
+}
+
+function isCurrentAccessDecision(
+  ctx: LifecycleContext,
   decision: ReferenceAccessDecision
 ): boolean {
-  const endpoints = [
-    substitution.from.acquisitionRef,
-    substitution.from.derivationRef,
-    substitution.to.acquisitionRef,
-    substitution.to.derivationRef,
-    subjectRef,
-  ];
-  const scopeRefs = substitution.scope.sourceAndDerivativeRefs;
-  const decisionRefs = [...decision.sourceRefs, ...decision.derivativeRefs];
-  return endpoints.every(
-    (endpointRef) => containsRef(scopeRefs, endpointRef) && containsRef(decisionRefs, endpointRef)
+  const current = latestVersion(
+    ctx.accessDecisions.filter(
+      (candidate) =>
+        candidate.id === decision.id &&
+        Date.parse(candidate.decidedAt) <= Date.parse(ctx.effectiveAt)
+    )
+  );
+  return current !== undefined && refsEqual(recordRef(current), recordRef(decision));
+}
+
+function isCurrentRightsAssertion(
+  ctx: LifecycleContext,
+  assertion: ReferenceRightsAssertion
+): boolean {
+  const current = latestVersion(
+    ctx.rightsAssertions.filter(
+      (candidate) =>
+        candidate.id === assertion.id &&
+        Date.parse(candidate.assertedAt) <= Date.parse(ctx.effectiveAt)
+    )
+  );
+  return current !== undefined && refsEqual(recordRef(current), recordRef(assertion));
+}
+
+function acquisitionRefIsActive(ctx: LifecycleContext, ref: ReferenceRecordRef): boolean {
+  const acquisition = ctx.acquisitionByRef.get(refKey(ref));
+  return acquisition !== undefined && acquisitionIsActive(ctx, acquisition);
+}
+
+function acquisitionIsActive(
+  ctx: LifecycleContext,
+  acquisition: ReferenceAssetAcquisition
+): boolean {
+  if (Date.parse(acquisition.acquiredAt) > Date.parse(ctx.effectiveAt)) return false;
+  if (
+    ctx.action.kind === "delete_acquisition" &&
+    refsEqual(recordRef(acquisition), ctx.action.targetAcquisitionRef)
+  ) {
+    return false;
+  }
+  return !ctx.acquisitions.some(
+    (candidate) =>
+      candidate.supersedesAcquisitionRef !== undefined &&
+      refsEqual(candidate.supersedesAcquisitionRef, recordRef(acquisition)) &&
+      Date.parse(candidate.acquiredAt) <= Date.parse(ctx.effectiveAt)
   );
 }
 
@@ -1113,11 +1563,11 @@ function collectImpactedDerivations(
   while (changed) {
     changed = false;
     for (const derivation of derivations) {
-      const key = refKey(recordRef(derivation));
+      const key = refKey(derivation);
       if (impacted.has(key)) continue;
       if (
         containsRef(derivation.sourceAcquisitionRefs, targetAcquisitionRef) ||
-        derivation.sourceDerivationRefs.some((sourceRef) => impacted.has(refKey(sourceRef)))
+        derivation.sourceDerivationRefs.some((ref) => impacted.has(refKey(ref)))
       ) {
         impacted.add(key);
         changed = true;
@@ -1127,64 +1577,67 @@ function collectImpactedDerivations(
   return impacted;
 }
 
-function derivationDependsOnAcquisition(
-  derivation: ReferenceSourceDerivation,
-  acquisitionRef: ReferenceRecordRef,
-  derivationByRef: Map<string, ReferenceSourceDerivation>,
-  visited: Set<string>
-): boolean {
-  if (containsRef(derivation.sourceAcquisitionRefs, acquisitionRef)) return true;
-  const key = refKey(recordRef(derivation));
-  if (visited.has(key)) return false;
-  visited.add(key);
-  return derivation.sourceDerivationRefs.some((sourceRef) => {
-    const source = derivationByRef.get(refKey(sourceRef));
-    return (
-      source !== undefined &&
-      derivationDependsOnAcquisition(source, acquisitionRef, derivationByRef, visited)
+function terminalForPath(
+  ctx: LifecycleContext,
+  path: { derivationRefs: ReferenceRecordRef[] },
+  subjectRef: ReferenceRecordRef
+): ReferenceSourceDerivation | null {
+  const terminals = path.derivationRefs
+    .map((ref) => ctx.derivationByRef.get(refKey(ref)))
+    .filter(
+      (record): record is ReferenceSourceDerivation =>
+        record !== undefined && refsEqual(record.derivedRef, subjectRef)
     );
-  });
+  return terminals.length === 1 ? terminals[0]! : null;
 }
 
-function endpointAffected(
-  endpoint: ReferenceLifecycleEndpoint,
-  targetAcquisitionRef: ReferenceRecordRef,
-  impactedDerivationKeys: Set<string>
-): boolean {
-  return (
-    refsEqual(endpoint.acquisitionRef, targetAcquisitionRef) ||
-    (endpoint.derivationRef !== undefined &&
-      impactedDerivationKeys.has(refKey(endpoint.derivationRef)))
-  );
+function selectEffectiveVersions<
+  T extends { id: string; version: number; createdAt: string; digest: string },
+>(records: T[], effectiveAt: string): T[] {
+  const byId = new Map<string, T>();
+  for (const record of records) {
+    if (Date.parse(record.createdAt) > Date.parse(effectiveAt)) continue;
+    const current = byId.get(record.id);
+    if (
+      !current ||
+      record.version > current.version ||
+      (record.version === current.version && record.digest.localeCompare(current.digest) > 0)
+    ) {
+      byId.set(record.id, record);
+    }
+  }
+  return [...byId.values()].sort(compareRecords);
 }
 
-function endpointSurvives(
-  endpoint: ReferenceLifecycleEndpoint,
-  targetAcquisitionRef: ReferenceRecordRef,
-  impactedDerivationKeys: Set<string>
-): boolean {
-  return !endpointAffected(endpoint, targetAcquisitionRef, impactedDerivationKeys);
+function latestVersion<T extends { version: number; digest: string }>(records: T[]): T | undefined {
+  return [...records].sort(
+    (left, right) => right.version - left.version || right.digest.localeCompare(left.digest)
+  )[0];
 }
 
-function endpointsEqual(
-  left: ReferenceLifecycleEndpoint,
-  right: { acquisitionRef: ReferenceRecordRef; derivationRef: ReferenceRecordRef }
-): boolean {
-  return (
-    left.derivationRef !== undefined &&
-    refsEqual(left.acquisitionRef, right.acquisitionRef) &&
-    refsEqual(left.derivationRef, right.derivationRef)
-  );
+function verifySnapshotDigest(snapshot: ReferenceSourceStagingSnapshot): boolean {
+  const { digest, ...core } = snapshot;
+  return referenceSourceDigest(core) === digest;
 }
 
-function endpointOf(path: ReferenceLifecycleAuthorizedPath): ReferenceLifecycleEndpoint {
-  return path.derivationRef
-    ? { acquisitionRef: path.acquisitionRef, derivationRef: path.derivationRef }
-    : { acquisitionRef: path.acquisitionRef };
+function sealPlan(value: Record<string, unknown>): ReferenceSourceLifecyclePlanResult {
+  const seed = referenceSourceDigest(value);
+  const withId = {
+    ...value,
+    id: "reference-lifecycle-plan." + seed.slice(0, 24),
+  };
+  const result = {
+    ...withId,
+    digest: referenceSourceDigest(withId),
+  };
+  if (!Value.Check(ReferenceSourceLifecyclePlanResultSchema, result)) {
+    throw new Error("Reference-source lifecycle planner produced an invalid result");
+  }
+  return result as ReferenceSourceLifecyclePlanResult;
 }
 
 function readinessImpactFor(
-  requirement: ReferenceLifecycleStorageSubject["readinessRequirement"],
+  requirement: ReferenceLifecycleStoragePolicy["readinessRequirement"],
   state: ReferenceLifecycleState
 ): ReferenceLifecycleReadinessImpact {
   if (state === "accessible") return "unchanged";
@@ -1196,8 +1649,43 @@ function readinessImpactFor(
 function degradeReplayability(
   replayability: ReferenceLifecycleReplayability
 ): ReferenceLifecycleReplayability {
-  if (replayability === "complete") return "partial";
-  return replayability;
+  return replayability === "complete" ? "partial" : replayability;
+}
+
+function endpointOf(path: {
+  acquisitionRefs: ReferenceRecordRef[];
+  derivationRefs: ReferenceRecordRef[];
+}): ReferenceLifecycleEndpoint {
+  return {
+    acquisitionRefs: uniqueSortedRefs(path.acquisitionRefs),
+    derivationRefs: uniqueSortedRefs(path.derivationRefs),
+  };
+}
+
+function pathKey(path: {
+  acquisitionRefs: ReferenceRecordRef[];
+  derivationRefs: ReferenceRecordRef[];
+}): string {
+  return (
+    path.acquisitionRefs.map(refKey).sort().join("\u0001") +
+    "\u0000" +
+    path.derivationRefs.map(refKey).sort().join("\u0001")
+  );
+}
+
+function hasDuplicatePaths(
+  paths: Array<{ acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] }>
+): boolean {
+  const keys = paths.map(pathKey);
+  return new Set(keys).size !== keys.length;
+}
+
+function sameRefSet(left: ReferenceRecordRef[], right: ReferenceRecordRef[]): boolean {
+  if (left.length !== right.length) return false;
+  const leftKeys = new Set(left.map(refKey));
+  const rightKeys = new Set(right.map(refKey));
+  if (leftKeys.size !== left.length || rightKeys.size !== right.length) return false;
+  return [...leftKeys].every((key) => rightKeys.has(key));
 }
 
 function destinationsEqual(
@@ -1207,27 +1695,36 @@ function destinationsEqual(
   return left.kind === right.kind && left.id === right.id;
 }
 
-function indexRecords<T extends { id: string; digest: string }>(records: T[]): Map<string, T> {
-  const result = new Map<string, T>();
-  for (const record of records) result.set(refKey(recordRef(record)), record);
-  return result;
+function addIssue(
+  ctx: LifecycleContext,
+  code: ReferenceLifecyclePlanningIssue["code"],
+  subjectRef: ReferenceRecordRef | undefined,
+  detail: string
+): void {
+  ctx.issues.push({ code, ...(subjectRef ? { subjectRef } : {}), detail });
 }
 
-function requireRef<T>(
-  records: Map<string, T>,
-  ref: ReferenceRecordRef,
-  code: "dangling_acquisition_ref" | "dangling_derivation_ref" | "dangling_access_decision_ref",
-  issues: ReferenceLifecyclePlanningIssue[]
-): T | undefined {
-  const record = records.get(refKey(ref));
-  if (!record) {
-    issues.push({
-      code,
-      subjectRef: ref,
-      detail: "An exact id-and-digest reference does not resolve in the lifecycle planning graph.",
+function sortIssues(issues: ReferenceLifecyclePlanningIssue[]): ReferenceLifecyclePlanningIssue[] {
+  return [...issues]
+    .sort((left, right) => {
+      const code = left.code.localeCompare(right.code);
+      if (code) return code;
+      const ref = compareOptionalRefs(left.subjectRef, right.subjectRef);
+      return ref || left.detail.localeCompare(right.detail);
+    })
+    .filter((issue, index, sorted) => {
+      const prior = sorted[index - 1];
+      return (
+        !prior ||
+        issue.code !== prior.code ||
+        compareOptionalRefs(issue.subjectRef, prior.subjectRef) !== 0 ||
+        issue.detail !== prior.detail
+      );
     });
-  }
-  return record;
+}
+
+function indexRecords<T extends { id: string; digest: string }>(records: T[]): Map<string, T> {
+  return new Map(records.map((record) => [refKey(record), record]));
 }
 
 function recordRef(record: { id: string; digest: string }): ReferenceRecordRef {
@@ -1235,7 +1732,7 @@ function recordRef(record: { id: string; digest: string }): ReferenceRecordRef {
 }
 
 function refKey(ref: ReferenceRecordRef): string {
-  return `${ref.id}\u0000${ref.digest}`;
+  return ref.id + "\u0000" + ref.digest;
 }
 
 function refsEqual(left: ReferenceRecordRef, right: ReferenceRecordRef): boolean {
@@ -1254,6 +1751,16 @@ function compareRefs(left: ReferenceRecordRef, right: ReferenceRecordRef): numbe
   return left.id.localeCompare(right.id) || left.digest.localeCompare(right.digest);
 }
 
+function compareOptionalRefs(
+  left: ReferenceRecordRef | undefined,
+  right: ReferenceRecordRef | undefined
+): number {
+  if (!left && !right) return 0;
+  if (!left) return -1;
+  if (!right) return 1;
+  return compareRefs(left, right);
+}
+
 function compareRecords(
   left: { id: string; digest: string },
   right: { id: string; digest: string }
@@ -1266,44 +1773,53 @@ function compareAuthorizedPaths(
   right: ReferenceLifecycleAuthorizedPath
 ): number {
   return (
-    compareRefs(left.acquisitionRef, right.acquisitionRef) ||
-    compareOptionalRefs(left.derivationRef, right.derivationRef) ||
+    pathKey(left).localeCompare(pathKey(right)) ||
     compareRefs(left.accessDecisionRef, right.accessDecisionRef)
   );
 }
 
-function compareOptionalRefs(
-  left: ReferenceRecordRef | undefined,
-  right: ReferenceRecordRef | undefined
-): number {
-  if (!left && !right) return 0;
-  if (!left) return -1;
-  if (!right) return 1;
-  return compareRefs(left, right);
+function isAssetAcquisition(
+  record: ReferenceSourceStagingRecord
+): record is ReferenceAssetAcquisition {
+  return record.recordKind === "asset_acquisition";
 }
 
-function sortIssues(issues: ReferenceLifecyclePlanningIssue[]): ReferenceLifecyclePlanningIssue[] {
-  return [...issues]
-    .sort((left, right) => {
-      const byCode = left.code.localeCompare(right.code);
-      if (byCode) return byCode;
-      const byRef = compareOptionalRefs(left.subjectRef, right.subjectRef);
-      return byRef || left.detail.localeCompare(right.detail);
-    })
-    .filter((issue, index, sorted) => {
-      if (index === 0) return true;
-      const prior = sorted[index - 1];
-      return (
-        issue.code !== prior.code ||
-        compareOptionalRefs(issue.subjectRef, prior.subjectRef) !== 0 ||
-        issue.detail !== prior.detail
-      );
-    });
+function isSourceDerivation(
+  record: ReferenceSourceStagingRecord
+): record is ReferenceSourceDerivation {
+  return record.recordKind === "source_derivation";
 }
 
-function checkedResult<T extends ReferenceSourceLifecyclePlanResult>(value: T): T {
-  if (!Value.Check(ReferenceSourceLifecyclePlanResultSchema, value)) {
-    throw new Error("Reference-source lifecycle planner produced an invalid result");
-  }
-  return value;
+function isAccessDecision(record: ReferenceSourceStagingRecord): record is ReferenceAccessDecision {
+  return record.recordKind === "access_decision";
+}
+
+function isRightsAssertion(
+  record: ReferenceSourceStagingRecord
+): record is ReferenceRightsAssertion {
+  return record.recordKind === "rights_assertion";
+}
+
+function isProvenanceSubstitution(
+  record: ReferenceSourceStagingRecord
+): record is ReferenceProvenanceSubstitution {
+  return record.recordKind === "provenance_substitution";
+}
+
+function isRoleBinding(record: ReferenceSourceStagingRecord): record is ReferenceAssetRoleBinding {
+  return [
+    "arrangement_source_binding",
+    "owner_reference_binding",
+    "evaluation_source_binding",
+  ].includes(record.recordKind);
+}
+
+function isLifecycleStoragePolicy(
+  record: ReferenceSourceStagingRecord
+): record is ReferenceLifecycleStoragePolicy {
+  return record.recordKind === "lifecycle_storage_policy";
+}
+
+function isLifecycleUse(record: ReferenceSourceStagingRecord): record is ReferenceLifecycleUse {
+  return record.recordKind === "lifecycle_use";
 }

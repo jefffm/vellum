@@ -525,6 +525,147 @@ export const ReferenceAccessDecisionSchema = Type.Object(
 );
 export type ReferenceAccessDecision = Static<typeof ReferenceAccessDecisionSchema>;
 
+export const ReferenceLifecycleReplayabilitySchema = Type.Union([
+  Type.Literal("complete"),
+  Type.Literal("partial"),
+  Type.Literal("unavailable"),
+  Type.Literal("legacy_unverifiable"),
+]);
+export type ReferenceLifecycleReplayability = Static<typeof ReferenceLifecycleReplayabilitySchema>;
+
+export const ReferenceLifecycleReadinessRequirementSchema = Type.Union([
+  Type.Literal("required"),
+  Type.Literal("advisory"),
+  Type.Literal("none"),
+]);
+export type ReferenceLifecycleReadinessRequirement = Static<
+  typeof ReferenceLifecycleReadinessRequirementSchema
+>;
+
+export const ReferenceLifecycleStorageSubjectKindSchema = Type.Union([
+  Type.Literal("asset_bytes"),
+  Type.Literal("segment"),
+  Type.Literal("crop"),
+  Type.Literal("extraction"),
+  Type.Literal("transcription"),
+  Type.Literal("translation"),
+  Type.Literal("candidate"),
+  Type.Literal("pack_entry"),
+  Type.Literal("fixture"),
+  Type.Literal("prompt"),
+  Type.Literal("release"),
+  Type.Literal("arrangement"),
+  Type.Literal("evaluation"),
+  Type.Literal("report"),
+  Type.Literal("log"),
+  Type.Literal("cache"),
+  Type.Literal("backup"),
+  Type.Literal("managed_export"),
+  Type.Literal("unmanaged_disclosure"),
+  Type.Literal("provider_payload"),
+  Type.Literal("provider_result"),
+  Type.Literal("other_derivative"),
+]);
+export type ReferenceLifecycleStorageSubjectKind = Static<
+  typeof ReferenceLifecycleStorageSubjectKindSchema
+>;
+
+export const ReferenceLifecycleProvenancePathSchema = Type.Object(
+  {
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
+    derivationRefs: Type.Array(ReferenceRecordRefSchema),
+  },
+  Strict
+);
+export type ReferenceLifecycleProvenancePath = Static<
+  typeof ReferenceLifecycleProvenancePathSchema
+>;
+
+export const ReferenceLifecycleAuthorizedPathSchema = Type.Object(
+  {
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1 }),
+    derivationRefs: Type.Array(ReferenceRecordRefSchema),
+    accessDecisionRef: ReferenceRecordRefSchema,
+  },
+  Strict
+);
+export type ReferenceLifecycleAuthorizedPath = Static<
+  typeof ReferenceLifecycleAuthorizedPathSchema
+>;
+
+const ReferenceLifecycleControlledCustodySchema = Type.Object(
+  {
+    kind: Type.Literal("vellum_controlled"),
+    retention: Type.Union([
+      Type.Literal("unretained"),
+      Type.Literal("encrypted_local_pin"),
+      Type.Literal("required_hold"),
+    ]),
+    tombstonePolicy: Type.Union([Type.Literal("preserve"), Type.Literal("discard")]),
+  },
+  Strict
+);
+
+const ReferenceLifecycleUnmanagedCustodySchema = Type.Object(
+  {
+    kind: Type.Literal("unmanaged_recipient"),
+    recipientRef: ReferenceRecordRefSchema,
+    disclosureAccessDecisionRef: ReferenceRecordRefSchema,
+    disclosedAt: IsoTimestampSchema,
+    tombstonePolicy: Type.Literal("preserve"),
+  },
+  Strict
+);
+
+export const ReferenceLifecycleStoragePolicySchema = Type.Object(
+  {
+    recordKind: Type.Literal("lifecycle_storage_policy"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    subjectRef: ReferenceRecordRefSchema,
+    subjectKind: ReferenceLifecycleStorageSubjectKindSchema,
+    provenancePaths: Type.Array(ReferenceLifecycleProvenancePathSchema, { minItems: 1 }),
+    policyRef: ReferenceRecordRefSchema,
+    custody: Type.Union([
+      ReferenceLifecycleControlledCustodySchema,
+      ReferenceLifecycleUnmanagedCustodySchema,
+    ]),
+    replayRequirement: Type.Union([
+      Type.Literal("required"),
+      Type.Literal("optional"),
+      Type.Literal("none"),
+    ]),
+    readinessRequirement: ReferenceLifecycleReadinessRequirementSchema,
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceLifecycleStoragePolicy = Static<typeof ReferenceLifecycleStoragePolicySchema>;
+
+export const ReferenceLifecycleUseSchema = Type.Object(
+  {
+    recordKind: Type.Literal("lifecycle_use"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    subjectRef: ReferenceRecordRefSchema,
+    provenancePaths: Type.Array(ReferenceLifecycleAuthorizedPathSchema, { minItems: 1 }),
+    operation: ReferenceAccessOperationSchema,
+    destination: ReferenceAccessDestinationSchema,
+    purpose: Type.String({ minLength: 1 }),
+    assetRole: Type.Optional(ReferenceAssetRoleSchema),
+    policyRef: ReferenceRecordRefSchema,
+    baselineReplayability: ReferenceLifecycleReplayabilitySchema,
+    readinessRequirement: ReferenceLifecycleReadinessRequirementSchema,
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceLifecycleUse = Static<typeof ReferenceLifecycleUseSchema>;
+
 const RoleBindingCommon = {
   id: IdSchema,
   digitalAssetRef: ReferenceRecordRefSchema,
@@ -723,6 +864,8 @@ const ReferenceSourceStagingInputRecordSchemas = [
   ReferenceSourceSegmentVersionSchema,
   ReferenceRightsAssertionSchema,
   ReferenceAccessDecisionSchema,
+  ReferenceLifecycleStoragePolicySchema,
+  ReferenceLifecycleUseSchema,
   ArrangementSourceBindingSchema,
   OwnerReferenceBindingSchema,
   EvaluationSourceBindingSchema,

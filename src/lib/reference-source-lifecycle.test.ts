@@ -10,18 +10,26 @@ import {
   type ReferenceSourceLifecyclePlannerInput,
 } from "./reference-source-lifecycle.js";
 import {
+  referenceSourceDigest,
   withReferenceRecordDigest,
   type ReferenceAccessDecision,
+  type ReferenceAccessDestination,
+  type ReferenceAccessOperation,
   type ReferenceAssetAcquisition,
-  type ReferenceProvenanceSubstitution,
+  type ReferenceAssetRole,
+  type ReferenceDigitalAsset,
   type ReferenceRecordRef,
+  type ReferenceRightsAssertion,
   type ReferenceSourceDerivation,
+  type ReferenceSourceStagingRecord,
+  type ReferenceSourceStagingSnapshot,
 } from "./reference-source-domain.js";
 
+const EARLY = "2026-07-15T08:00:00.000Z";
+const MID = "2026-07-15T10:00:00.000Z";
 const NOW = "2026-07-15T12:00:00.000Z";
-const ASSET_REF = ref("asset.shared", "a");
-const POLICY_REF = ref("policy.lifecycle", "b");
-const SNAPSHOT_REF = ref("snapshot.base", "c");
+const POLICY_REF = ref("policy.access", "b");
+const LIFECYCLE_POLICY_REF = ref("policy.lifecycle", "c");
 const SUBJECT_REF = ref("derivative.arrangement", "d");
 
 function ref(id: string, fill = "e"): ReferenceRecordRef {
@@ -32,175 +40,282 @@ function recordRef(record: { id: string; digest: string }): ReferenceRecordRef {
   return { id: record.id, digest: record.digest };
 }
 
-function acquisition(id: string, assetRef = ASSET_REF): ReferenceAssetAcquisition {
+function asset(id = "asset.shared", fill = "a"): ReferenceDigitalAsset {
+  return withReferenceRecordDigest({
+    recordKind: "digital_asset",
+    id,
+    sha256: fill.repeat(64),
+    mediaType: "application/pdf",
+    byteLength: 2048,
+  }) as ReferenceDigitalAsset;
+}
+
+function rights(options: {
+  id: string;
+  asset: ReferenceDigitalAsset;
+  kind?: ReferenceRightsAssertion["rightsKind"];
+  status?: ReferenceRightsAssertion["status"];
+  version?: number;
+  parent?: ReferenceRightsAssertion;
+  assertedAt?: string;
+}): ReferenceRightsAssertion {
+  return withReferenceRecordDigest({
+    recordKind: "rights_assertion",
+    id: options.id,
+    version: options.version ?? 1,
+    ...(options.parent
+      ? {
+          parentVersionRef: {
+            ...recordRef(options.parent),
+            version: options.parent.version,
+          },
+        }
+      : {}),
+    subjectRef: recordRef(options.asset),
+    subjectKind: "digital_asset",
+    rightsKind: options.kind ?? "export_redistribution",
+    status: options.status ?? "permitted",
+    claimant: { kind: "reviewer", claimantRef: ref("reviewer.rights") },
+    evidenceRefs: [ref("evidence.rights")],
+    assertedAt: options.assertedAt ?? EARLY,
+  }) as ReferenceRightsAssertion;
+}
+
+function acquisition(options: {
+  id: string;
+  asset: ReferenceDigitalAsset;
+  rights: ReferenceRightsAssertion;
+  acquiredAt?: string;
+}): ReferenceAssetAcquisition {
   return withReferenceRecordDigest({
     recordKind: "asset_acquisition",
-    id,
-    digitalAssetRef: assetRef,
+    id: options.id,
+    digitalAssetRef: recordRef(options.asset),
     representedExemplarRefs: [],
-    origin: { sourceKind: "upload", ownerActionRef: ref(`owner-action.${id}`) },
-    acquiredAt: NOW,
-    rightsAssertionRefs: [ref(`rights.${id}`)],
+    origin: { sourceKind: "upload", ownerActionRef: ref("owner-action." + options.id) },
+    acquiredAt: options.acquiredAt ?? EARLY,
+    rightsAssertionRefs: [recordRef(options.rights)],
     processingPolicyRef: POLICY_REF,
   }) as ReferenceAssetAcquisition;
 }
 
-function derivation(
-  id: string,
-  sourceAcquisitions: ReferenceAssetAcquisition[],
-  derivedRef = SUBJECT_REF,
-  sourceDerivations: ReferenceSourceDerivation[] = []
-): ReferenceSourceDerivation {
+function derivation(options: {
+  id: string;
+  acquisitions: ReferenceAssetAcquisition[];
+  derivedRef?: ReferenceRecordRef;
+  sources?: ReferenceSourceDerivation[];
+  kind?: ReferenceSourceDerivation["derivationKind"];
+  createdAt?: string;
+}): ReferenceSourceDerivation {
   return withReferenceRecordDigest({
     recordKind: "source_derivation",
-    id,
-    derivationKind: "extraction",
-    inputRefs: [ASSET_REF],
-    sourceAcquisitionRefs: sourceAcquisitions.map(recordRef),
-    sourceDerivationRefs: sourceDerivations.map(recordRef),
-    derivedRef,
+    id: options.id,
+    derivationKind: options.kind ?? "extraction",
+    inputRefs:
+      options.sources && options.sources.length > 0
+        ? options.sources.map((source) => source.derivedRef)
+        : options.acquisitions.map((item) => item.digitalAssetRef),
+    sourceAcquisitionRefs: options.acquisitions.map(recordRef),
+    sourceDerivationRefs: (options.sources ?? []).map(recordRef),
+    derivedRef: options.derivedRef ?? SUBJECT_REF,
     componentRef: ref("component.extractor"),
     configurationDigest: "f".repeat(64),
-    createdAt: NOW,
+    createdAt: options.createdAt ?? MID,
   }) as ReferenceSourceDerivation;
+}
+
+function closurePath(
+  acquisitions: ReferenceAssetAcquisition[],
+  derivations: ReferenceSourceDerivation[]
+): { acquisitionRefs: ReferenceRecordRef[]; derivationRefs: ReferenceRecordRef[] } {
+  return {
+    acquisitionRefs: acquisitions.map(recordRef),
+    derivationRefs: derivations.map(recordRef),
+  };
 }
 
 function accessDecision(options: {
   id: string;
-  acquisitionRefs: ReferenceRecordRef[];
-  derivationRefs?: ReferenceRecordRef[];
+  rights: ReferenceRightsAssertion[];
+  acquisitions: ReferenceAssetAcquisition[];
+  derivations?: ReferenceSourceDerivation[];
   subjectRef?: ReferenceRecordRef;
-  operation?: ReferenceAccessDecision["operation"];
-  destination?: ReferenceAccessDecision["destination"];
-  outcome?: ReferenceAccessDecision["outcome"];
+  operation?: ReferenceAccessOperation;
+  destination?: ReferenceAccessDestination;
   purpose?: string;
+  assetRole?: ReferenceAssetRole;
+  validUntil?: string;
 }): ReferenceAccessDecision {
   return withReferenceRecordDigest({
     recordKind: "access_decision",
     id: options.id,
     version: 1,
-    outcome: options.outcome ?? "allow",
+    outcome: "allow",
     operation: options.operation ?? "repository_inclusion",
-    sourceRefs: options.acquisitionRefs,
-    derivativeRefs: [...(options.derivationRefs ?? []), options.subjectRef ?? SUBJECT_REF],
-    destination: options.destination ?? { kind: "repository" },
+    sourceRefs: options.acquisitions.map(recordRef),
+    derivativeRefs: [
+      ...(options.derivations ?? []).map(recordRef),
+      options.subjectRef ?? SUBJECT_REF,
+    ],
+    destination: options.destination ?? { kind: "repository", id: "repo.vellum" },
     purpose: options.purpose ?? "Publish reviewed development fixture",
+    ...(options.assetRole ? { assetRole: options.assetRole } : {}),
     policyRef: POLICY_REF,
-    rightsAssertionRefs: [ref(`rights.${options.id}`)],
+    rightsAssertionRefs: options.rights.map(recordRef),
     authorityRefs: [ref("reviewer.rights")],
-    rationale: "Exact path and scope were reviewed",
-    decidedAt: NOW,
+    rationale: "Exact operation and full provenance closure were reviewed",
+    decidedAt: MID,
+    ...(options.validUntil ? { validUntil: options.validUntil } : {}),
   }) as ReferenceAccessDecision;
 }
 
-function use(options: {
+function storagePolicy(options: {
   id: string;
-  acquisition: ReferenceAssetAcquisition;
-  derivation?: ReferenceSourceDerivation;
+  subjectRef: ReferenceRecordRef;
+  subjectKind: ReferenceLifecycleStorageSubject["subjectKind"];
+  paths: ReferenceLifecycleStorageSubject["provenancePaths"];
+  custody?: ReferenceLifecycleStorageSubject["custody"];
+  replayRequirement?: ReferenceLifecycleStorageSubject["replayRequirement"];
+  readinessRequirement?: ReferenceLifecycleStorageSubject["readinessRequirement"];
+}): ReferenceLifecycleStorageSubject {
+  return withReferenceRecordDigest({
+    recordKind: "lifecycle_storage_policy",
+    id: options.id,
+    version: 1,
+    subjectRef: options.subjectRef,
+    subjectKind: options.subjectKind,
+    provenancePaths: options.paths,
+    policyRef: LIFECYCLE_POLICY_REF,
+    custody:
+      options.custody ??
+      ({
+        kind: "vellum_controlled",
+        retention: "unretained",
+        tombstonePolicy: "discard",
+      } as const),
+    replayRequirement: options.replayRequirement ?? "required",
+    readinessRequirement: options.readinessRequirement ?? "required",
+    createdAt: NOW,
+  }) as ReferenceLifecycleStorageSubject;
+}
+
+function lifecycleUse(options: {
+  id: string;
+  subjectRef: ReferenceRecordRef;
+  path: ReturnType<typeof closurePath>;
   decision: ReferenceAccessDecision;
-  operation?: ReferenceLifecycleUse["operation"];
-  destination?: ReferenceLifecycleUse["destination"];
-  subjectRef?: ReferenceRecordRef;
+  operation?: ReferenceAccessOperation;
+  destination?: ReferenceAccessDestination;
   purpose?: string;
+  assetRole?: ReferenceAssetRole;
   readinessRequirement?: ReferenceLifecycleUse["readinessRequirement"];
 }): ReferenceLifecycleUse {
-  return {
+  return withReferenceRecordDigest({
+    recordKind: "lifecycle_use",
     id: options.id,
-    subjectRef: options.subjectRef ?? SUBJECT_REF,
+    version: 1,
+    subjectRef: options.subjectRef,
     provenancePaths: [
       {
-        acquisitionRef: recordRef(options.acquisition),
-        ...(options.derivation ? { derivationRef: recordRef(options.derivation) } : {}),
+        ...options.path,
         accessDecisionRef: recordRef(options.decision),
       },
     ],
     operation: options.operation ?? "repository_inclusion",
-    destination: options.destination ?? { kind: "repository" },
+    destination: options.destination ?? { kind: "repository", id: "repo.vellum" },
     purpose: options.purpose ?? "Publish reviewed development fixture",
+    ...(options.assetRole ? { assetRole: options.assetRole } : {}),
     policyRef: POLICY_REF,
     baselineReplayability: "complete",
     readinessRequirement: options.readinessRequirement ?? "required",
-  };
+    createdAt: NOW,
+  }) as ReferenceLifecycleUse;
 }
 
-function storageSubject(
-  options: Partial<ReferenceLifecycleStorageSubject> &
-    Pick<ReferenceLifecycleStorageSubject, "subjectRef" | "subjectKind" | "provenancePaths">
+function assetPolicy(
+  digitalAsset: ReferenceDigitalAsset,
+  acquisitions: ReferenceAssetAcquisition[],
+  custody?: ReferenceLifecycleStorageSubject["custody"]
 ): ReferenceLifecycleStorageSubject {
-  return {
-    control: "vellum_controlled",
-    retention: "unretained",
-    tombstonePolicy: "discard",
-    replayRequirement: "required",
-    readinessRequirement: "required",
-    ...options,
-  };
-}
-
-function plannerInput(options: {
-  target: ReferenceAssetAcquisition;
-  acquisitions: ReferenceAssetAcquisition[];
-  derivations?: ReferenceSourceDerivation[];
-  decisions?: ReferenceAccessDecision[];
-  substitutions?: ReferenceProvenanceSubstitution[];
-  storageSubjects?: ReferenceLifecycleStorageSubject[];
-  uses?: ReferenceLifecycleUse[];
-  kind?: "delete_acquisition" | "restrict_acquisition";
-}): ReferenceSourceLifecyclePlannerInput {
-  return {
-    schemaVersion: 1,
-    baseSnapshotRef: SNAPSHOT_REF,
-    effectiveAt: NOW,
-    action: {
-      kind: options.kind ?? "delete_acquisition",
-      targetAcquisitionRef: recordRef(options.target),
-      reason: "Owner requested a rights-safe lifecycle dry run",
-    },
-    acquisitions: options.acquisitions,
-    derivations: options.derivations ?? [],
-    accessDecisions: options.decisions ?? [],
-    substitutions: options.substitutions ?? [],
-    storageSubjects: options.storageSubjects ?? [],
-    uses: options.uses ?? [],
-  };
-}
-
-function sharedAssetStorage(
-  acquisitions: ReferenceAssetAcquisition[]
-): ReferenceLifecycleStorageSubject {
-  return storageSubject({
-    subjectRef: ASSET_REF,
+  return storagePolicy({
+    id: "storage." + digitalAsset.id,
+    subjectRef: recordRef(digitalAsset),
     subjectKind: "asset_bytes",
-    provenancePaths: acquisitions.map((item) => ({
-      acquisitionRefs: [recordRef(item)],
-      derivationRefs: [],
-    })),
-    tombstonePolicy: "preserve",
+    paths: acquisitions.map((item) => closurePath([item], [])),
+    ...(custody ? { custody } : {}),
   });
 }
 
-describe("reference-source lifecycle planner", () => {
-  it("is closed-schema, dry-run only, deterministic, and does not mutate input", () => {
-    const first = acquisition("acquisition.first");
-    const input = plannerInput({
-      target: first,
-      acquisitions: [first],
-      storageSubjects: [sharedAssetStorage([first])],
-    });
-    const before = structuredClone(input);
-    const result = planReferenceSourceLifecycle(input);
+function snapshot(records: ReferenceSourceStagingRecord[]): ReferenceSourceStagingSnapshot {
+  const core = {
+    schemaVersion: 1 as const,
+    id: "reference-source-snapshot.test",
+    revision: 1,
+    publicationState: "staging_only" as const,
+    createdAt: NOW,
+    records,
+  };
+  return { ...core, digest: referenceSourceDigest(core) };
+}
 
-    expect(result).toMatchObject({
+function plannerInput(
+  records: ReferenceSourceStagingRecord[],
+  action: ReferenceSourceLifecyclePlannerInput["action"]
+): ReferenceSourceLifecyclePlannerInput {
+  return {
+    schemaVersion: 1,
+    baseSnapshot: snapshot(records),
+    effectiveAt: NOW,
+    action,
+  };
+}
+
+function deleteAction(
+  target: ReferenceAssetAcquisition
+): ReferenceSourceLifecyclePlannerInput["action"] {
+  return {
+    kind: "delete_acquisition",
+    targetAcquisitionRef: recordRef(target),
+    reason: "Owner requested a rights-safe lifecycle dry run",
+  };
+}
+
+describe("reference-source lifecycle planner", () => {
+  it("is closed-schema, digest-bound, deterministic, and non-mutating", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.asset", asset: digitalAsset });
+    const only = acquisition({ id: "acquisition.only", asset: digitalAsset, rights: assertion });
+    const input = plannerInput(
+      [
+        digitalAsset,
+        assertion,
+        only,
+        assetPolicy(digitalAsset, [only], {
+          kind: "vellum_controlled",
+          retention: "unretained",
+          tombstonePolicy: "preserve",
+        }),
+      ],
+      deleteAction(only)
+    );
+    const before = structuredClone(input);
+    const first = planReferenceSourceLifecycle(input);
+    const second = planReferenceSourceLifecycle(input);
+
+    expect(first).toEqual(second);
+    expect(first).toMatchObject({
       mode: "dry_run",
       status: "ready",
       atomicity: "all_or_nothing",
     });
-    expect(Value.Check(ReferenceSourceLifecyclePlanResultSchema, result)).toBe(true);
+    expect(Value.Check(ReferenceSourceLifecyclePlanResultSchema, first)).toBe(true);
+    const { digest, ...sealed } = first;
+    expect(referenceSourceDigest(sealed)).toBe(digest);
     expect(input).toEqual(before);
     expect(
       Value.Check(ReferenceSourceLifecyclePlannerInputSchema, {
         ...input,
-        publish: true,
+        acquisitions: [only],
       })
     ).toBe(false);
     expect(() =>
@@ -211,371 +326,599 @@ describe("reference-source lifecycle planner", () => {
     ).toThrow(/closed schema/);
   });
 
-  it("is invariant to same-byte acquisition order and never borrows sibling rights", () => {
-    const restrictedAcquisition = acquisition("acquisition.restricted");
-    const permittedAcquisition = acquisition("acquisition.permitted");
-    const restrictedDerivation = derivation("derivation.restricted", [restrictedAcquisition]);
-    const permittedDerivation = derivation("derivation.permitted", [permittedAcquisition]);
-    const removedPathDecision = accessDecision({
-      id: "access.removed-path",
-      acquisitionRefs: [recordRef(restrictedAcquisition)],
-      derivationRefs: [recordRef(restrictedDerivation)],
+  it("is acquisition-order invariant and never borrows a sibling path's rights", () => {
+    const digitalAsset = asset();
+    const repoRights = rights({ id: "rights.repo", asset: digitalAsset });
+    const localRights = rights({
+      id: "rights.local",
+      asset: digitalAsset,
+      kind: "local_extraction",
     });
-    const siblingDecision = accessDecision({
-      id: "access.sibling-path",
-      acquisitionRefs: [recordRef(permittedAcquisition)],
-      derivationRefs: [recordRef(permittedDerivation)],
+    const removed = acquisition({
+      id: "acquisition.removed",
+      asset: digitalAsset,
+      rights: repoRights,
+    });
+    const sibling = acquisition({
+      id: "acquisition.sibling",
+      asset: digitalAsset,
+      rights: localRights,
+    });
+    const removedDerivation = derivation({
+      id: "derivation.removed",
+      acquisitions: [removed],
+    });
+    const siblingDerivation = derivation({
+      id: "derivation.sibling",
+      acquisitions: [sibling],
+    });
+    const repoDecision = accessDecision({
+      id: "access.repo",
+      rights: [repoRights],
+      acquisitions: [removed],
+      derivations: [removedDerivation],
+    });
+    const localDecision = accessDecision({
+      id: "access.local",
+      rights: [localRights],
+      acquisitions: [sibling],
+      derivations: [siblingDerivation],
       operation: "local_extraction",
       destination: { kind: "local_runtime" },
       purpose: "Extract for private local study",
     });
-    const requirement = use({
+    const use = lifecycleUse({
       id: "use.repository",
-      acquisition: restrictedAcquisition,
-      derivation: restrictedDerivation,
-      decision: removedPathDecision,
+      subjectRef: SUBJECT_REF,
+      path: closurePath([removed], [removedDerivation]),
+      decision: repoDecision,
     });
-    const subjects = [
-      sharedAssetStorage([restrictedAcquisition, permittedAcquisition]),
-      storageSubject({
-        subjectRef: SUBJECT_REF,
-        subjectKind: "extraction",
-        provenancePaths: [
-          {
-            acquisitionRefs: [recordRef(restrictedAcquisition)],
-            derivationRefs: [recordRef(restrictedDerivation)],
-          },
-          {
-            acquisitionRefs: [recordRef(permittedAcquisition)],
-            derivationRefs: [recordRef(permittedDerivation)],
-          },
-        ],
-      }),
+    const derivativePolicy = storagePolicy({
+      id: "storage.arrangement",
+      subjectRef: SUBJECT_REF,
+      subjectKind: "extraction",
+      paths: [
+        closurePath([removed], [removedDerivation]),
+        closurePath([sibling], [siblingDerivation]),
+      ],
+    });
+    const common: ReferenceSourceStagingRecord[] = [
+      digitalAsset,
+      repoRights,
+      localRights,
+      removedDerivation,
+      siblingDerivation,
+      repoDecision,
+      localDecision,
+      derivativePolicy,
+      use,
     ];
-    const common = {
-      target: restrictedAcquisition,
-      derivations: [restrictedDerivation, permittedDerivation],
-      decisions: [removedPathDecision, siblingDecision],
-      storageSubjects: subjects,
-      uses: [requirement],
-    };
 
-    const restrictedFirst = planReferenceSourceLifecycle(
-      plannerInput({
-        ...common,
-        acquisitions: [restrictedAcquisition, permittedAcquisition],
-      })
+    const removedFirst = planReferenceSourceLifecycle(
+      plannerInput(
+        [removed, sibling, ...common, assetPolicy(digitalAsset, [removed, sibling])],
+        deleteAction(removed)
+      )
     );
-    const permittedFirst = planReferenceSourceLifecycle(
-      plannerInput({
-        ...common,
-        acquisitions: [permittedAcquisition, restrictedAcquisition],
-      })
+    const siblingFirst = planReferenceSourceLifecycle(
+      plannerInput(
+        [sibling, removed, ...common, assetPolicy(digitalAsset, [removed, sibling])],
+        deleteAction(removed)
+      )
     );
 
-    expect(restrictedFirst).toEqual(permittedFirst);
-    expect(restrictedFirst).toMatchObject({
+    expect(removedFirst.status).toBe("ready");
+    expect(siblingFirst.status).toBe("ready");
+    if (removedFirst.status !== "ready" || siblingFirst.status !== "ready") return;
+    expect(removedFirst.consequences).toEqual(siblingFirst.consequences);
+    expect(removedFirst.permissions).toEqual(siblingFirst.permissions);
+    expect(removedFirst.permissions).toMatchObject([
+      { useId: "use.repository", state: "restricted", authorization: "none" },
+    ]);
+    expect(
+      removedFirst.consequences.find((item) => item.subjectKind === "asset_bytes")
+    ).toMatchObject({ state: "accessible" });
+
+    const deleteSibling = planReferenceSourceLifecycle(
+      plannerInput(
+        [removed, sibling, ...common, assetPolicy(digitalAsset, [removed, sibling])],
+        deleteAction(sibling)
+      )
+    );
+    expect(deleteSibling).toMatchObject({
       status: "ready",
-      targetDigitalAssetRef: ASSET_REF,
-      permissions: [
-        {
-          useId: "use.repository",
-          state: "restricted",
-          authorization: "none",
-          replayability: "unavailable",
-          readinessImpact: "blocked",
-        },
-      ],
-    });
-    if (restrictedFirst.status === "ready") {
-      expect(
-        restrictedFirst.consequences.find((item) => item.subjectKind === "asset_bytes")
-      ).toMatchObject({ state: "accessible" });
-      expect(restrictedFirst.permissions[0].activeEndpoint).toBeUndefined();
-      expect(restrictedFirst.permissions[0].accessDecisionRef).toBeUndefined();
-    }
-
-    const deleteOtherAcquisition = planReferenceSourceLifecycle(
-      plannerInput({
-        ...common,
-        target: permittedAcquisition,
-        acquisitions: [restrictedAcquisition, permittedAcquisition],
-      })
-    );
-    expect(deleteOtherAcquisition).toMatchObject({
-      status: "ready",
-      permissions: [
-        {
-          useId: "use.repository",
-          state: "accessible",
-          authorization: "direct",
-        },
-      ],
+      permissions: [{ useId: "use.repository", state: "accessible", authorization: "direct" }],
     });
   });
 
-  it("uses only an exact reviewed substitution and keeps operations and destinations separate", () => {
-    const oldAcquisition = acquisition("acquisition.old");
-    const newAcquisition = acquisition("acquisition.new");
-    const oldDerivation = derivation("derivation.old", [oldAcquisition]);
-    const newDerivation = derivation("derivation.new", [newAcquisition]);
-    const oldDecision = accessDecision({
-      id: "access.old",
-      acquisitionRefs: [recordRef(oldAcquisition)],
-      derivationRefs: [recordRef(oldDerivation)],
+  it("blocks a multi-source derivative whose declared path omits one source", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.multi", asset: digitalAsset });
+    const first = acquisition({ id: "acquisition.a", asset: digitalAsset, rights: assertion });
+    const second = acquisition({ id: "acquisition.b", asset: digitalAsset, rights: assertion });
+    const combined = derivation({
+      id: "derivation.combined",
+      acquisitions: [first, second],
     });
-    const substitutionDecision = accessDecision({
-      id: "access.substitution",
-      acquisitionRefs: [recordRef(oldAcquisition), recordRef(newAcquisition)],
-      derivationRefs: [recordRef(oldDerivation), recordRef(newDerivation)],
+    const decision = accessDecision({
+      id: "access.combined",
+      rights: [assertion],
+      acquisitions: [second],
+      derivations: [combined],
     });
-    const providerDecision = accessDecision({
-      id: "access.provider-a",
-      acquisitionRefs: [recordRef(newAcquisition)],
-      derivationRefs: [recordRef(newDerivation)],
-      operation: "provider_ocr",
-      destination: { kind: "provider", id: "provider-a" },
-      purpose: "OCR the selected notation region",
-    });
-    const substitution = withReferenceRecordDigest({
-      recordKind: "provenance_substitution",
-      id: "substitution.reviewed",
-      from: {
-        acquisitionRef: recordRef(oldAcquisition),
-        derivationRef: recordRef(oldDerivation),
-      },
-      to: {
-        acquisitionRef: recordRef(newAcquisition),
-        derivationRef: recordRef(newDerivation),
-      },
-      scope: {
-        operation: "repository_inclusion",
-        sourceAndDerivativeRefs: [
-          SUBJECT_REF,
-          recordRef(oldAcquisition),
-          recordRef(oldDerivation),
-          recordRef(newAcquisition),
-          recordRef(newDerivation),
-        ],
-        destination: { kind: "repository" },
-        purpose: "Publish reviewed development fixture",
-        policyRef: POLICY_REF,
-      },
-      accessDecisionRef: recordRef(substitutionDecision),
-      authority: {
-        kind: "rights_reviewer",
-        authorityRef: ref("reviewer.rights"),
-        evidenceRefs: [ref("review.substitution")],
-      },
-      rationale: "Reviewer approved this exact replacement provenance path",
-      decidedAt: NOW,
-    }) as ReferenceProvenanceSubstitution;
-
-    const repositoryUse = use({
-      id: "use.repository",
-      acquisition: oldAcquisition,
-      derivation: oldDerivation,
-      decision: oldDecision,
-    });
-    const fixtureUse = use({
-      id: "use.fixture",
-      acquisition: oldAcquisition,
-      derivation: oldDerivation,
-      decision: oldDecision,
-      operation: "fixture_inclusion",
-    });
-    const providerAUse = use({
-      id: "use.provider-a",
-      acquisition: newAcquisition,
-      derivation: newDerivation,
-      decision: providerDecision,
-      operation: "provider_ocr",
-      destination: { kind: "provider", id: "provider-a" },
-      purpose: "OCR the selected notation region",
-    });
-    const providerBUse = use({
-      id: "use.provider-b",
-      acquisition: newAcquisition,
-      derivation: newDerivation,
-      decision: providerDecision,
-      operation: "provider_ocr",
-      destination: { kind: "provider", id: "provider-b" },
-      purpose: "OCR the selected notation region",
-    });
-
+    const incomplete = closurePath([second], [combined]);
     const result = planReferenceSourceLifecycle(
-      plannerInput({
-        target: oldAcquisition,
-        acquisitions: [newAcquisition, oldAcquisition],
-        derivations: [newDerivation, oldDerivation],
-        decisions: [providerDecision, substitutionDecision, oldDecision],
-        substitutions: [substitution],
-        storageSubjects: [
-          sharedAssetStorage([oldAcquisition, newAcquisition]),
-          storageSubject({
+      plannerInput(
+        [
+          digitalAsset,
+          assertion,
+          first,
+          second,
+          combined,
+          decision,
+          assetPolicy(digitalAsset, [first, second]),
+          storagePolicy({
+            id: "storage.combined",
             subjectRef: SUBJECT_REF,
             subjectKind: "extraction",
-            provenancePaths: [
-              {
-                acquisitionRefs: [recordRef(oldAcquisition)],
-                derivationRefs: [recordRef(oldDerivation)],
-              },
-              {
-                acquisitionRefs: [recordRef(newAcquisition)],
-                derivationRefs: [recordRef(newDerivation)],
-              },
-            ],
+            paths: [incomplete],
+          }),
+          lifecycleUse({
+            id: "use.combined",
+            subjectRef: SUBJECT_REF,
+            path: incomplete,
+            decision,
           }),
         ],
-        uses: [providerBUse, repositoryUse, fixtureUse, providerAUse],
-      })
+        deleteAction(first)
+      )
     );
+
+    expect(result.status).toBe("blocked");
+    if (result.status !== "blocked") return;
+    expect(result.issues.some((issue) => issue.code === "invalid_provenance_endpoint")).toBe(true);
+  });
+
+  it("re-evaluates current rights instead of trusting an old allowed decision", () => {
+    const digitalAsset = asset();
+    const permitted = rights({ id: "rights.current", asset: digitalAsset });
+    const restricted = rights({
+      id: "rights.current",
+      asset: digitalAsset,
+      status: "restricted",
+      version: 2,
+      parent: permitted,
+      assertedAt: MID,
+    });
+    const source = acquisition({
+      id: "acquisition.source",
+      asset: digitalAsset,
+      rights: permitted,
+    });
+    const target = acquisition({
+      id: "acquisition.target",
+      asset: digitalAsset,
+      rights: permitted,
+    });
+    const extracted = derivation({ id: "derivation.source", acquisitions: [source] });
+    const decision = accessDecision({
+      id: "access.stale-rights",
+      rights: [permitted],
+      acquisitions: [source],
+      derivations: [extracted],
+    });
+    const result = planReferenceSourceLifecycle(
+      plannerInput(
+        [
+          digitalAsset,
+          permitted,
+          restricted,
+          source,
+          target,
+          extracted,
+          decision,
+          assetPolicy(digitalAsset, [source, target]),
+          storagePolicy({
+            id: "storage.source",
+            subjectRef: SUBJECT_REF,
+            subjectKind: "extraction",
+            paths: [closurePath([source], [extracted])],
+          }),
+          lifecycleUse({
+            id: "use.stale-rights",
+            subjectRef: SUBJECT_REF,
+            path: closurePath([source], [extracted]),
+            decision,
+          }),
+        ],
+        deleteAction(target)
+      )
+    );
+
+    expect(result).toMatchObject({
+      status: "ready",
+      permissions: [{ state: "restricted", authorization: "none" }],
+    });
+  });
+
+  it("restricts one operation without disabling independent local study", () => {
+    const digitalAsset = asset();
+    const repoRights = rights({ id: "rights.repo", asset: digitalAsset });
+    const localRights = rights({
+      id: "rights.local",
+      asset: digitalAsset,
+      kind: "local_extraction",
+    });
+    const source = acquisition({
+      id: "acquisition.source",
+      asset: digitalAsset,
+      rights: repoRights,
+    });
+    const extracted = derivation({ id: "derivation.source", acquisitions: [source] });
+    const repoDecision = accessDecision({
+      id: "access.repo",
+      rights: [repoRights],
+      acquisitions: [source],
+      derivations: [extracted],
+    });
+    const localDecision = accessDecision({
+      id: "access.local",
+      rights: [localRights],
+      acquisitions: [source],
+      derivations: [extracted],
+      operation: "local_extraction",
+      destination: { kind: "local_runtime" },
+      purpose: "Extract for private local study",
+    });
+    const commonPath = closurePath([source], [extracted]);
+    const input = plannerInput(
+      [
+        digitalAsset,
+        repoRights,
+        localRights,
+        source,
+        extracted,
+        repoDecision,
+        localDecision,
+        assetPolicy(digitalAsset, [source]),
+        storagePolicy({
+          id: "storage.source",
+          subjectRef: SUBJECT_REF,
+          subjectKind: "extraction",
+          paths: [commonPath],
+        }),
+        lifecycleUse({
+          id: "use.local",
+          subjectRef: SUBJECT_REF,
+          path: commonPath,
+          decision: localDecision,
+          operation: "local_extraction",
+          destination: { kind: "local_runtime" },
+          purpose: "Extract for private local study",
+        }),
+        lifecycleUse({
+          id: "use.repo",
+          subjectRef: SUBJECT_REF,
+          path: commonPath,
+          decision: repoDecision,
+        }),
+      ],
+      {
+        kind: "restrict_access",
+        targetAccessDecisionRef: recordRef(repoDecision),
+        reason: "Repository permission was withdrawn",
+      }
+    );
+    const result = planReferenceSourceLifecycle(input);
 
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
     expect(result.permissions).toMatchObject([
-      { useId: "use.fixture", state: "restricted", authorization: "none" },
-      { useId: "use.provider-a", state: "accessible", authorization: "direct" },
-      { useId: "use.provider-b", state: "restricted", authorization: "none" },
-      {
-        useId: "use.repository",
-        state: "accessible",
-        authorization: "provenance_substitution",
-        replayability: "partial",
-        readinessImpact: "advisory",
-      },
+      { useId: "use.local", state: "accessible", authorization: "direct" },
+      { useId: "use.repo", state: "restricted", authorization: "none" },
     ]);
-    expect(result.consequences.find((item) => item.subjectRef.id === SUBJECT_REF.id)).toMatchObject(
-      {
-        state: "accessible",
-      }
-    );
+    expect(result.consequences.every((item) => item.state === "accessible")).toBe(true);
   });
 
-  it("traverses the full derivative closure and models purge, tombstone, pins, and disclosures", () => {
-    const target = acquisition("acquisition.target");
-    const survivor = acquisition("acquisition.survivor");
-    const root = derivation("derivation.root", [target], ref("derivative.root", "1"));
-    const child = derivation("derivation.child", [survivor], ref("derivative.child", "2"), [root]);
-    const storageSubjects: ReferenceLifecycleStorageSubject[] = [
-      sharedAssetStorage([target, survivor]),
-      storageSubject({
-        subjectRef: root.derivedRef,
-        subjectKind: "extraction",
-        provenancePaths: [
-          { acquisitionRefs: [recordRef(target)], derivationRefs: [recordRef(root)] },
-        ],
-        tombstonePolicy: "discard",
-      }),
-      storageSubject({
-        subjectRef: child.derivedRef,
-        subjectKind: "report",
-        provenancePaths: [
-          {
-            acquisitionRefs: [recordRef(survivor)],
-            derivationRefs: [recordRef(child)],
-          },
-        ],
+  it("traverses exact derivative closure and preserves pins and disclosure tombstones", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.export", asset: digitalAsset });
+    const source = acquisition({
+      id: "acquisition.source",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const rootRef = ref("derived.root", "1");
+    const reportRef = ref("derived.report", "2");
+    const backupRef = ref("derived.backup", "3");
+    const disclosureRef = ref("derived.disclosure", "4");
+    const root = derivation({
+      id: "derivation.root",
+      acquisitions: [source],
+      derivedRef: rootRef,
+    });
+    const report = derivation({
+      id: "derivation.report",
+      acquisitions: [source],
+      sources: [root],
+      derivedRef: reportRef,
+      kind: "report",
+    });
+    const backup = derivation({
+      id: "derivation.backup",
+      acquisitions: [source],
+      sources: [report],
+      derivedRef: backupRef,
+      kind: "other",
+    });
+    const disclosure = derivation({
+      id: "derivation.disclosure",
+      acquisitions: [source],
+      sources: [report],
+      derivedRef: disclosureRef,
+      kind: "export",
+    });
+    const disclosureDecision = accessDecision({
+      id: "access.disclosure",
+      rights: [assertion],
+      acquisitions: [source],
+      derivations: [root, report, disclosure],
+      subjectRef: disclosureRef,
+      operation: "export",
+      destination: { kind: "recipient", id: "recipient.archive" },
+      purpose: "Send an authorized copy",
+    });
+    const policies: ReferenceLifecycleStorageSubject[] = [
+      assetPolicy(digitalAsset, [source], {
+        kind: "vellum_controlled",
+        retention: "unretained",
         tombstonePolicy: "preserve",
       }),
-      storageSubject({
-        subjectRef: ref("backup.child", "3"),
+      storagePolicy({
+        id: "storage.root",
+        subjectRef: rootRef,
+        subjectKind: "extraction",
+        paths: [closurePath([source], [root])],
+      }),
+      storagePolicy({
+        id: "storage.report",
+        subjectRef: reportRef,
+        subjectKind: "report",
+        paths: [closurePath([source], [root, report])],
+        custody: {
+          kind: "vellum_controlled",
+          retention: "unretained",
+          tombstonePolicy: "preserve",
+        },
+      }),
+      storagePolicy({
+        id: "storage.backup",
+        subjectRef: backupRef,
         subjectKind: "backup",
-        provenancePaths: [{ acquisitionRefs: [], derivationRefs: [recordRef(child)] }],
-        retention: "encrypted_local_pin",
+        paths: [closurePath([source], [root, report, backup])],
+        custody: {
+          kind: "vellum_controlled",
+          retention: "encrypted_local_pin",
+          tombstonePolicy: "preserve",
+        },
         readinessRequirement: "advisory",
       }),
-      storageSubject({
-        subjectRef: ref("export.unmanaged", "4"),
+      storagePolicy({
+        id: "storage.disclosure",
+        subjectRef: disclosureRef,
         subjectKind: "unmanaged_disclosure",
-        provenancePaths: [{ acquisitionRefs: [], derivationRefs: [recordRef(child)] }],
-        control: "unmanaged_recipient",
+        paths: [closurePath([source], [root, report, disclosure])],
+        custody: {
+          kind: "unmanaged_recipient",
+          recipientRef: ref("recipient.archive"),
+          disclosureAccessDecisionRef: recordRef(disclosureDecision),
+          disclosedAt: NOW,
+          tombstonePolicy: "preserve",
+        },
         readinessRequirement: "none",
       }),
     ];
-
     const result = planReferenceSourceLifecycle(
-      plannerInput({
-        target,
-        acquisitions: [target, survivor],
-        derivations: [child, root],
-        storageSubjects,
-      })
+      plannerInput(
+        [
+          digitalAsset,
+          assertion,
+          source,
+          root,
+          report,
+          backup,
+          disclosure,
+          disclosureDecision,
+          ...policies,
+        ],
+        deleteAction(source)
+      )
     );
 
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
-    expect(
-      Object.fromEntries(result.consequences.map((item) => [item.subjectKind, item.state]))
-    ).toMatchObject({
+    const states = Object.fromEntries(
+      result.consequences.map((item) => [item.subjectKind, item.state])
+    );
+    expect(states).toMatchObject({
+      asset_bytes: "restricted",
       extraction: "purged",
       report: "tombstone",
       backup: "restricted",
       unmanaged_disclosure: "tombstone",
     });
     expect(
-      result.consequences.find((item) => item.subjectKind === "report")?.affectedByRefs
-    ).toContainEqual(recordRef(child));
-    expect(
       result.consequences.find((item) => item.subjectKind === "unmanaged_disclosure")
-    ).toMatchObject({ irreversibleDisclosure: true, replayability: "unavailable" });
-    expect(result.aggregate).toMatchObject({
-      purged: 1,
-      irreversibleDisclosures: 1,
-      readinessBlocked: 2,
-    });
-
-    const incompleteGraph = planReferenceSourceLifecycle(
-      plannerInput({
-        target,
-        acquisitions: [target, survivor],
-        derivations: [child, root],
-        storageSubjects: storageSubjects.filter(
-          (subject) =>
-            subject.subjectKind === "asset_bytes" || subject.subjectRef.id === root.derivedRef.id
-        ),
-      })
-    );
-    expect(incompleteGraph.status).toBe("blocked");
-    if (incompleteGraph.status !== "blocked") return;
-    expect(
-      incompleteGraph.issues.find((issue) => issue.code === "missing_derivative_storage_policy")
-    ).toMatchObject({ subjectRef: recordRef(child) });
+    ).toMatchObject({ irreversibleDisclosure: true });
   });
 
-  it("fails closed without a policy for the last shared blob and distinguishes restrict from delete", () => {
-    const only = acquisition("acquisition.only");
-    const blocked = planReferenceSourceLifecycle(
-      plannerInput({ target: only, acquisitions: [only] })
-    );
-    expect(blocked).toMatchObject({
-      status: "blocked",
-      issues: [{ code: "missing_asset_storage_policy", subjectRef: ASSET_REF }],
+  it("blocks a partial lifecycle inventory that omits an affected derivative", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.asset", asset: digitalAsset });
+    const source = acquisition({
+      id: "acquisition.source",
+      asset: digitalAsset,
+      rights: assertion,
     });
-
-    const restricted = planReferenceSourceLifecycle(
-      plannerInput({
-        target: only,
-        acquisitions: [only],
-        kind: "restrict_acquisition",
-        storageSubjects: [
-          storageSubject({
-            subjectRef: ASSET_REF,
-            subjectKind: "asset_bytes",
-            provenancePaths: [{ acquisitionRefs: [recordRef(only)], derivationRefs: [] }],
-            retention: "required_hold",
-            tombstonePolicy: "preserve",
+    const root = derivation({
+      id: "derivation.root",
+      acquisitions: [source],
+      derivedRef: ref("derived.root", "1"),
+    });
+    const child = derivation({
+      id: "derivation.child",
+      acquisitions: [source],
+      sources: [root],
+      derivedRef: ref("derived.child", "2"),
+    });
+    const result = planReferenceSourceLifecycle(
+      plannerInput(
+        [
+          digitalAsset,
+          assertion,
+          source,
+          root,
+          child,
+          assetPolicy(digitalAsset, [source]),
+          storagePolicy({
+            id: "storage.root",
+            subjectRef: root.derivedRef,
+            subjectKind: "extraction",
+            paths: [closurePath([source], [root])],
           }),
         ],
-      })
+        deleteAction(source)
+      )
     );
-    expect(restricted.status).toBe("ready");
-    if (restricted.status !== "ready") return;
+
+    expect(result.status).toBe("blocked");
+    if (result.status !== "blocked") return;
     expect(
-      restricted.consequences.find((item) => item.subjectKind === "asset_acquisition")
-    ).toMatchObject({ state: "restricted" });
-    expect(
-      restricted.consequences.find((item) => item.subjectKind === "asset_bytes")
-    ).toMatchObject({ state: "restricted", replayability: "partial" });
+      result.issues.some(
+        (issue) =>
+          issue.code === "missing_derivative_storage_policy" && issue.subjectRef?.id === child.id
+      )
+    ).toBe(true);
+  });
+
+  it("blocks retroactive authorization through a later same-byte acquisition", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.asset", asset: digitalAsset });
+    const oldAcquisition = acquisition({
+      id: "acquisition.old",
+      asset: digitalAsset,
+      rights: assertion,
+      acquiredAt: EARLY,
+    });
+    const newAcquisition = acquisition({
+      id: "acquisition.new",
+      asset: digitalAsset,
+      rights: assertion,
+      acquiredAt: MID,
+    });
+    const oldDerivation = derivation({
+      id: "derivation.old",
+      acquisitions: [oldAcquisition],
+      createdAt: "2026-07-15T09:00:00.000Z",
+    });
+    const newDerivation = derivation({
+      id: "derivation.new",
+      acquisitions: [newAcquisition],
+      createdAt: "2026-07-15T11:00:00.000Z",
+    });
+    const decision = accessDecision({
+      id: "access.new",
+      rights: [assertion],
+      acquisitions: [newAcquisition],
+      derivations: [newDerivation],
+    });
+    const result = planReferenceSourceLifecycle(
+      plannerInput(
+        [
+          digitalAsset,
+          assertion,
+          oldAcquisition,
+          newAcquisition,
+          oldDerivation,
+          newDerivation,
+          decision,
+          assetPolicy(digitalAsset, [oldAcquisition, newAcquisition]),
+          storagePolicy({
+            id: "storage.arrangement",
+            subjectRef: SUBJECT_REF,
+            subjectKind: "extraction",
+            paths: [
+              closurePath([oldAcquisition], [oldDerivation]),
+              closurePath([newAcquisition], [newDerivation]),
+            ],
+          }),
+          lifecycleUse({
+            id: "use.new",
+            subjectRef: SUBJECT_REF,
+            path: closurePath([newAcquisition], [newDerivation]),
+            decision,
+          }),
+        ],
+        deleteAction(oldAcquisition)
+      )
+    );
+
+    expect(result.status).toBe("blocked");
+    if (result.status !== "blocked") return;
+    expect(result.issues.some((issue) => issue.code === "retroactive_provenance")).toBe(true);
+  });
+
+  it("treats validUntil equal to effectiveAt as expired", () => {
+    const digitalAsset = asset();
+    const assertion = rights({ id: "rights.asset", asset: digitalAsset });
+    const source = acquisition({
+      id: "acquisition.source",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const target = acquisition({
+      id: "acquisition.target",
+      asset: digitalAsset,
+      rights: assertion,
+    });
+    const extracted = derivation({ id: "derivation.source", acquisitions: [source] });
+    const decision = accessDecision({
+      id: "access.expiring",
+      rights: [assertion],
+      acquisitions: [source],
+      derivations: [extracted],
+      validUntil: NOW,
+    });
+    const result = planReferenceSourceLifecycle(
+      plannerInput(
+        [
+          digitalAsset,
+          assertion,
+          source,
+          target,
+          extracted,
+          decision,
+          assetPolicy(digitalAsset, [source, target]),
+          storagePolicy({
+            id: "storage.source",
+            subjectRef: SUBJECT_REF,
+            subjectKind: "extraction",
+            paths: [closurePath([source], [extracted])],
+          }),
+          lifecycleUse({
+            id: "use.expiring",
+            subjectRef: SUBJECT_REF,
+            path: closurePath([source], [extracted]),
+            decision,
+          }),
+        ],
+        deleteAction(target)
+      )
+    );
+
+    expect(result).toMatchObject({
+      status: "ready",
+      permissions: [{ state: "restricted", authorization: "none" }],
+    });
   });
 });
