@@ -12,6 +12,7 @@ import {
   KnowledgePublicationTransactionSchema,
   type KnowledgePublicationSnapshot,
 } from "./knowledge-publication-store.js";
+import type { OwnerReferenceWorkbenchOpaqueProjector } from "./owner-reference-workbench-service.js";
 
 const Strict = { additionalProperties: false } as const;
 const SafeIdSchema = Type.String({
@@ -22,14 +23,20 @@ const SafeIdSchema = Type.String({
 const GenerationParamsSchema = Type.Object({ generationId: SafeIdSchema }, Strict);
 
 export function createKnowledgePublicationCurrentRoute(
-  store = new KnowledgePublicationStore()
+  store: KnowledgePublicationStore,
+  opaqueProjector: Pick<OwnerReferenceWorkbenchOpaqueProjector, "project">
 ): RequestHandler {
   return createApiRoute({
     validate: () => undefined,
     handler: async () =>
       translateKnowledgePublicationErrors(() => ({
         current: publicationSnapshotView(store.readCurrent()),
-        orphans: store.listOrphans(),
+        orphans: store.listOrphans().map((orphan) => ({
+          ...orphan,
+          displayRef: opaqueProjector.project("publication-orphan", {
+            generationId: orphan.generationId,
+          }),
+        })),
       })),
   });
 }

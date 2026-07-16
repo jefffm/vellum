@@ -4,14 +4,20 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import express, { type ErrorRequestHandler } from "express";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiResponse } from "../../lib/api-contract.js";
 import { ApiRouteError } from "./create-route.js";
 import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
 import { createReferenceSourceControlledAssetUploadRoute } from "./reference-source-controlled-asset-route.js";
-import { ReferenceSourceControlledAssetIngestionService } from "./reference-source-controlled-asset-service.js";
-import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import {
+  ReferenceSourceControlledAssetIngestionRecoveryRequiredError,
+  ReferenceSourceControlledAssetIngestionService,
+} from "./reference-source-controlled-asset-service.js";
+import {
+  createReferenceSourceControlledUploadStagingWriter,
+  ReferenceSourceStagingService,
+} from "./reference-source-staging-service.js";
 import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 
 const NOW = "2026-07-15T18:00:00.000Z";
@@ -21,6 +27,7 @@ describe("owner reference controlled-asset HTTP upload", () => {
   let server: Server;
   let staging: ReferenceSourceStagingService;
   let controlledStore: ReferenceSourceControlledArtifactStore;
+  let service: ReferenceSourceControlledAssetIngestionService;
 
   beforeEach(async () => {
     rootDirectory = mkdtempSync(path.join(tmpdir(), "vellum-reference-upload-route-"));
@@ -35,8 +42,8 @@ describe("owner reference controlled-asset HTTP upload", () => {
     controlledStore = new ReferenceSourceControlledArtifactStore({
       rootDirectory: path.join(rootDirectory, "controlled"),
     });
-    const service = new ReferenceSourceControlledAssetIngestionService({
-      stagingService: staging,
+    service = new ReferenceSourceControlledAssetIngestionService({
+      stagingService: createReferenceSourceControlledUploadStagingWriter(staging),
       controlledStore,
       now: () => new Date(NOW),
     });
@@ -148,6 +155,30 @@ describe("owner reference controlled-asset HTTP upload", () => {
     expect(oversized.status).toBe(413);
     expect(staging.readCurrent().head).toBeNull();
     expect(controlledStore.observe()).toMatchObject({ status: "complete", artifactBindings: [] });
+  });
+
+  it("marks a post-metadata recovery requirement as an uncertain retryable outcome", async () => {
+    vi.spyOn(service, "ingest").mockRejectedValueOnce(
+      new ReferenceSourceControlledAssetIngestionRecoveryRequiredError(
+        "Owner reference metadata committed but controlled bytes require restart recovery",
+        { cause: new Error("private cause"), ingestionError: new Error("private ingestion") }
+      )
+    );
+
+    const response = await upload(pdf("uncertain outcome"), {
+      "X-Reference-Acquisition-Key": "uncertain-outcome",
+    });
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "service_unavailable",
+        details: {
+          outcome: "unknown",
+          retrySafety: "reuse_acquisition_key_after_restart",
+        },
+      },
+    });
   });
 
   function upload(bytes: Buffer, headers: Record<string, string> = {}): Promise<Response> {

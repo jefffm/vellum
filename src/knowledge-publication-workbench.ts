@@ -13,9 +13,13 @@ const RECORD_KINDS = new Set([
   "activation_decision",
   "knowledge_library_inventory_snapshot",
   "knowledge_catalog_snapshot",
+  "owner_reference_migration_mapping",
+  "owner_reference_migration_quarantine",
+  "owner_reference_migration_journal",
 ]);
-const WRITER_KINDS = new Set(["upload", "review", "advisory", "activation", "system"]);
+const WRITER_KINDS = new Set(["upload", "review", "advisory", "activation", "system", "migration"]);
 const ORPHAN_STATES = new Set(["incomplete_staging", "complete_staging", "complete_generation"]);
+const PRIVATE_COUNT_LIMIT = 999;
 
 export type KnowledgePublicationRecordRef = {
   id: string;
@@ -59,6 +63,10 @@ export type KnowledgePublicationSnapshot = {
 
 export type KnowledgePublicationOrphan = {
   generationId: string;
+  displayRef: {
+    id: string;
+    digest: string;
+  };
   state: string;
   transactionId: string | null;
   revision: number | null;
@@ -105,6 +113,8 @@ export function renderKnowledgePublicationWorkbench(
 }
 
 function renderCurrent(document: Document, snapshot: KnowledgePublicationSnapshot): HTMLElement {
+  if (isMigrationPublication(snapshot)) return renderPrivateMigrationCurrent(document, snapshot);
+
   const section = document.createElement("section");
   section.className = "knowledge-publication-current";
   const generation = snapshot.generation;
@@ -129,6 +139,29 @@ function renderCurrent(document: Document, snapshot: KnowledgePublicationSnapsho
   records.append(summary);
   for (const record of snapshot.records) records.append(renderRecord(document, record));
   section.append(records);
+  return section;
+}
+
+function renderPrivateMigrationCurrent(
+  document: Document,
+  snapshot: KnowledgePublicationSnapshot
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "knowledge-publication-current knowledge-publication-current-private";
+  const title = document.createElement("h4");
+  title.textContent = "Current private migration publication";
+  const boundary = document.createElement("p");
+  boundary.className = "knowledge-publication-head";
+  boundary.textContent =
+    "Migration publication identities, digests, record identities, and successor identities are withheld.";
+  const lineage = document.createElement("p");
+  lineage.className = "knowledge-publication-lineage";
+  lineage.textContent = snapshot.generation.parentGenerationRef
+    ? "Successor publication · private lineage withheld"
+    : "Initial publication · private lineage withheld";
+  const counts = document.createElement("p");
+  counts.textContent = `${boundedCount(snapshot.records.length)} visible immutable records · ${boundedCount(snapshot.generation.newRecordRefs.length)} introduced here · migration staging only`;
+  section.append(title, boundary, lineage, counts);
   return section;
 }
 
@@ -157,7 +190,7 @@ function renderOrphans(
   const details = document.createElement("details");
   details.className = "knowledge-publication-orphans";
   const summary = document.createElement("summary");
-  summary.textContent = `Recoverable unreachable generations (${orphans.length})`;
+  summary.textContent = `Recoverable unreachable generations (${boundedCount(orphans.length)})`;
   details.append(summary);
   if (orphans.length === 0) {
     const empty = document.createElement("p");
@@ -165,36 +198,66 @@ function renderOrphans(
     details.append(empty);
     return details;
   }
-  for (const orphan of orphans) {
+  for (const orphan of orphans.slice(0, PRIVATE_COUNT_LIMIT)) {
     const row = document.createElement("article");
     row.className = "knowledge-publication-orphan";
     const title = document.createElement("strong");
-    title.textContent = `${orphan.generationId} · ${orphan.state}`;
+    title.textContent = `Unreachable private generation ${orphan.displayRef.id} · ${humanize(orphan.state)}`;
     const detail = document.createElement("p");
-    detail.textContent = `${orphan.stagedRecordCount} staged records${orphan.transactionId ? ` · transaction ${orphan.transactionId}` : ""}`;
+    detail.textContent = `${boundedCount(orphan.stagedRecordCount)} staged records · private transaction and lineage withheld`;
     row.append(title, detail);
     if (reclaim) {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = "Reclaim unreachable generation";
+      button.setAttribute("aria-label", `Reclaim ${orphan.displayRef.id}`);
+      const status = document.createElement("p");
+      status.className = "knowledge-publication-orphan-status";
+      status.setAttribute("role", "status");
       button.addEventListener("click", () => {
+        const confirmed =
+          document.defaultView?.confirm(
+            `Permanently reclaim ${orphan.displayRef.id}? This deletes that unreachable private staging generation and cannot be undone.`
+          ) ?? false;
+        if (!confirmed) return;
         button.disabled = true;
-        void reclaim(orphan.generationId).catch(() => {
-          button.disabled = false;
-        });
+        status.textContent = `Reclaiming ${orphan.displayRef.id}…`;
+        void reclaim(orphan.generationId).then(
+          () => {
+            status.textContent = `Reclaimed ${orphan.displayRef.id}.`;
+          },
+          () => {
+            button.disabled = false;
+            status.textContent = `Could not reclaim ${orphan.displayRef.id}. Refresh and retry.`;
+          }
+        );
       });
-      row.append(button);
+      row.append(button, status);
     }
     details.append(row);
+  }
+  if (orphans.length > PRIVATE_COUNT_LIMIT) {
+    const withheld = document.createElement("p");
+    withheld.textContent = "Additional private orphan rows are withheld from this view.";
+    details.append(withheld);
   }
   return details;
 }
 
 function decodeWorkbenchState(value: unknown): KnowledgePublicationWorkbenchState {
   const input = object(value, "knowledge publication response", ["current", "orphans"]);
+  const orphans = array(input.orphans, "publication orphans").map(decodeOrphan);
+  const generationIds = orphans.map(({ generationId }) => generationId);
+  const displayIds = orphans.map(({ displayRef }) => displayRef.id);
+  if (
+    new Set(generationIds).size !== generationIds.length ||
+    new Set(displayIds).size !== displayIds.length
+  ) {
+    throw new Error("Publication orphans contain duplicate identities");
+  }
   return {
     current: input.current === null ? null : decodeSnapshot(input.current),
-    orphans: array(input.orphans, "publication orphans").map(decodeOrphan),
+    orphans,
   };
 }
 
@@ -325,6 +388,7 @@ function decodeRecordRef(value: unknown): KnowledgePublicationRecordRef {
 function decodeOrphan(value: unknown): KnowledgePublicationOrphan {
   const input = object(value, "publication orphan", [
     "generationId",
+    "displayRef",
     "state",
     "transactionId",
     "revision",
@@ -336,6 +400,7 @@ function decodeOrphan(value: unknown): KnowledgePublicationOrphan {
   }
   return {
     generationId: id(input.generationId, "orphan generation ID"),
+    displayRef: decodePrivateDisplayRef(input.displayRef),
     state: input.state,
     transactionId:
       input.transactionId === null ? null : id(input.transactionId, "orphan transaction ID"),
@@ -343,6 +408,14 @@ function decodeOrphan(value: unknown): KnowledgePublicationOrphan {
     parentGenerationRef:
       input.parentGenerationRef === null ? null : decodeGenerationRef(input.parentGenerationRef),
     stagedRecordCount: revision(input.stagedRecordCount, "orphan staged-record count", true),
+  };
+}
+
+function decodePrivateDisplayRef(value: unknown): KnowledgePublicationOrphan["displayRef"] {
+  const input = object(value, "publication orphan display ref", ["id", "digest"]);
+  return {
+    id: id(input.id, "orphan display-ref ID"),
+    digest: digest(input.digest, "orphan display-ref digest"),
   };
 }
 
@@ -359,6 +432,25 @@ function canonicalRefs(refs: KnowledgePublicationRecordRef[]): string {
 
 function refKey(ref: KnowledgePublicationRecordRef): string {
   return `${ref.recordKind}:${ref.id}:${ref.digest}`;
+}
+
+function isMigrationPublication(snapshot: KnowledgePublicationSnapshot): boolean {
+  return (
+    snapshot.generation.writerKind === "migration" ||
+    snapshot.records.some(({ recordKind }) => isMigrationRecordKind(recordKind))
+  );
+}
+
+function isMigrationRecordKind(kind: string): boolean {
+  return kind.startsWith("owner_reference_migration_");
+}
+
+function boundedCount(value: number): string {
+  return value > PRIVATE_COUNT_LIMIT ? `${PRIVATE_COUNT_LIMIT}+` : String(value);
+}
+
+function humanize(value: string): string {
+  return value.replaceAll("_", " ");
 }
 
 function labelForKind(kind: string): string {

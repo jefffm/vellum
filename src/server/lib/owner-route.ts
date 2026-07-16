@@ -194,6 +194,31 @@ export function createOwnerReferenceRoute(
   };
 }
 
+/**
+ * Production quarantine boundary for the pre-migration OwnerReference writer.
+ *
+ * The implementation remains available to the migration harness so existing
+ * immutable libraries can be seeded and verified, but new production uploads
+ * must enter through the controlled Reference Digital Asset ingestion route.
+ */
+export function createLegacyOwnerReferenceQuarantineRoute(): RequestHandler {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+  return createApiRoute({
+    validate: () => undefined,
+    handler: async () => {
+      throw new ApiRouteError(
+        "Legacy OwnerReference upload is quarantined; use the Owner Reference Library controlled upload",
+        410,
+        "conflict",
+        {
+          reason: "legacy_owner_reference_writer_quarantined",
+          replacement: "/api/owner/reference-source-staging/assets",
+        }
+      );
+    },
+  });
+}
+
 function decodeReferenceHeader(value: string | undefined, field: string): string {
   if (!value) throw new ApiRouteError(`X-Reference-${field} is required`, 400);
   try {

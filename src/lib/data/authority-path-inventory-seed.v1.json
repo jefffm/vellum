@@ -4344,6 +4344,7 @@
         "src/guided-start.ts",
         "src/knowledge-publication-workbench.ts",
         "src/lib/tool-helpers.ts",
+        "src/owner-reference-workbench.ts",
         "src/reference-source-staging-diagnostics.ts",
         "src/renderers.ts"
       ],
@@ -4379,6 +4380,11 @@
           "kind": "symbol",
           "path": "src/lib/tool-helpers.ts",
           "selector": "formatViolations"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/owner-reference-workbench.ts",
+          "selector": "renderOwnerReferenceWorkbench"
         },
         {
           "kind": "symbol",
@@ -4474,6 +4480,19 @@
             "mode": "function_prologue",
             "path": "src/lib/tool-helpers.ts",
             "selector": "formatViolations"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/owner-reference-workbench.ts",
+            "selector": "renderOwnerReferenceWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/owner-reference-workbench.ts",
+            "selector": "renderOwnerReferenceWorkbench"
           }
         },
         {
@@ -8786,7 +8805,9 @@
       "id": "authority.validator.reference-source-governance",
       "category": "validator",
       "sourcePaths": [
+        "src/lib/owner-reference-migration-reason.ts",
         "src/lib/owner-reference-migration.ts",
+        "src/lib/owner-reference-workbench-contract.ts",
         "src/lib/reference-source-authority.ts",
         "src/lib/reference-source-domain.ts",
         "src/lib/reference-source-instant.ts",
@@ -8796,8 +8817,12 @@
         "src/server/index.ts",
         "src/server/lib/owner-reference-claim.ts",
         "src/server/lib/owner-reference-legacy-reader.ts",
+        "src/server/lib/owner-reference-local-study-service.ts",
         "src/server/lib/owner-reference-migration-route.ts",
         "src/server/lib/owner-reference-migration-service.ts",
+        "src/server/lib/owner-reference-workbench-route.ts",
+        "src/server/lib/owner-reference-workbench-service.ts",
+        "src/server/lib/owner-route.ts",
         "src/server/lib/owner-store.ts",
         "src/server/lib/reference-source-controlled-artifact-store.ts",
         "src/server/lib/reference-source-controlled-asset-route.ts",
@@ -8805,6 +8830,9 @@
         "src/server/lib/reference-source-inventory-provider.ts",
         "src/server/lib/reference-source-lifecycle-security.ts",
         "src/server/lib/reference-source-lifecycle-service.ts",
+        "src/server/lib/reference-source-operation-gateway.ts",
+        "src/server/lib/reference-source-operation-route.ts",
+        "src/server/lib/reference-source-protected-operation-adapter.ts",
         "src/server/lib/reference-source-staging-service.ts",
         "src/server/lib/reference-source-staging-store.ts"
       ],
@@ -8825,6 +8853,11 @@
           "kind": "symbol",
           "path": "src/lib/reference-source-authority.ts",
           "selector": "referenceAuthorityReceiptSigningPayload"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/lib/reference-source-domain.ts",
+          "selector": "REFERENCE_ACCESS_OPERATION_DESTINATIONS"
         },
         {
           "kind": "symbol",
@@ -8850,6 +8883,11 @@
           "kind": "symbol",
           "path": "src/server/lib/owner-reference-legacy-reader.ts",
           "selector": "OwnerReferenceLegacyReader.capture"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-local-study-service.ts",
+          "selector": "OwnerReferenceLocalStudyService.execute"
         },
         {
           "kind": "symbol",
@@ -8908,6 +8946,51 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-route.ts",
+          "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-route.ts",
+          "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-route.ts",
+          "selector": "createOwnerReferenceWorkbenchReadRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-route.ts",
+          "selector": "createOwnerReferenceWorkbenchUploadConfirmationRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.confirmUpload"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.read"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.reviewLocalOperation"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-route.ts",
+          "selector": "createLegacyOwnerReferenceQuarantineRoute"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/owner-store.ts",
           "selector": "OwnerStore.listReferences"
         },
@@ -8960,6 +9043,46 @@
           "kind": "symbol",
           "path": "src/server/lib/reference-source-lifecycle-service.ts",
           "selector": "deriveRequiredReviewedProvenanceSubstitutionRefs"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-operation-gateway.ts",
+          "selector": "ReferenceSourceOperationGateway.execute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-operation-route.ts",
+          "selector": "createReferenceSourceCompilerInputRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-operation-route.ts",
+          "selector": "createReferenceSourceOperationDefaultDecisionRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-operation-route.ts",
+          "selector": "createReferenceSourceProtectedOperationRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+          "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+          "selector": "ReferenceSourceProtectedOperationAdapter.executeCompilerInput"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
         },
         {
           "kind": "symbol",
@@ -9103,6 +9226,30 @@
         {
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-store.ts",
             "selector": "OwnerStore.addReference"
           },
@@ -9197,6 +9344,52 @@
         {
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-gateway.ts",
+            "selector": "ReferenceSourceOperationGateway.execute"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceProtectedOperationRoute"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyTransaction"
           },
@@ -9223,6 +9416,18 @@
             "selector": "ReferenceSourceStagingStore.commit"
           },
           "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
             "ReferenceSourceStagingHead.record",
             "ReferenceSourceStagingSnapshot.record"
           ]
@@ -9285,6 +9490,19 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/lib/reference-source-domain.ts",
+            "selector": "REFERENCE_ACCESS_OPERATION_DESTINATIONS"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/reference-source-domain.ts",
+            "selector": "REFERENCE_ACCESS_OPERATION_DESTINATIONS"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/lib/reference-source-inventory.ts",
             "selector": "planReferenceSourceInventoryClosure"
           },
@@ -9344,6 +9562,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-legacy-reader.ts",
             "selector": "OwnerReferenceLegacyReader.capture"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
           }
         },
         {
@@ -9493,6 +9724,123 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchReadRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchReadRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchUploadConfirmationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchUploadConfirmationRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.confirmUpload"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.confirmUpload"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.read"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.read"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.reviewLocalOperation"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.reviewLocalOperation"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-route.ts",
+            "selector": "createLegacyOwnerReferenceQuarantineRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-route.ts",
+            "selector": "createLegacyOwnerReferenceQuarantineRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-store.ts",
             "selector": "OwnerStore.listReferences"
           },
@@ -9630,6 +9978,110 @@
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-lifecycle-service.ts",
             "selector": "deriveRequiredReviewedProvenanceSubstitutionRefs"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-gateway.ts",
+            "selector": "ReferenceSourceOperationGateway.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-gateway.ts",
+            "selector": "ReferenceSourceOperationGateway.execute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceCompilerInputRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceCompilerInputRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceOperationDefaultDecisionRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceOperationDefaultDecisionRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceProtectedOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceProtectedOperationRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.executeCompilerInput"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.executeCompilerInput"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
           }
         },
         {
@@ -9844,6 +10296,19 @@
           "access": "write",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-gateway.ts",
+            "selector": "ReferenceSourceOperationGateway.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-gateway.ts",
+            "selector": "ReferenceSourceOperationGateway.execute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyTransaction"
           },
@@ -9877,6 +10342,97 @@
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-store.ts",
             "selector": "ReferenceSourceStagingStore.commit"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceProtectedOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-operation-route.ts",
+            "selector": "createReferenceSourceProtectedOperationRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+            "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
           }
         }
       ],
@@ -11323,7 +11879,7 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
-      "sourceDigest": "e2ed473c07bc42b0a7d2cecb7f8e16c39eb7b05c1be4fd591ab0da0d8ecc8136",
+      "sourceDigest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.parameter.arrangement-defaults",
@@ -11335,6 +11891,357 @@
         "authority.validator.source-interpretation"
       ],
       "declarations": [
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_STORAGE",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_KEY_BYTES",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_LOCK",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_MAX_PENDING",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_MIGRATION_STRICT",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_STAGING_SUMMARY_LIMIT",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_LOCK",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_MAX_BYTES",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_MAX_PENDING",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_PENDING_STORAGE",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationCapabilitiesSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationCompatibilityHeadSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationCompatibilitySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationDigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationExpectedHeadSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationGraphHeadSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationLegacySourceStateSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationPlanSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationRevisionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceMigrationSafeIdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceUploadIngestResultSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "OwnerReferenceUploadRecordRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "PRIVATE_REFERENCE_LOCAL_STUDY_MEDIA_TYPES",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
         {
           "selector": "api",
           "disposition": "authority_path",
@@ -11375,6 +12282,32 @@
           ]
         },
         {
+          "selector": "assertPrivateReferenceFileSize",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "assertUniquePrivateMigrationIds",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "audioPlaybackCleanups",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -11401,6 +12334,58 @@
           ]
         },
         {
+          "selector": "base64UrlDecode",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "base64UrlEncode",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "boundedPrivateCount",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "browserSha256Hex",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "buildScoreSelectionContext",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -11415,6 +12400,19 @@
         },
         {
           "selector": "checkpointGuidedWorkflow",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "classifyPrivateReferenceLocalStudyConflict",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -11479,6 +12477,45 @@
           ]
         },
         {
+          "selector": "decodeOwnerReferenceMigrationCompatibility",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "decodeOwnerReferenceMigrationPlan",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "decodeOwnerReferenceUploadIngestResult",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "defaultGuidedPerformanceBrief",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -11493,6 +12530,19 @@
         },
         {
           "selector": "describeArrangementEvent",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "fetchPrivateReferenceLocalStudy",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -11557,6 +12607,32 @@
           ]
         },
         {
+          "selector": "hasExactKeys",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "hasPrivateReferenceMediaSignature",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "hideScoreAnchoredReview",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -11571,6 +12647,19 @@
         },
         {
           "selector": "highlightLineage",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "humanizePrivateEnum",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -11817,7 +12906,46 @@
           ]
         },
         {
+          "selector": "isOpaqueBrowserRef",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "isOpticalSource",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "isPrivateReferenceStagingDiagnostics",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "isRecord",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -11947,6 +13075,19 @@
           ]
         },
         {
+          "selector": "ownerReferenceMigrationExpectedHead",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "parseOwnerValue",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -12012,6 +13153,123 @@
           ]
         },
         {
+          "selector": "privateArrayLength",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateNestedArrayLength",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceFileFingerprint",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceLocalStudyFingerprint",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceLocalStudyHmacKey",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceLocalStudyIntent",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceMimeType",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceUploadHmacKey",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "privateReferenceUploadIntent",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "proposeOwnerIntent",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -12026,6 +13284,45 @@
         },
         {
           "selector": "proposeSelectionDefault",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "readPrivateReferenceLocalStudyPendingState",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "readPrivateReferenceUploadPendingState",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "rebindPrivateReferenceLocalStudyIntent",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -12090,7 +13387,59 @@
           ]
         },
         {
+          "selector": "refsEqualInBrowser",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "renderEditValidationFindings",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "renderOwnerReferenceMigrationControls",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "renderPrivateReferenceStagingSummary",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "renderRedactedOwnerReferenceMigrationPlan",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -12116,6 +13465,19 @@
           ]
         },
         {
+          "selector": "resetPrivateReferenceUploadRetryState",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "resolveCriticalUncertainties",
           "disposition": "authority_path",
           "authorityPathIds": [
@@ -12129,7 +13491,46 @@
           ]
         },
         {
+          "selector": "retirePrivateReferenceLocalStudyIntent",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "retirePrivateReferenceUploadIntent",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
           "selector": "runGuidedWorkflowTargets",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "sameOwnerReferenceMigrationHead",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.parameter.arrangement-defaults",
@@ -12244,17 +13645,74 @@
             "authority.validator.owner-playtest-readiness",
             "authority.validator.source-interpretation"
           ]
+        },
+        {
+          "selector": "withPrivateReferenceLocalStudyLock",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "withPrivateReferenceUploadLock",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "writePrivateReferenceLocalStudyPendingState",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
+        },
+        {
+          "selector": "writePrivateReferenceUploadPendingState",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.parameter.arrangement-defaults",
+            "authority.parameter.owner-intent-and-edit",
+            "authority.presentation.claim-labels",
+            "authority.prompt.model-action-guidance",
+            "authority.validator.ergonomic-thresholds",
+            "authority.validator.owner-playtest-readiness",
+            "authority.validator.source-interpretation"
+          ]
         }
       ]
     },
     {
       "sourcePath": "src/knowledge-publication-workbench.ts",
-      "sourceDigest": "e2767c45078eb15d11104b5eb93ea751839ec60a0e89e0f705efb23f8f9c5bb3",
+      "sourceDigest": "36e9a5e07d850cc9fb811035f304c548970103ae0691ecfc5a9a439cdaf57d94",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.presentation.claim-labels"],
       "declarations": [
         {
           "selector": "ORPHAN_STATES",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "PRIVATE_COUNT_LIMIT",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
@@ -12284,6 +13742,11 @@
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
         {
+          "selector": "boundedCount",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
           "selector": "canonicalRefs",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
@@ -12305,6 +13768,11 @@
         },
         {
           "selector": "decodeOrphan",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "decodePrivateDisplayRef",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
@@ -12334,7 +13802,22 @@
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
         {
+          "selector": "humanize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
           "selector": "id",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "isMigrationPublication",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "isMigrationRecordKind",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
@@ -12365,6 +13848,11 @@
         },
         {
           "selector": "renderOrphans",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderPrivateMigrationCurrent",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
         },
@@ -12853,7 +14341,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "d78180939d8fce57c88d4d15cd96acb5670ce7154f4a895fddd76f5694df3958",
+      "sourceDigest": "c80b12d46b21c15150aabc0a6b0a3e5b60b7f1238d3cf5401fcc99f27a2721c6",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -13226,7 +14714,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "00d154507b5d709a4381ca832409899fde46932b6625c89e35ba04c36fbaed8a",
+      "sourceDigest": "74c32ac784ffa9e17e0d9b7938eebd8a3c6d095f07bd49a4cae080c89d4c240d",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -14344,14 +15832,14 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-classification-policy.v1.json",
-      "sourceDigest": "f10032b13b40c03cd2303f9f1664f3643f75fb7e5141c892f46eba9f3118b611",
+      "sourceDigest": "e1d8ea0733f2ebc175805961be439c297f4aa9b4eafd463bb24078ccbd5a4626",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d",
+      "sourceDigest": "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -16720,8 +18208,26 @@
       ]
     },
     {
+      "sourcePath": "src/lib/owner-reference-migration-reason.ts",
+      "sourceDigest": "25007c115cb158f337c46652233ee911de50229edefacaa8328f3fd4a92fe100",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "OwnerReferenceMigrationQuarantineActionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceMigrationQuarantineReasonSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/lib/owner-reference-migration.ts",
-      "sourceDigest": "65036cfb728ed50a8073b8068c445b93ce5024a9e4cfa626b0f97fcf9c044ef0",
+      "sourceDigest": "12c5e381544424ba3faef81e1f56301e80e48a9ca731aebc419c6b4e4433b128",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -16766,16 +18272,6 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
-          "selector": "OwnerReferenceMigrationQuarantineActionSchema",
-          "disposition": "authority_path",
-          "authorityPathIds": ["authority.validator.reference-source-governance"]
-        },
-        {
-          "selector": "OwnerReferenceMigrationQuarantineReasonSchema",
-          "disposition": "authority_path",
-          "authorityPathIds": ["authority.validator.reference-source-governance"]
-        },
-        {
           "selector": "OwnerReferenceMigrationQuarantineSchema",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -16792,6 +18288,99 @@
         },
         {
           "selector": "OwnerReferenceMigrationTargetRecordSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "SafeIdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/lib/owner-reference-workbench-contract.ts",
+      "sourceDigest": "968f21518dfa3d9fbec926afda3672e197c30d225f2ce220f9abd3442c0451b7",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "DigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OpaqueRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchAccessExplanationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchAccessOperationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchCardSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalOperationReviewRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalOperationReviewResultSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalOperationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalStudyConflictDetailsSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalStudyRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchMigrationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchRoleBindingsSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchSnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchUploadConfirmationRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchUploadConfirmationResultSchema",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -16890,7 +18479,7 @@
     },
     {
       "sourcePath": "src/lib/reference-source-authority.ts",
-      "sourceDigest": "8d51fca711d58884d2018f9b65b18ed3c8a841cfb18e734acd60f21839f41e22",
+      "sourceDigest": "e0a49b22ee2992815e431802a1786de086a7377b5ad1adebe333a77a2dd50132",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -17078,10 +18667,15 @@
     },
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
-      "sourceDigest": "ca993619c97837a6f0a3149e7ee8cc97d5afbe5f14fee0712b4c4a2ce37cb4f6",
+      "sourceDigest": "0929ea75ee4448c85487e2b2c1e30f5b07ea55d91bee05f6d6e84739913870ed",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
         {
           "selector": "ArrangementSourceBindingSchema",
           "disposition": "authority_path",
@@ -17149,6 +18743,11 @@
         },
         {
           "selector": "ProvenanceSubstitutionScopeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "REFERENCE_ACCESS_OPERATION_DESTINATIONS",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -17707,7 +19306,7 @@
     },
     {
       "sourcePath": "src/lib/reference-source-lifecycle.ts",
-      "sourceDigest": "818c678087332b8269d04c002111193af7b14ddf4e79fdb324c88b6121de7dd1",
+      "sourceDigest": "0e2044525dccb75edb105cc184fa488a288dc25b63c6fe1f1937108ab06605ea",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -19754,6 +21353,119 @@
       ]
     },
     {
+      "sourcePath": "src/owner-reference-workbench.ts",
+      "sourceDigest": "a52bd52b9eb3d8e868f637a4f0c9b9f6fe90de523506efed787eb868f7cb00c1",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.presentation.claim-labels"],
+      "declarations": [
+        {
+          "selector": "EXPECTED_ACCESS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalStudyError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchLocalStudyError.kind",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchUploadError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchUploadError.kind",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "append",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "decodeSnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "formatBytes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "humanize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "localReviewExplanation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "localStudyFailureExplanation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "localStudyPreviews",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderCard",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderLocalReviewControls",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderLocalStudyAuthorization",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderLocalStudyPreview",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderOwnerReferenceWorkbench",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderUpload",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderUploadRecovery",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "sentenceCase",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "uploadFailurePresentation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/prompts.ts",
       "sourceDigest": "14784175dc1eae16c81f923c80169e184741630deb83e230ae37b210606af719",
       "disposition": "authority_path",
@@ -19848,7 +21560,7 @@
     },
     {
       "sourcePath": "src/reference-source-staging-diagnostics.ts",
-      "sourceDigest": "14594b6ef9b705ee286fd0742a50bf02fa1bdb30f918b94744ff2b7adc9d15d9",
+      "sourceDigest": "62462e5867c69f179ae2d1a4f15c4a5ab285f9a7de38be214c4ff4a8139bf188",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.presentation.claim-labels"],
       "declarations": [
@@ -20367,7 +22079,7 @@
     },
     {
       "sourcePath": "src/server/index.ts",
-      "sourceDigest": "884e2d473ce4816b5ffc17dee8d312cea98a69d149a963684660b66a23be8d6f",
+      "sourceDigest": "5504574d7eefc4cfa50bf1d71a2c9531e06e11bdf0cd9be320499f432a42c151",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -22949,7 +24661,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-publication-route.ts",
-      "sourceDigest": "543a6df7febe708967a43a8a70f1c82db6ad58dc487436e7256230a31d79e2e6",
+      "sourceDigest": "c2d615061a246f269aed49b1a405feb9fe33514b7689a3e7700b0ee3cb1e2c3f",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.knowledge-publication-governance"],
       "declarations": [
@@ -24953,6 +26665,179 @@
       ]
     },
     {
+      "sourcePath": "src/server/lib/owner-reference-local-study-service.ts",
+      "sourceDigest": "a10c640f406453b78e64d880c322517ba198bbe3b49ad219ae14692d1b7cac22",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "OwnerReferenceLocalStudyConflictError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyConflictError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.authorizationIdentity",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.commitAuthorization",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.controlledArtifacts",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.execute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.gateway",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.issuedCapabilities",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.opaqueProjector",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.readCurrentState",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.stagingStore",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.stagingWriter",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyService.verifyCapability",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyStaleError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyStaleError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyUnavailableError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyUnavailableError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyUnsupportedMediaError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceLocalStudyUnsupportedMediaError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "SAFE_LOCAL_STUDY_MEDIA_TYPES",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertAuthorizationPairCurrentAndApplicable",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertCurrentSource",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertExactAuthorizationPair",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "authorizationPairIsCurrentAndApplicable",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "hasAuthorizationResidue",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "latestEffectiveVersion",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "locateAuthorizationPair",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "normalizeSafeMediaType",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "recordIsInvalidated",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refFor",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/server/lib/owner-reference-migration-route.ts",
       "sourceDigest": "13cd5077a58d95157b189a8c91a5462226bc0f63cff46237b946be1c70936e37",
       "disposition": "authority_path",
@@ -25964,13 +27849,300 @@
       ]
     },
     {
+      "sourcePath": "src/server/lib/owner-reference-workbench-route.ts",
+      "sourceDigest": "0a2701e9614b5e67894ebe7f29fcc75ac74852147816063e97f0fafa21a400e5",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createOwnerReferenceWorkbenchLocalStudyRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createOwnerReferenceWorkbenchReadRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createOwnerReferenceWorkbenchUploadConfirmationRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "localStudyApiError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "translateOwnerReferenceWorkbenchAsyncErrors",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "translateOwnerReferenceWorkbenchErrors",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "sourceDigest": "084dfa3eb9bc1d5d50ec06059df02e7cbbdfe6e818f0135339db818da6c53cec",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "ACCESS_EXPLANATIONS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "DEFAULT_SNAPSHOT_ATTEMPTS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "MIGRATED_ACQUISITION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "MIGRATION_MAPPING_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OPAQUE_KEY_BYTES",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OPAQUE_KEY_FILENAME",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchIntegrityError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchOpaqueProjector",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchOpaqueProjector.key",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchOpaqueProjector.project",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.captureInputs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.captureProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.confirmUpload",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.controlledArtifacts",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.executeLocalStudy",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.localStudyService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.maxSnapshotAttempts",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.migration",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.opaqueProjector",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.operationGateway",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.read",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.reviewLocalOperation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OwnerReferenceWorkbenchService.staging",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "PRIVATE_DEFAULT_POLICY_REF",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "SEALED_LOCAL_REVIEW_EFFECTS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertCoherentStagingState",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertControlledArtifactBinding",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertMigrationGraphSetEquality",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "buildCards",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "cardFor",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "classifyCard",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "coherenceReceipt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "countCurrentApplicableRightsAssertions",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "externalRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "fsyncDirectory",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "isAlreadyExistsError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "isAssetAcquisition",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "isNotFoundError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "isRoleBinding",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "loadOrCreateOwnerReferenceWorkbenchOpaqueProjector",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "migrationExplanation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "migrationStatesBySuffix",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "operationReviewResult",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refFor",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refKey",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/server/lib/owner-route.ts",
-      "sourceDigest": "e020a2ddaee176aafe4e22118440e31a327732d1051b861b9282b8880b9fe8b8",
+      "sourceDigest": "90f47237f34d1edef4e0fe94e9cded8a18fddfbf9d7f1ccbd3cc91e36c75e492",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.cache.owner-legacy-knowledge",
         "authority.cache.owner-personal-defaults",
-        "authority.legacy.built-in-knowledge-pack"
+        "authority.legacy.built-in-knowledge-pack",
+        "authority.validator.reference-source-governance"
       ],
       "declarations": [
         {
@@ -25979,7 +28151,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -25988,7 +28161,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -25997,7 +28171,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26006,7 +28181,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26015,7 +28191,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26024,7 +28201,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26033,7 +28211,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26042,7 +28221,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26051,7 +28231,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26060,7 +28241,18 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
+          ]
+        },
+        {
+          "selector": "createLegacyOwnerReferenceQuarantineRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.cache.owner-legacy-knowledge",
+            "authority.cache.owner-personal-defaults",
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26069,7 +28261,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -26083,7 +28276,8 @@
           "authorityPathIds": [
             "authority.cache.owner-legacy-knowledge",
             "authority.cache.owner-personal-defaults",
-            "authority.legacy.built-in-knowledge-pack"
+            "authority.legacy.built-in-knowledge-pack",
+            "authority.validator.reference-source-governance"
           ]
         },
         {
@@ -27145,7 +29339,7 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-controlled-artifact-store.ts",
-      "sourceDigest": "82b5cd9fcb847e82bd5c01cd517339bd1f82a1bddcbb306fbdb398c1e455f3d2",
+      "sourceDigest": "cae932cb0f7960cd9a3c46374cb753a6fc9f10a12657bd7b35fb740ef3d34ff7",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -27170,6 +29364,16 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "DigitalAssetIngestionIntentCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "DigitalAssetIngestionIntentSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "IdentifierPattern",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -27190,6 +29394,11 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "ReferenceSourceControlledArtifactStore.abortDigitalAssetIngestion",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "ReferenceSourceControlledArtifactStore.acquireCatalogClaim",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -27201,6 +29410,11 @@
         },
         {
           "selector": "ReferenceSourceControlledArtifactStore.assertHealthyBlob",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.assertNoPreparedDigitalAssetIngestions",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27235,6 +29449,11 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "ReferenceSourceControlledArtifactStore.commitDigitalAssetIngestion",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "ReferenceSourceControlledArtifactStore.completePreparedBlob",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -27245,12 +29464,22 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "ReferenceSourceControlledArtifactStore.digitalAssetIngestionIntentPath",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "ReferenceSourceControlledArtifactStore.hostIdentity",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
           "selector": "ReferenceSourceControlledArtifactStore.initialize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.listPreparedDigitalAssetIngestions",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27271,6 +29500,11 @@
         },
         {
           "selector": "ReferenceSourceControlledArtifactStore.pendingDirectory",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.prepareDigitalAssetIngestion",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27296,6 +29530,21 @@
         },
         {
           "selector": "ReferenceSourceControlledArtifactStore.readCatalog",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.readDigitalAssetBytes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.readDigitalAssetIngestionIntents",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.readMatchingDigitalAssetIngestionIntent",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27356,6 +29605,11 @@
         },
         {
           "selector": "ReferenceSourceControlledArtifactStore.release",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledArtifactStore.releaseClaimed",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27440,6 +29694,11 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "assertOptionalRegularFilePath",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "assertPathInside",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -27481,6 +29740,16 @@
         },
         {
           "selector": "decodeCatalogClaim",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "decodeDigitalAssetBytes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "digitalAssetIngestionHandle",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27545,6 +29814,11 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "pathDescriptorState",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "pathEntryExists",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -27585,7 +29859,17 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "refForDigitalAsset",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "refKey",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refsEqual",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27618,7 +29902,7 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-controlled-asset-route.ts",
-      "sourceDigest": "b1a12cbb80eed3b5bf4f3a555a4fdc73d3db4cf6a496c4895579aae16083a0fb",
+      "sourceDigest": "fe8477a7399380c81a5abdeb52106353ca2611032a4375891484449d8bf06ca4",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
@@ -27666,17 +29950,12 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-controlled-asset-service.ts",
-      "sourceDigest": "387931cf33441388ce50681a3fcb791636e82fe735950cb127dcc98eb183972b",
+      "sourceDigest": "e1ae7f03133a53ea701e14c3a1ce0651fe61f77472ca81e837f3a52a103e417f",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
         {
           "selector": "ACQUISITION_KEY_PATTERN",
-          "disposition": "authority_path",
-          "authorityPathIds": ["authority.validator.reference-source-governance"]
-        },
-        {
-          "selector": "OWNER_UPLOAD_PROCESSING_POLICY_REF",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27731,7 +30010,12 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
-          "selector": "ReferenceSourceControlledAssetIngestionService.rollbackNewUnreferencedBinding",
+          "selector": "ReferenceSourceControlledAssetIngestionService.recoverInterruptedIngestions",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceControlledAssetIngestionService.resolvePreparedIngestionAfterMetadataFailure",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -27781,7 +30065,7 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
-          "selector": "sameHead",
+          "selector": "snapshotReferencesDigitalAsset",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         }
@@ -28195,6 +30479,240 @@
       ]
     },
     {
+      "sourcePath": "src/server/lib/reference-source-operation-gateway.ts",
+      "sourceDigest": "38d7f6812aba436bfc3b82f559b04cab69238db6eb1786bf71bf5eb1f2eeb05f",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "ReferenceSourceOperationGateway",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.captureCurrentState",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.currentStateMatches",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.execute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.stagingStore",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationGateway.verifyAllowCapability",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationRequestError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationRequestError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceOperationRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "decodeRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "destinationIsExactAndCompatible",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "privateDefaultResult",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "recordIsInvalidated",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "referenceSourceAcquisitionIsCurrentAndApplicable",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "result",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-operation-route.ts",
+      "sourceDigest": "391d1daffd3cdaf8a0e356d084cff5489959765de16f3b41de59a3a11b73a647",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "ReferenceSourceOperationBoundaryBreachError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "SEALED_DEFAULT_EFFECTS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createReferenceSourceCompilerInputRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createReferenceSourceOperationDefaultDecisionRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createReferenceSourceProtectedOperationRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-protected-operation-adapter.ts",
+      "sourceDigest": "6e33a30854e775b28244bd2949ae64c5fa4a9683c32b0310a4d61139662cf794",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reference-source-governance"],
+      "declarations": [
+        {
+          "selector": "ReferenceSourceCompilerInputRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.execute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.executeCompilerInput",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.executeWithSink",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.gateway",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.readControlledBytes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.resolveServerCapability",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.sinks",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationUnavailableError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceProtectedOperationUnavailableError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertNever",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createFailClosedReferenceSourceProtectedOperationSinks",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "decodeCompilerInputRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "decodeOperationRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "freezeOperationRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "sinkForOperation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "unavailableSink",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/server/lib/reference-source-staging-route.ts",
       "sourceDigest": "5334d2b0d52483d45ef8e754a8a3da3fa6beb99e8fa0f87df81f2d690560c922",
       "disposition": "no_authority_effect",
@@ -28239,10 +30757,70 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
-      "sourceDigest": "663fcff489b0b748395b5ff93f179e49e370fc4967722dcac490343514c50f4e",
+      "sourceDigest": "51d4f8e9520fb4abe60af21623db10bba1ed0dffb23553d5f7a737b8c8f75c1c",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reference-source-governance"],
       "declarations": [
+        {
+          "selector": "CONTROLLED_UPLOAD_ACQUISITION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "CONTROLLED_UPLOAD_AUTHORITY",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "CONTROLLED_UPLOAD_OWNER_ACTION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "CONTROLLED_UPLOAD_TRANSACTION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_LOCAL_STUDY_POLICY_REF",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_LOCAL_STUDY_RATIONALE",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_STUDY_AUTHORITY",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_STUDY_DECISION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_STUDY_RIGHTS_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_PRIVATE_STUDY_TRANSACTION_ID",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
         {
           "selector": "ReferenceSourceStagingMigrationRequiredError",
           "disposition": "authority_path",
@@ -28264,7 +30842,22 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "ReferenceSourceStagingService.applyTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "ReferenceSourceStagingService.applyTransactionWithAuthority",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -28330,6 +30923,16 @@
         },
         {
           "selector": "assertAppendOnlyRecords",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertCanonicalControlledUploadTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertCanonicalOwnerPrivateStudyTransaction",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -28429,6 +31032,16 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "assertNoReservedControlledUploadProvenance",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "assertNoReservedOwnerPrivateStudyProvenance",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "assertNoRetroactiveLifecyclePath",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -28504,6 +31117,16 @@
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
         {
+          "selector": "createOwnerPrivateStudyStagingWriter",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "createReferenceSourceControlledUploadStagingWriter",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
           "selector": "deriveInvalidationOverlays",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
@@ -28570,6 +31193,11 @@
         },
         {
           "selector": "refKey",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reference-source-governance"]
+        },
+        {
+          "selector": "refsEqual",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reference-source-governance"]
         },
@@ -32304,7 +34932,7 @@
     },
     {
       "sourcePath": "src/styles.css",
-      "sourceDigest": "171aad7ab32a68e263a2bd81e1f5c47f15eedec49ffb57b10e46b412a016d353",
+      "sourceDigest": "02ca1080000796e69e2b3b0370e35168ea1bcb1c9221d1812afcffadbc3c02cb",
       "disposition": "no_authority_effect",
       "authorityPathIds": [],
       "declarations": []
@@ -32552,7 +35180,7 @@
     },
     {
       "sourcePath": "src/types.ts",
-      "sourceDigest": "00ba3cc28397a742822df00032ee067123b2155315f22344cba136211345be25",
+      "sourceDigest": "c46d60645182e38b81b12e94e3de258844695b27b83853d65ca8ee9f5ceadac7",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.tool.descriptions-defaults"],
       "declarations": [

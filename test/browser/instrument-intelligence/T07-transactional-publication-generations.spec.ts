@@ -39,7 +39,17 @@ test("Workbench reclaims only an unreachable generation and refreshes exact head
   const publication = page.locator(".knowledge-publication-section");
   await expect(publication).toContainText("Recoverable unreachable generations (1)");
   await publication.getByText("Recoverable unreachable generations (1)", { exact: true }).click();
-  await publication.getByRole("button", { name: "Reclaim unreachable generation" }).click();
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "owner-reference-publication-orphan.111111111111111111111111"
+    );
+    await dialog.accept();
+  });
+  await publication
+    .getByRole("button", {
+      name: "Reclaim owner-reference-publication-orphan.111111111111111111111111",
+    })
+    .click();
   await expect.poll(() => reclaimed).toBe("publication-generation.unreachable");
   await expect(page.locator(".knowledge-publication-section")).toContainText(
     "Recoverable unreachable generations (0)"
@@ -173,6 +183,10 @@ function publicationFixture(withOrphan = false) {
       ? [
           {
             generationId: "publication-generation.unreachable",
+            displayRef: {
+              id: "owner-reference-publication-orphan.111111111111111111111111",
+              digest: "1".repeat(64),
+            },
             state: "complete_staging",
             transactionId: "transaction.unreachable",
             revision: 3,

@@ -15,10 +15,12 @@ import {
 } from "../../lib/reference-source-domain.js";
 import { createApp } from "../index.js";
 import {
+  OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF,
   ReferenceSourceStagingService,
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-service.js";
 import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
+import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
 
 const NOW = "2026-07-15T12:00:00.000Z";
 const LATER = "2026-07-15T12:05:00.000Z";
@@ -105,6 +107,111 @@ describe("reference-source staging HTTP boundary", () => {
     );
     expect(reloaded).toEqual(second);
     expectCoherentCurrent(reloaded);
+  });
+
+  it("rejects reserved provenance over generic HTTP after a legitimate controlled upload", async () => {
+    const staging = new ReferenceSourceStagingService({
+      store: new ReferenceSourceStagingStore({
+        rootDirectory: path.join(rootDirectory, "staging"),
+      }),
+      now: () => new Date(NOW),
+      createId: () => "reserved-provenance-http",
+    });
+    const controlled = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: path.join(rootDirectory, "controlled"),
+    });
+    const server = createServer(
+      createApp({
+        referenceSourceStagingService: staging,
+        referenceSourceControlledArtifactStore: controlled,
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench"),
+      })
+    );
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    servers.push(server);
+    const baseUrl = serverUrl(server);
+    const uploadResponse = await fetch(`${baseUrl}${ROUTE}/assets`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/pdf",
+        "X-Reference-Acquisition-Key": "legitimate-controlled-upload",
+      },
+      body: Buffer.from("%PDF-1.7\nrights-private fixture\n%%EOF"),
+    });
+    const uploadBody = (await uploadResponse.json()) as ApiResponse<{
+      digitalAsset: { id: string; digest: string };
+      head: { snapshotId: string; digest: string; revision: number };
+    }>;
+    expect(uploadResponse.status).toBe(200);
+    if (!uploadBody.ok) throw new Error(uploadBody.error.message);
+
+    const forged = record({
+      recordKind: "asset_acquisition",
+      id: "acquisition.generic-forged-controlled-upload",
+      digitalAssetRef: {
+        id: uploadBody.data.digitalAsset.id,
+        digest: uploadBody.data.digitalAsset.digest,
+      },
+      representedExemplarRefs: [],
+      origin: {
+        sourceKind: "upload",
+        ownerActionRef: externalRef("owner-action.generic-forged-controlled-upload"),
+      },
+      acquiredAt: NOW,
+      rightsAssertionRefs: [],
+      processingPolicyRef: OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF,
+    });
+    const rejected = await request(baseUrl, `${ROUTE}/transactions`, {
+      method: "POST",
+      body: transaction(
+        "generic-forged-controlled-upload",
+        [forged],
+        { id: uploadBody.data.head.snapshotId, digest: uploadBody.data.head.digest },
+        NOW
+      ),
+    });
+
+    expect(rejected.response.status, JSON.stringify(rejected.body)).toBe(422);
+    await expectFailure(rejected, 422, "unprocessable_content");
+    expect(JSON.stringify(rejected.body)).not.toContain(uploadBody.data.digitalAsset.id);
+    expect(staging.readCurrent().snapshot?.records).toHaveLength(2);
+    expect(controlled.observe()).toMatchObject({
+      status: "complete",
+      artifactBindings: [
+        {
+          artifactRef: {
+            id: uploadBody.data.digitalAsset.id,
+            digest: uploadBody.data.digitalAsset.digest,
+          },
+        },
+      ],
+    });
+    const workbench = await request(baseUrl, "/api/owner/reference-source-workbench");
+    const workbenchData = await expectSuccess<{
+      snapshotRef: ReferenceRecordRef;
+      references: { cardRef: ReferenceRecordRef }[];
+    }>(workbench);
+    expect(workbenchData.references).toHaveLength(1);
+    const review = await request(
+      baseUrl,
+      "/api/owner/reference-source-workbench/local-operation-review",
+      {
+        method: "POST",
+        body: {
+          schemaVersion: 1,
+          snapshotRef: workbenchData.snapshotRef,
+          cardRef: workbenchData.references[0]!.cardRef,
+          operation: "local_extraction",
+          purpose: "Create a local-only extraction candidate for Owner review",
+        },
+      }
+    );
+    expect(await expectSuccess(review)).toEqual({
+      schemaVersion: 1,
+      operation: "local_extraction",
+      status: "review_required",
+      reasonCode: "owner_private_local_review_required",
+    });
   });
 
   it("explicitly repairs legacy observation history over HTTP before accepting normal appends", async () => {

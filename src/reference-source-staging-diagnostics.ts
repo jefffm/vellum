@@ -227,17 +227,21 @@ export function renderReferenceSourceLifecycleDryRun(
   panel.append(form, result);
   container.append(panel);
 
+  let activeTargets: ReferenceSourceLifecycleRef[] = [];
   const updateTargets = (): void => {
     const restricting = action.value === "restrict_access";
     const values = restricting ? inventory.accessDecisions : inventory.acquisitions;
+    activeTargets = values;
     targetLabelText.textContent = restricting ? "Access Decision" : "Acquisition";
     target.setAttribute("aria-label", targetLabelText.textContent);
     target.replaceChildren(
-      ...values.map(({ id, digest }) => {
-        const option = new Option(`${id} · ${abbreviate(digest)}`, id);
-        option.dataset.digest = digest;
-        return option;
-      })
+      ...values.map(
+        (_, index) =>
+          new Option(
+            `${restricting ? "Private access decision" : "Private acquisition"} ${index + 1}`,
+            String(index)
+          )
+      )
     );
     submit.disabled = values.length === 0;
   };
@@ -246,9 +250,9 @@ export function renderReferenceSourceLifecycleDryRun(
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const selected = target.selectedOptions[0];
-    const selectedRef = selected
-      ? safeReference({ id: selected.value, digest: selected.dataset.digest })
+    const selectedIndex = Number.parseInt(target.value, 10);
+    const selectedRef = Number.isSafeInteger(selectedIndex)
+      ? (activeTargets[selectedIndex] ?? null)
       : null;
     const trimmedReason = reason.value.trim();
     if (!selectedRef || !trimmedReason) {
@@ -1015,7 +1019,7 @@ function renderLifecyclePlan(container: HTMLElement, plan: SafeLifecyclePlan): v
   appendText(
     section,
     "p",
-    `${plan.id} · digest ${abbreviate(plan.digest)} · all or nothing · staging-controlled store only`,
+    "Authenticated sealed plan · all or nothing · staging-controlled store only. Private plan and record identities are hidden in this dialog.",
     ["reference-source-lifecycle-plan-identity"]
   );
   appendText(
@@ -1037,13 +1041,7 @@ function renderLifecyclePlan(container: HTMLElement, plan: SafeLifecyclePlan): v
       const row = document.createElement("article");
       row.className = "reference-source-lifecycle-issue";
       appendText(row, "strong", humanize(issue.code));
-      appendText(
-        row,
-        "p",
-        [issue.subjectRef?.id, issue.detail ?? "Detail withheld by redaction policy."]
-          .filter(Boolean)
-          .join(" · ")
-      );
+      appendText(row, "p", "Private subject identity and diagnostic detail withheld.");
       section.append(row);
     }
     container.append(section);
@@ -1101,16 +1099,20 @@ function renderLifecycleConsequences(
   group.className = "reference-source-lifecycle-consequences";
   appendText(group, "h5", "Storage and replay consequences");
   if (consequences.length === 0) appendText(group, "p", "No storage subjects are affected.");
-  for (const consequence of consequences) {
+  for (const [index, consequence] of consequences.entries()) {
     const row = document.createElement("article");
     row.className = `reference-source-lifecycle-consequence reference-source-lifecycle-state-${consequence.state}`;
-    appendText(row, "strong", `${humanize(consequence.state)} · ${consequence.subjectRef.id}`);
+    appendText(
+      row,
+      "strong",
+      `${humanize(consequence.state)} · Private affected subject ${index + 1}`
+    );
     appendText(
       row,
       "p",
       `${humanize(consequence.subjectKind)} · replayability ${humanize(consequence.replayability)} · readiness ${humanize(consequence.readinessImpact)}`
     );
-    appendText(row, "p", consequence.reason ?? "Reason withheld by redaction policy.");
+    appendText(row, "p", "Private reason and record identity withheld.");
     if (consequence.irreversibleDisclosure) {
       appendText(
         row,
@@ -1132,16 +1134,16 @@ function renderLifecyclePermissions(
   group.className = "reference-source-lifecycle-permissions";
   appendText(group, "h5", "Permission and use consequences");
   if (permissions.length === 0) appendText(group, "p", "No governed uses are affected.");
-  for (const permission of permissions) {
+  for (const [index, permission] of permissions.entries()) {
     const row = document.createElement("article");
     row.className = `reference-source-lifecycle-permission reference-source-lifecycle-state-${permission.state}`;
-    appendText(row, "strong", `${humanize(permission.state)} · ${permission.useId}`);
+    appendText(row, "strong", `${humanize(permission.state)} · Private governed use ${index + 1}`);
     appendText(
       row,
       "p",
-      `${permission.subjectRef.id} · authorization ${humanize(permission.authorization)} · source ${humanize(permission.sourceAvailability)} · replayability ${humanize(permission.replayability)} · readiness ${humanize(permission.readinessImpact)}`
+      `Authorization ${humanize(permission.authorization)} · source ${humanize(permission.sourceAvailability)} · replayability ${humanize(permission.replayability)} · readiness ${humanize(permission.readinessImpact)}`
     );
-    appendText(row, "p", permission.reason ?? "Reason withheld by redaction policy.");
+    appendText(row, "p", "Private reason, use identity, and record identity withheld.");
     group.append(row);
   }
   container.append(group);

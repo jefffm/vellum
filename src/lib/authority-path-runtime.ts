@@ -28,7 +28,7 @@ type RuntimeInventory = {
 };
 
 const EXPECTED_WRITER_CONTRACT_DIGEST =
-  "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d";
+  "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1";
 
 function validateRuntimeInventory(value: unknown): RuntimeInventory {
   if (

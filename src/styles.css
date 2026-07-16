@@ -677,6 +677,247 @@ chat-panel > div > div:has(agent-interface) {
   overflow-wrap: anywhere;
 }
 
+.owner-reference-library-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #b8c3d0;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+
+.owner-reference-library-section > summary {
+  color: #31445a;
+  font-weight: 750;
+}
+
+.owner-reference-library-workbench,
+.owner-reference-library-cards,
+.owner-reference-library-card,
+.owner-reference-library-upload,
+.owner-reference-library-upload-recovery,
+.owner-reference-library-migration-controls,
+.owner-reference-library-local-review,
+.owner-reference-library-local-study-authorization {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.owner-reference-library-workbench {
+  margin-top: 0.75rem;
+}
+
+.owner-reference-library-workbench h3,
+.owner-reference-library-workbench p {
+  margin: 0;
+}
+
+.owner-reference-library-boundary {
+  padding: 0.65rem;
+  border-left: 0.25rem solid #556f91;
+  color: #3e526c;
+  background: #edf3fa;
+  font-size: 0.8rem;
+}
+
+.owner-reference-library-counts,
+.owner-reference-library-identity,
+.owner-reference-library-rights,
+.owner-reference-library-roles,
+.owner-reference-library-policy,
+.owner-reference-library-migration,
+.owner-reference-library-upload p,
+.owner-reference-library-migration-controls p {
+  color: #526171;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.owner-reference-library-upload,
+.owner-reference-library-migration-controls {
+  padding: 0.65rem;
+  border: 1px solid #d7deea;
+  border-radius: 0.45rem;
+  background: #fff;
+}
+
+.owner-reference-library-upload-recovery {
+  padding: 0.65rem;
+  border: 1px solid #d7ad76;
+  border-radius: 0.4rem;
+  background: #fff8ec;
+}
+
+.owner-reference-library-upload-recovery button {
+  justify-self: start;
+}
+
+.owner-reference-library-migration-plan {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #594d34;
+  font-size: 0.76rem;
+}
+
+.owner-reference-library-migration-plan li {
+  padding: 0.45rem 0.55rem;
+  border-left: 0.18rem solid #9a6a2f;
+  background: #fff;
+}
+
+.owner-reference-library-local-review {
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  border: 1px solid #d7deea;
+  border-radius: 0.4rem;
+  background: #f8fafc;
+}
+
+.owner-reference-library-local-review label {
+  display: grid;
+  gap: 0.25rem;
+  color: #465568;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.owner-reference-library-local-review select,
+.owner-reference-library-local-review input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.42rem;
+  border: 1px solid #b8c3d0;
+  border-radius: 0.32rem;
+  background: #fff;
+  font: inherit;
+}
+
+.owner-reference-library-local-review button {
+  justify-self: start;
+}
+
+.owner-reference-library-local-review-status {
+  padding: 0.5rem !important;
+  border-left-color: #556f91 !important;
+  background: #fff;
+}
+
+.owner-reference-library-local-study-authorization {
+  padding: 0.65rem;
+  border: 1px solid #c29d62;
+  border-radius: 0.4rem;
+  background: #fffaf0;
+}
+
+.owner-reference-library-local-study-authorization[hidden] {
+  display: none;
+}
+
+.owner-reference-library-local-study-attestation {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.owner-reference-library-local-study-attestation input {
+  width: auto;
+  margin-top: 0.12rem;
+}
+
+.owner-reference-library-local-study-status {
+  padding: 0.5rem !important;
+  border-left-color: #9a6a2f !important;
+  background: #fff !important;
+}
+
+.owner-reference-local-study-preview {
+  width: min(94vw, 78rem);
+  height: min(92vh, 64rem);
+  padding: 1rem;
+  border: 1px solid #6b7890;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.owner-reference-local-study-preview[open] {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+}
+
+.owner-reference-local-study-preview h2,
+.owner-reference-local-study-preview p {
+  margin: 0;
+}
+
+.owner-reference-local-study-preview p {
+  padding: 0.65rem;
+  border-left: 0.25rem solid #9a6a2f;
+  color: #5e4b2e;
+  background: #fff8ec;
+  font-size: 0.8rem;
+}
+
+.owner-reference-local-study-viewport {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #c8ced8;
+  background: #e9edf2;
+}
+
+.owner-reference-local-study-viewport iframe,
+.owner-reference-local-study-viewport img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 28rem;
+  border: 0;
+  object-fit: contain;
+  background: #fff;
+}
+
+.owner-reference-local-study-preview button {
+  justify-self: end;
+}
+
+.owner-reference-library-upload label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.owner-reference-library-card {
+  padding: 0.65rem;
+  border-left: 0.2rem solid #667d9b;
+  background: #fff;
+}
+
+.owner-reference-library-access > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.owner-reference-library-access p {
+  margin-top: 0.4rem;
+  padding-left: 0.5rem;
+  border-left: 0.15rem solid #9a6a2f;
+  color: #5e4b2e;
+  font-size: 0.75rem;
+}
+
+.owner-reference-library-access-deny {
+  border-left-color: #924f4f !important;
+  color: #713f3f !important;
+}
+
+.owner-reference-library-migration-controls {
+  margin-top: 0.35rem;
+  border-color: #dacba8;
+  background: #fffaf0;
+}
+
 .knowledge-publication-section {
   margin-top: 0.75rem;
   padding: 0.75rem;

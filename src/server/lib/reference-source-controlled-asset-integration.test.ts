@@ -44,7 +44,7 @@ describe("controlled asset production wiring", () => {
     const controlledStore = new ReferenceSourceControlledArtifactStore({
       rootDirectory: path.join(rootDirectory, "controlled"),
     });
-    const put = vi.spyOn(controlledStore, "putDigitalAsset");
+    const prepare = vi.spyOn(controlledStore, "prepareDigitalAssetIngestion");
     const observe = vi.spyOn(controlledStore, "observe");
     server = createServer(
       createApp({
@@ -72,7 +72,7 @@ describe("controlled asset production wiring", () => {
     expect(uploadResponse.status).toBe(200);
     expect(upload.ok).toBe(true);
     if (!upload.ok) return;
-    expect(put).toHaveBeenCalledTimes(1);
+    expect(prepare).toHaveBeenCalledTimes(1);
 
     observe.mockClear();
     const planResponse = await fetch(

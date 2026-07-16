@@ -277,6 +277,12 @@
       "allowedRoots": []
     },
     {
+      "id": "owner-reference-local-study-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-local-study-service.ts",
+      "sinkSelectors": ["applyTransaction", "sink"],
+      "allowedRoots": []
+    },
+    {
       "id": "owner-reference-migration-persistence-closure",
       "sourcePath": "src/server/lib/owner-reference-migration-service.ts",
       "sinkSelectors": [
@@ -299,6 +305,66 @@
           "reason": "This guarded audit reader verifies and returns already-persisted migration evidence without creating, changing, deleting, or activating any authority-bearing record or private evidence bytes."
         }
       ]
+    },
+    {
+      "id": "owner-reference-workbench-local-study-route-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-workbench-route.ts",
+      "sinkSelectors": ["end", "executeLocalStudy"],
+      "allowedRoots": [
+        {
+          "selector": "sink",
+          "reason": "This locally scoped response writer is created only inside the guarded and contracted local-study route, is passed only to the guarded Workbench service, and emits the already-authorized bytes without adding identity metadata."
+        }
+      ]
+    },
+    {
+      "id": "owner-reference-workbench-local-study-service-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "sinkSelectors": ["execute"],
+      "allowedRoots": [
+        {
+          "selector": "OwnerReferenceWorkbenchService.reviewLocalOperation",
+          "reason": "This guarded review path supplies fixed effects that throw on byte reads or sink writes and supplies no allow capability, so the gateway cannot execute an authority-bearing effect."
+        }
+      ]
+    },
+    {
+      "id": "reference-source-operation-output-closure",
+      "sourcePath": "src/server/lib/reference-source-operation-gateway.ts",
+      "sinkSelectors": ["writeSink"],
+      "allowedRoots": []
+    },
+    {
+      "id": "reference-source-operation-route-output-closure",
+      "sourcePath": "src/server/lib/reference-source-operation-route.ts",
+      "sinkSelectors": ["execute", "executeCompilerInput"],
+      "allowedRoots": [
+        {
+          "selector": "createReferenceSourceCompilerInputRoute",
+          "reason": "The compiler-input adapter method hard-codes capability resolution off, so the gateway cannot read controlled bytes or invoke the sink."
+        },
+        {
+          "selector": "createReferenceSourceOperationDefaultDecisionRoute",
+          "reason": "This decision-only route constructs a gateway without an allow verifier and supplies fixed effects that throw on byte reads or sink writes."
+        }
+      ]
+    },
+    {
+      "id": "reference-source-protected-operation-output-closure",
+      "sourcePath": "src/server/lib/reference-source-protected-operation-adapter.ts",
+      "sinkSelectors": ["execute"],
+      "allowedRoots": [
+        {
+          "selector": "ReferenceSourceProtectedOperationAdapter.executeCompilerInput",
+          "reason": "This method hard-codes capability resolution off, leaving the gateway unable to read controlled bytes or invoke the sink."
+        }
+      ]
+    },
+    {
+      "id": "reference-source-staging-persistence-closure",
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "sinkSelectors": ["commit"],
+      "allowedRoots": []
     },
     {
       "id": "reviewed-learning-persistence-closure",
@@ -468,6 +534,7 @@
     "ReferenceDigitalAsset.record",
     "ReferenceSourceBlob.bytes",
     "ReferenceSourceControlledArtifactBinding.record",
+    "ReferenceSourceOperationSink.bytes",
     "ReferenceSourceStagingHead.record",
     "ReferenceSourceStagingSnapshot.record",
     "ResolvedEvaluationManifest.record",

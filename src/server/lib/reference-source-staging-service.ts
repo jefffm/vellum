@@ -3,12 +3,14 @@ import { randomUUID } from "node:crypto";
 import { Value } from "@sinclair/typebox/value";
 
 import {
+  REFERENCE_ACCESS_OPERATION_DESTINATIONS,
   ReferenceSourceStagingTransactionSchema,
   ReferenceSourceStagingSnapshotSchema,
   referenceSourceDigest,
   verifyReferenceRecordDigest,
   withReferenceRecordDigest,
   type ReferenceAccessDecision,
+  type ReferenceAssetAcquisition,
   type ReferenceAssetRoleBinding,
   type ReferenceDependencyEdge,
   type ReferenceSourceIdentityAssertion,
@@ -76,6 +78,71 @@ export type ReferenceSourceStagingServiceOptions = {
   now?: () => Date;
   createId?: () => string;
 };
+
+export const OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF: ReferenceRecordRef = Object.freeze({
+  id: "processing-policy.owner-local-reference-upload.v1",
+  digest: referenceSourceDigest({ id: "processing-policy.owner-local-reference-upload.v1" }),
+});
+
+const CONTROLLED_UPLOAD_AUTHORITY = Object.freeze({ kind: "controlled_upload" as const });
+const CONTROLLED_UPLOAD_TRANSACTION_ID = /^transaction\.owner-upload\.([a-f0-9]{32})$/;
+const CONTROLLED_UPLOAD_ACQUISITION_ID = /^acquisition\.owner-upload\.([a-f0-9]{32})$/;
+const CONTROLLED_UPLOAD_OWNER_ACTION_ID = /^owner-action\.reference-upload\.([a-f0-9]{32})$/;
+const OWNER_PRIVATE_STUDY_AUTHORITY = Object.freeze({ kind: "owner_private_study" as const });
+const OWNER_PRIVATE_STUDY_TRANSACTION_ID = /^transaction\.owner-private-study\.([a-f0-9]{32})$/;
+const OWNER_PRIVATE_STUDY_RIGHTS_ID = /^rights-assertion\.owner-private-study\.([a-f0-9]{32})$/;
+const OWNER_PRIVATE_STUDY_DECISION_ID = /^access-decision\.owner-private-study\.([a-f0-9]{32})$/;
+
+export const OWNER_PRIVATE_LOCAL_STUDY_POLICY_REF: ReferenceRecordRef = Object.freeze({
+  id: "policy.owner-private-local-study.v1",
+  digest: referenceSourceDigest({ id: "policy.owner-private-local-study.v1" }),
+});
+export const OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF: ReferenceRecordRef = Object.freeze({
+  id: "authority.owner-local-study-attestation.v1",
+  digest: referenceSourceDigest({ id: "authority.owner-local-study-attestation.v1" }),
+});
+export const OWNER_PRIVATE_LOCAL_STUDY_RATIONALE =
+  "The Owner explicitly attested to byte-for-byte private study on this local runtime; this grants no extraction, egress, export, redistribution, fixture, repository, historical, or specialist authority.";
+
+/**
+ * Server-minted capability presented only to the controlled-byte ingestion
+ * service. The generic staging service and HTTP route never receive the
+ * unexported symbol that authorizes the reserved provenance namespace.
+ */
+export type ReferenceSourceControlledUploadStagingWriter = Readonly<{
+  readCurrent: () => ReferenceSourceStagingDiagnostics;
+  applyTransaction: (
+    transaction: ReferenceSourceStagingTransaction
+  ) => ReferenceSourceStagingDiagnostics;
+}>;
+
+export function createReferenceSourceControlledUploadStagingWriter(
+  service: ReferenceSourceStagingService
+): ReferenceSourceControlledUploadStagingWriter {
+  return Object.freeze({
+    readCurrent: () => service.readCurrent(),
+    applyTransaction: (transaction: ReferenceSourceStagingTransaction) =>
+      service.applyControlledUploadTransaction(transaction, CONTROLLED_UPLOAD_AUTHORITY),
+  });
+}
+
+/** Server-only writer for one exact Owner-attested local-study pair. */
+export type OwnerPrivateStudyStagingWriter = Readonly<{
+  readCurrent: () => ReferenceSourceStagingDiagnostics;
+  applyTransaction: (
+    transaction: ReferenceSourceStagingTransaction
+  ) => ReferenceSourceStagingDiagnostics;
+}>;
+
+export function createOwnerPrivateStudyStagingWriter(
+  service: ReferenceSourceStagingService
+): OwnerPrivateStudyStagingWriter {
+  return Object.freeze({
+    readCurrent: () => service.readCurrent(),
+    applyTransaction: (transaction: ReferenceSourceStagingTransaction) =>
+      service.applyOwnerPrivateStudyTransaction(transaction, OWNER_PRIVATE_STUDY_AUTHORITY),
+  });
+}
 
 /**
  * A pre-observation snapshot cannot be advanced without inventing trusted
@@ -150,6 +217,40 @@ export class ReferenceSourceStagingService {
     transaction: ReferenceSourceStagingTransaction
   ): ReferenceSourceStagingDiagnostics {
     assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    return this.applyTransactionWithAuthority(transaction, "generic");
+  }
+
+  applyControlledUploadTransaction(
+    transaction: ReferenceSourceStagingTransaction,
+    authority: unknown
+  ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    if (authority !== CONTROLLED_UPLOAD_AUTHORITY) {
+      throw new ReferenceSourceStagingIntegrityError(
+        "Controlled owner-upload staging authority is unavailable"
+      );
+    }
+    return this.applyTransactionWithAuthority(transaction, "controlled_upload");
+  }
+
+  applyOwnerPrivateStudyTransaction(
+    transaction: ReferenceSourceStagingTransaction,
+    authority: unknown
+  ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    if (authority !== OWNER_PRIVATE_STUDY_AUTHORITY) {
+      throw new ReferenceSourceStagingIntegrityError(
+        "Owner-private study staging authority is unavailable"
+      );
+    }
+    return this.applyTransactionWithAuthority(transaction, "owner_private_study");
+  }
+
+  private applyTransactionWithAuthority(
+    transaction: ReferenceSourceStagingTransaction,
+    authority: "generic" | "controlled_upload" | "owner_private_study"
+  ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     let decodedTransaction: ReferenceSourceStagingTransaction;
     try {
       decodedTransaction = Value.Decode(ReferenceSourceStagingTransactionSchema, transaction);
@@ -159,6 +260,16 @@ export class ReferenceSourceStagingService {
       );
     }
     assertCanonicalTimestamps(decodedTransaction, `transaction ${decodedTransaction.id}`);
+    if (authority === "controlled_upload") {
+      assertCanonicalControlledUploadTransaction(decodedTransaction);
+      assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+    } else if (authority === "owner_private_study") {
+      assertCanonicalOwnerPrivateStudyTransaction(decodedTransaction);
+      assertNoReservedControlledUploadProvenance(decodedTransaction);
+    } else {
+      assertNoReservedControlledUploadProvenance(decodedTransaction);
+      assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+    }
     const currentState = this.store.readCurrentState();
     const current = currentState?.snapshot ?? null;
     if (current) assertCompleteObservationHistoryBeforeAppend(current);
@@ -318,6 +429,182 @@ export class ReferenceSourceStagingService {
         canonicalPublication: false,
       },
     };
+  }
+}
+
+function assertNoReservedControlledUploadProvenance(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const usesReservedNamespace =
+    transaction.id.startsWith("transaction.owner-upload.") ||
+    transaction.operations.some(({ record }) => {
+      if (record.id.startsWith("acquisition.owner-upload.")) return true;
+      if (record.recordKind !== "asset_acquisition") return false;
+      return (
+        record.processingPolicyRef.id === OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF.id ||
+        (record.origin.sourceKind === "upload" &&
+          record.origin.ownerActionRef.id.startsWith("owner-action.reference-upload."))
+      );
+    });
+  if (usesReservedNamespace) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Controlled owner-upload provenance is server-minted and unavailable to generic staging transactions"
+    );
+  }
+}
+
+function assertCanonicalControlledUploadTransaction(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const transactionMatch = transaction.id.match(CONTROLLED_UPLOAD_TRANSACTION_ID);
+  const records = transaction.operations.map(({ record }) => record);
+  const acquisitions = records.filter(
+    (record): record is ReferenceAssetAcquisition => record.recordKind === "asset_acquisition"
+  );
+  const otherRecords = records.filter(
+    (record) => record.recordKind !== "asset_acquisition" && record.recordKind !== "digital_asset"
+  );
+  const acquisition = acquisitions[0];
+  const acquisitionMatch = acquisition?.id.match(CONTROLLED_UPLOAD_ACQUISITION_ID);
+  const ownerActionMatch =
+    acquisition?.origin.sourceKind === "upload"
+      ? acquisition.origin.ownerActionRef.id.match(CONTROLLED_UPLOAD_OWNER_ACTION_ID)
+      : null;
+  const ownerActionRef = ownerActionMatch
+    ? {
+        id:
+          acquisition!.origin.sourceKind === "upload" ? acquisition!.origin.ownerActionRef.id : "",
+        digest: referenceSourceDigest({
+          id:
+            acquisition!.origin.sourceKind === "upload"
+              ? acquisition!.origin.ownerActionRef.id
+              : "",
+        }),
+      }
+    : null;
+  const digitalAssets = records.filter((record) => record.recordKind === "digital_asset");
+  const exact =
+    transactionMatch !== null &&
+    acquisitions.length === 1 &&
+    otherRecords.length === 0 &&
+    digitalAssets.length <= 1 &&
+    records.length === acquisitions.length + digitalAssets.length &&
+    acquisition !== undefined &&
+    acquisitionMatch !== null &&
+    acquisition.origin.sourceKind === "upload" &&
+    ownerActionMatch !== null &&
+    transactionMatch[1] === acquisition.digest.slice(0, 32) &&
+    acquisitionMatch[1] === ownerActionMatch[1] &&
+    refsEqual(acquisition.processingPolicyRef, OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF) &&
+    ownerActionRef !== null &&
+    refsEqual(acquisition.origin.ownerActionRef, ownerActionRef) &&
+    acquisition.representedExemplarRefs.length === 0 &&
+    acquisition.rightsAssertionRefs.length === 0 &&
+    acquisition.supersedesAcquisitionRef === undefined &&
+    transaction.submittedAt === acquisition.acquiredAt &&
+    (digitalAssets.length === 0 || refsEqual(acquisition.digitalAssetRef, digitalAssets[0]!));
+  if (!exact) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Controlled owner-upload staging transaction does not satisfy the server-minted provenance invariant"
+    );
+  }
+}
+
+function assertNoReservedOwnerPrivateStudyProvenance(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const usesReservedNamespace =
+    transaction.id.startsWith("transaction.owner-private-study.") ||
+    transaction.operations.some(({ record }) => {
+      if (
+        record.id.startsWith("rights-assertion.owner-private-study.") ||
+        record.id.startsWith("access-decision.owner-private-study.")
+      ) {
+        return true;
+      }
+      if (record.recordKind === "rights_assertion") {
+        return (
+          refsEqual(record.claimant.claimantRef, OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF) ||
+          record.evidenceRefs.some(({ id }) => id.startsWith("owner-reference-local-study-scope."))
+        );
+      }
+      return (
+        record.recordKind === "access_decision" &&
+        (refsEqual(record.policyRef, OWNER_PRIVATE_LOCAL_STUDY_POLICY_REF) ||
+          record.authorityRefs.some((reference) =>
+            refsEqual(reference, OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF)
+          ))
+      );
+    });
+  if (usesReservedNamespace) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Owner-private local-study attestations are server-minted and unavailable to generic staging transactions"
+    );
+  }
+}
+
+function assertCanonicalOwnerPrivateStudyTransaction(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const transactionMatch = transaction.id.match(OWNER_PRIVATE_STUDY_TRANSACTION_ID);
+  const records = transaction.operations.map(({ record }) => record);
+  const rights = records.filter(
+    (record): record is ReferenceRightsAssertion => record.recordKind === "rights_assertion"
+  );
+  const decisions = records.filter(
+    (record): record is ReferenceAccessDecision => record.recordKind === "access_decision"
+  );
+  const assertion = rights[0];
+  const decision = decisions[0];
+  const rightsMatch = assertion?.id.match(OWNER_PRIVATE_STUDY_RIGHTS_ID);
+  const decisionMatch = decision?.id.match(OWNER_PRIVATE_STUDY_DECISION_ID);
+  const exact =
+    transactionMatch !== null &&
+    records.length === 2 &&
+    transaction.operations[0]?.record.recordKind === "rights_assertion" &&
+    transaction.operations[1]?.record.recordKind === "access_decision" &&
+    rights.length === 1 &&
+    decisions.length === 1 &&
+    assertion !== undefined &&
+    decision !== undefined &&
+    rightsMatch !== null &&
+    decisionMatch !== null &&
+    transactionMatch[1] === rightsMatch[1] &&
+    transactionMatch[1] === decisionMatch[1] &&
+    assertion.version === 1 &&
+    assertion.parentVersionRef === undefined &&
+    assertion.subjectKind === "asset_acquisition" &&
+    assertion.rightsKind === "owner_private_access" &&
+    assertion.status === "permitted" &&
+    assertion.claimant.kind === "owner" &&
+    refsEqual(assertion.claimant.claimantRef, OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF) &&
+    assertion.evidenceRefs.length === 1 &&
+    assertion.evidenceRefs[0]!.id.startsWith("owner-reference-local-study-scope.") &&
+    assertion.validFrom === undefined &&
+    assertion.validUntil === undefined &&
+    assertion.assertedAt === transaction.submittedAt &&
+    decision.version === 1 &&
+    decision.parentVersionRef === undefined &&
+    decision.outcome === "allow" &&
+    decision.operation === "owner_private_study" &&
+    decision.sourceRefs.length === 1 &&
+    refsEqual(decision.sourceRefs[0]!, assertion.subjectRef) &&
+    decision.derivativeRefs.length === 0 &&
+    decision.destination.kind === "local_runtime" &&
+    decision.destination.id === undefined &&
+    decision.assetRole === undefined &&
+    refsEqual(decision.policyRef, OWNER_PRIVATE_LOCAL_STUDY_POLICY_REF) &&
+    decision.rightsAssertionRefs.length === 1 &&
+    refsEqual(decision.rightsAssertionRefs[0]!, assertion) &&
+    decision.authorityRefs.length === 1 &&
+    refsEqual(decision.authorityRefs[0]!, OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF) &&
+    decision.rationale === OWNER_PRIVATE_LOCAL_STUDY_RATIONALE &&
+    decision.decidedAt === transaction.submittedAt &&
+    decision.validUntil === undefined;
+  if (!exact) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Owner-private local-study transaction does not satisfy the server-minted attestation invariant"
+    );
   }
 }
 
@@ -1119,28 +1406,11 @@ function assertAccessDestination(decision: ReferenceAccessDecision): void {
     );
   }
 
-  const permittedDestinations: Record<
-    ReferenceAccessDecision["operation"],
-    readonly ReferenceAccessDecision["destination"]["kind"][]
-  > = {
-    underlying_work_use: ["local_runtime"],
-    manifestation_use: ["local_runtime"],
-    exemplar_access: ["local_runtime"],
-    scan_provider_use: ["local_runtime"],
-    owner_private_study: ["local_runtime"],
-    local_extraction: ["local_runtime"],
-    provider_ocr: ["provider"],
-    provider_omr: ["provider"],
-    provider_translation: ["provider"],
-    provider_model_processing: ["provider"],
-    pack_citation: ["repository"],
-    pack_excerpt: ["repository"],
-    fixture_inclusion: ["repository"],
-    repository_inclusion: ["repository"],
-    export: ["export", "recipient"],
-    redistribution: ["recipient", "repository", "export"],
-  };
-  if (!permittedDestinations[decision.operation].includes(decision.destination.kind)) {
+  if (
+    !REFERENCE_ACCESS_OPERATION_DESTINATIONS[decision.operation].some(
+      (permitted) => permitted === decision.destination.kind
+    )
+  ) {
     throw new ReferenceSourceStagingIntegrityError(
       `Access Decision ${decision.id} has an incompatible ${decision.operation}/${decision.destination.kind} scope`
     );
@@ -1585,6 +1855,8 @@ function operationFailsClosedOnUnknownRights(
     "repository_inclusion",
     "export",
     "redistribution",
+    "report",
+    "log",
   ].includes(operation);
 }
 
@@ -2324,6 +2596,13 @@ function invalidationScope(
 
 function refFor(record: { id: string; digest: string }): ReferenceRecordRef {
   return { id: record.id, digest: record.digest };
+}
+
+function refsEqual(
+  left: { id: string; digest: string },
+  right: { id: string; digest: string }
+): boolean {
+  return left.id === right.id && left.digest === right.digest;
 }
 
 function refKey(ref: ReferenceRecordRef): string {

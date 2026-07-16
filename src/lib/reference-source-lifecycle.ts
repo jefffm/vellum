@@ -3,6 +3,7 @@ import { Value } from "@sinclair/typebox/value";
 import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 import {
+  REFERENCE_ACCESS_OPERATION_DESTINATIONS,
   ReferenceLifecycleAuthorizedPathSchema,
   ReferenceLifecycleReplayabilitySchema,
   ReferenceLifecycleStoragePolicySchema,
@@ -1519,6 +1520,8 @@ function rightsKindSupportsOperation(
     repository_inclusion: ["pack_citation_excerpt", "export_redistribution"],
     export: ["export_redistribution"],
     redistribution: ["export_redistribution"],
+    report: ["export_redistribution"],
+    log: ["export_redistribution"],
   };
   return required[operation].includes(rightsKind);
 }
@@ -1769,28 +1772,9 @@ function operationDestinationCompatible(
   if (destination.kind === "local_runtime" ? destination.id !== undefined : !destination.id) {
     return false;
   }
-  const permitted: Record<
-    ReferenceAccessDecision["operation"],
-    readonly ReferenceAccessDestination["kind"][]
-  > = {
-    underlying_work_use: ["local_runtime"],
-    manifestation_use: ["local_runtime"],
-    exemplar_access: ["local_runtime"],
-    scan_provider_use: ["local_runtime"],
-    owner_private_study: ["local_runtime"],
-    local_extraction: ["local_runtime"],
-    provider_ocr: ["provider"],
-    provider_omr: ["provider"],
-    provider_translation: ["provider"],
-    provider_model_processing: ["provider"],
-    pack_citation: ["repository"],
-    pack_excerpt: ["repository"],
-    fixture_inclusion: ["repository"],
-    repository_inclusion: ["repository"],
-    export: ["export", "recipient"],
-    redistribution: ["recipient", "repository", "export"],
-  };
-  return permitted[operation].includes(destination.kind);
+  return REFERENCE_ACCESS_OPERATION_DESTINATIONS[operation].some(
+    (permitted) => permitted === destination.kind
+  );
 }
 
 function isCurrentAccessDecision(

@@ -9,19 +9,18 @@ import {
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
 import type {
+  PreparedReferenceSourceDigitalAssetIngestion,
   ReferenceSourceControlledArtifactBinding,
-  ReleaseReferenceSourceControlledArtifactInput,
 } from "./reference-source-controlled-artifact-store.js";
 import {
-  ReferenceSourceStagingService,
+  OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF,
+  type ReferenceSourceControlledUploadStagingWriter,
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-service.js";
 import { ReferenceSourceStagingConflictError } from "./reference-source-staging-store.js";
 import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
-const OWNER_UPLOAD_PROCESSING_POLICY_REF = externalRef(
-  "processing-policy.owner-local-reference-upload.v1"
-);
+export { OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF };
 const ACQUISITION_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/;
 
 /**
@@ -30,11 +29,22 @@ const ACQUISITION_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/;
  * Digital Asset record, its digest, declared byte identity, and the bytes.
  */
 export type ReferenceSourceDigitalAssetStore = {
+  withExclusiveTransaction<T>(operation: () => T): T;
   putDigitalAsset(input: { digitalAsset: ReferenceDigitalAsset; bytes: Uint8Array }): {
     binding: ReferenceSourceControlledArtifactBinding;
     created: boolean;
   };
-  release(input: ReleaseReferenceSourceControlledArtifactInput): unknown;
+  prepareDigitalAssetIngestion(input: {
+    digitalAsset: ReferenceDigitalAsset;
+    acquisitionRef: ReferenceRecordRef;
+    bytes: Uint8Array;
+  }): PreparedReferenceSourceDigitalAssetIngestion;
+  listPreparedDigitalAssetIngestions(): PreparedReferenceSourceDigitalAssetIngestion[];
+  commitDigitalAssetIngestion(prepared: PreparedReferenceSourceDigitalAssetIngestion): {
+    binding: ReferenceSourceControlledArtifactBinding;
+    created: boolean;
+  };
+  abortDigitalAssetIngestion(prepared: PreparedReferenceSourceDigitalAssetIngestion): void;
 };
 
 export type IngestOwnerReferenceSourceInput = {
@@ -54,7 +64,7 @@ export type IngestOwnerReferenceSourceResult = {
 };
 
 export type ReferenceSourceControlledAssetIngestionServiceOptions = {
-  stagingService: ReferenceSourceStagingService;
+  stagingService: ReferenceSourceControlledUploadStagingWriter;
   controlledStore: ReferenceSourceDigitalAssetStore;
   now?: () => Date;
 };
@@ -68,7 +78,7 @@ export type ReferenceSourceControlledAssetIngestionServiceOptions = {
  * acquisition edge even when the bytes deduplicate to the same Digital Asset.
  */
 export class ReferenceSourceControlledAssetIngestionService {
-  private readonly stagingService: ReferenceSourceStagingService;
+  private readonly stagingService: ReferenceSourceControlledUploadStagingWriter;
   private readonly controlledStore: ReferenceSourceDigitalAssetStore;
   private readonly now: () => Date;
   private queue: Promise<void> = Promise.resolve();
@@ -77,6 +87,7 @@ export class ReferenceSourceControlledAssetIngestionService {
     this.stagingService = options.stagingService;
     this.controlledStore = options.controlledStore;
     this.now = options.now ?? (() => new Date());
+    this.recoverInterruptedIngestions();
   }
 
   ingest(input: IngestOwnerReferenceSourceInput): Promise<IngestOwnerReferenceSourceResult> {
@@ -134,7 +145,10 @@ export class ReferenceSourceControlledAssetIngestionService {
         !refsEqual(existingWithId.digitalAssetRef, refFor(digitalAsset)) ||
         existingWithId.origin.sourceKind !== "upload" ||
         !refsEqual(existingWithId.origin.ownerActionRef, ownerActionRefFor(keyDigest)) ||
-        !refsEqual(existingWithId.processingPolicyRef, OWNER_UPLOAD_PROCESSING_POLICY_REF) ||
+        !refsEqual(
+          existingWithId.processingPolicyRef,
+          OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF
+        ) ||
         existingWithId.representedExemplarRefs.length !== 0 ||
         existingWithId.rightsAssertionRefs.length !== 0 ||
         existingWithId.supersedesAcquisitionRef !== undefined
@@ -172,7 +186,7 @@ export class ReferenceSourceControlledAssetIngestionService {
       },
       acquiredAt,
       rightsAssertionRefs: [],
-      processingPolicyRef: OWNER_UPLOAD_PROCESSING_POLICY_REF,
+      processingPolicyRef: OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF,
     }) as ReferenceAssetAcquisition;
     const appended: ReferenceSourceStagingInputRecord[] = [
       ...(existingAsset ? [] : [digitalAsset]),
@@ -186,54 +200,73 @@ export class ReferenceSourceControlledAssetIngestionService {
       submittedAt: acquiredAt,
     };
 
-    const put = this.controlledStore.putDigitalAsset({ digitalAsset, bytes });
-    let committed: ReferenceSourceStagingDiagnostics;
-    try {
-      committed = this.stagingService.applyTransaction(transaction);
-    } catch (error) {
-      this.rollbackNewUnreferencedBinding({
-        error,
-        putCreated: put.created,
-        assetWasStaged: existingAsset !== undefined,
+    return this.controlledStore.withExclusiveTransaction(() => {
+      const prepared = this.controlledStore.prepareDigitalAssetIngestion({
         digitalAsset,
-        priorHead: current.head,
+        acquisitionRef: refFor(acquisition),
+        bytes,
       });
-      throw error;
-    }
-    if (!committed.head) {
-      throw new ReferenceSourceControlledAssetIngestionIntegrityError(
-        "Owner reference ingestion committed without a staging head"
-      );
-    }
-    return {
-      schemaVersion: 1,
-      publicationState: "staging_only",
-      replayed: false,
-      digitalAsset,
-      acquisition,
-      head: committed.head,
-    };
+      let committed: ReferenceSourceStagingDiagnostics;
+      try {
+        committed = this.stagingService.applyTransaction(transaction);
+      } catch (error) {
+        this.resolvePreparedIngestionAfterMetadataFailure(prepared, error);
+        throw error;
+      }
+      if (!committed.head) {
+        const error = new ReferenceSourceControlledAssetIngestionIntegrityError(
+          "Owner reference ingestion returned without a staging head"
+        );
+        this.resolvePreparedIngestionAfterMetadataFailure(prepared, error);
+        throw error;
+      }
+      try {
+        this.controlledStore.commitDigitalAssetIngestion(prepared);
+      } catch (error) {
+        throw new ReferenceSourceControlledAssetIngestionRecoveryRequiredError(
+          "Owner reference metadata committed but its controlled bytes require restart recovery; inventory remains fail-closed",
+          { cause: error, ingestionError: error }
+        );
+      }
+      return {
+        schemaVersion: 1,
+        publicationState: "staging_only",
+        replayed: false,
+        digitalAsset,
+        acquisition,
+        head: committed.head,
+      };
+    });
   }
 
-  private rollbackNewUnreferencedBinding(input: {
-    error: unknown;
-    putCreated: boolean;
-    assetWasStaged: boolean;
-    digitalAsset: ReferenceDigitalAsset;
-    priorHead: ReferenceSourceStagingDiagnostics["head"];
-  }): void {
-    if (!input.putCreated || input.assetWasStaged) return;
-    const currentHead = this.stagingService.readCurrent().head;
-    if (!sameHead(currentHead, input.priorHead)) return;
+  private recoverInterruptedIngestions(): void {
+    this.controlledStore.withExclusiveTransaction(() => {
+      for (const prepared of this.controlledStore.listPreparedDigitalAssetIngestions()) {
+        const current = this.stagingService.readCurrent();
+        if (snapshotReferencesDigitalAsset(current, prepared.digitalAssetRef)) {
+          this.controlledStore.commitDigitalAssetIngestion(prepared);
+        } else {
+          this.controlledStore.abortDigitalAssetIngestion(prepared);
+        }
+      }
+    });
+  }
+
+  private resolvePreparedIngestionAfterMetadataFailure(
+    prepared: PreparedReferenceSourceDigitalAssetIngestion,
+    ingestionError: unknown
+  ): void {
     try {
-      this.controlledStore.release({
-        artifactRef: refFor(input.digitalAsset),
-        expectedBlobSha256: input.digitalAsset.sha256,
-      });
-    } catch (rollbackError) {
+      const current = this.stagingService.readCurrent();
+      if (snapshotReferencesDigitalAsset(current, prepared.digitalAssetRef)) {
+        this.controlledStore.commitDigitalAssetIngestion(prepared);
+      } else {
+        this.controlledStore.abortDigitalAssetIngestion(prepared);
+      }
+    } catch (recoveryError) {
       throw new ReferenceSourceControlledAssetIngestionRecoveryRequiredError(
-        "Owner reference metadata did not commit and its new controlled-store binding could not be rolled back; inventory will remain blocked until recovery",
-        { cause: rollbackError, ingestionError: input.error }
+        "Owner reference metadata outcome could not be reconciled with its prepared controlled bytes; inventory remains fail-closed until restart recovery",
+        { cause: recoveryError, ingestionError }
       );
     }
   }
@@ -333,15 +366,16 @@ function assertExpectedHead(
   );
 }
 
-function sameHead(
-  left: ReferenceSourceStagingDiagnostics["head"],
-  right: ReferenceSourceStagingDiagnostics["head"]
+function snapshotReferencesDigitalAsset(
+  diagnostics: ReferenceSourceStagingDiagnostics,
+  digitalAssetRef: ReferenceRecordRef
 ): boolean {
-  if (!left || !right) return left === null && right === null;
-  return (
-    left.snapshotId === right.snapshotId &&
-    left.digest === right.digest &&
-    left.revision === right.revision
+  return Boolean(
+    diagnostics.snapshot?.records.some(
+      (record) =>
+        record.recordKind === "asset_acquisition" &&
+        refsEqual(record.digitalAssetRef, digitalAssetRef)
+    )
   );
 }
 

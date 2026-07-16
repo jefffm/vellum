@@ -139,9 +139,14 @@ function referenceSourceControlledAssetApiError(error: unknown): unknown {
   if (error instanceof ReferenceSourceStagingNotFoundError) {
     return new ApiRouteError(error.message, 404, "not_found");
   }
+  if (error instanceof ReferenceSourceControlledAssetIngestionRecoveryRequiredError) {
+    return new ApiRouteError(error.message, 503, "service_unavailable", {
+      outcome: "unknown",
+      retrySafety: "reuse_acquisition_key_after_restart",
+    });
+  }
   if (
     error instanceof ReferenceSourceControlledAssetIngestionIntegrityError ||
-    error instanceof ReferenceSourceControlledAssetIngestionRecoveryRequiredError ||
     error instanceof ReferenceSourceControlledArtifactStoreIntegrityError ||
     error instanceof ReferenceSourceControlledArtifactStoreNotFoundError ||
     error instanceof ReferenceSourceStagingIntegrityError

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "f10032b13b40c03cd2303f9f1664f3643f75fb7e5141c892f46eba9f3118b611",
+  "classificationPolicyDigest": "e1d8ea0733f2ebc175805961be439c297f4aa9b4eafd463bb24078ccbd5a4626",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -92,12 +92,24 @@
       "digest": "aef57df3b3fab3d9c90ed998163b1fe62b0a51bf7a3744f261aaac10fb9e5a5c"
     },
     {
+      "path": "src/server/lib/owner-reference-local-study-service.ts",
+      "digest": "a10c640f406453b78e64d880c322517ba198bbe3b49ad219ae14692d1b7cac22"
+    },
+    {
       "path": "src/server/lib/owner-reference-migration-route.ts",
       "digest": "13cd5077a58d95157b189a8c91a5462226bc0f63cff46237b946be1c70936e37"
     },
     {
       "path": "src/server/lib/owner-reference-migration-service.ts",
       "digest": "3b044eafdacae3156cc697f467ccec32e3dcc615beed0f5328816fc2fea8fc9e"
+    },
+    {
+      "path": "src/server/lib/owner-reference-workbench-route.ts",
+      "digest": "0a2701e9614b5e67894ebe7f29fcc75ac74852147816063e97f0fafa21a400e5"
+    },
+    {
+      "path": "src/server/lib/owner-reference-workbench-service.ts",
+      "digest": "084dfa3eb9bc1d5d50ec06059df02e7cbbdfe6e818f0135339db818da6c53cec"
     },
     {
       "path": "src/server/lib/owner-store.ts",
@@ -109,19 +121,31 @@
     },
     {
       "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
-      "digest": "82b5cd9fcb847e82bd5c01cd517339bd1f82a1bddcbb306fbdb398c1e455f3d2"
+      "digest": "cae932cb0f7960cd9a3c46374cb753a6fc9f10a12657bd7b35fb740ef3d34ff7"
     },
     {
       "path": "src/server/lib/reference-source-controlled-asset-route.ts",
-      "digest": "b1a12cbb80eed3b5bf4f3a555a4fdc73d3db4cf6a496c4895579aae16083a0fb"
+      "digest": "fe8477a7399380c81a5abdeb52106353ca2611032a4375891484449d8bf06ca4"
     },
     {
       "path": "src/server/lib/reference-source-controlled-asset-service.ts",
-      "digest": "387931cf33441388ce50681a3fcb791636e82fe735950cb127dcc98eb183972b"
+      "digest": "e1ae7f03133a53ea701e14c3a1ce0651fe61f77472ca81e837f3a52a103e417f"
+    },
+    {
+      "path": "src/server/lib/reference-source-operation-gateway.ts",
+      "digest": "38d7f6812aba436bfc3b82f559b04cab69238db6eb1786bf71bf5eb1f2eeb05f"
+    },
+    {
+      "path": "src/server/lib/reference-source-operation-route.ts",
+      "digest": "391d1daffd3cdaf8a0e356d084cff5489959765de16f3b41de59a3a11b73a647"
+    },
+    {
+      "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+      "digest": "6e33a30854e775b28244bd2949ae64c5fa4a9683c32b0310a4d61139662cf794"
     },
     {
       "path": "src/server/lib/reference-source-staging-service.ts",
-      "digest": "663fcff489b0b748395b5ff93f179e49e370fc4967722dcac490343514c50f4e"
+      "digest": "51d4f8e9520fb4abe60af21623db10bba1ed0dffb23553d5f7a737b8c8f75c1c"
     },
     {
       "path": "src/server/lib/reference-source-staging-store.ts",
@@ -1917,6 +1941,20 @@
       "authorityPathId": "authority.validator.reference-source-governance",
       "locator": {
         "kind": "symbol",
+        "path": "src/server/lib/owner-reference-local-study-service.ts",
+        "selector": "OwnerReferenceLocalStudyService.execute"
+      },
+      "outputFields": [
+        "ReferenceSourceOperationSink.bytes",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "e70382512a94fd56b06f1d7149f90cc431f3c0deb13d5603508b36742cf696b3"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
         "path": "src/server/lib/owner-reference-migration-route.ts",
         "selector": "createOwnerReferenceMigrationCommitRoute"
       },
@@ -2051,6 +2089,34 @@
       "authorityPathId": "authority.validator.reference-source-governance",
       "locator": {
         "kind": "symbol",
+        "path": "src/server/lib/owner-reference-workbench-route.ts",
+        "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+      },
+      "outputFields": [
+        "ReferenceSourceOperationSink.bytes",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "855177594349f88d37dc8a24936357cd270ca67be412667f568db2ef59ff09ba"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-workbench-service.ts",
+        "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+      },
+      "outputFields": [
+        "ReferenceSourceOperationSink.bytes",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "391803ac31c72cbdad4c0862b2cc377e3dc22284ecafe15cb0f7b0d7721d7de2"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
         "path": "src/server/lib/owner-store.ts",
         "selector": "OwnerStore.addReference"
       },
@@ -2089,7 +2155,7 @@
         "ReferenceSourceBlob.bytes",
         "ReferenceSourceControlledArtifactBinding.record"
       ],
-      "implementationDigest": "716658b3c07cfeb35f4aa26ef169075495b8a8d34cc764834ee22bc176e5c714"
+      "implementationDigest": "eaff3dbc62d644023f561ee219b13b054fe8fa78f995afb0bcf6b241eecca649"
     },
     {
       "authorityPathId": "authority.validator.reference-source-governance",
@@ -2103,7 +2169,7 @@
         "ReferenceSourceBlob.bytes",
         "ReferenceSourceControlledArtifactBinding.record"
       ],
-      "implementationDigest": "1ca0d337313ec52e1dc698521452508ce2eadb3ccf19de07c40c68c67ca4b2dc"
+      "implementationDigest": "944e377b2e637004638e21a51f6aaa23ea174fc52dfd5eac4445531dcd2f9739"
     },
     {
       "authorityPathId": "authority.validator.reference-source-governance",
@@ -2159,6 +2225,62 @@
       "authorityPathId": "authority.validator.reference-source-governance",
       "locator": {
         "kind": "symbol",
+        "path": "src/server/lib/reference-source-operation-gateway.ts",
+        "selector": "ReferenceSourceOperationGateway.execute"
+      },
+      "outputFields": ["ReferenceSourceOperationSink.bytes"],
+      "implementationDigest": "210c19ac2ff1f7de02495b9bfe3d7f817b01bdcba873c8e580ea97c9539b294d"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-operation-route.ts",
+        "selector": "createReferenceSourceProtectedOperationRoute"
+      },
+      "outputFields": ["ReferenceSourceOperationSink.bytes"],
+      "implementationDigest": "a0d9eb9d7a617c037a94fa95797230cd1d00cd614d058a2fbaa7584dc2b259ef"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-protected-operation-adapter.ts",
+        "selector": "ReferenceSourceProtectedOperationAdapter.execute"
+      },
+      "outputFields": ["ReferenceSourceOperationSink.bytes"],
+      "implementationDigest": "18ea3d9d87c63c07211e5d930340d01f1619fc79425ca22acbd1a5cbc569d7f5"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-staging-service.ts",
+        "selector": "ReferenceSourceStagingService.applyControlledUploadTransaction"
+      },
+      "outputFields": [
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "c0a2242ca25cdd36fb0d29f7064ae9516437ff5a79726867f3c16f627a15dca2"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-staging-service.ts",
+        "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+      },
+      "outputFields": [
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "1876f61b53b7fa179c79db73b8c1cabc9a3526da27ace1c8491c05ec0265ffbe"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
         "path": "src/server/lib/reference-source-staging-service.ts",
         "selector": "ReferenceSourceStagingService.applyTransaction"
       },
@@ -2166,7 +2288,7 @@
         "ReferenceSourceStagingHead.record",
         "ReferenceSourceStagingSnapshot.record"
       ],
-      "implementationDigest": "ddf9dd6f7b3f9dfdabc93d0ec56a1511453fd4e04c8cc303639252317bb28a9a"
+      "implementationDigest": "18156551b878b5fc7b1a783d73a2abfc7bc22dbf2648cf3981aa19eaf5d38dbb"
     },
     {
       "authorityPathId": "authority.validator.reference-source-governance",

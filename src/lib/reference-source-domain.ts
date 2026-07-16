@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 
 import { Type, type Static } from "@sinclair/typebox";
 
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
+
 const Strict = { additionalProperties: false } as const;
 const IdSchema = Type.String({ pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$" });
 const VersionSchema = Type.Integer({ minimum: 1 });
@@ -478,6 +480,8 @@ export const ReferenceAccessOperationSchema = Type.Union([
   Type.Literal("repository_inclusion"),
   Type.Literal("export"),
   Type.Literal("redistribution"),
+  Type.Literal("report"),
+  Type.Literal("log"),
 ]);
 export type ReferenceAccessOperation = Static<typeof ReferenceAccessOperationSchema>;
 
@@ -495,6 +499,37 @@ export const ReferenceAccessDestinationSchema = Type.Object(
   Strict
 );
 export type ReferenceAccessDestination = Static<typeof ReferenceAccessDestinationSchema>;
+
+/**
+ * Closed operation/destination scopes shared by staging validation and the
+ * server-side operation boundary. Report and log creation are local sinks;
+ * disclosing either derivative requires a separate export, repository, or
+ * provider decision instead of broadening the original local decision.
+ */
+assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+export const REFERENCE_ACCESS_OPERATION_DESTINATIONS = Object.freeze({
+  underlying_work_use: ["local_runtime"],
+  manifestation_use: ["local_runtime"],
+  exemplar_access: ["local_runtime"],
+  scan_provider_use: ["local_runtime"],
+  owner_private_study: ["local_runtime"],
+  local_extraction: ["local_runtime"],
+  provider_ocr: ["provider"],
+  provider_omr: ["provider"],
+  provider_translation: ["provider"],
+  provider_model_processing: ["provider"],
+  pack_citation: ["repository"],
+  pack_excerpt: ["repository"],
+  fixture_inclusion: ["repository"],
+  repository_inclusion: ["repository"],
+  export: ["export", "recipient"],
+  redistribution: ["recipient", "repository", "export"],
+  report: ["local_runtime"],
+  log: ["local_runtime"],
+} as const satisfies Record<
+  ReferenceAccessOperation,
+  readonly ReferenceAccessDestination["kind"][]
+>);
 
 export const ReferenceAssetRoleSchema = Type.Union([
   Type.Literal("arrangement_source"),

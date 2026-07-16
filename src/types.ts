@@ -221,12 +221,17 @@ export const ArrangementSummarySchema = Type.Object({
 export type ArrangementSummary = Static<typeof ArrangementSummarySchema>;
 
 assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
-export const CompileParamsSchema = Type.Object({
-  source: Type.String({ minLength: 1, description: "LilyPond source code" }),
-  format: Type.Optional(
-    Type.Union([Type.Literal("svg"), Type.Literal("pdf"), Type.Literal("both")], { default: "svg" })
-  ),
-});
+export const CompileParamsSchema = Type.Object(
+  {
+    source: Type.String({ minLength: 1, description: "LilyPond source code" }),
+    format: Type.Optional(
+      Type.Union([Type.Literal("svg"), Type.Literal("pdf"), Type.Literal("both")], {
+        default: "svg",
+      })
+    ),
+  },
+  { additionalProperties: false }
+);
 
 export type CompileParams = Static<typeof CompileParamsSchema>;
 

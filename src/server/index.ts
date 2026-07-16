@@ -121,8 +121,8 @@ import {
   createKnowledgeCorrectionRoute,
   createKnowledgePromotionRoute,
   createKnowledgeRejectionRoute,
+  createLegacyOwnerReferenceQuarantineRoute,
   createOwnerChoiceRoute,
-  createOwnerReferenceRoute,
   createOwnerStateRoute,
 } from "./lib/owner-route.js";
 import {
@@ -138,7 +138,11 @@ import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventor
 import { createAuthorityPathInventoryRoute } from "./lib/authority-path-inventory-route.js";
 import { OwnerStore } from "./lib/owner-store.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
-import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
+import {
+  createOwnerPrivateStudyStagingWriter,
+  createReferenceSourceControlledUploadStagingWriter,
+  ReferenceSourceStagingService,
+} from "./lib/reference-source-staging-service.js";
 import {
   ReferenceSourceLifecyclePlanningService,
   type ReferenceSourceAuthorityTrust,
@@ -149,6 +153,17 @@ import { createReferenceSourceLifecycleSecurityBundle } from "./lib/reference-so
 import { ReferenceSourceControlledArtifactStore } from "./lib/reference-source-controlled-artifact-store.js";
 import { createReferenceSourceControlledAssetUploadRoute } from "./lib/reference-source-controlled-asset-route.js";
 import { ReferenceSourceControlledAssetIngestionService } from "./lib/reference-source-controlled-asset-service.js";
+import {
+  createReferenceSourceCompilerInputRoute,
+  createReferenceSourceOperationDefaultDecisionRoute,
+  createReferenceSourceProtectedOperationRoute,
+} from "./lib/reference-source-operation-route.js";
+import { ReferenceSourceOperationGateway } from "./lib/reference-source-operation-gateway.js";
+import {
+  createFailClosedReferenceSourceProtectedOperationSinks,
+  ReferenceSourceProtectedOperationAdapter,
+  type ReferenceSourceProtectedOperationSinks,
+} from "./lib/reference-source-protected-operation-adapter.js";
 import type { ReferenceSourceControlledStoreInventoryAdapter } from "./lib/reference-source-inventory-provider.js";
 import { createReferenceSourceLifecyclePlanRoute } from "./lib/reference-source-lifecycle-route.js";
 import {
@@ -168,6 +183,18 @@ import {
   createOwnerReferenceMigrationInterruptedRollbackRoute,
   createOwnerReferenceMigrationRollbackRoute,
 } from "./lib/owner-reference-migration-route.js";
+import {
+  createOwnerReferenceWorkbenchLocalOperationReviewRoute,
+  createOwnerReferenceWorkbenchLocalStudyRoute,
+  createOwnerReferenceWorkbenchReadRoute,
+  createOwnerReferenceWorkbenchUploadConfirmationRoute,
+} from "./lib/owner-reference-workbench-route.js";
+import {
+  loadOrCreateOwnerReferenceWorkbenchOpaqueProjector,
+  OwnerReferenceWorkbenchOpaqueProjector,
+  OwnerReferenceWorkbenchService,
+} from "./lib/owner-reference-workbench-service.js";
+import { OwnerReferenceLocalStudyService } from "./lib/owner-reference-local-study-service.js";
 import {
   createReferenceSourceObservationHistoryMigrationRoute,
   createReferenceSourceStagingReadRoute,
@@ -251,6 +278,13 @@ type ApiRouterOptions = {
   ownerReferenceMigrationService?: OwnerReferenceMigrationService;
   ownerReferenceMigrationOwnerRootDirectory?: string;
   ownerReferenceMigrationPrivateRootDirectory?: string;
+  ownerReferenceWorkbenchPrivateRootDirectory?: string;
+  ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
+  /**
+   * Trusted server-bootstrap seam for future source-bearing workflows. HTTP
+   * callers never select, replace, or receive these sinks.
+   */
+  referenceSourceProtectedOperationSinks?: ReferenceSourceProtectedOperationSinks;
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
@@ -316,15 +350,60 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
           }
         : {}),
     }));
+  const ownerReferenceWorkbenchOpaqueProjector = options.ownerReferenceWorkbenchOpaqueKey
+    ? new OwnerReferenceWorkbenchOpaqueProjector(options.ownerReferenceWorkbenchOpaqueKey)
+    : loadOrCreateOwnerReferenceWorkbenchOpaqueProjector(
+        options.ownerReferenceWorkbenchPrivateRootDirectory ??
+          path.join(
+            options.ownerReferenceMigrationPrivateRootDirectory ??
+              options.ownerReferenceMigrationOwnerRootDirectory ??
+              path.join(process.env.HOME ?? process.cwd(), ".vellum", "owner"),
+            "owner-reference-workbench"
+          )
+      );
+  const ownerReferenceLocalStudyService = new OwnerReferenceLocalStudyService({
+    stagingWriter: createOwnerPrivateStudyStagingWriter(referenceSourceStagingService),
+    stagingStore: referenceSourceStagingService.store,
+    controlledArtifacts: getReferenceSourceControlledArtifactStore(),
+    opaqueProjector: ownerReferenceWorkbenchOpaqueProjector,
+  });
+  const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
+    staging: referenceSourceStagingService,
+    migration: {
+      readCompatibility: () => getOwnerReferenceMigrationService().readCompatibility(),
+    },
+    controlledArtifacts: getReferenceSourceControlledArtifactStore(),
+    opaqueProjector: ownerReferenceWorkbenchOpaqueProjector,
+    operationGateway: new ReferenceSourceOperationGateway({
+      stagingStore: referenceSourceStagingService.store,
+    }),
+    localStudyService: ownerReferenceLocalStudyService,
+  });
+  const referenceSourceProtectedOperationAdapter = new ReferenceSourceProtectedOperationAdapter({
+    gateway: new ReferenceSourceOperationGateway({
+      stagingStore: referenceSourceStagingService.store,
+    }),
+    readControlledBytes: (digitalAssetRef) =>
+      getReferenceSourceControlledArtifactStore().readDigitalAssetBytes(digitalAssetRef),
+    sinks:
+      options.referenceSourceProtectedOperationSinks ??
+      createFailClosedReferenceSourceProtectedOperationSinks(),
+  });
   let referenceSourceControlledAssetIngestionService:
     | ReferenceSourceControlledAssetIngestionService
     | undefined;
   const getReferenceSourceControlledAssetIngestionService = () =>
     (referenceSourceControlledAssetIngestionService ??=
       new ReferenceSourceControlledAssetIngestionService({
-        stagingService: referenceSourceStagingService,
+        stagingService: createReferenceSourceControlledUploadStagingWriter(
+          referenceSourceStagingService
+        ),
         controlledStore: getReferenceSourceControlledArtifactStore(),
       }));
+  // Constructor recovery reconciles any metadata/byte publication interrupted
+  // before restart. Complete it before the first Workbench read can observe the
+  // shared stores; the upload route still reuses this single service instance.
+  getReferenceSourceControlledAssetIngestionService();
   const referenceSourceLifecyclePlanningService = new ReferenceSourceLifecyclePlanningService({
     store: referenceSourceStagingService.store,
     evidenceProvider:
@@ -370,6 +449,34 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createReferenceSourceStagingReadRoute(referenceSourceStagingService)
   );
   router.get(
+    "/owner/reference-source-workbench",
+    createOwnerReferenceWorkbenchReadRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/upload-confirmation",
+    createOwnerReferenceWorkbenchUploadConfirmationRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/local-operation-review",
+    createOwnerReferenceWorkbenchLocalOperationReviewRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/local-study",
+    createOwnerReferenceWorkbenchLocalStudyRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-operations/default-decision",
+    createReferenceSourceOperationDefaultDecisionRoute(referenceSourceStagingService.store)
+  );
+  router.post(
+    "/owner/reference-source-operations/execute",
+    createReferenceSourceProtectedOperationRoute(referenceSourceProtectedOperationAdapter)
+  );
+  router.post(
+    "/owner/reference-source-operations/compiler-input",
+    createReferenceSourceCompilerInputRoute(referenceSourceProtectedOperationAdapter)
+  );
+  router.get(
     "/owner/reference-migrations/owner-references",
     createOwnerReferenceMigrationCompatibilityRoute(getOwnerReferenceMigrationService())
   );
@@ -413,7 +520,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   );
   router.get(
     "/owner/knowledge-publication",
-    createKnowledgePublicationCurrentRoute(knowledgePublicationStore)
+    createKnowledgePublicationCurrentRoute(
+      knowledgePublicationStore,
+      ownerReferenceWorkbenchOpaqueProjector
+    )
   );
   if (options.knowledgePublicationWriter) {
     router.post(
@@ -445,7 +555,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createDefaultCandidateDecisionRoute("reject")
   );
   router.post("/owner/personal-defaults/:id/release", createDefaultReleaseRoute());
-  router.post("/owner/references", createOwnerReferenceRoute());
+  router.post("/owner/references", createLegacyOwnerReferenceQuarantineRoute());
   router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute());
   router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
   router.post("/owner/intent-proposals", createOwnerIntentClassificationRoute());
@@ -718,6 +828,9 @@ type CreateAppOptions = {
   ownerReferenceMigrationService?: OwnerReferenceMigrationService;
   ownerReferenceMigrationOwnerRootDirectory?: string;
   ownerReferenceMigrationPrivateRootDirectory?: string;
+  ownerReferenceWorkbenchPrivateRootDirectory?: string;
+  ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
+  referenceSourceProtectedOperationSinks?: ReferenceSourceProtectedOperationSinks;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -778,6 +891,10 @@ export function createApp(options: CreateAppOptions = {}) {
       ownerReferenceMigrationOwnerRootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
       ownerReferenceMigrationPrivateRootDirectory:
         options.ownerReferenceMigrationPrivateRootDirectory,
+      ownerReferenceWorkbenchPrivateRootDirectory:
+        options.ownerReferenceWorkbenchPrivateRootDirectory,
+      ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
+      referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
     })
   );
   app.use(express.static(distPath));
@@ -814,6 +931,10 @@ export function startServer(
     ownerReferenceMigrationOwnerRootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
     ownerReferenceMigrationPrivateRootDirectory:
       options.ownerReferenceMigrationPrivateRootDirectory,
+    ownerReferenceWorkbenchPrivateRootDirectory:
+      options.ownerReferenceWorkbenchPrivateRootDirectory,
+    ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
+    referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
   });
   const server = createServer(app);
 

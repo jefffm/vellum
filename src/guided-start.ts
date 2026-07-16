@@ -1,3 +1,6 @@
+import { Type, type Static } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
+
 import {
   skipRepeatedOccurrences,
   type AudioPreview,
@@ -32,13 +35,35 @@ import {
 import {
   formatReferenceIdentityConfidence,
   renderReferenceSourceLifecycleDryRun,
-  renderReferenceSourceStagingDiagnostics,
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-diagnostics.js";
 import {
   renderKnowledgePublicationWorkbench,
   type KnowledgePublicationWorkbenchState,
 } from "./knowledge-publication-workbench.js";
+import {
+  OwnerReferenceWorkbenchLocalStudyError,
+  OwnerReferenceWorkbenchUploadError,
+  renderOwnerReferenceWorkbench,
+  type OwnerReferenceWorkbenchLocalStudyRequest as OwnerReferenceWorkbenchLocalStudyInput,
+  type OwnerReferenceWorkbenchLocalStudyResult,
+} from "./owner-reference-workbench.js";
+import type {
+  OwnerReferenceWorkbenchLocalOperationReviewRequest,
+  OwnerReferenceWorkbenchLocalOperationReviewResult,
+  OwnerReferenceWorkbenchLocalStudyRequest,
+  OwnerReferenceWorkbenchSnapshot,
+  OwnerReferenceWorkbenchUploadConfirmationResult,
+} from "./lib/owner-reference-workbench-contract.js";
+import {
+  OwnerReferenceWorkbenchLocalStudyRequestSchema,
+  OwnerReferenceWorkbenchSnapshotSchema,
+  OwnerReferenceWorkbenchUploadConfirmationResultSchema,
+} from "./lib/owner-reference-workbench-contract.js";
+import {
+  OwnerReferenceMigrationQuarantineActionSchema,
+  OwnerReferenceMigrationQuarantineReasonSchema,
+} from "./lib/owner-reference-migration-reason.js";
 import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 
 type GuidedStartOptions = {
@@ -48,6 +73,20 @@ type GuidedStartOptions = {
 const audioSeekHandlers = new WeakMap<HTMLElement, EventListener>();
 const audioPlaybackCleanups = new WeakMap<HTMLElement, () => void>();
 const followedMeasureOccurrences = new WeakMap<HTMLElement, string>();
+const OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE = "vellum.owner-reference-upload-hmac-key.v1";
+const OWNER_REFERENCE_UPLOAD_PENDING_STORAGE = "vellum.owner-reference-upload-pending.v1";
+const OWNER_REFERENCE_UPLOAD_LOCK = "vellum.owner-reference-upload-intent.v1";
+const OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES = 32;
+const OWNER_REFERENCE_UPLOAD_MAX_BYTES = 32 * 1024 * 1024;
+const OWNER_REFERENCE_UPLOAD_MAX_PENDING = 32;
+const OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_STORAGE =
+  "vellum.owner-reference-local-study-hmac-key.v1";
+const OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE = "vellum.owner-reference-local-study-pending.v1";
+const OWNER_REFERENCE_LOCAL_STUDY_LOCK = "vellum.owner-reference-local-study-intent.v1";
+const OWNER_REFERENCE_LOCAL_STUDY_KEY_BYTES = 16;
+const OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES = 32;
+const OWNER_REFERENCE_LOCAL_STUDY_MAX_PENDING = 64;
+const OWNER_REFERENCE_STAGING_SUMMARY_LIMIT = 999;
 
 export type GuidedDeliverable = {
   workspaceId: string;
@@ -2361,6 +2400,188 @@ type OwnerState = {
   }>;
 };
 
+const OWNER_REFERENCE_MIGRATION_STRICT = { additionalProperties: false } as const;
+const OwnerReferenceMigrationSafeIdSchema = Type.String({
+  pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$",
+});
+const OwnerReferenceMigrationDigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
+const OwnerReferenceMigrationRevisionSchema = Type.Integer({ minimum: 1 });
+const OwnerReferenceUploadRecordRefSchema = Type.Object(
+  {
+    id: OwnerReferenceMigrationSafeIdSchema,
+    digest: OwnerReferenceMigrationDigestSchema,
+  },
+  OWNER_REFERENCE_MIGRATION_STRICT
+);
+const OwnerReferenceUploadIngestResultSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    publicationState: Type.Literal("staging_only"),
+    replayed: Type.Boolean(),
+    digitalAsset: Type.Object(
+      {
+        recordKind: Type.Literal("digital_asset"),
+        id: OwnerReferenceMigrationSafeIdSchema,
+        sha256: OwnerReferenceMigrationDigestSchema,
+        mediaType: Type.String({ minLength: 1 }),
+        byteLength: Type.Integer({ minimum: 1 }),
+        digest: OwnerReferenceMigrationDigestSchema,
+      },
+      OWNER_REFERENCE_MIGRATION_STRICT
+    ),
+    acquisition: Type.Object(
+      {
+        recordKind: Type.Literal("asset_acquisition"),
+        id: OwnerReferenceMigrationSafeIdSchema,
+        digitalAssetRef: OwnerReferenceUploadRecordRefSchema,
+        representedExemplarRefs: Type.Array(OwnerReferenceUploadRecordRefSchema, {
+          maxItems: 0,
+        }),
+        origin: Type.Object(
+          {
+            sourceKind: Type.Literal("upload"),
+            ownerActionRef: OwnerReferenceUploadRecordRefSchema,
+          },
+          OWNER_REFERENCE_MIGRATION_STRICT
+        ),
+        acquiredAt: Type.String({
+          pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+        }),
+        rightsAssertionRefs: Type.Array(OwnerReferenceUploadRecordRefSchema, { maxItems: 0 }),
+        processingPolicyRef: OwnerReferenceUploadRecordRefSchema,
+        digest: OwnerReferenceMigrationDigestSchema,
+      },
+      OWNER_REFERENCE_MIGRATION_STRICT
+    ),
+    head: Type.Object(
+      {
+        snapshotId: OwnerReferenceMigrationSafeIdSchema,
+        digest: OwnerReferenceMigrationDigestSchema,
+        revision: Type.Integer({ minimum: 1 }),
+      },
+      OWNER_REFERENCE_MIGRATION_STRICT
+    ),
+  },
+  OWNER_REFERENCE_MIGRATION_STRICT
+);
+const OwnerReferenceMigrationCapabilitiesSchema = Type.Object(
+  {
+    compatibilityReads: Type.Literal(true),
+    canonicalWriter: Type.Literal(false),
+    activation: Type.Literal(false),
+  },
+  OWNER_REFERENCE_MIGRATION_STRICT
+);
+const OwnerReferenceMigrationExpectedHeadSchema = Type.Union([
+  Type.Object(
+    {
+      id: OwnerReferenceMigrationSafeIdSchema,
+      digest: OwnerReferenceMigrationDigestSchema,
+      revision: OwnerReferenceMigrationRevisionSchema,
+    },
+    OWNER_REFERENCE_MIGRATION_STRICT
+  ),
+  Type.Null(),
+]);
+const OwnerReferenceMigrationGraphHeadSchema = Type.Union([
+  Type.Object(
+    {
+      snapshotId: OwnerReferenceMigrationSafeIdSchema,
+      digest: OwnerReferenceMigrationDigestSchema,
+      revision: Type.Integer({ minimum: 0 }),
+    },
+    OWNER_REFERENCE_MIGRATION_STRICT
+  ),
+  Type.Null(),
+]);
+const OwnerReferenceMigrationCompatibilityHeadSchema = Type.Union([
+  Type.Object(
+    {
+      generationId: OwnerReferenceMigrationSafeIdSchema,
+      digest: OwnerReferenceMigrationDigestSchema,
+      revision: OwnerReferenceMigrationRevisionSchema,
+    },
+    OWNER_REFERENCE_MIGRATION_STRICT
+  ),
+  Type.Null(),
+]);
+const OwnerReferenceMigrationLegacySourceStateSchema = Type.Union([
+  Type.Literal("verified"),
+  Type.Literal("missing"),
+  Type.Literal("diverged"),
+  Type.Literal("unavailable"),
+]);
+const OwnerReferenceMigrationCompatibilitySchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    publicationState: Type.Literal("migration_only"),
+    head: OwnerReferenceMigrationCompatibilityHeadSchema,
+    legacySourceState: OwnerReferenceMigrationLegacySourceStateSchema,
+    ownerReferences: Type.Array(
+      Type.Object(
+        {
+          legacyId: OwnerReferenceMigrationSafeIdSchema,
+          state: Type.Union([
+            Type.Literal("pending"),
+            Type.Literal("mapped"),
+            Type.Literal("quarantined"),
+            Type.Literal("rolled_back"),
+          ]),
+          legacySourceState: OwnerReferenceMigrationLegacySourceStateSchema,
+          mappingId: Type.Optional(OwnerReferenceMigrationSafeIdSchema),
+          quarantineReason: Type.Optional(OwnerReferenceMigrationQuarantineReasonSchema),
+        },
+        OWNER_REFERENCE_MIGRATION_STRICT
+      )
+    ),
+    capabilities: OwnerReferenceMigrationCapabilitiesSchema,
+  },
+  OWNER_REFERENCE_MIGRATION_STRICT
+);
+const OwnerReferenceMigrationPlanSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    mode: Type.Literal("dry_run"),
+    planDigest: OwnerReferenceMigrationDigestSchema,
+    expectedHead: OwnerReferenceMigrationExpectedHeadSchema,
+    expectedGraphHead: OwnerReferenceMigrationGraphHeadSchema,
+    writesPerformed: Type.Literal(false),
+    mappings: Type.Array(
+      Type.Object(
+        {
+          legacyId: OwnerReferenceMigrationSafeIdSchema,
+          bibliographicIdentity: Type.Literal("not_asserted"),
+          alreadyMapped: Type.Boolean(),
+        },
+        OWNER_REFERENCE_MIGRATION_STRICT
+      )
+    ),
+    quarantines: Type.Array(
+      Type.Object(
+        {
+          legacyId: OwnerReferenceMigrationSafeIdSchema,
+          reason: OwnerReferenceMigrationQuarantineReasonSchema,
+          action: OwnerReferenceMigrationQuarantineActionSchema,
+        },
+        OWNER_REFERENCE_MIGRATION_STRICT
+      )
+    ),
+    capabilities: OwnerReferenceMigrationCapabilitiesSchema,
+  },
+  OWNER_REFERENCE_MIGRATION_STRICT
+);
+
+type OwnerReferenceMigrationCompatibility = Static<
+  typeof OwnerReferenceMigrationCompatibilitySchema
+>;
+type OwnerReferenceMigrationPlan = Static<typeof OwnerReferenceMigrationPlanSchema>;
+type OwnerReferenceMigrationExpectedHead = Static<typeof OwnerReferenceMigrationExpectedHeadSchema>;
+type OwnerReferenceUploadIngestResult = Static<typeof OwnerReferenceUploadIngestResultSchema>;
+
+type OwnerKnowledgeRefreshResult = {
+  ownerReferenceSnapshot?: OwnerReferenceWorkbenchSnapshot;
+};
+
 export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
   assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
 
@@ -2393,8 +2614,156 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
     await api(url, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     await refresh();
   };
-  const refresh = async () => {
+  const uploadPrivateReference = async (file: File) => {
+    let mediaType: string;
+    try {
+      mediaType = privateReferenceMimeType(file);
+      assertPrivateReferenceFileSize(file);
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("invalid_file");
+    }
+    let diagnostics: ReferenceSourceStagingDiagnostics;
+    try {
+      diagnostics = await api<ReferenceSourceStagingDiagnostics>(
+        "/api/owner/reference-source-staging"
+      );
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("preflight_unavailable");
+    }
+    const intent = await privateReferenceUploadIntent(file, mediaType);
+    const headers: Record<string, string> = {
+      "Content-Type": mediaType,
+      "X-Reference-Acquisition-Key": intent.acquisitionKey,
+    };
+    if (diagnostics.head) {
+      headers["X-Reference-Expected-Head-Id"] = diagnostics.head.snapshotId;
+      headers["X-Reference-Expected-Head-Digest"] = diagnostics.head.digest;
+    }
+    let ingestInput: unknown;
+    try {
+      ingestInput = await api<unknown>("/api/owner/reference-source-staging/assets", {
+        method: "POST",
+        headers,
+        body: file,
+      });
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    let confirmation: OwnerReferenceWorkbenchUploadConfirmationResult;
+    try {
+      await decodeOwnerReferenceUploadIngestResult(ingestInput, file, mediaType, intent);
+      confirmation = Value.Decode(
+        OwnerReferenceWorkbenchUploadConfirmationResultSchema,
+        await api<unknown>("/api/owner/reference-source-workbench/upload-confirmation", {
+          method: "POST",
+          body: JSON.stringify({
+            schemaVersion: 1,
+            acquisitionKey: intent.acquisitionKey,
+          }),
+        })
+      );
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    if (confirmation.status !== "present") {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    let confirmedSnapshot: OwnerReferenceWorkbenchSnapshot;
+    try {
+      confirmedSnapshot = Value.Decode(
+        OwnerReferenceWorkbenchSnapshotSchema,
+        await api<unknown>("/api/owner/reference-source-workbench")
+      );
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    const confirmedCard = confirmedSnapshot.references.find(
+      ({ cardRef }) =>
+        cardRef.id === confirmation.cardRef.id && cardRef.digest === confirmation.cardRef.digest
+    );
+    if (
+      confirmedSnapshot.snapshotRef.id !== confirmation.snapshotRef.id ||
+      confirmedSnapshot.snapshotRef.digest !== confirmation.snapshotRef.digest ||
+      !confirmedCard ||
+      confirmedCard.origin !== "upload"
+    ) {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    try {
+      await refresh(confirmedSnapshot);
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("outcome_uncertain");
+    }
+    await retirePrivateReferenceUploadIntent(intent);
+  };
+  const reviewPrivateReferenceLocalOperation = (
+    request: OwnerReferenceWorkbenchLocalOperationReviewRequest
+  ) =>
+    api<OwnerReferenceWorkbenchLocalOperationReviewResult>(
+      "/api/owner/reference-source-workbench/local-operation-review",
+      { method: "POST", body: JSON.stringify(request) }
+    );
+  const studyPrivateReference = async (
+    input: OwnerReferenceWorkbenchLocalStudyInput
+  ): Promise<OwnerReferenceWorkbenchLocalStudyResult> => {
+    const intent = await privateReferenceLocalStudyIntent(input);
+    const request = Value.Decode(OwnerReferenceWorkbenchLocalStudyRequestSchema, {
+      schemaVersion: 1,
+      snapshotRef: intent.snapshotRef,
+      cardRef: intent.cardRef,
+      operation: "owner_private_study",
+      purpose: input.purpose,
+      authorization: "owner_attested_local_study",
+      operationKey: intent.operationKey,
+    } satisfies OwnerReferenceWorkbenchLocalStudyRequest);
+    let result: Omit<OwnerReferenceWorkbenchLocalStudyResult, "workbenchRefresh">;
+    try {
+      result = await fetchPrivateReferenceLocalStudy(request);
+    } catch (error) {
+      if (
+        error instanceof OwnerReferenceWorkbenchLocalStudyError &&
+        error.kind === "stale_before_commit"
+      ) {
+        try {
+          const refreshed = await refresh();
+          const currentSnapshot = refreshed.ownerReferenceSnapshot;
+          const currentCard = currentSnapshot?.references.find(
+            ({ cardRef }) =>
+              cardRef.id === input.cardRef.id && cardRef.digest === input.cardRef.digest
+          );
+          if (currentSnapshot && currentCard) {
+            await rebindPrivateReferenceLocalStudyIntent(
+              intent,
+              currentSnapshot.snapshotRef,
+              currentCard.cardRef,
+              input.purpose
+            );
+            status.textContent =
+              "Private reference state refreshed after a proven pre-commit stale response. Review the current card before retrying; its operation key was retained.";
+          }
+        } catch {
+          status.textContent =
+            "Private reference state changed before local study and could not be refreshed. No preview was opened; reload before retrying.";
+        }
+      }
+      throw error;
+    }
+    await retirePrivateReferenceLocalStudyIntent(intent);
+    try {
+      const refreshed = await refresh();
+      if (!refreshed.ownerReferenceSnapshot) throw new Error("Workbench refresh unavailable");
+      return { ...result, workbenchRefresh: "current" };
+    } catch {
+      status.textContent =
+        "Local study authorization succeeded, but the Owner Reference Library could not refresh. The operation key was retired; refresh before another operation.";
+      return { ...result, workbenchRefresh: "failed" };
+    }
+  };
+  const refresh = async (
+    confirmedOwnerReferenceSnapshot?: OwnerReferenceWorkbenchSnapshot
+  ): Promise<OwnerKnowledgeRefreshResult> => {
     const state = await api<OwnerState>("/api/owner");
+    const result: OwnerKnowledgeRefreshResult = {};
     content.replaceChildren();
     status.textContent = `${state.historicalPracticeClaims.length} reviewed claims · ${state.personalDefaults.filter((item) => item.status === "active").length} active defaults`;
     const section = (title: string) => {
@@ -2499,6 +2868,35 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         );
       defaults.append(row);
     }
+    const referenceLibrary = section("Owner Reference Library — private staging");
+    referenceLibrary.className = "owner-reference-library-section";
+    const referenceLibraryWorkbench = document.createElement("div");
+    referenceLibrary.append(referenceLibraryWorkbench);
+    try {
+      const [snapshot, compatibility] = await Promise.all([
+        confirmedOwnerReferenceSnapshot ??
+          api<OwnerReferenceWorkbenchSnapshot>("/api/owner/reference-source-workbench"),
+        api<unknown>("/api/owner/reference-migrations/owner-references").then(
+          decodeOwnerReferenceMigrationCompatibility
+        ),
+      ]);
+      result.ownerReferenceSnapshot = snapshot;
+      renderOwnerReferenceWorkbench(
+        referenceLibraryWorkbench,
+        snapshot,
+        uploadPrivateReference,
+        reviewPrivateReferenceLocalOperation,
+        resetPrivateReferenceUploadRetryState,
+        studyPrivateReference
+      );
+      const libraryRoot = referenceLibraryWorkbench.querySelector<HTMLElement>(
+        ".owner-reference-library-workbench"
+      );
+      libraryRoot?.append(renderOwnerReferenceMigrationControls(compatibility, refresh));
+    } catch {
+      referenceLibraryWorkbench.textContent =
+        "Private reference library unavailable. Private diagnostics are withheld; refresh and retry.";
+    }
     const referenceSources = section("Reference sources — staging diagnostics");
     referenceSources.className = "reference-source-staging-section";
     const referenceSourceDiagnostics = document.createElement("div");
@@ -2507,7 +2905,7 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
       const diagnostics = await api<ReferenceSourceStagingDiagnostics>(
         "/api/owner/reference-source-staging"
       );
-      renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, diagnostics);
+      renderPrivateReferenceStagingSummary(referenceSourceDiagnostics, diagnostics);
       renderReferenceSourceLifecycleDryRun(referenceSourceDiagnostics, diagnostics, (request) =>
         api("/api/owner/reference-source-staging/lifecycle/plan", {
           method: "POST",
@@ -2515,7 +2913,7 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         })
       );
     } catch {
-      renderReferenceSourceStagingDiagnostics(referenceSourceDiagnostics, undefined);
+      renderPrivateReferenceStagingSummary(referenceSourceDiagnostics, undefined);
     }
     const publicationGenerations = section("Knowledge library — transactional publications");
     publicationGenerations.className = "knowledge-publication-section";
@@ -2541,6 +2939,7 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
           ? `Publication generations unavailable: ${error.message}`
           : "Publication generations unavailable.";
     }
+    return result;
   };
   launcher.addEventListener("click", () => {
     dialog.showModal();
@@ -2549,6 +2948,999 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
     });
   });
   return dialog;
+}
+
+type PrivateReferenceUploadIntent = Readonly<{
+  fingerprint: string;
+  acquisitionKey: string;
+}>;
+
+type PrivateReferenceUploadPendingState = {
+  schemaVersion: 1;
+  intents: PrivateReferenceUploadIntent[];
+};
+
+type PrivateReferenceLocalStudyIntent = Readonly<{
+  fingerprint: string;
+  operationKey: string;
+  snapshotRef: OwnerReferenceWorkbenchSnapshot["snapshotRef"];
+  cardRef: OwnerReferenceWorkbenchLocalStudyInput["cardRef"];
+}>;
+
+type PrivateReferenceLocalStudyPendingState = {
+  schemaVersion: 1;
+  intents: PrivateReferenceLocalStudyIntent[];
+};
+
+const PRIVATE_REFERENCE_LOCAL_STUDY_MEDIA_TYPES = new Set<
+  OwnerReferenceWorkbenchLocalStudyResult["mediaType"]
+>([
+  "application/pdf",
+  "image/bmp",
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/tiff",
+  "image/webp",
+]);
+
+async function privateReferenceLocalStudyIntent(
+  input: OwnerReferenceWorkbenchLocalStudyInput
+): Promise<PrivateReferenceLocalStudyIntent> {
+  return withPrivateReferenceLocalStudyLock(async () => {
+    const fingerprint = await privateReferenceLocalStudyFingerprint(input.cardRef, input.purpose);
+    const pending = readPrivateReferenceLocalStudyPendingState();
+    const existing = pending.intents.find((intent) => intent.fingerprint === fingerprint);
+    if (existing) return existing;
+    if (pending.intents.length >= OWNER_REFERENCE_LOCAL_STUDY_MAX_PENDING) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("pending_limit");
+    }
+    const intent = Object.freeze({
+      fingerprint,
+      operationKey: `owner-local-study.v1.${base64UrlEncode(
+        window.crypto.getRandomValues(new Uint8Array(OWNER_REFERENCE_LOCAL_STUDY_KEY_BYTES))
+      )}`,
+      snapshotRef: Object.freeze({ ...input.snapshotRef }),
+      cardRef: Object.freeze({ ...input.cardRef }),
+    });
+    writePrivateReferenceLocalStudyPendingState({
+      schemaVersion: 1,
+      intents: [...pending.intents, intent],
+    });
+    return intent;
+  });
+}
+
+async function rebindPrivateReferenceLocalStudyIntent(
+  previous: PrivateReferenceLocalStudyIntent,
+  snapshotRef: OwnerReferenceWorkbenchSnapshot["snapshotRef"],
+  cardRef: OwnerReferenceWorkbenchLocalStudyInput["cardRef"],
+  purpose: string
+): Promise<void> {
+  const fingerprint = await privateReferenceLocalStudyFingerprint(cardRef, purpose);
+  await withPrivateReferenceLocalStudyLock(() => {
+    const pending = readPrivateReferenceLocalStudyPendingState();
+    const index = pending.intents.findIndex(
+      (intent) =>
+        intent.fingerprint === previous.fingerprint &&
+        intent.operationKey === previous.operationKey &&
+        refsEqualInBrowser(intent.snapshotRef, previous.snapshotRef) &&
+        refsEqualInBrowser(intent.cardRef, previous.cardRef)
+    );
+    if (index < 0) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+    }
+    if (
+      pending.intents.some(
+        (intent, candidateIndex) =>
+          candidateIndex !== index &&
+          (intent.fingerprint === fingerprint || intent.operationKey === previous.operationKey)
+      )
+    ) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+    }
+    const rebound = Object.freeze({
+      fingerprint,
+      operationKey: previous.operationKey,
+      snapshotRef: Object.freeze({ ...snapshotRef }),
+      cardRef: Object.freeze({ ...cardRef }),
+    });
+    const intents = [...pending.intents];
+    intents[index] = rebound;
+    writePrivateReferenceLocalStudyPendingState({ schemaVersion: 1, intents });
+  });
+}
+
+async function retirePrivateReferenceLocalStudyIntent(
+  completed: PrivateReferenceLocalStudyIntent
+): Promise<void> {
+  await withPrivateReferenceLocalStudyLock(() => {
+    const pending = readPrivateReferenceLocalStudyPendingState();
+    const exact = pending.intents.filter(
+      (intent) =>
+        intent.fingerprint === completed.fingerprint &&
+        intent.operationKey === completed.operationKey &&
+        refsEqualInBrowser(intent.snapshotRef, completed.snapshotRef) &&
+        refsEqualInBrowser(intent.cardRef, completed.cardRef)
+    );
+    if (exact.length === 0) {
+      const conflicting = pending.intents.some(
+        (intent) =>
+          intent.fingerprint === completed.fingerprint ||
+          intent.operationKey === completed.operationKey
+      );
+      if (!conflicting) return;
+    }
+    if (exact.length !== 1) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+    }
+    writePrivateReferenceLocalStudyPendingState({
+      schemaVersion: 1,
+      intents: pending.intents.filter((intent) => intent !== exact[0]),
+    });
+  });
+}
+
+async function privateReferenceLocalStudyFingerprint(
+  cardRef: OwnerReferenceWorkbenchLocalStudyInput["cardRef"],
+  purpose: string
+): Promise<string> {
+  const rawKey = privateReferenceLocalStudyHmacKey();
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    rawKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const message = new TextEncoder().encode(
+    JSON.stringify([
+      "vellum.owner-reference-local-study-fingerprint.v1",
+      cardRef.id,
+      cardRef.digest,
+      purpose,
+    ])
+  );
+  const commitment = new Uint8Array(await window.crypto.subtle.sign("HMAC", key, message));
+  return `local-study-scope.v1.${base64UrlEncode(commitment)}`;
+}
+
+async function withPrivateReferenceLocalStudyLock<T>(operation: () => T | Promise<T>): Promise<T> {
+  const locks = window.navigator.locks;
+  if (!locks) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_protection_unavailable");
+  }
+  return locks.request(OWNER_REFERENCE_LOCAL_STUDY_LOCK, { mode: "exclusive" }, operation);
+}
+
+function readPrivateReferenceLocalStudyPendingState(): PrivateReferenceLocalStudyPendingState {
+  let raw: string | null;
+  try {
+    raw = window.localStorage.getItem(OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE);
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_protection_unavailable");
+  }
+  if (raw === null) return { schemaVersion: 1, intents: [] };
+  let value: unknown;
+  try {
+    value = JSON.parse(raw) as unknown;
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+  }
+  if (!isRecord(value) || !hasExactKeys(value, ["schemaVersion", "intents"])) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+  }
+  if (value.schemaVersion !== 1 || !Array.isArray(value.intents)) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+  }
+  const intents = value.intents.map((entry) => {
+    if (
+      !isRecord(entry) ||
+      !hasExactKeys(entry, ["fingerprint", "operationKey", "snapshotRef", "cardRef"]) ||
+      typeof entry.fingerprint !== "string" ||
+      !/^local-study-scope\.v1\.[A-Za-z0-9_-]{43}$/u.test(entry.fingerprint) ||
+      typeof entry.operationKey !== "string" ||
+      !/^owner-local-study\.v1\.[A-Za-z0-9_-]{21}[AQgw]$/u.test(entry.operationKey) ||
+      !isOpaqueBrowserRef(entry.snapshotRef) ||
+      !isOpaqueBrowserRef(entry.cardRef)
+    ) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+    }
+    return Object.freeze({
+      fingerprint: entry.fingerprint,
+      operationKey: entry.operationKey,
+      snapshotRef: Object.freeze({ ...entry.snapshotRef }),
+      cardRef: Object.freeze({ ...entry.cardRef }),
+    });
+  });
+  if (
+    intents.length > OWNER_REFERENCE_LOCAL_STUDY_MAX_PENDING ||
+    new Set(intents.map(({ fingerprint }) => fingerprint)).size !== intents.length ||
+    new Set(intents.map(({ operationKey }) => operationKey)).size !== intents.length
+  ) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+  }
+  return { schemaVersion: 1, intents };
+}
+
+function writePrivateReferenceLocalStudyPendingState(
+  state: PrivateReferenceLocalStudyPendingState
+): void {
+  const encoded = JSON.stringify(state);
+  try {
+    window.localStorage.setItem(OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE, encoded);
+    if (window.localStorage.getItem(OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE) !== encoded) {
+      throw new Error("Browser-local study retry state did not persist");
+    }
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_protection_unavailable");
+  }
+}
+
+function privateReferenceLocalStudyHmacKey(): Uint8Array<ArrayBuffer> {
+  let stored: string | null;
+  let pending: string | null;
+  try {
+    stored = window.localStorage.getItem(OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_STORAGE);
+    pending = window.localStorage.getItem(OWNER_REFERENCE_LOCAL_STUDY_PENDING_STORAGE);
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_protection_unavailable");
+  }
+  if (stored !== null) {
+    const decoded = base64UrlDecode(stored);
+    if (decoded?.byteLength !== OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+    }
+    return decoded;
+  }
+  if (pending !== null && pending !== '{"schemaVersion":1,"intents":[]}') {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_state_invalid");
+  }
+  const generated = window.crypto.getRandomValues(
+    new Uint8Array(OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES)
+  );
+  const encoded = base64UrlEncode(generated);
+  try {
+    window.localStorage.setItem(OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_STORAGE, encoded);
+    const persisted = window.localStorage.getItem(OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_STORAGE);
+    const decoded = persisted ? base64UrlDecode(persisted) : null;
+    if (decoded?.byteLength !== OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES) {
+      throw new Error("Browser-local local-study retry key did not persist");
+    }
+    return decoded;
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("retry_protection_unavailable");
+  }
+}
+
+function isOpaqueBrowserRef(value: unknown): value is { id: string; digest: string } {
+  return (
+    isRecord(value) &&
+    hasExactKeys(value, ["id", "digest"]) &&
+    typeof value.id === "string" &&
+    /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u.test(value.id) &&
+    typeof value.digest === "string" &&
+    /^[a-f0-9]{64}$/u.test(value.digest)
+  );
+}
+
+function refsEqualInBrowser(
+  left: { id: string; digest: string },
+  right: { id: string; digest: string }
+): boolean {
+  return left.id === right.id && left.digest === right.digest;
+}
+
+async function fetchPrivateReferenceLocalStudy(
+  request: OwnerReferenceWorkbenchLocalStudyRequest
+): Promise<Omit<OwnerReferenceWorkbenchLocalStudyResult, "workbenchRefresh">> {
+  let response: Response;
+  try {
+    response = await window.fetch("/api/owner/reference-source-workbench/local-study", {
+      method: "POST",
+      headers: {
+        Accept: [...PRIVATE_REFERENCE_LOCAL_STUDY_MEDIA_TYPES].join(", "),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+  }
+  if (!response.ok) {
+    if (response.status === 409) {
+      throw await classifyPrivateReferenceLocalStudyConflict(response);
+    }
+    if (response.status === 422) {
+      throw new OwnerReferenceWorkbenchLocalStudyError("unavailable");
+    }
+    throw new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+  }
+
+  const mediaType = response.headers.get("content-type")?.trim().toLowerCase();
+  const contentLength = response.headers.get("content-length")?.trim();
+  const cacheControl = response.headers.get("cache-control")?.toLowerCase() ?? "";
+  const disposition = response.headers.get("content-disposition")?.trim().toLowerCase();
+  if (
+    !mediaType ||
+    !PRIVATE_REFERENCE_LOCAL_STUDY_MEDIA_TYPES.has(
+      mediaType as OwnerReferenceWorkbenchLocalStudyResult["mediaType"]
+    ) ||
+    !contentLength ||
+    !/^[1-9][0-9]{0,7}$/u.test(contentLength) ||
+    Number(contentLength) > OWNER_REFERENCE_UPLOAD_MAX_BYTES ||
+    !cacheControl.split(",").some((directive) => directive.trim() === "no-store") ||
+    response.headers.get("x-content-type-options")?.trim().toLowerCase() !== "nosniff" ||
+    disposition !== "inline" ||
+    response.headers.has("etag")
+  ) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("invalid_response");
+  }
+
+  let bytes: Uint8Array<ArrayBuffer>;
+  try {
+    bytes = new Uint8Array(await response.arrayBuffer());
+  } catch {
+    throw new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+  }
+  if (
+    bytes.byteLength !== Number(contentLength) ||
+    bytes.byteLength < 1 ||
+    bytes.byteLength > OWNER_REFERENCE_UPLOAD_MAX_BYTES ||
+    !hasPrivateReferenceMediaSignature(mediaType, bytes)
+  ) {
+    throw new OwnerReferenceWorkbenchLocalStudyError("invalid_response");
+  }
+  return {
+    mediaType: mediaType as OwnerReferenceWorkbenchLocalStudyResult["mediaType"],
+    blob: new Blob([bytes], { type: mediaType }),
+  };
+}
+
+async function classifyPrivateReferenceLocalStudyConflict(
+  response: Response
+): Promise<OwnerReferenceWorkbenchLocalStudyError> {
+  let value: unknown;
+  try {
+    const text = await response.text();
+    if (text.length > 4096) {
+      return new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+    }
+    value = JSON.parse(text) as unknown;
+  } catch {
+    return new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+  }
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(value, ["ok", "error"]) ||
+    value.ok !== false ||
+    !isRecord(value.error) ||
+    !hasExactKeys(value.error, ["code", "message", "status", "correlationId", "details"]) ||
+    value.error.code !== "conflict" ||
+    value.error.status !== 409 ||
+    typeof value.error.message !== "string" ||
+    value.error.message.length < 1 ||
+    value.error.message.length > 512 ||
+    typeof value.error.correlationId !== "string" ||
+    value.error.correlationId.length < 1 ||
+    value.error.correlationId.length > 128 ||
+    !isRecord(value.error.details) ||
+    !hasExactKeys(value.error.details, ["reason", "retrySafety"])
+  ) {
+    return new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+  }
+  if (
+    value.error.details.reason === "operation_key_bound_to_different_scope" &&
+    value.error.details.retrySafety === "reuse_exact_request"
+  ) {
+    return new OwnerReferenceWorkbenchLocalStudyError("operation_key_conflict");
+  }
+  if (
+    value.error.details.reason === "workbench_snapshot_stale_before_commit" &&
+    value.error.details.retrySafety === "refresh_and_rebind_same_operation_key"
+  ) {
+    return new OwnerReferenceWorkbenchLocalStudyError("stale_before_commit");
+  }
+  return new OwnerReferenceWorkbenchLocalStudyError("outcome_uncertain");
+}
+
+function hasPrivateReferenceMediaSignature(mediaType: string, bytes: Uint8Array): boolean {
+  const startsWith = (...expected: number[]) =>
+    bytes.byteLength >= expected.length && expected.every((byte, index) => bytes[index] === byte);
+  switch (mediaType) {
+    case "application/pdf":
+      return startsWith(0x25, 0x50, 0x44, 0x46, 0x2d);
+    case "image/png":
+      return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case "image/jpeg":
+      return startsWith(0xff, 0xd8, 0xff);
+    case "image/gif":
+      return (
+        startsWith(0x47, 0x49, 0x46, 0x38, 0x37, 0x61) ||
+        startsWith(0x47, 0x49, 0x46, 0x38, 0x39, 0x61)
+      );
+    case "image/bmp":
+      return startsWith(0x42, 0x4d);
+    case "image/tiff":
+      return startsWith(0x49, 0x49, 0x2a, 0x00) || startsWith(0x4d, 0x4d, 0x00, 0x2a);
+    case "image/webp":
+      return (
+        bytes.byteLength >= 12 &&
+        startsWith(0x52, 0x49, 0x46, 0x46) &&
+        bytes[8] === 0x57 &&
+        bytes[9] === 0x45 &&
+        bytes[10] === 0x42 &&
+        bytes[11] === 0x50
+      );
+    default:
+      return false;
+  }
+}
+
+async function privateReferenceUploadIntent(
+  file: File,
+  mediaType: string
+): Promise<PrivateReferenceUploadIntent> {
+  assertPrivateReferenceFileSize(file);
+  return withPrivateReferenceUploadLock(async () => {
+    const fingerprint = await privateReferenceFileFingerprint(file, mediaType);
+    const pending = readPrivateReferenceUploadPendingState();
+    const existing = pending.intents.find((intent) => intent.fingerprint === fingerprint);
+    if (existing) return existing;
+    if (pending.intents.length >= OWNER_REFERENCE_UPLOAD_MAX_PENDING) {
+      throw new OwnerReferenceWorkbenchUploadError("pending_limit");
+    }
+    const intent = Object.freeze({
+      fingerprint,
+      acquisitionKey: `owner-upload.v2.${base64UrlEncode(
+        window.crypto.getRandomValues(new Uint8Array(OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES))
+      )}`,
+    });
+    writePrivateReferenceUploadPendingState({
+      schemaVersion: 1,
+      intents: [...pending.intents, intent],
+    });
+    return intent;
+  });
+}
+
+function assertPrivateReferenceFileSize(file: Pick<File, "size">): void {
+  if (file.size === 0 || file.size > OWNER_REFERENCE_UPLOAD_MAX_BYTES) {
+    throw new Error("Private references must be between 1 byte and 32 MiB.");
+  }
+}
+
+async function retirePrivateReferenceUploadIntent(
+  completed: PrivateReferenceUploadIntent
+): Promise<void> {
+  await withPrivateReferenceUploadLock(() => {
+    const pending = readPrivateReferenceUploadPendingState();
+    const exact = pending.intents.filter(
+      (intent) =>
+        intent.fingerprint === completed.fingerprint &&
+        intent.acquisitionKey === completed.acquisitionKey
+    );
+    if (exact.length === 0) {
+      const conflicting = pending.intents.some(
+        (intent) =>
+          intent.fingerprint === completed.fingerprint ||
+          intent.acquisitionKey === completed.acquisitionKey
+      );
+      if (!conflicting) return;
+    }
+    if (exact.length !== 1) {
+      throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+    }
+    writePrivateReferenceUploadPendingState({
+      schemaVersion: 1,
+      intents: pending.intents.filter((intent) => intent !== exact[0]),
+    });
+  });
+}
+
+async function privateReferenceFileFingerprint(file: File, mediaType: string): Promise<string> {
+  const rawKey = privateReferenceUploadHmacKey();
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    rawKey,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const domain = new TextEncoder().encode(
+    `vellum.owner-reference-upload-file-fingerprint.v1\0${mediaType}\0${file.size}\0`
+  );
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const message = new Uint8Array(domain.byteLength + bytes.byteLength);
+  message.set(domain);
+  message.set(bytes, domain.byteLength);
+  const commitment = new Uint8Array(await window.crypto.subtle.sign("HMAC", key, message));
+  return `private-file.v1.${base64UrlEncode(commitment)}`;
+}
+
+async function withPrivateReferenceUploadLock<T>(operation: () => T | Promise<T>): Promise<T> {
+  const locks = window.navigator.locks;
+  if (!locks) {
+    throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+  }
+  return locks.request(OWNER_REFERENCE_UPLOAD_LOCK, { mode: "exclusive" }, operation);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function readPrivateReferenceUploadPendingState(): PrivateReferenceUploadPendingState {
+  let raw: string | null;
+  try {
+    raw = window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE);
+  } catch {
+    throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+  }
+  if (raw === null) return { schemaVersion: 1, intents: [] };
+  let value: unknown;
+  try {
+    value = JSON.parse(raw) as unknown;
+  } catch {
+    throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+  }
+  if (!isRecord(value) || !hasExactKeys(value, ["schemaVersion", "intents"])) {
+    throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+  }
+  if (value.schemaVersion !== 1 || !Array.isArray(value.intents)) {
+    throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+  }
+  const intents = value.intents.map((entry) => {
+    if (!isRecord(entry) || !hasExactKeys(entry, ["fingerprint", "acquisitionKey"])) {
+      throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+    }
+    if (
+      typeof entry.fingerprint !== "string" ||
+      !/^private-file\.v1\.[A-Za-z0-9_-]{43}$/u.test(entry.fingerprint) ||
+      typeof entry.acquisitionKey !== "string" ||
+      !/^owner-upload\.v2\.[A-Za-z0-9_-]{43}$/u.test(entry.acquisitionKey)
+    ) {
+      throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+    }
+    return Object.freeze({
+      fingerprint: entry.fingerprint,
+      acquisitionKey: entry.acquisitionKey,
+    });
+  });
+  if (
+    intents.length > OWNER_REFERENCE_UPLOAD_MAX_PENDING ||
+    new Set(intents.map(({ fingerprint }) => fingerprint)).size !== intents.length ||
+    new Set(intents.map(({ acquisitionKey }) => acquisitionKey)).size !== intents.length
+  ) {
+    throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+  }
+  return { schemaVersion: 1, intents };
+}
+
+function writePrivateReferenceUploadPendingState(state: PrivateReferenceUploadPendingState): void {
+  const encoded = JSON.stringify(state);
+  try {
+    window.localStorage.setItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE, encoded);
+    if (window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE) !== encoded) {
+      throw new Error("Browser-local upload retry state did not persist");
+    }
+  } catch {
+    throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+  }
+}
+
+function privateReferenceUploadHmacKey(): Uint8Array<ArrayBuffer> {
+  let stored: string | null;
+  let pending: string | null;
+  try {
+    stored = window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE);
+    pending = window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE);
+  } catch {
+    throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+  }
+  if (stored !== null) {
+    const decoded = base64UrlDecode(stored);
+    if (decoded?.byteLength !== OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES) {
+      throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+    }
+    return decoded;
+  }
+  if (pending !== null && pending !== '{"schemaVersion":1,"intents":[]}') {
+    throw new OwnerReferenceWorkbenchUploadError("retry_state_invalid");
+  }
+
+  const generated = window.crypto.getRandomValues(
+    new Uint8Array(OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES)
+  );
+  const encoded = base64UrlEncode(generated);
+  try {
+    window.localStorage.setItem(OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE, encoded);
+    const persisted = window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE);
+    const persistedBytes = persisted ? base64UrlDecode(persisted) : null;
+    if (persistedBytes?.byteLength !== OWNER_REFERENCE_UPLOAD_HMAC_KEY_BYTES) {
+      throw new Error("Browser-local upload retry key did not persist");
+    }
+    return persistedBytes;
+  } catch {
+    throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+  }
+}
+
+async function resetPrivateReferenceUploadRetryState(): Promise<void> {
+  await withPrivateReferenceUploadLock(() => {
+    try {
+      window.localStorage.removeItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE);
+      if (window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_PENDING_STORAGE) !== null) {
+        throw new Error("pending retry state did not clear");
+      }
+      window.localStorage.removeItem(OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE);
+      if (window.localStorage.getItem(OWNER_REFERENCE_UPLOAD_HMAC_KEY_STORAGE) !== null) {
+        throw new Error("retry key did not clear");
+      }
+    } catch {
+      throw new OwnerReferenceWorkbenchUploadError("retry_protection_unavailable");
+    }
+  });
+}
+
+async function decodeOwnerReferenceUploadIngestResult(
+  input: unknown,
+  file: File,
+  mediaType: string,
+  intent: PrivateReferenceUploadIntent
+): Promise<OwnerReferenceUploadIngestResult> {
+  const result = Value.Decode(OwnerReferenceUploadIngestResultSchema, input);
+  const [fileSha256, keySha256] = await Promise.all([
+    browserSha256Hex(new Uint8Array(await file.arrayBuffer())),
+    browserSha256Hex(new TextEncoder().encode(intent.acquisitionKey)),
+  ]);
+  const expectedAcquisitionId = `acquisition.owner-upload.${keySha256.slice(0, 32)}`;
+  const expectedOwnerActionId = `owner-action.reference-upload.${keySha256.slice(0, 32)}`;
+  if (
+    result.digitalAsset.sha256 !== fileSha256 ||
+    result.digitalAsset.id !== `digital-asset.sha256.${fileSha256}` ||
+    result.digitalAsset.mediaType !== mediaType ||
+    result.digitalAsset.byteLength !== file.size ||
+    result.acquisition.id !== expectedAcquisitionId ||
+    result.acquisition.digitalAssetRef.id !== result.digitalAsset.id ||
+    result.acquisition.digitalAssetRef.digest !== result.digitalAsset.digest ||
+    result.acquisition.origin.ownerActionRef.id !== expectedOwnerActionId ||
+    result.acquisition.processingPolicyRef.id !==
+      "processing-policy.owner-local-reference-upload.v1"
+  ) {
+    throw new Error("The private upload confirmation does not match the submitted acquisition");
+  }
+  return result;
+}
+
+async function browserSha256Hex(value: Uint8Array<ArrayBuffer>): Promise<string> {
+  const digest = new Uint8Array(await window.crypto.subtle.digest("SHA-256", value));
+  return [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function base64UrlEncode(value: Uint8Array): string {
+  let binary = "";
+  for (const byte of value) binary += String.fromCharCode(byte);
+  return window.btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
+}
+
+function base64UrlDecode(value: string): Uint8Array<ArrayBuffer> | null {
+  if (!/^[A-Za-z0-9_-]{43}$/u.test(value)) return null;
+  try {
+    const padded = `${value.replaceAll("-", "+").replaceAll("_", "/")}=`;
+    return Uint8Array.from(window.atob(padded), (character) => character.charCodeAt(0));
+  } catch {
+    return null;
+  }
+}
+
+function renderPrivateReferenceStagingSummary(container: HTMLElement, input: unknown): void {
+  container.replaceChildren();
+  container.className = "reference-source-staging-private-summary";
+  if (!isPrivateReferenceStagingDiagnostics(input)) {
+    const unavailable = document.createElement("p");
+    unavailable.textContent = "Private staging summary is unavailable.";
+    container.append(unavailable);
+    return;
+  }
+
+  const boundary = document.createElement("strong");
+  boundary.textContent = "Staging only · read-only compatibility view";
+  const publication = document.createElement("p");
+  publication.textContent =
+    "Canonical publication is disabled. This private summary cannot affect arranging or reviewed knowledge.";
+  const counts = document.createElement("p");
+  const stagedRecords = privateArrayLength(input.snapshot, "records");
+  const legacyRecords = Math.max(
+    privateNestedArrayLength(input, "legacyProjection", "ownerReferences"),
+    privateNestedArrayLength(input, "legacyProjections", "ownerReferences")
+  );
+  counts.textContent = `${boundedPrivateCount(stagedRecords)} staged record${stagedRecords === 1 ? "" : "s"} · ${boundedPrivateCount(legacyRecords)} legacy compatibility record${legacyRecords === 1 ? "" : "s"}`;
+  const explanation = document.createElement("p");
+  explanation.textContent = input.head
+    ? "A current private staging snapshot is available. Bibliographic identity confidence unassessed until reviewed. Record identities, source metadata, paths, and direct digests are hidden; use the redacted reference cards above for review."
+    : "No current private staging snapshot exists. Bibliographic identity confidence unassessed. Record identities, source metadata, paths, and direct digests remain hidden.";
+  container.append(boundary, publication, counts, explanation);
+}
+
+function isPrivateReferenceStagingDiagnostics(
+  value: unknown
+): value is ReferenceSourceStagingDiagnostics {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { publicationState?: unknown }).publicationState === "staging_only" &&
+    typeof (value as { capabilities?: unknown }).capabilities === "object" &&
+    (value as { capabilities?: unknown }).capabilities !== null &&
+    (value as { capabilities: { canonicalPublication?: unknown } }).capabilities
+      .canonicalPublication === false
+  );
+}
+
+function privateArrayLength(value: unknown, key: string): number {
+  if (typeof value !== "object" || value === null) return 0;
+  const candidate = (value as Record<string, unknown>)[key];
+  return Array.isArray(candidate) ? candidate.length : 0;
+}
+
+function privateNestedArrayLength(value: unknown, outerKey: string, innerKey: string): number {
+  if (typeof value !== "object" || value === null) return 0;
+  return privateArrayLength((value as Record<string, unknown>)[outerKey], innerKey);
+}
+
+function boundedPrivateCount(value: number): string {
+  return value > OWNER_REFERENCE_STAGING_SUMMARY_LIMIT
+    ? `${OWNER_REFERENCE_STAGING_SUMMARY_LIMIT}+`
+    : String(value);
+}
+
+function privateReferenceMimeType(file: Pick<File, "name" | "type">): string {
+  const declared = file.type.split(";", 1)[0]?.trim().toLowerCase();
+  if (
+    declared &&
+    ["application/pdf", "image/png", "image/jpeg", "image/tiff", "image/webp"].includes(declared)
+  ) {
+    return declared;
+  }
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const inferred = {
+    pdf: "application/pdf",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    tif: "image/tiff",
+    tiff: "image/tiff",
+    webp: "image/webp",
+  }[extension ?? ""];
+  if (!inferred) throw new Error("Choose a supported private PDF or image.");
+  return inferred;
+}
+
+function renderOwnerReferenceMigrationControls(
+  compatibility: OwnerReferenceMigrationCompatibility,
+  refresh: () => Promise<unknown>
+): HTMLElement {
+  const panel = document.createElement("section");
+  panel.className = "owner-reference-library-migration-controls";
+  panel.dataset.ownerReferenceMigrationControls = "";
+  const heading = document.createElement("strong");
+  heading.textContent = "Legacy private references";
+  const explanation = document.createElement("p");
+  const pending = compatibility.ownerReferences.filter(({ state }) => state === "pending").length;
+  explanation.textContent = pending
+    ? `${pending} legacy private reference${pending === 1 ? " is" : "s are"} waiting for a transactional byte-level migration. No title, citation, filename, or historical identity will be inferred.`
+    : compatibility.ownerReferences.length
+      ? "Legacy private references have a migration disposition. Quarantined records remain visible for review but cannot become arranging or specialist authority."
+      : compatibility.legacySourceState === "unavailable"
+        ? "The legacy private store is unavailable. No migration or authority claim was inferred."
+        : "No legacy private references are waiting for migration.";
+  panel.append(heading, explanation);
+  if (pending === 0) return panel;
+
+  const review = document.createElement("button");
+  review.type = "button";
+  review.textContent = "Review migration plan";
+  const authorize = document.createElement("button");
+  authorize.type = "button";
+  authorize.textContent = "Authorize private staging migration";
+  authorize.hidden = true;
+  const planItems = document.createElement("ol");
+  planItems.className = "owner-reference-library-migration-plan";
+  planItems.dataset.ownerReferenceMigrationPlan = "";
+  planItems.hidden = true;
+  const status = document.createElement("p");
+  status.className = "owner-reference-library-migration-status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  panel.append(review, status, planItems, authorize);
+
+  let reviewedPlan: OwnerReferenceMigrationPlan | undefined;
+  let migrationStateInvalidated = false;
+  const expectedHead = ownerReferenceMigrationExpectedHead(compatibility.head);
+  const invalidateAndRefresh = async (message: string): Promise<void> => {
+    migrationStateInvalidated = true;
+    reviewedPlan = undefined;
+    authorize.hidden = true;
+    authorize.disabled = true;
+    review.disabled = true;
+    planItems.hidden = true;
+    planItems.replaceChildren();
+    status.textContent = "Refreshing private migration state…";
+    try {
+      await refresh();
+      const freshStatus = panel.ownerDocument.querySelector<HTMLElement>(
+        "#vellum-owner-workbench .owner-reference-library-migration-status"
+      );
+      if (freshStatus) freshStatus.textContent = message;
+    } catch {
+      status.textContent = `${message} Automatic refresh failed. Close and reopen Knowledge & defaults before reviewing another plan.`;
+    }
+  };
+  review.addEventListener("click", async () => {
+    review.disabled = true;
+    authorize.hidden = true;
+    planItems.hidden = true;
+    planItems.replaceChildren();
+    status.textContent = "Preparing a read-only migration plan…";
+    try {
+      const input = await api<unknown>("/api/owner/reference-migrations/owner-references/dry-run", {
+        method: "POST",
+        body: JSON.stringify({ expectedHead }),
+      });
+      reviewedPlan = decodeOwnerReferenceMigrationPlan(input, expectedHead);
+      const changes = reviewedPlan.mappings.length + reviewedPlan.quarantines.length;
+      status.textContent = changes
+        ? `Plan reviewed without writes: ${reviewedPlan.mappings.length} byte mapping${reviewedPlan.mappings.length === 1 ? "" : "s"} and ${reviewedPlan.quarantines.length} quarantine decision${reviewedPlan.quarantines.length === 1 ? "" : "s"}. Authorization migrates bytes into private staging only; activation remains disabled.`
+        : "Plan reviewed without writes. There are no migration changes to authorize.";
+      if (changes > 0) {
+        const expectedReviewItems = new Set([
+          ...reviewedPlan.mappings.map(({ legacyId }) => legacyId),
+          ...reviewedPlan.quarantines.map(({ legacyId }) => legacyId),
+        ]).size;
+        const renderedReviewItems = renderRedactedOwnerReferenceMigrationPlan(
+          planItems,
+          reviewedPlan
+        );
+        if (
+          renderedReviewItems !== expectedReviewItems ||
+          planItems.childElementCount !== expectedReviewItems
+        ) {
+          throw new Error("The redacted migration review is incomplete");
+        }
+        planItems.hidden = false;
+      }
+      authorize.hidden = changes === 0;
+    } catch {
+      await invalidateAndRefresh(
+        "The migration plan could not be validated. No migration change was made; review a fresh plan."
+      );
+    } finally {
+      if (panel.isConnected && !migrationStateInvalidated) review.disabled = false;
+    }
+  });
+  authorize.addEventListener("click", async () => {
+    if (!reviewedPlan) return;
+    review.disabled = true;
+    authorize.disabled = true;
+    status.textContent = "Committing the reviewed private staging migration…";
+    try {
+      await api("/api/owner/reference-migrations/owner-references/commit", {
+        method: "POST",
+        body: JSON.stringify({
+          expectedHead,
+          planDigest: reviewedPlan.planDigest,
+        }),
+      });
+      await refresh();
+    } catch {
+      await invalidateAndRefresh(
+        "The reviewed private migration outcome could not be confirmed. No authority was activated; review the refreshed state before any retry."
+      );
+    }
+  });
+  return panel;
+}
+
+function decodeOwnerReferenceMigrationCompatibility(
+  input: unknown
+): OwnerReferenceMigrationCompatibility {
+  const compatibility = Value.Decode(OwnerReferenceMigrationCompatibilitySchema, input);
+  assertUniquePrivateMigrationIds(
+    compatibility.ownerReferences.map(({ legacyId }) => legacyId),
+    "compatibility rows"
+  );
+  return compatibility;
+}
+
+function decodeOwnerReferenceMigrationPlan(
+  input: unknown,
+  requestedHead: OwnerReferenceMigrationExpectedHead
+): OwnerReferenceMigrationPlan {
+  const plan = Value.Decode(OwnerReferenceMigrationPlanSchema, input);
+  if (!sameOwnerReferenceMigrationHead(plan.expectedHead, requestedHead)) {
+    throw new Error("The private migration plan is bound to a different publication head");
+  }
+  assertUniquePrivateMigrationIds(
+    plan.mappings.map(({ legacyId }) => legacyId),
+    "migration mappings"
+  );
+  assertUniquePrivateMigrationIds(
+    plan.quarantines.map(({ legacyId }) => legacyId),
+    "migration quarantines"
+  );
+  return plan;
+}
+
+function assertUniquePrivateMigrationIds(ids: string[], label: string): void {
+  if (new Set(ids).size !== ids.length) {
+    throw new Error(`The private ${label} contain duplicate identities`);
+  }
+}
+
+function sameOwnerReferenceMigrationHead(
+  left: OwnerReferenceMigrationExpectedHead,
+  right: OwnerReferenceMigrationExpectedHead
+): boolean {
+  if (left === null || right === null) return left === right;
+  return left.id === right.id && left.digest === right.digest && left.revision === right.revision;
+}
+
+function renderRedactedOwnerReferenceMigrationPlan(
+  list: HTMLOListElement,
+  plan: OwnerReferenceMigrationPlan
+): number {
+  type ReviewItem = {
+    mapping?: OwnerReferenceMigrationPlan["mappings"][number];
+    quarantine?: OwnerReferenceMigrationPlan["quarantines"][number];
+  };
+  const items = new Map<string, ReviewItem>();
+  for (const mapping of plan.mappings) {
+    items.set(mapping.legacyId, { ...items.get(mapping.legacyId), mapping });
+  }
+  for (const quarantine of plan.quarantines) {
+    items.set(quarantine.legacyId, { ...items.get(quarantine.legacyId), quarantine });
+  }
+  let ordinal = 0;
+  for (const item of items.values()) {
+    ordinal += 1;
+    const row = list.ownerDocument.createElement("li");
+    const parts = [`Private reference ${ordinal}`];
+    if (item.mapping) {
+      parts.push(
+        item.mapping.alreadyMapped
+          ? "exact byte mapping already exists"
+          : "exact bytes will be mapped into private staging",
+        "bibliographic identity will not be asserted"
+      );
+    }
+    if (item.quarantine) {
+      parts.push(
+        `authority remains quarantined: ${humanizePrivateEnum(item.quarantine.reason)}`,
+        `required action: ${humanizePrivateEnum(item.quarantine.action)}`
+      );
+    } else {
+      parts.push("required action: review source identity before any authority-bearing use");
+    }
+    row.textContent = `${parts.join(" · ")}.`;
+    list.append(row);
+  }
+  return ordinal;
+}
+
+function humanizePrivateEnum(value: string): string {
+  return value.replaceAll("_", " ");
+}
+
+function ownerReferenceMigrationExpectedHead(
+  head: OwnerReferenceMigrationCompatibility["head"]
+): OwnerReferenceMigrationExpectedHead {
+  return head ? { id: head.generationId, digest: head.digest, revision: head.revision } : null;
 }
 
 function ownerRecord(title: string, evidence: string): HTMLElement {

@@ -4,6 +4,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 type PlanVariant = "ready" | "unknown_canary" | "bad_digest";
 
+const PRIVATE_LIFECYCLE_RECORD_ID_CANARY = "asset-acquisition.PRIVATE-LIFECYCLE-RECORD-ID-CANARY";
+
 type LifecycleFixture = {
   snapshotId: string;
   snapshotDigest: string;
@@ -49,6 +51,14 @@ test("Workbench previews a sealed lifecycle plan without exposing private values
   await expect(staging).not.toContainText("PRIVATE-PATH-CANARY");
   await expect(staging).not.toContainText("PRIVATE-BYTES-CANARY");
   await expect(staging).not.toContainText("file://");
+  await expect(staging).not.toContainText(fixture.snapshotId);
+  await expect(staging).not.toContainText(fixture.snapshotDigest);
+  await expect(staging).not.toContainText(fixture.acquisitionId);
+  await expect(staging).not.toContainText(PRIVATE_LIFECYCLE_RECORD_ID_CANARY);
+  await expect(staging).not.toContainText(fixture.acquisitionDigest);
+  await expect(staging).not.toContainText("digital-asset.owner-copy");
+  await expect(staging).not.toContainText("use.alternate-provenance");
+  await expectSerializedLifecycleRedaction(staging, fixture);
 });
 
 test("Workbench rejects a correctly sealed lifecycle response with an unknown private-field canary", async ({
@@ -63,6 +73,7 @@ test("Workbench rejects a correctly sealed lifecycle response with an unknown pr
   await expect(staging).not.toContainText("PRIVATE-PATH-CANARY");
   await expect(staging).not.toContainText("file://");
   await expect(staging.getByRole("button")).toHaveCount(1);
+  await expectSerializedLifecycleRedaction(staging);
 });
 
 test("Workbench rejects a valid-looking lifecycle response with a bad canonical digest", async ({
@@ -75,7 +86,36 @@ test("Workbench rejects a valid-looking lifecycle response with a bad canonical 
   await expect(staging).not.toContainText("Sealed dry-run plan");
   await expect(staging).not.toContainText("Dry-run plan ready");
   await expect(staging.getByRole("button")).toHaveCount(1);
+  await expectSerializedLifecycleRedaction(staging);
 });
+
+async function expectSerializedLifecycleRedaction(
+  staging: Locator,
+  fixture?: LifecycleFixture
+): Promise<void> {
+  const serialized = await staging.evaluate((element) => element.outerHTML);
+  const values = [
+    "PRIVATE-PATH-CANARY",
+    "PRIVATE-BYTES-CANARY",
+    "file://",
+    PRIVATE_LIFECYCLE_RECORD_ID_CANARY,
+    "digital-asset.owner-copy",
+    "digital-asset.restricted-copy",
+    "use.alternate-provenance",
+    "use.removed-provenance",
+    ...(fixture
+      ? [
+          fixture.snapshotId,
+          fixture.snapshotDigest,
+          fixture.snapshotDigest.slice(0, 12),
+          fixture.acquisitionId,
+          fixture.acquisitionDigest,
+          fixture.acquisitionDigest.slice(0, 12),
+        ]
+      : []),
+  ];
+  for (const value of values) expect(serialized).not.toContain(value);
+}
 
 async function installLifecycleFixture(
   page: Page,
@@ -84,7 +124,7 @@ async function installLifecycleFixture(
   const fixture: LifecycleFixture = {
     snapshotId: "reference-source-snapshot.lifecycle-current",
     snapshotDigest: "1".repeat(64),
-    acquisitionId: "asset-acquisition.owner-copy",
+    acquisitionId: PRIVATE_LIFECYCLE_RECORD_ID_CANARY,
     acquisitionDigest: "2".repeat(64),
   };
 
@@ -190,7 +230,7 @@ async function openAndSubmitLifecyclePlanner(page: Page): Promise<Locator> {
   await expect(staging).toContainText("without changing bytes, permissions, publications");
   await expect(staging.getByLabel("Action", { exact: true })).toHaveValue("delete_acquisition");
   await expect(staging.getByLabel("Acquisition", { exact: true })).toContainText(
-    "asset-acquisition.owner-copy"
+    "Private acquisition 1"
   );
   await staging.getByLabel("Reason", { exact: true }).fill("Owner requested a dry-run preview");
   await staging.getByRole("button", { name: "Preview lifecycle plan" }).click();

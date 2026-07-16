@@ -17,6 +17,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   canonicalReferenceJson,
   referenceSourceDigest,
+  withReferenceRecordDigest,
+  type ReferenceDigitalAsset,
   type ReferenceRecordRef,
 } from "../../lib/reference-source-domain.js";
 import {
@@ -59,6 +61,62 @@ describe("reference-source controlled artifact store", () => {
     });
     expect(restarted.observe().storeGeneration).toBe(2);
   });
+
+  it("reads one exact no-follow Digital Asset binding and survives restart", () => {
+    const root = temporaryRoot();
+    const bytes = Buffer.from("exact private study bytes");
+    const asset = digitalAsset("read-exact", bytes);
+    const store = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
+    store.putDigitalAsset({ digitalAsset: asset, bytes });
+
+    expect(store.readDigitalAssetBytes({ id: asset.id, digest: asset.digest })).toEqual(
+      new Uint8Array(bytes)
+    );
+    expect(
+      new ReferenceSourceControlledArtifactStore({ rootDirectory: root }).readDigitalAssetBytes({
+        id: asset.id,
+        digest: asset.digest,
+      })
+    ).toEqual(new Uint8Array(bytes));
+  });
+
+  it.each(["tampered", "missing", "symlink", "pending"] as const)(
+    "fails a controlled byte read with a typed path-redacted error for %s",
+    (failure) => {
+      const root = temporaryRoot();
+      const outside = temporaryRoot();
+      const bytes = Buffer.from(`private ${failure} bytes`);
+      const asset = digitalAsset(`read-${failure}`, bytes);
+      const store = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
+      store.putDigitalAsset({ digitalAsset: asset, bytes });
+      const blobPath = path.join(root, "blobs", asset.sha256);
+
+      if (failure === "tampered") writeFileSync(blobPath, "tampered");
+      if (failure === "missing") rmSync(blobPath);
+      if (failure === "symlink") {
+        rmSync(blobPath);
+        const target = path.join(outside, "outside-private-bytes");
+        writeFileSync(target, bytes);
+        symlinkSync(target, blobPath);
+      }
+      if (failure === "pending") {
+        writeFileSync(
+          path.join(root, ".pending", `${asset.sha256}.${randomUUID()}.pending`),
+          bytes
+        );
+      }
+
+      let thrown: unknown;
+      try {
+        store.readDigitalAssetBytes({ id: asset.id, digest: asset.digest });
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toBeInstanceOf(ReferenceSourceControlledArtifactStoreIntegrityError);
+      expect(String((thrown as Error).message)).not.toContain(root);
+      expect(String((thrown as Error).message)).not.toContain(asset.sha256);
+    }
+  );
 
   it("fails inventory closed for tampered, missing, and orphan blobs", () => {
     const tamperedRoot = temporaryRoot();
@@ -249,6 +307,39 @@ describe("reference-source controlled artifact store", () => {
     });
   });
 
+  it("keeps prepared ingestion fail-closed and can abort a pre-catalog hard link after restart", () => {
+    const root = temporaryRoot();
+    const store = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
+    const bytes = Buffer.from("prepared ingestion crash bytes");
+    const asset = digitalAsset("prepared-crash", bytes);
+    const prepared = store.prepareDigitalAssetIngestion({
+      digitalAsset: asset,
+      acquisitionRef: ref("acquisition.prepared-crash", "b"),
+      bytes,
+    });
+    const pendingPayload = readdirSync(path.join(root, ".pending")).find((name) =>
+      new RegExp(`^${asset.sha256}\\.[0-9a-f-]{36}\\.pending$`).test(name)
+    );
+    expect(pendingPayload).toBeDefined();
+    const pendingPath = path.join(root, ".pending", pendingPayload!);
+    const blobPath = path.join(root, "blobs", asset.sha256);
+    linkSync(pendingPath, blobPath);
+
+    expect(store.observe()).toMatchObject({
+      status: "failed",
+      artifactBindings: [],
+    });
+    const restarted = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
+    expect(existsSync(pendingPath)).toBe(true);
+    expect(existsSync(blobPath)).toBe(true);
+    expect(restarted.observe()).toMatchObject({ status: "failed", artifactBindings: [] });
+
+    restarted.abortDigitalAssetIngestion(prepared);
+    expect(existsSync(pendingPath)).toBe(false);
+    expect(existsSync(blobPath)).toBe(false);
+    expect(restarted.observe()).toMatchObject({ status: "complete", artifactBindings: [] });
+  });
+
   it("fails on an interrupted catalog replacement and removes its private metadata on restart", () => {
     const root = temporaryRoot();
     const store = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
@@ -379,12 +470,17 @@ describe("reference-source controlled artifact store", () => {
   it("does not mistake an abandoned pre-publication claim temporary for an owned claim", () => {
     const root = temporaryRoot();
     const hostIdentity = "e".repeat(64);
-    new ReferenceSourceControlledArtifactStore({
+    const store = new ReferenceSourceControlledArtifactStore({
       rootDirectory: root,
       hostIdentity: () => hostIdentity,
     });
     const abandonedTemporary = path.join(root, `.catalog-claim.${randomUUID()}.tmp`);
     writeFileSync(abandonedTemporary, '{"schemaVersion":1');
+
+    expect(store.observe()).toMatchObject({
+      status: "failed",
+      failureCode: "enumeration_incomplete",
+    });
 
     const restarted = new ReferenceSourceControlledArtifactStore({
       rootDirectory: root,
@@ -392,6 +488,7 @@ describe("reference-source controlled artifact store", () => {
     });
 
     expect(restarted.observe()).toMatchObject({ status: "complete" });
+    expect(existsSync(abandonedTemporary)).toBe(false);
     expect(existsSync(path.join(root, ".catalog.claim"))).toBe(false);
   });
 
@@ -504,6 +601,16 @@ function bindingFor(input: PutReferenceSourceControlledArtifactInput) {
     blobSha256: input.sha256,
     byteLength: input.byteLength,
   };
+}
+
+function digitalAsset(id: string, bytes: Uint8Array): ReferenceDigitalAsset {
+  return withReferenceRecordDigest({
+    recordKind: "digital_asset" as const,
+    id: `digital-asset.${id}`,
+    sha256: digest(bytes),
+    mediaType: "application/octet-stream",
+    byteLength: bytes.byteLength,
+  }) as ReferenceDigitalAsset;
 }
 
 function readCatalog(root: string): {

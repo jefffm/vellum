@@ -90,6 +90,36 @@ const LastBindingReleaseIntentSchema = Type.Object(
 );
 type LastBindingReleaseIntent = Static<typeof LastBindingReleaseIntentSchema>;
 
+const DigitalAssetIngestionIntentCoreSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    kind: Type.Literal("digital_asset_ingestion"),
+    intentId: Type.String({ pattern: "^[0-9a-f-]{36}$" }),
+    digitalAssetRef: ReferenceRecordRefSchema,
+    acquisitionRef: ReferenceRecordRefSchema,
+    blobSha256: DigestSchema,
+    byteLength: Type.Integer({ minimum: 0 }),
+    bindingExistedBefore: Type.Boolean(),
+    pendingFileName: Type.Union([
+      Type.String({ pattern: "^[a-f0-9]{64}\\.[0-9a-f-]{36}\\.pending$" }),
+      Type.Null(),
+    ]),
+    catalogBeforeGeneration: Type.Integer({ minimum: 0 }),
+    catalogBeforeDigest: DigestSchema,
+  },
+  Strict
+);
+type DigitalAssetIngestionIntentCore = Static<typeof DigitalAssetIngestionIntentCoreSchema>;
+
+const DigitalAssetIngestionIntentSchema = Type.Object(
+  {
+    ...DigitalAssetIngestionIntentCoreSchema.properties,
+    digest: DigestSchema,
+  },
+  Strict
+);
+type DigitalAssetIngestionIntent = Static<typeof DigitalAssetIngestionIntentSchema>;
+
 const CatalogRecoveryReceiptSchema = Type.Object(
   {
     schemaVersion: Type.Literal(1),
@@ -161,6 +191,15 @@ export type PutReferenceSourceControlledArtifactInput = {
 export type ReleaseReferenceSourceControlledArtifactInput = {
   artifactRef: ReferenceRecordRef;
   expectedBlobSha256: string;
+};
+
+export type PreparedReferenceSourceDigitalAssetIngestion = {
+  intentId: string;
+  intentDigest: string;
+  digitalAssetRef: ReferenceRecordRef;
+  acquisitionRef: ReferenceRecordRef;
+  blobSha256: string;
+  byteLength: number;
 };
 
 /**
@@ -238,31 +277,214 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     created: boolean;
   } {
     assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
-    let digitalAsset: ReferenceDigitalAsset;
-    try {
-      digitalAsset = Value.Decode(ReferenceDigitalAssetSchema, input.digitalAsset);
-    } catch (error) {
-      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
-        `Controlled Digital Asset failed schema validation: ${errorMessage(error)}`
-      );
-    }
-    const { digest, ...core } = digitalAsset;
-    if (referenceSourceDigest(core) !== digest) {
-      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
-        "Controlled Digital Asset identity or record digest is invalid"
-      );
-    }
-    const bytes = Buffer.from(input.bytes);
-    if (bytes.byteLength !== digitalAsset.byteLength || sha256(bytes) !== digitalAsset.sha256) {
-      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
-        "Controlled Digital Asset bytes do not match its declared identity"
-      );
-    }
+    const { digitalAsset, bytes } = decodeDigitalAssetBytes(input);
     return this.putValidated({
       artifactRef: { id: digitalAsset.id, digest: digitalAsset.digest },
       sha256: digitalAsset.sha256,
       byteLength: digitalAsset.byteLength,
       bytes,
+    });
+  }
+
+  /**
+   * Persist upload bytes as inventory-visible pending state without publishing
+   * a controlled binding. Staging metadata is committed first; only then may
+   * commitDigitalAssetIngestion publish the binding. A crash at either side of
+   * that boundary therefore leaves a durable, fail-closed recovery intent
+   * instead of a complete unreferenced artifact.
+   */
+  prepareDigitalAssetIngestion(input: {
+    digitalAsset: ReferenceDigitalAsset;
+    acquisitionRef: ReferenceRecordRef;
+    bytes: Uint8Array;
+  }): PreparedReferenceSourceDigitalAssetIngestion {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    const { digitalAsset, bytes } = decodeDigitalAssetBytes(input);
+    const acquisitionRef = decodeArtifactRef(input.acquisitionRef);
+
+    return this.withCatalogClaim(() => {
+      if (readdirSync(this.pendingDirectory()).length > 0) {
+        throw new ReferenceSourceControlledArtifactStoreConflictError(
+          "Controlled-artifact recovery must finish before another Digital Asset ingestion"
+        );
+      }
+      const catalog = this.readCatalog();
+      const digitalAssetRef = refForDigitalAsset(digitalAsset);
+      const existing = catalog.bindings.find(
+        (binding) => refKey(binding.artifactRef) === refKey(digitalAssetRef)
+      );
+      if (
+        existing &&
+        (existing.blobSha256 !== digitalAsset.sha256 ||
+          existing.byteLength !== digitalAsset.byteLength)
+      ) {
+        throw new ReferenceSourceControlledArtifactStoreConflictError(
+          `Controlled artifact ${digitalAsset.id} is already bound to different bytes`
+        );
+      }
+      if (existing) this.assertHealthyBlob(existing.blobSha256, existing.byteLength);
+
+      const intentId = randomUUID();
+      let pendingFileName: string | null = null;
+      if (!existing) {
+        pendingFileName = `${digitalAsset.sha256}.${randomUUID()}.pending`;
+        const pendingPath = path.join(this.pendingDirectory(), pendingFileName);
+        const descriptor = openSync(
+          pendingPath,
+          fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW,
+          0o600
+        );
+        try {
+          writeFileSync(descriptor, bytes);
+          fsyncSync(descriptor);
+        } finally {
+          closeSync(descriptor);
+        }
+        fsyncDirectory(this.pendingDirectory());
+      }
+
+      const core: DigitalAssetIngestionIntentCore = {
+        schemaVersion: 1,
+        kind: "digital_asset_ingestion",
+        intentId,
+        digitalAssetRef,
+        acquisitionRef,
+        blobSha256: digitalAsset.sha256,
+        byteLength: digitalAsset.byteLength,
+        bindingExistedBefore: existing !== undefined,
+        pendingFileName,
+        catalogBeforeGeneration: catalog.generation,
+        catalogBeforeDigest: catalog.digest,
+      };
+      const intent = Value.Decode(DigitalAssetIngestionIntentSchema, {
+        ...core,
+        digest: referenceSourceDigest(core),
+      });
+      writeJsonAtomic(this.digitalAssetIngestionIntentPath(intent.intentId), intent);
+      return digitalAssetIngestionHandle(intent);
+    });
+  }
+
+  listPreparedDigitalAssetIngestions(): PreparedReferenceSourceDigitalAssetIngestion[] {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    return this.withCatalogClaim(() =>
+      this.readDigitalAssetIngestionIntents().map(digitalAssetIngestionHandle)
+    );
+  }
+
+  commitDigitalAssetIngestion(prepared: PreparedReferenceSourceDigitalAssetIngestion): {
+    binding: ReferenceSourceControlledArtifactBinding;
+    created: boolean;
+  } {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    return this.withCatalogClaim(() => {
+      const intent = this.readMatchingDigitalAssetIngestionIntent(prepared);
+      const catalog = this.readCatalog();
+      const key = refKey(intent.digitalAssetRef);
+      const existing = catalog.bindings.find((binding) => refKey(binding.artifactRef) === key);
+      if (
+        existing &&
+        (existing.blobSha256 !== intent.blobSha256 || existing.byteLength !== intent.byteLength)
+      ) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          `Prepared Digital Asset ${intent.digitalAssetRef.id} conflicts with its controlled binding`
+        );
+      }
+
+      const binding: ReferenceSourceControlledArtifactBinding = existing ?? {
+        artifactRef: intent.digitalAssetRef,
+        blobSha256: intent.blobSha256,
+        byteLength: intent.byteLength,
+      };
+      if (existing) {
+        this.assertHealthyBlob(existing.blobSha256, existing.byteLength);
+      } else {
+        if (intent.bindingExistedBefore || !intent.pendingFileName) {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            "Prepared Digital Asset lost a pre-existing controlled binding"
+          );
+        }
+        const pendingPath = path.join(this.pendingDirectory(), intent.pendingFileName);
+        const observed = inspectFile(pendingPath);
+        if (observed.sha256 !== intent.blobSha256 || observed.byteLength !== intent.byteLength) {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            "Prepared Digital Asset pending bytes failed digest or length verification"
+          );
+        }
+        const destination = this.blobPath(intent.blobSha256);
+        try {
+          linkSync(pendingPath, destination);
+          fsyncDirectory(this.blobsDirectory());
+        } catch (error) {
+          if (!isFileExistsError(error)) throw error;
+          this.assertHealthyBlob(intent.blobSha256, intent.byteLength);
+        }
+        this.writeCatalog(
+          bindCatalog({
+            schemaVersion: 1,
+            generation: catalog.generation + 1,
+            bindings: sortBindings([...catalog.bindings, binding]),
+          })
+        );
+      }
+
+      if (intent.pendingFileName) {
+        const pendingPath = path.join(this.pendingDirectory(), intent.pendingFileName);
+        if (pathEntryExists(pendingPath)) this.removePendingFile(pendingPath);
+      }
+      this.removePendingFile(this.digitalAssetIngestionIntentPath(intent.intentId));
+      return { binding: structuredClone(binding), created: !intent.bindingExistedBefore };
+    });
+  }
+
+  abortDigitalAssetIngestion(prepared: PreparedReferenceSourceDigitalAssetIngestion): void {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    this.withCatalogClaim(() => {
+      const intent = this.readMatchingDigitalAssetIngestionIntent(prepared);
+      const catalog = this.readCatalog();
+      const binding = catalog.bindings.find(
+        (candidate) => refKey(candidate.artifactRef) === refKey(intent.digitalAssetRef)
+      );
+      if (binding && !intent.bindingExistedBefore) {
+        if (binding.blobSha256 !== intent.blobSha256 || binding.byteLength !== intent.byteLength) {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            "Prepared Digital Asset changed before ingestion rollback"
+          );
+        }
+        this.releaseClaimed({
+          artifactRef: intent.digitalAssetRef,
+          expectedBlobSha256: intent.blobSha256,
+        });
+      } else if (binding) {
+        this.assertHealthyBlob(binding.blobSha256, binding.byteLength);
+      } else if (intent.bindingExistedBefore) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          "Prepared Digital Asset lost its pre-existing binding before ingestion rollback"
+        );
+      } else {
+        const destination = this.blobPath(intent.blobSha256);
+        if (pathEntryExists(destination)) {
+          if (!intent.pendingFileName) {
+            throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+              "Prepared Digital Asset rollback cannot prove ownership of an orphan blob"
+            );
+          }
+          const pendingPath = path.join(this.pendingDirectory(), intent.pendingFileName);
+          if (!pathEntryExists(pendingPath) || !sameRegularFile(pendingPath, destination)) {
+            throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+              "Prepared Digital Asset rollback found an unrelated blob at its digest path"
+            );
+          }
+          this.assertHealthyBlob(intent.blobSha256, intent.byteLength);
+          unlinkSync(destination);
+          fsyncDirectory(this.blobsDirectory());
+        }
+      }
+      if (intent.pendingFileName) {
+        const pendingPath = path.join(this.pendingDirectory(), intent.pendingFileName);
+        if (pathEntryExists(pendingPath)) this.removePendingFile(pendingPath);
+      }
+      this.removePendingFile(this.digitalAssetIngestionIntentPath(intent.intentId));
     });
   }
 
@@ -275,6 +497,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     const { artifactRef, bytes } = input;
 
     return this.withCatalogClaim(() => {
+      this.assertNoPreparedDigitalAssetIngestions();
       const catalog = this.readCatalog();
       const key = refKey(artifactRef);
       const existing = catalog.bindings.find((binding) => refKey(binding.artifactRef) === key);
@@ -326,51 +549,60 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     assertDigest(input.expectedBlobSha256, "expected blob SHA-256");
 
     return this.withCatalogClaim(() => {
-      const catalog = this.readCatalog();
-      const key = refKey(artifactRef);
-      const binding = catalog.bindings.find((item) => refKey(item.artifactRef) === key);
-      if (!binding) {
-        throw new ReferenceSourceControlledArtifactStoreNotFoundError(
-          `Controlled artifact binding not found: ${artifactRef.id}`
-        );
-      }
-      if (binding.blobSha256 !== input.expectedBlobSha256) {
-        throw new ReferenceSourceControlledArtifactStoreConflictError(
-          `Controlled artifact ${artifactRef.id} does not match the expected blob digest`
-        );
-      }
-
-      const remaining = catalog.bindings.filter((item) => refKey(item.artifactRef) !== key);
-      const blobStillBound = remaining.some(({ blobSha256 }) => blobSha256 === binding.blobSha256);
-      const next = bindCatalog({
-        schemaVersion: 1,
-        generation: catalog.generation + 1,
-        bindings: remaining,
-      });
-      let blobDeleted = false;
-      if (blobStillBound) {
-        this.assertHealthyBlob(binding.blobSha256, binding.byteLength);
-        this.writeCatalog(next);
-      } else {
-        const releaseIntentPath = this.writeLastBindingReleaseIntent(
-          bindLastBindingReleaseIntent(catalog, next, binding)
-        );
-        const blobPath = this.blobPath(binding.blobSha256);
-        if (pathEntryExists(blobPath)) {
-          this.assertHealthyBlob(binding.blobSha256, binding.byteLength);
-          unlinkSync(blobPath);
-          fsyncDirectory(this.blobsDirectory());
-          blobDeleted = true;
-        }
-        this.writeCatalog(next);
-        this.removePendingFile(releaseIntentPath);
-      }
-      return {
-        releasedBinding: structuredClone(binding),
-        blobDeleted,
-        generation: next.generation,
-      };
+      this.assertNoPreparedDigitalAssetIngestions();
+      return this.releaseClaimed({ artifactRef, expectedBlobSha256: input.expectedBlobSha256 });
     });
+  }
+
+  private releaseClaimed(input: ReleaseReferenceSourceControlledArtifactInput): {
+    releasedBinding: ReferenceSourceControlledArtifactBinding;
+    blobDeleted: boolean;
+    generation: number;
+  } {
+    const catalog = this.readCatalog();
+    const key = refKey(input.artifactRef);
+    const binding = catalog.bindings.find((item) => refKey(item.artifactRef) === key);
+    if (!binding) {
+      throw new ReferenceSourceControlledArtifactStoreNotFoundError(
+        `Controlled artifact binding not found: ${input.artifactRef.id}`
+      );
+    }
+    if (binding.blobSha256 !== input.expectedBlobSha256) {
+      throw new ReferenceSourceControlledArtifactStoreConflictError(
+        `Controlled artifact ${input.artifactRef.id} does not match the expected blob digest`
+      );
+    }
+
+    const remaining = catalog.bindings.filter((item) => refKey(item.artifactRef) !== key);
+    const blobStillBound = remaining.some(({ blobSha256 }) => blobSha256 === binding.blobSha256);
+    const next = bindCatalog({
+      schemaVersion: 1,
+      generation: catalog.generation + 1,
+      bindings: remaining,
+    });
+    let blobDeleted = false;
+    if (blobStillBound) {
+      this.assertHealthyBlob(binding.blobSha256, binding.byteLength);
+      this.writeCatalog(next);
+    } else {
+      const releaseIntentPath = this.writeLastBindingReleaseIntent(
+        bindLastBindingReleaseIntent(catalog, next, binding)
+      );
+      const blobPath = this.blobPath(binding.blobSha256);
+      if (pathEntryExists(blobPath)) {
+        this.assertHealthyBlob(binding.blobSha256, binding.byteLength);
+        unlinkSync(blobPath);
+        fsyncDirectory(this.blobsDirectory());
+        blobDeleted = true;
+      }
+      this.writeCatalog(next);
+      this.removePendingFile(releaseIntentPath);
+    }
+    return {
+      releasedBinding: structuredClone(binding),
+      blobDeleted,
+      generation: next.generation,
+    };
   }
 
   /**
@@ -395,6 +627,95 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
         this.catalogTransactionDepth -= 1;
       }
     });
+  }
+
+  /**
+   * Read one exact immutable Digital Asset through the controlled catalog.
+   *
+   * This is intentionally stricter than an inventory lookup: the complete
+   * store must be healthy, no ingestion/recovery bytes may be pending, the
+   * exact ref must have one catalog binding, and the opened blob must remain a
+   * no-follow regular file with the catalogued length and SHA-256.
+   */
+  readDigitalAssetBytes(digitalAssetRef: ReferenceRecordRef): Uint8Array {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    const decodedRef = decodeArtifactRef(digitalAssetRef);
+
+    try {
+      return this.withCatalogClaim(() => {
+        const observation = this.observeClaimed();
+        if (observation.status !== "complete") {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            "Controlled Digital Asset bytes are unavailable while the store is incomplete"
+          );
+        }
+        const catalog = this.readCatalog();
+        const matches = catalog.bindings.filter(
+          (binding) => refKey(binding.artifactRef) === refKey(decodedRef)
+        );
+        if (matches.length !== 1) {
+          throw new ReferenceSourceControlledArtifactStoreNotFoundError(
+            "Controlled Digital Asset binding is unavailable"
+          );
+        }
+        const binding = matches[0]!;
+        const blobPath = this.blobPath(binding.blobSha256);
+        let descriptor: number | undefined;
+        try {
+          const before = lstatSync(blobPath);
+          if (!before.isFile() || before.isSymbolicLink()) {
+            throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+              "Controlled Digital Asset blob is not a regular file"
+            );
+          }
+          descriptor = openSync(blobPath, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+          const opened = fstatSync(descriptor);
+          if (
+            !opened.isFile() ||
+            opened.dev !== before.dev ||
+            opened.ino !== before.ino ||
+            opened.size !== binding.byteLength
+          ) {
+            throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+              "Controlled Digital Asset blob changed during guarded open"
+            );
+          }
+          const bytes = readFileSync(descriptor);
+          const after = fstatSync(descriptor);
+          const atPath = lstatSync(blobPath);
+          if (
+            !after.isFile() ||
+            !atPath.isFile() ||
+            atPath.isSymbolicLink() ||
+            after.dev !== opened.dev ||
+            after.ino !== opened.ino ||
+            after.size !== opened.size ||
+            atPath.dev !== opened.dev ||
+            atPath.ino !== opened.ino ||
+            bytes.byteLength !== binding.byteLength ||
+            sha256(bytes) !== binding.blobSha256
+          ) {
+            throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+              "Controlled Digital Asset bytes failed exact integrity verification"
+            );
+          }
+          return new Uint8Array(bytes);
+        } finally {
+          if (descriptor !== undefined) closeSync(descriptor);
+        }
+      });
+    } catch (error) {
+      if (
+        error instanceof ReferenceSourceControlledArtifactStoreIntegrityError ||
+        error instanceof ReferenceSourceControlledArtifactStoreConflictError ||
+        error instanceof ReferenceSourceControlledArtifactStoreNotFoundError
+      ) {
+        throw error;
+      }
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Controlled Digital Asset bytes are unavailable"
+      );
+    }
   }
 
   /** Enumerate the exact persisted catalog and disk state without snapshot input. */
@@ -438,10 +759,11 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
         kind: directoryEntryKind(entry),
       }))
       .sort((left, right) => left.name.localeCompare(right.name));
+    // No temporary is invisible to exact inventory merely because its name
+    // resembles one of ours. Live and abandoned temporaries fail closed until
+    // the writer removes them or restart recovery reconciles them.
     const unexpectedRootEntries = observedRootEntries.filter(
-      (entry) =>
-        !expectedRootEntries.has(entry.name) &&
-        !(entry.kind === "file" && /^\.catalog-claim\.[0-9a-f-]{36}\.tmp$/.test(entry.name))
+      (entry) => !expectedRootEntries.has(entry.name)
     );
     if (unexpectedRootEntries.length > 0) issues.add("orphan");
     if (
@@ -556,11 +878,17 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     this.reconcileInterruptedPendingMetadata();
     let catalog = this.readCatalog();
     catalog = this.reconcileLastBindingReleaseIntent(catalog);
+    const protectedIngestionPayloads = new Set(
+      this.readDigitalAssetIngestionIntents().flatMap((intent) =>
+        intent.pendingFileName ? [intent.pendingFileName] : []
+      )
+    );
     let changed = false;
     for (const entry of readdirSync(this.pendingDirectory(), { withFileTypes: true })) {
       if (!entry.isFile()) continue;
       const match = /^([a-f0-9]{64})\.[0-9a-f-]{36}\.pending$/.exec(entry.name);
       if (!match) continue;
+      if (protectedIngestionPayloads.has(entry.name)) continue;
       const expectedSha256 = match[1]!;
       const pendingPath = path.join(this.pendingDirectory(), entry.name);
       const observed = inspectFile(pendingPath);
@@ -684,9 +1012,13 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
       if (!entry.isFile()) continue;
       if (
         /^\.catalog\.[0-9a-f-]{36}\.tmp$/.test(entry.name) ||
+        /^\.catalog-init\.[0-9a-f-]{36}\.tmp$/.test(entry.name) ||
+        /^\.catalog-claim\.[0-9a-f-]{36}\.tmp$/.test(entry.name) ||
         /^\.catalog\.claim(?:\.recovery)?\.orphan\.[0-9a-f-]{36}$/.test(entry.name)
       ) {
-        unlinkSync(path.join(this.rootDirectory, entry.name));
+        // A concurrent initializer may remove its own temporary after readdir.
+        // Missing is benign; any replacement directory still fails closed.
+        rmSync(path.join(this.rootDirectory, entry.name), { force: true });
         changed = true;
       }
     }
@@ -714,7 +1046,9 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     for (const entry of readdirSync(this.pendingDirectory(), { withFileTypes: true })) {
       if (
         entry.isFile() &&
-        /^release\.[0-9a-f-]{36}\.intent\.json\.[0-9a-f-]{36}\.tmp$/.test(entry.name)
+        /^(?:release\.[0-9a-f-]{36}\.intent\.json|ingestion\.[0-9a-f-]{36}\.intent\.json)\.[0-9a-f-]{36}\.tmp$/.test(
+          entry.name
+        )
       ) {
         unlinkSync(path.join(this.pendingDirectory(), entry.name));
         changed = true;
@@ -729,23 +1063,34 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     ensureRealDirectory(this.pendingDirectory(), false);
     ensureRealDirectory(this.recoveriesDirectory(), false);
     if (pathEntryExists(this.catalogPath())) {
-      assertRegularFilePath(this.catalogPath(), "controlled-artifact catalog");
       this.readCatalog();
       return;
     }
     const empty = bindCatalog({ schemaVersion: 1, generation: 0, bindings: [] });
+    const temporary = path.join(this.rootDirectory, `.catalog-init.${randomUUID()}.tmp`);
+    let descriptor: number | undefined;
     try {
-      const descriptor = openSync(this.catalogPath(), "wx", 0o600);
-      try {
-        writeFileSync(descriptor, `${canonicalReferenceJson(empty)}\n`);
-        fsyncSync(descriptor);
-      } finally {
-        closeSync(descriptor);
-      }
+      descriptor = openSync(
+        temporary,
+        fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW,
+        0o600
+      );
+      writeFileSync(descriptor, `${canonicalReferenceJson(empty)}\n`);
+      fsyncSync(descriptor);
+      // Publish only a complete catalog and never replace a concurrent winner.
+      linkSync(temporary, this.catalogPath());
       fsyncDirectory(this.rootDirectory);
     } catch (error) {
-      if (!isFileExistsError(error)) throw error;
+      if (
+        !isFileExistsError(error) &&
+        !(isFileMissingError(error) && pathEntryExists(this.catalogPath()))
+      ) {
+        throw error;
+      }
       this.readCatalog();
+    } finally {
+      if (descriptor !== undefined) closeSync(descriptor);
+      rmSync(temporary, { force: true });
     }
   }
 
@@ -848,6 +1193,88 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     const file = path.join(this.pendingDirectory(), `release.${randomUUID()}.intent.json`);
     writeJsonAtomic(file, intent);
     return file;
+  }
+
+  private readDigitalAssetIngestionIntents(): DigitalAssetIngestionIntent[] {
+    const intents: DigitalAssetIngestionIntent[] = [];
+    for (const entry of readdirSync(this.pendingDirectory(), { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    )) {
+      const match = /^ingestion\.([0-9a-f-]{36})\.intent\.json$/.exec(entry.name);
+      if (!match) continue;
+      if (!entry.isFile() || entry.isSymbolicLink()) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          "Prepared Digital Asset ingestion intent is not a real regular file"
+        );
+      }
+      const file = path.join(this.pendingDirectory(), entry.name);
+      let intent: DigitalAssetIngestionIntent;
+      let raw: string;
+      try {
+        raw = readRegularTextFile(file, "Digital Asset ingestion intent");
+        intent = Value.Decode(DigitalAssetIngestionIntentSchema, JSON.parse(raw));
+      } catch (error) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          `Prepared Digital Asset ingestion intent failed schema validation: ${errorMessage(error)}`
+        );
+      }
+      const { digest, ...core } = intent;
+      if (
+        intent.intentId !== match[1] ||
+        referenceSourceDigest(core) !== digest ||
+        raw !== `${canonicalReferenceJson(intent)}\n` ||
+        (intent.bindingExistedBefore && intent.pendingFileName !== null) ||
+        (!intent.bindingExistedBefore &&
+          (intent.pendingFileName === null ||
+            !intent.pendingFileName.startsWith(`${intent.blobSha256}.`)))
+      ) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          "Prepared Digital Asset ingestion intent identity is invalid"
+        );
+      }
+      decodeArtifactRef(intent.digitalAssetRef);
+      decodeArtifactRef(intent.acquisitionRef);
+      intents.push(intent);
+    }
+    if (intents.length > 1) {
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Multiple unresolved Digital Asset ingestion intents require manual recovery"
+      );
+    }
+    return intents;
+  }
+
+  private readMatchingDigitalAssetIngestionIntent(
+    prepared: PreparedReferenceSourceDigitalAssetIngestion
+  ): DigitalAssetIngestionIntent {
+    if (!/^[0-9a-f-]{36}$/.test(prepared.intentId)) {
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Prepared Digital Asset ingestion handle has an invalid intent ID"
+      );
+    }
+    const intents = this.readDigitalAssetIngestionIntents();
+    const intent = intents.find(({ intentId }) => intentId === prepared.intentId);
+    if (
+      !intent ||
+      intent.digest !== prepared.intentDigest ||
+      !refsEqual(intent.digitalAssetRef, prepared.digitalAssetRef) ||
+      !refsEqual(intent.acquisitionRef, prepared.acquisitionRef) ||
+      intent.blobSha256 !== prepared.blobSha256 ||
+      intent.byteLength !== prepared.byteLength
+    ) {
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Prepared Digital Asset ingestion handle does not match its durable intent"
+      );
+    }
+    return intent;
+  }
+
+  private assertNoPreparedDigitalAssetIngestions(): void {
+    if (this.readDigitalAssetIngestionIntents().length > 0) {
+      throw new ReferenceSourceControlledArtifactStoreConflictError(
+        "Controlled-artifact recovery must finish before mutating the catalog"
+      );
+    }
   }
 
   private removePendingFile(file: string): void {
@@ -1021,7 +1448,9 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
       throw error;
     }
     try {
-      if (!pathMatchesDescriptor(filePath, descriptor)) {
+      const initialPathState = pathDescriptorState(filePath, descriptor);
+      if (initialPathState === "missing") return true;
+      if (initialPathState !== "same") {
         throw new ReferenceSourceControlledArtifactStoreIntegrityError(
           `Controlled-artifact ${kind} is not one stable regular file`
         );
@@ -1146,6 +1575,15 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     return path.join(this.rootDirectory, ".pending");
   }
 
+  private digitalAssetIngestionIntentPath(intentId: string): string {
+    if (!/^[0-9a-f-]{36}$/.test(intentId)) {
+      throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+        "Digital Asset ingestion intent ID is invalid"
+      );
+    }
+    return path.join(this.pendingDirectory(), `ingestion.${intentId}.intent.json`);
+  }
+
   private recoveriesDirectory(): string {
     return path.join(this.rootDirectory, "recoveries");
   }
@@ -1160,7 +1598,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
       [this.catalogClaimPath(), "controlled-artifact catalog claim"],
       [this.recoveryClaimPath(), "controlled-artifact recovery claim"],
     ] as const) {
-      if (pathEntryExists(file)) assertRegularFilePath(file, label);
+      assertOptionalRegularFilePath(file, label);
     }
     this.recoveryClaimPaths();
   }
@@ -1273,6 +1711,54 @@ function decodeArtifactRef(value: unknown): ReferenceRecordRef {
   }
 }
 
+function decodeDigitalAssetBytes(input: {
+  digitalAsset: ReferenceDigitalAsset;
+  bytes: Uint8Array;
+}): { digitalAsset: ReferenceDigitalAsset; bytes: Buffer } {
+  let digitalAsset: ReferenceDigitalAsset;
+  try {
+    digitalAsset = Value.Decode(ReferenceDigitalAssetSchema, input.digitalAsset);
+  } catch (error) {
+    throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+      `Controlled Digital Asset failed schema validation: ${errorMessage(error)}`
+    );
+  }
+  const { digest, ...core } = digitalAsset;
+  if (referenceSourceDigest(core) !== digest) {
+    throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+      "Controlled Digital Asset identity or record digest is invalid"
+    );
+  }
+  const bytes = Buffer.from(input.bytes);
+  if (bytes.byteLength !== digitalAsset.byteLength || sha256(bytes) !== digitalAsset.sha256) {
+    throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+      "Controlled Digital Asset bytes do not match its declared identity"
+    );
+  }
+  return { digitalAsset, bytes };
+}
+
+function refForDigitalAsset(digitalAsset: ReferenceDigitalAsset): ReferenceRecordRef {
+  return { id: digitalAsset.id, digest: digitalAsset.digest };
+}
+
+function digitalAssetIngestionHandle(
+  intent: DigitalAssetIngestionIntent
+): PreparedReferenceSourceDigitalAssetIngestion {
+  return {
+    intentId: intent.intentId,
+    intentDigest: intent.digest,
+    digitalAssetRef: structuredClone(intent.digitalAssetRef),
+    acquisitionRef: structuredClone(intent.acquisitionRef),
+    blobSha256: intent.blobSha256,
+    byteLength: intent.byteLength,
+  };
+}
+
+function refsEqual(left: ReferenceRecordRef, right: ReferenceRecordRef): boolean {
+  return left.id === right.id && left.digest === right.digest;
+}
+
 function inspectFile(file: string): { sha256: string; byteLength: number } {
   const before = lstatSync(file);
   if (!before.isFile() || before.isSymbolicLink()) {
@@ -1337,18 +1823,40 @@ function fsyncDirectory(directory: string): void {
 }
 
 function pathMatchesDescriptor(file: string, descriptor: number): boolean {
+  return pathDescriptorState(file, descriptor) === "same";
+}
+
+function pathDescriptorState(file: string, descriptor: number): "same" | "missing" | "different" {
   try {
     const opened = fstatSync(descriptor);
     const named = lstatSync(file);
-    return (
-      opened.isFile() &&
+    return opened.isFile() &&
       named.isFile() &&
       !named.isSymbolicLink() &&
       opened.dev === named.dev &&
       opened.ino === named.ino
+      ? "same"
+      : "different";
+  } catch (error) {
+    if (isFileMissingError(error)) return "missing";
+    return "different";
+  }
+}
+
+function assertOptionalRegularFilePath(file: string, label: string): void {
+  let stat;
+  try {
+    stat = lstatSync(file);
+  } catch (error) {
+    if (isFileMissingError(error)) return;
+    throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+      `${label} is unavailable: ${errorMessage(error)}`
     );
-  } catch {
-    return false;
+  }
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+      `${label} must be a real regular file, not a symlink or another entry type`
+    );
   }
 }
 
@@ -1371,8 +1879,13 @@ function writeJsonAtomic(file: string, value: unknown): void {
 }
 
 function ensureRealDirectory(directory: string, recursive: boolean): void {
-  if (!pathEntryExists(directory)) {
+  try {
     mkdirSync(directory, { recursive, mode: 0o700 });
+  } catch (error) {
+    // Another process may create the directory between our startup steps.
+    // EEXIST is acceptable only after the entry passes the real-directory
+    // check below, so a file or symlink still fails closed.
+    if (!isFileExistsError(error)) throw error;
   }
   assertDirectoryPath(directory, "controlled-artifact directory");
 }

@@ -9,6 +9,7 @@ import type { OwnerReference } from "../../lib/owner-domain.js";
 import {
   createKnowledgeCandidateRoute,
   createKnowledgePromotionRoute,
+  createLegacyOwnerReferenceQuarantineRoute,
   createOwnerReferenceRoute,
   createOwnerStateRoute,
 } from "./owner-route.js";
@@ -93,6 +94,33 @@ describe("Owner Reference upload", () => {
       });
       expect(json.data).not.toHaveProperty("storedPath");
     }
+  });
+
+  it("quarantines the legacy writer at the production routing boundary", async () => {
+    const server = await listen(createLegacyOwnerReferenceQuarantineRoute(), true);
+    const response = await fetch(serverUrl(server), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Must not enter the legacy store",
+        citation: "Private citation",
+        mimeType: "application/pdf",
+        contentBase64: Buffer.from("private bytes").toString("base64"),
+      }),
+    });
+
+    expect(response.status).toBe(410);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "conflict",
+        details: {
+          reason: "legacy_owner_reference_writer_quarantined",
+          replacement: "/api/owner/reference-source-staging/assets",
+        },
+      },
+    });
+    expect(store.listReferences()).toEqual([]);
   });
 
   it("rejects a streamed reference beyond the configured limit", async () => {

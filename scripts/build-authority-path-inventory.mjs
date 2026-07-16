@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d";
+  "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -219,6 +219,13 @@ const canonicalBinaryOutputBindings = new Map([
     {
       path: "src/server/lib/reference-source-controlled-artifact-store.ts",
       selector: "ReferenceSourceControlledArtifactStore.putDigitalAsset",
+    },
+  ],
+  [
+    "ReferenceSourceOperationSink.bytes",
+    {
+      path: "src/server/lib/reference-source-operation-gateway.ts",
+      selector: "ReferenceSourceOperationGateway.execute",
     },
   ],
   [

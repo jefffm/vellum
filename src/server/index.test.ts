@@ -95,6 +95,27 @@ describe("server API endpoints", () => {
       "POST",
       "/api/owner/reference-source-staging/assets",
     ],
+    ["owner reference Workbench", "GET", "/api/owner/reference-source-workbench"],
+    [
+      "owner reference upload confirmation",
+      "POST",
+      "/api/owner/reference-source-workbench/upload-confirmation",
+    ],
+    [
+      "reference-source private-default decision",
+      "POST",
+      "/api/owner/reference-source-operations/default-decision",
+    ],
+    [
+      "reference-source protected operation",
+      "POST",
+      "/api/owner/reference-source-operations/execute",
+    ],
+    [
+      "reference-source protected compiler input",
+      "POST",
+      "/api/owner/reference-source-operations/compiler-input",
+    ],
     [
       "reference-source lifecycle planning",
       "POST",

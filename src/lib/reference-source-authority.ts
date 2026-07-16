@@ -159,6 +159,22 @@ export const REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS = Object.freeze({
     "export_redistribution",
     "attribution",
   ],
+  report: [
+    "underlying_work_status",
+    "manifestation_editorial",
+    "exemplar_restriction",
+    "scan_provider_terms",
+    "export_redistribution",
+    "attribution",
+  ],
+  log: [
+    "underlying_work_status",
+    "manifestation_editorial",
+    "exemplar_restriction",
+    "scan_provider_terms",
+    "export_redistribution",
+    "attribution",
+  ],
 } satisfies Record<ReferenceAccessOperation, readonly ReferenceAuthorityFacet[]>);
 
 const ReferenceAuthorityServerProofSchema = Type.Object(

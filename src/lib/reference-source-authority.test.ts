@@ -49,6 +49,8 @@ describe("reference-source authority closure", () => {
       "repository_inclusion",
       "export",
       "redistribution",
+      "report",
+      "log",
     ];
 
     expect(Object.keys(REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS).sort()).toEqual(
@@ -64,6 +66,12 @@ describe("reference-source authority closure", () => {
     );
     expect(REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.repository_inclusion).toEqual(
       expect.arrayContaining(["pack_citation_excerpt", "export_redistribution"])
+    );
+    expect(REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.report).toEqual(
+      expect.arrayContaining(["export_redistribution", "attribution"])
+    );
+    expect(REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS.log).toEqual(
+      expect.arrayContaining(["export_redistribution", "attribution"])
     );
   });
 

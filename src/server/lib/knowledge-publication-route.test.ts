@@ -31,7 +31,11 @@ describe("knowledge publication HTTP boundary", () => {
     store = new KnowledgePublicationStore({ rootDirectory });
     vi.spyOn(console, "log").mockImplementation(() => undefined);
     server = createServer(
-      createApp({ knowledgePublicationStore: store, knowledgePublicationWriter: store })
+      createApp({
+        knowledgePublicationStore: store,
+        knowledgePublicationWriter: store,
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench"),
+      })
     );
     await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));
   });
@@ -118,6 +122,20 @@ describe("knowledge publication HTTP boundary", () => {
       await request("/api/owner/knowledge-publication/orphans")
     );
     expect(orphans).toHaveLength(1);
+    const workbench = await success<KnowledgePublicationWorkbenchState>(
+      await request("/api/owner/knowledge-publication")
+    );
+    expect(workbench.orphans[0]).toMatchObject({
+      generationId: orphans[0]!.generationId,
+      displayRef: {
+        id: expect.stringMatching(/^owner-reference-publication-orphan\.[a-f0-9]{24}$/),
+        digest: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    });
+    const reloaded = await success<KnowledgePublicationWorkbenchState>(
+      await request("/api/owner/knowledge-publication")
+    );
+    expect(reloaded.orphans[0]!.displayRef).toEqual(workbench.orphans[0]!.displayRef);
     expect(
       await success(
         await request(`/api/owner/knowledge-publication/orphans/${orphans[0]!.generationId}`, {

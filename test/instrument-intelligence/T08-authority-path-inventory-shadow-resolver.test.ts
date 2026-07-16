@@ -81,7 +81,7 @@ describe("T08 authority-path inventory and compatibility classification", () => 
       id: "authority-writer-contract.v1",
       version: 1,
       path: "src/lib/data/authority-writer-contract.v1.json",
-      digest: "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d",
+      digest: "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1",
     });
     expect(new Set(inventory.entries.map((entry) => entry.id)).size).toBe(inventory.entries.length);
     expect(inventory.coverage.length).toBeGreaterThan(200);
@@ -137,7 +137,12 @@ describe("T08 authority-path inventory and compatibility classification", () => 
   it("closes every T09 migration writer over its exact persisted outputs", () => {
     const referenceGovernance = entry("authority.validator.reference-source-governance");
     expect(referenceGovernance.reads.map(({ selector }) => selector)).toEqual(
-      expect.arrayContaining(["createApiRouter", "OwnerStore.listReferences"])
+      expect.arrayContaining([
+        "createApiRouter",
+        "OwnerStore.listReferences",
+        "ReferenceSourceOperationGateway.execute",
+        "createReferenceSourceOperationDefaultDecisionRoute",
+      ])
     );
     const writes = new Map(
       referenceGovernance.writes.map((write) => [write.locator.selector, write.outputFields])
@@ -192,6 +197,9 @@ describe("T08 authority-path inventory and compatibility classification", () => 
         "ReferenceSourceControlledArtifactBinding.record",
       ])
     );
+    expect(writes.get("ReferenceSourceOperationGateway.execute")).toEqual([
+      "ReferenceSourceOperationSink.bytes",
+    ]);
 
     const publicationGovernance = entry("authority.validator.knowledge-publication-governance");
     expect(
