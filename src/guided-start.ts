@@ -41,6 +41,7 @@ import {
   renderKnowledgePublicationWorkbench,
   type KnowledgePublicationWorkbenchState,
 } from "./knowledge-publication-workbench.js";
+import { renderReviewerAuthorityWorkbench } from "./reviewer-authority-workbench.js";
 import {
   OwnerReferenceWorkbenchLocalStudyError,
   OwnerReferenceWorkbenchUploadError,
@@ -2976,6 +2977,19 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         error instanceof Error
           ? `Publication generations unavailable: ${error.message}`
           : "Publication generations unavailable.";
+    }
+    const reviewerAuthority = section("Reviewer authority — external verification");
+    reviewerAuthority.className = "reviewer-authority-section";
+    const reviewerAuthorityWorkbench = document.createElement("div");
+    reviewerAuthority.append(reviewerAuthorityWorkbench);
+    try {
+      const reviewerAuthorityState = await api<unknown>("/api/owner/reviewer-authority");
+      renderReviewerAuthorityWorkbench(reviewerAuthorityWorkbench, reviewerAuthorityState);
+    } catch (error) {
+      reviewerAuthorityWorkbench.textContent =
+        error instanceof Error
+          ? `Reviewer authority unavailable: ${error.message}`
+          : "Reviewer authority unavailable.";
     }
     return result;
   };

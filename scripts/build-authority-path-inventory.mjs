@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "119ca7eacf43aee5ca4659acf1d71b071c4104898332bccf3ca54abf59c513ee";
+  "a5521c94344edee643e11515c53f4d5ed15017b6762ac3091a9ab3a022f98121";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -115,6 +115,18 @@ const canonicalWriteOutputRootBindings = new Map([
     "KnowledgeSystemIdentitySnapshot",
     "KnowledgeTestPolicy",
     "SystemTestOnlyAttestation",
+  ]),
+  ...schemaBindings("src/lib/reviewer-authority-contract.ts", [
+    "AdvisoryVerification",
+    "AttestationVerification",
+    "ReviewerAuthorityScope",
+    "ReviewerCredentialAssertion",
+    "ReviewerIdentitySnapshot",
+    "ReviewerRevocationSnapshot",
+    "ReviewerTrustPolicy",
+    "ReviewerVerifierReceipt",
+    "ScopedReleaseAdvisory",
+    "ScopedReleaseAttestation",
   ]),
   ...schemaBindings("src/lib/typed-knowledge-authority-verification.ts", [
     "TypedKnowledgeAuthorityVerification",

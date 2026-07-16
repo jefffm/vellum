@@ -982,6 +982,65 @@ chat-panel > div > div:has(agent-interface) {
   font-weight: 700;
 }
 
+.reviewer-authority-section {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+}
+
+.reviewer-authority-workbench {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reviewer-authority-workbench h3,
+.reviewer-authority-workbench h4,
+.reviewer-authority-workbench p {
+  margin: 0;
+}
+
+.reviewer-authority-boundary,
+.reviewer-authority-synthetic-warning {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.reviewer-authority-synthetic-warning {
+  border-left: 0.25rem solid var(--warning, #a66b20);
+}
+
+.reviewer-authority-policy,
+.reviewer-authority-verification dl {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) 1fr;
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+}
+
+.reviewer-authority-policy dt,
+.reviewer-authority-verification dt {
+  font-weight: 650;
+}
+
+.reviewer-authority-policy dd,
+.reviewer-authority-verification dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.reviewer-authority-verifications {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.reviewer-authority-verification {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--surface);
+}
+
 .reference-source-lifecycle-planner,
 .reference-source-lifecycle-plan,
 .reference-source-lifecycle-consequences,

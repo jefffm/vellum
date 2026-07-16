@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "8b6cba7819a95374b3c89887797671f8cee075038aee6f58642b444b8fb42dd6",
+  "classificationPolicyDigest": "c48c500622dbe842e16b28999f304e048074725debd573be49d8384e4aed0689",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -73,7 +73,7 @@
     },
     {
       "path": "src/server/lib/knowledge-publication-store.ts",
-      "digest": "1db7d54b8b7d34869f621d7e91e127673ebbffc16cb035b1cd4d1dba7ab3a31a"
+      "digest": "4e158ca2077ca08b43cb98cb068d7e53efd301b3bf13d1c90db2af1fd713c331"
     },
     {
       "path": "src/server/lib/lineage-service.ts",
@@ -166,6 +166,10 @@
     {
       "path": "src/server/lib/reviewed-owner-default-bridge.ts",
       "digest": "5c11c9d6b7573755839a9ecace18e8e56e17c94fcee2bd9e96f6af44639c7618"
+    },
+    {
+      "path": "src/server/lib/reviewer-authority-service.ts",
+      "digest": "4e661538761fc915f8dc39c39706da38400b56d098f20eb3d84678c729640891"
     },
     {
       "path": "src/server/lib/source-import-service.ts",
@@ -2498,6 +2502,68 @@
         "TypedKnowledgeAuthorityVerification.record"
       ],
       "implementationDigest": "012edab4db188ee5ba3b1a27a4b1ef8da5a12b55dbb7832dc2edd76922628d1e"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewer-authority-service.ts",
+        "selector": "ReviewerAuthorityService.publishMaterials"
+      },
+      "outputFields": [
+        "AdvisoryVerification.record",
+        "AttestationVerification.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "PublicationTransactionBinding.record",
+        "ReviewerAuthorityScope.record",
+        "ReviewerCredentialAssertion.record",
+        "ReviewerIdentitySnapshot.record",
+        "ReviewerRevocationSnapshot.record",
+        "ReviewerTrustPolicy.record",
+        "ReviewerVerifierReceipt.record",
+        "ScopedReleaseAdvisory.record",
+        "ScopedReleaseAttestation.record"
+      ],
+      "implementationDigest": "016f09eff184543486a8a1496b900c8db037770fe54b3baad7ac8b8bc7d71e3d"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewer-authority-service.ts",
+        "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+      },
+      "outputFields": [
+        "AdvisoryVerification.record",
+        "AttestationVerification.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "PublicationTransactionBinding.record",
+        "ReviewerVerifierReceipt.record"
+      ],
+      "implementationDigest": "4e5476278f82417a6df17810de67de20d91200fa51b15e4af71b8939c4011664"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewer-authority-service.ts",
+        "selector": "ReviewerAuthorityService.verify"
+      },
+      "outputFields": [
+        "AdvisoryVerification.record",
+        "AttestationVerification.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "PublicationTransactionBinding.record",
+        "ReviewerAuthorityScope.record",
+        "ReviewerVerifierReceipt.record"
+      ],
+      "implementationDigest": "c5d87859439b5bb4ae5c2e457ad7a4511aa930c2469c99c7ae3f6e095645f27c"
     },
     {
       "authorityPathId": "authority.validator.reviewed-knowledge-governance",

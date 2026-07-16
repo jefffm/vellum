@@ -208,6 +208,12 @@ import {
   type TypedKnowledgePackCitationAuthorityProvider,
   type TypedKnowledgeSystemIdentityProvider,
 } from "./lib/typed-knowledge-release-service.js";
+import { createReviewerAuthorityWorkbenchRoute } from "./lib/reviewer-authority-route.js";
+import {
+  ReviewerAuthorityService,
+  type ExternalReviewerVerifier,
+  type ReviewerVerifierReceiptVerifier,
+} from "./lib/reviewer-authority-service.js";
 import {
   PopplerReferencePageAtlasParser,
   type ReferencePageAtlasParser,
@@ -302,6 +308,8 @@ type ApiRouterOptions = {
   referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
   typedKnowledgePackCitationAuthorityProvider?: TypedKnowledgePackCitationAuthorityProvider;
   typedKnowledgeSystemIdentityProvider?: TypedKnowledgeSystemIdentityProvider;
+  reviewerAuthorityVerifier?: ExternalReviewerVerifier;
+  reviewerAuthorityReceiptVerifier?: ReviewerVerifierReceiptVerifier;
   /**
    * Trusted server-bootstrap seam for future source-bearing workflows. HTTP
    * callers never select, replace, or receive these sinks.
@@ -404,6 +412,11 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     publicationStore: knowledgePublicationStore,
     packCitationAuthorityProvider: options.typedKnowledgePackCitationAuthorityProvider,
     systemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
+  });
+  const reviewerAuthorityService = new ReviewerAuthorityService({
+    publicationStore: knowledgePublicationStore,
+    verifier: options.reviewerAuthorityVerifier,
+    verifyReceipt: options.reviewerAuthorityReceiptVerifier,
   });
   const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
     staging: referenceSourceStagingService,
@@ -576,6 +589,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
       knowledgePublicationStore,
       ownerReferenceWorkbenchOpaqueProjector
     )
+  );
+  router.get(
+    "/owner/reviewer-authority",
+    createReviewerAuthorityWorkbenchRoute(reviewerAuthorityService)
   );
   if (options.knowledgePublicationWriter) {
     router.post(
@@ -898,6 +915,8 @@ type CreateAppOptions = {
   referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
   typedKnowledgePackCitationAuthorityProvider?: TypedKnowledgePackCitationAuthorityProvider;
   typedKnowledgeSystemIdentityProvider?: TypedKnowledgeSystemIdentityProvider;
+  reviewerAuthorityVerifier?: ExternalReviewerVerifier;
+  reviewerAuthorityReceiptVerifier?: ReviewerVerifierReceiptVerifier;
   referenceSourceProtectedOperationSinks?: ReferenceSourceProtectedOperationSinks;
 };
 
@@ -967,6 +986,8 @@ export function createApp(options: CreateAppOptions = {}) {
       typedKnowledgePackCitationAuthorityProvider:
         options.typedKnowledgePackCitationAuthorityProvider,
       typedKnowledgeSystemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
+      reviewerAuthorityVerifier: options.reviewerAuthorityVerifier,
+      reviewerAuthorityReceiptVerifier: options.reviewerAuthorityReceiptVerifier,
       referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
     })
   );
@@ -1012,6 +1033,8 @@ export function startServer(
     typedKnowledgePackCitationAuthorityProvider:
       options.typedKnowledgePackCitationAuthorityProvider,
     typedKnowledgeSystemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
+    reviewerAuthorityVerifier: options.reviewerAuthorityVerifier,
+    reviewerAuthorityReceiptVerifier: options.reviewerAuthorityReceiptVerifier,
     referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
   });
   const server = createServer(app);

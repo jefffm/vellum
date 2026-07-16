@@ -4348,6 +4348,7 @@
         "src/owner-reference-workbench.ts",
         "src/reference-source-staging-diagnostics.ts",
         "src/renderers.ts",
+        "src/reviewer-authority-workbench.ts",
         "src/owner-reference-page-atlas-workbench.ts",
         "src/typed-knowledge-release-workbench.ts"
       ],
@@ -4393,6 +4394,11 @@
           "kind": "symbol",
           "path": "src/reference-source-staging-diagnostics.ts",
           "selector": "renderReferenceSourceStagingDiagnostics"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/reviewer-authority-workbench.ts",
+          "selector": "renderReviewerAuthorityWorkbench"
         },
         {
           "kind": "symbol",
@@ -4519,6 +4525,19 @@
             "mode": "function_prologue",
             "path": "src/reference-source-staging-diagnostics.ts",
             "selector": "renderReferenceSourceStagingDiagnostics"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/reviewer-authority-workbench.ts",
+            "selector": "renderReviewerAuthorityWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/reviewer-authority-workbench.ts",
+            "selector": "renderReviewerAuthorityWorkbench"
           }
         },
         {
@@ -7726,11 +7745,15 @@
       "category": "validator",
       "sourcePaths": [
         "src/lib/reviewed-knowledge-contract.ts",
+        "src/lib/reviewer-authority-contract.ts",
+        "src/lib/reviewer-authority-wire.ts",
         "src/lib/typed-knowledge-authority-verification.ts",
         "src/lib/typed-knowledge-release-contract.ts",
         "src/server/index.ts",
         "src/server/lib/owner-reference-page-atlas-service.ts",
         "src/server/lib/owner-reference-workbench-service.ts",
+        "src/server/lib/reviewer-authority-route.ts",
+        "src/server/lib/reviewer-authority-service.ts",
         "src/server/lib/typed-knowledge-release-route.ts",
         "src/server/lib/typed-knowledge-release-service.ts"
       ],
@@ -7741,6 +7764,16 @@
           "kind": "symbol",
           "path": "src/lib/reviewed-knowledge-contract.ts",
           "selector": "KnowledgeRecordRefSchema"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/lib/reviewer-authority-contract.ts",
+          "selector": "ReviewerAuthorityRefSchema"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/lib/reviewer-authority-wire.ts",
+          "selector": "ReviewerAuthorityWorkbenchProjectionSchema"
         },
         {
           "kind": "symbol",
@@ -7776,6 +7809,26 @@
           "kind": "symbol",
           "path": "src/server/lib/owner-reference-page-atlas-service.ts",
           "selector": "OwnerReferencePageAtlasService.resolveKnowledgeReleaseSeed"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reviewer-authority-route.ts",
+          "selector": "createReviewerAuthorityWorkbenchRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reviewer-authority-service.ts",
+          "selector": "ReviewerAuthorityService.readWorkbench"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reviewer-authority-service.ts",
+          "selector": "ReviewerAuthorityService.verify"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reviewer-authority-service.ts",
+          "selector": "ReviewerAuthorityService.refreshCurrentStatus"
         },
         {
           "kind": "symbol",
@@ -7866,6 +7919,62 @@
             "SystemTestOnlyAttestation.record",
             "TypedKnowledgeAuthorityVerification.record"
           ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.publishMaterials"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerAuthorityScope.record",
+            "ReviewerCredentialAssertion.record",
+            "ReviewerIdentitySnapshot.record",
+            "ReviewerRevocationSnapshot.record",
+            "ReviewerTrustPolicy.record",
+            "ReviewerVerifierReceipt.record",
+            "ScopedReleaseAdvisory.record",
+            "ScopedReleaseAttestation.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerAuthorityScope.record",
+            "ReviewerVerifierReceipt.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerVerifierReceipt.record"
+          ]
         }
       ],
       "authorityEffect": "authority_claim",
@@ -7904,6 +8013,32 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/lib/reviewer-authority-contract.ts",
+            "selector": "ReviewerAuthorityRefSchema"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/reviewer-authority-contract.ts",
+            "selector": "ReviewerAuthorityRefSchema"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/lib/reviewer-authority-wire.ts",
+            "selector": "ReviewerAuthorityWorkbenchProjectionSchema"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/reviewer-authority-wire.ts",
+            "selector": "ReviewerAuthorityWorkbenchProjectionSchema"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/lib/typed-knowledge-authority-verification.ts",
             "selector": "buildTypedKnowledgeAuthorityVerification"
           },
@@ -7989,6 +8124,58 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-page-atlas-service.ts",
             "selector": "OwnerReferencePageAtlasService.resolveKnowledgeReleaseSeed"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-route.ts",
+            "selector": "createReviewerAuthorityWorkbenchRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-route.ts",
+            "selector": "createReviewerAuthorityWorkbenchRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.readWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.readWorkbench"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
           }
         },
         {
@@ -8028,6 +8215,45 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-workbench-service.ts",
             "selector": "OwnerReferenceWorkbenchService.executeTypedKnowledgeRelease"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.publishMaterials"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.publishMaterials"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
           }
         },
         {
@@ -12836,7 +13062,7 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
-      "sourceDigest": "f1440343382bf291376856f71d5850c97abbb5ab05782da700f9dc418dd99452",
+      "sourceDigest": "742e65d902eb53544592c5ea27a96ae42dc19af78a673e489a9a647b0eb69b21",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.parameter.arrangement-defaults",
@@ -14685,7 +14911,7 @@
     },
     {
       "sourcePath": "src/knowledge-publication-workbench.ts",
-      "sourceDigest": "331a6057c8c7421e70a1fd443be1005a820962f5b61e902dc41d32d2fb7b282e",
+      "sourceDigest": "d3fbfc8a717aa3b84b1eb3f38fb8d2dd194cfb47ca2987155b677c0f7c603ce8",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.presentation.claim-labels"],
       "declarations": [
@@ -15324,7 +15550,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "ae852ef7f4b38d5a43fa8ae227730858903ad586138ecd0df4c1603e91839e95",
+      "sourceDigest": "58e4076bb1d76a43a57d52a081e7a32a1a9e09b04162f21e32a3fd713dc5f749",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -15697,7 +15923,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "d0d36fc60fc8a478e450cdd31c73d782da77202f1339d12e2bb8a7b679fa0b51",
+      "sourceDigest": "20ae2bf069c24e7224ab069685f0819a42690614736d55f84a5ab061da1a695c",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -16815,14 +17041,14 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-classification-policy.v1.json",
-      "sourceDigest": "8b6cba7819a95374b3c89887797671f8cee075038aee6f58642b444b8fb42dd6",
+      "sourceDigest": "c48c500622dbe842e16b28999f304e048074725debd573be49d8384e4aed0689",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "119ca7eacf43aee5ca4659acf1d71b071c4104898332bccf3ca54abf59c513ee",
+      "sourceDigest": "a5521c94344edee643e11515c53f4d5ed15017b6762ac3091a9ab3a022f98121",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -22602,6 +22828,412 @@
       ]
     },
     {
+      "sourcePath": "src/lib/reviewer-authority-contract.ts",
+      "sourceDigest": "d78694485e695bfa526f19d7e6aef1ef9c1d91b5bc369c7dcdbbd62fbf87edeb",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "AdvisoryVerificationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "AttestationVerificationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "AuthorizedReviewerVerifierSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "DigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IsoTimestampSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReleaseAdvisoryKindSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityActionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityScopeCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityScopeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerClaimDimensionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerClockPolicySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerCredentialAssertionCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerCredentialAssertionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerCredentialKindSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerIdentitySnapshotCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerIdentitySnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerRevocationSnapshotCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerRevocationSnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerRoleConflictSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerRoleSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerSubjectKindSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerTrustPolicyCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerTrustPolicySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerificationReasonSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerificationResultProperties",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerificationSharedProperties",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerifierReceiptCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerifierReceiptSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerVerifierRequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ScopedReleaseAdvisoryCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ScopedReleaseAdvisorySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ScopedReleaseAttestationCoreSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ScopedReleaseAttestationSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertVerificationVariant",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildAdvisoryVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildAttestationVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerAuthorityScope",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerCredentialAssertion",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerIdentitySnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerRevocationSnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerTrustPolicy",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildReviewerVerifierReceipt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildScopedReleaseAdvisory",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildScopedReleaseAttestation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "reviewerAuthorityRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "reviewerVerifierReceiptSigningPayload",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "reviewerVerifierRequestDigest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateAdvisoryVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateAttestationVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerAuthorityScope",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerCredentialAssertion",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerIdentitySnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerRevocationSnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerTrustPolicy",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateReviewerVerifierReceipt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateScopedReleaseAdvisory",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateScopedReleaseAttestation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reviewer-authority-wire.ts",
+      "sourceDigest": "23d62998da424405b553a950d6b44f5caf37fbb601314f6e56937ac6ff06bc90",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ActivationDecisionStateSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ConfiguredProjectionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "DigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "DimensionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IsoTimestampSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "RefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityWorkbenchProjectionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "RoleConflictSummarySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "RoleSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ScopeSummarySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "UnconfiguredProjectionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "VerificationSummarySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/lib/rhythmic-semantics.ts",
       "sourceDigest": "18e1b2f8d92c707d4778a6209638eef99443c9dcbc82cf111f300c325c9d4abb",
       "disposition": "authority_path",
@@ -24398,6 +25030,44 @@
       ]
     },
     {
+      "sourcePath": "src/reviewer-authority-workbench.ts",
+      "sourceDigest": "1d47b25c02028c0fa89598e7223d495582a6f555372c67e973551ef7f8432f72",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.presentation.claim-labels"],
+      "declarations": [
+        {
+          "selector": "definition",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "formatRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "humanize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderReviewerAuthorityWorkbench",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "scopeLabel",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "validityLabel",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/server-tools.ts",
       "sourceDigest": "daff889e9aed5a7740145dc66d945b3993d1c9b17221d5dace0c058c37dcfe0f",
       "disposition": "authority_path",
@@ -24542,7 +25212,7 @@
     },
     {
       "sourcePath": "src/server/index.ts",
-      "sourceDigest": "c4c6208e2519ebd151f6730e50515cd9574c203dd9e504647ea7636c5ecd2947",
+      "sourceDigest": "2594684bd826e01c352446b78a95a0adff5b86c279d9f9c66112891991cf6167",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance",
@@ -27224,7 +27894,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-publication-store.ts",
-      "sourceDigest": "1db7d54b8b7d34869f621d7e91e127673ebbffc16cb035b1cd4d1dba7ab3a31a",
+      "sourceDigest": "4e158ca2077ca08b43cb98cb068d7e53efd301b3bf13d1c90db2af1fd713c331",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.knowledge-publication-governance"],
       "declarations": [
@@ -35837,6 +36507,362 @@
       ]
     },
     {
+      "sourcePath": "src/server/lib/reviewer-authority-route.ts",
+      "sourceDigest": "cc82a0efef90cf94af0b7475fb0ac37a56f551ddd56a1a275208229e0bb056ec",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "createReviewerAuthorityWorkbenchRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "stableErrorCode",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reviewer-authority-service.ts",
+      "sourceDigest": "4e661538761fc915f8dc39c39706da38400b56d098f20eb3d84678c729640891",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "MATERIAL_KINDS",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityCancelledError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityConflictError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityIntegrityError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityNoStatusChangeError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.publicationStore",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.publishMaterials",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.readWorkbench",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.refreshCurrentStatus",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.verifier",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.verify",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityService.verifyReceipt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ReviewerAuthorityUnavailableError.code",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertNoActivationDecisionIntroduced",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertUniqueMaterialRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertVerificationMintEnvelope",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "authorizedVerifier",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "compareCodePoints",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "credentialIsCurrentAndClear",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "decide",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "dedupeSortedRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "evaluateRevocation",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "failure",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "hasActivationDecision",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "hasRoleConflict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "intersectScopes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "isPlainRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "isRecordFamily",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "latestVerificationPerFamily",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "loadIdentityCredentials",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "loadSubject",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "loadVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "matchingContents",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "materialTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "materialWrite",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "minimumTimestamp",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "persistedVerificationMatchesDecision",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "projectRoleConflicts",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "projectScope",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "projectUntrustedVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "projectVerification",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "publicationRefForContent",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "publicationRefsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "receiptBindsRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "refKey",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "refSetCovers",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "refsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requestedScopeIsComplete",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireAnyContent",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireContent",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireCurrent",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameGenerationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameRefSet",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "scopeCovers",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "selectCurrentPolicy",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "setCovers",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sortedUniqueRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "subjectCanConferHumanAuthority",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "unconfiguredProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateMaterial",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "verificationEnvironment",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "verificationTransaction",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "verificationWrites",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/server/lib/secret-redaction.ts",
       "sourceDigest": "4b78a3c688241b0f38ff07330ffc25f00ffa8dcaa9dbe1ef2580e9363a55d8b2",
       "disposition": "no_authority_effect",
@@ -39649,7 +40675,7 @@
     },
     {
       "sourcePath": "src/styles.css",
-      "sourceDigest": "5ceb0c9779d8fa933474b1e988534281e9e6f76d217ed3d38ceb62a794a7b34e",
+      "sourceDigest": "b5fdc0d7f8560fda0dd7a7b6433772432e358b3f34007bac2e017f315e28d585",
       "disposition": "no_authority_effect",
       "authorityPathIds": [],
       "declarations": []

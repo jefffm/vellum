@@ -403,6 +403,12 @@
       "allowedRoots": []
     },
     {
+      "id": "reviewer-authority-persistence-closure",
+      "sourcePath": "src/server/lib/reviewer-authority-service.ts",
+      "sinkSelectors": ["publish"],
+      "allowedRoots": []
+    },
+    {
       "id": "three-target-evaluation-runner-persistence-closure",
       "sourcePath": "src/server/lib/three-target-parity.ts",
       "sinkSelectors": ["run"],
@@ -439,6 +445,7 @@
     }
   ],
   "writeOutputFieldRegistry": [
+    "AdvisoryVerification.record",
     "AnalysisRecord.record",
     "Arrangement.canonicality.canonicalWorkspaceImportRequired",
     "Arrangement.canonicality.rationale",
@@ -477,6 +484,7 @@
     "ArrangementWorkspace.sourceArtifactIds",
     "ArrangementWorkspace.sourceTruthAssessmentIds",
     "ArrangementWorkspace.staleDerivationIds",
+    "AttestationVerification.record",
     "CommitmentConflict.record",
     "ControlledArtifactCatalog.record",
     "Deliverable.arrangementScoreId",
@@ -582,7 +590,15 @@
     "ReviewedLearningDecision.record",
     "ReviewedLearningOutputCandidate.record",
     "ReviewedLearningProposal.record",
+    "ReviewerAuthorityScope.record",
+    "ReviewerCredentialAssertion.record",
+    "ReviewerIdentitySnapshot.record",
+    "ReviewerRevocationSnapshot.record",
+    "ReviewerTrustPolicy.record",
+    "ReviewerVerifierReceipt.record",
     "ScoreTranscription.record",
+    "ScopedReleaseAdvisory.record",
+    "ScopedReleaseAttestation.record",
     "SourceArtifact.record",
     "SourceArtifactContent.bytes",
     "SourceTruthAssessment.record",
