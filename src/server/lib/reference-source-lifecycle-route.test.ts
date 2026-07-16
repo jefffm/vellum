@@ -24,6 +24,7 @@ import {
   type ReferenceSourceLifecyclePlanResult,
 } from "../../lib/reference-source-lifecycle.js";
 import { createApp } from "../index.js";
+import { KnowledgePublicationStore } from "./knowledge-publication-store.js";
 import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
 import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
@@ -502,9 +503,26 @@ async function startServer(
   servers: Server[],
   productionInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[]
 ): Promise<Server> {
+  const ownerRuntimeRoot = mkdtempSync(path.join(tmpdir(), "vellum-lifecycle-http-owner-"));
+  const controlledStore = productionInventoryAdapters?.find(
+    (adapter): adapter is ReferenceSourceControlledArtifactStore =>
+      adapter instanceof ReferenceSourceControlledArtifactStore
+  );
   const server = createServer(
     createApp({
       referenceSourceStagingService: staging,
+      referenceSourceControlledArtifactStore:
+        controlledStore ??
+        new ReferenceSourceControlledArtifactStore({
+          rootDirectory: path.join(ownerRuntimeRoot, "controlled-artifacts"),
+        }),
+      knowledgePublicationStore: new KnowledgePublicationStore({
+        rootDirectory: path.join(ownerRuntimeRoot, "knowledge-publication"),
+      }),
+      ownerReferenceMigrationOwnerRootDirectory: path.join(ownerRuntimeRoot, "owner"),
+      ownerReferenceMigrationPrivateRootDirectory: path.join(ownerRuntimeRoot, "migration-private"),
+      ownerReferenceWorkbenchPrivateRootDirectory: path.join(ownerRuntimeRoot, "workbench-private"),
+      ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x4c),
       ...(productionInventoryAdapters
         ? {
             referenceSourceControlledStoreInventoryAdapters: productionInventoryAdapters,
@@ -517,6 +535,7 @@ async function startServer(
           }),
     })
   );
+  server.once("close", () => rmSync(ownerRuntimeRoot, { recursive: true, force: true }));
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   servers.push(server);
   return server;

@@ -2,7 +2,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { createApp } from "../../src/server/index.js";
 import { loadFixture, loadLyFixture } from "./fixtures.js";
+import { createIsolatedOwnerRuntime } from "./isolated-owner-runtime.js";
 import { tableTest } from "./table-test.js";
 import { TestServer } from "./test-server.js";
 
@@ -34,6 +36,38 @@ describe("TestServer", () => {
       expect(response.data).toMatchObject({ status: "ok" });
     } finally {
       await server.stop();
+    }
+  });
+
+  it("never opens or creates production-default Owner state under HOME", async () => {
+    const sentinelHome = path.join(tempRoots.at(-1)!, "sentinel-home");
+    const previousHome = process.env.HOME;
+    process.env.HOME = sentinelHome;
+    let server: TestServer | undefined;
+
+    try {
+      server = await TestServer.start();
+      expect(fs.existsSync(path.join(sentinelHome, ".vellum"))).toBe(false);
+    } finally {
+      if (server) await server.stop();
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it("isolates a direct createApp construction from production-default Owner state", () => {
+    const sentinelHome = path.join(tempRoots.at(-1)!, "direct-create-app-sentinel-home");
+    const previousHome = process.env.HOME;
+    process.env.HOME = sentinelHome;
+    const runtime = createIsolatedOwnerRuntime();
+
+    try {
+      createApp(runtime.options);
+      expect(fs.existsSync(path.join(sentinelHome, ".vellum"))).toBe(false);
+    } finally {
+      runtime.cleanup();
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
     }
   });
 

@@ -307,6 +307,18 @@
       ]
     },
     {
+      "id": "owner-reference-page-atlas-route-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "sinkSelectors": ["end", "executePageAtlas", "previewPageAtlas"],
+      "allowedRoots": []
+    },
+    {
+      "id": "owner-reference-page-atlas-service-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "sinkSelectors": ["applyTransaction", "execute"],
+      "allowedRoots": []
+    },
+    {
       "id": "owner-reference-workbench-local-study-route-persistence-closure",
       "sourcePath": "src/server/lib/owner-reference-workbench-route.ts",
       "sinkSelectors": ["end", "executeLocalStudy"],
@@ -327,6 +339,12 @@
           "reason": "This guarded review path supplies fixed effects that throw on byte reads or sink writes and supplies no allow capability, so the gateway cannot execute an authority-bearing effect."
         }
       ]
+    },
+    {
+      "id": "owner-reference-workbench-page-atlas-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "sinkSelectors": ["cancel", "correctMapping", "preview", "resume", "start"],
+      "allowedRoots": []
     },
     {
       "id": "reference-source-operation-output-closure",

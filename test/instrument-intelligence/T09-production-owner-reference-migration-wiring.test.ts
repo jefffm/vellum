@@ -95,6 +95,8 @@ describe("T09 production OwnerReference migration wiring", () => {
         knowledgePublicationStore: publicationStore,
         referenceSourceStagingService: stagingService,
         referenceSourceControlledArtifactStore: controlledStore,
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(root, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x50),
       })
     );
     servers.push(server);

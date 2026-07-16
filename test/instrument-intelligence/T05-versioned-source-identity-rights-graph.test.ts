@@ -1,5 +1,5 @@
 import { Value } from "@sinclair/typebox/value";
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -18,7 +18,6 @@ import {
   type ReferenceSourceStagingSnapshot,
   type ReferenceSourceStagingTransaction,
 } from "../../src/lib/reference-source-domain.js";
-import { createApp } from "../../src/server/index.js";
 import { OwnerStore } from "../../src/server/lib/owner-store.js";
 import {
   ReferenceSourceStagingConflictError,
@@ -27,6 +26,7 @@ import {
 } from "../../src/server/lib/reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "../../src/server/lib/reference-source-staging-service.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
+import { createIsolatedOwnerHttpServer } from "../lib/isolated-owner-runtime.js";
 
 const NOW = "2026-07-15T12:00:00.000Z";
 const LATER = "2026-07-15T12:05:00.000Z";
@@ -391,7 +391,7 @@ describe("T05 versioned source identity and rights graph", () => {
       ].filter((name) => /referenceSourceStaging|stagedReference/i.test(name))
     ).toEqual([]);
 
-    const server = createServer(createApp({ referenceSourceStagingService: service }));
+    const server = createIsolatedOwnerHttpServer({ referenceSourceStagingService: service });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     servers.push(server);
     const baseUrl = serverUrl(server);

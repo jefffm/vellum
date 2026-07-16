@@ -6,6 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ApiResponse } from "../lib/api-contract.js";
 import { createApp, startServer } from "./index.js";
 import { VELLUM_API_SCHEMA_VERSION } from "../lib/runtime-contract.js";
+import { KnowledgePublicationStore } from "./lib/knowledge-publication-store.js";
+import { ReferenceSourceControlledArtifactStore } from "./lib/reference-source-controlled-artifact-store.js";
+import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
+import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 
 type ApiEnvelope<T> = ApiResponse<T>;
 
@@ -34,7 +38,12 @@ describe("server API endpoints", () => {
 
   it("binds the actual default listener to numeric loopback", async () => {
     vi.spyOn(console, "log").mockImplementation(() => undefined);
-    const server = startServer(0, { installSignalHandlers: false });
+    const runtime = createIndexTestRuntime();
+    const server = startServer(0, {
+      ...runtime.options,
+      installSignalHandlers: false,
+    });
+    server.once("close", runtime.cleanup);
     servers.push(server);
     await listening(server);
     const address = server.address();
@@ -346,13 +355,56 @@ describe("server API endpoints", () => {
 });
 
 async function listen(): Promise<Server> {
-  const server = createServer(createApp());
+  const runtime = createIndexTestRuntime();
+  let server: Server;
+  try {
+    server = createServer(createApp(runtime.options));
+  } catch (error) {
+    runtime.cleanup();
+    throw error;
+  }
+  server.once("close", runtime.cleanup);
 
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", resolve);
   });
 
   return server;
+}
+
+function createIndexTestRuntime() {
+  const rootDirectory = mkdtempSync(path.join(tmpdir(), "vellum-index-http-owner-"));
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    rmSync(rootDirectory, { recursive: true, force: true });
+  };
+  try {
+    return {
+      options: {
+        knowledgePublicationStore: new KnowledgePublicationStore({
+          rootDirectory: path.join(rootDirectory, "knowledge-publication"),
+        }),
+        referenceSourceStagingService: new ReferenceSourceStagingService({
+          store: new ReferenceSourceStagingStore({
+            rootDirectory: path.join(rootDirectory, "reference-source-staging"),
+          }),
+        }),
+        referenceSourceControlledArtifactStore: new ReferenceSourceControlledArtifactStore({
+          rootDirectory: path.join(rootDirectory, "reference-source-controlled-artifacts"),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(rootDirectory, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(rootDirectory, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x49),
+      } satisfies NonNullable<Parameters<typeof createApp>[0]>,
+      cleanup,
+    };
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 }
 
 async function listening(server: Server): Promise<void> {

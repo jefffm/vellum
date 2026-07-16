@@ -12,25 +12,25 @@
     "id": "build-authority-path-inventory.v1",
     "version": 1,
     "path": "scripts/build-authority-path-inventory.mjs",
-    "digest": "34e55174537651d98e61857dabf48dbefad3c5cadf2220922110107053360421"
+    "digest": "61bb23c284e93a92e7cebef74e0b2fb09d8300277c1b073ca6d9a1802135b3d2"
   },
   "classificationPolicyRef": {
     "id": "authority-path-classification-policy.v1",
     "version": 1,
     "path": "src/lib/data/authority-path-classification-policy.v1.json",
-    "digest": "e1d8ea0733f2ebc175805961be439c297f4aa9b4eafd463bb24078ccbd5a4626"
+    "digest": "d6093288eab79b5e47696491047f9a296ee38028505274dc9d2aa96346bb9b56"
   },
   "definitionRef": {
     "id": "authority-path-inventory.v1.seed",
     "version": 1,
     "path": "src/lib/data/authority-path-inventory-seed.v1.json",
-    "digest": "7d891c07127c611c0787857cbe6f3376701d362fd2d29252d57c51693479fef2"
+    "digest": "f3ffd8b882ce6bed3a516f0eaf835b35c67d6fd2d54f8136ee7e3aae06f5403b"
   },
   "writerContractRef": {
     "id": "authority-writer-contract.v1",
     "version": 1,
     "path": "src/lib/data/authority-writer-contract.v1.json",
-    "digest": "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1"
+    "digest": "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527"
   },
   "manifestCompleteness": {
     "status": "not_evaluated",
@@ -285,7 +285,7 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
-      "sourceDigest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877",
+      "sourceDigest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -423,7 +423,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "c80b12d46b21c15150aabc0a6b0a3e5b60b7f1238d3cf5401fcc99f27a2721c6",
+      "sourceDigest": "363b0325670f02243cd4868c2a055270097d6259c8eaefa53244f81c0f472e2e",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -434,7 +434,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "74c32ac784ffa9e17e0d9b7938eebd8a3c6d095f07bd49a4cae080c89d4c240d",
+      "sourceDigest": "e6b99bd04e769d14a2c406d7d09d5a2edd93484a2fb377bc0fe8019f96559bc8",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -569,7 +569,7 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-classification-policy.v1.json",
-      "sourceDigest": "e1d8ea0733f2ebc175805961be439c297f4aa9b4eafd463bb24078ccbd5a4626",
+      "sourceDigest": "d6093288eab79b5e47696491047f9a296ee38028505274dc9d2aa96346bb9b56",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -580,7 +580,7 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-inventory-seed.v1.json",
-      "sourceDigest": "7d891c07127c611c0787857cbe6f3376701d362fd2d29252d57c51693479fef2",
+      "sourceDigest": "f3ffd8b882ce6bed3a516f0eaf835b35c67d6fd2d54f8136ee7e3aae06f5403b",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -591,7 +591,7 @@
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1",
+      "sourceDigest": "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -837,7 +837,7 @@
     },
     {
       "sourcePath": "src/lib/owner-reference-workbench-contract.ts",
-      "sourceDigest": "968f21518dfa3d9fbec926afda3672e197c30d225f2ce220f9abd3442c0451b7",
+      "sourceDigest": "dd9110417f0d9d1d2ae06a2ca767298b4740a1bc7d788ef67cfcf1bf5087b274",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -869,6 +869,17 @@
       "reviewOwner": "maintainers.vellum"
     },
     {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "sourceDigest": "59db4c296b79913184b447718bea8f512a617a732bd72cf339a1dbfa47255a33",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
       "sourcePath": "src/lib/reference-source-authority.ts",
       "sourceDigest": "e0a49b22ee2992815e431802a1786de086a7377b5ad1adebe333a77a2dd50132",
       "surfaceScope": "production",
@@ -881,7 +892,7 @@
     },
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
-      "sourceDigest": "0929ea75ee4448c85487e2b2c1e30f5b07ea55d91bee05f6d6e84739913870ed",
+      "sourceDigest": "dd44257fe01e63e73ce1ef572954deb12300ec2a944cc3104d9e443e358ea5a0",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -1068,8 +1079,19 @@
       "reviewOwner": "maintainers.vellum"
     },
     {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "sourceDigest": "161b3925c56b594e0f69456fecdd204cd180f58e9d8489028ec32b4c64f782c7",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
       "sourcePath": "src/owner-reference-workbench.ts",
-      "sourceDigest": "a52bd52b9eb3d8e868f637a4f0c9b9f6fe90de523506efed787eb868f7cb00c1",
+      "sourceDigest": "f179baac61d14280e0f27e7fb97ac34cc8c1a28c6a1225a03a0a94a4278a80f4",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -1181,7 +1203,7 @@
     },
     {
       "sourcePath": "src/server/index.ts",
-      "sourceDigest": "5504574d7eefc4cfa50bf1d71a2c9531e06e11bdf0cd9be320499f432a42c151",
+      "sourceDigest": "a8081801a806d4e832793b472157edb4c70f8ffe4940212e05ddd59bbdfb2777",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -1295,7 +1317,7 @@
     },
     {
       "sourcePath": "src/server/lib/arrangement-workspace-route.ts",
-      "sourceDigest": "a992aa298825e05489944bdcfbe136c6670f57a6248845712917c9e202a3950e",
+      "sourceDigest": "b8a5497e2d3df032b11c072bbf6c0d86fb5b1c7f07adc903306b3bf6f4790316",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -1800,6 +1822,28 @@
       "reviewOwner": "maintainers.vellum"
     },
     {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "sourceDigest": "27aebdc7c73fd36d1402e933d0048a944b21e258a16244b51c14adb3fbef0892",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "sourceDigest": "fb92f19d94be0ec7e0ccac2cdf9b2333d833765b28a3f1ef7ed965351fe41354",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
       "sourcePath": "src/server/lib/owner-reference-workbench-route.ts",
       "sourceDigest": "0a2701e9614b5e67894ebe7f29fcc75ac74852147816063e97f0fafa21a400e5",
       "surfaceScope": "production",
@@ -1812,7 +1856,7 @@
     },
     {
       "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
-      "sourceDigest": "084dfa3eb9bc1d5d50ec06059df02e7cbbdfe6e818f0135339db818da6c53cec",
+      "sourceDigest": "32de0c0f6180896b3847588c84f92021ead914c4a944bd4ed917a6ea3df37b26",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -1917,6 +1961,28 @@
       "disposition": "no_authority_effect",
       "authorityPathIds": [],
       "reviewRationale": "Transport, persistence, schema, protocol, or process-control support; no authority-affecting symbol was identified in the T08 frozen review. Any byte change invalidates this decision.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "sourceDigest": "43ebbe8ae67a9aa62e6455190e9b363be7e0d2ea3ec174436afc098dc6449a9b",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
+      "reviewOwner": "maintainers.vellum"
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "sourceDigest": "43d6f8dcd45980713bab28ba6fced3826c81953bd5b7a0698a23cf0caf2be4f3",
+      "surfaceScope": "production",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ],
+      "reviewRationale": "Field or symbol-level authority paths are classified by the referenced immutable entries.",
       "reviewOwner": "maintainers.vellum"
     },
     {
@@ -2038,7 +2104,7 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
-      "sourceDigest": "51d4f8e9520fb4abe60af21623db10bba1ed0dffb23553d5f7a737b8c8f75c1c",
+      "sourceDigest": "ff4a5e87281865c88dfa168904d2e2afe27518fcbf6c2ec909bedb04a4670fdb",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -2134,7 +2200,7 @@
     },
     {
       "sourcePath": "src/server/lib/subprocess.ts",
-      "sourceDigest": "83d9d2ad41a5ca3e2617792d086cae1f2227e16c2fee418904b829706cb69ee8",
+      "sourceDigest": "2a38fe1d41f325a0a9c305d87b51e1cb7d01f1dae57df8f83f0f6334bb61e6ef",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -2333,7 +2399,7 @@
     },
     {
       "sourcePath": "src/styles.css",
-      "sourceDigest": "02ca1080000796e69e2b3b0370e35168ea1bcb1c9221d1812afcffadbc3c02cb",
+      "sourceDigest": "81b1bdcd5fcf47a46b0ef457eee8e9baa41b5daecec5b3cca6c16040b5a56262",
       "surfaceScope": "production",
       "disposition": "no_authority_effect",
       "authorityPathIds": [],
@@ -3172,6 +3238,20 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
+      "selector": "OWNER_REFERENCE_PAGE_ATLAS_PREVIEW_MAX_BYTES",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.parameter.arrangement-defaults",
+        "authority.parameter.owner-intent-and-edit",
+        "authority.presentation.claim-labels",
+        "authority.prompt.model-action-guidance",
+        "authority.validator.ergonomic-thresholds",
+        "authority.validator.owner-playtest-readiness",
+        "authority.validator.source-interpretation"
+      ]
+    },
+    {
+      "sourcePath": "src/guided-start.ts",
       "selector": "OWNER_REFERENCE_STAGING_SUMMARY_LIMIT",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -3775,6 +3855,20 @@
     {
       "sourcePath": "src/guided-start.ts",
       "selector": "fetchPrivateReferenceLocalStudy",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.parameter.arrangement-defaults",
+        "authority.parameter.owner-intent-and-edit",
+        "authority.presentation.claim-labels",
+        "authority.prompt.model-action-guidance",
+        "authority.validator.ergonomic-thresholds",
+        "authority.validator.owner-playtest-readiness",
+        "authority.validator.source-interpretation"
+      ]
+    },
+    {
+      "sourcePath": "src/guided-start.ts",
+      "selector": "fetchPrivateReferencePageAtlasPreview",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.parameter.arrangement-defaults",
@@ -10984,6 +11078,262 @@
       ]
     },
     {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "AtlasCoverageSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "AtlasStopSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "MaceCourseMappingSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "MappingStateSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "NormalizedRegionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "OpaqueCommitmentSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "OpaqueIdSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "OperationScopeSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "REFERENCE_PAGE_ATLAS_CITED_SEGMENT_LINEAGE_MAX_VERSIONS",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasAnchorSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasBrowserRetryStateSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasCancelRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasCitedSegmentLineageSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasCitedSegmentVersionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasConfidenceAssessmentSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasConfidenceDimensionsSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasCorrectMappingRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasOpaqueHmacRefSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasOperationRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasPendingRetryStateSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasPreviewRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasPrintedLocatorSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasProfileSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasProjectionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasReadRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasResumeRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasStagedKnowledgeSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasStartRequestSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasStartedRetryStateSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "ReferencePageAtlasTargetSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "Strict",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-page-atlas-contract.ts",
+      "selector": "WorkbenchScopeSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
       "sourcePath": "src/lib/reference-source-authority.ts",
       "selector": "<module:1>",
       "disposition": "authority_path",
@@ -11361,6 +11711,14 @@
     },
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "PageRangeSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "PageRegionSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -11449,6 +11807,14 @@
     },
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceAssetIdentityResolutionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "ReferenceAssetRoleBindingSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -11458,6 +11824,38 @@
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "ReferenceAssetRoleSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceCitationAnchorCommon",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceCitationAnchorSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceCitationSuccessorSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceCitedExtractionVersionSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -11489,6 +11887,14 @@
     },
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceDerivativeArtifactSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "ReferenceDigitalAssetSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -11506,6 +11912,30 @@
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "ReferenceExemplarSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceExtractedNotationTokenSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceExtractionProposalSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferenceExtractionUncertaintySchema",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -11610,6 +12040,54 @@
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "ReferenceLifecycleUseSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageAtlasAttemptSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageAtlasCanvasSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageAtlasCorrectionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageAtlasRegionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageAtlasVersionSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "ReferencePageLocatorSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -11770,6 +12248,22 @@
     {
       "sourcePath": "src/lib/reference-source-domain.ts",
       "selector": "Strict",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "TwelveCourseNumbersSchema",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/lib/reference-source-domain.ts",
+      "selector": "TwelveCourseSymbolsSchema",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -14921,6 +15415,270 @@
       "authorityPathIds": [
         "authority.cache.browser-profile",
         "authority.tool.descriptions-defaults"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "DEFAULT_PURPOSE",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "MAX_RETRY_STATE_BYTES",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "PENDING_RETRY_STORAGE_PREFIX",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "PROFILE_LABELS",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "STARTED_RETRY_STORAGE_PREFIX",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "actionButton",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "activeWorkbenches",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "append",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "badge",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "clearRetryState",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "createOperationKey",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "currentSegment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "decodeProjection",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "emptyPanel",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "inspectRetryState",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "openOwnerReferencePageAtlasWorkbench",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "operationProgressLabel",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "operationRequest",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "parseBoundedRetryJson",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "printedLocatorLabel",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "refsEqual",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderConfidence",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderCorrection",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderLineage",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderOperationControls",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderPageTarget",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderReview",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "renderStagedKnowledge",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "retryStorageKeys",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "splitCamelCase",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "statusNode",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "validPreviewResult",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
+      ]
+    },
+    {
+      "sourcePath": "src/owner-reference-page-atlas-workbench.ts",
+      "selector": "writeRetryState",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.presentation.claim-labels"
       ]
     },
     {
@@ -23758,6 +24516,1054 @@
       ]
     },
     {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "selector": "createOwnerReferencePageAtlasOperationRoute",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "selector": "createOwnerReferencePageAtlasPreviewRoute",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "selector": "pageAtlasApiError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "selector": "translatePageAtlasErrors",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-route.ts",
+      "selector": "writePrivatePng",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "ATTEMPT_ID",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "DEFAULT_RESUME_BATCH_PAGES",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "MAX_RESUME_BATCH_PAGES",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OPERATION_ID",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasConflictError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasConflictError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasInterruptionError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasInterruptionError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasLineageLimitError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasLineageLimitError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasMappingError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasMappingError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasRegenerationUnavailableError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasRegenerationUnavailableError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.activeRuns",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.assertExpectedProjection",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.assertStartAuthorization",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.authorizationIdentity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.beginActiveRun",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.cancel",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.commitAuthorization",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.commitInterruptedUnlessCancelled",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.commitParserFailure",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.commitProtectedRecords",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.controlledArtifacts",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.correctMapping",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.finishActiveRun",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.gateway",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.issuedCapabilities",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.localExtractionWriter",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.now",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.opaqueProjector",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.pageAtlasWriter",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.parser",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.preview",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.project",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.read",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.readCurrentState",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resolveOperation",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resolveProtectedRecordRace",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resolveSourceProfile",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resume",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resumeBatchPages",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.resumeFailedInitial",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.sourceProfileResolver",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.stagingStore",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.start",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.verifyCapability",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasService.withControlledBytes",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasSourceProfileError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasSourceProfileError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasStaleError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasStaleError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasUnavailableError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasUnavailableError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasUnsupportedMediaError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "OwnerReferencePageAtlasUnsupportedMediaError.code",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "PAGE_ATLAS_OWNER_REF",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "PAGE_ATLAS_RESOURCE_POLICY_REF",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "SAFE_PDF_MEDIA_TYPE",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertAtlasExecutionCompatible",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertAuthorizationPair",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertCurrentSource",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertExactAuthorizationPair",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertInspectionRuntime",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertPdfContext",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertRenderRuntime",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertRenderedCanvasGeometry",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertWorkbenchCard",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "assertWorkbenchScope",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "atlasForRef",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "attemptId",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "attemptSequence",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildAtlasAttempt",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildCanvas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildCorrectedAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildGenericSegment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildInitialAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildMaceExtractionGraph",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildMaceIdentityBundle",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "buildResumedAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "changedCanvasIdsBetween",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "classifyParserFailure",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "cloneInterruptedCheckpoint",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "complementOrdinals",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "decodeResumeBatchPages",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "deriveCitationLineage",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "distinctSegmentScanPages",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "executionIdentityFromAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "expandRanges",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "externalRef",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "extractionsForSegment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "imageOnlyRegions",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestAttempt",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestExtraction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestExtractionForSegment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestProposal",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "latestProposalForExtraction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "locateAuthorizationPair",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "locateOperationBySuffix",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "maceRegions",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "maceSourceProfileMatchesAsset",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "nextAttemptSequence",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "numericPrintedOrdinal",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "operationId",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "operationIdentity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "operationSuffix",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "operationSuffixes",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "pageAtlasExecutionIdentity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "profileForTag",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "profileTag",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "rangesFromOrdinals",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "receipt",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "refFor",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "refKey",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "refsEqual",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "renderedGeometryDigest",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "requireAuthorizationPair",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "requireExtractionRecord",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "requireSegmentRecord",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "scopeEvidenceForSuffix",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "segmentMappingState",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "unresolvedExecutionIdentity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-page-atlas-service.ts",
+      "selector": "versionedRefFor",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
       "sourcePath": "src/server/lib/owner-reference-workbench-route.ts",
       "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute",
       "disposition": "authority_path",
@@ -23943,6 +25749,14 @@
     },
     {
       "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "selector": "OwnerReferenceWorkbenchService.executePageAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
       "selector": "OwnerReferenceWorkbenchService.localStudyService",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -23983,7 +25797,39 @@
     },
     {
       "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "selector": "OwnerReferenceWorkbenchService.pageAtlasContext",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "selector": "OwnerReferenceWorkbenchService.pageAtlasService",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "selector": "OwnerReferenceWorkbenchService.previewPageAtlas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
       "selector": "OwnerReferenceWorkbenchService.read",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/owner-reference-workbench-service.ts",
+      "selector": "OwnerReferenceWorkbenchService.requirePageAtlasService",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -25577,6 +27423,270 @@
       "selector": "resolveApiKeyFromEnvironment",
       "disposition": "no_authority_effect",
       "authorityPathIds": []
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "DEFAULT_REFERENCE_PAGE_ATLAS_PARSER_LIMITS",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "FAILURE_MESSAGES",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.decodePdfBytes",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.describeRuntime",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.inspect",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.limits",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.pdfInfoConfig",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.readExecutableVersion",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.renderConfig",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.renderPage",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.runner",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "PopplerReferencePageAtlasParser.runtimeIdentity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "ReferencePageAtlasParserError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "assertCapturedOutputLimit",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "assertPageDimensions",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "assertRenderedPixelLimits",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "decodeLimits",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "decodePngDimensions",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "expectedRenderPixels",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "failure",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "hasExactPdfSignature",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "inspectRunnerFailure",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "isRotation",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "parsePdfInfo",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-parser.ts",
+      "selector": "renderRunnerFailure",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.source-normalization"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "ExactAssetReferencePageAtlasSourceProfileResolver",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "ExactAssetReferencePageAtlasSourceProfileResolver.resolveMaceProfile",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "PUBLIC_MACE_MUSICKS_MONUMENT_PROFILE",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "assertProfile",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "deepFreeze",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "defineMacePageAtlasSourceProfile",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-page-atlas-source-profile.ts",
+      "selector": "publicRef",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.profile.reference-page-atlas-exact-source-routing"
+      ]
     },
     {
       "sourcePath": "src/server/lib/reference-source-controlled-artifact-store.ts",
@@ -27724,6 +29834,62 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_AUTHORITY",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_DECISION_ID",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_POLICY_REF",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_RATIONALE",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_RIGHTS_ID",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "OWNER_LOCAL_EXTRACTION_TRANSACTION_ID",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -27788,6 +29954,22 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "PAGE_ATLAS_AUTHORITY",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "PAGE_ATLAS_PROTECTED_RECORD_KINDS",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "ReferenceSourceStagingMigrationRequiredError",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -27828,7 +30010,23 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -27948,7 +30146,31 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertAcquisitionsDescribeAsset",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertAppendOnlyRecords",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertAssetIdentityResolution",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertAtlasAttemptIdentity",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -27964,6 +30186,14 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertCanonicalOwnerLocalExtractionTransaction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertCanonicalOwnerPrivateStudyTransaction",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -27972,7 +30202,31 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertCanonicalPageAtlasTransaction",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertCanonicalTimestamps",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertCitationSuccessor",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertCitedExtractionVersion",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28012,7 +30266,23 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertDerivativeArtifact",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertDisclosedEvaluationBinding",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertDistinctRefs",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28029,6 +30299,14 @@
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertExactLifecycleProvenancePath",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertExtractionProposal",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28092,6 +30370,14 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertLocalExtractionAccess",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertLocalOrOpaqueRef",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -28116,6 +30402,14 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertModernSourceSegment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertNever",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -28124,7 +30418,31 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertNoProtectedPageAtlasRecords",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertNoProtectedPageAtlasSegments",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertNoReservedControlledUploadProvenance",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertNoReservedOwnerLocalExtractionProvenance",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28157,6 +30475,38 @@
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertOpaqueExternalRefs",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertPageAtlasAttempt",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertPageAtlasCorrection",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertPageAtlasVersion",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertProtectedPageAtlasSegments",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28197,6 +30547,14 @@
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertReferenceSourceStagingSnapshotIntegrity",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertRegionWithinCanvas",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28252,7 +30610,31 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "assertUniqueStrings",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "assertVersionParent",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "atlasLineagePreservesCitedCanvas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "createOwnerLocalExtractionStagingWriter",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28276,6 +30658,14 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "createReferenceSourcePageAtlasStagingWriter",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "deriveInvalidationOverlays",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -28285,6 +30675,14 @@
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "errorMessage",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "expandPageRanges",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -28404,6 +30802,14 @@
     },
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "requireAtlasCanvas",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "resolveKind",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -28453,6 +30859,22 @@
     {
       "sourcePath": "src/server/lib/reference-source-staging-service.ts",
       "selector": "sameRefSet",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "sameStrings",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.validator.reference-source-governance"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/reference-source-staging-service.ts",
+      "selector": "segmentIsAncestorOf",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance"
@@ -29316,6 +31738,14 @@
     },
     {
       "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "SubprocessAbortedError",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
       "selector": "SubprocessError",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -29396,7 +31826,31 @@
     },
     {
       "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "assertFiniteLimit",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
       "selector": "assertSafeInputFile",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "buildRestrictedSandboxLaunch",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "closeInheritedFileDescriptors",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.compiler.external-tool-execution"
@@ -29444,7 +31898,39 @@
     },
     {
       "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "linuxNoForkSeccompFilter",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
       "selector": "minimalSubprocessEnvironment",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "openLinuxNoForkSeccompFilter",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "prepareWorkingFiles",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "processGroupResidentBytes",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.compiler.external-tool-execution"
@@ -29476,7 +31962,31 @@
     },
     {
       "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "resourceLimitedLaunch",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
       "selector": "runSubprocess",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "sandboxedLaunch",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "seatbeltString",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.compiler.external-tool-execution"
@@ -29533,6 +32043,14 @@
     {
       "sourcePath": "src/server/lib/subprocess.ts",
       "selector": "walkFiles",
+      "disposition": "authority_path",
+      "authorityPathIds": [
+        "authority.compiler.external-tool-execution"
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/subprocess.ts",
+      "selector": "walkFilesInto",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.compiler.external-tool-execution"
@@ -33600,7 +36118,7 @@
         },
         {
           "path": "src/server/lib/arrangement-workspace-route.ts",
-          "digest": "a992aa298825e05489944bdcfbe136c6670f57a6248845712917c9e202a3950e"
+          "digest": "b8a5497e2d3df032b11c072bbf6c0d86fb5b1c7f07adc903306b3bf6f4790316"
         },
         {
           "path": "src/server/lib/owner-route.ts",
@@ -34327,7 +36845,7 @@
         "Evaluator-side learning can create only an inactive candidate through the explicit Owner-reviewed production bridge; activation remains a separate Owner approval.",
         "Owner-local choices affect only the Owner-local guidance lane."
       ],
-      "digest": "d402ea5a7e25eaf968044e74cb3589bad9d29e3791bed5f9b8e337b700dd13c5"
+      "digest": "b6407a43d1157103f5ebc8b66bbdcd0841dbf630d203a124a9cda670a27bf436"
     },
     {
       "id": "authority.compiler.deliverable-projection-dispatch",
@@ -34739,7 +37257,7 @@
       "definitionSources": [
         {
           "path": "src/server/lib/subprocess.ts",
-          "digest": "83d9d2ad41a5ca3e2617792d086cae1f2227e16c2fee418904b829706cb69ee8"
+          "digest": "2a38fe1d41f325a0a9c305d87b51e1cb7d01f1dae57df8f83f0f6334bb61e6ef"
         }
       ],
       "reads": [
@@ -34832,9 +37350,10 @@
         }
       ],
       "claimLimitations": [
+        "Filesystem, network, and resource isolation constrain execution only; they supply no bibliographic, extraction, musical, historical, specialist, or activation authority.",
         "Trusted absolute resolution and a minimal environment prevent runtime environment substitution but do not pin executable bytes or certify tool output."
       ],
-      "digest": "a518233f6893018b239605f08cc1c2c829378803d74c8aa935d639c6e0b298a7"
+      "digest": "a5c90af43734fe862a2eae9f3ea35636667579ebc06a467481df9e46addd7c9e"
     },
     {
       "id": "authority.compiler.lilypond-execution",
@@ -35417,19 +37936,19 @@
       "definitionSources": [
         {
           "path": "src/lib/authority-path-inventory.ts",
-          "digest": "c80b12d46b21c15150aabc0a6b0a3e5b60b7f1238d3cf5401fcc99f27a2721c6"
+          "digest": "363b0325670f02243cd4868c2a055270097d6259c8eaefa53244f81c0f472e2e"
         },
         {
           "path": "src/lib/data/authority-path-classification-policy.v1.json",
-          "digest": "e1d8ea0733f2ebc175805961be439c297f4aa9b4eafd463bb24078ccbd5a4626"
+          "digest": "d6093288eab79b5e47696491047f9a296ee38028505274dc9d2aa96346bb9b56"
         },
         {
           "path": "src/lib/data/authority-path-inventory-seed.v1.json",
-          "digest": "7d891c07127c611c0787857cbe6f3376701d362fd2d29252d57c51693479fef2"
+          "digest": "f3ffd8b882ce6bed3a516f0eaf835b35c67d6fd2d54f8136ee7e3aae06f5403b"
         },
         {
           "path": "src/lib/data/authority-writer-contract.v1.json",
-          "digest": "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1"
+          "digest": "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527"
         }
       ],
       "reads": [
@@ -35480,7 +37999,7 @@
         "Classification metadata cannot authorize musical behavior or certify manifest completeness.",
         "The pinned builder and an independent validator remain separate trust inputs."
       ],
-      "digest": "111ec22df0dda26b59c6bd852a4266720f3e01030d88f4626a5aefb3e1e90809"
+      "digest": "1d1e4c7fccf3ba3c2c0b96408e07c3cc7c062bc7bfabd2949a60d4aa80f7672d"
     },
     {
       "id": "authority.governance.provider-credential-boundary",
@@ -35702,7 +38221,7 @@
       "definitionSources": [
         {
           "path": "src/lib/authority-path-runtime.ts",
-          "digest": "74c32ac784ffa9e17e0d9b7938eebd8a3c6d095f07bd49a4cae080c89d4c240d"
+          "digest": "e6b99bd04e769d14a2c406d7d09d5a2edd93484a2fb377bc0fe8019f96559bc8"
         }
       ],
       "reads": [
@@ -35762,7 +38281,7 @@
         "Complete manifest resolution and activation remain unavailable until the later resolver cutover.",
         "The guard validates only frozen T08 classification and grants no musical or knowledge authority."
       ],
-      "digest": "7b0b518af126ae78aded334c06682cb0eb5b345919d9166216846dd62f86af45"
+      "digest": "5d6016670964554b9b34495705f2f7d98f6c6887bf543fcd511ed8833f060d9e"
     },
     {
       "id": "authority.governance.workspace-recovery",
@@ -36068,7 +38587,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/lib/music-domain.ts",
@@ -36603,7 +39122,7 @@
       "claimLimitations": [
         "Fallback parameters cannot masquerade as Owner intent or reviewed idiom."
       ],
-      "digest": "a3131bdf2ef57732a4ecaab86f920b64abe5d7ba42182a34e14ff5006f1de15d"
+      "digest": "ec72ec648e5af24ed854f54db57797ec02e80baea4d712523d260169e61e65e4"
     },
     {
       "id": "authority.parameter.compile-retry-policy",
@@ -36823,7 +39342,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/lib/owner-intent.ts",
@@ -37976,7 +40495,7 @@
         "Model-proposed intent remains a proposal until accepted through the Owner boundary.",
         "Owner edits and intent govern the Owner's requested output but do not grant historical authority."
       ],
-      "digest": "6903e48597f18c52db8291c6a08e3b854167bc4c33a0e1de6751ad6be449eca4"
+      "digest": "7e1b85d6f9c60536c8229eb97d5ee11297ede88d2016efbbd3a6ce9b3b74cf0c"
     },
     {
       "id": "authority.parameter.performance-interpretation",
@@ -38369,7 +40888,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/knowledge-publication-workbench.ts",
@@ -38380,8 +40899,12 @@
           "digest": "193a4170879844b500e3f253455cad224ad3f2fc7dc52c1c6ceeda2165b40c97"
         },
         {
+          "path": "src/owner-reference-page-atlas-workbench.ts",
+          "digest": "161b3925c56b594e0f69456fecdd204cd180f58e9d8489028ec32b4c64f782c7"
+        },
+        {
           "path": "src/owner-reference-workbench.ts",
-          "digest": "a52bd52b9eb3d8e868f637a4f0c9b9f6fe90de523506efed787eb868f7cb00c1"
+          "digest": "f179baac61d14280e0f27e7fb97ac34cc8c1a28c6a1225a03a0a94a4278a80f4"
         },
         {
           "path": "src/reference-source-staging-diagnostics.ts",
@@ -38425,6 +40948,11 @@
         },
         {
           "kind": "symbol",
+          "path": "src/owner-reference-page-atlas-workbench.ts",
+          "selector": "openOwnerReferencePageAtlasWorkbench"
+        },
+        {
+          "kind": "symbol",
           "path": "src/owner-reference-workbench.ts",
           "selector": "renderOwnerReferenceWorkbench"
         },
@@ -38451,7 +40979,7 @@
       ],
       "compatibility": {
         "mode": "exact_current_reader",
-        "readerId": "installGuidedStart|installOwnerKnowledgeWorkbench|performanceBriefFromForm|renderKnowledgePublicationWorkbench|formatPositions|formatViolations|renderOwnerReferenceWorkbench|renderReferenceSourceStagingDiagnostics"
+        "readerId": "installGuidedStart|installOwnerKnowledgeWorkbench|performanceBriefFromForm|renderKnowledgePublicationWorkbench|formatPositions|formatViolations|openOwnerReferencePageAtlasWorkbench|renderOwnerReferenceWorkbench|renderReferenceSourceStagingDiagnostics"
       },
       "quarantine": {
         "state": "not_quarantined",
@@ -38549,6 +41077,19 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/owner-reference-page-atlas-workbench.ts",
+            "selector": "openOwnerReferencePageAtlasWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/owner-reference-page-atlas-workbench.ts",
+            "selector": "openOwnerReferencePageAtlasWorkbench"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/owner-reference-workbench.ts",
             "selector": "renderOwnerReferenceWorkbench"
           },
@@ -38575,7 +41116,7 @@
       "claimLimitations": [
         "Labels present persisted state and cannot upgrade its authority."
       ],
-      "digest": "3995e80d8bfbb028800793f3a9c2790e7197cd85a0d4d03f3a49cd17c448114d"
+      "digest": "da5ca22207e451ecb308c1d215f085e85e9a0b5cb2406708803a33d1dd1d2202"
     },
     {
       "id": "authority.profile.guidance-fields",
@@ -38990,6 +41531,76 @@
       "digest": "58100686e0e01fc39d6acdf14f7b83cda727a5dad771935070b7de735f998046"
     },
     {
+      "id": "authority.profile.reference-page-atlas-exact-source-routing",
+      "category": "profile_constant",
+      "owner": "maintainers.vellum",
+      "definitionSources": [
+        {
+          "path": "src/server/lib/reference-page-atlas-source-profile.ts",
+          "digest": "43d6f8dcd45980713bab28ba6fced3826c81953bd5b7a0698a23cf0caf2be4f3"
+        }
+      ],
+      "reads": [
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-page-atlas-source-profile.ts",
+          "selector": "ExactAssetReferencePageAtlasSourceProfileResolver.resolveMaceProfile"
+        }
+      ],
+      "writes": [],
+      "deniedMutations": [],
+      "effect": {
+        "changesMusicalBehavior": true,
+        "changesAuthorityClaim": true
+      },
+      "mechanicality": "nonmechanical",
+      "classification": "maintainer_reviewed_software_heuristic",
+      "authorityLane": "software_heuristic",
+      "mechanicalEvidenceRef": null,
+      "subjectDomains": [
+        "identity",
+        "provenance",
+        "reference_source",
+        "transcription"
+      ],
+      "compatibility": {
+        "mode": "exact_current_reader",
+        "readerId": "ExactAssetReferencePageAtlasSourceProfileResolver.resolveMaceProfile"
+      },
+      "quarantine": {
+        "state": "not_quarantined",
+        "reasonCodes": []
+      },
+      "futureBinding": {
+        "status": "planned",
+        "componentId": "component.reference-page-atlas-source-profile-resolver.v1",
+        "componentKind": "component"
+      },
+      "runtimeAccess": [
+        "production"
+      ],
+      "runtimeGuardBindings": [
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-page-atlas-source-profile.ts",
+            "selector": "ExactAssetReferencePageAtlasSourceProfileResolver.resolveMaceProfile"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-page-atlas-source-profile.ts",
+            "selector": "ExactAssetReferencePageAtlasSourceProfileResolver.resolveMaceProfile"
+          }
+        }
+      ],
+      "claimLimitations": [
+        "An exact byte and page-count tuple selects only a maintainer-reviewed software profile; a match does not establish bibliographic identity or extraction correctness.",
+        "The routed profile remains candidate input and conveys no historical, specialist, Owner-review, activation, release, or publication authority."
+      ],
+      "digest": "99158fb6ddeb47dad6ed34bbb99fedd02e9b26681ab36270cc94d26aa93111e7"
+    },
+    {
       "id": "authority.prompt.examples",
       "category": "prompt_example",
       "owner": "maintainers.vellum",
@@ -39139,7 +41750,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/server/lib/model-action-boundary.ts",
@@ -39222,7 +41833,7 @@
         "Provider output remains bounded by the Model Action commit and review contract.",
         "The system prompt is a software policy, not specialist or historical authority."
       ],
-      "digest": "6890b8427effa24148bab942c6ef9fe5648cb4330fa2ecead2210e58f150f3cd"
+      "digest": "ff1d3b442f1cc68c154e550fe254aceb653b4c74d3694256f8960081af4265c5"
     },
     {
       "id": "authority.ranker.continuo",
@@ -40925,7 +43536,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/lib/baroque-guitar-arranger.ts",
@@ -41298,7 +43909,7 @@
       "claimLimitations": [
         "Default thresholds cannot establish player-specific comfort or reliability."
       ],
-      "digest": "0c3c100921b117f5fa12b163eded8d1b79417fc15d14a6c8c7ba4ea71bfbc28b"
+      "digest": "e7b73a10260c471f3fe027a1f57db5efcc14318cf903802baf4b22069f830868"
     },
     {
       "id": "authority.validator.evaluator-only",
@@ -43610,7 +46221,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/server/lib/owner-playtest-route.ts",
@@ -43800,7 +46411,7 @@
         "Readiness labels summarize exact scoped Owner evidence and cannot upgrade its role, scope, or authority.",
         "The production path must cross the observation-only authority guard before reading evidence or persisting a playtest."
       ],
-      "digest": "7db65e85409e3464d7ccab4445d25f77c76b5c7041a4038e73a4fc54de84a2da"
+      "digest": "90623fcf4958bcf86c1a8e49ee957a6bd9fa58f76bd76dae532ceeae56755600"
     },
     {
       "id": "authority.validator.preservation-editorial",
@@ -44019,7 +46630,11 @@
         },
         {
           "path": "src/lib/owner-reference-workbench-contract.ts",
-          "digest": "968f21518dfa3d9fbec926afda3672e197c30d225f2ce220f9abd3442c0451b7"
+          "digest": "dd9110417f0d9d1d2ae06a2ca767298b4740a1bc7d788ef67cfcf1bf5087b274"
+        },
+        {
+          "path": "src/lib/reference-page-atlas-contract.ts",
+          "digest": "59db4c296b79913184b447718bea8f512a617a732bd72cf339a1dbfa47255a33"
         },
         {
           "path": "src/lib/reference-source-authority.ts",
@@ -44027,7 +46642,7 @@
         },
         {
           "path": "src/lib/reference-source-domain.ts",
-          "digest": "0929ea75ee4448c85487e2b2c1e30f5b07ea55d91bee05f6d6e84739913870ed"
+          "digest": "dd44257fe01e63e73ce1ef572954deb12300ec2a944cc3104d9e443e358ea5a0"
         },
         {
           "path": "src/lib/reference-source-instant.ts",
@@ -44047,7 +46662,7 @@
         },
         {
           "path": "src/server/index.ts",
-          "digest": "5504574d7eefc4cfa50bf1d71a2c9531e06e11bdf0cd9be320499f432a42c151"
+          "digest": "a8081801a806d4e832793b472157edb4c70f8ffe4940212e05ddd59bbdfb2777"
         },
         {
           "path": "src/server/lib/owner-reference-claim.ts",
@@ -44070,12 +46685,20 @@
           "digest": "3b044eafdacae3156cc697f467ccec32e3dcc615beed0f5328816fc2fea8fc9e"
         },
         {
+          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+          "digest": "27aebdc7c73fd36d1402e933d0048a944b21e258a16244b51c14adb3fbef0892"
+        },
+        {
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "digest": "fb92f19d94be0ec7e0ccac2cdf9b2333d833765b28a3f1ef7ed965351fe41354"
+        },
+        {
           "path": "src/server/lib/owner-reference-workbench-route.ts",
           "digest": "0a2701e9614b5e67894ebe7f29fcc75ac74852147816063e97f0fafa21a400e5"
         },
         {
           "path": "src/server/lib/owner-reference-workbench-service.ts",
-          "digest": "084dfa3eb9bc1d5d50ec06059df02e7cbbdfe6e818f0135339db818da6c53cec"
+          "digest": "32de0c0f6180896b3847588c84f92021ead914c4a944bd4ed917a6ea3df37b26"
         },
         {
           "path": "src/server/lib/owner-route.ts",
@@ -44123,7 +46746,7 @@
         },
         {
           "path": "src/server/lib/reference-source-staging-service.ts",
-          "digest": "51d4f8e9520fb4abe60af21623db10bba1ed0dffb23553d5f7a737b8c8f75c1c"
+          "digest": "ff4a5e87281865c88dfa168904d2e2afe27518fcbf6c2ec909bedb04a4670fdb"
         },
         {
           "path": "src/server/lib/reference-source-staging-store.ts",
@@ -44238,6 +46861,46 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+          "selector": "createOwnerReferencePageAtlasOperationRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+          "selector": "createOwnerReferencePageAtlasPreviewRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.cancel"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.correctMapping"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.preview"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.read"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.resume"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.start"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/owner-reference-workbench-route.ts",
           "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
         },
@@ -44265,6 +46928,16 @@
           "kind": "symbol",
           "path": "src/server/lib/owner-reference-workbench-service.ts",
           "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
         },
         {
           "kind": "symbol",
@@ -44374,7 +47047,17 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
           "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
         },
         {
           "kind": "symbol",
@@ -44530,6 +47213,85 @@
         {
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-workbench-route.ts",
             "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
           },
@@ -44549,6 +47311,28 @@
             "ReferenceSourceOperationSink.bytes",
             "ReferenceSourceStagingHead.record",
             "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes"
           ]
         },
         {
@@ -44690,7 +47474,29 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           },
           "outputFields": [
             "ReferenceSourceStagingHead.record",
@@ -44748,7 +47554,7 @@
       ],
       "compatibility": {
         "mode": "exact_current_reader",
-        "readerId": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS|evaluateReferenceSourceAuthority|referenceAuthorityReceiptSigningPayload|REFERENCE_ACCESS_OPERATION_DESTINATIONS|planReferenceSourceInventoryClosure|planReferenceSourceLifecycle|evaluateReferenceSourceRetentionAuthority|createApiRouter|OwnerReferenceLegacyReader.capture|OwnerReferenceLocalStudyService.execute|createOwnerReferenceMigrationCommitRoute|createOwnerReferenceMigrationCompatibilityRoute|createOwnerReferenceMigrationDryRunRoute|createOwnerReferenceMigrationInterruptedRollbackRoute|createOwnerReferenceMigrationRollbackRoute|OwnerReferenceMigrationService.commit|OwnerReferenceMigrationService.dryRun|OwnerReferenceMigrationService.inspectPrivateAudit|OwnerReferenceMigrationService.readCompatibility|OwnerReferenceMigrationService.rollback|OwnerReferenceMigrationService.rollbackInterrupted|createOwnerReferenceWorkbenchLocalOperationReviewRoute|createOwnerReferenceWorkbenchLocalStudyRoute|createOwnerReferenceWorkbenchReadRoute|createOwnerReferenceWorkbenchUploadConfirmationRoute|OwnerReferenceWorkbenchService.confirmUpload|OwnerReferenceWorkbenchService.executeLocalStudy|OwnerReferenceWorkbenchService.read|OwnerReferenceWorkbenchService.reviewLocalOperation|createLegacyOwnerReferenceQuarantineRoute|OwnerStore.listReferences|ReferenceSourceControlledArtifactStore.putDigitalAsset|ReferenceSourceControlledArtifactStore.release|ReferenceSourceControlledArtifactStore.withExclusiveTransaction|createReferenceSourceControlledAssetUploadRoute|ReferenceSourceControlledAssetIngestionService.ingest|createReferenceSourceLifecycleSecurityBundle|ReferenceSourceLifecyclePlanningService.planDryRun|deriveReferenceSourceAuthoritySubjectClosure|deriveRequiredReferenceSourceAuthoritySubjectFacets|deriveRequiredReviewedProvenanceSubstitutionRefs|ReferenceSourceOperationGateway.execute|createReferenceSourceCompilerInputRoute|createReferenceSourceOperationDefaultDecisionRoute|createReferenceSourceProtectedOperationRoute|ReferenceSourceProtectedOperationAdapter.execute|ReferenceSourceProtectedOperationAdapter.executeCompilerInput|ReferenceSourceStagingService.applyControlledUploadTransaction|ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction|ReferenceSourceStagingService.applyTransaction|ReferenceSourceStagingService.migrateLegacyObservationHistory|ReferenceSourceStagingStore.commit"
+        "readerId": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS|evaluateReferenceSourceAuthority|referenceAuthorityReceiptSigningPayload|REFERENCE_ACCESS_OPERATION_DESTINATIONS|planReferenceSourceInventoryClosure|planReferenceSourceLifecycle|evaluateReferenceSourceRetentionAuthority|createApiRouter|OwnerReferenceLegacyReader.capture|OwnerReferenceLocalStudyService.execute|createOwnerReferenceMigrationCommitRoute|createOwnerReferenceMigrationCompatibilityRoute|createOwnerReferenceMigrationDryRunRoute|createOwnerReferenceMigrationInterruptedRollbackRoute|createOwnerReferenceMigrationRollbackRoute|OwnerReferenceMigrationService.commit|OwnerReferenceMigrationService.dryRun|OwnerReferenceMigrationService.inspectPrivateAudit|OwnerReferenceMigrationService.readCompatibility|OwnerReferenceMigrationService.rollback|OwnerReferenceMigrationService.rollbackInterrupted|createOwnerReferencePageAtlasOperationRoute|createOwnerReferencePageAtlasPreviewRoute|OwnerReferencePageAtlasService.cancel|OwnerReferencePageAtlasService.correctMapping|OwnerReferencePageAtlasService.preview|OwnerReferencePageAtlasService.read|OwnerReferencePageAtlasService.resume|OwnerReferencePageAtlasService.start|createOwnerReferenceWorkbenchLocalOperationReviewRoute|createOwnerReferenceWorkbenchLocalStudyRoute|createOwnerReferenceWorkbenchReadRoute|createOwnerReferenceWorkbenchUploadConfirmationRoute|OwnerReferenceWorkbenchService.confirmUpload|OwnerReferenceWorkbenchService.executeLocalStudy|OwnerReferenceWorkbenchService.executePageAtlas|OwnerReferenceWorkbenchService.previewPageAtlas|OwnerReferenceWorkbenchService.read|OwnerReferenceWorkbenchService.reviewLocalOperation|createLegacyOwnerReferenceQuarantineRoute|OwnerStore.listReferences|ReferenceSourceControlledArtifactStore.putDigitalAsset|ReferenceSourceControlledArtifactStore.release|ReferenceSourceControlledArtifactStore.withExclusiveTransaction|createReferenceSourceControlledAssetUploadRoute|ReferenceSourceControlledAssetIngestionService.ingest|createReferenceSourceLifecycleSecurityBundle|ReferenceSourceLifecyclePlanningService.planDryRun|deriveReferenceSourceAuthoritySubjectClosure|deriveRequiredReferenceSourceAuthoritySubjectFacets|deriveRequiredReviewedProvenanceSubstitutionRefs|ReferenceSourceOperationGateway.execute|createReferenceSourceCompilerInputRoute|createReferenceSourceOperationDefaultDecisionRoute|createReferenceSourceProtectedOperationRoute|ReferenceSourceProtectedOperationAdapter.execute|ReferenceSourceProtectedOperationAdapter.executeCompilerInput|ReferenceSourceStagingService.applyControlledUploadTransaction|ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction|ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction|ReferenceSourceStagingService.applyPageAtlasTransaction|ReferenceSourceStagingService.applyTransaction|ReferenceSourceStagingService.migrateLegacyObservationHistory|ReferenceSourceStagingStore.commit"
       },
       "quarantine": {
         "state": "not_quarantined",
@@ -45042,6 +47848,110 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.read"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.read"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-workbench-route.ts",
             "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
           },
@@ -45114,6 +48024,32 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-workbench-service.ts",
             "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
           }
         },
         {
@@ -45394,12 +48330,38 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
           },
           "guardScope": {
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           }
         },
         {
@@ -45536,6 +48498,97 @@
           "access": "write",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-workbench-route.ts",
             "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
           },
@@ -45556,6 +48609,32 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-workbench-service.ts",
             "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
           }
         },
         {
@@ -45706,12 +48785,38 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
           },
           "guardScope": {
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           }
         },
         {
@@ -45755,10 +48860,11 @@
         }
       ],
       "claimLimitations": [
+        "Page Atlas workflows stage non-authoritative candidates and citation lineage only; parser output and source-profile routing cannot supply bibliographic, extraction, historical, specialist, or activation authority.",
         "Reference identity and storage integrity remain distinct from historical-practice review.",
         "Rights and lifecycle policy can deny use but cannot supply positive musical authority."
       ],
-      "digest": "082358aa519c7cc1ef0bb099de7880d13acd8cb022f9dad3b200f1135b89555a"
+      "digest": "7278b9c7713d19b0b0c93c2412e52385721ada227071e026707af9ecc8d4b493"
     },
     {
       "id": "authority.validator.source-interpretation",
@@ -45767,7 +48873,7 @@
       "definitionSources": [
         {
           "path": "src/guided-start.ts",
-          "digest": "98c8f399c12ead1c35df5f3dbb3e931074711217e66808d5b09a29713d2b8877"
+          "digest": "db4bedbbf9e3b12cc4406fa57365d76d7b1c05c2f9290e76516105a7389f4f04"
         },
         {
           "path": "src/lib/abc-normalizer.ts",
@@ -46325,7 +49431,7 @@
       "claimLimitations": [
         "Confidence and inferred voices remain reviewable evidence, never documentary authority."
       ],
-      "digest": "29e0effa8412410e908dcc6b03c45a2f79d223180cca22dd60819b2e3097849f"
+      "digest": "c6000782694b532d6194435d1abebc91bf79183127d71025faf49141f52fc8ff"
     },
     {
       "id": "authority.validator.source-normalization",
@@ -46353,6 +49459,10 @@
           "digest": "7894b02aca076056e8695e210709cc190ee617db55b49831a56cd7945e6ebb82"
         },
         {
+          "path": "src/server/lib/reference-page-atlas-parser.ts",
+          "digest": "43ebbe8ae67a9aa62e6455190e9b363be7e0d2ea3ec174436afc098dc6449a9b"
+        },
+        {
           "path": "src/server/musicxml_normalize.py",
           "digest": "f118919e2502bb336f99df2722384c6a7bf67cc3a3c599032556ecbfa40d7831"
         }
@@ -46377,6 +49487,21 @@
           "kind": "symbol",
           "path": "src/server/lib/musicxml-normalizer.ts",
           "selector": "normalizeMusicXml"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-page-atlas-parser.ts",
+          "selector": "PopplerReferencePageAtlasParser.describeRuntime"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-page-atlas-parser.ts",
+          "selector": "PopplerReferencePageAtlasParser.inspect"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-page-atlas-parser.ts",
+          "selector": "PopplerReferencePageAtlasParser.renderPage"
         }
       ],
       "writes": [],
@@ -46391,12 +49516,13 @@
       "mechanicalEvidenceRef": null,
       "subjectDomains": [
         "normalization",
+        "reference_source",
         "source_truth",
         "symbolic_import"
       ],
       "compatibility": {
         "mode": "legacy_reader_shadow_required",
-        "readerId": "normalizeAbc|parseExplicitVoiceLilypond|convertInterchangeToMusicXml|normalizeMusicXml"
+        "readerId": "normalizeAbc|parseExplicitVoiceLilypond|convertInterchangeToMusicXml|normalizeMusicXml|PopplerReferencePageAtlasParser.describeRuntime|PopplerReferencePageAtlasParser.inspect|PopplerReferencePageAtlasParser.renderPage"
       },
       "quarantine": {
         "state": "not_quarantined",
@@ -46464,12 +49590,52 @@
             "path": "src/server/lib/musicxml-normalizer.ts",
             "selector": "normalizeMusicXml"
           }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.describeRuntime"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.describeRuntime"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.inspect"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.inspect"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.renderPage"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-page-atlas-parser.ts",
+            "selector": "PopplerReferencePageAtlasParser.renderPage"
+          }
         }
       ],
       "claimLimitations": [
+        "Page enumeration, geometry parsing, component-version observation, and rasterization describe bounded tool output only; they establish no source identity, extraction truth, citation authority, or musical interpretation.",
         "Syntactic normalization does not establish documentary identity or resolve ambiguous notation."
       ],
-      "digest": "52913c26eb3d603c32fdd78ea19ad438f11a67bed50bed8ad0b6bdf3fc2c842f"
+      "digest": "545d77f67ff93ff319fa8af5cc6a0b7125b2baa3d2d4a1938f219a88da729c35"
     },
     {
       "id": "authority.validator.theory-engine",
@@ -47321,5 +50487,5 @@
       "digest": "47cc8dd23212dfaa5215a765732624db22bed6a774b0880b4ee4ce2708a7aa7e"
     }
   ],
-  "digest": "c71cd34dcbdd0021bf4c917f038f2f9511f33c3f38d205b3e1b7a89277656234"
+  "digest": "c41e8ad82ffe1c243b1f78e9e1e6aeb4025b947a4c6944e502066ad475c82893"
 }

@@ -1,5 +1,14 @@
 import { Value } from "@sinclair/typebox/value";
 import {
+  ReferencePageAtlasOperationRequestSchema,
+  ReferencePageAtlasPreviewRequestSchema,
+  ReferencePageAtlasProjectionSchema,
+  ReferencePageAtlasReadRequestSchema,
+  type ReferencePageAtlasOperationRequest,
+  type ReferencePageAtlasPreviewRequest,
+  type ReferencePageAtlasProjection,
+} from "../../lib/reference-page-atlas-contract.js";
+import {
   constants,
   closeSync,
   fstatSync,
@@ -36,10 +45,16 @@ import {
   referenceSourceDigest,
   type ReferenceAssetAcquisition,
   type ReferenceAssetRoleBinding,
+  type ReferenceAssetIdentityResolution,
   type ReferenceDigitalAsset,
   type ReferenceRecordRef,
   type ReferenceSourceStagingRecord,
 } from "../../lib/reference-source-domain.js";
+import type {
+  OwnerReferencePageAtlasPreview,
+  OwnerReferencePageAtlasResolvedContext,
+  OwnerReferencePageAtlasService,
+} from "./owner-reference-page-atlas-service.js";
 import type {
   OwnerReferenceMigrationCompatibilityView,
   OwnerReferenceMigrationService,
@@ -69,6 +84,10 @@ type MigrationCompatibilityReader = Pick<OwnerReferenceMigrationService, "readCo
 type ControlledArtifactInventoryReader = Pick<ReferenceSourceControlledArtifactStore, "observe">;
 type DefaultOperationGateway = Pick<ReferenceSourceOperationGateway, "execute">;
 type LocalStudyExecutor = Pick<OwnerReferenceLocalStudyService, "execute">;
+type PageAtlasExecutor = Pick<
+  OwnerReferencePageAtlasService,
+  "start" | "read" | "resume" | "cancel" | "correctMapping" | "preview"
+>;
 
 export type OwnerReferenceWorkbenchServiceOptions = {
   staging: StagingReader;
@@ -77,6 +96,7 @@ export type OwnerReferenceWorkbenchServiceOptions = {
   opaqueProjector: OwnerReferenceWorkbenchOpaqueProjector;
   operationGateway?: DefaultOperationGateway;
   localStudyService?: LocalStudyExecutor;
+  pageAtlasService?: PageAtlasExecutor;
   maxSnapshotAttempts?: number;
 };
 
@@ -255,6 +275,7 @@ export class OwnerReferenceWorkbenchService {
   private readonly opaqueProjector: OwnerReferenceWorkbenchOpaqueProjector;
   private readonly operationGateway: DefaultOperationGateway | undefined;
   private readonly localStudyService: LocalStudyExecutor | undefined;
+  private readonly pageAtlasService: PageAtlasExecutor | undefined;
   private readonly maxSnapshotAttempts: number;
 
   constructor(options: OwnerReferenceWorkbenchServiceOptions) {
@@ -264,6 +285,7 @@ export class OwnerReferenceWorkbenchService {
     this.opaqueProjector = options.opaqueProjector;
     this.operationGateway = options.operationGateway;
     this.localStudyService = options.localStudyService;
+    this.pageAtlasService = options.pageAtlasService;
     this.maxSnapshotAttempts = options.maxSnapshotAttempts ?? DEFAULT_SNAPSHOT_ATTEMPTS;
     if (!Number.isSafeInteger(this.maxSnapshotAttempts) || this.maxSnapshotAttempts < 1) {
       throw new OwnerReferenceWorkbenchIntegrityError(
@@ -392,6 +414,92 @@ export class OwnerReferenceWorkbenchService {
       },
       sink
     );
+  }
+
+  /**
+   * Resolve every opaque browser scope inside the Workbench boundary, execute
+   * one Page Atlas operation, then recapture the successor Workbench snapshot
+   * before projecting a mutation result. Raw graph identities never enter the
+   * route or browser contract.
+   */
+  async executePageAtlas(
+    request: ReferencePageAtlasOperationRequest,
+    signal?: AbortSignal
+  ): Promise<ReferencePageAtlasProjection> {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    const decoded = Value.Decode(ReferencePageAtlasOperationRequestSchema, request);
+    const before = this.captureProjection();
+    const beforeContext = this.pageAtlasContext(before, decoded.workbenchCardRef);
+    const service = this.requirePageAtlasService();
+
+    if (decoded.action === "read") {
+      return Value.Decode(
+        ReferencePageAtlasProjectionSchema,
+        service.read({ request: decoded, context: beforeContext })
+      );
+    }
+
+    const receipt =
+      decoded.action === "start"
+        ? await service.start({ request: decoded, context: beforeContext, signal })
+        : decoded.action === "resume"
+          ? await service.resume({ request: decoded, context: beforeContext, signal })
+          : decoded.action === "cancel"
+            ? service.cancel({ request: decoded, context: beforeContext })
+            : await service.correctMapping({ request: decoded, context: beforeContext, signal });
+
+    const after = this.captureProjection();
+    const afterContext = this.pageAtlasContext(after, decoded.workbenchCardRef);
+    const readRequest = Value.Decode(ReferencePageAtlasReadRequestSchema, {
+      schemaVersion: 1,
+      action: "read",
+      workbenchSnapshotRef: after.snapshot.snapshotRef,
+      workbenchCardRef: decoded.workbenchCardRef,
+      operationRef: receipt.operationRef,
+    });
+    return Value.Decode(
+      ReferencePageAtlasProjectionSchema,
+      service.read({ request: readRequest, context: afterContext })
+    );
+  }
+
+  /** Render one exact current cited page through the no-store binary route. */
+  async previewPageAtlas(
+    request: ReferencePageAtlasPreviewRequest
+  ): Promise<OwnerReferencePageAtlasPreview> {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    const decoded = Value.Decode(ReferencePageAtlasPreviewRequestSchema, request);
+    const projection = this.captureProjection();
+    const context = this.pageAtlasContext(projection, decoded.workbenchCardRef);
+    return this.requirePageAtlasService().preview({ request: decoded, context });
+  }
+
+  private requirePageAtlasService(): PageAtlasExecutor {
+    if (!this.pageAtlasService) {
+      throw new OwnerReferenceWorkbenchIntegrityError(
+        "The Owner-reference Page Atlas service is unavailable"
+      );
+    }
+    return this.pageAtlasService;
+  }
+
+  private pageAtlasContext(
+    projection: WorkbenchProjection,
+    cardRef: ReferenceRecordRef
+  ): OwnerReferencePageAtlasResolvedContext {
+    const source = projection.sourceByCardRef.get(refKey(cardRef));
+    if (!source || !projection.stagingSnapshotRef) {
+      throw new OwnerReferenceWorkbenchIntegrityError(
+        "The Owner-reference Page Atlas card is unavailable"
+      );
+    }
+    return Object.freeze({
+      currentWorkbenchSnapshotRef: projection.snapshot.snapshotRef,
+      currentWorkbenchCardRef: cardRef,
+      currentStagingSnapshotRef: projection.stagingSnapshotRef,
+      acquisition: source.acquisition,
+      digitalAsset: source.digitalAsset,
+    });
   }
 
   private captureProjection(): WorkbenchProjection {
@@ -542,12 +650,19 @@ function buildCards(
       records,
       staging.snapshot!.createdAt
     );
+    const identityResolutions = records.filter(
+      (record): record is ReferenceAssetIdentityResolution =>
+        record.recordKind === "asset_identity_resolution" &&
+        refsEqual(record.digitalAssetRef, asset) &&
+        record.acquisitionRefs.some((reference) => refsEqual(reference, acquisition))
+    );
     const card = cardFor(
       acquisition,
       asset,
       classification,
       bindings,
       rightsAssertionCount,
+      identityResolutions,
       opaqueProjector
     );
     cards.push(card);
@@ -692,6 +807,7 @@ function cardFor(
   classification: CardClassification,
   bindings: ReferenceAssetRoleBinding[],
   rightsAssertionCount: number,
+  identityResolutions: readonly ReferenceAssetIdentityResolution[],
   opaqueProjector: OwnerReferenceWorkbenchOpaqueProjector
 ): OwnerReferenceWorkbenchSnapshot["references"][number] {
   const cardRef = opaqueProjector.project("card", { acquisition, asset });
@@ -713,6 +829,41 @@ function cardFor(
   ).length;
   const total = ownerReferenceCount + arrangementSourceCount + evaluationSourceCount;
 
+  const currentIdentityResolutions = identityResolutions.filter(
+    (resolution) =>
+      !identityResolutions.some(
+        (candidate) =>
+          candidate.parentVersionRef !== undefined &&
+          refsEqual(candidate.parentVersionRef, resolution)
+      )
+  );
+  const identityState: "unresolved" | "candidate" | "reviewed" | "disputed" =
+    currentIdentityResolutions.some(({ reviewState }) => reviewState === "disputed")
+      ? "disputed"
+      : currentIdentityResolutions.some(({ reviewState }) => reviewState === "reviewed")
+        ? "reviewed"
+        : currentIdentityResolutions.length > 0
+          ? "candidate"
+          : "unresolved";
+
+  const identity: OwnerReferenceWorkbenchSnapshot["references"][number]["identity"] =
+    identityState === "unresolved"
+      ? {
+          state: "unresolved",
+          explanation:
+            "No Work, manifestation, exemplar, date, edition, or specialist identity is asserted by this byte-level record.",
+        }
+      : {
+          state: identityState,
+          resolutionCount: currentIdentityResolutions.length,
+          explanation:
+            identityState === "candidate"
+              ? "A source-identity candidate is staged for review. Its labels remain private and it grants no historical or specialist authority."
+              : identityState === "reviewed"
+                ? "A reviewed source-identity resolution is recorded for these exact bytes; it does not itself grant historical, specialist, access, or publication authority."
+                : "Competing source-identity evidence is disputed. Vellum makes no automatic identity choice.",
+        };
+
   return {
     id: cardRef.id,
     cardRef,
@@ -722,11 +873,7 @@ function cardFor(
     migration: classification.migration,
     mediaType: asset.mediaType,
     byteLength: asset.byteLength,
-    identity: {
-      state: "unresolved",
-      explanation:
-        "No Work, manifestation, exemplar, date, edition, or specialist identity is asserted by this byte-level record.",
-    },
+    identity,
     rights: {
       state: rightsAssertionCount === 0 ? "unasserted" : "recorded",
       assertionCount: rightsAssertionCount,

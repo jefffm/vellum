@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiResponse } from "../../lib/api-contract.js";
 import { createApp } from "../index.js";
+import { KnowledgePublicationStore } from "./knowledge-publication-store.js";
 import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
 import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
 import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
@@ -50,6 +51,13 @@ describe("controlled asset production wiring", () => {
       createApp({
         referenceSourceStagingService: staging,
         referenceSourceControlledArtifactStore: controlledStore,
+        knowledgePublicationStore: new KnowledgePublicationStore({
+          rootDirectory: path.join(rootDirectory, "knowledge-publication"),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(rootDirectory, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(rootDirectory, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x43),
       })
     );
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));

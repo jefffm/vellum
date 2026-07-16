@@ -516,7 +516,7 @@ const EXPECTED_COMPLETENESS_REASON_CODES = [
 ] as const;
 
 const EXPECTED_WRITER_CONTRACT_DIGEST =
-  "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1";
+  "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527";
 
 const DOMAIN_PREFIX = "vellum.authority-path-inventory.v1\0";
 

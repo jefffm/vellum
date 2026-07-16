@@ -17,6 +17,9 @@ import {
   KnowledgePublicationStore,
   type KnowledgePublicationTransaction,
 } from "./knowledge-publication-store.js";
+import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
+import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 
 describe("knowledge publication HTTP boundary", () => {
   type HttpPublicationResult = NonNullable<KnowledgePublicationWorkbenchState["current"]> & {
@@ -34,7 +37,18 @@ describe("knowledge publication HTTP boundary", () => {
       createApp({
         knowledgePublicationStore: store,
         knowledgePublicationWriter: store,
-        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench"),
+        referenceSourceStagingService: new ReferenceSourceStagingService({
+          store: new ReferenceSourceStagingStore({
+            rootDirectory: path.join(rootDirectory, "reference-source-staging"),
+          }),
+        }),
+        referenceSourceControlledArtifactStore: new ReferenceSourceControlledArtifactStore({
+          rootDirectory: path.join(rootDirectory, "controlled-artifacts"),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(rootDirectory, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(rootDirectory, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x4b),
       })
     );
     await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));

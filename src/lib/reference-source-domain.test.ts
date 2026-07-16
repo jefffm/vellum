@@ -6,6 +6,7 @@ import {
   ReferenceAssetRoleBindingSchema,
   ReferenceDigitalAssetSchema,
   ReferenceEvaluationSourceBindingCommitmentSchema,
+  ReferenceExtractionProposalSchema,
   ReferenceProvenanceSubstitutionSchema,
   ReferenceSourceIdentityAssertionSchema,
   ReferenceSourceStagingOperationSchema,
@@ -254,6 +255,66 @@ describe("reference-source domain", () => {
       Value.Check(ReferenceProvenanceSubstitutionSchema, {
         ...substitution,
         sha256: HEX_A,
+      })
+    ).toBe(false);
+  });
+
+  it("keeps the exact twelve-course diapason reading and course-thirteen question nonauthoritative", () => {
+    const common = {
+      recordKind: "extraction_proposal",
+      version: 1,
+      citedExtractionRef: ref("extraction.mace-page-75"),
+      scope: {
+        instrument: "baroque_lute",
+        notationSystem: "french_tablature",
+        sourceCourseCount: 12,
+      },
+      reviewState: "proposed",
+      authorityState: "nonauthoritative",
+      activationAllowed: false,
+      releaseRefs: [],
+      attestationRefs: [],
+      createdAt: NOW,
+    } as const;
+    const mapping = withReferenceRecordDigest({
+      ...common,
+      id: "proposal.mace-twelve-course",
+      proposal: {
+        kind: "twelve_course_diapason_mapping",
+        courses: [7, 8, 9, 10, 11, 12],
+        symbols: ["a", "/a", "//a", "///a", "4", "5"],
+        numericSymbolsHaveSlashes: false,
+      },
+    });
+    const question = withReferenceRecordDigest({
+      ...common,
+      id: "proposal.mace-course-thirteen-question",
+      proposal: {
+        kind: "course_thirteen_notation_question",
+        course: 13,
+        state: "unresolved",
+        forbiddenInference: "sequence_extrapolation",
+      },
+    });
+
+    expect(Value.Check(ReferenceExtractionProposalSchema, mapping)).toBe(true);
+    expect(Value.Check(ReferenceExtractionProposalSchema, question)).toBe(true);
+    expect(
+      Value.Check(ReferenceExtractionProposalSchema, {
+        ...mapping,
+        proposal: { ...mapping.proposal, symbols: ["a", "/a", "//a", "///a", "/4", "/5"] },
+      })
+    ).toBe(false);
+    expect(
+      Value.Check(ReferenceExtractionProposalSchema, {
+        ...question,
+        proposal: { ...question.proposal, answer: "6" },
+      })
+    ).toBe(false);
+    expect(
+      Value.Check(ReferenceExtractionProposalSchema, {
+        ...mapping,
+        activationAllowed: true,
       })
     ).toBe(false);
   });

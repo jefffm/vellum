@@ -161,6 +161,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
         compilerRunner: { run: compilerRun },
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: firstRuntime.publication,
         referenceSourceStagingService: firstRuntime.staging,
         referenceSourceControlledArtifactStore: firstRuntime.controlled,
@@ -291,6 +293,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: restartedRuntime.publication,
         referenceSourceStagingService: restartedRuntime.staging,
         referenceSourceControlledArtifactStore: restartedRuntime.controlled,
@@ -410,6 +414,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: interruptedRuntime.publication,
         referenceSourceStagingService: interruptedRuntime.staging,
         referenceSourceControlledArtifactStore: interruptedRuntime.controlled,
@@ -463,6 +469,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: recoveryRuntime.publication,
         referenceSourceStagingService: recoveryRuntime.staging,
         referenceSourceControlledArtifactStore: recoveryRuntime.controlled,
@@ -529,6 +537,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: restartedRuntime.publication,
         referenceSourceStagingService: restartedRuntime.staging,
         referenceSourceControlledArtifactStore: restartedRuntime.controlled,
@@ -591,6 +601,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: runtime.publication,
         referenceSourceStagingService: runtime.staging,
         referenceSourceControlledArtifactStore: runtime.controlled,
@@ -692,6 +704,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: restartedRuntime.publication,
         referenceSourceStagingService: restartedRuntime.staging,
         referenceSourceControlledArtifactStore: restartedRuntime.controlled,
@@ -750,6 +764,8 @@ describe("T10 migrated-private defaults and production Workbench", () => {
       createApp({
         ownerReferenceMigrationOwnerRootDirectory: paths.owner,
         ownerReferenceMigrationPrivateRootDirectory: paths.migrationPrivate,
+        ownerReferenceWorkbenchPrivateRootDirectory: paths.workbenchPrivate,
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x10),
         knowledgePublicationStore: runtime.publication,
         referenceSourceStagingService: runtime.staging,
         referenceSourceControlledArtifactStore: runtime.controlled,
@@ -1254,6 +1270,7 @@ function persistentPaths(root: string) {
   return {
     owner: path.join(root, "owner"),
     migrationPrivate: path.join(root, "migration-private"),
+    workbenchPrivate: path.join(root, "workbench-private"),
     publication: path.join(root, "knowledge-publication"),
     staging: path.join(root, "reference-source-staging"),
     controlled: path.join(root, "controlled-artifacts"),

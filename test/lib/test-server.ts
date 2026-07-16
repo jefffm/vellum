@@ -2,6 +2,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { createApp } from "../../src/server/index.js";
 import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
+import { createIsolatedOwnerRuntime } from "./isolated-owner-runtime.js";
 
 export type TestResponse<TData = unknown> = {
   status: number;
@@ -12,11 +13,21 @@ export type TestResponse<TData = unknown> = {
 export class TestServer {
   private constructor(
     private readonly server: Server,
-    private readonly port: number
+    private readonly port: number,
+    private readonly cleanupOwnerRuntime: () => void
   ) {}
 
   static async start(opts: { port?: number } = {}): Promise<TestServer> {
-    const app = createApp({ compilerRunner: new SubprocessRunner(60_000) });
+    const runtime = createIsolatedOwnerRuntime({
+      compilerRunner: new SubprocessRunner(60_000),
+    });
+    let app: ReturnType<typeof createApp>;
+    try {
+      app = createApp(runtime.options);
+    } catch (error) {
+      runtime.cleanup();
+      throw error;
+    }
     const requestedPort = opts.port ?? 0;
 
     return await new Promise<TestServer>((resolve, reject) => {
@@ -24,6 +35,7 @@ export class TestServer {
 
       const onError = (error: Error) => {
         server.off("listening", onListening);
+        runtime.cleanup();
         reject(new Error(`Failed to start test server on port ${requestedPort}: ${error.message}`));
       };
 
@@ -32,11 +44,14 @@ export class TestServer {
         const address = server.address();
 
         if (!address || typeof address === "string") {
-          server.close(() => reject(new Error("Test server started without a TCP address")));
+          server.close(() => {
+            runtime.cleanup();
+            reject(new Error("Test server started without a TCP address"));
+          });
           return;
         }
 
-        resolve(new TestServer(server, (address as AddressInfo).port));
+        resolve(new TestServer(server, (address as AddressInfo).port, runtime.cleanup));
       };
 
       server.once("error", onError);
@@ -61,16 +76,20 @@ export class TestServer {
   }
 
   async stop(): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      this.server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+    try {
+      await new Promise<void>((resolve, reject) => {
+        this.server.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
 
-        resolve();
+          resolve();
+        });
       });
-    });
+    } finally {
+      this.cleanupOwnerRuntime();
+    }
   }
 
   get baseUrl(): string {

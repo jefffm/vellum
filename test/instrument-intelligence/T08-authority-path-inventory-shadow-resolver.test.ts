@@ -81,7 +81,7 @@ describe("T08 authority-path inventory and compatibility classification", () => 
       id: "authority-writer-contract.v1",
       version: 1,
       path: "src/lib/data/authority-writer-contract.v1.json",
-      digest: "54ff570644b6f240dfe2795f08a29cedcc8abc325e245774da2f274d3da2efa1",
+      digest: "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527",
     });
     expect(new Set(inventory.entries.map((entry) => entry.id)).size).toBe(inventory.entries.length);
     expect(inventory.coverage.length).toBeGreaterThan(200);

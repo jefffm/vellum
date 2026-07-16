@@ -380,6 +380,224 @@ const PageRegionSchema = Type.Object(
   Strict
 );
 
+const PageRangeSchema = Type.Object(
+  {
+    start: Type.Integer({ minimum: 1, maximum: 100_000 }),
+    end: Type.Integer({ minimum: 1, maximum: 100_000 }),
+  },
+  Strict
+);
+
+export const ReferencePageLocatorSchema = Type.Object(
+  {
+    kind: Type.Union([
+      Type.Literal("printed_page"),
+      Type.Literal("folio"),
+      Type.Literal("plate"),
+      Type.Literal("internal_sequence"),
+    ]),
+    sequenceId: IdSchema,
+    label: Type.String({ minLength: 1, maxLength: 128 }),
+    ordinal: Type.Optional(Type.Integer({ minimum: 0, maximum: 100_000 })),
+    side: Type.Optional(Type.Union([Type.Literal("recto"), Type.Literal("verso")])),
+  },
+  Strict
+);
+export type ReferencePageLocator = Static<typeof ReferencePageLocatorSchema>;
+
+export const ReferencePageAtlasRegionSchema = Type.Object(
+  {
+    id: IdSchema,
+    x: Type.Number(),
+    y: Type.Number(),
+    width: Type.Number({ exclusiveMinimum: 0 }),
+    height: Type.Number({ exclusiveMinimum: 0 }),
+    unit: Type.Union([Type.Literal("pixel"), Type.Literal("normalized")]),
+    modality: Type.Union([
+      Type.Literal("text"),
+      Type.Literal("image"),
+      Type.Literal("notation"),
+      Type.Literal("mixed"),
+    ]),
+  },
+  Strict
+);
+export type ReferencePageAtlasRegion = Static<typeof ReferencePageAtlasRegionSchema>;
+
+export const ReferencePageAtlasCanvasSchema = Type.Object(
+  {
+    canvasId: IdSchema,
+    scanOrder: Type.Integer({ minimum: 1, maximum: 100_000 }),
+    scanLocator: Type.String({ minLength: 1, maxLength: 256 }),
+    coordinateSystem: Type.String({ minLength: 1, maxLength: 128 }),
+    widthPixels: Type.Integer({ minimum: 1, maximum: 200_000 }),
+    heightPixels: Type.Integer({ minimum: 1, maximum: 200_000 }),
+    rotationDegrees: Type.Union([
+      Type.Literal(0),
+      Type.Literal(90),
+      Type.Literal(180),
+      Type.Literal(270),
+    ]),
+    conditions: Type.Array(
+      Type.Union([
+        Type.Literal("missing"),
+        Type.Literal("duplicate"),
+        Type.Literal("cropped"),
+        Type.Literal("damaged"),
+        Type.Literal("blank"),
+      ]),
+      { maxItems: 5 }
+    ),
+    locators: Type.Array(ReferencePageLocatorSchema, { maxItems: 64 }),
+    regions: Type.Array(ReferencePageAtlasRegionSchema, { maxItems: 4096 }),
+  },
+  Strict
+);
+export type ReferencePageAtlasCanvas = Static<typeof ReferencePageAtlasCanvasSchema>;
+
+export const ReferenceAssetIdentityResolutionSchema = Type.Object(
+  {
+    recordKind: Type.Literal("asset_identity_resolution"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    digitalAssetRef: ReferenceRecordRefSchema,
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    workRef: ReferenceRecordRefSchema,
+    manifestationRef: ReferenceRecordRefSchema,
+    exemplarRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    identityAssertionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 256 }),
+    resolutionState: Type.Union([
+      Type.Literal("candidate"),
+      Type.Literal("resolved"),
+      Type.Literal("disputed"),
+    ]),
+    reviewState: Type.Union([
+      Type.Literal("candidate"),
+      Type.Literal("reviewed"),
+      Type.Literal("disputed"),
+    ]),
+    resolverRef: ReferenceRecordRefSchema,
+    evidenceRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 256 }),
+    recordedAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceAssetIdentityResolution = Static<
+  typeof ReferenceAssetIdentityResolutionSchema
+>;
+
+export const ReferencePageAtlasVersionSchema = Type.Object(
+  {
+    recordKind: Type.Literal("page_atlas_version"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    digitalAssetRef: ReferenceRecordRefSchema,
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    accessDecisionRef: ReferenceRecordRefSchema,
+    componentRef: ReferenceRecordRefSchema,
+    configurationDigest: DigestSchema,
+    resourcePolicyRef: ReferenceRecordRefSchema,
+    coverage: Type.Union([Type.Literal("partial"), Type.Literal("complete")]),
+    canvasCount: Type.Integer({ minimum: 1, maximum: 100_000 }),
+    processedScanRanges: Type.Array(PageRangeSchema, { maxItems: 4096 }),
+    unprocessedScanRanges: Type.Array(PageRangeSchema, { maxItems: 4096 }),
+    canvases: Type.Array(ReferencePageAtlasCanvasSchema, { maxItems: 100_000 }),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferencePageAtlasVersion = Static<typeof ReferencePageAtlasVersionSchema>;
+
+export const ReferencePageAtlasAttemptSchema = Type.Object(
+  {
+    recordKind: Type.Literal("page_atlas_attempt"),
+    id: IdSchema,
+    attemptKind: Type.Union([
+      Type.Literal("initial"),
+      Type.Literal("resume"),
+      Type.Literal("correction"),
+    ]),
+    digitalAssetRef: ReferenceRecordRefSchema,
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    accessDecisionRef: ReferenceRecordRefSchema,
+    componentRef: ReferenceRecordRefSchema,
+    configurationDigest: DigestSchema,
+    resourcePolicyRef: ReferenceRecordRefSchema,
+    basisAtlasRef: Type.Optional(ReferenceRecordRefSchema),
+    outputAtlasRef: Type.Optional(ReferenceRecordRefSchema),
+    status: Type.Union([
+      Type.Literal("completed"),
+      Type.Literal("interrupted"),
+      Type.Literal("cancelled"),
+      Type.Literal("resource_exhausted"),
+      Type.Literal("failed"),
+    ]),
+    failureCode: Type.Optional(
+      Type.Union([
+        Type.Literal("parser_failure"),
+        Type.Literal("resource_limit"),
+        Type.Literal("malformed_asset"),
+        Type.Literal("unsupported_asset"),
+        Type.Literal("cancelled"),
+        Type.Literal("interrupted"),
+      ])
+    ),
+    redactedDiagnosticRefs: Type.Array(ReferenceRecordRefSchema, { maxItems: 256 }),
+    startedAt: IsoTimestampSchema,
+    endedAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferencePageAtlasAttempt = Static<typeof ReferencePageAtlasAttemptSchema>;
+
+export const ReferencePageAtlasCorrectionSchema = Type.Object(
+  {
+    recordKind: Type.Literal("page_atlas_correction"),
+    id: IdSchema,
+    priorAtlasRef: ReferenceRecordRefSchema,
+    successorAtlasRef: ReferenceRecordRefSchema,
+    changedCanvasIds: Type.Array(IdSchema, { minItems: 1, maxItems: 4096 }),
+    evidenceRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 256 }),
+    correctedByRef: ReferenceRecordRefSchema,
+    rationale: Type.String({ minLength: 1, maxLength: 2048 }),
+    correctedAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferencePageAtlasCorrection = Static<typeof ReferencePageAtlasCorrectionSchema>;
+
+export const ReferenceDerivativeArtifactSchema = Type.Object(
+  {
+    recordKind: Type.Literal("reference_derivative_artifact"),
+    id: IdSchema,
+    artifactKind: Type.Union([
+      Type.Literal("page_image"),
+      Type.Literal("thumbnail"),
+      Type.Literal("crop"),
+    ]),
+    digitalAssetRef: ReferenceRecordRefSchema,
+    acquisitionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    pageAtlasRef: ReferenceRecordRefSchema,
+    canvasId: IdSchema,
+    mediaType: Type.String({ pattern: "^image/[A-Za-z0-9.+-]+$", maxLength: 128 }),
+    byteLength: Type.Integer({ minimum: 1, maximum: 268_435_456 }),
+    sha256: Sha256Schema,
+    widthPixels: Type.Integer({ minimum: 1, maximum: 200_000 }),
+    heightPixels: Type.Integer({ minimum: 1, maximum: 200_000 }),
+    region: Type.Optional(PageRegionSchema),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceDerivativeArtifact = Static<typeof ReferenceDerivativeArtifactSchema>;
+
 export const ReferenceSourceSegmentVersionSchema = Type.Object(
   {
     recordKind: Type.Literal("source_segment_version"),
@@ -410,6 +628,205 @@ export const ReferenceSourceSegmentVersionSchema = Type.Object(
   Strict
 );
 export type ReferenceSourceSegmentVersion = Static<typeof ReferenceSourceSegmentVersionSchema>;
+
+const ReferenceCitationAnchorCommon = {
+  id: IdSchema,
+  sourceSegmentRef: ReferenceRecordRefSchema,
+  regionIds: Type.Array(IdSchema, { minItems: 1, maxItems: 4096 }),
+};
+
+export const ReferenceCitationAnchorSchema = Type.Union([
+  Type.Object(
+    {
+      ...ReferenceCitationAnchorCommon,
+      kind: Type.Literal("image"),
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      ...ReferenceCitationAnchorCommon,
+      kind: Type.Literal("text"),
+      characterRange: Type.Optional(
+        Type.Object(
+          {
+            start: Type.Integer({ minimum: 0, maximum: 10_000_000 }),
+            end: Type.Integer({ minimum: 1, maximum: 10_000_000 }),
+          },
+          Strict
+        )
+      ),
+    },
+    Strict
+  ),
+  Type.Object(
+    {
+      ...ReferenceCitationAnchorCommon,
+      kind: Type.Literal("notation"),
+      tokenIds: Type.Array(IdSchema, { minItems: 1, maxItems: 4096 }),
+    },
+    Strict
+  ),
+]);
+export type ReferenceCitationAnchor = Static<typeof ReferenceCitationAnchorSchema>;
+
+export const ReferenceExtractionUncertaintySchema = Type.Union([
+  Type.Object({ kind: Type.Literal("unknown") }, Strict),
+  Type.Object(
+    {
+      kind: Type.Literal("assessed"),
+      value: Type.Number({ minimum: 0, maximum: 1 }),
+      basis: Type.String({ minLength: 1, maxLength: 2048 }),
+      evidenceRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 256 }),
+    },
+    Strict
+  ),
+]);
+export type ReferenceExtractionUncertainty = Static<typeof ReferenceExtractionUncertaintySchema>;
+
+export const ReferenceExtractedNotationTokenSchema = Type.Object(
+  {
+    id: IdSchema,
+    value: Type.String({ minLength: 1, maxLength: 64 }),
+    course: Type.Optional(Type.Integer({ minimum: 1, maximum: 64 })),
+    regionId: IdSchema,
+  },
+  Strict
+);
+export type ReferenceExtractedNotationToken = Static<typeof ReferenceExtractedNotationTokenSchema>;
+
+export const ReferenceCitedExtractionVersionSchema = Type.Object(
+  {
+    recordKind: Type.Literal("cited_extraction_version"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    sourceSegmentRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 256 }),
+    accessDecisionRefs: Type.Array(ReferenceRecordRefSchema, { minItems: 1, maxItems: 64 }),
+    componentRef: ReferenceRecordRefSchema,
+    configurationDigest: DigestSchema,
+    anchors: Type.Array(ReferenceCitationAnchorSchema, { minItems: 3, maxItems: 12_288 }),
+    originalTranscription: Type.String({ minLength: 1, maxLength: 1_000_000 }),
+    normalizedTranscription: Type.String({ minLength: 1, maxLength: 1_000_000 }),
+    translation: Type.Optional(Type.String({ minLength: 1, maxLength: 1_000_000 })),
+    notationTokens: Type.Array(ReferenceExtractedNotationTokenSchema, {
+      minItems: 1,
+      maxItems: 4096,
+    }),
+    confidence: Type.Object(
+      {
+        extraction: ReferenceExtractionUncertaintySchema,
+        sourceIdentity: ReferenceExtractionUncertaintySchema,
+        interpretation: ReferenceExtractionUncertaintySchema,
+        applicability: ReferenceExtractionUncertaintySchema,
+      },
+      Strict
+    ),
+    unresolvedAlternatives: Type.Array(Type.String({ minLength: 1, maxLength: 2048 }), {
+      maxItems: 256,
+    }),
+    reviewState: Type.Union([
+      Type.Literal("proposed"),
+      Type.Literal("reviewed"),
+      Type.Literal("rejected"),
+      Type.Literal("superseded"),
+    ]),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceCitedExtractionVersion = Static<typeof ReferenceCitedExtractionVersionSchema>;
+
+const TwelveCourseNumbersSchema = Type.Tuple([
+  Type.Literal(7),
+  Type.Literal(8),
+  Type.Literal(9),
+  Type.Literal(10),
+  Type.Literal(11),
+  Type.Literal(12),
+]);
+const TwelveCourseSymbolsSchema = Type.Tuple([
+  Type.Literal("a"),
+  Type.Literal("/a"),
+  Type.Literal("//a"),
+  Type.Literal("///a"),
+  Type.Literal("4"),
+  Type.Literal("5"),
+]);
+
+export const ReferenceExtractionProposalSchema = Type.Object(
+  {
+    recordKind: Type.Literal("extraction_proposal"),
+    id: IdSchema,
+    version: VersionSchema,
+    parentVersionRef: Type.Optional(VersionedReferenceRecordRefSchema),
+    citedExtractionRef: ReferenceRecordRefSchema,
+    scope: Type.Object(
+      {
+        instrument: Type.Literal("baroque_lute"),
+        notationSystem: Type.Literal("french_tablature"),
+        sourceCourseCount: Type.Literal(12),
+      },
+      Strict
+    ),
+    proposal: Type.Union([
+      Type.Object(
+        {
+          kind: Type.Literal("twelve_course_diapason_mapping"),
+          courses: TwelveCourseNumbersSchema,
+          symbols: TwelveCourseSymbolsSchema,
+          numericSymbolsHaveSlashes: Type.Literal(false),
+        },
+        Strict
+      ),
+      Type.Object(
+        {
+          kind: Type.Literal("course_thirteen_notation_question"),
+          course: Type.Literal(13),
+          state: Type.Literal("unresolved"),
+          forbiddenInference: Type.Literal("sequence_extrapolation"),
+        },
+        Strict
+      ),
+    ]),
+    reviewState: Type.Literal("proposed"),
+    authorityState: Type.Literal("nonauthoritative"),
+    activationAllowed: Type.Literal(false),
+    releaseRefs: Type.Array(ReferenceRecordRefSchema, { maxItems: 0 }),
+    attestationRefs: Type.Array(ReferenceRecordRefSchema, { maxItems: 0 }),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceExtractionProposal = Static<typeof ReferenceExtractionProposalSchema>;
+
+export const ReferenceCitationSuccessorSchema = Type.Object(
+  {
+    recordKind: Type.Literal("citation_successor"),
+    id: IdSchema,
+    atlasCorrectionRef: ReferenceRecordRefSchema,
+    priorSegmentRef: ReferenceRecordRefSchema,
+    successorSegmentRef: ReferenceRecordRefSchema,
+    extractionTransition: Type.Union([
+      Type.Literal("not_applicable"),
+      Type.Literal("mapped_successor"),
+      Type.Literal("reextraction_required"),
+      Type.Literal("reextracted"),
+    ]),
+    priorCitedExtractionRefs: Type.Array(ReferenceRecordRefSchema, {
+      maxItems: 256,
+    }),
+    successorCitedExtractionRefs: Type.Array(ReferenceRecordRefSchema, {
+      maxItems: 256,
+    }),
+    createdAt: IsoTimestampSchema,
+    digest: DigestSchema,
+  },
+  Strict
+);
+export type ReferenceCitationSuccessor = Static<typeof ReferenceCitationSuccessorSchema>;
 
 const RightsSubjectKindSchema = Type.Union([
   Type.Literal("work"),
@@ -906,8 +1323,16 @@ const ReferenceSourceStagingInputRecordSchemas = [
   ReferenceExemplarSchema,
   ReferenceDigitalAssetSchema,
   ReferenceAssetAcquisitionSchema,
+  ReferenceAssetIdentityResolutionSchema,
   ReferenceSourceDerivationSchema,
+  ReferencePageAtlasVersionSchema,
+  ReferencePageAtlasAttemptSchema,
+  ReferencePageAtlasCorrectionSchema,
+  ReferenceDerivativeArtifactSchema,
   ReferenceSourceSegmentVersionSchema,
+  ReferenceCitedExtractionVersionSchema,
+  ReferenceExtractionProposalSchema,
+  ReferenceCitationSuccessorSchema,
   ReferenceRightsAssertionSchema,
   ReferenceAccessDecisionSchema,
   ReferenceLifecycleStoragePolicySchema,

@@ -9,18 +9,39 @@ import type { ApiResponse } from "../../lib/api-contract.js";
 import { getAuthorityPathInventoryView } from "../../lib/authority-path-inventory.js";
 import { createApp } from "../index.js";
 import { KnowledgePublicationStore } from "./knowledge-publication-store.js";
+import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
+import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 
 describe("Authority Path Inventory HTTP boundary", () => {
-  let publicationRoot: string;
+  let testRoot: string;
   let publicationStore: KnowledgePublicationStore;
   let server: Server | undefined;
 
   beforeEach(async () => {
-    publicationRoot = mkdtempSync(path.join(tmpdir(), "vellum-authority-path-http-"));
-    publicationStore = new KnowledgePublicationStore({ rootDirectory: publicationRoot });
+    testRoot = mkdtempSync(path.join(tmpdir(), "vellum-authority-path-http-"));
+    publicationStore = new KnowledgePublicationStore({
+      rootDirectory: path.join(testRoot, "publication"),
+    });
     vi.spyOn(publicationStore, "publish");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
-    server = createServer(createApp({ knowledgePublicationStore: publicationStore }));
+    server = createServer(
+      createApp({
+        knowledgePublicationStore: publicationStore,
+        referenceSourceControlledArtifactStore: new ReferenceSourceControlledArtifactStore({
+          rootDirectory: path.join(testRoot, "controlled-artifacts"),
+        }),
+        referenceSourceStagingService: new ReferenceSourceStagingService({
+          store: new ReferenceSourceStagingStore({
+            rootDirectory: path.join(testRoot, "staging"),
+          }),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(testRoot, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(testRoot, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(testRoot, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x41),
+      })
+    );
     await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));
   });
 
@@ -31,7 +52,7 @@ describe("Authority Path Inventory HTTP boundary", () => {
       );
     }
     vi.restoreAllMocks();
-    rmSync(publicationRoot, { recursive: true, force: true });
+    rmSync(testRoot, { recursive: true, force: true });
   });
 
   it("serves the exact immutable inventory view without publishing a generation", async () => {

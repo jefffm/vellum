@@ -139,7 +139,9 @@ import { createAuthorityPathInventoryRoute } from "./lib/authority-path-inventor
 import { OwnerStore } from "./lib/owner-store.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 import {
+  createOwnerLocalExtractionStagingWriter,
   createOwnerPrivateStudyStagingWriter,
+  createReferenceSourcePageAtlasStagingWriter,
   createReferenceSourceControlledUploadStagingWriter,
   ReferenceSourceStagingService,
 } from "./lib/reference-source-staging-service.js";
@@ -195,6 +197,16 @@ import {
   OwnerReferenceWorkbenchService,
 } from "./lib/owner-reference-workbench-service.js";
 import { OwnerReferenceLocalStudyService } from "./lib/owner-reference-local-study-service.js";
+import { OwnerReferencePageAtlasService } from "./lib/owner-reference-page-atlas-service.js";
+import {
+  createOwnerReferencePageAtlasOperationRoute,
+  createOwnerReferencePageAtlasPreviewRoute,
+} from "./lib/owner-reference-page-atlas-route.js";
+import {
+  PopplerReferencePageAtlasParser,
+  type ReferencePageAtlasParser,
+} from "./lib/reference-page-atlas-parser.js";
+import type { ReferencePageAtlasSourceProfileResolver } from "./lib/reference-page-atlas-source-profile.js";
 import {
   createReferenceSourceObservationHistoryMigrationRoute,
   createReferenceSourceStagingReadRoute,
@@ -280,6 +292,8 @@ type ApiRouterOptions = {
   ownerReferenceMigrationPrivateRootDirectory?: string;
   ownerReferenceWorkbenchPrivateRootDirectory?: string;
   ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
+  referencePageAtlasParser?: ReferencePageAtlasParser;
+  referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
   /**
    * Trusted server-bootstrap seam for future source-bearing workflows. HTTP
    * callers never select, replace, or receive these sinks.
@@ -290,6 +304,9 @@ type ApiRouterOptions = {
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
   assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const router = Router();
+  const ownerStore = new OwnerStore({
+    rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
+  });
   const knowledgePublicationStore =
     options.knowledgePublicationStore ?? new KnowledgePublicationStore();
   let referenceSourceControlledArtifactStore =
@@ -328,10 +345,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     options.referenceSourceStagingService ??
     new ReferenceSourceStagingService({
       store: new ReferenceSourceStagingStore(),
-      listLegacyOwnerReferences: () =>
-        new OwnerStore({
-          rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
-        }).listReferences(),
+      listLegacyOwnerReferences: () => ownerStore.listReferences(),
     });
   let ownerReferenceMigrationService = options.ownerReferenceMigrationService;
   const getOwnerReferenceMigrationService = () =>
@@ -367,6 +381,15 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     controlledArtifacts: getReferenceSourceControlledArtifactStore(),
     opaqueProjector: ownerReferenceWorkbenchOpaqueProjector,
   });
+  const ownerReferencePageAtlasService = new OwnerReferencePageAtlasService({
+    localExtractionWriter: createOwnerLocalExtractionStagingWriter(referenceSourceStagingService),
+    pageAtlasWriter: createReferenceSourcePageAtlasStagingWriter(referenceSourceStagingService),
+    stagingStore: referenceSourceStagingService.store,
+    controlledArtifacts: getReferenceSourceControlledArtifactStore(),
+    parser: options.referencePageAtlasParser ?? new PopplerReferencePageAtlasParser(),
+    sourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
+    opaqueProjector: ownerReferenceWorkbenchOpaqueProjector,
+  });
   const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
     staging: referenceSourceStagingService,
     migration: {
@@ -378,6 +401,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
       stagingStore: referenceSourceStagingService.store,
     }),
     localStudyService: ownerReferenceLocalStudyService,
+    pageAtlasService: ownerReferencePageAtlasService,
   });
   const referenceSourceProtectedOperationAdapter = new ReferenceSourceProtectedOperationAdapter({
     gateway: new ReferenceSourceOperationGateway({
@@ -441,7 +465,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.delete("/arrangements/:id", createArrangementDeleteRoute());
 
   router.get("/workspaces", createWorkspaceListRoute());
-  router.get("/owner", createOwnerStateRoute());
+  router.get("/owner", createOwnerStateRoute(ownerStore));
   router.get("/owner/authority-path-inventory", createAuthorityPathInventoryRoute());
   router.get("/owner/tracked-source-inventory", createTrackedSourceInventoryRoute());
   router.get(
@@ -463,6 +487,14 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/owner/reference-source-workbench/local-study",
     createOwnerReferenceWorkbenchLocalStudyRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/page-atlas",
+    createOwnerReferencePageAtlasOperationRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/page-atlas/preview",
+    createOwnerReferencePageAtlasPreviewRoute(ownerReferenceWorkbenchService)
   );
   router.post(
     "/owner/reference-source-operations/default-decision",
@@ -543,29 +575,38 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     "/owner/knowledge-publication/orphans/:generationId",
     createKnowledgePublicationOrphanReclaimRoute(knowledgePublicationStore)
   );
-  router.post("/owner/choices", createOwnerChoiceRoute());
+  router.post("/owner/choices", createOwnerChoiceRoute(ownerStore));
   router.post(
     "/owner/personal-default-candidates/:id/approve",
-    createDefaultCandidateDecisionRoute("approve")
+    createDefaultCandidateDecisionRoute("approve", ownerStore)
   );
-  router.post("/owner/personal-default-candidates", createDefaultCandidateProposalRoute());
-  router.patch("/owner/personal-default-candidates/:id", createDefaultCandidateCorrectionRoute());
+  router.post(
+    "/owner/personal-default-candidates",
+    createDefaultCandidateProposalRoute(ownerStore)
+  );
+  router.patch(
+    "/owner/personal-default-candidates/:id",
+    createDefaultCandidateCorrectionRoute(ownerStore)
+  );
   router.post(
     "/owner/personal-default-candidates/:id/reject",
-    createDefaultCandidateDecisionRoute("reject")
+    createDefaultCandidateDecisionRoute("reject", ownerStore)
   );
-  router.post("/owner/personal-defaults/:id/release", createDefaultReleaseRoute());
+  router.post("/owner/personal-defaults/:id/release", createDefaultReleaseRoute(ownerStore));
   router.post("/owner/references", createLegacyOwnerReferenceQuarantineRoute());
-  router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute());
-  router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute());
+  router.post("/owner/knowledge-candidates", createKnowledgeCandidateRoute(ownerStore));
+  router.post("/owner/knowledge-promotions", createKnowledgePromotionRoute(ownerStore));
   router.post("/owner/intent-proposals", createOwnerIntentClassificationRoute());
   router.post(
     "/workspaces/:workspaceId/plan-conflicts/:conflictId/resolution",
     createPlanConflictResolutionRoute()
   );
-  router.post("/owner/knowledge-candidates/:id/reject", createKnowledgeRejectionRoute());
-  router.patch("/owner/knowledge-candidates/:id", createKnowledgeCorrectionRoute());
-  router.post("/owner/historical-practice-claims/:id/release", createHistoricalClaimReleaseRoute());
+  router.post("/owner/knowledge-candidates/:id/reject", createKnowledgeRejectionRoute(ownerStore));
+  router.patch("/owner/knowledge-candidates/:id", createKnowledgeCorrectionRoute(ownerStore));
+  router.post(
+    "/owner/historical-practice-claims/:id/release",
+    createHistoricalClaimReleaseRoute(ownerStore)
+  );
   router.post("/workspaces", createWorkspaceCreateRoute());
   router.get("/workspaces/:workspaceId", createWorkspaceGetRoute());
   router.get("/workspaces/:workspaceId/navigation", createWorkspaceNavigationRoute());
@@ -669,7 +710,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     "/workspaces/:workspaceId/transcriptions/:transcriptionId/review",
     createTranscriptionReviewRoute()
   );
-  router.post("/workspaces/:workspaceId/arrangements", createFaithfulArrangementRoute());
+  router.post(
+    "/workspaces/:workspaceId/arrangements",
+    createFaithfulArrangementRoute({ ownerStore })
+  );
   router.get(
     "/workspaces/:workspaceId/arrangements/:arrangementId/evaluation-card",
     createNarrowEvaluationCardRoute()
@@ -830,6 +874,8 @@ type CreateAppOptions = {
   ownerReferenceMigrationPrivateRootDirectory?: string;
   ownerReferenceWorkbenchPrivateRootDirectory?: string;
   ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
+  referencePageAtlasParser?: ReferencePageAtlasParser;
+  referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
   referenceSourceProtectedOperationSinks?: ReferenceSourceProtectedOperationSinks;
 };
 
@@ -894,6 +940,8 @@ export function createApp(options: CreateAppOptions = {}) {
       ownerReferenceWorkbenchPrivateRootDirectory:
         options.ownerReferenceWorkbenchPrivateRootDirectory,
       ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
+      referencePageAtlasParser: options.referencePageAtlasParser,
+      referencePageAtlasSourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
       referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
     })
   );
@@ -934,6 +982,8 @@ export function startServer(
     ownerReferenceWorkbenchPrivateRootDirectory:
       options.ownerReferenceWorkbenchPrivateRootDirectory,
     ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
+    referencePageAtlasParser: options.referencePageAtlasParser,
+    referencePageAtlasSourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
     referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
   });
   const server = createServer(app);

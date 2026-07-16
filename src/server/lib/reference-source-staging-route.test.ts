@@ -14,6 +14,7 @@ import {
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
 import { createApp } from "../index.js";
+import { KnowledgePublicationStore } from "./knowledge-publication-store.js";
 import {
   OWNER_REFERENCE_UPLOAD_PROCESSING_POLICY_REF,
   ReferenceSourceStagingService,
@@ -124,7 +125,13 @@ describe("reference-source staging HTTP boundary", () => {
       createApp({
         referenceSourceStagingService: staging,
         referenceSourceControlledArtifactStore: controlled,
-        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench"),
+        knowledgePublicationStore: new KnowledgePublicationStore({
+          rootDirectory: path.join(rootDirectory, "knowledge-publication"),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(rootDirectory, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(rootDirectory, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x53),
       })
     );
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -584,7 +591,22 @@ async function startServer(
     now: () => new Date(NOW),
   })
 ): Promise<Server> {
-  const server = createServer(createApp({ referenceSourceStagingService: service }));
+  const ownerRuntimeRoot = path.join(rootDirectory, ".http-owner-runtime");
+  const server = createServer(
+    createApp({
+      referenceSourceStagingService: service,
+      referenceSourceControlledArtifactStore: new ReferenceSourceControlledArtifactStore({
+        rootDirectory: path.join(ownerRuntimeRoot, "controlled-artifacts"),
+      }),
+      knowledgePublicationStore: new KnowledgePublicationStore({
+        rootDirectory: path.join(ownerRuntimeRoot, "knowledge-publication"),
+      }),
+      ownerReferenceMigrationOwnerRootDirectory: path.join(ownerRuntimeRoot, "owner"),
+      ownerReferenceMigrationPrivateRootDirectory: path.join(ownerRuntimeRoot, "migration-private"),
+      ownerReferenceWorkbenchPrivateRootDirectory: path.join(ownerRuntimeRoot, "workbench-private"),
+      ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x53),
+    })
+  );
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   servers.push(server);
   return server;

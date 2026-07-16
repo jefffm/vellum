@@ -18,13 +18,20 @@ import {
   ReferenceSourceStagingStore,
 } from "./reference-source-staging-store.js";
 import {
+  OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF,
+  OWNER_LOCAL_EXTRACTION_POLICY_REF,
+  OWNER_LOCAL_EXTRACTION_RATIONALE,
   ReferenceSourceStagingMigrationRequiredError,
   ReferenceSourceStagingService,
+  createOwnerLocalExtractionStagingWriter,
+  createReferenceSourcePageAtlasStagingWriter,
 } from "./reference-source-staging-service.js";
 
 const ASSERTED_AT = "2026-07-15T12:00:00.000Z";
 const SERVER_TIME = "2026-07-15T13:00:00.000Z";
 const MALICIOUS_CLIENT_TIME = "1999-01-01T00:00:00.000Z";
+const OWNER_ATTESTED_EXTRACTION_PURPOSE =
+  "Build a bounded Page Atlas for this exact private source.";
 
 const roots: string[] = [];
 
@@ -531,6 +538,168 @@ describe("ReferenceSourceStagingService integrity", () => {
     expect(service.readCurrent()).toEqual(before);
   });
 
+  it("protects an exact Page Atlas, cited extraction, and immutable correction lineage", () => {
+    const { service } = harness();
+    const graph = baseGraph();
+    let current = service.applyTransaction(transaction("page-atlas-base", graph.records));
+    const authorization = localExtractionAuthorization(graph.acquisitionA, headRef(current));
+    expect(() => service.applyTransaction(authorization.transaction)).toThrow(/server-minted/);
+    current = createOwnerLocalExtractionStagingWriter(service).applyTransaction(
+      authorization.transaction
+    );
+
+    const protectedGraph = pageAtlasGraph(graph, authorization.decision);
+    expect(() =>
+      service.applyTransaction(
+        transaction(
+          "generic-protected-record",
+          [protectedGraph.identityResolution],
+          headRef(current)
+        )
+      )
+    ).toThrow(/server-minted/);
+
+    const pageAtlasWriter = createReferenceSourcePageAtlasStagingWriter(service);
+    current = pageAtlasWriter.applyTransaction(
+      transaction("protected-page-atlas", protectedGraph.records, headRef(current))
+    );
+    expect(current.snapshot?.records).toContainEqual(protectedGraph.mappingProposal);
+    expect(current.snapshot?.records).toContainEqual(protectedGraph.courseThirteenQuestion);
+
+    const genericAttachedSegment = record({
+      ...withoutDigest(protectedGraph.segment),
+      id: "segment.generic-attachment",
+    });
+    expect(() =>
+      service.applyTransaction(
+        transaction("generic-atlas-segment", [genericAttachedSegment], headRef(current))
+      )
+    ).toThrow(/protected local Page Atlas/);
+    const opaqueAtlasSegment = record({
+      ...withoutDigest(genericAttachedSegment),
+      id: "segment.opaque-atlas-via-protected-writer",
+      pageAtlasRef: externalRef("page-atlas.opaque-legacy"),
+    });
+    expect(() =>
+      pageAtlasWriter.applyTransaction(
+        transaction("opaque-atlas-segment", [opaqueAtlasSegment], headRef(current))
+      )
+    ).toThrow(/requires every new source segment/);
+
+    const modalityMismatch = record({
+      ...withoutDigest(protectedGraph.extraction),
+      id: "cited-extraction.modality-mismatch",
+      anchors: protectedGraph.extraction.anchors.map((anchor) =>
+        anchor.kind === "image" ? { ...anchor, regionIds: ["region.p75.text"] } : anchor
+      ),
+    });
+    expect(() =>
+      pageAtlasWriter.applyTransaction(
+        transaction("modality-mismatch", [modalityMismatch], headRef(current))
+      )
+    ).toThrow(/atlas-region modality/);
+
+    const corrected = correctedPageAtlasGraph(protectedGraph, authorization.decision);
+    current = pageAtlasWriter.applyTransaction(
+      transaction("corrected-page-atlas", corrected.records, headRef(current), SERVER_TIME)
+    );
+    expect(current.snapshot?.records).toContainEqual(protectedGraph.atlas);
+    expect(current.snapshot?.records).toContainEqual(protectedGraph.extraction);
+    expect(current.snapshot?.records).toContainEqual(corrected.atlas);
+    expect(current.snapshot?.records).toContainEqual(corrected.extraction);
+    expect(current.snapshot?.records).toContainEqual(corrected.citationSuccessor);
+
+    const contradictoryCoverage = record({
+      ...withoutDigest(protectedGraph.atlas),
+      id: "atlas.contradictory-coverage",
+      coverage: "complete",
+      processedScanRanges: [],
+      unprocessedScanRanges: [{ start: 1, end: 1 }],
+      canvases: [],
+    });
+    expect(() =>
+      pageAtlasWriter.applyTransaction(
+        transaction("contradictory-coverage", [contradictoryCoverage], headRef(current))
+      )
+    ).toThrow(/coverage contradicts/);
+  });
+
+  it("accepts only an interrupted initial Page Atlas attempt without a basis or output", () => {
+    const { service } = harness();
+    const graph = baseGraph();
+    let current = service.applyTransaction(transaction("initial-interruption-base", graph.records));
+    const authorization = localExtractionAuthorization(graph.acquisitionA, headRef(current));
+    current = createOwnerLocalExtractionStagingWriter(service).applyTransaction(
+      authorization.transaction
+    );
+    const protectedGraph = pageAtlasGraph(graph, authorization.decision);
+    const { outputAtlasRef: _outputAtlasRef, ...attemptWithoutOutput } = withoutDigest(
+      protectedGraph.attempt
+    );
+    const interruptedInitial = record({
+      ...attemptWithoutOutput,
+      status: "interrupted",
+      failureCode: "interrupted",
+    });
+
+    const accepted = createReferenceSourcePageAtlasStagingWriter(service).applyTransaction(
+      transaction("initial-interruption", [interruptedInitial], headRef(current))
+    );
+
+    expect(accepted.snapshot?.records).toContainEqual(interruptedInitial);
+    expect(interruptedInitial).not.toHaveProperty("basisAtlasRef");
+    expect(interruptedInitial).not.toHaveProperty("outputAtlasRef");
+  });
+
+  it("rejects attempts that try to broaden the no-output initial-interruption exception", () => {
+    const { service } = harness();
+    const graph = baseGraph();
+    let current = service.applyTransaction(transaction("narrow-interruption-base", graph.records));
+    const authorization = localExtractionAuthorization(graph.acquisitionA, headRef(current));
+    current = createOwnerLocalExtractionStagingWriter(service).applyTransaction(
+      authorization.transaction
+    );
+    const protectedGraph = pageAtlasGraph(graph, authorization.decision);
+    const writer = createReferenceSourcePageAtlasStagingWriter(service);
+    const { outputAtlasRef: _outputAtlasRef, ...attemptWithoutOutput } = withoutDigest(
+      protectedGraph.attempt
+    );
+    const completedInitial = record({ ...attemptWithoutOutput, id: "attempt.no-output.completed" });
+
+    expect(() =>
+      writer.applyTransaction(
+        transaction("completed-initial-without-output", [completedInitial], headRef(current))
+      )
+    ).toThrow(/must retain its bounded output/);
+    expect(service.readCurrent()).toEqual(current);
+
+    current = writer.applyTransaction(
+      transaction("narrow-interruption-atlas", protectedGraph.records, headRef(current))
+    );
+    const interruptedCorrection = record({
+      ...attemptWithoutOutput,
+      id: "attempt.no-output.interrupted-correction",
+      attemptKind: "correction",
+      basisAtlasRef: ref(protectedGraph.atlas),
+      status: "interrupted",
+      failureCode: "interrupted",
+      startedAt: SERVER_TIME,
+      endedAt: SERVER_TIME,
+    });
+
+    expect(() =>
+      writer.applyTransaction(
+        transaction(
+          "interrupted-correction-without-output",
+          [interruptedCorrection],
+          headRef(current),
+          SERVER_TIME
+        )
+      )
+    ).toThrow(/must retain its bounded output/);
+    expect(service.readCurrent()).toEqual(current);
+  });
+
   it("can advance an empty legacy snapshot without inventing prior record order", () => {
     const graph = baseGraph();
     const { service } = legacyHarness([]);
@@ -764,6 +933,414 @@ function baseGraph() {
     identityEdge,
     transitiveEdge,
     substitution,
+  };
+}
+
+function localExtractionAuthorization(
+  acquisitionRecord: ReferenceSourceStagingRecord,
+  expectedHeadRef: ReferenceRecordRef
+) {
+  const suffix = "0123456789abcdef0123456789abcdef";
+  const rights = record({
+    recordKind: "rights_assertion",
+    id: `rights-assertion.owner-local-extraction.${suffix}`,
+    version: 1,
+    subjectRef: ref(acquisitionRecord),
+    subjectKind: "asset_acquisition",
+    rightsKind: "local_extraction",
+    status: "permitted",
+    claimant: {
+      kind: "owner",
+      claimantRef: OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF,
+    },
+    evidenceRefs: [externalRef(`owner-reference-local-extraction-scope.${suffix}`)],
+    assertedAt: ASSERTED_AT,
+  });
+  const decision = record({
+    recordKind: "access_decision",
+    id: `access-decision.owner-local-extraction.${suffix}`,
+    version: 1,
+    outcome: "allow",
+    operation: "local_extraction",
+    sourceRefs: [ref(acquisitionRecord)],
+    derivativeRefs: [],
+    destination: { kind: "local_runtime" },
+    purpose: OWNER_ATTESTED_EXTRACTION_PURPOSE,
+    policyRef: OWNER_LOCAL_EXTRACTION_POLICY_REF,
+    rightsAssertionRefs: [ref(rights)],
+    authorityRefs: [OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF],
+    rationale: OWNER_LOCAL_EXTRACTION_RATIONALE,
+    decidedAt: ASSERTED_AT,
+  });
+  const transactionValue = {
+    schemaVersion: 1,
+    id: `transaction.owner-local-extraction.${suffix}`,
+    expectedHeadRef,
+    operations: [rights, decision].map((entry) => ({ type: "append_record", record: entry })),
+    submittedAt: ASSERTED_AT,
+  } as ReferenceSourceStagingTransaction;
+  return { rights, decision, transaction: transactionValue };
+}
+
+function pageAtlasGraph(
+  graph: ReturnType<typeof baseGraph>,
+  localExtractionDecision: ReferenceSourceStagingRecord
+) {
+  const identity = record({
+    recordKind: "identity_assertion",
+    id: "identity.mace-page-atlas-fixture",
+    version: 1,
+    subjectRef: ref(graph.work),
+    subjectKind: "work",
+    property: "preferred_title",
+    assertedValue: { kind: "text", value: "Mace page-atlas development fixture" },
+    claimant: { kind: "reviewer", claimantRef: externalRef("reviewer.source-identity") },
+    evidenceRefs: [externalRef("evidence.source-identity")],
+    confidence: {
+      kind: "assessed",
+      value: 0.95,
+      basis: "Compared with the rights-approved development fixture catalog record",
+      evidenceRefs: [externalRef("evidence.source-identity")],
+    },
+    completeness: "complete",
+    composition: "atomic",
+    componentAssertionRefs: [],
+    assertionState: "reviewed",
+    predecessorAssertionRefs: [],
+    successorRelationship: "initial",
+    conflictAssertionRefs: [],
+    assertedAt: ASSERTED_AT,
+  });
+  const identityResolution = record({
+    recordKind: "asset_identity_resolution",
+    id: "asset-identity.mace-page-atlas-fixture",
+    version: 1,
+    digitalAssetRef: ref(graph.asset),
+    acquisitionRefs: [ref(graph.acquisitionA)],
+    workRef: ref(graph.work),
+    manifestationRef: ref(graph.manifestation),
+    exemplarRefs: [ref(graph.exemplar)],
+    identityAssertionRefs: [ref(identity)],
+    resolutionState: "resolved",
+    reviewState: "reviewed",
+    resolverRef: externalRef("resolver.source-identity"),
+    evidenceRefs: [externalRef("evidence.source-identity")],
+    recordedAt: ASSERTED_AT,
+  });
+  const canvas = {
+    canvasId: "canvas.printed-page-75",
+    scanOrder: 1,
+    scanLocator: "scan-order-1",
+    coordinateSystem: "source-pixels-top-left",
+    widthPixels: 1200,
+    heightPixels: 1800,
+    rotationDegrees: 0,
+    conditions: [],
+    locators: [
+      {
+        kind: "printed_page",
+        sequenceId: "sequence.printed-pages",
+        label: "75",
+        ordinal: 75,
+      },
+      {
+        kind: "internal_sequence",
+        sequenceId: "sequence.scan-order",
+        label: "1",
+        ordinal: 1,
+      },
+    ],
+    regions: [
+      {
+        id: "region.p75.image",
+        x: 40,
+        y: 40,
+        width: 1120,
+        height: 1720,
+        unit: "pixel",
+        modality: "image",
+      },
+      {
+        id: "region.p75.text",
+        x: 100,
+        y: 100,
+        width: 1000,
+        height: 400,
+        unit: "pixel",
+        modality: "text",
+      },
+      {
+        id: "region.p75.notation",
+        x: 100,
+        y: 600,
+        width: 1000,
+        height: 800,
+        unit: "pixel",
+        modality: "notation",
+      },
+    ],
+  } as const;
+  const atlas = record({
+    recordKind: "page_atlas_version",
+    id: "page-atlas.mace-page-75",
+    version: 1,
+    digitalAssetRef: ref(graph.asset),
+    acquisitionRefs: [ref(graph.acquisitionA)],
+    accessDecisionRef: ref(localExtractionDecision),
+    componentRef: externalRef("component.page-atlas-parser.v1"),
+    configurationDigest: "1".repeat(64),
+    resourcePolicyRef: externalRef("resource-policy.page-atlas-bounded.v1"),
+    coverage: "complete",
+    canvasCount: 1,
+    processedScanRanges: [{ start: 1, end: 1 }],
+    unprocessedScanRanges: [],
+    canvases: [canvas],
+    createdAt: ASSERTED_AT,
+  });
+  const attempt = record({
+    recordKind: "page_atlas_attempt",
+    id: "page-atlas-attempt.mace-page-75.initial",
+    attemptKind: "initial",
+    digitalAssetRef: ref(graph.asset),
+    acquisitionRefs: [ref(graph.acquisitionA)],
+    accessDecisionRef: ref(localExtractionDecision),
+    componentRef: atlas.componentRef,
+    configurationDigest: atlas.configurationDigest,
+    resourcePolicyRef: atlas.resourcePolicyRef,
+    outputAtlasRef: ref(atlas),
+    status: "completed",
+    redactedDiagnosticRefs: [],
+    startedAt: ASSERTED_AT,
+    endedAt: SERVER_TIME,
+  });
+  const segmentRegions = canvas.regions.map(({ modality: _modality, ...region }) => region);
+  const segment = record({
+    recordKind: "source_segment_version",
+    id: "source-segment.mace-page-75",
+    version: 1,
+    digitalAssetRef: ref(graph.asset),
+    acquisitionRefs: [ref(graph.acquisitionA)],
+    provenancePathRefs: [ref(graph.acquisitionA)],
+    pageAtlasRef: ref(atlas),
+    canvasId: canvas.canvasId,
+    printedLocator: "75",
+    scanLocator: canvas.scanLocator,
+    coordinateSystem: canvas.coordinateSystem,
+    regionTransforms: [],
+    regions: segmentRegions,
+    musicalRange: "twelve-course diapason signs",
+    modality: "mixed",
+    sourceImageRef: ref(graph.asset),
+    cropDigest: "2".repeat(64),
+  });
+  const notationTokens = [
+    [7, "a"],
+    [8, "/a"],
+    [9, "//a"],
+    [10, "///a"],
+    [11, "4"],
+    [12, "5"],
+  ].map(([course, value], index) => ({
+    id: `token.diapason-${index + 1}`,
+    course,
+    value,
+    regionId: "region.p75.notation",
+  }));
+  const extraction = record({
+    recordKind: "cited_extraction_version",
+    id: "cited-extraction.mace-page-75",
+    version: 1,
+    sourceSegmentRefs: [ref(segment)],
+    accessDecisionRefs: [ref(localExtractionDecision)],
+    componentRef: externalRef("component.cited-extractor.v1"),
+    configurationDigest: "3".repeat(64),
+    anchors: [
+      {
+        id: "anchor.p75.image",
+        kind: "image",
+        sourceSegmentRef: ref(segment),
+        regionIds: ["region.p75.image"],
+      },
+      {
+        id: "anchor.p75.text",
+        kind: "text",
+        sourceSegmentRef: ref(segment),
+        regionIds: ["region.p75.text"],
+      },
+      {
+        id: "anchor.p75.notation",
+        kind: "notation",
+        sourceSegmentRef: ref(segment),
+        regionIds: ["region.p75.notation"],
+        tokenIds: notationTokens.map(({ id }) => id),
+      },
+    ],
+    originalTranscription: "a /a //a ///a 4 5",
+    normalizedTranscription: "courses 7-12: a /a //a ///a 4 5",
+    notationTokens,
+    confidence: {
+      extraction: { kind: "unknown" },
+      sourceIdentity: { kind: "unknown" },
+      interpretation: { kind: "unknown" },
+      applicability: { kind: "unknown" },
+    },
+    unresolvedAlternatives: ["Course thirteen notation remains unresolved"],
+    reviewState: "proposed",
+    createdAt: ASSERTED_AT,
+  });
+  const proposalBase = {
+    recordKind: "extraction_proposal",
+    version: 1,
+    citedExtractionRef: ref(extraction),
+    scope: {
+      instrument: "baroque_lute",
+      notationSystem: "french_tablature",
+      sourceCourseCount: 12,
+    },
+    reviewState: "proposed",
+    authorityState: "nonauthoritative",
+    activationAllowed: false,
+    releaseRefs: [],
+    attestationRefs: [],
+    createdAt: ASSERTED_AT,
+  } as const;
+  const mappingProposal = record({
+    ...proposalBase,
+    id: "extraction-proposal.mace-twelve-course",
+    proposal: {
+      kind: "twelve_course_diapason_mapping",
+      courses: [7, 8, 9, 10, 11, 12],
+      symbols: ["a", "/a", "//a", "///a", "4", "5"],
+      numericSymbolsHaveSlashes: false,
+    },
+  });
+  const courseThirteenQuestion = record({
+    ...proposalBase,
+    id: "extraction-proposal.mace-course-thirteen",
+    proposal: {
+      kind: "course_thirteen_notation_question",
+      course: 13,
+      state: "unresolved",
+      forbiddenInference: "sequence_extrapolation",
+    },
+  });
+  return {
+    records: [
+      identity,
+      identityResolution,
+      atlas,
+      attempt,
+      segment,
+      extraction,
+      mappingProposal,
+      courseThirteenQuestion,
+    ],
+    identity,
+    identityResolution,
+    atlas,
+    attempt,
+    segment,
+    extraction,
+    mappingProposal,
+    courseThirteenQuestion,
+  };
+}
+
+function correctedPageAtlasGraph(
+  original: ReturnType<typeof pageAtlasGraph>,
+  localExtractionDecision: ReferenceSourceStagingRecord
+) {
+  const originalCanvas = original.atlas.canvases[0]!;
+  const correctedCanvas = {
+    ...originalCanvas,
+    regions: originalCanvas.regions.map((region) =>
+      region.id === "region.p75.notation" ? { ...region, x: region.x + 1 } : region
+    ),
+  };
+  const atlas = record({
+    ...withoutDigest(original.atlas),
+    version: 2,
+    parentVersionRef: {
+      id: original.atlas.id,
+      version: original.atlas.version,
+      digest: original.atlas.digest,
+    },
+    canvases: [correctedCanvas],
+    createdAt: SERVER_TIME,
+  });
+  const correction = record({
+    recordKind: "page_atlas_correction",
+    id: "page-atlas-correction.mace-page-75.v2",
+    priorAtlasRef: ref(original.atlas),
+    successorAtlasRef: ref(atlas),
+    changedCanvasIds: [correctedCanvas.canvasId],
+    evidenceRefs: [externalRef("evidence.page-atlas-correction")],
+    correctedByRef: externalRef("reviewer.page-atlas"),
+    rationale: "Corrected the notation-region x coordinate without rewriting prior citations",
+    correctedAt: SERVER_TIME,
+  });
+  const attempt = record({
+    recordKind: "page_atlas_attempt",
+    id: "page-atlas-attempt.mace-page-75.correction",
+    attemptKind: "correction",
+    digitalAssetRef: original.atlas.digitalAssetRef,
+    acquisitionRefs: original.atlas.acquisitionRefs,
+    accessDecisionRef: ref(localExtractionDecision),
+    componentRef: original.atlas.componentRef,
+    configurationDigest: original.atlas.configurationDigest,
+    resourcePolicyRef: original.atlas.resourcePolicyRef,
+    basisAtlasRef: ref(original.atlas),
+    outputAtlasRef: ref(atlas),
+    status: "completed",
+    redactedDiagnosticRefs: [],
+    startedAt: SERVER_TIME,
+    endedAt: SERVER_TIME,
+  });
+  const segment = record({
+    ...withoutDigest(original.segment),
+    version: 2,
+    parentVersionRef: {
+      id: original.segment.id,
+      version: original.segment.version,
+      digest: original.segment.digest,
+    },
+    pageAtlasRef: ref(atlas),
+    regions: correctedCanvas.regions.map(({ modality: _modality, ...region }) => region),
+  });
+  const extraction = record({
+    ...withoutDigest(original.extraction),
+    version: 2,
+    parentVersionRef: {
+      id: original.extraction.id,
+      version: original.extraction.version,
+      digest: original.extraction.digest,
+    },
+    sourceSegmentRefs: [ref(segment)],
+    anchors: original.extraction.anchors.map((anchor) => ({
+      ...anchor,
+      sourceSegmentRef: ref(segment),
+    })),
+    createdAt: SERVER_TIME,
+  });
+  const citationSuccessor = record({
+    recordKind: "citation_successor",
+    id: "citation-successor.mace-page-75.v2",
+    atlasCorrectionRef: ref(correction),
+    priorSegmentRef: ref(original.segment),
+    successorSegmentRef: ref(segment),
+    extractionTransition: "mapped_successor",
+    priorCitedExtractionRefs: [ref(original.extraction)],
+    successorCitedExtractionRefs: [ref(extraction)],
+    createdAt: SERVER_TIME,
+  });
+  return {
+    records: [atlas, correction, attempt, segment, extraction, citationSuccessor],
+    atlas,
+    correction,
+    attempt,
+    segment,
+    extraction,
+    citationSuccessor,
   };
 }
 

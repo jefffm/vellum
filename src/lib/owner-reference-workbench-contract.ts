@@ -77,13 +77,27 @@ export const OwnerReferenceWorkbenchCardSchema = Type.Object(
     migration: Type.Union([OwnerReferenceWorkbenchMigrationSchema, Type.Null()]),
     mediaType: Type.String({ minLength: 1 }),
     byteLength: Type.Integer({ minimum: 0 }),
-    identity: Type.Object(
-      {
-        state: Type.Literal("unresolved"),
-        explanation: Type.String({ minLength: 1 }),
-      },
-      Strict
-    ),
+    identity: Type.Union([
+      Type.Object(
+        {
+          state: Type.Literal("unresolved"),
+          explanation: Type.String({ minLength: 1 }),
+        },
+        Strict
+      ),
+      Type.Object(
+        {
+          state: Type.Union([
+            Type.Literal("candidate"),
+            Type.Literal("reviewed"),
+            Type.Literal("disputed"),
+          ]),
+          resolutionCount: Type.Integer({ minimum: 1 }),
+          explanation: Type.String({ minLength: 1 }),
+        },
+        Strict
+      ),
+    ]),
     rights: Type.Object(
       {
         state: Type.Union([Type.Literal("unasserted"), Type.Literal("recorded")]),

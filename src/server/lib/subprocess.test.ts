@@ -1,11 +1,14 @@
 import { access, chmod, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { setTimeout as delay } from "node:timers/promises";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  buildRestrictedSandboxLaunch,
   isTrustedExecutableResolution,
   resolveTrustedExecutable,
   runSubprocess,
+  SubprocessAbortedError,
   SubprocessError,
   SubprocessLimitError,
 } from "./subprocess.js";
@@ -144,6 +147,245 @@ describe("SubprocessRunner", () => {
     });
 
     expect(result.stdout).toBe(bytes.toString("hex"));
+  });
+
+  it.runIf(process.platform === "darwin")(
+    "runs local work while the OS sandbox denies socket egress",
+    async () => {
+      const local = await runSubprocess({
+        command: process.execPath,
+        args: ["-e", "process.stdout.write('local-only')"],
+        networkAccess: "deny",
+      });
+      expect(local).toMatchObject({ exitCode: 0, stdout: "local-only" });
+
+      const socket = await runSubprocess({
+        command: process.execPath,
+        args: [
+          "-e",
+          "const s=require('node:net').connect({host:'127.0.0.1',port:9});s.once('connect',()=>process.exit(3));s.once('error',e=>{process.stdout.write(String(e.code));process.exit(e.code==='EPERM'?0:4)});setTimeout(()=>process.exit(5),1000)",
+        ],
+        networkAccess: "deny",
+      });
+      expect(socket).toMatchObject({ exitCode: 0, stdout: "EPERM" });
+    }
+  );
+
+  it.runIf(process.platform === "darwin")(
+    "restricts an untrusted child to its disposable inputs and exact outputs",
+    async () => {
+      const canaryDirectory = await mkdtemp(path.join(homedir(), ".vellum-sandbox-canary-"));
+      const canary = path.join(canaryDirectory, "owner-secret.txt");
+      try {
+        await writeFile(canary, "owner-secret");
+        const result = await runSubprocess({
+          command: process.execPath,
+          args: [
+            "-e",
+            [
+              "const fs=require('node:fs');",
+              "const cp=require('node:child_process');",
+              "const outcomes=[];",
+              "try{fs.readFileSync(process.argv[1]);outcomes.push('ambient-read')}catch(e){outcomes.push(e.code)}",
+              "try{fs.writeFileSync('undeclared.out','bad');outcomes.push('ambient-write')}catch(e){outcomes.push(e.code)}",
+              "const nested=cp.spawnSync('/usr/bin/true');outcomes.push(nested.error?.code??'nested-exec');",
+              "fs.writeFileSync('allowed.out','allowed');",
+              "process.stdout.write(JSON.stringify(outcomes));",
+            ].join(""),
+            canary,
+          ],
+          outputGlobs: ["*.out"],
+          writableOutputFiles: ["allowed.out"],
+          maxOutputFiles: 1,
+          maxOutputFileBytes: 1_024,
+          maxOutputTotalBytes: 1_024,
+          maxScannedEntries: 4,
+          maxAddressSpaceBytes: 768 * 1_024 * 1_024,
+          maxCpuSeconds: 5,
+          maxOpenFiles: 64,
+          maxFileWriteBytes: 1_024,
+          networkAccess: "deny",
+          filesystemAccess: "workdir-only",
+        });
+
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(result.files.get("allowed.out")?.toString("utf8")).toBe("allowed");
+        const outcomes = JSON.parse(result.stdout) as string[];
+        expect(outcomes).not.toContain("ambient-read");
+        expect(outcomes).not.toContain("ambient-write");
+        expect(outcomes).not.toContain("nested-exec");
+        expect(outcomes.every((outcome) => outcome === "EPERM" || outcome === "EACCES")).toBe(true);
+      } finally {
+        await rm(canaryDirectory, { recursive: true, force: true });
+      }
+    }
+  );
+
+  it("aborts the whole process group so descendants cannot outlive cancellation", async () => {
+    const markerDirectory = await mkdtemp(path.join(tmpdir(), "vellum-abort-marker-"));
+    const marker = path.join(markerDirectory, "descendant-survived");
+    const controller = new AbortController();
+    try {
+      const pending = runSubprocess(
+        {
+          command: process.execPath,
+          args: [
+            "-e",
+            [
+              "const {spawn}=require('node:child_process');",
+              "const childScript=\"setTimeout(()=>require(\\'node:fs\\').writeFileSync(process.argv[1],\\'survived\\'),500)\";",
+              "const child=spawn(process.execPath,['-e',childScript,process.argv[1]]);",
+              "child.unref();setInterval(()=>{},1000);",
+            ].join(""),
+            marker,
+          ],
+          timeout: 5_000,
+        },
+        { signal: controller.signal }
+      );
+      setTimeout(() => controller.abort(), 100);
+      await expect(pending).rejects.toBeInstanceOf(SubprocessAbortedError);
+      await delay(750);
+      await expect(access(marker)).rejects.toThrow();
+    } finally {
+      await rm(markerDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("force-kills descendants when the process-group leader exits after SIGTERM", async () => {
+    const markerDirectory = await mkdtemp(path.join(tmpdir(), "vellum-term-exit-marker-"));
+    const ready = path.join(markerDirectory, "descendant-ready");
+    const survived = path.join(markerDirectory, "descendant-survived");
+    const controller = new AbortController();
+    try {
+      const pending = runSubprocess(
+        {
+          command: process.execPath,
+          args: [
+            "-e",
+            [
+              "const {spawn}=require('node:child_process');",
+              "process.on('SIGTERM',()=>process.exit(0));",
+              "const childScript=\"const fs=require('node:fs');process.on('SIGTERM',()=>{});fs.writeFileSync(process.argv[1],'ready');setTimeout(()=>{fs.writeFileSync(process.argv[2],'survived');process.exit(0)},2100)\";",
+              "const child=spawn(process.execPath,['-e',childScript,process.argv[1],process.argv[2]],{stdio:['ignore','inherit','inherit']});",
+              "child.unref();setInterval(()=>{},1000);",
+            ].join(""),
+            ready,
+            survived,
+          ],
+          timeout: 5_000,
+        },
+        { signal: controller.signal }
+      );
+
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        try {
+          await access(ready);
+          break;
+        } catch {
+          if (attempt === 99) throw new Error("descendant did not become ready");
+          await delay(10);
+        }
+      }
+
+      const abortedAt = Date.now();
+      controller.abort();
+      await expect(pending).rejects.toBeInstanceOf(SubprocessAbortedError);
+      expect(Date.now() - abortedAt).toBeLessThan(1_500);
+      await delay(Math.max(0, 2_250 - (Date.now() - abortedAt)));
+      await expect(access(survived)).rejects.toThrow();
+    } finally {
+      await rm(markerDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it.runIf(process.platform === "linux")(
+    "prevents restricted Linux tools from creating descendant processes",
+    async () => {
+      const result = await runSubprocess({
+        command: "python3",
+        args: [
+          "-c",
+          [
+            "import os,sys",
+            "try:",
+            " os.fork()",
+            "except PermissionError:",
+            " print('fork-blocked')",
+            " sys.exit(0)",
+            "sys.exit(9)",
+          ].join("\n"),
+        ],
+        timeout: 5_000,
+        maxAddressSpaceBytes: 512 * 1_024 * 1_024,
+        maxCpuSeconds: 2,
+        maxOpenFiles: 64,
+        maxFileWriteBytes: 0,
+        networkAccess: "deny",
+        filesystemAccess: "workdir-only",
+      });
+
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(result.stdout).toBe("fork-blocked\n");
+    }
+  );
+
+  it("rejects an already-aborted subprocess without launching it", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      runSubprocess({ command: "true", args: [] }, { signal: controller.signal })
+    ).rejects.toBeInstanceOf(SubprocessAbortedError);
+  });
+
+  it.runIf(process.platform === "darwin")(
+    "terminates a process group when the macOS memory watchdog exceeds its budget",
+    async () => {
+      await expect(
+        runSubprocess({
+          command: process.execPath,
+          args: ["-e", "setInterval(()=>{},1000)"],
+          timeout: 5_000,
+          maxAddressSpaceBytes: 1,
+        })
+      ).rejects.toMatchObject({
+        status: 413,
+        code: "request_too_large",
+        details: {
+          resource: "subprocess",
+          resourceLimit: "process_group_memory",
+          limitBytes: 1,
+        },
+      });
+    }
+  );
+
+  it("builds a Linux untrusted-document sandbox without exposing the host root", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "vellum-linux-sandbox-shape-"));
+    const output = path.join(directory, "page.png");
+    try {
+      await writeFile(output, "");
+      const launch = buildRestrictedSandboxLaunch({
+        platform: "linux",
+        sandboxExecutable: "/usr/bin/bwrap",
+        executable: "/usr/bin/pdfinfo",
+        args: ["source.pdf"],
+        workingDir: directory,
+        writableOutputPaths: [output],
+        linuxSeccompFileDescriptor: 42,
+      });
+
+      expect(launch.executable).toBe("/usr/bin/bwrap");
+      expect(launch.args.join(" ")).not.toContain("--ro-bind / /");
+      expect(launch.args).toContain("--unshare-net");
+      expect(launch.args).toContain("--unshare-pid");
+      expect(launch.args).toContain("--seccomp");
+      expect(launch.inheritedFileDescriptors).toEqual([42]);
+      expect(launch.args).toContain("/work");
+      expect(launch.args).not.toContain(homedir());
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 
   it("bounds stdout and stderr while retaining their tails", async () => {

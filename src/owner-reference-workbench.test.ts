@@ -278,7 +278,7 @@ describe("Owner Reference Library Workbench", () => {
     }
   });
 
-  it("keeps local extraction in a future governed workflow without offering study bytes", async () => {
+  it("hands local extraction to the Page Atlas workflow without offering study bytes", async () => {
     const container = document.createElement("div");
     const review = vi.fn(async () => ({
       schemaVersion: 1 as const,
@@ -287,15 +287,30 @@ describe("Owner Reference Library Workbench", () => {
       reasonCode: "owner_private_local_review_required" as const,
     }));
     const study = vi.fn();
-    renderOwnerReferenceWorkbench(container, fixture(), undefined, review, undefined, study);
+    const extract = vi.fn();
+    const snapshot = fixture();
+    renderOwnerReferenceWorkbench(
+      container,
+      snapshot,
+      undefined,
+      review,
+      undefined,
+      study,
+      extract
+    );
     const form = container.querySelector<HTMLFormElement>(".owner-reference-library-local-review")!;
     form.querySelector<HTMLSelectElement>('select[aria-label="Local operation"]')!.value =
       "local_extraction";
     form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 
     await vi.waitFor(() =>
-      expect(form.textContent).toContain("separately governed extraction workflow")
+      expect(form.textContent).toContain("local Page Atlas Workbench is open")
     );
+    expect(extract).toHaveBeenCalledWith({
+      snapshotRef: snapshot.snapshotRef,
+      cardRef: snapshot.references[0]!.cardRef,
+      purpose: "Review this exact private source for local study",
+    });
     expect(
       form.querySelector<HTMLElement>(".owner-reference-library-local-study-authorization")!.hidden
     ).toBe(true);

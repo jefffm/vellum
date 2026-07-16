@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 import {
   mkdtempSync,
   mkdirSync,
@@ -16,7 +16,6 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createApp } from "../../src/server/index.js";
 import {
   canonicalReferenceJson,
   withReferenceRecordDigest,
@@ -35,6 +34,7 @@ import {
   ReferenceSourceControlledArtifactStore,
   ReferenceSourceControlledArtifactStoreConflictError,
 } from "../../src/server/lib/reference-source-controlled-artifact-store.js";
+import { createIsolatedOwnerHttpServer } from "../lib/isolated-owner-runtime.js";
 
 const NOW = "2026-07-15T16:00:00.000Z";
 const LATER = "2026-07-15T16:05:00.000Z";
@@ -1942,7 +1942,7 @@ describe("T09 transactional OwnerReference migration", () => {
     const rawRecordSha256 = sha256(
       readFileSync(path.join(harness.owner.rootDirectory, "references", `${reference.id}.json`))
     );
-    const server = await listen(createApp({ ownerReferenceMigrationService: harness.service }));
+    const server = await listen({ ownerReferenceMigrationService: harness.service });
     servers.push(server);
     const base = address(server);
 
@@ -2023,7 +2023,7 @@ describe("T09 transactional OwnerReference migration", () => {
     expect(() =>
       harness.service.commit({ expectedHead: null, planDigest: plan.planDigest })
     ).toThrow(/interrupt HTTP fixture commit/);
-    const server = await listen(createApp({ ownerReferenceMigrationService: harness.service }));
+    const server = await listen({ ownerReferenceMigrationService: harness.service });
     servers.push(server);
     const base = address(server);
 
@@ -2223,8 +2223,10 @@ function migrationHeadRef(store: KnowledgePublicationStore) {
   return head ? { id: head.generationId, digest: head.digest, revision: head.revision } : null;
 }
 
-async function listen(app: ReturnType<typeof createApp>): Promise<Server> {
-  const server = createServer(app);
+async function listen(
+  options: Parameters<typeof createIsolatedOwnerHttpServer>[0]
+): Promise<Server> {
+  const server = createIsolatedOwnerHttpServer(options);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   return server;
 }

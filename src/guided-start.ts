@@ -48,6 +48,10 @@ import {
   type OwnerReferenceWorkbenchLocalStudyRequest as OwnerReferenceWorkbenchLocalStudyInput,
   type OwnerReferenceWorkbenchLocalStudyResult,
 } from "./owner-reference-workbench.js";
+import {
+  openOwnerReferencePageAtlasWorkbench,
+  type OwnerReferencePageAtlasPreviewResult,
+} from "./owner-reference-page-atlas-workbench.js";
 import type {
   OwnerReferenceWorkbenchLocalOperationReviewRequest,
   OwnerReferenceWorkbenchLocalOperationReviewResult,
@@ -87,6 +91,7 @@ const OWNER_REFERENCE_LOCAL_STUDY_KEY_BYTES = 16;
 const OWNER_REFERENCE_LOCAL_STUDY_HMAC_KEY_BYTES = 32;
 const OWNER_REFERENCE_LOCAL_STUDY_MAX_PENDING = 64;
 const OWNER_REFERENCE_STAGING_SUMMARY_LIMIT = 999;
+const OWNER_REFERENCE_PAGE_ATLAS_PREVIEW_MAX_BYTES = 16 * 1024 * 1024;
 
 export type GuidedDeliverable = {
   workspaceId: string;
@@ -2759,6 +2764,30 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
       return { ...result, workbenchRefresh: "failed" };
     }
   };
+  const extractPrivateReference = (input: OwnerReferenceWorkbenchLocalStudyInput): void => {
+    const operate = (request: unknown, signal?: AbortSignal) =>
+      api<unknown>("/api/owner/reference-source-workbench/page-atlas", {
+        method: "POST",
+        body: JSON.stringify(request),
+        ...(signal ? { signal } : {}),
+      });
+    openOwnerReferencePageAtlasWorkbench(
+      document,
+      {
+        workbenchSnapshotRef: input.snapshotRef,
+        workbenchCardRef: input.cardRef,
+        initialPurpose: input.purpose,
+      },
+      {
+        start: operate,
+        read: operate,
+        resume: operate,
+        cancel: operate,
+        correctMapping: operate,
+        preview: fetchPrivateReferencePageAtlasPreview,
+      }
+    );
+  };
   const refresh = async (
     confirmedOwnerReferenceSnapshot?: OwnerReferenceWorkbenchSnapshot
   ): Promise<OwnerKnowledgeRefreshResult> => {
@@ -2887,7 +2916,8 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         uploadPrivateReference,
         reviewPrivateReferenceLocalOperation,
         resetPrivateReferenceUploadRetryState,
-        studyPrivateReference
+        studyPrivateReference,
+        extractPrivateReference
       );
       const libraryRoot = referenceLibraryWorkbench.querySelector<HTMLElement>(
         ".owner-reference-library-workbench"
@@ -3294,6 +3324,51 @@ async function fetchPrivateReferenceLocalStudy(
   return {
     mediaType: mediaType as OwnerReferenceWorkbenchLocalStudyResult["mediaType"],
     blob: new Blob([bytes], { type: mediaType }),
+  };
+}
+
+async function fetchPrivateReferencePageAtlasPreview(
+  request: unknown
+): Promise<OwnerReferencePageAtlasPreviewResult> {
+  let response: Response;
+  try {
+    response = await window.fetch("/api/owner/reference-source-workbench/page-atlas/preview", {
+      method: "POST",
+      headers: { Accept: "image/png", "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+  } catch {
+    throw new Error("Private Page Atlas preview outcome is uncertain");
+  }
+  if (!response.ok) throw new Error("Private Page Atlas preview is unavailable");
+  const contentLength = response.headers.get("content-length")?.trim();
+  const cacheControl = response.headers.get("cache-control")?.toLowerCase() ?? "";
+  if (
+    response.headers.get("content-type")?.trim().toLowerCase() !== "image/png" ||
+    !contentLength ||
+    !/^[1-9][0-9]{0,7}$/u.test(contentLength) ||
+    Number(contentLength) > OWNER_REFERENCE_PAGE_ATLAS_PREVIEW_MAX_BYTES ||
+    !cacheControl.split(",").some((directive) => directive.trim() === "no-store") ||
+    response.headers.get("x-content-type-options")?.trim().toLowerCase() !== "nosniff" ||
+    response.headers.get("content-disposition")?.trim().toLowerCase() !== "inline" ||
+    response.headers.get("cross-origin-resource-policy")?.trim().toLowerCase() !== "same-origin" ||
+    response.headers.has("content-encoding") ||
+    response.headers.has("etag")
+  ) {
+    throw new Error("Private Page Atlas preview response is invalid");
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (
+    bytes.byteLength !== Number(contentLength) ||
+    bytes.byteLength > OWNER_REFERENCE_PAGE_ATLAS_PREVIEW_MAX_BYTES ||
+    pngSignature.some((value, index) => bytes[index] !== value)
+  ) {
+    throw new Error("Private Page Atlas preview bytes are invalid");
+  }
+  return {
+    mediaType: "image/png",
+    blob: new Blob([bytes], { type: "image/png" }),
   };
 }
 

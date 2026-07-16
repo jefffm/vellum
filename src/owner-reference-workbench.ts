@@ -88,6 +88,9 @@ export type OwnerReferenceWorkbenchLocalStudyResult = Readonly<{
 export type OwnerReferenceWorkbenchLocalStudy = (
   request: OwnerReferenceWorkbenchLocalStudyRequest
 ) => Promise<OwnerReferenceWorkbenchLocalStudyResult>;
+export type OwnerReferenceWorkbenchLocalExtraction = (
+  request: OwnerReferenceWorkbenchLocalStudyRequest
+) => void;
 
 type LocalStudyPreview = Readonly<{
   dialog: HTMLDialogElement;
@@ -103,7 +106,8 @@ export function renderOwnerReferenceWorkbench(
   upload?: OwnerReferenceWorkbenchUpload,
   reviewLocalOperation?: OwnerReferenceWorkbenchLocalReview,
   recoverUploadRetryState?: OwnerReferenceWorkbenchUploadRecovery,
-  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy
+  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy,
+  extractLocalReference?: OwnerReferenceWorkbenchLocalExtraction
 ): OwnerReferenceWorkbenchSnapshot {
   assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
   const snapshot = decodeSnapshot(input);
@@ -143,7 +147,8 @@ export function renderOwnerReferenceWorkbench(
         card,
         snapshot.snapshotRef,
         reviewLocalOperation,
-        studyLocalReference
+        studyLocalReference,
+        extractLocalReference
       )
     );
   root.append(references);
@@ -303,7 +308,8 @@ function renderCard(
   card: OwnerReferenceWorkbenchCard,
   snapshotRef: OwnerReferenceWorkbenchSnapshot["snapshotRef"],
   reviewLocalOperation?: OwnerReferenceWorkbenchLocalReview,
-  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy
+  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy,
+  extractLocalReference?: OwnerReferenceWorkbenchLocalExtraction
 ): HTMLElement {
   const article = document.createElement("article");
   article.className = "owner-reference-library-card";
@@ -365,7 +371,8 @@ function renderCard(
         card,
         snapshotRef,
         reviewLocalOperation,
-        studyLocalReference
+        studyLocalReference,
+        extractLocalReference
       )
     );
   }
@@ -379,7 +386,8 @@ function renderLocalReviewControls(
   card: OwnerReferenceWorkbenchCard,
   snapshotRef: OwnerReferenceWorkbenchSnapshot["snapshotRef"],
   reviewLocalOperation: OwnerReferenceWorkbenchLocalReview,
-  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy
+  studyLocalReference?: OwnerReferenceWorkbenchLocalStudy,
+  extractLocalReference?: OwnerReferenceWorkbenchLocalExtraction
 ): HTMLElement {
   const form = document.createElement("form");
   form.className = "owner-reference-library-local-review";
@@ -464,6 +472,22 @@ function renderLocalReviewControls(
           result.reasonCode === "owner_private_local_review_required"
         ) {
           authorization.offer(exactPurpose);
+        }
+        if (
+          reviewedOperation === "local_extraction" &&
+          result.status === "review_required" &&
+          result.reasonCode === "owner_private_local_review_required"
+        ) {
+          if (!extractLocalReference) {
+            throw new Error("Local Page Atlas Workbench is unavailable");
+          }
+          extractLocalReference({
+            snapshotRef,
+            cardRef: card.cardRef,
+            purpose: exactPurpose,
+          });
+          status.textContent =
+            "Review required · no bytes were read by the metadata review. The local Page Atlas Workbench is open for explicit profile selection and Owner attestation.";
         }
       })
       .catch(() => {

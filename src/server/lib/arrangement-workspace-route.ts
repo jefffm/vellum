@@ -36,13 +36,15 @@ type RouteInput = CreateFaithfulArrangementInput & { workspaceId: string };
 type RouteOptions = {
   store?: WorkspaceStore;
   service?: ArrangementService;
+  ownerStore?: OwnerStore;
 };
 
 export function createFaithfulArrangementRoute(options: RouteOptions = {}): RequestHandler {
   assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
   const store = options.store ?? new WorkspaceStore();
   const service =
-    options.service ?? new ArrangementService({ store, ownerStore: new OwnerStore() });
+    options.service ??
+    new ArrangementService({ store, ownerStore: options.ownerStore ?? new OwnerStore() });
   return createApiRoute<RouteInput, CreateFaithfulArrangementResult>({
     validate: (body, request) => {
       const requestBody = Value.Decode(RequestSchema, body);

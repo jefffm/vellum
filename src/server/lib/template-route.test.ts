@@ -1,7 +1,14 @@
 import { createServer, type Server } from "node:http";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ApiResponse } from "../../lib/api-contract.js";
 import { createApp } from "../index.js";
+import { KnowledgePublicationStore } from "./knowledge-publication-store.js";
+import { ReferenceSourceControlledArtifactStore } from "./reference-source-controlled-artifact-store.js";
+import { ReferenceSourceStagingService } from "./reference-source-staging-service.js";
+import { ReferenceSourceStagingStore } from "./reference-source-staging-store.js";
 
 type ApiEnvelope<T> = ApiResponse<T>;
 
@@ -85,7 +92,33 @@ describe("template API routes", () => {
 });
 
 async function listen(): Promise<Server> {
-  const server = createServer(createApp());
+  const rootDirectory = mkdtempSync(path.join(tmpdir(), "vellum-template-http-owner-"));
+  let server: Server;
+  try {
+    server = createServer(
+      createApp({
+        knowledgePublicationStore: new KnowledgePublicationStore({
+          rootDirectory: path.join(rootDirectory, "knowledge-publication"),
+        }),
+        referenceSourceStagingService: new ReferenceSourceStagingService({
+          store: new ReferenceSourceStagingStore({
+            rootDirectory: path.join(rootDirectory, "reference-source-staging"),
+          }),
+        }),
+        referenceSourceControlledArtifactStore: new ReferenceSourceControlledArtifactStore({
+          rootDirectory: path.join(rootDirectory, "controlled-artifacts"),
+        }),
+        ownerReferenceMigrationOwnerRootDirectory: path.join(rootDirectory, "owner"),
+        ownerReferenceMigrationPrivateRootDirectory: path.join(rootDirectory, "migration-private"),
+        ownerReferenceWorkbenchPrivateRootDirectory: path.join(rootDirectory, "workbench-private"),
+        ownerReferenceWorkbenchOpaqueKey: Buffer.alloc(32, 0x54),
+      })
+    );
+  } catch (error) {
+    rmSync(rootDirectory, { recursive: true, force: true });
+    throw error;
+  }
+  server.once("close", () => rmSync(rootDirectory, { recursive: true, force: true }));
 
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", resolve);

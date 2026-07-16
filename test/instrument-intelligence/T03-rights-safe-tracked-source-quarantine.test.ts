@@ -2,7 +2,6 @@ import { Value } from "@sinclair/typebox/value";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { createServer } from "node:http";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -15,7 +14,7 @@ import {
   resolveTrackedSourceOperation,
   type TrackedSourceInventory,
 } from "../../src/lib/tracked-source-quarantine.js";
-import { createApp } from "../../src/server/index.js";
+import { createIsolatedOwnerHttpServer } from "../lib/isolated-owner-runtime.js";
 
 const TYLER_SHA = "f39bd77758f89ad075dd3225f94a9d06100c0a35bbaf07b5b12c676d0719e331";
 const FOSCARINI_SHA = "9fb1d7b0179cb0008e1fac439f828d08b635a5c15b4c57d6f52022bc3b06008a";
@@ -94,7 +93,7 @@ describe("T03 rights-safe tracked-source quarantine", () => {
   });
 
   it("exposes the validated quarantine inventory through the Owner inspection boundary", async () => {
-    const server = createServer(createApp());
+    const server = createIsolatedOwnerHttpServer();
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     try {
       const address = server.address();

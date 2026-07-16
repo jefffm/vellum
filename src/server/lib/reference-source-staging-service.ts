@@ -10,9 +10,17 @@ import {
   verifyReferenceRecordDigest,
   withReferenceRecordDigest,
   type ReferenceAccessDecision,
+  type ReferenceAssetIdentityResolution,
   type ReferenceAssetAcquisition,
   type ReferenceAssetRoleBinding,
+  type ReferenceCitedExtractionVersion,
+  type ReferenceCitationSuccessor,
   type ReferenceDependencyEdge,
+  type ReferenceDerivativeArtifact,
+  type ReferenceExtractionProposal,
+  type ReferencePageAtlasAttempt,
+  type ReferencePageAtlasCorrection,
+  type ReferencePageAtlasVersion,
   type ReferenceSourceIdentityAssertion,
   type ReferenceSourceDerivation,
   type ReferenceInvalidation,
@@ -23,6 +31,7 @@ import {
   type ReferenceRightsAssertion,
   type ReferenceSourceStagingRecord,
   type ReferenceSourceRecordObservation,
+  type ReferenceSourceSegmentVersion,
   type ReferenceSourceStagingSnapshot,
   type ReferenceSourceStagingTransaction,
 } from "../../lib/reference-source-domain.js";
@@ -92,6 +101,14 @@ const OWNER_PRIVATE_STUDY_AUTHORITY = Object.freeze({ kind: "owner_private_study
 const OWNER_PRIVATE_STUDY_TRANSACTION_ID = /^transaction\.owner-private-study\.([a-f0-9]{32})$/;
 const OWNER_PRIVATE_STUDY_RIGHTS_ID = /^rights-assertion\.owner-private-study\.([a-f0-9]{32})$/;
 const OWNER_PRIVATE_STUDY_DECISION_ID = /^access-decision\.owner-private-study\.([a-f0-9]{32})$/;
+const OWNER_LOCAL_EXTRACTION_AUTHORITY = Object.freeze({ kind: "owner_local_extraction" as const });
+const OWNER_LOCAL_EXTRACTION_TRANSACTION_ID =
+  /^transaction\.owner-local-extraction\.([a-f0-9]{32})$/;
+const OWNER_LOCAL_EXTRACTION_RIGHTS_ID =
+  /^rights-assertion\.owner-local-extraction\.([a-f0-9]{32})$/;
+const OWNER_LOCAL_EXTRACTION_DECISION_ID =
+  /^access-decision\.owner-local-extraction\.([a-f0-9]{32})$/;
+const PAGE_ATLAS_AUTHORITY = Object.freeze({ kind: "page_atlas" as const });
 
 export const OWNER_PRIVATE_LOCAL_STUDY_POLICY_REF: ReferenceRecordRef = Object.freeze({
   id: "policy.owner-private-local-study.v1",
@@ -103,6 +120,16 @@ export const OWNER_LOCAL_STUDY_ATTESTATION_AUTHORITY_REF: ReferenceRecordRef = O
 });
 export const OWNER_PRIVATE_LOCAL_STUDY_RATIONALE =
   "The Owner explicitly attested to byte-for-byte private study on this local runtime; this grants no extraction, egress, export, redistribution, fixture, repository, historical, or specialist authority.";
+export const OWNER_LOCAL_EXTRACTION_POLICY_REF: ReferenceRecordRef = Object.freeze({
+  id: "policy.owner-local-extraction.v1",
+  digest: referenceSourceDigest({ id: "policy.owner-local-extraction.v1" }),
+});
+export const OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF: ReferenceRecordRef = Object.freeze({
+  id: "authority.owner-local-extraction-attestation.v1",
+  digest: referenceSourceDigest({ id: "authority.owner-local-extraction-attestation.v1" }),
+});
+export const OWNER_LOCAL_EXTRACTION_RATIONALE =
+  "The Owner explicitly attested to bounded extraction of this exact acquisition on the local runtime; this grants no provider egress, export, redistribution, fixture, repository, historical, or specialist authority.";
 
 /**
  * Server-minted capability presented only to the controlled-byte ingestion
@@ -141,6 +168,46 @@ export function createOwnerPrivateStudyStagingWriter(
     readCurrent: () => service.readCurrent(),
     applyTransaction: (transaction: ReferenceSourceStagingTransaction) =>
       service.applyOwnerPrivateStudyTransaction(transaction, OWNER_PRIVATE_STUDY_AUTHORITY),
+  });
+}
+
+/** Server-only writer for one exact Owner-attested local-extraction pair. */
+export type OwnerLocalExtractionStagingWriter = Readonly<{
+  readCurrent: () => ReferenceSourceStagingDiagnostics;
+  applyTransaction: (
+    transaction: ReferenceSourceStagingTransaction
+  ) => ReferenceSourceStagingDiagnostics;
+}>;
+
+export function createOwnerLocalExtractionStagingWriter(
+  service: ReferenceSourceStagingService
+): OwnerLocalExtractionStagingWriter {
+  return Object.freeze({
+    readCurrent: () => service.readCurrent(),
+    applyTransaction: (transaction: ReferenceSourceStagingTransaction) =>
+      service.applyOwnerLocalExtractionTransaction(transaction, OWNER_LOCAL_EXTRACTION_AUTHORITY),
+  });
+}
+
+/**
+ * Server-only capability for immutable Page Atlas, cited-extraction, and
+ * nonauthoritative extraction-proposal records. The generic staging route
+ * cannot append any of these protected records.
+ */
+export type ReferenceSourcePageAtlasStagingWriter = Readonly<{
+  readCurrent: () => ReferenceSourceStagingDiagnostics;
+  applyTransaction: (
+    transaction: ReferenceSourceStagingTransaction
+  ) => ReferenceSourceStagingDiagnostics;
+}>;
+
+export function createReferenceSourcePageAtlasStagingWriter(
+  service: ReferenceSourceStagingService
+): ReferenceSourcePageAtlasStagingWriter {
+  return Object.freeze({
+    readCurrent: () => service.readCurrent(),
+    applyTransaction: (transaction: ReferenceSourceStagingTransaction) =>
+      service.applyPageAtlasTransaction(transaction, PAGE_ATLAS_AUTHORITY),
   });
 }
 
@@ -246,9 +313,38 @@ export class ReferenceSourceStagingService {
     return this.applyTransactionWithAuthority(transaction, "owner_private_study");
   }
 
+  applyPageAtlasTransaction(
+    transaction: ReferenceSourceStagingTransaction,
+    authority: unknown
+  ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    if (authority !== PAGE_ATLAS_AUTHORITY) {
+      throw new ReferenceSourceStagingIntegrityError("Page Atlas staging authority is unavailable");
+    }
+    return this.applyTransactionWithAuthority(transaction, "page_atlas");
+  }
+
+  applyOwnerLocalExtractionTransaction(
+    transaction: ReferenceSourceStagingTransaction,
+    authority: unknown
+  ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    if (authority !== OWNER_LOCAL_EXTRACTION_AUTHORITY) {
+      throw new ReferenceSourceStagingIntegrityError(
+        "Owner-local extraction staging authority is unavailable"
+      );
+    }
+    return this.applyTransactionWithAuthority(transaction, "owner_local_extraction");
+  }
+
   private applyTransactionWithAuthority(
     transaction: ReferenceSourceStagingTransaction,
-    authority: "generic" | "controlled_upload" | "owner_private_study"
+    authority:
+      | "generic"
+      | "controlled_upload"
+      | "owner_private_study"
+      | "owner_local_extraction"
+      | "page_atlas"
   ): ReferenceSourceStagingDiagnostics {
     assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     let decodedTransaction: ReferenceSourceStagingTransaction;
@@ -263,12 +359,28 @@ export class ReferenceSourceStagingService {
     if (authority === "controlled_upload") {
       assertCanonicalControlledUploadTransaction(decodedTransaction);
       assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+      assertNoReservedOwnerLocalExtractionProvenance(decodedTransaction);
+      assertNoProtectedPageAtlasRecords(decodedTransaction);
     } else if (authority === "owner_private_study") {
       assertCanonicalOwnerPrivateStudyTransaction(decodedTransaction);
       assertNoReservedControlledUploadProvenance(decodedTransaction);
+      assertNoReservedOwnerLocalExtractionProvenance(decodedTransaction);
+      assertNoProtectedPageAtlasRecords(decodedTransaction);
+    } else if (authority === "owner_local_extraction") {
+      assertCanonicalOwnerLocalExtractionTransaction(decodedTransaction);
+      assertNoReservedControlledUploadProvenance(decodedTransaction);
+      assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+      assertNoProtectedPageAtlasRecords(decodedTransaction);
+    } else if (authority === "page_atlas") {
+      assertCanonicalPageAtlasTransaction(decodedTransaction);
+      assertNoReservedControlledUploadProvenance(decodedTransaction);
+      assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+      assertNoReservedOwnerLocalExtractionProvenance(decodedTransaction);
     } else {
       assertNoReservedControlledUploadProvenance(decodedTransaction);
       assertNoReservedOwnerPrivateStudyProvenance(decodedTransaction);
+      assertNoReservedOwnerLocalExtractionProvenance(decodedTransaction);
+      assertNoProtectedPageAtlasRecords(decodedTransaction);
     }
     const currentState = this.store.readCurrentState();
     const current = currentState?.snapshot ?? null;
@@ -277,6 +389,11 @@ export class ReferenceSourceStagingService {
     const appended: ReferenceSourceStagingRecord[] = decodedTransaction.operations.map(
       (operation) => operation.record
     );
+    if (authority === "page_atlas") {
+      assertProtectedPageAtlasSegments(existing, appended);
+    } else {
+      assertNoProtectedPageAtlasSegments(existing, appended);
+    }
     if (appended.some((record) => record.recordKind === "invalidation")) {
       throw new ReferenceSourceStagingIntegrityError(
         "Invalidation overlays are service-derived and cannot be supplied by a staging client"
@@ -567,7 +684,9 @@ function assertCanonicalOwnerPrivateStudyTransaction(
     decisions.length === 1 &&
     assertion !== undefined &&
     decision !== undefined &&
+    rightsMatch !== undefined &&
     rightsMatch !== null &&
+    decisionMatch !== undefined &&
     decisionMatch !== null &&
     transactionMatch[1] === rightsMatch[1] &&
     transactionMatch[1] === decisionMatch[1] &&
@@ -604,6 +723,225 @@ function assertCanonicalOwnerPrivateStudyTransaction(
   if (!exact) {
     throw new ReferenceSourceStagingIntegrityError(
       "Owner-private local-study transaction does not satisfy the server-minted attestation invariant"
+    );
+  }
+}
+
+function assertNoReservedOwnerLocalExtractionProvenance(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const usesReservedNamespace =
+    transaction.id.startsWith("transaction.owner-local-extraction.") ||
+    transaction.operations.some(({ record }) => {
+      if (
+        record.id.startsWith("rights-assertion.owner-local-extraction.") ||
+        record.id.startsWith("access-decision.owner-local-extraction.")
+      ) {
+        return true;
+      }
+      if (record.recordKind === "rights_assertion") {
+        return (
+          refsEqual(
+            record.claimant.claimantRef,
+            OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF
+          ) ||
+          record.evidenceRefs.some(({ id }) =>
+            id.startsWith("owner-reference-local-extraction-scope.")
+          )
+        );
+      }
+      return (
+        record.recordKind === "access_decision" &&
+        (refsEqual(record.policyRef, OWNER_LOCAL_EXTRACTION_POLICY_REF) ||
+          record.authorityRefs.some((reference) =>
+            refsEqual(reference, OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF)
+          ))
+      );
+    });
+  if (usesReservedNamespace) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Owner-local extraction attestations are server-minted and unavailable to generic staging transactions"
+    );
+  }
+}
+
+function assertCanonicalOwnerLocalExtractionTransaction(
+  transaction: ReferenceSourceStagingTransaction
+): void {
+  const transactionMatch = transaction.id.match(OWNER_LOCAL_EXTRACTION_TRANSACTION_ID);
+  const records = transaction.operations.map(({ record }) => record);
+  const assertion = records.find(
+    (record): record is ReferenceRightsAssertion => record.recordKind === "rights_assertion"
+  );
+  const decision = records.find(
+    (record): record is ReferenceAccessDecision => record.recordKind === "access_decision"
+  );
+  const rightsMatch = assertion?.id.match(OWNER_LOCAL_EXTRACTION_RIGHTS_ID);
+  const decisionMatch = decision?.id.match(OWNER_LOCAL_EXTRACTION_DECISION_ID);
+  const exact =
+    transactionMatch !== null &&
+    records.length === 2 &&
+    transaction.operations[0]?.record.recordKind === "rights_assertion" &&
+    transaction.operations[1]?.record.recordKind === "access_decision" &&
+    assertion !== undefined &&
+    decision !== undefined &&
+    rightsMatch !== undefined &&
+    rightsMatch !== null &&
+    decisionMatch !== undefined &&
+    decisionMatch !== null &&
+    transactionMatch[1] === rightsMatch[1] &&
+    transactionMatch[1] === decisionMatch[1] &&
+    assertion.version === 1 &&
+    assertion.parentVersionRef === undefined &&
+    assertion.subjectKind === "asset_acquisition" &&
+    assertion.rightsKind === "local_extraction" &&
+    assertion.status === "permitted" &&
+    assertion.claimant.kind === "owner" &&
+    refsEqual(assertion.claimant.claimantRef, OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF) &&
+    assertion.evidenceRefs.length === 1 &&
+    assertion.evidenceRefs[0]!.id.startsWith("owner-reference-local-extraction-scope.") &&
+    assertion.validFrom === undefined &&
+    assertion.validUntil === undefined &&
+    assertion.assertedAt === transaction.submittedAt &&
+    decision.version === 1 &&
+    decision.parentVersionRef === undefined &&
+    decision.outcome === "allow" &&
+    decision.operation === "local_extraction" &&
+    decision.sourceRefs.length === 1 &&
+    refsEqual(decision.sourceRefs[0]!, assertion.subjectRef) &&
+    decision.derivativeRefs.length === 0 &&
+    decision.destination.kind === "local_runtime" &&
+    decision.destination.id === undefined &&
+    decision.assetRole === undefined &&
+    decision.purpose.trim().length > 0 &&
+    refsEqual(decision.policyRef, OWNER_LOCAL_EXTRACTION_POLICY_REF) &&
+    decision.rightsAssertionRefs.length === 1 &&
+    refsEqual(decision.rightsAssertionRefs[0]!, assertion) &&
+    decision.authorityRefs.length === 1 &&
+    refsEqual(decision.authorityRefs[0]!, OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF) &&
+    decision.rationale === OWNER_LOCAL_EXTRACTION_RATIONALE &&
+    decision.decidedAt === transaction.submittedAt &&
+    decision.validUntil === undefined;
+  if (!exact) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Owner-local extraction transaction does not satisfy the server-minted attestation invariant"
+    );
+  }
+}
+
+const PAGE_ATLAS_PROTECTED_RECORD_KINDS = new Set<ReferenceSourceStagingRecord["recordKind"]>([
+  "asset_identity_resolution",
+  "page_atlas_version",
+  "page_atlas_attempt",
+  "page_atlas_correction",
+  "reference_derivative_artifact",
+  "cited_extraction_version",
+  "extraction_proposal",
+  "citation_successor",
+]);
+
+function assertNoProtectedPageAtlasRecords(transaction: ReferenceSourceStagingTransaction): void {
+  if (
+    transaction.operations.some(({ record }) =>
+      PAGE_ATLAS_PROTECTED_RECORD_KINDS.has(record.recordKind)
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Page Atlas and cited-extraction records are server-minted and unavailable to the generic staging writer"
+    );
+  }
+}
+
+function assertCanonicalPageAtlasTransaction(transaction: ReferenceSourceStagingTransaction): void {
+  const identityBundleKinds = new Set<ReferenceSourceStagingRecord["recordKind"]>([
+    "work",
+    "source_manifestation",
+    "exemplar",
+    "identity_assertion",
+  ]);
+  if (
+    transaction.operations.some(
+      ({ record }) =>
+        !PAGE_ATLAS_PROTECTED_RECORD_KINDS.has(record.recordKind) &&
+        record.recordKind !== "source_segment_version" &&
+        !identityBundleKinds.has(record.recordKind)
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "The Page Atlas staging writer cannot append records outside its protected graph"
+    );
+  }
+
+  const records = transaction.operations.map(({ record }) => record);
+  const identityBundle = records.filter(({ recordKind }) => identityBundleKinds.has(recordKind));
+  if (identityBundle.length === 0) return;
+  const resolutions = records.filter(
+    (record): record is ReferenceAssetIdentityResolution =>
+      record.recordKind === "asset_identity_resolution"
+  );
+  if (resolutions.length !== 1) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "A Page Atlas identity bundle requires exactly one protected Asset Identity Resolution"
+    );
+  }
+  const resolution = resolutions[0]!;
+  const allowed = new Set([
+    refKey(resolution.workRef),
+    refKey(resolution.manifestationRef),
+    ...resolution.exemplarRefs.map(refKey),
+    ...resolution.identityAssertionRefs.map(refKey),
+  ]);
+  if (identityBundle.some((record) => !allowed.has(refKey(record)))) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "A Page Atlas identity bundle cannot append identity records outside its exact resolution"
+    );
+  }
+}
+
+function assertNoProtectedPageAtlasSegments(
+  existing: ReferenceSourceStagingRecord[],
+  appended: ReferenceSourceStagingRecord[]
+): void {
+  const localAtlasRefs = new Set(
+    [...existing, ...appended]
+      .filter(
+        (record): record is ReferencePageAtlasVersion => record.recordKind === "page_atlas_version"
+      )
+      .map(refKey)
+  );
+  if (
+    appended.some(
+      (record) =>
+        record.recordKind === "source_segment_version" &&
+        localAtlasRefs.has(refKey(record.pageAtlasRef))
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "Source segments attached to a protected local Page Atlas are server-minted and unavailable to the generic staging writer"
+    );
+  }
+}
+
+function assertProtectedPageAtlasSegments(
+  existing: ReferenceSourceStagingRecord[],
+  appended: ReferenceSourceStagingRecord[]
+): void {
+  const localAtlasRefs = new Set(
+    [...existing, ...appended]
+      .filter(
+        (record): record is ReferencePageAtlasVersion => record.recordKind === "page_atlas_version"
+      )
+      .map(refKey)
+  );
+  if (
+    appended.some(
+      (record) =>
+        record.recordKind === "source_segment_version" &&
+        !localAtlasRefs.has(refKey(record.pageAtlasRef))
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      "The Page Atlas staging writer requires every new source segment to resolve a protected local Page Atlas Version"
     );
   }
 }
@@ -943,6 +1281,9 @@ function assertLocalStructuralEdges(
         `${record.id}.processingPolicyRef`
       );
       return;
+    case "asset_identity_resolution":
+      assertAssetIdentityResolution(record, byRef);
+      return;
     case "source_derivation":
       resolveMany(
         record.sourceAcquisitionRefs,
@@ -959,6 +1300,18 @@ function assertLocalStructuralEdges(
       assertLocalOrOpaqueRefs(record.inputRefs, byRef, `${record.id}.inputRefs`);
       assertLocalOrOpaqueRef(record.derivedRef, byRef, `${record.id}.derivedRef`);
       assertOpaqueExternalRef(record.componentRef, byRef, `${record.id}.componentRef`);
+      return;
+    case "page_atlas_version":
+      assertPageAtlasVersion(record, byRef);
+      return;
+    case "page_atlas_attempt":
+      assertPageAtlasAttempt(record, byRef);
+      return;
+    case "page_atlas_correction":
+      assertPageAtlasCorrection(record, byRef);
+      return;
+    case "reference_derivative_artifact":
+      assertDerivativeArtifact(record, byRef);
       return;
     case "source_segment_version": {
       resolveKind(record.digitalAssetRef, "digital_asset", byRef, `${record.id}.digitalAssetRef`);
@@ -990,10 +1343,32 @@ function assertLocalStructuralEdges(
           );
         }
       }
-      assertOpaqueExternalRef(record.pageAtlasRef, byRef, `${record.id}.pageAtlasRef`);
-      assertLocalOrOpaqueRef(record.sourceImageRef, byRef, `${record.id}.sourceImageRef`);
+      const localAtlas = byRef.get(refKey(record.pageAtlasRef));
+      if (localAtlas) {
+        if (localAtlas.recordKind !== "page_atlas_version") {
+          throw new ReferenceSourceStagingIntegrityError(
+            `Source Segment Version ${record.id} pageAtlasRef does not resolve to a Page Atlas Version`
+          );
+        }
+        assertModernSourceSegment(record, localAtlas, byRef);
+      } else {
+        // Compatibility for immutable T05-era segments whose Page Atlas lived
+        // outside this graph. Every newly protected segment must resolve a
+        // local Page Atlas Version and is validated by the branch above.
+        assertOpaqueExternalRef(record.pageAtlasRef, byRef, `${record.id}.pageAtlasRef`);
+        assertLocalOrOpaqueRef(record.sourceImageRef, byRef, `${record.id}.sourceImageRef`);
+      }
       return;
     }
+    case "cited_extraction_version":
+      assertCitedExtractionVersion(record, byRef);
+      return;
+    case "extraction_proposal":
+      assertExtractionProposal(record, byRef);
+      return;
+    case "citation_successor":
+      assertCitationSuccessor(record, byRef);
+      return;
     case "rights_assertion":
       resolveKind(record.subjectRef, record.subjectKind, byRef, `${record.id}.subjectRef`);
       if (record.status !== "unknown" && record.evidenceRefs.length === 0) {
@@ -1068,6 +1443,1225 @@ function assertLocalStructuralEdges(
       return;
     default:
       assertNever(record);
+  }
+}
+
+function assertAssetIdentityResolution(
+  resolution: ReferenceAssetIdentityResolution,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const expectedResolutionState =
+    resolution.reviewState === "reviewed"
+      ? "resolved"
+      : resolution.reviewState === "disputed"
+        ? "disputed"
+        : "candidate";
+  if (resolution.resolutionState !== expectedResolutionState) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Asset Identity Resolution ${resolution.id} overstates or contradicts its review state`
+    );
+  }
+  resolveKind(
+    resolution.digitalAssetRef,
+    "digital_asset",
+    byRef,
+    `${resolution.id}.digitalAssetRef`
+  );
+  const acquisitions = resolveMany(
+    resolution.acquisitionRefs,
+    "asset_acquisition",
+    byRef,
+    `${resolution.id}.acquisitionRefs`
+  );
+  assertDistinctRefs(resolution.acquisitionRefs, `${resolution.id}.acquisitionRefs`);
+  assertAcquisitionsDescribeAsset(acquisitions, resolution.digitalAssetRef, resolution.id);
+
+  const work = resolveKind(resolution.workRef, "work", byRef, `${resolution.id}.workRef`);
+  const manifestation = resolveKind(
+    resolution.manifestationRef,
+    "source_manifestation",
+    byRef,
+    `${resolution.id}.manifestationRef`
+  );
+  if (!manifestation.workRelations.some(({ workRef }) => refKey(workRef) === refKey(work))) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Asset Identity Resolution ${resolution.id} manifestation does not represent its exact Work`
+    );
+  }
+  const exemplars = resolveMany(
+    resolution.exemplarRefs,
+    "exemplar",
+    byRef,
+    `${resolution.id}.exemplarRefs`
+  );
+  assertDistinctRefs(resolution.exemplarRefs, `${resolution.id}.exemplarRefs`);
+  if (
+    exemplars.some(
+      (exemplar) => !exemplar.manifestationRefs.some((ref) => refKey(ref) === refKey(manifestation))
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Asset Identity Resolution ${resolution.id} exemplar does not represent its exact manifestation`
+    );
+  }
+
+  const allowedSubjects = new Set(
+    [
+      resolution.digitalAssetRef,
+      ...resolution.acquisitionRefs,
+      resolution.workRef,
+      resolution.manifestationRef,
+      ...resolution.exemplarRefs,
+    ].map(refKey)
+  );
+  const assertions = resolveMany(
+    resolution.identityAssertionRefs,
+    "identity_assertion",
+    byRef,
+    `${resolution.id}.identityAssertionRefs`
+  );
+  assertDistinctRefs(resolution.identityAssertionRefs, `${resolution.id}.identityAssertionRefs`);
+  if (
+    assertions.some(
+      (assertion) =>
+        !allowedSubjects.has(refKey(assertion.subjectRef)) ||
+        assertion.completeness !== "complete" ||
+        assertion.assertedValue.kind === "unknown" ||
+        assertion.assertionState === "rejected"
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Resolved Asset Identity ${resolution.id} contains incomplete, rejected, or unrelated assertions`
+    );
+  }
+  if (
+    resolution.reviewState === "reviewed" &&
+    assertions.some(({ assertionState }) => assertionState !== "reviewed")
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reviewed Asset Identity Resolution ${resolution.id} contains an unreviewed assertion`
+    );
+  }
+  if (
+    resolution.reviewState === "candidate" &&
+    assertions.some(({ assertionState }) => assertionState !== "candidate")
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Candidate Asset Identity Resolution ${resolution.id} contains a non-candidate assertion`
+    );
+  }
+  if (
+    resolution.reviewState === "disputed" &&
+    assertions.every(({ assertionState }) => assertionState !== "disputed")
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Disputed Asset Identity Resolution ${resolution.id} contains no disputed assertion`
+    );
+  }
+  assertOpaqueExternalRef(resolution.resolverRef, byRef, `${resolution.id}.resolverRef`);
+  assertLocalOrOpaqueRefs(resolution.evidenceRefs, byRef, `${resolution.id}.evidenceRefs`);
+  assertDistinctRefs(resolution.evidenceRefs, `${resolution.id}.evidenceRefs`);
+
+  if (resolution.parentVersionRef) {
+    const parent = resolveKind(
+      resolution.parentVersionRef,
+      "asset_identity_resolution",
+      byRef,
+      `${resolution.id}.parentVersionRef`
+    );
+    if (
+      refKey(parent.digitalAssetRef) !== refKey(resolution.digitalAssetRef) ||
+      !sameRefSet(parent.acquisitionRefs, resolution.acquisitionRefs)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Asset Identity Resolution ${resolution.id} successor changes its exact acquired bytes`
+      );
+    }
+  }
+}
+
+function assertPageAtlasVersion(
+  atlas: ReferencePageAtlasVersion,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  resolveKind(atlas.digitalAssetRef, "digital_asset", byRef, `${atlas.id}.digitalAssetRef`);
+  const acquisitions = resolveMany(
+    atlas.acquisitionRefs,
+    "asset_acquisition",
+    byRef,
+    `${atlas.id}.acquisitionRefs`
+  );
+  assertDistinctRefs(atlas.acquisitionRefs, `${atlas.id}.acquisitionRefs`);
+  assertAcquisitionsDescribeAsset(acquisitions, atlas.digitalAssetRef, atlas.id);
+  assertLocalExtractionAccess(
+    atlas.accessDecisionRef,
+    atlas.digitalAssetRef,
+    atlas.acquisitionRefs,
+    atlas.createdAt,
+    byRef,
+    atlas.id
+  );
+  assertOpaqueExternalRef(atlas.componentRef, byRef, `${atlas.id}.componentRef`);
+  assertOpaqueExternalRef(atlas.resourcePolicyRef, byRef, `${atlas.id}.resourcePolicyRef`);
+
+  const processed = expandPageRanges(
+    atlas.processedScanRanges,
+    atlas.canvasCount,
+    `${atlas.id}.processedScanRanges`
+  );
+  const unprocessed = expandPageRanges(
+    atlas.unprocessedScanRanges,
+    atlas.canvasCount,
+    `${atlas.id}.unprocessedScanRanges`
+  );
+  if ([...processed].some((value) => unprocessed.has(value))) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas ${atlas.id} processed and unprocessed ranges overlap`
+    );
+  }
+  if (processed.size + unprocessed.size !== atlas.canvasCount) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas ${atlas.id} ranges do not account for every declared canvas`
+    );
+  }
+  for (let scanOrder = 1; scanOrder <= atlas.canvasCount; scanOrder += 1) {
+    if (!processed.has(scanOrder) && !unprocessed.has(scanOrder)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas ${atlas.id} leaves scan order ${scanOrder} implicit`
+      );
+    }
+  }
+  if (
+    (atlas.coverage === "complete" && unprocessed.size !== 0) ||
+    (atlas.coverage === "partial" && unprocessed.size === 0)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas ${atlas.id} coverage contradicts its explicit unprocessed ranges`
+    );
+  }
+  if (atlas.canvases.length !== processed.size) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas ${atlas.id} must contain exactly one canvas for each processed scan order`
+    );
+  }
+
+  const canvasIds = new Set<string>();
+  const scanOrders = new Set<number>();
+  const scanLocators = new Set<string>();
+  const locatorKeys = new Set<string>();
+  for (const canvas of atlas.canvases) {
+    if (
+      canvasIds.has(canvas.canvasId) ||
+      scanOrders.has(canvas.scanOrder) ||
+      scanLocators.has(canvas.scanLocator) ||
+      !processed.has(canvas.scanOrder)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas ${atlas.id} contains a duplicate or unprocessed canvas identity`
+      );
+    }
+    canvasIds.add(canvas.canvasId);
+    scanOrders.add(canvas.scanOrder);
+    scanLocators.add(canvas.scanLocator);
+    assertUniqueStrings(canvas.conditions, `${atlas.id}.${canvas.canvasId}.conditions`);
+    if (
+      (canvas.conditions.includes("missing") || canvas.conditions.includes("blank")) &&
+      canvas.regions.length !== 0
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas ${atlas.id} missing or blank canvas cannot contain detected regions`
+      );
+    }
+    const regionIds = new Set<string>();
+    for (const region of canvas.regions) {
+      if (regionIds.has(region.id)) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Page Atlas ${atlas.id} repeats region ${region.id} on canvas ${canvas.canvasId}`
+        );
+      }
+      regionIds.add(region.id);
+      assertRegionWithinCanvas(region, canvas, `${atlas.id}.${canvas.canvasId}.${region.id}`);
+    }
+    for (const locator of canvas.locators) {
+      if (locator.side && locator.kind !== "folio") {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Page Atlas ${atlas.id} uses recto/verso on a non-folio locator`
+        );
+      }
+      const key = [
+        locator.kind,
+        locator.sequenceId,
+        locator.label,
+        locator.ordinal ?? "",
+        locator.side ?? "",
+      ].join("\u0000");
+      if (locatorKeys.has(key)) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Page Atlas ${atlas.id} contains an ambiguous duplicate page locator`
+        );
+      }
+      locatorKeys.add(key);
+    }
+  }
+
+  if (atlas.parentVersionRef) {
+    const parent = resolveKind(
+      atlas.parentVersionRef,
+      "page_atlas_version",
+      byRef,
+      `${atlas.id}.parentVersionRef`
+    );
+    if (
+      refKey(parent.digitalAssetRef) !== refKey(atlas.digitalAssetRef) ||
+      !sameRefSet(parent.acquisitionRefs, atlas.acquisitionRefs)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas ${atlas.id} successor changes its exact acquired bytes`
+      );
+    }
+  }
+}
+
+function assertAcquisitionsDescribeAsset(
+  acquisitions: ReferenceAssetAcquisition[],
+  digitalAssetRef: ReferenceRecordRef,
+  label: string
+): void {
+  if (
+    acquisitions.some(
+      (acquisition) => refKey(acquisition.digitalAssetRef) !== refKey(digitalAssetRef)
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} names an acquisition for different bytes`
+    );
+  }
+}
+
+function assertLocalExtractionAccess(
+  accessDecisionRef: ReferenceRecordRef,
+  _digitalAssetRef: ReferenceRecordRef,
+  acquisitionRefs: ReferenceRecordRef[],
+  effectiveAt: string,
+  byRef: Map<string, ReferenceSourceStagingRecord>,
+  label: string
+): ReferenceAccessDecision {
+  const decision = resolveKind(
+    accessDecisionRef,
+    "access_decision",
+    byRef,
+    `${label}.accessDecisionRef`
+  );
+  const rights = decision.rightsAssertionRefs.map((ref) =>
+    resolveKind(ref, "rights_assertion", byRef, `${label}.accessDecisionRef.rightsAssertionRefs`)
+  );
+  if (
+    decision.outcome !== "allow" ||
+    decision.operation !== "local_extraction" ||
+    decision.destination.kind !== "local_runtime" ||
+    decision.destination.id !== undefined ||
+    decision.assetRole !== undefined ||
+    !sameRefSet(decision.sourceRefs, acquisitionRefs) ||
+    decision.derivativeRefs.length !== 0 ||
+    decision.purpose.trim().length === 0 ||
+    !refsEqual(decision.policyRef, OWNER_LOCAL_EXTRACTION_POLICY_REF) ||
+    decision.authorityRefs.length !== 1 ||
+    !refsEqual(decision.authorityRefs[0]!, OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF) ||
+    rights.length !== acquisitionRefs.length ||
+    rights.some(
+      (assertion) =>
+        assertion.subjectKind !== "asset_acquisition" ||
+        !acquisitionRefs.some((ref) => refsEqual(ref, assertion.subjectRef)) ||
+        assertion.rightsKind !== "local_extraction" ||
+        assertion.status !== "permitted" ||
+        assertion.claimant.kind !== "owner" ||
+        !refsEqual(assertion.claimant.claimantRef, OWNER_LOCAL_EXTRACTION_ATTESTATION_AUTHORITY_REF)
+    ) ||
+    Date.parse(decision.decidedAt) > Date.parse(effectiveAt) ||
+    (decision.validUntil !== undefined &&
+      Date.parse(decision.validUntil) <= Date.parse(effectiveAt))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} lacks an exact current local-extraction allow decision`
+    );
+  }
+  return decision;
+}
+
+function assertPageAtlasAttempt(
+  attempt: ReferencePageAtlasAttempt,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  resolveKind(attempt.digitalAssetRef, "digital_asset", byRef, `${attempt.id}.digitalAssetRef`);
+  const acquisitions = resolveMany(
+    attempt.acquisitionRefs,
+    "asset_acquisition",
+    byRef,
+    `${attempt.id}.acquisitionRefs`
+  );
+  assertDistinctRefs(attempt.acquisitionRefs, `${attempt.id}.acquisitionRefs`);
+  assertAcquisitionsDescribeAsset(acquisitions, attempt.digitalAssetRef, attempt.id);
+  assertLocalExtractionAccess(
+    attempt.accessDecisionRef,
+    attempt.digitalAssetRef,
+    attempt.acquisitionRefs,
+    attempt.startedAt,
+    byRef,
+    attempt.id
+  );
+  assertOpaqueExternalRef(attempt.componentRef, byRef, `${attempt.id}.componentRef`);
+  assertOpaqueExternalRef(attempt.resourcePolicyRef, byRef, `${attempt.id}.resourcePolicyRef`);
+  assertLocalOrOpaqueRefs(
+    attempt.redactedDiagnosticRefs,
+    byRef,
+    `${attempt.id}.redactedDiagnosticRefs`
+  );
+  assertDistinctRefs(attempt.redactedDiagnosticRefs, `${attempt.id}.redactedDiagnosticRefs`);
+  if (Date.parse(attempt.endedAt) < Date.parse(attempt.startedAt)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} ends before it starts`
+    );
+  }
+
+  const expectedFailureCode: Record<ReferencePageAtlasAttempt["status"], string[] | undefined> = {
+    completed: undefined,
+    interrupted: ["interrupted"],
+    cancelled: ["cancelled"],
+    resource_exhausted: ["resource_limit"],
+    failed: ["parser_failure", "malformed_asset", "unsupported_asset"],
+  };
+  const allowedCodes = expectedFailureCode[attempt.status];
+  if (
+    (allowedCodes === undefined && attempt.failureCode !== undefined) ||
+    (allowedCodes !== undefined &&
+      (attempt.failureCode === undefined || !allowedCodes.includes(attempt.failureCode)))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} status and failure code disagree`
+    );
+  }
+
+  const basis = attempt.basisAtlasRef
+    ? resolveKind(attempt.basisAtlasRef, "page_atlas_version", byRef, `${attempt.id}.basisAtlasRef`)
+    : undefined;
+  const output = attempt.outputAtlasRef
+    ? resolveKind(
+        attempt.outputAtlasRef,
+        "page_atlas_version",
+        byRef,
+        `${attempt.id}.outputAtlasRef`
+      )
+    : undefined;
+  if (
+    (attempt.attemptKind === "initial" && basis !== undefined) ||
+    (attempt.attemptKind !== "initial" && basis === undefined)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} has an invalid ${attempt.attemptKind} basis`
+    );
+  }
+  if (attempt.attemptKind === "resume" && basis?.coverage !== "partial") {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Resumed Page Atlas Attempt ${attempt.id} must begin from partial coverage`
+    );
+  }
+  if (basis && Date.parse(basis.createdAt) > Date.parse(attempt.startedAt)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} begins before its exact basis exists`
+    );
+  }
+  const interruptedBeforeFirstAtlas =
+    attempt.status === "interrupted" &&
+    attempt.attemptKind === "initial" &&
+    basis === undefined &&
+    output === undefined;
+  if (
+    (attempt.status === "completed" || attempt.status === "interrupted") &&
+    output === undefined &&
+    !interruptedBeforeFirstAtlas
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} must retain its bounded output`
+    );
+  }
+  // `completed` describes this bounded attempt, not necessarily the entire
+  // source. A successful attempt may deliberately stop at a partial atlas and
+  // be resumed later. Failed, interrupted, cancelled, and exhausted attempts
+  // may retain partial progress, but must never claim complete coverage.
+  if (attempt.status !== "completed" && output !== undefined && output.coverage !== "partial") {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} status contradicts output coverage`
+    );
+  }
+  if (basis) assertAtlasAttemptIdentity(attempt, basis, "basis");
+  if (output) {
+    assertAtlasAttemptIdentity(attempt, output, "output");
+    if (
+      Date.parse(output.createdAt) < Date.parse(attempt.startedAt) ||
+      Date.parse(output.createdAt) > Date.parse(attempt.endedAt)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas Attempt ${attempt.id} output falls outside its execution interval`
+      );
+    }
+    if (
+      (basis === undefined && output.parentVersionRef !== undefined) ||
+      (basis !== undefined &&
+        (output.parentVersionRef === undefined ||
+          refKey(output.parentVersionRef) !== refKey(basis) ||
+          output.parentVersionRef.version !== basis.version))
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Page Atlas Attempt ${attempt.id} output does not descend from its exact basis`
+      );
+    }
+  }
+}
+
+function assertAtlasAttemptIdentity(
+  attempt: ReferencePageAtlasAttempt,
+  atlas: ReferencePageAtlasVersion,
+  role: "basis" | "output"
+): void {
+  if (
+    refKey(atlas.digitalAssetRef) !== refKey(attempt.digitalAssetRef) ||
+    !sameRefSet(atlas.acquisitionRefs, attempt.acquisitionRefs) ||
+    refKey(atlas.accessDecisionRef) !== refKey(attempt.accessDecisionRef) ||
+    refKey(atlas.componentRef) !== refKey(attempt.componentRef) ||
+    atlas.configurationDigest !== attempt.configurationDigest ||
+    refKey(atlas.resourcePolicyRef) !== refKey(attempt.resourcePolicyRef)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Attempt ${attempt.id} ${role} changes its exact source or execution identity`
+    );
+  }
+}
+
+function assertPageAtlasCorrection(
+  correction: ReferencePageAtlasCorrection,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const prior = resolveKind(
+    correction.priorAtlasRef,
+    "page_atlas_version",
+    byRef,
+    `${correction.id}.priorAtlasRef`
+  );
+  const successor = resolveKind(
+    correction.successorAtlasRef,
+    "page_atlas_version",
+    byRef,
+    `${correction.id}.successorAtlasRef`
+  );
+  if (
+    successor.parentVersionRef === undefined ||
+    refKey(successor.parentVersionRef) !== refKey(prior) ||
+    successor.parentVersionRef.version !== prior.version ||
+    refKey(successor.digitalAssetRef) !== refKey(prior.digitalAssetRef) ||
+    !sameRefSet(successor.acquisitionRefs, prior.acquisitionRefs)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Correction ${correction.id} does not name one exact successor lineage`
+    );
+  }
+  if (
+    refKey(successor.accessDecisionRef) !== refKey(prior.accessDecisionRef) ||
+    refKey(successor.componentRef) !== refKey(prior.componentRef) ||
+    successor.configurationDigest !== prior.configurationDigest ||
+    refKey(successor.resourcePolicyRef) !== refKey(prior.resourcePolicyRef) ||
+    successor.coverage !== prior.coverage ||
+    successor.canvasCount !== prior.canvasCount ||
+    referenceSourceDigest(successor.processedScanRanges) !==
+      referenceSourceDigest(prior.processedScanRanges) ||
+    referenceSourceDigest(successor.unprocessedScanRanges) !==
+      referenceSourceDigest(prior.unprocessedScanRanges)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Correction ${correction.id} changes execution identity or coverage instead of canvas facts`
+    );
+  }
+  assertUniqueStrings(correction.changedCanvasIds, `${correction.id}.changedCanvasIds`);
+  const priorCanvases = new Map(prior.canvases.map((canvas) => [canvas.canvasId, canvas]));
+  const successorCanvases = new Map(successor.canvases.map((canvas) => [canvas.canvasId, canvas]));
+  if (
+    priorCanvases.size !== successorCanvases.size ||
+    [...priorCanvases.keys()].some((id) => !successorCanvases.has(id))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Correction ${correction.id} cannot add or remove canvases`
+    );
+  }
+  const actualChanges = [...priorCanvases.entries()]
+    .filter(
+      ([id, canvas]) =>
+        referenceSourceDigest(canvas) !== referenceSourceDigest(successorCanvases.get(id)!)
+    )
+    .map(([id]) => id);
+  if (!sameStrings(correction.changedCanvasIds, actualChanges)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Correction ${correction.id} must enumerate exactly its changed canvases`
+    );
+  }
+  assertLocalOrOpaqueRefs(correction.evidenceRefs, byRef, `${correction.id}.evidenceRefs`);
+  assertDistinctRefs(correction.evidenceRefs, `${correction.id}.evidenceRefs`);
+  assertOpaqueExternalRef(correction.correctedByRef, byRef, `${correction.id}.correctedByRef`);
+  if (
+    Date.parse(correction.correctedAt) < Date.parse(prior.createdAt) ||
+    Date.parse(correction.correctedAt) < Date.parse(successor.createdAt)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Page Atlas Correction ${correction.id} predates its atlas lineage`
+    );
+  }
+}
+
+function assertDerivativeArtifact(
+  artifact: ReferenceDerivativeArtifact,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  resolveKind(artifact.digitalAssetRef, "digital_asset", byRef, `${artifact.id}.digitalAssetRef`);
+  const acquisitions = resolveMany(
+    artifact.acquisitionRefs,
+    "asset_acquisition",
+    byRef,
+    `${artifact.id}.acquisitionRefs`
+  );
+  assertDistinctRefs(artifact.acquisitionRefs, `${artifact.id}.acquisitionRefs`);
+  assertAcquisitionsDescribeAsset(acquisitions, artifact.digitalAssetRef, artifact.id);
+  const atlas = resolveKind(
+    artifact.pageAtlasRef,
+    "page_atlas_version",
+    byRef,
+    `${artifact.id}.pageAtlasRef`
+  );
+  if (
+    refKey(atlas.digitalAssetRef) !== refKey(artifact.digitalAssetRef) ||
+    !sameRefSet(atlas.acquisitionRefs, artifact.acquisitionRefs)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference Derivative ${artifact.id} changes its exact source acquisition`
+    );
+  }
+  const canvas = requireAtlasCanvas(atlas, artifact.canvasId, artifact.id);
+  if ((artifact.artifactKind === "crop") !== (artifact.region !== undefined)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference Derivative ${artifact.id} crop geometry and artifact kind disagree`
+    );
+  }
+  if (artifact.region) assertRegionWithinCanvas(artifact.region, canvas, `${artifact.id}.region`);
+  if (
+    artifact.artifactKind === "page_image" &&
+    (artifact.widthPixels !== canvas.widthPixels || artifact.heightPixels !== canvas.heightPixels)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference Derivative ${artifact.id} full-page dimensions do not match its canvas`
+    );
+  }
+  if (Date.parse(artifact.createdAt) < Date.parse(atlas.createdAt)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference Derivative ${artifact.id} predates its Page Atlas`
+    );
+  }
+}
+
+function assertModernSourceSegment(
+  segment: ReferenceSourceSegmentVersion,
+  atlas: ReferencePageAtlasVersion,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  if (
+    refKey(segment.digitalAssetRef) !== refKey(atlas.digitalAssetRef) ||
+    !sameRefSet(segment.acquisitionRefs, atlas.acquisitionRefs)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} changes its Page Atlas source acquisition`
+    );
+  }
+  assertDistinctRefs(segment.acquisitionRefs, `${segment.id}.acquisitionRefs`);
+  const canvas = requireAtlasCanvas(atlas, segment.canvasId, segment.id);
+  if (
+    segment.scanLocator !== canvas.scanLocator ||
+    segment.coordinateSystem !== canvas.coordinateSystem
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} does not preserve its exact canvas locator system`
+    );
+  }
+  if (
+    segment.printedLocator !== undefined &&
+    !canvas.locators.some(
+      (locator) => locator.label === segment.printedLocator && locator.kind !== "internal_sequence"
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} printed locator is absent from its Page Atlas canvas`
+    );
+  }
+  assertUniqueStrings(
+    segment.regions.map(({ id }) => id),
+    `${segment.id}.regions`
+  );
+  const atlasRegions = new Map(canvas.regions.map((region) => [region.id, region]));
+  for (const region of segment.regions) {
+    const atlasRegion = atlasRegions.get(region.id);
+    if (
+      !atlasRegion ||
+      region.x !== atlasRegion.x ||
+      region.y !== atlasRegion.y ||
+      region.width !== atlasRegion.width ||
+      region.height !== atlasRegion.height ||
+      region.unit !== atlasRegion.unit
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Source Segment Version ${segment.id} region ${region.id} does not resolve exact atlas geometry`
+      );
+    }
+    if (
+      segment.modality !== "mixed" &&
+      atlasRegion.modality !== "mixed" &&
+      atlasRegion.modality !== segment.modality
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Source Segment Version ${segment.id} modality contradicts atlas region ${region.id}`
+      );
+    }
+  }
+  if (
+    segment.regionTransforms.length !== 0 &&
+    segment.regionTransforms.length !== segment.regions.length
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} must bind transforms one-to-one with its regions`
+    );
+  }
+  if (
+    segment.regionTransforms.some(({ matrix }) => matrix.some((value) => !Number.isFinite(value)))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} contains a non-finite region transform`
+    );
+  }
+
+  const sourceImage = resolveRecord(segment.sourceImageRef, byRef, `${segment.id}.sourceImageRef`);
+  if (sourceImage.recordKind === "digital_asset") {
+    if (refKey(sourceImage) !== refKey(segment.digitalAssetRef)) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Source Segment Version ${segment.id} source image is not its original Digital Asset`
+      );
+    }
+  } else if (sourceImage.recordKind === "reference_derivative_artifact") {
+    if (
+      refKey(sourceImage.pageAtlasRef) !== refKey(atlas) ||
+      sourceImage.canvasId !== segment.canvasId ||
+      refKey(sourceImage.digitalAssetRef) !== refKey(segment.digitalAssetRef) ||
+      !sameRefSet(sourceImage.acquisitionRefs, segment.acquisitionRefs) ||
+      sourceImage.sha256 !== segment.cropDigest
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Source Segment Version ${segment.id} source image does not preserve its exact atlas crop`
+      );
+    }
+  } else {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Source Segment Version ${segment.id} sourceImageRef must resolve to original bytes or a protected image derivative`
+    );
+  }
+
+  if (segment.parentVersionRef) {
+    const parent = resolveKind(
+      segment.parentVersionRef,
+      "source_segment_version",
+      byRef,
+      `${segment.id}.parentVersionRef`
+    );
+    if (
+      refKey(parent.digitalAssetRef) !== refKey(segment.digitalAssetRef) ||
+      !sameRefSet(parent.acquisitionRefs, segment.acquisitionRefs)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Source Segment Version ${segment.id} successor changes its exact acquired bytes`
+      );
+    }
+  }
+}
+
+function assertCitedExtractionVersion(
+  extraction: ReferenceCitedExtractionVersion,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const segments = resolveMany(
+    extraction.sourceSegmentRefs,
+    "source_segment_version",
+    byRef,
+    `${extraction.id}.sourceSegmentRefs`
+  );
+  assertDistinctRefs(extraction.sourceSegmentRefs, `${extraction.id}.sourceSegmentRefs`);
+  if (
+    segments.some(
+      (segment) => byRef.get(refKey(segment.pageAtlasRef))?.recordKind !== "page_atlas_version"
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Cited Extraction ${extraction.id} must resolve every segment through a protected local Page Atlas`
+    );
+  }
+  const decisions = resolveMany(
+    extraction.accessDecisionRefs,
+    "access_decision",
+    byRef,
+    `${extraction.id}.accessDecisionRefs`
+  );
+  assertDistinctRefs(extraction.accessDecisionRefs, `${extraction.id}.accessDecisionRefs`);
+  for (const decision of decisions) {
+    assertLocalExtractionAccess(
+      refFor(decision),
+      segments[0]!.digitalAssetRef,
+      decision.sourceRefs,
+      extraction.createdAt,
+      byRef,
+      extraction.id
+    );
+  }
+  const acquisitionRefs = uniqueRefs(segments.flatMap(({ acquisitionRefs: refs }) => refs));
+  if (
+    decisions.some(
+      (decision) =>
+        decision.outcome !== "allow" ||
+        decision.operation !== "local_extraction" ||
+        decision.destination.kind !== "local_runtime" ||
+        decision.destination.id !== undefined ||
+        Date.parse(decision.decidedAt) > Date.parse(extraction.createdAt) ||
+        (decision.validUntil !== undefined &&
+          Date.parse(decision.validUntil) <= Date.parse(extraction.createdAt))
+    ) ||
+    !sameRefSet(uniqueRefs(decisions.flatMap(({ sourceRefs }) => sourceRefs)), acquisitionRefs)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Cited Extraction ${extraction.id} lacks exact current local-extraction coverage`
+    );
+  }
+  assertOpaqueExternalRef(extraction.componentRef, byRef, `${extraction.id}.componentRef`);
+
+  assertUniqueStrings(
+    extraction.anchors.map(({ id }) => id),
+    `${extraction.id}.anchors`
+  );
+  const anchorKinds = new Set(extraction.anchors.map(({ kind }) => kind));
+  if (!anchorKinds.has("image") || !anchorKinds.has("text") || !anchorKinds.has("notation")) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Cited Extraction ${extraction.id} requires image, text, and notation anchors`
+    );
+  }
+  const segmentByRef = new Map(segments.map((segment) => [refKey(segment), segment]));
+  const tokenIds = new Set(extraction.notationTokens.map(({ id }) => id));
+  if (tokenIds.size !== extraction.notationTokens.length) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Cited Extraction ${extraction.id} repeats a notation token identity`
+    );
+  }
+  for (const anchor of extraction.anchors) {
+    const segment = segmentByRef.get(refKey(anchor.sourceSegmentRef));
+    if (!segment) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Cited Extraction ${extraction.id} anchor ${anchor.id} names an undeclared segment`
+      );
+    }
+    const segmentRegionIds = new Set(segment.regions.map(({ id }) => id));
+    assertUniqueStrings(anchor.regionIds, `${extraction.id}.${anchor.id}.regionIds`);
+    if (anchor.regionIds.some((id) => !segmentRegionIds.has(id))) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Cited Extraction ${extraction.id} anchor ${anchor.id} does not resolve exact segment geometry`
+      );
+    }
+    const atlas = resolveKind(
+      segment.pageAtlasRef,
+      "page_atlas_version",
+      byRef,
+      `${extraction.id}.${anchor.id}.pageAtlasRef`
+    );
+    const canvas = requireAtlasCanvas(atlas, segment.canvasId, `${extraction.id}.${anchor.id}`);
+    const compatibleModalities = new Set([anchor.kind, "mixed"]);
+    if (
+      anchor.regionIds.some((id) => {
+        const region = canvas.regions.find((candidate) => candidate.id === id);
+        return !region || !compatibleModalities.has(region.modality);
+      })
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Cited Extraction ${extraction.id} anchor ${anchor.id} contradicts its atlas-region modality`
+      );
+    }
+    if (
+      anchor.kind === "text" &&
+      anchor.characterRange !== undefined &&
+      (anchor.characterRange.start >= anchor.characterRange.end ||
+        anchor.characterRange.end > extraction.originalTranscription.length)
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Cited Extraction ${extraction.id} text anchor ${anchor.id} exceeds its original transcription`
+      );
+    }
+    if (anchor.kind === "notation") {
+      assertUniqueStrings(anchor.tokenIds, `${extraction.id}.${anchor.id}.tokenIds`);
+      if (anchor.tokenIds.some((id) => !tokenIds.has(id))) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Cited Extraction ${extraction.id} notation anchor ${anchor.id} names an unknown token`
+        );
+      }
+    }
+  }
+
+  const referencedNotationTokens = new Set(
+    extraction.anchors.flatMap((anchor) => (anchor.kind === "notation" ? anchor.tokenIds : []))
+  );
+  if (
+    referencedNotationTokens.size !== tokenIds.size ||
+    [...tokenIds].some((id) => !referencedNotationTokens.has(id))
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Cited Extraction ${extraction.id} must cite every notation token exactly by anchor membership`
+    );
+  }
+  const allSegmentRegions = segments.flatMap((segment) =>
+    segment.regions.map((region) => ({ segment, region }))
+  );
+  for (const token of extraction.notationTokens) {
+    const matches = allSegmentRegions.filter(({ region }) => region.id === token.regionId);
+    if (matches.length !== 1) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Cited Extraction ${extraction.id} token ${token.id} has ambiguous or missing geometry`
+      );
+    }
+  }
+  for (const [dimension, confidence] of Object.entries(extraction.confidence)) {
+    if (confidence.kind !== "assessed") continue;
+    assertLocalOrOpaqueRefs(
+      confidence.evidenceRefs,
+      byRef,
+      `${extraction.id}.confidence.${dimension}.evidenceRefs`
+    );
+    assertDistinctRefs(
+      confidence.evidenceRefs,
+      `${extraction.id}.confidence.${dimension}.evidenceRefs`
+    );
+  }
+}
+
+function assertExtractionProposal(
+  proposal: ReferenceExtractionProposal,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const extraction = resolveKind(
+    proposal.citedExtractionRef,
+    "cited_extraction_version",
+    byRef,
+    `${proposal.id}.citedExtractionRef`
+  );
+  const courseTokens = extraction.notationTokens.filter(
+    (token): token is typeof token & { course: number } => token.course !== undefined
+  );
+  const expectedCourses = [7, 8, 9, 10, 11, 12];
+  const expectedSymbols = ["a", "/a", "//a", "///a", "4", "5"];
+  if (
+    courseTokens.length !== expectedCourses.length ||
+    courseTokens.some(
+      (token, index) =>
+        token.course !== expectedCourses[index] || token.value !== expectedSymbols[index]
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Extraction Proposal ${proposal.id} is not grounded in the exact cited twelve-course sequence`
+    );
+  }
+  if (proposal.proposal.kind === "twelve_course_diapason_mapping") {
+    if (
+      proposal.proposal.courses.some((course, index) => course !== expectedCourses[index]) ||
+      proposal.proposal.symbols.some((symbol, index) => symbol !== expectedSymbols[index])
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Extraction Proposal ${proposal.id} changes the exact cited twelve-course mapping`
+      );
+    }
+  } else if (courseTokens.some(({ course }) => course === 13)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Extraction Proposal ${proposal.id} cannot answer course thirteen by extrapolation`
+    );
+  }
+  if (proposal.parentVersionRef) {
+    const parent = resolveKind(
+      proposal.parentVersionRef,
+      "extraction_proposal",
+      byRef,
+      `${proposal.id}.parentVersionRef`
+    );
+    if (
+      parent.scope.instrument !== proposal.scope.instrument ||
+      parent.scope.notationSystem !== proposal.scope.notationSystem ||
+      parent.scope.sourceCourseCount !== proposal.scope.sourceCourseCount ||
+      parent.proposal.kind !== proposal.proposal.kind
+    ) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Extraction Proposal ${proposal.id} successor changes its bounded research question`
+      );
+    }
+  }
+}
+
+function assertCitationSuccessor(
+  mapping: ReferenceCitationSuccessor,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): void {
+  const correction = resolveKind(
+    mapping.atlasCorrectionRef,
+    "page_atlas_correction",
+    byRef,
+    `${mapping.id}.atlasCorrectionRef`
+  );
+  const priorSegment = resolveKind(
+    mapping.priorSegmentRef,
+    "source_segment_version",
+    byRef,
+    `${mapping.id}.priorSegmentRef`
+  );
+  const successorSegment = resolveKind(
+    mapping.successorSegmentRef,
+    "source_segment_version",
+    byRef,
+    `${mapping.id}.successorSegmentRef`
+  );
+  if (
+    successorSegment.parentVersionRef === undefined ||
+    refKey(successorSegment.parentVersionRef) !== refKey(priorSegment) ||
+    successorSegment.parentVersionRef.version !== priorSegment.version ||
+    !atlasLineagePreservesCitedCanvas(priorSegment, correction.priorAtlasRef, byRef) ||
+    refKey(successorSegment.pageAtlasRef) !== refKey(correction.successorAtlasRef)
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Citation Successor ${mapping.id} does not follow its exact corrected atlas segment lineage`
+    );
+  }
+  assertDistinctRefs(mapping.priorCitedExtractionRefs, `${mapping.id}.priorCitedExtractionRefs`);
+  assertDistinctRefs(
+    mapping.successorCitedExtractionRefs,
+    `${mapping.id}.successorCitedExtractionRefs`
+  );
+  const priorExtractions = resolveMany(
+    mapping.priorCitedExtractionRefs,
+    "cited_extraction_version",
+    byRef,
+    `${mapping.id}.priorCitedExtractionRefs`
+  );
+  const successorExtractions = resolveMany(
+    mapping.successorCitedExtractionRefs,
+    "cited_extraction_version",
+    byRef,
+    `${mapping.id}.successorCitedExtractionRefs`
+  );
+  if (
+    priorExtractions.some(
+      (extraction) =>
+        !extraction.sourceSegmentRefs.some((ref) => refKey(ref) === refKey(priorSegment))
+    ) ||
+    successorExtractions.some(
+      (extraction) =>
+        !extraction.sourceSegmentRefs.some((ref) => refKey(ref) === refKey(successorSegment))
+    )
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Citation Successor ${mapping.id} extraction refs do not cite their exact segment side`
+    );
+  }
+
+  switch (mapping.extractionTransition) {
+    case "not_applicable":
+      if (
+        priorExtractions.length !== 0 ||
+        successorExtractions.length !== 0 ||
+        priorSegment.modality !== "image" ||
+        successorSegment.modality !== "image"
+      ) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Citation Successor ${mapping.id} has an invalid not-applicable extraction transition`
+        );
+      }
+      break;
+    case "reextraction_required":
+      if (
+        priorExtractions.length === 0 ||
+        successorExtractions.length !== 0 ||
+        successorSegment.modality !== "image"
+      ) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Citation Successor ${mapping.id} has an invalid re-extraction-required transition`
+        );
+      }
+      break;
+    case "reextracted":
+      if (
+        priorExtractions.length !== 0 ||
+        successorExtractions.length === 0 ||
+        priorSegment.modality !== "image" ||
+        successorExtractions.some((successor) => {
+          if (!successor.parentVersionRef) return true;
+          const parent = resolveKind(
+            successor.parentVersionRef,
+            "cited_extraction_version",
+            byRef,
+            `${mapping.id}.successorCitedExtractionRefs.parentVersionRef`
+          );
+          return parent.sourceSegmentRefs.some(
+            (segmentRef) => !segmentIsAncestorOf(segmentRef, priorSegment, byRef)
+          );
+        })
+      ) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Citation Successor ${mapping.id} has an invalid re-extracted transition`
+        );
+      }
+      break;
+    case "mapped_successor":
+      if (
+        priorExtractions.length === 0 ||
+        priorExtractions.length !== successorExtractions.length
+      ) {
+        throw new ReferenceSourceStagingIntegrityError(
+          `Citation Successor ${mapping.id} requires one mapped successor per prior extraction`
+        );
+      }
+      for (let index = 0; index < priorExtractions.length; index += 1) {
+        const prior = priorExtractions[index]!;
+        const successor = successorExtractions[index]!;
+        const expectedSuccessorSegments = prior.sourceSegmentRefs.map((ref) =>
+          refKey(ref) === refKey(priorSegment) ? refFor(successorSegment) : ref
+        );
+        if (
+          successor.parentVersionRef === undefined ||
+          refKey(successor.parentVersionRef) !== refKey(prior) ||
+          successor.parentVersionRef.version !== prior.version ||
+          !sameRefSet(successor.sourceSegmentRefs, expectedSuccessorSegments)
+        ) {
+          throw new ReferenceSourceStagingIntegrityError(
+            `Citation Successor ${mapping.id} does not preserve one exact extraction lineage`
+          );
+        }
+      }
+      break;
+  }
+  if (Date.parse(mapping.createdAt) < Date.parse(correction.correctedAt)) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Citation Successor ${mapping.id} predates its Page Atlas correction`
+    );
+  }
+}
+
+function segmentIsAncestorOf(
+  candidateRef: ReferenceRecordRef,
+  descendant: ReferenceSourceSegmentVersion,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): boolean {
+  let cursor: ReferenceSourceSegmentVersion = descendant;
+  while (true) {
+    if (refKey(cursor) === refKey(candidateRef)) return true;
+    if (!cursor.parentVersionRef) return false;
+    cursor = resolveKind(
+      cursor.parentVersionRef,
+      "source_segment_version",
+      byRef,
+      `${descendant.id}.ancestorSegmentRef`
+    );
+  }
+}
+
+function atlasLineagePreservesCitedCanvas(
+  segment: ReferenceSourceSegmentVersion,
+  descendantAtlasRef: ReferenceRecordRef,
+  byRef: Map<string, ReferenceSourceStagingRecord>
+): boolean {
+  let descendant = resolveKind(
+    descendantAtlasRef,
+    "page_atlas_version",
+    byRef,
+    `${segment.id}.citationAtlasLineage`
+  );
+  while (refKey(descendant) !== refKey(segment.pageAtlasRef)) {
+    if (!descendant.parentVersionRef) return false;
+    const parent = resolveKind(
+      descendant.parentVersionRef,
+      "page_atlas_version",
+      byRef,
+      `${segment.id}.citationAtlasLineage.parentVersionRef`
+    );
+    const descendantCanvas = descendant.canvases.find(
+      ({ canvasId }) => canvasId === segment.canvasId
+    );
+    const parentCanvas = parent.canvases.find(({ canvasId }) => canvasId === segment.canvasId);
+    if (
+      !descendantCanvas ||
+      !parentCanvas ||
+      referenceSourceDigest(descendantCanvas) !== referenceSourceDigest(parentCanvas)
+    ) {
+      return false;
+    }
+    descendant = parent;
+  }
+  return true;
+}
+
+function requireAtlasCanvas(
+  atlas: ReferencePageAtlasVersion,
+  canvasId: string,
+  label: string
+): ReferencePageAtlasVersion["canvases"][number] {
+  const canvas = atlas.canvases.find((candidate) => candidate.canvasId === canvasId);
+  if (!canvas) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} cannot resolve canvas ${canvasId} in its exact Page Atlas`
+    );
+  }
+  return canvas;
+}
+
+function expandPageRanges(
+  ranges: Array<{ start: number; end: number }>,
+  canvasCount: number,
+  label: string
+): Set<number> {
+  const values = new Set<number>();
+  let priorEnd = 0;
+  for (const range of ranges) {
+    if (range.start > range.end || range.end > canvasCount || range.start <= priorEnd) {
+      throw new ReferenceSourceStagingIntegrityError(
+        `Reference-source ${label} must be ordered, disjoint, and within the canvas count`
+      );
+    }
+    for (let value = range.start; value <= range.end; value += 1) values.add(value);
+    priorEnd = range.end;
+  }
+  return values;
+}
+
+function assertRegionWithinCanvas(
+  region: { x: number; y: number; width: number; height: number; unit: "pixel" | "normalized" },
+  canvas: { widthPixels: number; heightPixels: number },
+  label: string
+): void {
+  if (
+    ![region.x, region.y, region.width, region.height].every(Number.isFinite) ||
+    region.x < 0 ||
+    region.y < 0 ||
+    region.width <= 0 ||
+    region.height <= 0
+  ) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source region ${label} has invalid geometry`
+    );
+  }
+  const maximumX = region.unit === "normalized" ? 1 : canvas.widthPixels;
+  const maximumY = region.unit === "normalized" ? 1 : canvas.heightPixels;
+  if (region.x + region.width > maximumX || region.y + region.height > maximumY) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source region ${label} extends beyond its exact canvas`
+    );
   }
 }
 
@@ -2390,8 +3984,8 @@ function resolveMany<K extends ReferenceSourceStagingRecord["recordKind"]>(
   kind: K,
   byRef: Map<string, ReferenceSourceStagingRecord>,
   label: string
-): void {
-  for (const ref of refs) resolveKind(ref, kind, byRef, label);
+): Array<Extract<ReferenceSourceStagingRecord, { recordKind: K }>> {
+  return refs.map((ref) => resolveKind(ref, kind, byRef, label));
 }
 
 function resolveManyOfKinds(
@@ -2468,6 +4062,28 @@ function sameRefSet(left: ReferenceRecordRef[], right: ReferenceRecordRef[]): bo
   if (left.length !== right.length) return false;
   const rightKeys = new Set(right.map(refKey));
   return rightKeys.size === right.length && left.every((ref) => rightKeys.has(refKey(ref)));
+}
+
+function assertDistinctRefs(refs: ReferenceRecordRef[], label: string): void {
+  if (new Set(refs.map(refKey)).size !== refs.length) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} must contain duplicate-free exact references`
+    );
+  }
+}
+
+function assertUniqueStrings(values: string[], label: string): void {
+  if (new Set(values).size !== values.length) {
+    throw new ReferenceSourceStagingIntegrityError(
+      `Reference-source ${label} must contain unique values`
+    );
+  }
+}
+
+function sameStrings(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  const rightValues = new Set(right);
+  return rightValues.size === right.length && left.every((value) => rightValues.has(value));
 }
 
 function uniqueRefs(refs: ReferenceRecordRef[]): ReferenceRecordRef[] {
