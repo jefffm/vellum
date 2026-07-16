@@ -44,6 +44,9 @@ export const KnowledgePublicationRecordKindSchema = Type.Union([
   Type.Literal("activation_decision"),
   Type.Literal("knowledge_library_inventory_snapshot"),
   Type.Literal("knowledge_catalog_snapshot"),
+  Type.Literal("owner_reference_migration_mapping"),
+  Type.Literal("owner_reference_migration_quarantine"),
+  Type.Literal("owner_reference_migration_journal"),
 ]);
 export type KnowledgePublicationRecordKind = Static<typeof KnowledgePublicationRecordKindSchema>;
 
@@ -53,6 +56,7 @@ export const KnowledgePublicationWriterKindSchema = Type.Union([
   Type.Literal("advisory"),
   Type.Literal("activation"),
   Type.Literal("system"),
+  Type.Literal("migration"),
 ]);
 export type KnowledgePublicationWriterKind = Static<typeof KnowledgePublicationWriterKindSchema>;
 
@@ -84,6 +88,21 @@ export const KnowledgePublicationWriteSchema = Type.Object(
   Strict
 );
 export type KnowledgePublicationWrite = Static<typeof KnowledgePublicationWriteSchema>;
+
+/** Compute the exact immutable record ref a normalized write will publish. */
+export function knowledgePublicationRecordRefForWrite(
+  write: KnowledgePublicationWrite
+): KnowledgePublicationRecordRef {
+  const core = {
+    schemaVersion: 1 as const,
+    recordKind: write.recordKind,
+    id: write.id,
+    successorRefs: sortRecordRefs(write.successorRefs),
+    content: structuredClone(write.content),
+  };
+  const decoded = decodeRecord({ ...core, digest: publicationDigest("record", core) });
+  return recordRef(decoded);
+}
 
 export const KnowledgePublicationTransactionSchema = Type.Object(
   {
@@ -426,6 +445,101 @@ export class KnowledgePublicationStore {
       if (targets.length === 0) return { reclaimed: false };
       for (const target of targets) {
         assertRealDirectory(target, "publication orphan");
+        rmSync(target, { recursive: true, force: true });
+        fsyncDirectory(path.dirname(target));
+      }
+      return { reclaimed: true };
+    } finally {
+      this.releaseHeadClaim(claim);
+    }
+  }
+
+  /**
+   * Reclaim only the unreachable generation bound to these exact transaction
+   * bytes. This is the safe retry path for a caller that already has an
+   * immutable transaction intent; a transaction-ID match alone is not enough
+   * authority to delete an orphan.
+   */
+  reclaimExactTransactionOrphan(transactionValue: KnowledgePublicationTransaction): {
+    reclaimed: boolean;
+  } {
+    assertAuthorityPathRuntime(
+      "authority.validator.knowledge-publication-governance",
+      "production"
+    );
+    const transaction = decodeTransaction(transactionValue);
+    const normalized = normalizeTransaction(transaction);
+    const requestDigest = publicationDigest("transaction", normalized);
+    const generationId = `publication-generation.${publicationDigest("generation-id", {
+      requestDigest,
+    }).slice(0, 32)}`;
+    const claim = this.acquireHeadClaim();
+    try {
+      cleanupKnownTemporaryFiles(this.rootDirectory);
+      const liveHead = this.readHead();
+      if (this.isGenerationReachable(generationId, liveHead)) {
+        const committed = this.readGenerationDirect(generationId);
+        if (committed.generation.requestDigest !== requestDigest) {
+          throw new KnowledgePublicationIntegrityError(
+            "Reachable publication generation does not match its exact retry transaction"
+          );
+        }
+        return { reclaimed: false };
+      }
+
+      const staging = this.stagingGenerationPath(generationId);
+      const generation = this.generationPath(generationId);
+      const targets = [staging, generation].filter(existsSync);
+      if (targets.length === 0) return { reclaimed: false };
+
+      const bindingFile = this.transactionBindingPath(transaction.transactionId);
+      if (!existsSync(bindingFile)) {
+        throw new KnowledgePublicationIntegrityError(
+          "Publication orphan lacks its immutable transaction binding"
+        );
+      }
+      const binding = decodeTransactionBinding(
+        readJsonFile(bindingFile, "publication transaction binding")
+      );
+      if (
+        binding.transactionId !== transaction.transactionId ||
+        binding.requestDigest !== requestDigest ||
+        binding.generationId !== generationId
+      ) {
+        throw new KnowledgePublicationIntegrityError(
+          "Publication orphan transaction binding does not match the exact retry"
+        );
+      }
+
+      if (existsSync(staging)) {
+        assertRealDirectory(staging, "publication staging orphan");
+        const intent = this.tryReadStageIntent(staging);
+        if (
+          !intent ||
+          intent.generationId !== generationId ||
+          intent.transactionId !== transaction.transactionId ||
+          intent.requestDigest !== requestDigest ||
+          !sameGenerationRef(intent.parentGenerationRef, normalized.expectedHead)
+        ) {
+          throw new KnowledgePublicationIntegrityError(
+            "Publication staging orphan is not the exact requested transaction"
+          );
+        }
+        const manifestFile = path.join(staging, "generation.json");
+        if (existsSync(manifestFile)) {
+          const manifest = this.readGenerationManifest(staging);
+          assertRequestMatchesGeneration(manifest, normalized, requestDigest);
+          this.validateGenerationRecords(staging, manifest);
+        }
+      }
+      if (existsSync(generation)) {
+        assertRealDirectory(generation, "publication generation orphan");
+        const manifest = this.readGenerationManifest(generation);
+        assertRequestMatchesGeneration(manifest, normalized, requestDigest);
+        this.validateGenerationRecords(generation, manifest);
+      }
+
+      for (const target of targets) {
         rmSync(target, { recursive: true, force: true });
         fsyncDirectory(path.dirname(target));
       }
@@ -919,8 +1033,9 @@ export class KnowledgePublicationStore {
 
   private acquireHeadClaim(attempt = 0): HeadClaim {
     ensureRealDirectory(this.rootDirectory);
-    if (existsSync(this.recoveryClaimPath())) {
-      if (!this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")) {
+    if (this.recoveryClaimPaths().length > 0) {
+      const recoveryClaim = this.acquireRecoveryClaim();
+      if (!recoveryClaim) {
         if (attempt < 250) {
           waitForClaimRetry();
           return this.acquireHeadClaim(attempt + 1);
@@ -931,10 +1046,11 @@ export class KnowledgePublicationStore {
           null
         );
       }
+      this.releaseOwnedClaim(recoveryClaim);
     }
     try {
       const claim = this.createOwnedClaim(this.headClaimPath());
-      if (existsSync(this.recoveryClaimPath())) {
+      if (this.recoveryClaimPaths().length > 0) {
         this.releaseOwnedClaim(claim);
         if (attempt < 250) {
           waitForClaimRetry();
@@ -960,6 +1076,13 @@ export class KnowledgePublicationStore {
           null
         );
       }
+      if (attempt > 250) {
+        throw new KnowledgePublicationConflictError(
+          "Knowledge publication head claim kept changing during recovery",
+          this.readHead(),
+          null
+        );
+      }
       return this.acquireHeadClaim(attempt + 1);
     }
   }
@@ -968,7 +1091,7 @@ export class KnowledgePublicationStore {
     const recovery = this.acquireRecoveryClaim();
     if (!recovery) return false;
     try {
-      if (!existsSync(this.headClaimPath())) return true;
+      if (!pathEntryExists(this.headClaimPath())) return true;
       return this.recoverStaleOwnedClaim(this.headClaimPath(), "head-claim");
     } finally {
       this.releaseOwnedClaim(recovery);
@@ -977,11 +1100,31 @@ export class KnowledgePublicationStore {
 
   private acquireRecoveryClaim(): HeadClaim | null {
     for (let attempt = 0; attempt < 4; attempt += 1) {
+      const claim = this.createOwnedClaim(this.recoveryTicketPath());
+      let keepClaim = false;
       try {
-        return this.createOwnedClaim(this.recoveryClaimPath());
-      } catch (error) {
-        if (!isFileExistsError(error)) throw error;
-        if (!this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")) return null;
+        for (const candidate of this.recoveryClaimPaths()) {
+          if (candidate === claim.path || candidate === this.recoveryClaimPath()) continue;
+          if (!this.recoverStaleOwnedClaim(candidate, "recovery-guard")) return null;
+        }
+        if (
+          this.recoveryClaimPaths().some(
+            (candidate) => candidate !== claim.path && candidate !== this.recoveryClaimPath()
+          )
+        ) {
+          continue;
+        }
+        if (
+          pathEntryExists(this.recoveryClaimPath()) &&
+          !this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")
+        ) {
+          return null;
+        }
+        if (this.recoveryClaimPaths().some((candidate) => candidate !== claim.path)) continue;
+        keepClaim = true;
+        return claim;
+      } finally {
+        if (!keepClaim) this.releaseOwnedClaim(claim);
       }
     }
     return null;
@@ -1041,34 +1184,67 @@ export class KnowledgePublicationStore {
   }
 
   private recoverStaleOwnedClaim(file: string, kind: string): boolean {
-    if (!existsSync(file)) return true;
-    const original = readCanonicalJsonBytes(file, `publication ${kind}`);
-    const receipt = decodeHeadClaim(JSON.parse(original));
-    if (!claimOwnerIsProvablyAbsent(receipt, this.hostIdentity)) return false;
-    if (readCanonicalJsonBytes(file, `publication ${kind}`) !== original) return false;
-    const quarantine = `${file}.orphan.${randomUUID()}`;
-    renameSync(file, quarantine);
+    if (!pathEntryExists(file)) return true;
+    let descriptor: number;
     try {
-      if (readCanonicalJsonBytes(quarantine, `quarantined publication ${kind}`) !== original) {
+      descriptor = openSync(file, fsConstants.O_RDONLY | noFollowFlag());
+    } catch (error) {
+      if (isFileMissingError(error)) return true;
+      throw new KnowledgePublicationIntegrityError(
+        `Publication ${kind} could not be opened without following links`
+      );
+    }
+    try {
+      if (!pathMatchesDescriptor(file, descriptor)) {
         throw new KnowledgePublicationIntegrityError(
-          `Recovered publication ${kind} bytes changed during guarded rename`
+          `Publication ${kind} is not one stable regular file`
         );
       }
-      writeJsonAtomic(path.join(this.rootDirectory, "recoveries", `${kind}.${randomUUID()}.json`), {
-        schemaVersion: 1,
-        kind,
-        recoveredClaimDigest: createHash("sha256").update(original).digest("hex"),
-        absentOwner: {
-          pid: receipt.pid,
-          hostIdentity: receipt.hostIdentity,
-          bootIdentity: receipt.bootIdentity,
-          processStartIdentity: receipt.processStartIdentity,
-        },
-        recoveredAt: this.now().toISOString(),
-      });
-      return true;
+      const original = readFileSync(descriptor, "utf8");
+      if (readCanonicalJsonBytes(file, `publication ${kind}`) !== original) return false;
+      const receipt = decodeHeadClaim(JSON.parse(original));
+      if (!claimOwnerIsProvablyAbsent(receipt, this.hostIdentity)) return false;
+      // Establish the durable receipt destination before moving the stale
+      // claim away from its public name. A bad or substituted recovery path
+      // must not consume the only evidence that serialized writers.
+      ensureRealDirectory(this.recoveriesDirectory());
+      const quarantine = `${file}.orphan.${randomUUID()}`;
+      renameSync(file, quarantine);
+      let quarantineOwned = false;
+      let recoveryReceiptPublished = false;
+      try {
+        if (
+          !pathMatchesDescriptor(quarantine, descriptor) ||
+          readCanonicalJsonBytes(quarantine, `quarantined publication ${kind}`) !== original
+        ) {
+          throw new KnowledgePublicationIntegrityError(
+            `Recovered publication ${kind} bytes changed during guarded rename`
+          );
+        }
+        quarantineOwned = true;
+        writeJsonAtomic(path.join(this.recoveriesDirectory(), `${kind}.${randomUUID()}.json`), {
+          schemaVersion: 1,
+          kind,
+          recoveredClaimDigest: createHash("sha256").update(original).digest("hex"),
+          absentOwner: {
+            pid: receipt.pid,
+            hostIdentity: receipt.hostIdentity,
+            bootIdentity: receipt.bootIdentity,
+            processStartIdentity: receipt.processStartIdentity,
+          },
+          recoveredAt: this.now().toISOString(),
+        });
+        recoveryReceiptPublished = true;
+        return true;
+      } finally {
+        if (quarantineOwned && pathMatchesDescriptor(quarantine, descriptor)) {
+          if (recoveryReceiptPublished) unlinkSync(quarantine);
+          else if (!pathEntryExists(file)) renameSync(quarantine, file);
+        }
+        fsyncDirectory(this.rootDirectory);
+      }
     } finally {
-      rmSync(quarantine, { force: true });
+      closeSync(descriptor);
     }
   }
 
@@ -1078,7 +1254,7 @@ export class KnowledgePublicationStore {
 
   private releaseOwnedClaim(claim: HeadClaim): void {
     if (
-      !existsSync(claim.path) ||
+      !pathEntryExists(claim.path) ||
       !pathMatchesDescriptor(claim.path, claim.descriptor) ||
       readCanonicalJsonBytes(claim.path, "publication head claim") !== claim.serialized
     ) {
@@ -1108,6 +1284,25 @@ export class KnowledgePublicationStore {
     return path.join(this.rootDirectory, ".head.claim.recovery");
   }
 
+  private recoveryTicketPath(): string {
+    return path.join(this.rootDirectory, `.head.claim.recovery.${randomUUID()}`);
+  }
+
+  private recoveryClaimPaths(): string[] {
+    const legacy = this.recoveryClaimPath();
+    const claims = pathEntryExists(legacy) ? [legacy] : [];
+    for (const entry of readdirSync(this.rootDirectory, { withFileTypes: true })) {
+      if (!/^\.head\.claim\.recovery\.[0-9a-f-]{36}$/.test(entry.name)) continue;
+      if (!entry.isFile() || entry.isSymbolicLink()) {
+        throw new KnowledgePublicationIntegrityError(
+          "Knowledge publication recovery ticket is not a regular file"
+        );
+      }
+      claims.push(path.join(this.rootDirectory, entry.name));
+    }
+    return claims.sort();
+  }
+
   private stagingDirectory(): string {
     return path.join(this.rootDirectory, "staging");
   }
@@ -1118,6 +1313,10 @@ export class KnowledgePublicationStore {
 
   private transactionsDirectory(): string {
     return path.join(this.rootDirectory, "transactions");
+  }
+
+  private recoveriesDirectory(): string {
+    return path.join(this.rootDirectory, "recoveries");
   }
 
   private transactionBindingPath(transactionId: string): string {
@@ -1742,6 +1941,16 @@ function pathMatchesDescriptor(file: string, descriptor: number): boolean {
     );
   } catch {
     return false;
+  }
+}
+
+function pathEntryExists(file: string): boolean {
+  try {
+    lstatSync(file);
+    return true;
+  } catch (error) {
+    if (isFileMissingError(error)) return false;
+    throw error;
   }
 }
 

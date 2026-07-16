@@ -159,6 +159,15 @@ import {
   createKnowledgePublicationPublishRoute,
 } from "./lib/knowledge-publication-route.js";
 import { KnowledgePublicationStore } from "./lib/knowledge-publication-store.js";
+import { OwnerReferenceLegacyReader } from "./lib/owner-reference-legacy-reader.js";
+import { OwnerReferenceMigrationService } from "./lib/owner-reference-migration-service.js";
+import {
+  createOwnerReferenceMigrationCommitRoute,
+  createOwnerReferenceMigrationCompatibilityRoute,
+  createOwnerReferenceMigrationDryRunRoute,
+  createOwnerReferenceMigrationInterruptedRollbackRoute,
+  createOwnerReferenceMigrationRollbackRoute,
+} from "./lib/owner-reference-migration-route.js";
 import {
   createReferenceSourceObservationHistoryMigrationRoute,
   createReferenceSourceStagingReadRoute,
@@ -239,6 +248,9 @@ type ApiRouterOptions = {
   knowledgePublicationStore?: KnowledgePublicationStore;
   /** Installed only by a later typed canonical writer or an explicit test harness. */
   knowledgePublicationWriter?: Pick<KnowledgePublicationStore, "publish">;
+  ownerReferenceMigrationService?: OwnerReferenceMigrationService;
+  ownerReferenceMigrationOwnerRootDirectory?: string;
+  ownerReferenceMigrationPrivateRootDirectory?: string;
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
@@ -282,8 +294,28 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     options.referenceSourceStagingService ??
     new ReferenceSourceStagingService({
       store: new ReferenceSourceStagingStore(),
-      listLegacyOwnerReferences: () => new OwnerStore().listReferences(),
+      listLegacyOwnerReferences: () =>
+        new OwnerStore({
+          rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
+        }).listReferences(),
     });
+  let ownerReferenceMigrationService = options.ownerReferenceMigrationService;
+  const getOwnerReferenceMigrationService = () =>
+    (ownerReferenceMigrationService ??= new OwnerReferenceMigrationService({
+      journalStore: knowledgePublicationStore,
+      controlledStore: getReferenceSourceControlledArtifactStore(),
+      migrationGraphService: referenceSourceStagingService,
+      ...(options.ownerReferenceMigrationPrivateRootDirectory
+        ? { migrationRootDirectory: options.ownerReferenceMigrationPrivateRootDirectory }
+        : {}),
+      ...(options.ownerReferenceMigrationOwnerRootDirectory
+        ? {
+            legacySource: new OwnerReferenceLegacyReader({
+              rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
+            }),
+          }
+        : {}),
+    }));
   let referenceSourceControlledAssetIngestionService:
     | ReferenceSourceControlledAssetIngestionService
     | undefined;
@@ -336,6 +368,26 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get(
     "/owner/reference-source-staging",
     createReferenceSourceStagingReadRoute(referenceSourceStagingService)
+  );
+  router.get(
+    "/owner/reference-migrations/owner-references",
+    createOwnerReferenceMigrationCompatibilityRoute(getOwnerReferenceMigrationService())
+  );
+  router.post(
+    "/owner/reference-migrations/owner-references/dry-run",
+    createOwnerReferenceMigrationDryRunRoute(getOwnerReferenceMigrationService())
+  );
+  router.post(
+    "/owner/reference-migrations/owner-references/commit",
+    createOwnerReferenceMigrationCommitRoute(getOwnerReferenceMigrationService())
+  );
+  router.post(
+    "/owner/reference-migrations/owner-references/rollback",
+    createOwnerReferenceMigrationRollbackRoute(getOwnerReferenceMigrationService())
+  );
+  router.post(
+    "/owner/reference-migrations/owner-references/rollback-interrupted",
+    createOwnerReferenceMigrationInterruptedRollbackRoute(getOwnerReferenceMigrationService())
   );
   router.get(
     "/owner/reference-source-staging/snapshots/:snapshotId",
@@ -663,6 +715,9 @@ type CreateAppOptions = {
   referenceSourceControlledStoreInventoryAdapters?: readonly ReferenceSourceControlledStoreInventoryAdapter[];
   knowledgePublicationStore?: KnowledgePublicationStore;
   knowledgePublicationWriter?: Pick<KnowledgePublicationStore, "publish">;
+  ownerReferenceMigrationService?: OwnerReferenceMigrationService;
+  ownerReferenceMigrationOwnerRootDirectory?: string;
+  ownerReferenceMigrationPrivateRootDirectory?: string;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -719,6 +774,10 @@ export function createApp(options: CreateAppOptions = {}) {
         options.referenceSourceControlledStoreInventoryAdapters,
       knowledgePublicationStore: options.knowledgePublicationStore,
       knowledgePublicationWriter: options.knowledgePublicationWriter,
+      ownerReferenceMigrationService: options.ownerReferenceMigrationService,
+      ownerReferenceMigrationOwnerRootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
+      ownerReferenceMigrationPrivateRootDirectory:
+        options.ownerReferenceMigrationPrivateRootDirectory,
     })
   );
   app.use(express.static(distPath));
@@ -751,6 +810,10 @@ export function startServer(
       options.referenceSourceControlledStoreInventoryAdapters,
     knowledgePublicationStore: options.knowledgePublicationStore,
     knowledgePublicationWriter: options.knowledgePublicationWriter,
+    ownerReferenceMigrationService: options.ownerReferenceMigrationService,
+    ownerReferenceMigrationOwnerRootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
+    ownerReferenceMigrationPrivateRootDirectory:
+      options.ownerReferenceMigrationPrivateRootDirectory,
   });
   const server = createServer(app);
 

@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "668c08d8b0e15c99685207a7f50bfcaecaf6fbb72ea189fae62b27a99b59be11";
+  "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -88,8 +88,14 @@ const canonicalWriteOutputRootBindings = new Map([
   ]),
   ...schemaBindings("src/lib/owner-domain.ts", [
     "OwnerChoice",
+    "OwnerReference",
     "PersonalDefault",
     "PersonalDefaultCandidate",
+  ]),
+  ...schemaBindings("src/lib/owner-reference-migration.ts", [
+    "OwnerReferenceMigrationJournal",
+    "OwnerReferenceMigrationMapping",
+    "OwnerReferenceMigrationQuarantine",
   ]),
   ...schemaBindings("src/lib/reference-source-domain.ts", [
     "ReferenceAssetAcquisition",
@@ -171,6 +177,41 @@ const canonicalBinaryOutputBindings = new Map([
     {
       path: "src/server/lib/workspace-store.ts",
       selector: "WorkspaceStore.writeOmrArtifact",
+    },
+  ],
+  [
+    "OwnerReferenceContent.bytes",
+    {
+      path: "src/server/lib/owner-store.ts",
+      selector: "OwnerStore.addReference",
+    },
+  ],
+  [
+    "OwnerReferenceClaimRecoveryReceipt.bytes",
+    {
+      path: "src/server/lib/owner-reference-claim.ts",
+      selector: "OwnerReferenceWriteClaim.writeRecoveryReceipt",
+    },
+  ],
+  [
+    "OwnerReferenceMigrationEvidence.bytes",
+    {
+      path: "src/server/lib/owner-reference-migration-service.ts",
+      selector: "OwnerReferenceMigrationService.stageEvidenceBytes",
+    },
+  ],
+  [
+    "OwnerReferenceMigrationIntent.bytes",
+    {
+      path: "src/server/lib/owner-reference-migration-service.ts",
+      selector: "writeImmutableIntent",
+    },
+  ],
+  [
+    "OwnerReferenceMigrationRecoveryReceipt.bytes",
+    {
+      path: "src/server/lib/owner-reference-migration-service.ts",
+      selector: "OwnerReferenceMigrationService.recoverStaleMigrationClaim",
     },
   ],
   [

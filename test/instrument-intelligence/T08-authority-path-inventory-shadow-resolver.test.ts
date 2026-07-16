@@ -50,6 +50,13 @@ import type { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
 import { getChart, listChartIds } from "../../src/lib/alfabeto/charts/index.js";
 
 const projectRoot = path.resolve(process.cwd());
+// Each hostile case makes a complete authority-source copy, runs at least one
+// full static inventory scan, and removes the copy. The full suite deliberately
+// contends for CPU and filesystem bandwidth, so budget by isolated case count
+// rather than using one fixed wall-clock deadline for every compound test.
+const AUTHORITY_REPOSITORY_COPY_BUDGET_MS = 20_000;
+const authorityRepositoryCopyTimeout = (copyCount: number): number =>
+  copyCount * AUTHORITY_REPOSITORY_COPY_BUDGET_MS;
 
 describe("T08 authority-path inventory and compatibility classification", () => {
   it("loads one closed, deeply frozen classification-only snapshot", () => {
@@ -74,7 +81,7 @@ describe("T08 authority-path inventory and compatibility classification", () => 
       id: "authority-writer-contract.v1",
       version: 1,
       path: "src/lib/data/authority-writer-contract.v1.json",
-      digest: "668c08d8b0e15c99685207a7f50bfcaecaf6fbb72ea189fae62b27a99b59be11",
+      digest: "d77b0c7f6fd92b062700a0310a939bf9b1e38b841e241768f6ec5094ce65d24d",
     });
     expect(new Set(inventory.entries.map((entry) => entry.id)).size).toBe(inventory.entries.length);
     expect(inventory.coverage.length).toBeGreaterThan(200);
@@ -127,6 +134,93 @@ describe("T08 authority-path inventory and compatibility classification", () => 
     );
   });
 
+  it("closes every T09 migration writer over its exact persisted outputs", () => {
+    const referenceGovernance = entry("authority.validator.reference-source-governance");
+    expect(referenceGovernance.reads.map(({ selector }) => selector)).toEqual(
+      expect.arrayContaining(["createApiRouter", "OwnerStore.listReferences"])
+    );
+    const writes = new Map(
+      referenceGovernance.writes.map((write) => [write.locator.selector, write.outputFields])
+    );
+    expect(writes.get("OwnerReferenceMigrationService.commit")).toEqual(
+      expect.arrayContaining([
+        "OwnerReferenceMigrationEvidence.bytes",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationJournal.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "PublicationTransactionBinding.record",
+        "ReferenceSourceStagingSnapshot.record",
+        "ControlledArtifactCatalog.record",
+      ])
+    );
+    expect(writes.get("OwnerReferenceMigrationService.rollbackInterrupted")).toEqual(
+      expect.arrayContaining([
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationJournal.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "PublicationTransactionBinding.record",
+      ])
+    );
+    expect(writes.get("createOwnerReferenceMigrationInterruptedRollbackRoute")).toEqual(
+      writes.get("OwnerReferenceMigrationService.rollbackInterrupted")
+    );
+    expect(writes.get("OwnerStore.addReference")).toEqual(
+      expect.arrayContaining([
+        "OwnerReference.record",
+        "OwnerReferenceContent.bytes",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerStoreManifest.referenceIds",
+      ])
+    );
+    expect(writes.get("OwnerStore.addReferenceFromSpool")).toEqual(
+      expect.arrayContaining([
+        "OwnerReference.record",
+        "OwnerReferenceContent.bytes",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerStoreManifest.referenceIds",
+      ])
+    );
+    expect(writes.get("ReferenceSourceControlledArtifactStore.withExclusiveTransaction")).toEqual(
+      expect.arrayContaining([
+        "ControlledArtifactCatalog.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record",
+      ])
+    );
+
+    const publicationGovernance = entry("authority.validator.knowledge-publication-governance");
+    expect(
+      publicationGovernance.writes.find(
+        (write) =>
+          write.locator.selector === "KnowledgePublicationStore.reclaimExactTransactionOrphan"
+      )?.outputFields
+    ).toEqual([
+      "KnowledgePublicationGeneration.record",
+      "KnowledgePublicationRecord.record",
+      "PublicationTransactionBinding.record",
+    ]);
+
+    const ownerDefaults = entry("authority.cache.owner-personal-defaults");
+    for (const selector of [
+      "OwnerStore.approveDefaultCandidate",
+      "OwnerStore.proposeDefaultCandidate",
+      "OwnerStore.recordChoice",
+      "OwnerStore.rejectDefaultCandidate",
+      "OwnerStore.releaseDefault",
+      "OwnerStore.reviseDefaultCandidate",
+      "acceptReviewedOwnerDefault",
+    ]) {
+      expect(
+        ownerDefaults.writes.find((write) => write.locator.selector === selector)?.outputFields
+      ).toContain("OwnerReferenceClaimRecoveryReceipt.bytes");
+    }
+  });
+
   it("independently re-hashes the builder, policy, seed, sources, and fixtures", () => {
     const receipt = verifyAuthorityPathInventoryFiles(projectRoot);
     expect(receipt).toMatchObject({
@@ -147,167 +241,176 @@ describe("T08 authority-path inventory and compatibility classification", () => 
     ).not.toThrow();
   });
 
-  it("freezes exact writer attribution independently of the editable inventory seed", () => {
-    const forgedInventory = structuredClone(bundledAuthorityPathInventory);
-    forgedInventory.writerContractRef.digest = "0".repeat(64);
-    expect(() => validateAuthorityPathInventory(forgedInventory)).toThrow(
-      /writer-contract identity is invalid/i
-    );
+  it(
+    "freezes exact writer attribution independently of the editable inventory seed",
+    () => {
+      const forgedInventory = structuredClone(bundledAuthorityPathInventory);
+      forgedInventory.writerContractRef.digest = "0".repeat(64);
+      expect(() => validateAuthorityPathInventory(forgedInventory)).toThrow(
+        /writer-contract identity is invalid/i
+      );
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = readWriterSeed(seedPath);
-      const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
-      writes.push({
-        locator: {
-          kind: "cache",
-          path: "src/server/lib/owner-store.ts",
-          selector: "OwnerStore.listDefaults",
-        },
-        outputFields: ["PersonalDefault.id"],
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = readWriterSeed(seedPath);
+        const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
+        writes.push({
+          locator: {
+            kind: "cache",
+            path: "src/server/lib/owner-store.ts",
+            selector: "OwnerStore.listDefaults",
+          },
+          outputFields: ["PersonalDefault.id"],
+        });
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer contract attribution set mismatch.*OwnerStore\.listDefaults/i
+        );
       });
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer contract attribution set mismatch.*OwnerStore\.listDefaults/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = readWriterSeed(seedPath);
+        const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
+        const removed = writes.findIndex(
+          (write) => write.locator.selector === "OwnerStore.rejectDefaultCandidate"
+        );
+        expect(removed).toBeGreaterThanOrEqual(0);
+        writes.splice(removed, 1);
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = readWriterSeed(seedPath);
-      const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
-      const removed = writes.findIndex(
-        (write) => write.locator.selector === "OwnerStore.rejectDefaultCandidate"
-      );
-      expect(removed).toBeGreaterThanOrEqual(0);
-      writes.splice(removed, 1);
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer contract attribution set mismatch.*rejectDefaultCandidate/i
+        );
+      });
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer contract attribution set mismatch.*rejectDefaultCandidate/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = readWriterSeed(seedPath);
+        const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
+        const approve = writes.find(
+          (write) => write.locator.selector === "OwnerStore.approveDefaultCandidate"
+        );
+        const reject = writes.find(
+          (write) => write.locator.selector === "OwnerStore.rejectDefaultCandidate"
+        );
+        expect(approve).toBeDefined();
+        expect(reject).toBeDefined();
+        [approve!.outputFields, reject!.outputFields] = [
+          reject!.outputFields,
+          approve!.outputFields,
+        ];
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = readWriterSeed(seedPath);
-      const writes = writerEntry(seed, "authority.cache.owner-personal-defaults");
-      const approve = writes.find(
-        (write) => write.locator.selector === "OwnerStore.approveDefaultCandidate"
-      );
-      const reject = writes.find(
-        (write) => write.locator.selector === "OwnerStore.rejectDefaultCandidate"
-      );
-      expect(approve).toBeDefined();
-      expect(reject).toBeDefined();
-      [approve!.outputFields, reject!.outputFields] = [reject!.outputFields, approve!.outputFields];
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer contract output mismatch.*(?:approve|reject)DefaultCandidate/i
+        );
+      });
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer contract output mismatch.*(?:approve|reject)DefaultCandidate/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const contractPath = path.join(root, "src/lib/data/authority-writer-contract.v1.json");
+        const seed = readWriterSeed(seedPath);
+        const contract = JSON.parse(readFileSync(contractPath, "utf8")) as {
+          entries: WriterAttribution[];
+        };
+        const seedWrite = writerEntry(seed, "authority.cache.owner-personal-defaults").find(
+          (write) => write.locator.selector === "OwnerStore.recordChoice"
+        );
+        const contractWrite = contract.entries.find(
+          (write) =>
+            write.authorityPathId === "authority.cache.owner-personal-defaults" &&
+            write.locator.selector === "OwnerStore.recordChoice"
+        );
+        expect(seedWrite).toBeDefined();
+        expect(contractWrite).toBeDefined();
+        seedWrite!.outputFields.push("PersonalDefault.id");
+        seedWrite!.outputFields.sort();
+        contractWrite!.outputFields.push("PersonalDefault.id");
+        contractWrite!.outputFields.sort();
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const contractPath = path.join(root, "src/lib/data/authority-writer-contract.v1.json");
-      const seed = readWriterSeed(seedPath);
-      const contract = JSON.parse(readFileSync(contractPath, "utf8")) as {
-        entries: WriterAttribution[];
-      };
-      const seedWrite = writerEntry(seed, "authority.cache.owner-personal-defaults").find(
-        (write) => write.locator.selector === "OwnerStore.recordChoice"
-      );
-      const contractWrite = contract.entries.find(
-        (write) =>
-          write.authorityPathId === "authority.cache.owner-personal-defaults" &&
-          write.locator.selector === "OwnerStore.recordChoice"
-      );
-      expect(seedWrite).toBeDefined();
-      expect(contractWrite).toBeDefined();
-      seedWrite!.outputFields.push("PersonalDefault.id");
-      seedWrite!.outputFields.sort();
-      contractWrite!.outputFields.push("PersonalDefault.id");
-      contractWrite!.outputFields.sort();
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer contract digest mismatch/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(4)
+  );
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer contract digest mismatch/i
-      );
-    });
-  }, 60_000);
-
-  it("rejects uncontracted or output-insensitive persistence paths", () => {
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/guided-workflow-service.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "\n  active(workspaceId: string): GuidedWorkflow | undefined {",
-          `
+  it(
+    "rejects uncontracted or output-insensitive persistence paths",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/guided-workflow-service.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "\n  active(workspaceId: string): GuidedWorkflow | undefined {",
+            `
   unregisteredWriter(workspaceId: string, workflow: GuidedWorkflow): GuidedWorkflow {
     return this.store.saveGuidedWorkflow(workspaceId, workflow);
   }
 
   active(workspaceId: string): GuidedWorkflow | undefined {`
-        )
-      );
-      const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === sourcePath
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
-        {
-          selector: "GuidedWorkflowService.unregisteredWriter",
-          disposition: "authority_path",
-          authorityPathIds: [...authorityPathIds],
-        },
-      ]);
+          )
+        );
+        const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === sourcePath
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
+          {
+            selector: "GuidedWorkflowService.unregisteredWriter",
+            disposition: "authority_path",
+            authorityPathIds: [...authorityPathIds],
+          },
+        ]);
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /guided-workflow-persistence-closure.*uncontracted writer root/i
-      );
-    });
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /guided-workflow-persistence-closure.*uncontracted writer root/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/evaluation-artifact-store.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "\n  collect(now = this.now()): string[] {",
-          `
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/evaluation-artifact-store.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "\n  collect(now = this.now()): string[] {",
+            `
   unregisteredArtifactDeletion(sha256: string): void {
     rmSync(path.join(this.rootDirectory, "blobs", sha256), { force: true });
   }
 
   collect(now = this.now()): string[] {`
-        )
-      );
-      const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === sourcePath
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
-        {
-          selector: "EvaluationArtifactStore.unregisteredArtifactDeletion",
-          disposition: "authority_path",
-          authorityPathIds: [...authorityPathIds],
-        },
-      ]);
+          )
+        );
+        const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === sourcePath
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
+          {
+            selector: "EvaluationArtifactStore.unregisteredArtifactDeletion",
+            disposition: "authority_path",
+            authorityPathIds: [...authorityPathIds],
+          },
+        ]);
 
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /evaluation-artifact-persistence-closure.*uncontracted writer root/i
-      );
-    });
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /evaluation-artifact-persistence-closure.*uncontracted writer root/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/human-comparison.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        `${readFileSync(filePath, "utf8")}
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/human-comparison.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          `${readFileSync(filePath, "utf8")}
 export function unregisteredHumanEvaluationWriter(
   evaluationStore: EvaluationStore,
   evaluation: HumanEvaluation
@@ -315,609 +418,634 @@ export function unregisteredHumanEvaluationWriter(
   return evaluationStore.saveHumanEvaluation(evaluation);
 }
 `
-      );
-      const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === sourcePath
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
-        {
-          selector: "unregisteredHumanEvaluationWriter",
-          disposition: "authority_path",
-          authorityPathIds: [...authorityPathIds],
-        },
-      ]);
-
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /human-evaluation-persistence-closure.*uncontracted writer root/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/workspace-store.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "      brief,\n      updatedAt: this.now().toISOString(),",
-          "      brief,\n      guidedWorkflowIds: [],\n      updatedAt: this.now().toISOString(),"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /WorkspaceStore\.updateBrief mutates unclaimed authority writer output ArrangementWorkspace\.guidedWorkflowIds/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/evaluation-comparison.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "      return this.options.store.saveReport({",
-          "      this.options.store.saveComparison(comparison);\n      return this.options.store.saveReport({"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer (source|implementation) digest mismatch.*evaluation-comparison/i
-      );
-    });
-  }, 60_000);
-
-  it("fails static source and declaration coverage", () => {
-    withAuthorityRepositoryCopy((root) => {
-      writeFileSync(
-        path.join(root, "src/lib/unclassified-authority.ts"),
-        'export const historicalDefault = "invented";\n'
-      );
-      expect(() => runInventoryBuilder(root)).toThrow(/unclassified production or evaluator/i);
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      appendFileSync(
-        path.join(root, "src/prompts.ts"),
-        '\nexport const inventedHistoricalDefault = "unreviewed";\n'
-      );
-      expect(() =>
-        runInventoryBuilder(root, [
-          "--write",
-          "--acknowledge-review",
-          "--review-source=src/prompts.ts",
-        ])
-      ).toThrow(/digest-bound source classification review.*src\/prompts\.ts/i);
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      appendFileSync(
-        path.join(root, sourcePath),
-        "\nexport function inventedUnregisteredHistoricalRanker(): number { return 1; }\n"
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /unreviewed declaration.*imitative-arranger\.ts::inventedUnregisteredHistoricalRanker/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        sourceReviews: Array<{
-          sourcePath: string;
-          declarations: Array<{
-            selector: string;
-            disposition: "authority_path" | "no_authority_effect";
-            authorityPathIds: string[];
-          }>;
-        }>;
-      };
-      const ownerStoreReview = seed.sourceReviews.find(
-        (review) => review.sourcePath === "src/server/lib/owner-store.ts"
-      );
-      const applyDefaultsReview = ownerStoreReview?.declarations.find(
-        (declaration) => declaration.selector === "OwnerStore.applyDefaults"
-      );
-      expect(applyDefaultsReview).toBeDefined();
-      applyDefaultsReview!.disposition = "no_authority_effect";
-      applyDefaultsReview!.authorityPathIds = [];
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /unapproved no-authority declaration downgrade: src\/server\/lib\/owner-store\.ts::OwnerStore\.applyDefaults/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/owner-store.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          '      authorityState: "raw_staged",\n      activationAllowed: false,\n      createdAt: this.now().toISOString(),',
-          '      authorityState: "raw_staged",\n      activationAllowed: true,\n      createdAt: this.now().toISOString(),'
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /no-authority declaration exception implementation digest mismatch: src\/server\/lib\/owner-store\.ts::OwnerStore\.addReference/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      rmSync(path.join(root, "src/lib/musicological-analysis.ts"));
-      expect(() => runInventoryBuilder(root)).toThrow(/names an uncovered source/i);
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      symlinkSync(
-        path.join(root, "src/prompts.ts"),
-        path.join(root, "src/lib/symlinked-authority.ts")
-      );
-      expect(() => runInventoryBuilder(root)).toThrow(/symbolic links are forbidden/i);
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      appendFileSync(
-        path.join(root, sourcePath),
-        "\nclass InventedAuthority { static { globalThis.console.log('authority'); } }\n"
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /class static blocks are forbidden/i
-      );
-    });
-  }, 60_000);
-
-  it("rejects denied-mutation, evaluator-import, and lookup bypasses", () => {
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/owner-store.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          'assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");\n    throw legacyKnowledgeMutationError("proposal");',
-          "return {} as never;"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer source digest mismatch: src\/server\/lib\/owner-store\.ts|denied mutation must begin.*unconditional throw/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const evaluatorPath = "test/fixtures/hostile-evaluator.ts";
-      writeFileSync(path.join(root, evaluatorPath), "export const evaluatorSecret = 1;\n");
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        entries: Array<{ id: string; sourcePaths: string[] }>;
-      };
-      const evaluator = seed.entries.find(
-        (item) => item.id === "authority.validator.evaluator-only"
-      )!;
-      evaluator.sourcePaths.push(evaluatorPath);
-      evaluator.sourcePaths.sort();
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      refreshFrozenSourceReview(
-        root,
-        evaluatorPath,
-        ["authority.validator.evaluator-only"],
-        "authority_path",
-        [
+        );
+        const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === sourcePath
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, sourcePath, undefined, undefined, [
           {
-            selector: "evaluatorSecret",
+            selector: "unregisteredHumanEvaluationWriter",
             disposition: "authority_path",
-            authorityPathIds: ["authority.validator.evaluator-only"],
+            authorityPathIds: [...authorityPathIds],
           },
-        ]
-      );
-      const productionPath = "src/lib/imitative-arranger.ts";
-      appendFileSync(
-        path.join(root, productionPath),
-        '\nimport { evaluatorSecret } from "../../test/fixtures/hostile-evaluator.js";\nvoid evaluatorSecret;\n'
-      );
-      const productionIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === productionPath
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, productionPath, undefined, undefined, [
-        {
-          selector: "<module:1>",
-          disposition: "authority_path",
-          authorityPathIds: [...productionIds],
-        },
-      ]);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /production source imports evaluator-only code/i
-      );
-    });
+        ]);
 
-    withAuthorityRepositoryCopy((root) => {
-      const bypassPath = "src/lib/unclassified-bypass.ts";
-      writeFileSync(
-        path.join(root, bypassPath),
-        'const reader = () => import("./alfabeto/lookup.js").then((api) => api.lookupAlfabetoChart);\n'
-      );
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        noAuthorityEffect: Array<{ sourcePath: string; owner: string; reason: string }>;
-      };
-      seed.noAuthorityEffect.push({
-        sourcePath: bypassPath,
-        owner: "hostile.fixture",
-        reason: "Hostile attempt to launder a direct chart reader as transport.",
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /human-evaluation-persistence-closure.*uncontracted writer root/i
+        );
       });
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      refreshFrozenSourceReview(root, bypassPath, [], "no_authority_effect", [
-        {
-          selector: "reader",
-          disposition: "no_authority_effect",
-          authorityPathIds: [],
-        },
-      ]);
-      expect(() => runInventoryBuilder(root)).toThrow(/raw-alfabeto-chart-api/i);
-    });
 
-    withAuthorityRepositoryCopy((root) => {
-      const productionPath = "src/lib/imitative-arranger.ts";
-      appendFileSync(
-        path.join(root, productionPath),
-        '\nimport { createRequire as makeLoader } from "node:module";\nvoid makeLoader(import.meta.url)("../server/lib/evaluation-harness.js");\n'
-      );
-      const productionIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === productionPath
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, productionPath, undefined, undefined, [
-        {
-          selector: "<module:1>",
-          disposition: "authority_path",
-          authorityPathIds: [...productionIds],
-        },
-      ]);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /CommonJS module loaders are forbidden/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/workspace-store.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "      brief,\n      updatedAt: this.now().toISOString(),",
+            "      brief,\n      guidedWorkflowIds: [],\n      updatedAt: this.now().toISOString(),"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
 
-    withAuthorityRepositoryCopy((root) => {
-      appendFileSync(
-        path.join(root, "src/lib/alfabeto/index.ts"),
-        '\nexport { lookupAlfabetoChart } from "./lookup.js";\n'
-      );
-      refreshFrozenSourceReview(root, "src/lib/alfabeto/index.ts");
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /raw-alfabeto-chart-api|sibling-alfabeto-lookup-module/i
-      );
-    });
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /WorkspaceStore\.updateBrief mutates unclaimed authority writer output ArrangementWorkspace\.guidedWorkflowIds/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      appendFileSync(
-        path.join(root, "src/server/lib/engrave.ts"),
-        '\nconst bypass = () => import("../../lib/alfabeto/lookup.js");\n'
-      );
-      const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
-        (item) => item.sourcePath === "src/server/lib/engrave.ts"
-      )!.authorityPathIds;
-      refreshFrozenSourceReview(root, "src/server/lib/engrave.ts", undefined, undefined, [
-        {
-          selector: "bypass",
-          disposition: "authority_path",
-          authorityPathIds: [...authorityPathIds],
-        },
-      ]);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /direct-alfabeto-lookup-module/i
-      );
-    });
-  }, 60_000);
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/evaluation-comparison.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "      return this.options.store.saveReport({",
+            "      this.options.store.saveComparison(comparison);\n      return this.options.store.saveReport({"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
 
-  it("rejects displaced guards and hostile parameter defaults", () => {
-    withAuthorityRepositoryCopy((root) => {
-      const promptPath = path.join(root, "src/prompts.ts");
-      writeFileSync(
-        promptPath,
-        readFileSync(promptPath, "utf8").replace(
-          'assertAuthorityPathRuntime("authority.prompt.instructions", "production");',
-          ""
-        )
-      );
-      refreshFrozenSourceReview(root, "src/prompts.ts");
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /prompt\.instructions.*lacks a direct production guard/i
-      );
-    });
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer (source|implementation) digest mismatch.*evaluation-comparison/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(5)
+  );
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      const filePath = path.join(root, sourcePath);
-      const source = readFileSync(filePath, "utf8");
-      const selectorStart = source.indexOf("export function rankImitativeAssignments");
-      const guard =
-        '  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");\n';
-      const guardStart = source.indexOf(guard, selectorStart);
-      expect(selectorStart).toBeGreaterThanOrEqual(0);
-      expect(guardStart).toBeGreaterThan(selectorStart);
-      writeFileSync(
-        filePath,
-        `${source.slice(0, guardStart)}  const guardDecoy = ${JSON.stringify(guard.trim())};\n  if (false) {\n${guard}  }\n${source.slice(guardStart + guard.length)}`
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /rankImitativeAssignments.*lacks a direct production guard.*function_prologue/i
-      );
-    });
+  it(
+    "fails static source and declaration coverage",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        writeFileSync(
+          path.join(root, "src/lib/unclassified-authority.ts"),
+          'export const historicalDefault = "invented";\n'
+        );
+        expect(() => runInventoryBuilder(root)).toThrow(/unclassified production or evaluator/i);
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      const filePath = path.join(root, sourcePath);
-      const source = readFileSync(filePath, "utf8");
-      const selectorStart = source.indexOf("export function rankImitativeAssignments");
-      const guard =
-        '  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");\n';
-      const guardStart = source.indexOf(guard, selectorStart);
-      expect(selectorStart).toBeGreaterThanOrEqual(0);
-      expect(guardStart).toBeGreaterThan(selectorStart);
-      writeFileSync(
-        filePath,
-        `${source.slice(0, guardStart)}  const workBeforeGuard = true;\n${guard}${source.slice(guardStart + guard.length)}`
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /rankImitativeAssignments.*lacks a direct production guard.*function_prologue/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        appendFileSync(
+          path.join(root, "src/prompts.ts"),
+          '\nexport const inventedHistoricalDefault = "unreviewed";\n'
+        );
+        expect(() =>
+          runInventoryBuilder(root, [
+            "--write",
+            "--acknowledge-review",
+            "--review-source=src/prompts.ts",
+          ])
+        ).toThrow(/digest-bound source classification review.*src\/prompts\.ts/i);
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "maximumCompleteAssignments = 128",
-          "maximumCompleteAssignments = globalThis.hostileDefaults.value"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /ranker\.imitative-intabulation.*non-pure default parameter before its guard/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        appendFileSync(
+          path.join(root, sourcePath),
+          "\nexport function inventedUnregisteredHistoricalRanker(): number { return 1; }\n"
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /unreviewed declaration.*imitative-arranger\.ts::inventedUnregisteredHistoricalRanker/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/imitative-arranger.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "score: NormalizedScore,\n  model: InstrumentModel,",
-          "{ score = globalThis.hostileDefaults.value }: any,\n  model: InstrumentModel,"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /ranker\.imitative-intabulation.*destructuring parameter before its guard/i
-      );
-    });
-  }, 60_000);
-
-  it("rejects constructor and denied-mutation pre-guard effects", () => {
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/instrument-model.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "constructor(profile: InstrumentProfile, instance?: InstrumentInstanceConfiguration)",
-          "constructor(private readonly profile: InstrumentProfile, instance?: InstrumentInstanceConfiguration)"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /validator\.instrument-mechanics.*parameter property before its guard/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/instrument-model.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "private readonly profile: InstrumentProfile;",
-          "private readonly profile: InstrumentProfile = globalThis.hostileDefaults.value;"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /validator\.instrument-mechanics.*non-pure field initializer before its guard/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/instrument-model.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "private currentDiapasonScheme?: string;",
-          "private static currentDiapasonScheme = globalThis.hostileDefaults.value;"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /validator\.instrument-mechanics.*non-pure field initializer before its guard/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/instrument-model.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "export class InstrumentModel {",
-          "export class InstrumentModel extends class {} {"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /validator\.instrument-mechanics.*cannot extend a base class before its guard/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/lib/instrument-model.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "private readonly profile: InstrumentProfile;",
-          "private readonly [globalThis.hostileDefaults.key]: InstrumentProfile;"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /computed class member names are forbidden|validator\.instrument-mechanics.*computed member name before its guard/i
-      );
-    });
-
-    withAuthorityRepositoryCopy((root) => {
-      const sourcePath = "src/server/lib/owner-store.ts";
-      const filePath = path.join(root, sourcePath);
-      writeFileSync(
-        filePath,
-        readFileSync(filePath, "utf8").replace(
-          "releaseClaim(_id: string): HistoricalPracticeClaim",
-          "releaseClaim(_id: string = globalThis.hostileDefaults.value): HistoricalPracticeClaim"
-        )
-      );
-      refreshFrozenSourceReview(root, sourcePath);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority writer source digest mismatch: src\/server\/lib\/owner-store\.ts|cache\.owner-legacy-knowledge.*non-pure default parameter before its guard/i
-      );
-    });
-  }, 60_000);
-
-  it("rejects forged writer locators, guard scopes, and output schemas", () => {
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        entries: Array<{
-          id: string;
-          currentWritePaths: Array<{
-            locator: { path: string; selector: string };
-            outputFields: string[];
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          sourceReviews: Array<{
+            sourcePath: string;
+            declarations: Array<{
+              selector: string;
+              disposition: "authority_path" | "no_authority_effect";
+              authorityPathIds: string[];
+            }>;
           }>;
-          runtimeGuardBindings: Array<{
-            locator: { path: string; selector: string };
-            guardScope: { mode: string; path: string; selector: string };
+        };
+        const ownerStoreReview = seed.sourceReviews.find(
+          (review) => review.sourcePath === "src/server/lib/owner-store.ts"
+        );
+        const applyDefaultsReview = ownerStoreReview?.declarations.find(
+          (declaration) => declaration.selector === "OwnerStore.applyDefaults"
+        );
+        expect(applyDefaultsReview).toBeDefined();
+        applyDefaultsReview!.disposition = "no_authority_effect";
+        applyDefaultsReview!.authorityPathIds = [];
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /unapproved no-authority declaration downgrade: src\/server\/lib\/owner-store\.ts::OwnerStore\.applyDefaults/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/owner-store.ts";
+        const filePath = path.join(root, sourcePath);
+        const source = readFileSync(filePath, "utf8");
+        const mutated = source.replace(
+          '          authorityState: "raw_staged",\n          activationAllowed: false,\n          createdAt,',
+          '          authorityState: "raw_staged",\n          activationAllowed: true,\n          createdAt,'
+        );
+        expect(mutated).not.toBe(source);
+        writeFileSync(filePath, mutated);
+        refreshFrozenSourceReview(root, sourcePath);
+
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer (?:source|implementation) digest mismatch.*(?:owner-store\.ts|OwnerStore\.addReference)/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        rmSync(path.join(root, "src/lib/musicological-analysis.ts"));
+        expect(() => runInventoryBuilder(root)).toThrow(/names an uncovered source/i);
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        symlinkSync(
+          path.join(root, "src/prompts.ts"),
+          path.join(root, "src/lib/symlinked-authority.ts")
+        );
+        expect(() => runInventoryBuilder(root)).toThrow(/symbolic links are forbidden/i);
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        appendFileSync(
+          path.join(root, sourcePath),
+          "\nclass InventedAuthority { static { globalThis.console.log('authority'); } }\n"
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /class static blocks are forbidden/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(8)
+  );
+
+  it(
+    "rejects denied-mutation, evaluator-import, and lookup bypasses",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/owner-store.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            'assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");\n    throw legacyKnowledgeMutationError("proposal");',
+            "return {} as never;"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer source digest mismatch: src\/server\/lib\/owner-store\.ts|denied mutation must begin.*unconditional throw/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const evaluatorPath = "test/fixtures/hostile-evaluator.ts";
+        writeFileSync(path.join(root, evaluatorPath), "export const evaluatorSecret = 1;\n");
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          entries: Array<{ id: string; sourcePaths: string[] }>;
+        };
+        const evaluator = seed.entries.find(
+          (item) => item.id === "authority.validator.evaluator-only"
+        )!;
+        evaluator.sourcePaths.push(evaluatorPath);
+        evaluator.sourcePaths.sort();
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        refreshFrozenSourceReview(
+          root,
+          evaluatorPath,
+          ["authority.validator.evaluator-only"],
+          "authority_path",
+          [
+            {
+              selector: "evaluatorSecret",
+              disposition: "authority_path",
+              authorityPathIds: ["authority.validator.evaluator-only"],
+            },
+          ]
+        );
+        const productionPath = "src/lib/imitative-arranger.ts";
+        appendFileSync(
+          path.join(root, productionPath),
+          '\nimport { evaluatorSecret } from "../../test/fixtures/hostile-evaluator.js";\nvoid evaluatorSecret;\n'
+        );
+        const productionIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === productionPath
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, productionPath, undefined, undefined, [
+          {
+            selector: "<module:1>",
+            disposition: "authority_path",
+            authorityPathIds: [...productionIds],
+          },
+        ]);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /production source imports evaluator-only code/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const bypassPath = "src/lib/unclassified-bypass.ts";
+        writeFileSync(
+          path.join(root, bypassPath),
+          'const reader = () => import("./alfabeto/lookup.js").then((api) => api.lookupAlfabetoChart);\n'
+        );
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          noAuthorityEffect: Array<{ sourcePath: string; owner: string; reason: string }>;
+        };
+        seed.noAuthorityEffect.push({
+          sourcePath: bypassPath,
+          owner: "hostile.fixture",
+          reason: "Hostile attempt to launder a direct chart reader as transport.",
+        });
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        refreshFrozenSourceReview(root, bypassPath, [], "no_authority_effect", [
+          {
+            selector: "reader",
+            disposition: "no_authority_effect",
+            authorityPathIds: [],
+          },
+        ]);
+        expect(() => runInventoryBuilder(root)).toThrow(/raw-alfabeto-chart-api/i);
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const productionPath = "src/lib/imitative-arranger.ts";
+        appendFileSync(
+          path.join(root, productionPath),
+          '\nimport { createRequire as makeLoader } from "node:module";\nvoid makeLoader(import.meta.url)("../server/lib/evaluation-harness.js");\n'
+        );
+        const productionIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === productionPath
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, productionPath, undefined, undefined, [
+          {
+            selector: "<module:1>",
+            disposition: "authority_path",
+            authorityPathIds: [...productionIds],
+          },
+        ]);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /CommonJS module loaders are forbidden/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        appendFileSync(
+          path.join(root, "src/lib/alfabeto/index.ts"),
+          '\nexport { lookupAlfabetoChart } from "./lookup.js";\n'
+        );
+        refreshFrozenSourceReview(root, "src/lib/alfabeto/index.ts");
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /raw-alfabeto-chart-api|sibling-alfabeto-lookup-module/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        appendFileSync(
+          path.join(root, "src/server/lib/engrave.ts"),
+          '\nconst bypass = () => import("../../lib/alfabeto/lookup.js");\n'
+        );
+        const authorityPathIds = bundledAuthorityPathInventory.coverage.find(
+          (item) => item.sourcePath === "src/server/lib/engrave.ts"
+        )!.authorityPathIds;
+        refreshFrozenSourceReview(root, "src/server/lib/engrave.ts", undefined, undefined, [
+          {
+            selector: "bypass",
+            disposition: "authority_path",
+            authorityPathIds: [...authorityPathIds],
+          },
+        ]);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /direct-alfabeto-lookup-module/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(6)
+  );
+
+  it(
+    "rejects displaced guards and hostile parameter defaults",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        const promptPath = path.join(root, "src/prompts.ts");
+        writeFileSync(
+          promptPath,
+          readFileSync(promptPath, "utf8").replace(
+            'assertAuthorityPathRuntime("authority.prompt.instructions", "production");',
+            ""
+          )
+        );
+        refreshFrozenSourceReview(root, "src/prompts.ts");
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /prompt\.instructions.*lacks a direct production guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        const filePath = path.join(root, sourcePath);
+        const source = readFileSync(filePath, "utf8");
+        const selectorStart = source.indexOf("export function rankImitativeAssignments");
+        const guard =
+          '  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");\n';
+        const guardStart = source.indexOf(guard, selectorStart);
+        expect(selectorStart).toBeGreaterThanOrEqual(0);
+        expect(guardStart).toBeGreaterThan(selectorStart);
+        writeFileSync(
+          filePath,
+          `${source.slice(0, guardStart)}  const guardDecoy = ${JSON.stringify(guard.trim())};\n  if (false) {\n${guard}  }\n${source.slice(guardStart + guard.length)}`
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /rankImitativeAssignments.*lacks a direct production guard.*function_prologue/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        const filePath = path.join(root, sourcePath);
+        const source = readFileSync(filePath, "utf8");
+        const selectorStart = source.indexOf("export function rankImitativeAssignments");
+        const guard =
+          '  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");\n';
+        const guardStart = source.indexOf(guard, selectorStart);
+        expect(selectorStart).toBeGreaterThanOrEqual(0);
+        expect(guardStart).toBeGreaterThan(selectorStart);
+        writeFileSync(
+          filePath,
+          `${source.slice(0, guardStart)}  const workBeforeGuard = true;\n${guard}${source.slice(guardStart + guard.length)}`
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /rankImitativeAssignments.*lacks a direct production guard.*function_prologue/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "maximumCompleteAssignments = 128",
+            "maximumCompleteAssignments = globalThis.hostileDefaults.value"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /ranker\.imitative-intabulation.*non-pure default parameter before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/imitative-arranger.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "score: NormalizedScore,\n  model: InstrumentModel,",
+            "{ score = globalThis.hostileDefaults.value }: any,\n  model: InstrumentModel,"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /ranker\.imitative-intabulation.*destructuring parameter before its guard/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(5)
+  );
+
+  it(
+    "rejects constructor and denied-mutation pre-guard effects",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/instrument-model.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "constructor(profile: InstrumentProfile, instance?: InstrumentInstanceConfiguration)",
+            "constructor(private readonly profile: InstrumentProfile, instance?: InstrumentInstanceConfiguration)"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /validator\.instrument-mechanics.*parameter property before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/instrument-model.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "private readonly profile: InstrumentProfile;",
+            "private readonly profile: InstrumentProfile = globalThis.hostileDefaults.value;"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /validator\.instrument-mechanics.*non-pure field initializer before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/instrument-model.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "private currentDiapasonScheme?: string;",
+            "private static currentDiapasonScheme = globalThis.hostileDefaults.value;"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /validator\.instrument-mechanics.*non-pure field initializer before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/instrument-model.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "export class InstrumentModel {",
+            "export class InstrumentModel extends class {} {"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /validator\.instrument-mechanics.*cannot extend a base class before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/lib/instrument-model.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "private readonly profile: InstrumentProfile;",
+            "private readonly [globalThis.hostileDefaults.key]: InstrumentProfile;"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /computed class member names are forbidden|validator\.instrument-mechanics.*computed member name before its guard/i
+        );
+      });
+
+      withAuthorityRepositoryCopy((root) => {
+        const sourcePath = "src/server/lib/owner-store.ts";
+        const filePath = path.join(root, sourcePath);
+        writeFileSync(
+          filePath,
+          readFileSync(filePath, "utf8").replace(
+            "releaseClaim(_id: string): HistoricalPracticeClaim",
+            "releaseClaim(_id: string = globalThis.hostileDefaults.value): HistoricalPracticeClaim"
+          )
+        );
+        refreshFrozenSourceReview(root, sourcePath);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority writer source digest mismatch: src\/server\/lib\/owner-store\.ts|cache\.owner-legacy-knowledge.*non-pure default parameter before its guard/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(6)
+  );
+
+  it(
+    "rejects forged writer locators, guard scopes, and output schemas",
+    () => {
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          entries: Array<{
+            id: string;
+            currentWritePaths: Array<{
+              locator: { path: string; selector: string };
+              outputFields: string[];
+            }>;
+            runtimeGuardBindings: Array<{
+              locator: { path: string; selector: string };
+              guardScope: { mode: string; path: string; selector: string };
+            }>;
           }>;
-        }>;
-      };
-      const ownerDefaults = seed.entries.find(
-        (item) => item.id === "authority.cache.owner-personal-defaults"
-      );
-      const recordChoice = ownerDefaults?.currentWritePaths.find(
-        (item) => item.locator.selector === "OwnerStore.recordChoice"
-      );
-      const recordChoiceGuard = ownerDefaults?.runtimeGuardBindings.find(
-        (item) => item.locator.selector === "OwnerStore.recordChoice"
-      );
-      expect(recordChoice).toBeDefined();
-      expect(recordChoiceGuard).toBeDefined();
-      recordChoice!.locator.path = "src/server/lib/owner-route.ts";
-      recordChoiceGuard!.locator.path = "src/server/lib/owner-route.ts";
-      recordChoiceGuard!.guardScope = {
-        mode: "function_prologue",
-        path: "src/server/lib/owner-route.ts",
-        selector: "createOwnerStateRoute",
-      };
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /authority locator is not a reviewed runtime declaration: src\/server\/lib\/owner-route\.ts::OwnerStore\.recordChoice/i
-      );
-    });
+        };
+        const ownerDefaults = seed.entries.find(
+          (item) => item.id === "authority.cache.owner-personal-defaults"
+        );
+        const recordChoice = ownerDefaults?.currentWritePaths.find(
+          (item) => item.locator.selector === "OwnerStore.recordChoice"
+        );
+        const recordChoiceGuard = ownerDefaults?.runtimeGuardBindings.find(
+          (item) => item.locator.selector === "OwnerStore.recordChoice"
+        );
+        expect(recordChoice).toBeDefined();
+        expect(recordChoiceGuard).toBeDefined();
+        recordChoice!.locator.path = "src/server/lib/owner-route.ts";
+        recordChoiceGuard!.locator.path = "src/server/lib/owner-route.ts";
+        recordChoiceGuard!.guardScope = {
+          mode: "function_prologue",
+          path: "src/server/lib/owner-route.ts",
+          selector: "createOwnerStateRoute",
+        };
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /authority locator is not a reviewed runtime declaration: src\/server\/lib\/owner-route\.ts::OwnerStore\.recordChoice/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        entries: Array<{
-          id: string;
-          runtimeGuardBindings: Array<{
-            locator: { selector: string };
-            guardScope: { selector: string };
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          entries: Array<{
+            id: string;
+            runtimeGuardBindings: Array<{
+              locator: { selector: string };
+              guardScope: { selector: string };
+            }>;
           }>;
-        }>;
-      };
-      const ranker = seed.entries.find(
-        (item) => item.id === "authority.ranker.imitative-intabulation"
-      );
-      const binding = ranker?.runtimeGuardBindings.find(
-        (item) => item.locator.selector === "rankImitativeAssignments"
-      );
-      expect(binding).toBeDefined();
-      binding!.guardScope.selector = "arrangeImitativeIntabulation";
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /ranker\.imitative-intabulation.*guard scope must be the exact locator declaration/i
-      );
-    });
+        };
+        const ranker = seed.entries.find(
+          (item) => item.id === "authority.ranker.imitative-intabulation"
+        );
+        const binding = ranker?.runtimeGuardBindings.find(
+          (item) => item.locator.selector === "rankImitativeAssignments"
+        );
+        expect(binding).toBeDefined();
+        binding!.guardScope.selector = "arrangeImitativeIntabulation";
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /ranker\.imitative-intabulation.*guard scope must be the exact locator declaration/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        entries: Array<{
-          id: string;
-          currentWritePaths: Array<{ outputFields: string[] }>;
-        }>;
-      };
-      const ownerDefaults = seed.entries.find(
-        (item) => item.id === "authority.cache.owner-personal-defaults"
-      );
-      expect(ownerDefaults).toBeDefined();
-      ownerDefaults!.currentWritePaths[0]!.outputFields.push("Invented.record");
-      ownerDefaults!.currentWritePaths[0]!.outputFields.sort();
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /write output is not schema-bound by policy: Invented\.record/i
-      );
-    });
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          entries: Array<{
+            id: string;
+            currentWritePaths: Array<{ outputFields: string[] }>;
+          }>;
+        };
+        const ownerDefaults = seed.entries.find(
+          (item) => item.id === "authority.cache.owner-personal-defaults"
+        );
+        expect(ownerDefaults).toBeDefined();
+        ownerDefaults!.currentWritePaths[0]!.outputFields.push("Invented.record");
+        ownerDefaults!.currentWritePaths[0]!.outputFields.sort();
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /write output is not schema-bound by policy: Invented\.record/i
+        );
+      });
 
-    withAuthorityRepositoryCopy((root) => {
-      const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
-      const policyPath = path.join(
-        root,
-        "src/lib/data/authority-path-classification-policy.v1.json"
-      );
-      const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
-        entries: Array<{
-          id: string;
-          currentWritePaths: Array<{ outputFields: string[] }>;
-        }>;
-      };
-      const policy = JSON.parse(readFileSync(policyPath, "utf8")) as {
-        writeOutputFieldRegistry: string[];
-      };
-      const ownerDefaults = seed.entries.find(
-        (item) => item.id === "authority.cache.owner-personal-defaults"
-      );
-      expect(ownerDefaults).toBeDefined();
-      ownerDefaults!.currentWritePaths[0]!.outputFields.push("Invented.record");
-      ownerDefaults!.currentWritePaths[0]!.outputFields.sort();
-      policy.writeOutputFieldRegistry.push("Invented.record");
-      policy.writeOutputFieldRegistry.sort();
-      writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
-      writeFileSync(policyPath, `${JSON.stringify(policy, null, 2)}\n`);
-      refreshFrozenSourceReview(root, "src/lib/data/authority-path-classification-policy.v1.json");
-      expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
-        /write output registry root has no fixed canonical binding: Invented\.record/i
-      );
-    });
-  }, 60_000);
+      withAuthorityRepositoryCopy((root) => {
+        const seedPath = path.join(root, "src/lib/data/authority-path-inventory-seed.v1.json");
+        const policyPath = path.join(
+          root,
+          "src/lib/data/authority-path-classification-policy.v1.json"
+        );
+        const seed = JSON.parse(readFileSync(seedPath, "utf8")) as {
+          entries: Array<{
+            id: string;
+            currentWritePaths: Array<{ outputFields: string[] }>;
+          }>;
+        };
+        const policy = JSON.parse(readFileSync(policyPath, "utf8")) as {
+          writeOutputFieldRegistry: string[];
+        };
+        const ownerDefaults = seed.entries.find(
+          (item) => item.id === "authority.cache.owner-personal-defaults"
+        );
+        expect(ownerDefaults).toBeDefined();
+        ownerDefaults!.currentWritePaths[0]!.outputFields.push("Invented.record");
+        ownerDefaults!.currentWritePaths[0]!.outputFields.sort();
+        policy.writeOutputFieldRegistry.push("Invented.record");
+        policy.writeOutputFieldRegistry.sort();
+        writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);
+        writeFileSync(policyPath, `${JSON.stringify(policy, null, 2)}\n`);
+        refreshFrozenSourceReview(
+          root,
+          "src/lib/data/authority-path-classification-policy.v1.json"
+        );
+        expect(() => runInventoryBuilder(root, ["--write", "--acknowledge-review"])).toThrow(
+          /write output registry root has no fixed canonical binding: Invented\.record/i
+        );
+      });
+    },
+    authorityRepositoryCopyTimeout(4)
+  );
 
   it("makes legacy mutations denial-only and inventories legacy canonicality output exactly", () => {
     const legacy = entry("authority.cache.owner-legacy-knowledge");
@@ -945,6 +1073,7 @@ export function unregisteredHumanEvaluationWriter(
         selector: "acceptReviewedOwnerDefault",
       },
       outputFields: [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
         "PersonalDefaultCandidate.dimension",
@@ -957,9 +1086,6 @@ export function unregisteredHumanEvaluationWriter(
     });
     for (const selector of [
       "OwnerReferenceSchema",
-      "OwnerStore.addReference",
-      "OwnerStore.addReferenceFromSpool",
-      "OwnerStore.listReferences",
       "createOwnerReferenceRoute",
       "decodeReferenceHeader",
       "ownerReferenceSummary",
@@ -967,6 +1093,20 @@ export function unregisteredHumanEvaluationWriter(
       expect(
         bundledAuthorityPathInventory.declarationCoverage.find((item) => item.selector === selector)
       ).toMatchObject({ disposition: "no_authority_effect", authorityPathIds: [] });
+    }
+    for (const selector of [
+      "OwnerStore.addReference",
+      "OwnerStore.addReferenceFromSpool",
+      "OwnerStore.listReferences",
+    ]) {
+      expect(
+        bundledAuthorityPathInventory.declarationCoverage.find((item) => item.selector === selector)
+      ).toMatchObject({
+        disposition: "authority_path",
+        authorityPathIds: expect.arrayContaining([
+          "authority.validator.reference-source-governance",
+        ]),
+      });
     }
 
     const canonicality = entry("authority.validator.legacy-arrangement-canonicality");

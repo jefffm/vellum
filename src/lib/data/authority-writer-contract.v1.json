@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "007adcc57e3f6f02ec8c8c56d395b7db57188d0a44ace9c8e256df467d852254",
+  "classificationPolicyDigest": "f10032b13b40c03cd2303f9f1664f3643f75fb7e5141c892f46eba9f3118b611",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -73,7 +73,7 @@
     },
     {
       "path": "src/server/lib/knowledge-publication-store.ts",
-      "digest": "dd1cf6cd642635ef8d70f08068cb9ce8dabb54e6062430183068ca42c905caeb"
+      "digest": "c381577f8911f281fc3961fa1d45d30f64ba6999dc95ff49e400926dfc12d6be"
     },
     {
       "path": "src/server/lib/lineage-service.ts",
@@ -92,8 +92,16 @@
       "digest": "aef57df3b3fab3d9c90ed998163b1fe62b0a51bf7a3744f261aaac10fb9e5a5c"
     },
     {
+      "path": "src/server/lib/owner-reference-migration-route.ts",
+      "digest": "13cd5077a58d95157b189a8c91a5462226bc0f63cff46237b946be1c70936e37"
+    },
+    {
+      "path": "src/server/lib/owner-reference-migration-service.ts",
+      "digest": "3b044eafdacae3156cc697f467ccec32e3dcc615beed0f5328816fc2fea8fc9e"
+    },
+    {
       "path": "src/server/lib/owner-store.ts",
-      "digest": "5c040d4154ba924346b8ddded4539a041fb662009fb251c3b6bef21f75d14f42"
+      "digest": "cbbed50342edf0058653ede6d0113209064c024e5e7d535d0574ff8aa22f195e"
     },
     {
       "path": "src/server/lib/performance-interpretation-route.ts",
@@ -101,7 +109,7 @@
     },
     {
       "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
-      "digest": "82803681c89aaadf6690bdac5390a227c0855430d3d072dfb3e95024dfbff661"
+      "digest": "82b5cd9fcb847e82bd5c01cd517339bd1f82a1bddcbb306fbdb398c1e455f3d2"
     },
     {
       "path": "src/server/lib/reference-source-controlled-asset-route.ts",
@@ -113,7 +121,7 @@
     },
     {
       "path": "src/server/lib/reference-source-staging-service.ts",
-      "digest": "7bee468ed5159afd9bfce19a6b2280959f3f509a79dbf0cb9fe0c37e56ec5e01"
+      "digest": "663fcff489b0b748395b5ff93f179e49e370fc4967722dcac490343514c50f4e"
     },
     {
       "path": "src/server/lib/reference-source-staging-store.ts",
@@ -161,6 +169,7 @@
         "selector": "OwnerStore.approveDefaultCandidate"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "OwnerStoreManifest.defaultIds",
         "PersonalDefault.candidateId",
@@ -179,7 +188,7 @@
         "PersonalDefaultCandidate.status",
         "PersonalDefaultCandidate.value"
       ],
-      "implementationDigest": "b1760bebb46a3dba18f1454854a2851508b93dc053313bf9ccb3761018b6f7d0"
+      "implementationDigest": "c5aa77f13773bf966b1b1b8ff59aaca39aec540d3137943bfa06881a2ec2e7c5"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -189,6 +198,7 @@
         "selector": "OwnerStore.proposeDefaultCandidate"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
         "PersonalDefaultCandidate.dimension",
@@ -198,7 +208,7 @@
         "PersonalDefaultCandidate.status",
         "PersonalDefaultCandidate.value"
       ],
-      "implementationDigest": "272de6220134d0765d6fa65ebe47f443739f18a47200b16bceca0d5a6f3f1a3d"
+      "implementationDigest": "c1a9ec972c533af73d5e65e853d590987ae0a3bacb12cb8e4b00cbd8f9572777"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -214,6 +224,7 @@
         "OwnerChoice.scope",
         "OwnerChoice.value",
         "OwnerChoice.workspaceId",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.choiceIds",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
@@ -224,7 +235,7 @@
         "PersonalDefaultCandidate.status",
         "PersonalDefaultCandidate.value"
       ],
-      "implementationDigest": "2fd187e7d903a31f93770a8a0e511ded9c676db274c6163f1b4659fe3552fa5f"
+      "implementationDigest": "ebb49ea3bf040c015ef8998544e4e60afd5db53822e1392985436a139b03a7e8"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -234,6 +245,7 @@
         "selector": "OwnerStore.rejectDefaultCandidate"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
         "PersonalDefaultCandidate.dimension",
@@ -244,7 +256,7 @@
         "PersonalDefaultCandidate.status",
         "PersonalDefaultCandidate.value"
       ],
-      "implementationDigest": "13523bff770b661e498c595c78c5929019b800750a87eb7006a50c585fc9cd1b"
+      "implementationDigest": "020241b9a00ad4119795184792dd0e3bd0e69721fa971c23e50f11cc06ce0ef6"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -254,6 +266,7 @@
         "selector": "OwnerStore.releaseDefault"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultIds",
         "PersonalDefault.candidateId",
         "PersonalDefault.createdAt",
@@ -264,7 +277,7 @@
         "PersonalDefault.status",
         "PersonalDefault.value"
       ],
-      "implementationDigest": "9cc45232123d8d8e26f8e045be9eedb986c45e734d650b8974828e01f0d1e627"
+      "implementationDigest": "58fdab0a962e8c0882fd2e47c64151e747904d103fb536ab092c0a6b1031fe6e"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -274,6 +287,7 @@
         "selector": "OwnerStore.reviseDefaultCandidate"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
         "PersonalDefaultCandidate.dimension",
@@ -284,7 +298,7 @@
         "PersonalDefaultCandidate.status",
         "PersonalDefaultCandidate.value"
       ],
-      "implementationDigest": "89171eafa6ba497d433fcd3369538d305bbfde68beefec57f6726b4227f6fd7b"
+      "implementationDigest": "4f62b53ec5d2d06416cac0e033afd52fd6894fa0d7f340060c84b508f65f460a"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -304,6 +318,7 @@
         "selector": "acceptReviewedOwnerDefault"
       },
       "outputFields": [
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
         "OwnerStoreManifest.defaultCandidateIds",
         "PersonalDefaultCandidate.createdAt",
         "PersonalDefaultCandidate.dimension",
@@ -1701,6 +1716,20 @@
       "implementationDigest": "fb9ddf5f3f6f7b5aa68db1a5f240cbfea8d1efab340bc3a2505cd1a8747038bd"
     },
     {
+      "authorityPathId": "authority.validator.knowledge-publication-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/knowledge-publication-store.ts",
+        "selector": "KnowledgePublicationStore.reclaimExactTransactionOrphan"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationRecord.record",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "33a0152046c9c528354b66f21f12bec003a8f05749b494b02bc630f9edb4ae48"
+    },
+    {
       "authorityPathId": "authority.validator.legacy-arrangement-canonicality",
       "locator": {
         "kind": "symbol",
@@ -1888,6 +1917,170 @@
       "authorityPathId": "authority.validator.reference-source-governance",
       "locator": {
         "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-route.ts",
+        "selector": "createOwnerReferenceMigrationCommitRoute"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerReferenceMigrationEvidence.bytes",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record",
+        "ReferenceAssetAcquisition.record",
+        "ReferenceDigitalAsset.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "0235d8923469e5a9041377c934970601b0a85993caa4995491399f231ec7adb2"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-route.ts",
+        "selector": "createOwnerReferenceMigrationInterruptedRollbackRoute"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "6ccc0d927c8b2a9fc616c6b155c2b2f291617757f1681f4dcc498b09211327c7"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-route.ts",
+        "selector": "createOwnerReferenceMigrationRollbackRoute"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "0409c9037053f9635032398434dc1a0a5e4a8c0dd6d97e36701928e12399c47b"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-service.ts",
+        "selector": "OwnerReferenceMigrationService.commit"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerReferenceMigrationEvidence.bytes",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record",
+        "ReferenceAssetAcquisition.record",
+        "ReferenceDigitalAsset.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "cd1f816ba0fb77eaec08a846f6f287278da4457d0a705cd9391094f51f014bff"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-service.ts",
+        "selector": "OwnerReferenceMigrationService.rollback"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "f57b4087086f9ded5d6a48bd81ec6ffc1fa511b690ad5449369b8050da8b10ae"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-migration-service.ts",
+        "selector": "OwnerReferenceMigrationService.rollbackInterrupted"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "OwnerReferenceMigrationIntent.bytes",
+        "OwnerReferenceMigrationJournal.record",
+        "OwnerReferenceMigrationMapping.record",
+        "OwnerReferenceMigrationQuarantine.record",
+        "OwnerReferenceMigrationRecoveryReceipt.bytes",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "c7b5e39c98b645fc6149132b1d64abe6a30f3d590a3eb17005808dee215e9f26"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.addReference"
+      },
+      "outputFields": [
+        "OwnerReference.record",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerReferenceContent.bytes",
+        "OwnerStoreManifest.referenceIds"
+      ],
+      "implementationDigest": "46485f7cb11859c36a5478213dc69e29976f1202637c6f7c4ae04ec93c501a5f"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.addReferenceFromSpool"
+      },
+      "outputFields": [
+        "OwnerReference.record",
+        "OwnerReferenceClaimRecoveryReceipt.bytes",
+        "OwnerReferenceContent.bytes",
+        "OwnerStoreManifest.referenceIds"
+      ],
+      "implementationDigest": "61985325607f405d7f513772d23a7a523c26fabdc696395a2d421221d58df253"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
         "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
         "selector": "ReferenceSourceControlledArtifactStore.putDigitalAsset"
       },
@@ -1911,6 +2104,20 @@
         "ReferenceSourceControlledArtifactBinding.record"
       ],
       "implementationDigest": "1ca0d337313ec52e1dc698521452508ce2eadb3ccf19de07c40c68c67ca4b2dc"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
+        "selector": "ReferenceSourceControlledArtifactStore.withExclusiveTransaction"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record"
+      ],
+      "implementationDigest": "cf15308d560385a4b5c52808d1e04a034d81bbf50c3e009284f40c2db464a87b"
     },
     {
       "authorityPathId": "authority.validator.reference-source-governance",

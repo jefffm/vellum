@@ -176,6 +176,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
   readonly storeKind: string;
   private readonly now: () => Date;
   private readonly hostIdentity: () => string | null;
+  private catalogTransactionDepth = 0;
 
   constructor(options: ReferenceSourceControlledArtifactStoreOptions = {}) {
     this.rootDirectory =
@@ -369,6 +370,30 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
         blobDeleted,
         generation: next.generation,
       };
+    });
+  }
+
+  /**
+   * Hold the cross-process catalog claim across a synchronous multi-store
+   * transaction boundary. Calls back into this instance are re-entrant on the
+   * same stack; every other instance or process remains excluded until the
+   * callback returns.
+   */
+  withExclusiveTransaction<T>(operation: () => T): T {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    return this.withCatalogClaim(() => {
+      this.catalogTransactionDepth += 1;
+      try {
+        const result = operation();
+        if (isPromiseLike(result)) {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            "Controlled-artifact exclusive transactions must be synchronous"
+          );
+        }
+        return result;
+      } finally {
+        this.catalogTransactionDepth -= 1;
+      }
     });
   }
 
@@ -848,6 +873,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
   }
 
   private withCatalogClaim<T>(operation: () => T): T {
+    if (this.catalogTransactionDepth > 0) return operation();
     this.assertStoreLayout();
     const claim = this.acquireCatalogClaim();
     try {
@@ -859,16 +885,18 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
   }
 
   private acquireCatalogClaim(): CatalogClaim {
-    if (pathEntryExists(this.recoveryClaimPath())) {
-      if (!this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")) {
+    if (this.recoveryClaimPaths().length > 0) {
+      const recoveryClaim = this.acquireRecoveryClaim();
+      if (!recoveryClaim) {
         throw new ReferenceSourceControlledArtifactStoreConflictError(
           "Controlled-artifact catalog claim recovery is already in progress"
         );
       }
+      this.releaseOwnedClaim(recoveryClaim);
     }
     try {
       const claim = this.createOwnedClaim(this.catalogClaimPath());
-      if (pathEntryExists(this.recoveryClaimPath())) {
+      if (this.recoveryClaimPaths().length > 0) {
         this.releaseOwnedClaim(claim);
         throw new ReferenceSourceControlledArtifactStoreConflictError(
           "Controlled-artifact catalog claim recovery raced this operation"
@@ -899,11 +927,31 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
 
   private acquireRecoveryClaim(): CatalogClaim | null {
     for (let attempt = 0; attempt < 4; attempt += 1) {
+      const claim = this.createOwnedClaim(this.recoveryTicketPath());
+      let keepClaim = false;
       try {
-        return this.createOwnedClaim(this.recoveryClaimPath());
-      } catch (error) {
-        if (!isFileExistsError(error)) throw error;
-        if (!this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")) return null;
+        for (const candidate of this.recoveryClaimPaths()) {
+          if (candidate === claim.path || candidate === this.recoveryClaimPath()) continue;
+          if (!this.recoverStaleOwnedClaim(candidate, "recovery-guard")) return null;
+        }
+        if (
+          this.recoveryClaimPaths().some(
+            (candidate) => candidate !== claim.path && candidate !== this.recoveryClaimPath()
+          )
+        ) {
+          continue;
+        }
+        if (
+          pathEntryExists(this.recoveryClaimPath()) &&
+          !this.recoverStaleOwnedClaim(this.recoveryClaimPath(), "recovery-guard")
+        ) {
+          return null;
+        }
+        if (this.recoveryClaimPaths().some((candidate) => candidate !== claim.path)) continue;
+        keepClaim = true;
+        return claim;
+      } finally {
+        if (!keepClaim) this.releaseOwnedClaim(claim);
       }
     }
     return null;
@@ -965,56 +1013,81 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     kind: "catalog-claim" | "recovery-guard"
   ): boolean {
     if (!pathEntryExists(filePath)) return true;
-    assertRegularFilePath(filePath, `controlled-artifact ${kind}`);
-    let originalBytes: string;
+    let descriptor: number;
     try {
-      originalBytes = readRegularTextFile(filePath, `controlled-artifact ${kind}`);
-    } catch (error) {
-      if (isFileMissingError(error)) return true;
-      throw error;
-    }
-    const receipt = decodeCatalogClaim(JSON.parse(originalBytes));
-    if (!catalogClaimOwnerIsProvablyAbsent(receipt, this.hostIdentity)) return false;
-    try {
-      if (readRegularTextFile(filePath, `controlled-artifact ${kind}`) !== originalBytes) {
-        return false;
-      }
-    } catch (error) {
-      if (isFileMissingError(error)) return true;
-      throw error;
-    }
-
-    const quarantine = `${filePath}.orphan.${randomUUID()}`;
-    try {
-      renameSync(filePath, quarantine);
+      descriptor = openSync(filePath, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
     } catch (error) {
       if (isFileMissingError(error)) return true;
       throw error;
     }
     try {
-      if (
-        readRegularTextFile(quarantine, `recovered controlled-artifact ${kind}`) !== originalBytes
-      ) {
+      if (!pathMatchesDescriptor(filePath, descriptor)) {
         throw new ReferenceSourceControlledArtifactStoreIntegrityError(
-          `Recovered controlled-artifact ${kind} bytes changed during guarded rename`
+          `Controlled-artifact ${kind} is not one stable regular file`
         );
       }
-      writeJsonAtomic(path.join(this.rootDirectory, "recoveries", `${kind}.${randomUUID()}.json`), {
-        schemaVersion: 1,
-        kind,
-        recoveredClaimDigest: sha256(Buffer.from(originalBytes)),
-        absentOwner: {
-          pid: receipt.pid,
-          hostIdentity: receipt.hostIdentity,
-          bootIdentity: receipt.bootIdentity,
-          processStartIdentity: receipt.processStartIdentity,
-        },
-        recoveredAt: this.now().toISOString(),
-      });
+      const originalBytes = readFileSync(descriptor, "utf8");
+      const receipt = decodeCatalogClaim(JSON.parse(originalBytes));
+      if (!catalogClaimOwnerIsProvablyAbsent(receipt, this.hostIdentity)) return false;
+      if (
+        !pathMatchesDescriptor(filePath, descriptor) ||
+        readRegularTextFile(filePath, `controlled-artifact ${kind}`) !== originalBytes
+      ) {
+        return false;
+      }
+
+      // Validate the receipt destination before removing the stale claim from
+      // its public name. If it is substituted after this check, the guarded
+      // failure path below restores the exact quarantined claim.
+      assertDirectoryPath(
+        this.recoveriesDirectory(),
+        "controlled-artifact recovery receipt directory"
+      );
+      const quarantine = `${filePath}.orphan.${randomUUID()}`;
+      try {
+        renameSync(filePath, quarantine);
+      } catch (error) {
+        if (isFileMissingError(error)) return true;
+        throw error;
+      }
+      let quarantineOwned = false;
+      let recoveryReceiptPublished = false;
+      try {
+        if (
+          !pathMatchesDescriptor(quarantine, descriptor) ||
+          readRegularTextFile(quarantine, `recovered controlled-artifact ${kind}`) !== originalBytes
+        ) {
+          throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+            `Recovered controlled-artifact ${kind} bytes changed during guarded rename`
+          );
+        }
+        quarantineOwned = true;
+        writeJsonAtomic(
+          path.join(this.rootDirectory, "recoveries", `${kind}.${randomUUID()}.json`),
+          {
+            schemaVersion: 1,
+            kind,
+            recoveredClaimDigest: sha256(Buffer.from(originalBytes)),
+            absentOwner: {
+              pid: receipt.pid,
+              hostIdentity: receipt.hostIdentity,
+              bootIdentity: receipt.bootIdentity,
+              processStartIdentity: receipt.processStartIdentity,
+            },
+            recoveredAt: this.now().toISOString(),
+          }
+        );
+        recoveryReceiptPublished = true;
+      } finally {
+        if (quarantineOwned && pathMatchesDescriptor(quarantine, descriptor)) {
+          if (recoveryReceiptPublished) unlinkSync(quarantine);
+          else if (!pathEntryExists(filePath)) renameSync(quarantine, filePath);
+        }
+        fsyncDirectory(this.rootDirectory);
+      }
       return true;
     } finally {
-      rmSync(quarantine, { force: true });
-      fsyncDirectory(this.rootDirectory);
+      closeSync(descriptor);
     }
   }
 
@@ -1046,6 +1119,25 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     return path.join(this.rootDirectory, ".catalog.claim.recovery");
   }
 
+  private recoveryTicketPath(): string {
+    return path.join(this.rootDirectory, `.catalog.claim.recovery.${randomUUID()}`);
+  }
+
+  private recoveryClaimPaths(): string[] {
+    const legacy = this.recoveryClaimPath();
+    const claims = pathEntryExists(legacy) ? [legacy] : [];
+    for (const entry of readdirSync(this.rootDirectory, { withFileTypes: true })) {
+      if (!/^\.catalog\.claim\.recovery\.[0-9a-f-]{36}$/.test(entry.name)) continue;
+      if (!entry.isFile() || entry.isSymbolicLink()) {
+        throw new ReferenceSourceControlledArtifactStoreIntegrityError(
+          "Controlled-artifact recovery ticket is not a regular file"
+        );
+      }
+      claims.push(path.join(this.rootDirectory, entry.name));
+    }
+    return claims.sort();
+  }
+
   private blobsDirectory(): string {
     return path.join(this.rootDirectory, "blobs");
   }
@@ -1070,6 +1162,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     ] as const) {
       if (pathEntryExists(file)) assertRegularFilePath(file, label);
     }
+    this.recoveryClaimPaths();
   }
 
   private blobPath(blobSha256: string): string {
@@ -1524,6 +1617,15 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
+}
+
+function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
+  return (
+    (typeof value === "object" || typeof value === "function") &&
+    value !== null &&
+    "then" in value &&
+    typeof (value as { then?: unknown }).then === "function"
+  );
 }
 
 function isFileExistsError(error: unknown): error is NodeJS.ErrnoException {

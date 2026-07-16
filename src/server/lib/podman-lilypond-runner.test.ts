@@ -156,6 +156,17 @@ const podmanAvailable = (() => {
   }
 })();
 
+const REAL_SANDBOX_RUN_BUDGET_MS = 60_000;
+const SERIALIZED_GREENSLEEVES_SANDBOX_RUNS = 6;
+const FULL_SUITE_COMPILER_QUEUE_BUDGET_MS =
+  SERIALIZED_GREENSLEEVES_SANDBOX_RUNS * REAL_SANDBOX_RUN_BUDGET_MS;
+const SANDBOX_TEST_CLEANUP_BUDGET_MS = 30_000;
+// The full host suite also serializes Greensleeves' six real compiler containers
+// through the same cross-process slot. Vitest must allow the complete queue wait
+// before starting the sandbox's own compiler budget and cleanup.
+const QUEUE_AWARE_SANDBOX_TEST_TIMEOUT_MS =
+  FULL_SUITE_COMPILER_QUEUE_BUDGET_MS + REAL_SANDBOX_RUN_BUDGET_MS + SANDBOX_TEST_CLEANUP_BUDGET_MS;
+
 describe.skipIf(!podmanAvailable)("PodmanLilyPondRunner isolation", () => {
   const tempPaths: string[] = [];
 
@@ -165,50 +176,58 @@ describe.skipIf(!podmanAvailable)("PodmanLilyPondRunner isolation", () => {
     );
   });
 
-  it("compiles ordinary notation inside the pinned sandbox", async () => {
-    const runner = new PodmanLilyPondRunner({ defaultTimeout: 60_000 });
-    const compiled = await runner.run({
-      command: "lilypond",
-      args: ["--svg", "-o", "output", "source.ly"],
-      inputFile: {
-        name: "source.ly",
-        content:
-          "\\version \"2.24.0\" \\include \"instruments/baroque-guitar-5.ily\" { c'4 d' e' f' }",
-      },
-      timeout: 60_000,
-      outputGlobs: ["*.svg"],
-    });
-    expect(compiled.exitCode).toBe(0);
-    expect([...compiled.files.keys()]).toContain("output.svg");
-    expect(compiled.files.get("output.svg")?.toString()).toContain("<svg");
-  }, 70_000);
+  it(
+    "compiles ordinary notation inside the pinned sandbox",
+    async () => {
+      const runner = new PodmanLilyPondRunner({ defaultTimeout: REAL_SANDBOX_RUN_BUDGET_MS });
+      const compiled = await runner.run({
+        command: "lilypond",
+        args: ["--svg", "-o", "output", "source.ly"],
+        inputFile: {
+          name: "source.ly",
+          content:
+            "\\version \"2.24.0\" \\include \"instruments/baroque-guitar-5.ily\" { c'4 d' e' f' }",
+        },
+        timeout: REAL_SANDBOX_RUN_BUDGET_MS,
+        outputGlobs: ["*.svg"],
+      });
+      expect(compiled.exitCode).toBe(0);
+      expect([...compiled.files.keys()]).toContain("output.svg");
+      expect(compiled.files.get("output.svg")?.toString()).toContain("<svg");
+    },
+    QUEUE_AWARE_SANDBOX_TEST_TIMEOUT_MS
+  );
 
-  it("cannot read or overwrite a host sentinel and does not inherit secrets", async () => {
-    const host = await mkdtemp(path.join(tmpdir(), "vellum-host-sentinel-"));
-    tempPaths.push(host);
-    const sentinel = path.join(host, "sentinel.txt");
-    await writeFile(sentinel, "untouched", "utf8");
-    process.env.VELLUM_SANDBOX_TEST_SECRET = "must-not-cross-boundary";
+  it(
+    "cannot read or overwrite a host sentinel and does not inherit secrets",
+    async () => {
+      const host = await mkdtemp(path.join(tmpdir(), "vellum-host-sentinel-"));
+      tempPaths.push(host);
+      const sentinel = path.join(host, "sentinel.txt");
+      await writeFile(sentinel, "untouched", "utf8");
+      process.env.VELLUM_SANDBOX_TEST_SECRET = "must-not-cross-boundary";
 
-    const schemePath = sentinel.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
-    const source = `\\version "2.24.0"
+      const schemePath = sentinel.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+      const source = `\\version "2.24.0"
 #(system "sh -c 'cat ${schemePath}; echo pwned > ${schemePath}'")
 #(system "ln -s /etc/passwd symlink.svg")
 #(call-with-output-file "leak.svg" (lambda (port) (display (or (getenv "VELLUM_SANDBOX_TEST_SECRET") "absent") port)))
 { c'4 }`;
-    const runner = new PodmanLilyPondRunner({ defaultTimeout: 60_000 });
-    const compiled = await runner.run({
-      command: "lilypond",
-      args: ["--svg", "-o", "output", "source.ly"],
-      inputFile: { name: "source.ly", content: source },
-      timeout: 60_000,
-      outputGlobs: ["*.svg"],
-    });
+      const runner = new PodmanLilyPondRunner({ defaultTimeout: REAL_SANDBOX_RUN_BUDGET_MS });
+      const compiled = await runner.run({
+        command: "lilypond",
+        args: ["--svg", "-o", "output", "source.ly"],
+        inputFile: { name: "source.ly", content: source },
+        timeout: REAL_SANDBOX_RUN_BUDGET_MS,
+        outputGlobs: ["*.svg"],
+      });
 
-    delete process.env.VELLUM_SANDBOX_TEST_SECRET;
-    expect(await readFile(sentinel, "utf8")).toBe("untouched");
-    expect(compiled.stdout + compiled.stderr).not.toContain("untouched");
-    expect(compiled.files.get("leak.svg")?.toString()).toBe("absent");
-    expect(compiled.files.has("symlink.svg")).toBe(false);
-  }, 70_000);
+      delete process.env.VELLUM_SANDBOX_TEST_SECRET;
+      expect(await readFile(sentinel, "utf8")).toBe("untouched");
+      expect(compiled.stdout + compiled.stderr).not.toContain("untouched");
+      expect(compiled.files.get("leak.svg")?.toString()).toBe("absent");
+      expect(compiled.files.has("symlink.svg")).toBe(false);
+    },
+    QUEUE_AWARE_SANDBOX_TEST_TIMEOUT_MS
+  );
 });

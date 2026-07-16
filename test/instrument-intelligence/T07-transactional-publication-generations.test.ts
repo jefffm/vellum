@@ -187,6 +187,119 @@ describe("T07 transactional publication generations", () => {
     expect(readdirSync(path.join(root, "recoveries"))).toHaveLength(1);
   });
 
+  it("preserves a live unique recovery ticket when a second head reclaimer arrives", () => {
+    const root = publicationRoot();
+    const hostIdentity = "b".repeat(64);
+    const claimReceipt = (pid: number) =>
+      `${canonicalReferenceJson({
+        schemaVersion: 1,
+        token: randomUUID(),
+        pid,
+        hostIdentity,
+        bootIdentity: null,
+        processStartIdentity: null,
+        claimedAt: "2026-07-15T12:00:00.000Z",
+      })}\n`;
+    writeFileSync(path.join(root, ".head.claim"), claimReceipt(2_147_483_647));
+    const recoveryTicket = path.join(root, `.head.claim.recovery.${randomUUID()}`);
+    const liveRecoveryReceipt = claimReceipt(process.pid);
+    writeFileSync(recoveryTicket, liveRecoveryReceipt);
+    const store = new KnowledgePublicationStore({
+      rootDirectory: root,
+      hostIdentity: () => hostIdentity,
+    });
+
+    expect(() =>
+      store.publish(
+        singleRecordTransaction("transaction.concurrent-reclaimer", "upload", "blocked")
+      )
+    ).toThrow(KnowledgePublicationConflictError);
+    expect(readFileSync(recoveryTicket, "utf8")).toBe(liveRecoveryReceipt);
+    expect(existsSync(path.join(root, ".head.claim"))).toBe(true);
+
+    rmSync(recoveryTicket);
+    expect(
+      store.publish(
+        singleRecordTransaction("transaction.concurrent-reclaimer", "upload", "blocked")
+      ).outcome
+    ).toBe("committed");
+    expect(existsSync(path.join(root, ".head.claim"))).toBe(false);
+  });
+
+  it("fails closed on dangling primary and legacy-recovery claim symlinks", () => {
+    for (const name of [".head.claim", ".head.claim.recovery"]) {
+      const root = publicationRoot();
+      symlinkSync(path.join(root, "missing-claim-target"), path.join(root, name));
+      const store = new KnowledgePublicationStore({
+        rootDirectory: root,
+        hostIdentity: () => "f".repeat(64),
+      });
+
+      expect(() =>
+        store.publish(singleRecordTransaction(`transaction.dangling.${name}`, "upload", "dangling"))
+      ).toThrow(KnowledgePublicationIntegrityError);
+      expect(
+        readdirSync(root).filter((entry) => entry.startsWith(".head.claim.recovery."))
+      ).toEqual([]);
+    }
+  });
+
+  it("restores a stale head claim when its recovery destination is swapped after validation", () => {
+    const root = publicationRoot();
+    const outside = publicationRoot();
+    const recoveryDirectory = path.join(root, "recoveries");
+    const claimPath = path.join(root, ".head.claim");
+    const hostIdentity = "9".repeat(64);
+    const staleClaim = `${canonicalReferenceJson({
+      schemaVersion: 1,
+      token: randomUUID(),
+      pid: 2_147_483_647,
+      hostIdentity,
+      bootIdentity: null,
+      processStartIdentity: null,
+      claimedAt: "2026-07-15T12:00:00.000Z",
+    })}\n`;
+    mkdirSync(recoveryDirectory);
+    writeFileSync(claimPath, staleClaim);
+    let swapArmed = false;
+    let swapped = false;
+    const store = new KnowledgePublicationStore({
+      rootDirectory: root,
+      hostIdentity: () => {
+        if (
+          existsSync(claimPath) &&
+          readdirSync(root).some((name) => /^\.head\.claim\.recovery\.[0-9a-f-]{36}$/.test(name))
+        ) {
+          swapArmed = true;
+        }
+        return hostIdentity;
+      },
+      now: () => {
+        if (swapArmed && !swapped) {
+          rmSync(recoveryDirectory, { recursive: true, force: true });
+          symlinkSync(outside, recoveryDirectory, "dir");
+          swapped = true;
+        }
+        return new Date("2026-07-15T12:00:00.000Z");
+      },
+    });
+
+    expect(() =>
+      store.publish(
+        singleRecordTransaction("transaction.recovery-destination-swap", "upload", "blocked")
+      )
+    ).toThrow(KnowledgePublicationIntegrityError);
+
+    expect(swapped).toBe(true);
+    expect(readFileSync(claimPath, "utf8")).toBe(staleClaim);
+    expect(readdirSync(outside)).toEqual([]);
+    expect(
+      readdirSync(root).filter(
+        (name) => name.includes(".orphan.") || /^\.head\.claim\.recovery\.[0-9a-f-]{36}$/.test(name)
+      )
+    ).toEqual([]);
+  });
+
   it("recovers every staged-write and head-commit crash boundary without partial visibility", () => {
     const writes = completeTransaction().writes;
     for (let recordIndex = 0; recordIndex < writes.length; recordIndex += 1) {

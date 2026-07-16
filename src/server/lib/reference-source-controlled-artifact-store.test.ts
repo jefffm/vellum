@@ -124,6 +124,42 @@ describe("reference-source controlled artifact store", () => {
     expect(store.observe()).toMatchObject({ status: "complete", artifactBindings: [] });
   });
 
+  it("holds one cross-process catalog claim across a synchronous transaction boundary", () => {
+    const root = temporaryRoot();
+    const transactionOwner = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+    });
+    const contender = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
+    const first = artifactInput("asset.transaction-first", "a", "transaction bytes");
+    const second = artifactInput("asset.transaction-second", "b", "transaction bytes");
+    transactionOwner.put(first);
+
+    transactionOwner.withExclusiveTransaction(() => {
+      expect(transactionOwner.observe()).toMatchObject({
+        status: "complete",
+        artifactBindings: [bindingFor(first)],
+      });
+      expect(() =>
+        contender.release({
+          artifactRef: first.artifactRef,
+          expectedBlobSha256: first.sha256,
+        })
+      ).toThrow(ReferenceSourceControlledArtifactStoreConflictError);
+      transactionOwner.put(second);
+    });
+
+    expect(transactionOwner.observe()).toMatchObject({
+      status: "complete",
+      artifactBindings: [bindingFor(first), bindingFor(second)],
+    });
+    expect(
+      contender.release({
+        artifactRef: first.artifactRef,
+        expectedBlobSha256: first.sha256,
+      })
+    ).toMatchObject({ blobDeleted: false });
+  });
+
   it("durably completes an interrupted last-binding release without an external retry", () => {
     const root = temporaryRoot();
     const store = new ReferenceSourceControlledArtifactStore({ rootDirectory: root });
@@ -258,6 +294,86 @@ describe("reference-source controlled artifact store", () => {
     });
     expect(foreign.observe()).toMatchObject({ status: "failed", failureCode: "read_error" });
     expect(existsSync(path.join(foreignRoot, ".catalog.claim"))).toBe(true);
+  });
+
+  it("restores a stale catalog claim when its recovery destination is swapped after validation", () => {
+    const root = temporaryRoot();
+    const outside = temporaryRoot();
+    const recoveryDirectory = path.join(root, "recoveries");
+    const claimPath = path.join(root, ".catalog.claim");
+    const hostIdentity = "9".repeat(64);
+    let swapArmed = false;
+    let swapped = false;
+    const store = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+      hostIdentity: () => {
+        if (
+          existsSync(claimPath) &&
+          readdirSync(root).some((name) => /^\.catalog\.claim\.recovery\.[0-9a-f-]{36}$/.test(name))
+        ) {
+          swapArmed = true;
+        }
+        return hostIdentity;
+      },
+      now: () => {
+        if (swapArmed && !swapped) {
+          rmSync(recoveryDirectory, { recursive: true, force: true });
+          symlinkSync(outside, recoveryDirectory, "dir");
+          swapped = true;
+        }
+        return new Date("2026-07-15T12:00:00.000Z");
+      },
+    });
+    writeClaim(root, hostIdentity);
+    const staleClaim = readFileSync(claimPath, "utf8");
+
+    expect(() =>
+      store.put(artifactInput("asset.recovery-destination-swap", "a", "blocked recovery bytes"))
+    ).toThrow(ReferenceSourceControlledArtifactStoreIntegrityError);
+
+    expect(swapped).toBe(true);
+    expect(readFileSync(claimPath, "utf8")).toBe(staleClaim);
+    expect(readdirSync(outside)).toEqual([]);
+    expect(
+      readdirSync(root).filter(
+        (name) =>
+          name.includes(".orphan.") || /^\.catalog\.claim\.recovery\.[0-9a-f-]{36}$/.test(name)
+      )
+    ).toEqual([]);
+  });
+
+  it("preserves a live unique recovery ticket when a second reclaimer arrives", () => {
+    const root = temporaryRoot();
+    const hostIdentity = "b".repeat(64);
+    new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+      hostIdentity: () => hostIdentity,
+    });
+    writeClaim(root, hostIdentity);
+    const recoveryTicket = path.join(root, `.catalog.claim.recovery.${randomUUID()}`);
+    const liveRecoveryReceipt = `${JSON.stringify({
+      schemaVersion: 1,
+      token: randomUUID(),
+      pid: process.pid,
+      hostIdentity,
+      bootIdentity: null,
+      processStartIdentity: null,
+      claimedAt: "2026-07-15T12:00:00.000Z",
+    })}\n`;
+    writeFileSync(recoveryTicket, liveRecoveryReceipt);
+    const contender = new ReferenceSourceControlledArtifactStore({
+      rootDirectory: root,
+      hostIdentity: () => hostIdentity,
+    });
+    const input = artifactInput("asset.after-recovery", "a", "recovery serialization bytes");
+
+    expect(() => contender.put(input)).toThrow(ReferenceSourceControlledArtifactStoreConflictError);
+    expect(readFileSync(recoveryTicket, "utf8")).toBe(liveRecoveryReceipt);
+    expect(existsSync(path.join(root, ".catalog.claim"))).toBe(true);
+
+    rmSync(recoveryTicket);
+    expect(contender.put(input)).toEqual(bindingFor(input));
+    expect(existsSync(path.join(root, ".catalog.claim"))).toBe(false);
   });
 
   it("does not mistake an abandoned pre-publication claim temporary for an owned claim", () => {

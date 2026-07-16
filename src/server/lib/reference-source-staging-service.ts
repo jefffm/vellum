@@ -643,6 +643,13 @@ function assertLocalStructuralEdges(
           `${record.id}.origin.ownerActionRef`
         );
       }
+      if ("legacyRecordRef" in record.origin) {
+        assertOpaqueExternalRef(
+          record.origin.legacyRecordRef,
+          byRef,
+          `${record.id}.origin.legacyRecordRef`
+        );
+      }
       assertOpaqueExternalRef(
         record.processingPolicyRef,
         byRef,

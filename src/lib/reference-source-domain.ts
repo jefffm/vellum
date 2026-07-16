@@ -259,6 +259,13 @@ const RedactedRetrievalUriSchema = Type.String({
 export const ReferenceAcquisitionOriginSchema = Type.Union([
   Type.Object(
     {
+      sourceKind: Type.Literal("legacy_owner_reference"),
+      legacyRecordRef: ReferenceRecordRefSchema,
+    },
+    Strict
+  ),
+  Type.Object(
+    {
       sourceKind: Type.Literal("upload"),
       ownerActionRef: ReferenceRecordRefSchema,
     },

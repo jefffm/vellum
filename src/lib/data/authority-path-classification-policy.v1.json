@@ -57,21 +57,9 @@
     },
     {
       "sourcePath": "src/server/lib/owner-store.ts",
-      "selector": "OwnerStore.addReference",
-      "reason": "This store operation stages raw source bytes while forcing authorityState raw_staged and activationAllowed false; reviewed promotion remains a separate boundary.",
-      "declarationDigest": "d5d0c1422216c48b04f5bd44b10b0e3729a124045f5402ae8f53eec90e5f9a4c"
-    },
-    {
-      "sourcePath": "src/server/lib/owner-store.ts",
-      "selector": "OwnerStore.addReferenceFromSpool",
-      "reason": "This streaming store operation stages raw source bytes while forcing authorityState raw_staged and activationAllowed false; reviewed promotion remains a separate boundary.",
-      "declarationDigest": "341e59cc496e2cccac1019c75307ea068f2d52ad0e482396294e3def2eee9301"
-    },
-    {
-      "sourcePath": "src/server/lib/owner-store.ts",
-      "selector": "OwnerStore.listReferences",
-      "reason": "This read returns only raw-staging receipts whose schema forbids activation; it cannot make staged material authoritative.",
-      "declarationDigest": "888e8b0afdf5f4b877691ec7080f23466496eb056a9be40fd6ffcdc383eed119"
+      "selector": "OwnerStore.withStoreWriteClaim",
+      "reason": "This wrapper only serializes already-classified OwnerStore operations and carries no record content, identity, provenance, rights, activation, or musical decision of its own.",
+      "declarationDigest": "47a79d837f141928539bb62f5ee987005ee370020808c00242ef1586a94d0184"
     }
   ],
   "classifications": [
@@ -289,6 +277,30 @@
       "allowedRoots": []
     },
     {
+      "id": "owner-reference-migration-persistence-closure",
+      "sourcePath": "src/server/lib/owner-reference-migration-service.ts",
+      "sinkSelectors": [
+        "applyTransaction",
+        "fsyncSync",
+        "linkSync",
+        "mkdirSync",
+        "openSync",
+        "publish",
+        "putDigitalAsset",
+        "reclaimExactTransactionOrphan",
+        "renameSync",
+        "rmSync",
+        "withExclusiveTransaction",
+        "writeFileSync"
+      ],
+      "allowedRoots": [
+        {
+          "selector": "OwnerReferenceMigrationService.inspectPrivateAudit",
+          "reason": "This guarded audit reader verifies and returns already-persisted migration evidence without creating, changing, deleting, or activating any authority-bearing record or private evidence bytes."
+        }
+      ]
+    },
+    {
       "id": "reviewed-learning-persistence-closure",
       "sourcePath": "src/server/lib/reviewed-learning.ts",
       "sinkSelectors": [
@@ -364,8 +376,8 @@
     "ArrangementWorkspace.planConflictIds",
     "ArrangementWorkspace.policyExceptionIds",
     "ArrangementWorkspace.revision",
-    "ArrangementWorkspace.scoreTranscriptionIds",
     "ArrangementWorkspace.schemaVersion",
+    "ArrangementWorkspace.scoreTranscriptionIds",
     "ArrangementWorkspace.sourceArtifactIds",
     "ArrangementWorkspace.sourceTruthAssessmentIds",
     "ArrangementWorkspace.staleDerivationIds",
@@ -417,9 +429,19 @@
     "OwnerChoice.value",
     "OwnerChoice.workspaceId",
     "OwnerPlaytest.record",
+    "OwnerReference.record",
+    "OwnerReferenceClaimRecoveryReceipt.bytes",
+    "OwnerReferenceContent.bytes",
+    "OwnerReferenceMigrationEvidence.bytes",
+    "OwnerReferenceMigrationIntent.bytes",
+    "OwnerReferenceMigrationJournal.record",
+    "OwnerReferenceMigrationMapping.record",
+    "OwnerReferenceMigrationQuarantine.record",
+    "OwnerReferenceMigrationRecoveryReceipt.bytes",
     "OwnerStoreManifest.choiceIds",
     "OwnerStoreManifest.defaultCandidateIds",
     "OwnerStoreManifest.defaultIds",
+    "OwnerStoreManifest.referenceIds",
     "PassageSearch.record",
     "PerformanceBrief.record",
     "PerformanceInterpretation.record",
