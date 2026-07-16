@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.continuo-policy.v1",
+  "input": {
+    "sourceFixture": "test/fixtures/continuo/reviewed-score.json",
+    "realizationProfileId": "continuo.italian-baroque"
+  },
+  "expectedLegacyOutput": {
+    "candidateCount": 2,
+    "selectedCandidateId": "candidate.complete-realization",
+    "preservationAudit": "pass",
+    "principalPitches": ["F4", "F4", "E4", "D4", "C4"],
+    "foundationPitches": ["D3", "C3", "G2", "C3"]
+  }
+}

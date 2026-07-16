@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ApiRouteError } from "./create-route.js";
 import { SubprocessError, SubprocessRunner } from "./subprocess.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 type ConverterOptions = {
   runner?: Pick<SubprocessRunner, "run">;
@@ -13,13 +14,11 @@ export async function convertInterchangeToMusicXml(
   content: Buffer,
   options: ConverterOptions = {}
 ): Promise<{ content: Buffer; converter: string }> {
+  assertAuthorityPathRuntime("authority.validator.source-normalization", "production");
   const timeout = options.timeout ?? 60_000;
   const runner = options.runner ?? new SubprocessRunner(timeout);
   const inputName = `source.${kind}`;
-  const command =
-    kind === "mscz"
-      ? (options.musescoreCommand ?? process.env.VELLUM_MUSESCORE_COMMAND ?? "mscore")
-      : "python3";
+  const command = kind === "mscz" ? (options.musescoreCommand ?? "mscore") : "python3";
   const args =
     kind === "mscz"
       ? ["-o", "converted.musicxml", inputName]

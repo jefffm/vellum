@@ -6,6 +6,7 @@ import {
 } from "./lib/alfabeto/index.js";
 import { createBaroqueGuitarInstance } from "./lib/instrument-instance.js";
 import { InstrumentModel } from "./lib/instrument-model.js";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 import { errorMessage } from "./lib/errors.js";
 import { runTheoryOperation, type TheoryValue } from "./theory.js";
 import { formatPositions, instrumentTool, toolError, toolResult } from "./lib/tool-helpers.js";
@@ -125,6 +126,7 @@ export const theoryTool: AgentTool<
   },
 };
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const tools = [
   tabulateTool,
   voicingsTool,
@@ -207,6 +209,7 @@ function formatTheoryResult(operation: string, result: TheoryValue): string {
 }
 
 function checkPlayability(model: InstrumentModel, bars: Bar[]): PlayabilityResult {
+  assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
   const violations: Violation[] = [];
   let difficultyScore = 0;
 

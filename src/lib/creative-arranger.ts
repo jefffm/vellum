@@ -2,6 +2,7 @@ import {
   arrangeFaithfulPluckedString,
   auditFaithfulPrincipalVoice,
 } from "./baroque-guitar-arranger.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { InstrumentModel } from "./instrument-model.js";
 import type {
   AnalysisRecord,
@@ -26,6 +27,7 @@ export function arrangeCreativeParaphrase(
     allowedStrategies: Array<"ornamented-paraphrase" | "idiomatic-revoicing">;
   }
 ): { candidates: ArrangementCandidate[]; selected: ArrangementScore } {
+  assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
   if (options.preservationPolicy !== "free_paraphrase") {
     throw new Error("Creative arrangement requires the explicit free-paraphrase policy");
   }

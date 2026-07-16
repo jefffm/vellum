@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 export const CanonicalOwnerIntentLayerSchema = Type.Union([
   Type.Literal("score_transcription"),
@@ -148,6 +149,7 @@ export function classifyOwnerIntent(input: {
   anchor: OwnerIntentAnchor;
   modelProposedLayer?: CanonicalOwnerIntentLayer;
 }): OwnerIntentProposal {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   const request = input.request.trim();
   if (!request) throw new Error("Owner request must not be empty");
   const matched = CLASSIFIERS.filter((classifier) =>

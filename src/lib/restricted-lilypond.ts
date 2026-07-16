@@ -1,3 +1,4 @@
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { addRational, compareRational, rational } from "./music-domain.js";
 import type { Rational, ScoreEvent, ScoreMeasure, ScorePart } from "./music-domain.js";
 
@@ -20,6 +21,7 @@ export function parseExplicitVoiceLilypond(
   source: string,
   voiceNames: string[]
 ): ParsedLilypondScore {
+  assertAuthorityPathRuntime("authority.validator.source-normalization", "production");
   if (voiceNames.length === 0) {
     throw new Error("At least one LilyPond voice name is required");
   }

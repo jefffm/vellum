@@ -21,6 +21,7 @@ import {
   validateSourceArtifactForServing,
 } from "./artifact-response.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const WorkspaceParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -147,9 +148,11 @@ export function createWorkspaceCreateRoute(store = new WorkspaceStore()): Reques
 }
 
 export function createSourceUploadRoute(
-  store = new WorkspaceStore(),
+  store: WorkspaceStore | undefined = undefined,
   options: { maxBytes?: number } = {}
 ): RequestHandler {
+  assertAuthorityPathRuntime("authority.parameter.source-upload-defaults", "production");
+  store ??= new WorkspaceStore();
   const maxBytes = options.maxBytes ?? 32 * 1024 * 1024;
   return async (request, response, next) => {
     let spoolDirectory: string | undefined;

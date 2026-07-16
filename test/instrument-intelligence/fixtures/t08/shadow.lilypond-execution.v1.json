@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.lilypond-execution.v1",
+  "input": {
+    "format": null,
+    "runner": "digest-pinned-podman",
+    "source": "\\version \"2.24.0\" { c'4 }"
+  },
+  "expectedLegacyOutput": {
+    "defaultFormat": "svg",
+    "imageMustBeDigestPinned": true,
+    "includeRoots": ["instruments", "templates"],
+    "validationAcceptsOnlyZeroExitWithoutParsedErrors": true
+  }
+}

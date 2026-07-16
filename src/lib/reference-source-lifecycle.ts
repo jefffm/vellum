@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 import {
   ReferenceLifecycleAuthorizedPathSchema,
@@ -398,6 +399,7 @@ type ExactClosure = {
 export function planReferenceSourceLifecycle(
   input: ReferenceSourceLifecyclePlannerInput
 ): ReferenceSourceLifecycleComputationResult {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   if (!Value.Check(ReferenceSourceLifecyclePlannerInputSchema, input)) {
     throw new TypeError("Reference-source lifecycle input does not match the closed schema");
   }

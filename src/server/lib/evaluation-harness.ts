@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { Value } from "@sinclair/typebox/value";
 import {
   EvaluationCaseSchema,
@@ -17,7 +17,8 @@ import {
   type VersionedRef,
   type HumanComparisonProtocol,
 } from "../../lib/evaluation-domain.js";
-import { canonicalJson, EvaluationStore } from "./evaluation-store.js";
+import { digestValue as digestContentValue } from "../../lib/content-digest.js";
+import { EvaluationStore } from "./evaluation-store.js";
 
 export type EvaluationRegistry = {
   suites: EvaluationSuite[];
@@ -39,7 +40,7 @@ export type EvaluationCaseExecutor = (
 ) => Promise<EvaluationCaseExecution>;
 
 export function digestValue(value: unknown): string {
-  return createHash("sha256").update(canonicalJson(value)).digest("hex");
+  return digestContentValue(value);
 }
 
 export function digestedRef(value: { id: string; version: number }): DigestedRef {

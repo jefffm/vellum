@@ -1,5 +1,6 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { Note } from "tonal";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 import { noteToMidi } from "./lib/pitch.js";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { errorMessage } from "./lib/errors.js";
@@ -13,6 +14,7 @@ export type TransposeResult = {
   suggestedKeys: string[];
 };
 
+assertAuthorityPathRuntime("authority.ranker.idiomatic-transposition-suggestions", "production");
 const IDIOMATIC_KEYS: Record<string, string[]> = {
   "baroque-lute-13": ["D minor", "A minor", "F major", "G minor", "C major"],
   "baroque-guitar-5": ["A minor", "E minor", "C major", "G major", "D minor"],

@@ -1,6 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import path from "node:path";
 import process from "node:process";
 import {
@@ -106,6 +107,7 @@ function defaultTheoryPath(): string {
 }
 
 function normalizeChordifyResult(value: unknown): ChordAnalysis[] {
+  assertAuthorityPathRuntime("authority.validator.theory-response-normalization", "production");
   const rawChords = isRecord(value) && Array.isArray(value.chords) ? value.chords : value;
   if (!Array.isArray(rawChords)) {
     throw new ApiRouteError("Invalid chordify response from theory.py", 500);
@@ -115,6 +117,7 @@ function normalizeChordifyResult(value: unknown): ChordAnalysis[] {
 }
 
 function normalizeAnalysisResult(value: unknown): AnalysisResult {
+  assertAuthorityPathRuntime("authority.validator.theory-response-normalization", "production");
   if (!isRecord(value)) {
     throw new ApiRouteError("Invalid analyze response from theory.py", 500);
   }
@@ -130,6 +133,7 @@ function normalizeAnalysisResult(value: unknown): AnalysisResult {
 }
 
 function normalizeLintResult(value: unknown): { violations: LintViolation[] } {
+  assertAuthorityPathRuntime("authority.validator.theory-response-normalization", "production");
   const normalized = {
     violations: isRecord(value) && Array.isArray(value.violations) ? value.violations : [],
   };
@@ -138,6 +142,7 @@ function normalizeLintResult(value: unknown): { violations: LintViolation[] } {
 }
 
 function normalizeChord(value: unknown): ChordAnalysis {
+  assertAuthorityPathRuntime("authority.validator.theory-response-normalization", "production");
   if (!isRecord(value)) {
     throw new ApiRouteError("Invalid chord entry from theory.py", 500);
   }

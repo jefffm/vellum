@@ -6,6 +6,7 @@ import type { RequestHandler } from "express";
 import { CreateArrangementSchema } from "../../types.js";
 import type { Arrangement, ArrangementSummary, CreateArrangement } from "../../types.js";
 import { createApiRoute, ApiRouteError } from "./create-route.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 type ArrangementRouteOptions = {
   directory?: string;
@@ -73,8 +74,10 @@ export function createArrangementDeleteRoute(
 
 export function createArrangement(
   input: CreateArrangement,
-  directory = arrangementsDirectory()
+  directory?: string
 ): ArrangementCreateResponse {
+  assertAuthorityPathRuntime("authority.validator.legacy-arrangement-canonicality", "production");
+  directory ??= arrangementsDirectory();
   mkdirSync(directory, { recursive: true });
   const id = randomUUID();
   const now = new Date().toISOString();
@@ -133,6 +136,7 @@ export function readArrangement(id: string, directory = arrangementsDirectory())
 }
 
 function legacyCanonicality(): Arrangement["canonicality"] {
+  assertAuthorityPathRuntime("authority.validator.legacy-arrangement-canonicality", "production");
   return {
     status: "noncanonical_legacy_projection",
     canonicalWorkspaceImportRequired: true,

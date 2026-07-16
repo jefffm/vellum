@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { HistoricalPracticeClaim, KnowledgePack } from "../../lib/owner-domain.js";
 import { authorizeTrackedSourceOperation } from "../../lib/tracked-source-quarantine.js";
 
@@ -22,14 +23,16 @@ const trackedBuiltInPackIds: Readonly<Record<string, string>> = Object.freeze({
  * historical claim for production use.
  */
 export function loadBuiltInKnowledgePacks(
-  _directory = path.resolve(process.cwd(), "knowledge-packs")
+  _directory?: string
 ): Array<{ pack: KnowledgePack; claims: HistoricalPracticeClaim[] }> {
   return [];
 }
 
 export function listQuarantinedBuiltInKnowledgePacks(
-  directory = path.resolve(process.cwd(), "knowledge-packs")
+  directory?: string
 ): QuarantinedBuiltInKnowledgePack[] {
+  assertAuthorityPathRuntime("authority.validator.legacy-pack-quarantine-metadata", "production");
+  directory ??= path.resolve(process.cwd(), "knowledge-packs");
   return builtInPackFiles(directory).flatMap<QuarantinedBuiltInKnowledgePack>(
     ({ artifactId, filename, sha256 }) => {
       if (!artifactId) {
@@ -78,6 +81,7 @@ function builtInPackFiles(directory: string): Array<{
   filename: string;
   sha256: string;
 }> {
+  assertAuthorityPathRuntime("authority.validator.legacy-pack-quarantine-metadata", "production");
   return readdirSync(directory)
     .filter((filename) => filename.endsWith(".json"))
     .sort()

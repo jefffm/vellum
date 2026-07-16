@@ -1,3 +1,4 @@
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   AnalysisRecord,
   ArrangementEvent,
@@ -14,6 +15,7 @@ export function buildCompleteTransformationReport(
   arrangedEvents: ArrangementEvent[],
   semitones: number
 ): TransformationEntry[] {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const principalEventIds = new Set(
     analysis.preservationTargets.find((target) => target.kind === "principal_voice")?.eventIds ?? []
   );

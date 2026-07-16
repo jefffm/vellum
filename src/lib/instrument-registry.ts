@@ -7,6 +7,8 @@
  * the .ily and .yaml files.
  */
 
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
+
 export type InstrumentLyVars = {
   /** Path to the .ily file (relative to project root). */
   include: string;
@@ -18,6 +20,7 @@ export type InstrumentLyVars = {
   diapasons?: string;
 };
 
+assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
 export const INSTRUMENT_LY_VARS: Record<string, InstrumentLyVars> = {
   "baroque-lute-13": {
     include: "instruments/baroque-lute-13.ily",
@@ -49,9 +52,11 @@ export const INSTRUMENT_LY_VARS: Record<string, InstrumentLyVars> = {
 };
 
 /** All supported instrument IDs for the engrave tool. */
+assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
 export const ENGRAVE_INSTRUMENT_IDS = Object.keys(INSTRUMENT_LY_VARS);
 
 /** All supported v1 template IDs. */
+assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
 export const ENGRAVE_TEMPLATE_IDS = [
   "solo-staff",
   "solo-tab",
@@ -67,6 +72,7 @@ export type EngraveTemplateId = (typeof ENGRAVE_TEMPLATE_IDS)[number];
  * Throws with a descriptive error listing valid IDs if the instrument is unknown.
  */
 export function getInstrumentLyVars(instrumentId: string): InstrumentLyVars {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const vars = INSTRUMENT_LY_VARS[instrumentId];
 
   if (!vars) {
@@ -83,6 +89,7 @@ export function getInstrumentLyVars(instrumentId: string): InstrumentLyVars {
  * Throws with a descriptive error listing valid IDs if unknown.
  */
 export function validateTemplateId(templateId: string): asserts templateId is EngraveTemplateId {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   if (!ENGRAVE_TEMPLATE_IDS.includes(templateId as EngraveTemplateId)) {
     throw new Error(
       `Unknown template "${templateId}". Valid v1 templates: ${ENGRAVE_TEMPLATE_IDS.join(", ")}`

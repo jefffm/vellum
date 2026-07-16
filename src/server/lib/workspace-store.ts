@@ -18,7 +18,7 @@ import {
 import path from "node:path";
 import { assertInstrumentInstanceIdentity } from "../../lib/instrument-instance.js";
 import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
-import { digestValue } from "./evaluation-harness.js";
+import { digestValue } from "../../lib/content-digest.js";
 import {
   AnalysisRecordSchema,
   ArrangementFamilySchema,
@@ -82,6 +82,7 @@ import type {
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { modelActionResponseDigest, modelActionValidationDigest } from "./model-action-boundary.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 type WorkspaceStoreOptions = {
   rootDirectory?: string;
@@ -137,6 +138,9 @@ export class WorkspaceStore {
   }
 
   create(input: CreateWorkspace): ArrangementWorkspace {
+    assertAuthorityPathRuntime("authority.governance.workspace-recovery", "production");
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     mkdirSync(this.rootDirectory, { recursive: true });
     const id = `workspace.${this.createId()}`;
     const timestamp = this.now().toISOString();
@@ -195,6 +199,7 @@ export class WorkspaceStore {
   }
 
   recoverWorkspace(workspaceId: string): WorkspaceRecoveryReport {
+    assertAuthorityPathRuntime("authority.governance.workspace-recovery", "production");
     const staleLockRemoved = this.removeStaleWorkspaceLock(workspaceId);
     let workspace = this.get(workspaceId);
     const linkedRecordIds: string[] = [];
@@ -288,6 +293,8 @@ export class WorkspaceStore {
   }
 
   updateBrief(workspaceId: string, brief: ArrangementWorkspace["brief"]): ArrangementWorkspace {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     return this.mutateWorkspace(workspaceId, undefined, (workspace) => ({
       ...workspace,
       brief,
@@ -314,6 +321,7 @@ export class WorkspaceStore {
   }
 
   get(workspaceId: string): ArrangementWorkspace {
+    assertAuthorityPathRuntime("authority.governance.workspace-recovery", "production");
     const manifestPath = this.workspaceManifestPath(workspaceId);
     if (!existsSync(manifestPath)) {
       throw new ApiRouteError(`Arrangement workspace not found: ${workspaceId}`, 404);
@@ -406,6 +414,7 @@ export class WorkspaceStore {
   }
 
   addSourceArtifact(workspaceId: string, input: UploadSourceArtifact): SourceArtifact {
+    assertAuthorityPathRuntime("authority.parameter.source-upload-defaults", "production");
     const workspace = this.get(workspaceId);
     const content = decodeBase64(input.contentBase64);
     validateSourceContent(input.mimeType, content);
@@ -454,6 +463,7 @@ export class WorkspaceStore {
       byteLength: number;
     }
   ): SourceArtifact {
+    assertAuthorityPathRuntime("authority.parameter.source-upload-defaults", "production");
     const workspace = this.get(workspaceId);
     validateSourceFile(input.mimeType, input.spoolPath, input.byteLength);
     if (!/^[a-f0-9]{64}$/.test(input.sha256)) {
@@ -537,6 +547,7 @@ export class WorkspaceStore {
     filename: string,
     content: Buffer
   ): string {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.omrRunIds.includes(omrRunId)) {
       throw new ApiRouteError(`OMR run is not part of workspace: ${omrRunId}`, 400);
@@ -549,6 +560,7 @@ export class WorkspaceStore {
   }
 
   saveOmrRun(workspaceId: string, run: OmrRun): OmrRun {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.sourceArtifactIds.includes(run.sourceArtifactId)) {
       throw new ApiRouteError(`OMR source is not part of workspace: ${run.sourceArtifactId}`, 400);
@@ -589,6 +601,7 @@ export class WorkspaceStore {
     workspaceId: string,
     transcription: ScoreTranscription
   ): ScoreTranscription {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.sourceArtifactIds.includes(transcription.sourceArtifactId)) {
       throw new ApiRouteError(
@@ -620,6 +633,7 @@ export class WorkspaceStore {
   }
 
   saveNormalizedScore(workspaceId: string, score: NormalizedScore): NormalizedScore {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.scoreTranscriptionIds.includes(score.scoreTranscriptionId)) {
       throw new ApiRouteError(
@@ -645,6 +659,9 @@ export class WorkspaceStore {
   }
 
   saveAnalysisRecord(workspaceId: string, analysis: AnalysisRecord): AnalysisRecord {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
+    assertAuthorityPathRuntime("authority.validator.musicological-analysis", "production");
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.normalizedScoreIds.includes(analysis.normalizedScoreId)) {
       throw new ApiRouteError(
@@ -669,6 +686,7 @@ export class WorkspaceStore {
   }
 
   saveArrangementFamily(workspaceId: string, family: ArrangementFamily): ArrangementFamily {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const workspace = this.get(workspaceId);
     if (
       !workspace.normalizedScoreIds.includes(family.normalizedScoreId) ||
@@ -693,6 +711,7 @@ export class WorkspaceStore {
   }
 
   saveStaleDerivation(workspaceId: string, record: StaleDerivation): StaleDerivation {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     return this.saveLineageRecord(
       workspaceId,
       "stale-derivations",
@@ -705,6 +724,7 @@ export class WorkspaceStore {
     return this.readRecord(workspaceId, "stale-derivations", id, "stale", StaleDerivationSchema);
   }
   saveEditorialCommitment(workspaceId: string, record: EditorialCommitment): EditorialCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     return this.saveLineageRecord(
       workspaceId,
       "editorial-commitments",
@@ -723,6 +743,7 @@ export class WorkspaceStore {
     );
   }
   saveFamilyCommitment(workspaceId: string, record: FamilyCommitment): FamilyCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     return this.saveLineageRecord(
       workspaceId,
       "family-commitments",
@@ -741,6 +762,7 @@ export class WorkspaceStore {
     );
   }
   saveCommitmentConflict(workspaceId: string, record: CommitmentConflict): CommitmentConflict {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     return this.saveLineageRecord(
       workspaceId,
       "commitment-conflicts",
@@ -759,6 +781,7 @@ export class WorkspaceStore {
     );
   }
   savePolicyException(workspaceId: string, record: PolicyException): PolicyException {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     return this.saveLineageRecord(
       workspaceId,
       "policy-exceptions",
@@ -778,6 +801,8 @@ export class WorkspaceStore {
   }
 
   saveDeliverable(workspaceId: string, deliverable: Deliverable, content: Buffer): Deliverable {
+    assertAuthorityPathRuntime("authority.compiler.playback-projection", "production");
+    assertAuthorityPathRuntime("authority.compiler.deliverable-projection-dispatch", "production");
     const workspace = this.get(workspaceId);
     const arrangement = this.getArrangementScore(workspaceId, deliverable.arrangementScoreId);
     if (arrangement.version !== deliverable.arrangementScoreVersion) {
@@ -844,6 +869,8 @@ export class WorkspaceStore {
   }
 
   saveArrangementScore(workspaceId: string, arrangement: ArrangementScore): ArrangementScore {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.analysisRecordIds.includes(arrangement.analysisRecordId)) {
       throw new ApiRouteError(
@@ -956,6 +983,7 @@ export class WorkspaceStore {
   }
 
   saveArrangementSearch(workspaceId: string, search: ArrangementSearch): ArrangementSearch {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const workspace = this.get(workspaceId);
     if (!workspace.normalizedScoreIds.includes(search.normalizedScoreId)) {
       throw new ApiRouteError(
@@ -1074,6 +1102,7 @@ export class WorkspaceStore {
   }
 
   savePassageSearch(workspaceId: string, passageSearch: PassageSearchRecord): PassageSearchRecord {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const workspace = this.get(workspaceId);
     const arrangement = this.getArrangementScore(workspaceId, passageSearch.arrangementScoreId);
     if (
@@ -1102,6 +1131,7 @@ export class WorkspaceStore {
   }
 
   saveOwnerPlaytest(workspaceId: string, playtest: OwnerPlaytest): OwnerPlaytest {
+    assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
     const workspace = this.get(workspaceId);
     const score = this.getArrangementScore(workspaceId, playtest.arrangementScoreId);
     const scoreVersion = score.version ?? 1;
@@ -1159,6 +1189,7 @@ export class WorkspaceStore {
     workspaceId: string,
     candidate: ArrangementCandidate
   ): ArrangementCandidate {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const workspace = this.get(workspaceId);
     if (
       !candidate.arrangementSearchId ||
@@ -1198,6 +1229,7 @@ export class WorkspaceStore {
   }
 
   saveModelAction(workspaceId: string, action: ModelAction): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const workspace = this.get(workspaceId);
     const decoded = Value.Decode(ModelActionSchema, action);
     if (workspace.modelActionIds.includes(decoded.id)) {
@@ -1241,6 +1273,7 @@ export class WorkspaceStore {
     expected: ModelAction,
     transition: (current: ModelAction) => ModelAction
   ): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     this.get(workspaceId);
     const release = this.acquireWorkspaceLock(workspaceId);
     try {
@@ -1282,6 +1315,7 @@ export class WorkspaceStore {
     actionId: string,
     publication: ModelActionPublication
   ): ModelActionPublication {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const decoded = Value.Decode(ModelActionPublicationSchema, publication);
     validateRecordId(decoded.id, "model-publication");
     this.get(workspaceId);
@@ -1378,6 +1412,8 @@ export class WorkspaceStore {
   }
 
   saveGuidedWorkflow(workspaceId: string, workflow: GuidedWorkflow): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const workspace = this.get(workspaceId);
     const decoded = Value.Decode(GuidedWorkflowSchema, workflow);
     if (decoded.workspaceId !== workspaceId) {
@@ -1408,6 +1444,7 @@ export class WorkspaceStore {
     workspaceId: string,
     assessment: SourceTruthAssessment
   ): SourceTruthAssessment {
+    assertAuthorityPathRuntime("authority.validator.musicological-analysis", "production");
     const decoded = Value.Decode(SourceTruthAssessmentSchema, assessment);
     const source = this.getSourceArtifact(workspaceId, decoded.sourceArtifactId);
     const transcription = this.getScoreTranscription(workspaceId, decoded.scoreTranscriptionId);
@@ -1541,6 +1578,7 @@ export class WorkspaceStore {
   }
 
   savePerformanceBrief(workspaceId: string, brief: PerformanceBrief): PerformanceBrief {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const decoded = Value.Decode(PerformanceBriefSchema, brief);
     const workspace = this.get(workspaceId);
     if (
@@ -1600,6 +1638,8 @@ export class WorkspaceStore {
   }
 
   saveArrangementPlan(workspaceId: string, plan: ArrangementPlan): ArrangementPlan {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const decoded = Value.Decode(ArrangementPlanSchema, plan);
     const truth = this.getSourceTruthAssessment(workspaceId, decoded.sourceTruthAssessmentId);
     const normalized = this.getNormalizedScore(workspaceId, decoded.normalizedScoreId);
@@ -1756,6 +1796,7 @@ export class WorkspaceStore {
   }
 
   savePlanConflict(workspaceId: string, conflict: PlanConflict): PlanConflict {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const decoded = Value.Decode(PlanConflictSchema, conflict);
     const plan = this.getArrangementPlan(workspaceId, decoded.arrangementPlanId);
     if (
@@ -1798,6 +1839,7 @@ export class WorkspaceStore {
     id: string,
     selectedResolution: NonNullable<PlanConflict["selectedResolution"]>
   ): PlanConflict {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const conflict = this.getPlanConflict(workspaceId, id);
     if (!conflict.resolutionOptions.includes(selectedResolution)) {
       throw new ApiRouteError("Selected Plan Conflict resolution is not available", 400);
@@ -2067,6 +2109,9 @@ export class WorkspaceStore {
   }
 
   saveArrangementBranch(workspaceId: string, branch: ArrangementBranch): ArrangementBranch {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const workspace = this.get(workspaceId);
     const decoded = Value.Decode(ArrangementBranchSchema, branch);
     this.writeImmutableRecord(workspaceId, "arrangement-branches", decoded.id, decoded);
@@ -2088,6 +2133,7 @@ export class WorkspaceStore {
     workspaceId: string,
     interpretation: PerformanceInterpretation
   ): PerformanceInterpretation {
+    assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
     const workspace = this.get(workspaceId);
     const arrangement = this.getArrangementScore(workspaceId, interpretation.arrangementScoreId);
     if ((arrangement.version ?? 1) !== interpretation.arrangementScoreVersion) {

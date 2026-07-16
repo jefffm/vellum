@@ -7,6 +7,7 @@ import type {
   ChartId,
   ReviewRequiredAlfabetoLookupResult,
 } from "./types.js";
+import { assertAuthorityPathRuntime } from "../authority-path-runtime.js";
 import {
   barrePitchClasses,
   barreTranspose,
@@ -137,6 +138,7 @@ function isProperSuperset(a: Set<number>, b: Set<number>): boolean {
  * binding exact authorized release bytes to the core source-authority decision.
  */
 export function alfabetoLookup(params: AlfabetoLookupParams): AlfabetoLookupResult {
+  assertAuthorityPathRuntime("authority.validator.alfabeto-quarantine-denial", "production");
   const chartId = params.chartId ?? "tyler-universal";
   const artifactId = QUARANTINED_CHART_ARTIFACTS[chartId];
   const artifact = loadBundledTrackedSourceInventory().artifacts.find(

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.source-interpretation.v1",
+  "input": {
+    "ocrAutoAcceptConfidence": 0.8,
+    "observations": [
+      {
+        "id": "event.at-threshold",
+        "type": "note",
+        "confidence": 0.8,
+        "critical": false
+      },
+      {
+        "id": "event.below-threshold",
+        "type": "note",
+        "confidence": 0.799,
+        "critical": false
+      }
+    ]
+  },
+  "expectedLegacyOutput": {
+    "acceptedIds": ["event.at-threshold"],
+    "reviewRequiredIds": ["event.below-threshold"],
+    "comparison": "greater_than_or_equal"
+  }
+}

@@ -1,4 +1,5 @@
 import type { EngraveMusicEvent, EngraveParams } from "./engrave-schema.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   ArrangementEvent,
   ArrangementScore,
@@ -10,6 +11,8 @@ export function arrangementToEngraveParams(
   arrangement: ArrangementScore,
   sourceScore: NormalizedScore
 ): EngraveParams {
+  assertAuthorityPathRuntime("authority.compiler.notation-projection", "production");
+  assertAuthorityPathRuntime("authority.compiler.editorial-layout", "production");
   const standardNotation =
     arrangement.targetConfiguration.notationLayouts.includes("standard-notation");
   const eventsByMeasure = new Map<string, ArrangementEvent[]>();

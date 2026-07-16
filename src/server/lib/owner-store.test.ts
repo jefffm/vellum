@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -41,44 +41,113 @@ describe("local Owner trust boundary", () => {
     expect(store.releaseDefault(approved.id).status).toBe("released");
   });
 
-  it("requires a cited local reference and explicit review before historical promotion", () => {
+  it("fails closed before any legacy knowledge proposal or promotion write", () => {
     const reference = store.addReference({
       title: "Instruction pour toucher le théorbe",
       citation: "Paris, 17th century",
       mimeType: "text/plain",
       contentBase64: Buffer.from("A cited passage about accompaniment.").toString("base64"),
     });
-    const candidate = store.proposeKnowledge({
-      statement: "A cadence may receive a fuller texture.",
-      scope: {
-        period: "seventeenth century",
-        region: "France",
-        genre: "continuo",
-        instrument: "theorbo",
-        ensembleRole: "accompaniment",
-      },
-      referenceId: reference.id,
-      citationLocator: "chapter 2",
+    expect(reference).toMatchObject({
+      authorityState: "raw_staged",
+      activationAllowed: false,
     });
+    expect(store.listReferences()).toEqual([
+      expect.objectContaining({
+        id: reference.id,
+        authorityState: "raw_staged",
+        activationAllowed: false,
+      }),
+    ]);
+    const before = readFileSync(path.join(rootDirectory, "manifest.json"), "utf8");
+
+    expect(() =>
+      store.proposeKnowledge({
+        statement: "A cadence may receive a fuller texture.",
+        scope: {
+          period: "seventeenth century",
+          region: "France",
+          genre: "continuo",
+          instrument: "theorbo",
+          ensembleRole: "accompaniment",
+        },
+        referenceId: reference.id,
+        citationLocator: "chapter 2",
+      })
+    ).toThrowError(
+      expect.objectContaining({
+        status: 410,
+        code: "conflict",
+        details: expect.objectContaining({ reason: "legacy_knowledge_quarantined" }),
+      })
+    );
+    expect(() =>
+      store.promoteKnowledge({
+        candidateId: "knowledge-candidate.missing",
+        packId: "pack.owner-continuo",
+        packName: "Owner-reviewed continuo claims",
+        authority: "documented_practice",
+      })
+    ).toThrowError(
+      expect.objectContaining({
+        status: 410,
+        code: "conflict",
+        details: expect.objectContaining({ reason: "legacy_knowledge_quarantined" }),
+      })
+    );
+    for (const mutate of [
+      () => store.rejectKnowledge("knowledge-candidate.missing"),
+      () =>
+        store.reviseKnowledge("knowledge-candidate.missing", {
+          statement: "A corrected legacy assertion.",
+          scope: {
+            period: "seventeenth century",
+            region: "France",
+            genre: "continuo",
+            instrument: "theorbo",
+            ensembleRole: "accompaniment",
+          },
+          citationLocator: "chapter 3",
+        }),
+      () => store.releaseClaim("historical-claim.missing"),
+    ]) {
+      expect(mutate).toThrowError(
+        expect.objectContaining({
+          status: 410,
+          code: "conflict",
+          details: expect.objectContaining({ reason: "legacy_knowledge_quarantined" }),
+        })
+      );
+    }
+
+    expect(readFileSync(path.join(rootDirectory, "manifest.json"), "utf8")).toBe(before);
+    expect(store.listKnowledgeCandidates()).toEqual([]);
     expect(store.listClaims()).toEqual([]);
-    const promoted = store.promoteKnowledge({
-      candidateId: candidate.id,
-      packId: "pack.owner-continuo",
-      packName: "Owner-reviewed continuo claims",
-      authority: "documented_practice",
+    expect(store.listPacks()).toEqual([]);
+  });
+
+  it("loads pre-boundary references as raw staging without rewriting their stored record", () => {
+    const reference = store.addReference({
+      title: "Existing local facsimile",
+      citation: "Owner library",
+      mimeType: "application/pdf",
+      contentBase64: Buffer.from("legacy local source").toString("base64"),
     });
-    expect(promoted.claim).toMatchObject({
-      referenceId: reference.id,
-      sourceCandidateId: candidate.id,
-      status: "active",
-    });
-    expect(promoted.claim.confidence).toBeUndefined();
-    expect(promoted.pack).toMatchObject({
-      reviewed: true,
-      version: 1,
-      claimIds: [promoted.claim.id],
-    });
-    expect(store.releaseClaim(promoted.claim.id)).toMatchObject({ status: "released" });
+    const recordPath = path.join(rootDirectory, "references", `${reference.id}.json`);
+    const legacy = JSON.parse(readFileSync(recordPath, "utf8")) as Record<string, unknown>;
+    delete legacy.authorityState;
+    delete legacy.activationAllowed;
+    writeFileSync(recordPath, `${JSON.stringify(legacy, null, 2)}\n`);
+    const before = readFileSync(recordPath, "utf8");
+
+    expect(store.listReferences()).toContainEqual(
+      expect.objectContaining({
+        id: reference.id,
+        authorityState: "raw_staged",
+        activationAllowed: false,
+      })
+    );
+    expect(readFileSync(recordPath, "utf8")).toBe(before);
   });
 
   it("keeps explicit candidate correction and rejection separate from learning", () => {

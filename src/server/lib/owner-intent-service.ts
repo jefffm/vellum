@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   classifyOwnerIntent,
   type CanonicalOwnerIntentLayer,
@@ -13,6 +14,7 @@ export class OwnerIntentService {
   private readonly createId: () => string;
 
   constructor(options: { store: WorkspaceStore; createId?: () => string }) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     this.store = options.store;
     this.createId = options.createId ?? randomUUID;
   }

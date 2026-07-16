@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { ArrangementPlan } from "../../lib/music-domain.js";
 import { LineageService } from "./lineage-service.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -39,6 +40,7 @@ export class ArrangementPlanService {
     correction: ArrangementPlanCorrection,
     reason: string
   ): { plan: ArrangementPlan; staleDerivationIds: string[] } {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
     const prior = this.store.getArrangementPlan(workspaceId, priorPlanId);
     const plan = this.store.saveArrangementPlan(workspaceId, {
       ...prior,

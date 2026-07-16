@@ -24,6 +24,7 @@ import {
   type ReferenceRecordRef,
   type ReferenceSourceStagingSnapshot,
 } from "../../lib/reference-source-domain.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type ReferenceSourceStagingHead = {
   snapshotId: string;
@@ -164,6 +165,7 @@ export class ReferenceSourceStagingStore {
     snapshot: ReferenceSourceStagingSnapshot,
     expectedHeadRef?: ReferenceRecordRef
   ): ReferenceSourceStagingHead {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     const decoded = decodeSnapshot(snapshot);
     this.writeImmutableSnapshot(decoded);
 

@@ -30,6 +30,7 @@ import {
   ReferenceSourceStagingStore,
   type ReferenceSourceStagingHead,
 } from "./reference-source-staging-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type LegacyOwnerReference = {
   id: string;
@@ -148,6 +149,7 @@ export class ReferenceSourceStagingService {
   applyTransaction(
     transaction: ReferenceSourceStagingTransaction
   ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     let decodedTransaction: ReferenceSourceStagingTransaction;
     try {
       decodedTransaction = Value.Decode(ReferenceSourceStagingTransactionSchema, transaction);
@@ -236,6 +238,7 @@ export class ReferenceSourceStagingService {
   migrateLegacyObservationHistory(
     expectedHeadRef: ReferenceRecordRef
   ): ReferenceSourceStagingDiagnostics {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     const currentState = this.store.readCurrentState();
     if (!currentState) {
       throw new ReferenceSourceStagingIntegrityError(

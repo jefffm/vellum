@@ -24,6 +24,7 @@ import type {
   PositionNote,
   RestEvent,
 } from "../../lib/engrave-schema.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   type InstrumentLyVars,
   type EngraveTemplateId,
@@ -464,6 +465,7 @@ export function eventsToLeaves(
   params: EngraveParams,
   model: InstrumentModel
 ): LyLeaf[] {
+  assertAuthorityPathRuntime("authority.compiler.notation-projection", "production");
   const leaves: LyLeaf[] = [];
   let isFirstLeaf = true;
 
@@ -623,22 +625,12 @@ function resolveEvent(
 
 type AnyAlfabetoEvent = AlfabetoEvent | AlfabetoChordEvent;
 
-/** Cache alfabeto lookups so validation + codegen don't repeat work on the same event. */
-const alfabetoMatchCache = new WeakMap<AnyAlfabetoEvent, AlfabetoMatch | undefined>();
-
 function selectAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefined {
-  const cached = alfabetoMatchCache.get(event);
-  if (cached !== undefined) return cached;
-  // WeakMap returns undefined for missing keys AND for cached undefined values.
-  // Use has() to distinguish "not cached" from "cached as no-match".
-  if (alfabetoMatchCache.has(event)) return undefined;
-
-  const match = resolveAlfabetoMatch(event);
-  alfabetoMatchCache.set(event, match);
-  return match;
+  return resolveAlfabetoMatch(event);
 }
 
 function resolveAlfabetoMatch(event: AnyAlfabetoEvent): AlfabetoMatch | undefined {
+  assertAuthorityPathRuntime("authority.validator.alfabeto-quarantine-denial", "production");
   const request = normalizeAlfabetoEvent(event);
   const chartId = request.chartId ?? "tyler-universal";
 
@@ -731,6 +723,7 @@ function noteIndicators(event: PositionNote | PitchNote): LyIndicator[] {
  * build LyTree → serialize.
  */
 export function engrave(params: EngraveParams): EngraveResult {
+  assertAuthorityPathRuntime("authority.compiler.notation-projection", "production");
   // Step 0: Validate structure when called directly (routes validate schema first).
   validateStructure(params);
 

@@ -1,12 +1,17 @@
 import express from "express";
 import { createServer, type Server } from "node:http";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { ApiResponse } from "../../lib/api-contract.js";
 import type { OwnerReference } from "../../lib/owner-domain.js";
-import { createOwnerReferenceRoute, createOwnerStateRoute } from "./owner-route.js";
+import {
+  createKnowledgeCandidateRoute,
+  createKnowledgePromotionRoute,
+  createOwnerReferenceRoute,
+  createOwnerStateRoute,
+} from "./owner-route.js";
 import { OwnerStore } from "./owner-store.js";
 
 describe("Owner Reference upload", () => {
@@ -56,6 +61,8 @@ describe("Owner Reference upload", () => {
       citation: "Paris, 1830, plate 1",
       mimeType: "application/pdf",
       byteLength: content.byteLength,
+      authorityState: "raw_staged",
+      activationAllowed: false,
     });
     expect(json.data).not.toHaveProperty("storedPath");
     const stored = store.listReferences()[0];
@@ -80,6 +87,10 @@ describe("Owner Reference upload", () => {
     expect(json.ok).toBe(true);
     if (json.ok) {
       expect(json.data.byteLength).toBe(15);
+      expect(json.data).toMatchObject({
+        authorityState: "raw_staged",
+        activationAllowed: false,
+      });
       expect(json.data).not.toHaveProperty("storedPath");
     }
   });
@@ -123,6 +134,97 @@ describe("Owner Reference upload", () => {
     expect(JSON.stringify(json.data)).not.toContain("references/reference.");
   });
 
+  it("moves legacy knowledge into an explicit read-only quarantine envelope", async () => {
+    seedLegacyKnowledge(rootDirectory);
+    const server = await listen(createOwnerStateRoute(store));
+    const response = await fetch(serverUrl(server));
+    const json = (await response.json()) as ApiResponse<{
+      knowledgeCandidates: unknown[];
+      historicalPracticeClaims: unknown[];
+      knowledgePacks: unknown[];
+      quarantinedLegacyKnowledge: {
+        authorityPathId: string;
+        state: string;
+        compatibilityMode: string;
+        activationAllowed: boolean;
+        knowledgeCandidates: Array<{ id: string }>;
+        historicalPracticeClaims: Array<{ id: string; status?: string }>;
+        knowledgePacks: Array<{ id: string; reviewed: boolean }>;
+      };
+    }>;
+
+    expect(response.status).toBe(200);
+    expect(json.ok).toBe(true);
+    if (!json.ok) return;
+    expect(json.data).toMatchObject({
+      knowledgeCandidates: [],
+      historicalPracticeClaims: [],
+      knowledgePacks: [],
+      quarantinedLegacyKnowledge: {
+        authorityPathId: "authority.cache.owner-legacy-knowledge",
+        state: "quarantined",
+        compatibilityMode: "quarantined_inspection_only",
+        activationAllowed: false,
+        knowledgeCandidates: [{ id: "knowledge-candidate.legacy" }],
+        historicalPracticeClaims: [{ id: "historical-claim.legacy", status: "active" }],
+        knowledgePacks: [{ id: "pack.legacy", reviewed: true }],
+      },
+    });
+  });
+
+  it("returns a stable quarantine error from both legacy mutation endpoints", async () => {
+    const candidateServer = await listen(createKnowledgeCandidateRoute(store), true);
+    const promotionServer = await listen(createKnowledgePromotionRoute(store), true);
+    const candidateResponse = await fetch(serverUrl(candidateServer), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        statement: "A legacy assertion",
+        scope: {
+          period: "seventeenth century",
+          region: "France",
+          genre: "continuo",
+          instrument: "theorbo",
+          ensembleRole: "accompaniment",
+        },
+        referenceId: "reference.missing",
+        citationLocator: "folio 1",
+      }),
+    });
+    const promotionResponse = await fetch(serverUrl(promotionServer), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        candidateId: "knowledge-candidate.missing",
+        packId: "pack.missing",
+        packName: "Legacy pack",
+        authority: "documented_practice",
+      }),
+    });
+
+    for (const response of [candidateResponse, promotionResponse]) {
+      expect(response.status).toBe(410);
+      expect(await response.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "conflict",
+          status: 410,
+          details: {
+            reason: "legacy_knowledge_quarantined",
+            authorityPathId: "authority.cache.owner-legacy-knowledge",
+          },
+        },
+      });
+    }
+    expect(
+      JSON.parse(readFileSync(path.join(rootDirectory, "manifest.json"), "utf8"))
+    ).toMatchObject({
+      knowledgeCandidateIds: [],
+      claimIds: [],
+      packIds: [],
+    });
+  });
+
   async function listen(route: express.RequestHandler, parseJson = false): Promise<Server> {
     const app = express();
     if (parseJson) app.use(express.json());
@@ -139,6 +241,78 @@ describe("Owner Reference upload", () => {
     return server;
   }
 });
+
+function seedLegacyKnowledge(rootDirectory: string): void {
+  const scope = {
+    period: "seventeenth century",
+    region: "France",
+    genre: "continuo",
+    instrument: "theorbo",
+    ensembleRole: "accompaniment",
+  };
+  const records = [
+    [
+      "knowledge-candidates/knowledge-candidate.legacy.json",
+      {
+        id: "knowledge-candidate.legacy",
+        statement: "A cadence may receive a fuller texture.",
+        scope,
+        referenceId: "reference.legacy",
+        citationLocator: "chapter 2",
+        status: "promoted",
+        createdAt: "2026-07-11T12:00:00.000Z",
+        reviewedAt: "2026-07-11T12:00:00.000Z",
+      },
+    ],
+    [
+      "claims/historical-claim.legacy.json",
+      {
+        id: "historical-claim.legacy",
+        statement: "A cadence may receive a fuller texture.",
+        scope,
+        authority: "documented_practice",
+        referenceId: "reference.legacy",
+        citationLocator: "chapter 2",
+        sourceCandidateId: "knowledge-candidate.legacy",
+        status: "active",
+        reviewedAt: "2026-07-11T12:00:00.000Z",
+      },
+    ],
+    [
+      "packs/pack.legacy.json",
+      {
+        id: "pack.legacy",
+        name: "Legacy reviewed pack",
+        version: 1,
+        reviewed: true,
+        claimIds: ["historical-claim.legacy"],
+        createdAt: "2026-07-11T12:00:00.000Z",
+        updatedAt: "2026-07-11T12:00:00.000Z",
+      },
+    ],
+  ] as const;
+  for (const [relativePath, record] of records) {
+    const file = path.join(rootDirectory, relativePath);
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
+  }
+  writeFileSync(
+    path.join(rootDirectory, "manifest.json"),
+    `${JSON.stringify(
+      {
+        choiceIds: [],
+        defaultCandidateIds: [],
+        defaultIds: [],
+        referenceIds: [],
+        knowledgeCandidateIds: ["knowledge-candidate.legacy"],
+        claimIds: ["historical-claim.legacy"],
+        packIds: ["pack.legacy"],
+      },
+      null,
+      2
+    )}\n`
+  );
+}
 
 function serverUrl(server: Server): string {
   const address = server.address();

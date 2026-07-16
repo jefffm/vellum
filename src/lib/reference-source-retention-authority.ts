@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 import {
   ReferenceRecordRefSchema,
@@ -146,6 +147,7 @@ export type ReferenceSourceRetentionAuthorityEvaluationInput =
 export function evaluateReferenceSourceRetentionAuthority(
   input: ReferenceSourceRetentionAuthorityEvaluationInput
 ): ReferenceSourceRetentionAuthorityEvaluation {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const { verifyServerReceipt, ...data } = input;
   if (!Value.Check(ReferenceSourceRetentionAuthorityEvaluationDataSchema, data)) {
     throw new TypeError(

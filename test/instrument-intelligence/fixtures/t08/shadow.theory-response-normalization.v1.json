@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.theory-response-normalization.v1",
+  "input": {
+    "analysis": {},
+    "chord": {
+      "name": "C major",
+      "roman": "I"
+    },
+    "lint": {}
+  },
+  "expectedLegacyOutput": {
+    "analysis": {
+      "chords": [],
+      "key": "unknown",
+      "time": "unknown"
+    },
+    "chord": {
+      "chord": "C major",
+      "romanNumeral": "I"
+    },
+    "lint": {
+      "violations": []
+    }
+  }
+}

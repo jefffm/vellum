@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { KnowledgeScopeSchema } from "../../lib/owner-domain.js";
 import type { OwnerReference } from "../../lib/owner-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
@@ -19,19 +20,29 @@ import {
 
 const IdParams = Type.Object({ id: Type.String({ minLength: 1 }) });
 
-export function createOwnerStateRoute(store = new OwnerStore()): RequestHandler {
+export function createOwnerStateRoute(store?: OwnerStore): RequestHandler {
+  assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+  const ownerStore = store ?? new OwnerStore();
   return createApiRoute<undefined, unknown>({
     validate: () => undefined,
-    handler: async () => ({
-      personalDefaultCandidates: store.listDefaultCandidates(),
-      personalDefaults: store.listDefaults(),
-      ownerReferences: store.listReferences().map(ownerReferenceSummary),
-      knowledgeCandidates: store.listKnowledgeCandidates(),
-      historicalPracticeClaims: store.listClaims(),
-      knowledgePacks: store.listPacks(),
-      builtInKnowledgePacks: loadBuiltInKnowledgePacks(),
-      quarantinedBuiltInKnowledgePacks: listQuarantinedBuiltInKnowledgePacks(),
-    }),
+    handler: async () => {
+      assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+      const quarantinedLegacyKnowledge = ownerStore.inspectQuarantinedLegacyKnowledge();
+      return {
+        personalDefaultCandidates: ownerStore.listDefaultCandidates(),
+        personalDefaults: ownerStore.listDefaults(),
+        ownerReferences: ownerStore.listReferences().map(ownerReferenceSummary),
+        // These compatibility fields formerly looked production-active. Keep the
+        // response shape, but expose frozen legacy bytes only under the explicit
+        // quarantine envelope below.
+        knowledgeCandidates: [],
+        historicalPracticeClaims: [],
+        knowledgePacks: [],
+        quarantinedLegacyKnowledge,
+        builtInKnowledgePacks: loadBuiltInKnowledgePacks(),
+        quarantinedBuiltInKnowledgePacks: listQuarantinedBuiltInKnowledgePacks(),
+      };
+    },
   });
 }
 
@@ -43,6 +54,8 @@ function ownerReferenceSummary(reference: OwnerReference): Omit<OwnerReference, 
     mimeType: reference.mimeType,
     sha256: reference.sha256,
     byteLength: reference.byteLength,
+    authorityState: reference.authorityState,
+    activationAllowed: reference.activationAllowed,
     createdAt: reference.createdAt,
   };
 }

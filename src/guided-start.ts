@@ -39,6 +39,7 @@ import {
   renderKnowledgePublicationWorkbench,
   type KnowledgePublicationWorkbenchState,
 } from "./knowledge-publication-workbench.js";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 
 type GuidedStartOptions = {
   onComplete: (deliverables: GuidedDeliverable[]) => void;
@@ -385,6 +386,7 @@ export function buildScoreSelectionContext(
   deliverable: GuidedDeliverable,
   selectedEventIds: readonly string[]
 ): ScoreSelectionContext {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   const chosen = new Set(selectedEventIds);
   const events = deliverable.arrangementEvents.filter((event) => chosen.has(event.id));
   const lineage = deliverable.transformationReport.filter((entry) =>
@@ -419,6 +421,7 @@ export function buildScoreSelectionContext(
 }
 
 export function ownerIntentAnchorFromContext(context: ScoreSelectionContext): OwnerIntentAnchor {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   return {
     workspaceId: context.workspaceId,
     arrangementScoreId: context.arrangementScoreId,
@@ -437,6 +440,8 @@ export function ownerIntentAnchorFromContext(context: ScoreSelectionContext): Ow
 }
 
 export function selectionPrompt(context: ScoreSelectionContext, request: string): string {
+  assertAuthorityPathRuntime("authority.prompt.model-action-guidance", "production");
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   const conciseRequest =
     request.trim() || "Give me interactive musical feedback on this selection.";
   return `${conciseRequest}\n\nUse this exact Vellum Selection Context; do not infer a different passage or score version:\n\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\``;
@@ -448,6 +453,7 @@ export async function proposeOwnerIntent(
   request: string,
   onProceed?: (layer: CanonicalOwnerIntentLayer) => void
 ): Promise<OwnerIntentProposal> {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   container.querySelector(".owner-intent-proposal")?.remove();
   const effectiveRequest =
     request.trim() || "Give me interactive musical feedback on this selection.";
@@ -952,6 +958,7 @@ export function openOwnerPlaytestDialog(
   deliverable: GuidedDeliverable,
   selectedEvents: ArrangementEvent[]
 ): HTMLDialogElement {
+  assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
   document.querySelector("#vellum-owner-playtest")?.remove();
   const dialog = document.createElement("dialog");
   dialog.id = "vellum-owner-playtest";
@@ -977,23 +984,31 @@ export function openOwnerPlaytestDialog(
     wrapper.append(document.createTextNode(label), control);
     return wrapper;
   };
-  const select = (label: string, values: string[]) => {
+  const select = (label: string, values: string[], required = false) => {
     const control = document.createElement("select");
     control.setAttribute("aria-label", label);
+    const placeholder = new Option("Choose…", "", true, true);
+    placeholder.disabled = true;
+    control.add(placeholder);
     values.forEach((value) => control.add(new Option(value.replaceAll("_", " "), value)));
+    control.required = required;
     return control;
   };
-  const outcome = select("Playtest outcome", [
-    "comfortable",
-    "practice_playable",
-    "marginal",
-    "unplayable",
-    "unclear_unmusical",
-    "historically_questionable",
-    "notation_problem",
-    "not_tested",
-  ]);
-  const basis = select("Evidence basis", ["physical_playing", "notation", "listening"]);
+  const outcome = select(
+    "Playtest outcome",
+    [
+      "comfortable",
+      "practice_playable",
+      "marginal",
+      "unplayable",
+      "unclear_unmusical",
+      "historically_questionable",
+      "notation_problem",
+      "not_tested",
+    ],
+    true
+  );
+  const basis = select("Evidence basis", ["physical_playing", "notation", "listening"], true);
   const tempo = document.createElement("input");
   tempo.type = "number";
   tempo.min = "1";
@@ -1002,11 +1017,12 @@ export function openOwnerPlaytestDialog(
   practice.required = true;
   practice.placeholder = "Instrument, posture, warm-up, practice conditions…";
   const confidence = document.createElement("input");
-  confidence.type = "range";
+  confidence.type = "number";
   confidence.min = "0";
   confidence.max = "1";
   confidence.step = "0.05";
-  confidence.value = "0.8";
+  confidence.required = true;
+  confidence.placeholder = "0–1 confidence";
   const dimension = select("Finding dimension", [
     "mechanics",
     "technique",
@@ -1048,6 +1064,7 @@ export function openOwnerPlaytestDialog(
     "calibration_candidate",
     "fixture_nomination",
   ]);
+  proposal.value = "none";
   const warning = document.createElement("p");
   warning.textContent = occurrenceId
     ? `Anchored to playback occurrence ${occurrenceId}. Proposed consequences remain proposals until explicitly adopted.`
@@ -1079,8 +1096,15 @@ export function openOwnerPlaytestDialog(
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!occurrenceId) return;
+    const hasFinding = findingRationale.value.trim().length > 0;
+    for (const control of [dimension, findingCode, findingOutcome]) {
+      control.setCustomValidity(
+        hasFinding && !control.value ? "Choose a value for this finding." : ""
+      );
+    }
+    if (!form.reportValidity()) return;
     save.disabled = true;
-    const observation = findingRationale.value.trim()
+    const observation = hasFinding
       ? [
           {
             dimension: dimension.value,
@@ -1847,6 +1871,9 @@ function globalLauncherBar(): HTMLElement {
 }
 
 export function installGuidedStart(options: GuidedStartOptions): void {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
+  assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
   const linkedWorkspace = new URL(window.location.href).searchParams.get("workspace");
   let activeWorkspaceId =
     linkedWorkspace?.match(/^workspace\.[a-f0-9-]{16,}$/)?.[0] ??
@@ -2335,6 +2362,8 @@ type OwnerState = {
 };
 
 export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
+
   document.querySelector("#vellum-owner-workbench")?.remove();
   document.querySelector("#owner-workbench-launcher")?.remove();
   const launcher = document.createElement("button");
@@ -3660,6 +3689,7 @@ export function presentScoreAnchoredReview(
 export function recommendedVoiceAssignments(
   events: Array<Extract<ScoreEvent, { type: "note" }>>
 ): Map<string, "soprano" | "alto" | "tenor" | "bass"> {
+  assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
   const groups = new Map<string, Array<Extract<ScoreEvent, { type: "note" }>>>();
   for (const event of events) {
     const key = `${event.measureId}:${event.onset.numerator}/${event.onset.denominator}`;
@@ -4007,6 +4037,7 @@ export function isOpticalSource(file: Pick<File, "name" | "type">): boolean {
 }
 
 export function guidedStartMarkup(): string {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
   return `
     <form>
       <header><p>Guided Start</p><h1>Turn a score into a playable arrangement</h1><button type="button" data-guided-skip aria-label="Close">×</button></header>
@@ -4035,6 +4066,8 @@ export function guidedStartMarkup(): string {
 }
 
 export function performanceBriefFromForm(form: HTMLFormElement): PerformanceBriefInput {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
   const value = (name: string) =>
     form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)?.value.trim() ??
     "";
@@ -4100,6 +4133,7 @@ function defaultGuidedPerformanceBrief(): PerformanceBriefInput {
 }
 
 export function targetConfiguration(id: string): TargetConfiguration {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
   if (id === "target.baroque-guitar") {
     return {
       id,

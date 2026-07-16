@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { buildInterpretedAudioPreview } from "../../lib/audio-preview.js";
 import type { PerformanceInterpretation } from "../../lib/music-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
@@ -41,6 +42,7 @@ const CreateBody = Type.Object(
 type Options = { store?: WorkspaceStore; now?: () => Date; createId?: () => string };
 
 export function createPerformanceInterpretationListRoute(options: Options = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
   const store = options.store ?? new WorkspaceStore();
   return createApiRoute({
     validate: (_body, request) => Value.Decode(ArrangementParams, request.params),
@@ -67,6 +69,7 @@ export function createPerformanceInterpretationListRoute(options: Options = {}):
 }
 
 export function createPerformanceInterpretationCreateRoute(options: Options = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
   const store = options.store ?? new WorkspaceStore();
   const now = options.now ?? (() => new Date());
   const createId = options.createId ?? randomUUID;
@@ -110,10 +113,12 @@ export function createPerformanceInterpretationCreateRoute(options: Options = {}
 }
 
 export function createPerformanceInterpretationPreviewRoute(options: Options = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
   const store = options.store ?? new WorkspaceStore();
   return createApiRoute({
     validate: (_body, request) => Value.Decode(InterpretationParams, request.params),
     handler: async ({ workspaceId, arrangementId, interpretationId }) => {
+      assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
       const arrangement = store.getArrangementScore(workspaceId, arrangementId);
       const interpretation = store.getPerformanceInterpretation(workspaceId, interpretationId);
       const analysis = store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);

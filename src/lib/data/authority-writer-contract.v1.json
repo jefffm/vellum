@@ -1,0 +1,2097 @@
+{
+  "schemaVersion": 1,
+  "contractId": "authority-writer-contract.v1",
+  "classificationPolicyDigest": "007adcc57e3f6f02ec8c8c56d395b7db57188d0a44ace9c8e256df467d852254",
+  "sourceDigests": [
+    {
+      "path": "src/server/evaluation-comparison-cli.ts",
+      "digest": "248753864afeb81d28c6b015f8b0e09eaa1ecbf2aeea855fabf3ac6fb0e65fca"
+    },
+    {
+      "path": "src/server/external-evaluation-cli.ts",
+      "digest": "4b63f5f70cc6e97b630a7f248f3656884c933b427bbd944d7fc455909c9c97a5"
+    },
+    {
+      "path": "src/server/lib/analysis-service.ts",
+      "digest": "bc57a9add1a4b83865652e12efc26c8c82119b43da48967d90fe5940f3af5d41"
+    },
+    {
+      "path": "src/server/lib/arrangement-plan-service.ts",
+      "digest": "857a97f75aedad1517cc2509b7aa1f8007ae8079ef73f09184971cc958da1d2b"
+    },
+    {
+      "path": "src/server/lib/arrangement-route.ts",
+      "digest": "e6edf826e5f64666105fc1a2a982f8216032ab546e93f60feb22873d574ec06d"
+    },
+    {
+      "path": "src/server/lib/arrangement-service.ts",
+      "digest": "48d96906cbe9a376d0e8ddd677a91fd43359ae252d2917a6be50c18cf7e2e901"
+    },
+    {
+      "path": "src/server/lib/continuo-evaluation.ts",
+      "digest": "68cdb9b98efe38915e9f058c34462f1aa8fa83ab33774f4549a80c6ccfee485f"
+    },
+    {
+      "path": "src/server/lib/deliverable-service.ts",
+      "digest": "c6d178d651b188667113db9102131af93703742fcda3f6e9efbda5dec32370b4"
+    },
+    {
+      "path": "src/server/lib/evaluation-artifact-store.ts",
+      "digest": "9878bf97624a76c23703c6b1b62689a6eb2db9d383beedc66d5a168faca9ef27"
+    },
+    {
+      "path": "src/server/lib/evaluation-comparison.ts",
+      "digest": "902860b12efe3949462e510bc4b7cb91006896bcc272c96fc32349a7ee1bd137"
+    },
+    {
+      "path": "src/server/lib/evaluation-harness.ts",
+      "digest": "a476b23493ed4ff254f23c584130adb4a23e5793b234d7f931dbc9c9f90b9ef7"
+    },
+    {
+      "path": "src/server/lib/evaluation-promotion.ts",
+      "digest": "e4c9765c7bdbf6c3b530e8bb64cf003df1a4bd7b7ff03a47b42326c50a7bbf4c"
+    },
+    {
+      "path": "src/server/lib/evaluation-store.ts",
+      "digest": "c6fd9c7879d1d8c1a816d9da79a997c8e5c958a824f3456888d31cae4a29363c"
+    },
+    {
+      "path": "src/server/lib/first-loop-evaluation.ts",
+      "digest": "dc8a3356d9ff8268d8b5e5cd4f5e1297c4e52a8a0debd457d5f82bce9940dab2"
+    },
+    {
+      "path": "src/server/lib/guided-workflow-service.ts",
+      "digest": "91cf3a34b26567703785542a3146d4c9fa18e7174426863f125d39aaf26f1471"
+    },
+    {
+      "path": "src/server/lib/human-comparison.ts",
+      "digest": "f2ae7af0493debecf680405d8c80a5d5c84caca90e486a5f478fc027630712e3"
+    },
+    {
+      "path": "src/server/lib/imitative-evaluation.ts",
+      "digest": "00c61add9f2d62178d5bafbb4d7c1c4d73bf487623a2435bdf447dea7714199b"
+    },
+    {
+      "path": "src/server/lib/knowledge-publication-store.ts",
+      "digest": "dd1cf6cd642635ef8d70f08068cb9ce8dabb54e6062430183068ca42c905caeb"
+    },
+    {
+      "path": "src/server/lib/lineage-service.ts",
+      "digest": "27e85dd044e8e0de9307c1c7a47f7a5702786ca8b4b6314049d97281fc913659"
+    },
+    {
+      "path": "src/server/lib/model-action-service.ts",
+      "digest": "2e2af161825aec781b5e1c7687b49163ccc10b1e867e985dd5dd20dc75701128"
+    },
+    {
+      "path": "src/server/lib/omr.ts",
+      "digest": "d93b6debd4fbc05d5e74406a389334943960761b9579f33befe4d4ae7d1e8b51"
+    },
+    {
+      "path": "src/server/lib/owner-playtest-route.ts",
+      "digest": "aef57df3b3fab3d9c90ed998163b1fe62b0a51bf7a3744f261aaac10fb9e5a5c"
+    },
+    {
+      "path": "src/server/lib/owner-store.ts",
+      "digest": "5c040d4154ba924346b8ddded4539a041fb662009fb251c3b6bef21f75d14f42"
+    },
+    {
+      "path": "src/server/lib/performance-interpretation-route.ts",
+      "digest": "87eb384b04119edec7514d7bb69de55763f1676c7d5ef61305369dbf20cccabf"
+    },
+    {
+      "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
+      "digest": "82803681c89aaadf6690bdac5390a227c0855430d3d072dfb3e95024dfbff661"
+    },
+    {
+      "path": "src/server/lib/reference-source-controlled-asset-route.ts",
+      "digest": "b1a12cbb80eed3b5bf4f3a555a4fdc73d3db4cf6a496c4895579aae16083a0fb"
+    },
+    {
+      "path": "src/server/lib/reference-source-controlled-asset-service.ts",
+      "digest": "387931cf33441388ce50681a3fcb791636e82fe735950cb127dcc98eb183972b"
+    },
+    {
+      "path": "src/server/lib/reference-source-staging-service.ts",
+      "digest": "7bee468ed5159afd9bfce19a6b2280959f3f509a79dbf0cb9fe0c37e56ec5e01"
+    },
+    {
+      "path": "src/server/lib/reference-source-staging-store.ts",
+      "digest": "a8fcae50793ff783cf9f9924935673b5beaffa738b9bf6458173c63475713ba2"
+    },
+    {
+      "path": "src/server/lib/reviewed-learning.ts",
+      "digest": "324bef913acc28f9c6778c107b532c001887995ebdaee4f6c5c06bdb4805ad3e"
+    },
+    {
+      "path": "src/server/lib/reviewed-owner-default-bridge.ts",
+      "digest": "5c11c9d6b7573755839a9ecace18e8e56e17c94fcee2bd9e96f6af44639c7618"
+    },
+    {
+      "path": "src/server/lib/source-import-service.ts",
+      "digest": "80cbecd39055723efb882c87a13949255e78f2d74c908aee6241a73160cd331e"
+    },
+    {
+      "path": "src/server/lib/source-truth-service.ts",
+      "digest": "6b6fce43e675d6e3804b657cd0f55e53afc68e5e73f6ec9da95e7e4312ca18da"
+    },
+    {
+      "path": "src/server/lib/three-target-parity.ts",
+      "digest": "dedf9627e9255d6b4a538fce90d69dd4d744fd73687d8f19e8e9b18d25536c41"
+    },
+    {
+      "path": "src/server/lib/transcription-service.ts",
+      "digest": "f54ae12fe494b73c3a2dcd76ef0bc5858e059321ae0f94fe52a819bbf76bb291"
+    },
+    {
+      "path": "src/server/lib/workspace-route.ts",
+      "digest": "380ebed563264c4184429689227d4ddfb5b29b40a1772589d29800149f662531"
+    },
+    {
+      "path": "src/server/lib/workspace-store.ts",
+      "digest": "c9381669dfdb01c78c5590c65fd18432a8b3cbcb91ff76df30a5c20f5fd7f52c"
+    }
+  ],
+  "entries": [
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.approveDefaultCandidate"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultCandidateIds",
+        "OwnerStoreManifest.defaultIds",
+        "PersonalDefault.candidateId",
+        "PersonalDefault.createdAt",
+        "PersonalDefault.dimension",
+        "PersonalDefault.id",
+        "PersonalDefault.scope",
+        "PersonalDefault.status",
+        "PersonalDefault.value",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.resolvedAt",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "b1760bebb46a3dba18f1454854a2851508b93dc053313bf9ccb3761018b6f7d0"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.proposeDefaultCandidate"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultCandidateIds",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "272de6220134d0765d6fa65ebe47f443739f18a47200b16bceca0d5a6f3f1a3d"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.recordChoice"
+      },
+      "outputFields": [
+        "OwnerChoice.createdAt",
+        "OwnerChoice.dimension",
+        "OwnerChoice.id",
+        "OwnerChoice.scope",
+        "OwnerChoice.value",
+        "OwnerChoice.workspaceId",
+        "OwnerStoreManifest.choiceIds",
+        "OwnerStoreManifest.defaultCandidateIds",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "2fd187e7d903a31f93770a8a0e511ded9c676db274c6163f1b4659fe3552fa5f"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.rejectDefaultCandidate"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultCandidateIds",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.resolvedAt",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "13523bff770b661e498c595c78c5929019b800750a87eb7006a50c585fc9cd1b"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.releaseDefault"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultIds",
+        "PersonalDefault.candidateId",
+        "PersonalDefault.createdAt",
+        "PersonalDefault.dimension",
+        "PersonalDefault.id",
+        "PersonalDefault.releasedAt",
+        "PersonalDefault.scope",
+        "PersonalDefault.status",
+        "PersonalDefault.value"
+      ],
+      "implementationDigest": "9cc45232123d8d8e26f8e045be9eedb986c45e734d650b8974828e01f0d1e627"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "cache",
+        "path": "src/server/lib/owner-store.ts",
+        "selector": "OwnerStore.reviseDefaultCandidate"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultCandidateIds",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.resolvedAt",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "89171eafa6ba497d433fcd3369538d305bbfde68beefec57f6726b4227f6fd7b"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-service.ts",
+        "selector": "ArrangementService.createFaithfulReduction"
+      },
+      "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
+      "implementationDigest": "21a34fdc6aaef3b34ae2751da574e3e48eacce09a3e8dfa9f373b80e8538ef33"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-owner-default-bridge.ts",
+        "selector": "acceptReviewedOwnerDefault"
+      },
+      "outputFields": [
+        "OwnerStoreManifest.defaultCandidateIds",
+        "PersonalDefaultCandidate.createdAt",
+        "PersonalDefaultCandidate.dimension",
+        "PersonalDefaultCandidate.evidenceChoiceIds",
+        "PersonalDefaultCandidate.id",
+        "PersonalDefaultCandidate.scope",
+        "PersonalDefaultCandidate.status",
+        "PersonalDefaultCandidate.value"
+      ],
+      "implementationDigest": "0546d45bef1ab5fec6c32388532c9156a67a34b087e51a9e70a17b7d7c91a8df"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.create"
+      },
+      "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
+      "implementationDigest": "abb8f2068945846c6b08976ac793ebef48f6b10893e3fc5b7cca08c530333032"
+    },
+    {
+      "authorityPathId": "authority.cache.owner-personal-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.updateBrief"
+      },
+      "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
+      "implementationDigest": "e1e437aba732010f543d1c820da89e33e2ba3b7f264966e25d3d96c261dec60f"
+    },
+    {
+      "authorityPathId": "authority.compiler.deliverable-projection-dispatch",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/deliverable-service.ts",
+        "selector": "persistDeliverable"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.deliverableIds",
+        "Deliverable.arrangementScoreId",
+        "Deliverable.arrangementScoreVersion",
+        "Deliverable.artifactPolicyVersion",
+        "Deliverable.byteLength",
+        "Deliverable.createdAt",
+        "Deliverable.id",
+        "Deliverable.kind",
+        "Deliverable.mimeType",
+        "Deliverable.notationLayout",
+        "Deliverable.sha256",
+        "Deliverable.storedPath",
+        "DeliverableArtifact.bytes"
+      ],
+      "implementationDigest": "0f3090a7011abb96aa9b4eb2521fbf9009e866ed14ca38edff75be9fbc7a3f44"
+    },
+    {
+      "authorityPathId": "authority.compiler.deliverable-projection-dispatch",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveDeliverable"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.deliverableIds",
+        "Deliverable.arrangementScoreId",
+        "Deliverable.arrangementScoreVersion",
+        "Deliverable.artifactPolicyVersion",
+        "Deliverable.byteLength",
+        "Deliverable.createdAt",
+        "Deliverable.id",
+        "Deliverable.kind",
+        "Deliverable.mimeType",
+        "Deliverable.notationLayout",
+        "Deliverable.sha256",
+        "Deliverable.storedPath",
+        "DeliverableArtifact.bytes"
+      ],
+      "implementationDigest": "abfb7f052e6a6249834eeb27e33e71caa271153d4db8f15026a5bb3d0c7769cb"
+    },
+    {
+      "authorityPathId": "authority.compiler.playback-projection",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/deliverable-service.ts",
+        "selector": "persistDeliverable"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.deliverableIds",
+        "Deliverable.arrangementScoreId",
+        "Deliverable.arrangementScoreVersion",
+        "Deliverable.artifactPolicyVersion",
+        "Deliverable.byteLength",
+        "Deliverable.createdAt",
+        "Deliverable.id",
+        "Deliverable.kind",
+        "Deliverable.mimeType",
+        "Deliverable.notationLayout",
+        "Deliverable.sha256",
+        "Deliverable.storedPath",
+        "DeliverableArtifact.bytes"
+      ],
+      "implementationDigest": "0f3090a7011abb96aa9b4eb2521fbf9009e866ed14ca38edff75be9fbc7a3f44"
+    },
+    {
+      "authorityPathId": "authority.compiler.playback-projection",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveDeliverable"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.deliverableIds",
+        "Deliverable.arrangementScoreId",
+        "Deliverable.arrangementScoreVersion",
+        "Deliverable.artifactPolicyVersion",
+        "Deliverable.byteLength",
+        "Deliverable.createdAt",
+        "Deliverable.id",
+        "Deliverable.kind",
+        "Deliverable.mimeType",
+        "Deliverable.notationLayout",
+        "Deliverable.sha256",
+        "Deliverable.storedPath",
+        "DeliverableArtifact.bytes"
+      ],
+      "implementationDigest": "abfb7f052e6a6249834eeb27e33e71caa271153d4db8f15026a5bb3d0c7769cb"
+    },
+    {
+      "authorityPathId": "authority.governance.workspace-recovery",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.create"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementCandidateIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.arrangementScoreIds",
+        "ArrangementWorkspace.arrangementSearchIds",
+        "ArrangementWorkspace.brief",
+        "ArrangementWorkspace.commitmentConflictIds",
+        "ArrangementWorkspace.deliverableIds",
+        "ArrangementWorkspace.editorialCommitmentIds",
+        "ArrangementWorkspace.familyCommitmentIds",
+        "ArrangementWorkspace.guidedWorkflowIds",
+        "ArrangementWorkspace.modelActionIds",
+        "ArrangementWorkspace.normalizedScoreIds",
+        "ArrangementWorkspace.omrRunIds",
+        "ArrangementWorkspace.ownerPlaytestIds",
+        "ArrangementWorkspace.passageSearchIds",
+        "ArrangementWorkspace.performanceBriefIds",
+        "ArrangementWorkspace.performanceInterpretationIds",
+        "ArrangementWorkspace.planConflictIds",
+        "ArrangementWorkspace.policyExceptionIds",
+        "ArrangementWorkspace.revision",
+        "ArrangementWorkspace.schemaVersion",
+        "ArrangementWorkspace.scoreTranscriptionIds",
+        "ArrangementWorkspace.sourceArtifactIds",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "ArrangementWorkspace.staleDerivationIds"
+      ],
+      "implementationDigest": "abb8f2068945846c6b08976ac793ebef48f6b10893e3fc5b7cca08c530333032"
+    },
+    {
+      "authorityPathId": "authority.governance.workspace-recovery",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.get"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementCandidateIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.arrangementSearchIds",
+        "ArrangementWorkspace.commitmentConflictIds",
+        "ArrangementWorkspace.deliverableIds",
+        "ArrangementWorkspace.editorialCommitmentIds",
+        "ArrangementWorkspace.familyCommitmentIds",
+        "ArrangementWorkspace.guidedWorkflowIds",
+        "ArrangementWorkspace.modelActionIds",
+        "ArrangementWorkspace.ownerPlaytestIds",
+        "ArrangementWorkspace.passageSearchIds",
+        "ArrangementWorkspace.performanceBriefIds",
+        "ArrangementWorkspace.performanceInterpretationIds",
+        "ArrangementWorkspace.planConflictIds",
+        "ArrangementWorkspace.policyExceptionIds",
+        "ArrangementWorkspace.revision",
+        "ArrangementWorkspace.schemaVersion",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "ArrangementWorkspace.staleDerivationIds"
+      ],
+      "implementationDigest": "0ed1727feb26955a511b0e72a25dc50f598f60a035388a1a5d7a9a2d15f93948"
+    },
+    {
+      "authorityPathId": "authority.governance.workspace-recovery",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.recoverWorkspace"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementCandidateIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.arrangementScoreIds",
+        "ArrangementWorkspace.arrangementSearchIds",
+        "ArrangementWorkspace.commitmentConflictIds",
+        "ArrangementWorkspace.deliverableIds",
+        "ArrangementWorkspace.editorialCommitmentIds",
+        "ArrangementWorkspace.familyCommitmentIds",
+        "ArrangementWorkspace.guidedWorkflowIds",
+        "ArrangementWorkspace.modelActionIds",
+        "ArrangementWorkspace.normalizedScoreIds",
+        "ArrangementWorkspace.omrRunIds",
+        "ArrangementWorkspace.ownerPlaytestIds",
+        "ArrangementWorkspace.passageSearchIds",
+        "ArrangementWorkspace.performanceBriefIds",
+        "ArrangementWorkspace.performanceInterpretationIds",
+        "ArrangementWorkspace.planConflictIds",
+        "ArrangementWorkspace.policyExceptionIds",
+        "ArrangementWorkspace.revision",
+        "ArrangementWorkspace.scoreTranscriptionIds",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "ArrangementWorkspace.staleDerivationIds"
+      ],
+      "implementationDigest": "230e97e03246ee10f1c002ef6d4564188f05648a99367b96bf04ed3be0eca1f4"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-plan-service.ts",
+        "selector": "ArrangementPlanService.correct"
+      },
+      "outputFields": [
+        "ArrangementPlan.record",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.staleDerivationIds",
+        "StaleDerivation.record"
+      ],
+      "implementationDigest": "8d0060a0cd2541dad4660191b61d7d0a5259bee82ab8f7bfd62b10c68ed0fa41"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.checkpoint"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "86cb586003662024914347cdc5ba3eb4cffc9e21f3e7a580d39846771649da08"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.create"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "27b3b017b452b23350ba5c69e975e653963101ee8b1f0372d7e4ef1d30343d7b"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.interrupt"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "39846cc30d8eca9fa868ae38c1a531f17b43d08b19acfdc6c18f18fbbe33bb93"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.restart"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "b3ced73468741db30f7121fbb7e8984a6a83cb3d48c2896602bc2f3f53bf3d71"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.resume"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "37c993067d2b42643d5e5a741df66b61cc485179c94edf8907e00e45692c9072"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementPlan"
+      },
+      "outputFields": ["ArrangementPlan.record", "ArrangementWorkspace.arrangementPlanIds"],
+      "implementationDigest": "f16fac1acb447f7ec5f7fbebc817b5f6fb20bfed1c460ff3cccf54772b9b7151"
+    },
+    {
+      "authorityPathId": "authority.parameter.arrangement-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveGuidedWorkflow"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "7d1d232df111269cd265c81c6f6ac76764c110d60d8c63e3a7d21220e7954371"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.acknowledgeStaleDerivation"
+      },
+      "outputFields": ["ArrangementWorkspace.staleDerivationIds", "StaleDerivation.record"],
+      "implementationDigest": "5e219ce5111eaef866da5a0f511b7f2afae2098780c803e442a332552668089f"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.approvePolicyException"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.commitmentConflictIds",
+        "ArrangementWorkspace.policyExceptionIds",
+        "CommitmentConflict.record",
+        "PolicyException.record"
+      ],
+      "implementationDigest": "01e2730eaf6b106134b6a5ea9f301e86388557a9874610f27d06876d73a7f67e"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.conservativeRegenerate"
+      },
+      "outputFields": [
+        "AnalysisRecord.record",
+        "ArrangementBranch.record",
+        "ArrangementCandidate.record",
+        "ArrangementFamily.record",
+        "ArrangementPlan.record",
+        "ArrangementScore.record",
+        "ArrangementSearch.record",
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementCandidateIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.arrangementScoreIds",
+        "ArrangementWorkspace.arrangementSearchIds",
+        "ArrangementWorkspace.brief",
+        "ArrangementWorkspace.commitmentConflictIds",
+        "ArrangementWorkspace.performanceBriefIds",
+        "ArrangementWorkspace.planConflictIds",
+        "ArrangementWorkspace.revision",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "CommitmentConflict.record",
+        "PerformanceBrief.record",
+        "PlanConflict.record",
+        "SourceTruthAssessment.record"
+      ],
+      "implementationDigest": "5a45e1639628ec04aba9d31214b276491d766a1e1cb0dba9ac2e6210c4b5649a"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.createEditorialCommitment"
+      },
+      "outputFields": ["ArrangementWorkspace.editorialCommitmentIds", "EditorialCommitment.record"],
+      "implementationDigest": "12801132907702a3128843b8a6c2b7232537a1c335870c277875229b8a947351"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.editArrangementEvent"
+      },
+      "outputFields": [
+        "ArrangementBranch.record",
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds"
+      ],
+      "implementationDigest": "b9615c9689352c1888ae73de0725985966e4d64d36dd706ec3529ee9421901b3"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.editArrangementEvents"
+      },
+      "outputFields": [
+        "ArrangementBranch.record",
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds"
+      ],
+      "implementationDigest": "fa083835739fa05e1c00189c32dcb678ad5f8349c9f96fc1960448cfe2dda31c"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.markArrangementsStale"
+      },
+      "outputFields": ["ArrangementWorkspace.staleDerivationIds", "StaleDerivation.record"],
+      "implementationDigest": "a33369584ac990c9abd97e8607fff323099e4bc24ffa1ad13e7c4ecbbc4d4f96"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.markPlanDependentsStale"
+      },
+      "outputFields": ["ArrangementWorkspace.staleDerivationIds", "StaleDerivation.record"],
+      "implementationDigest": "345557b918d321334715385fe9a7654b0a50a500082b416bd5456d93403c80f2"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.markSourceTruthDependentsStale"
+      },
+      "outputFields": ["ArrangementWorkspace.staleDerivationIds", "StaleDerivation.record"],
+      "implementationDigest": "dce2c5be9b329604cae5dddd15e8c524958dce1f4df4818b76bd7f7d1dc46933"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.promoteFamilyCommitment"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.familyCommitmentIds",
+        "ArrangementWorkspace.staleDerivationIds",
+        "FamilyCommitment.record",
+        "StaleDerivation.record"
+      ],
+      "implementationDigest": "4ccd36bb3238f052fc0f85a74e641a29fdfd48793ad40b014bc1f6b787370af4"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.promotePlanDecisionToFamilyCommitment"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.familyCommitmentIds",
+        "ArrangementWorkspace.staleDerivationIds",
+        "FamilyCommitment.record",
+        "StaleDerivation.record"
+      ],
+      "implementationDigest": "6ec8a079132f25a269c872da5e1f5dac69b36a0597aba71f72354159862bb3e7"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.releaseCommitment"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.editorialCommitmentIds",
+        "ArrangementWorkspace.familyCommitmentIds",
+        "EditorialCommitment.record",
+        "FamilyCommitment.record"
+      ],
+      "implementationDigest": "d15445749ad380cdded5f9fb5f124753e7204fb0b5b9e757b4d9d694c94f9b18"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/lineage-service.ts",
+        "selector": "LineageService.releaseEditorialCommitment"
+      },
+      "outputFields": ["ArrangementWorkspace.editorialCommitmentIds", "EditorialCommitment.record"],
+      "implementationDigest": "5949a9cecd5f25efa0b2c7b4279c10e652cad7a2e0e8aafbf2fccdf3df5d1278"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementBranch"
+      },
+      "outputFields": ["ArrangementBranch.record", "ArrangementWorkspace.arrangementBranchIds"],
+      "implementationDigest": "668c8a2b1caa5d672ca7e35661628cc7573d0866e237624c4e6646117384af2a"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementScore"
+      },
+      "outputFields": [
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds"
+      ],
+      "implementationDigest": "f633be7eef586f9bd4faaf2c60bd180c553590ff6756fd9eae7ca7e3e60849a7"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveCommitmentConflict"
+      },
+      "outputFields": ["ArrangementWorkspace.commitmentConflictIds", "CommitmentConflict.record"],
+      "implementationDigest": "26b030f6ad4294d66f1e560fdbfe7b87f5793bec484ca60a7d62efc50df66bfd"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveEditorialCommitment"
+      },
+      "outputFields": ["ArrangementWorkspace.editorialCommitmentIds", "EditorialCommitment.record"],
+      "implementationDigest": "15f0fcfaab71cacdc632f83bebc9b8bfbe700f9359814ea1295947c1a7d77a72"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveFamilyCommitment"
+      },
+      "outputFields": ["ArrangementWorkspace.familyCommitmentIds", "FamilyCommitment.record"],
+      "implementationDigest": "86ffd4ae5598f7f4b6b90a31e645ecd7b6440a6362de5bb4c188550db450d572"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.savePolicyException"
+      },
+      "outputFields": ["ArrangementWorkspace.policyExceptionIds", "PolicyException.record"],
+      "implementationDigest": "61438ad7cae6b1e6df11a910ce9d946552e67b568ff3c3098282a5d972b94681"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveStaleDerivation"
+      },
+      "outputFields": ["ArrangementWorkspace.staleDerivationIds", "StaleDerivation.record"],
+      "implementationDigest": "6f055721256486b50472382ee0101f06e70d0db5d962cbe861ab9147e5a869a5"
+    },
+    {
+      "authorityPathId": "authority.parameter.owner-intent-and-edit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.selectPlanConflictResolution"
+      },
+      "outputFields": ["ArrangementWorkspace.planConflictIds", "PlanConflict.record"],
+      "implementationDigest": "25aefeadc45394b710b63535f7e5e0e2c1ba7eb0d6b40f701dc98ec5b49c7781"
+    },
+    {
+      "authorityPathId": "authority.parameter.performance-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/performance-interpretation-route.ts",
+        "selector": "createPerformanceInterpretationCreateRoute"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.performanceInterpretationIds",
+        "PerformanceInterpretation.record"
+      ],
+      "implementationDigest": "fca4ee8605decce0c3a65f1286d141558eb3a5d3bff5ae6e0961863b899e7b1b"
+    },
+    {
+      "authorityPathId": "authority.parameter.performance-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.savePerformanceInterpretation"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.performanceInterpretationIds",
+        "PerformanceInterpretation.record"
+      ],
+      "implementationDigest": "59eaaa398dcd20b863cc45ebe40efa53de423a259eb8ed611acd4d63ff8729fc"
+    },
+    {
+      "authorityPathId": "authority.parameter.source-upload-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-route.ts",
+        "selector": "createSourceUploadRoute"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.sourceArtifactIds",
+        "SourceArtifact.record",
+        "SourceArtifactContent.bytes"
+      ],
+      "implementationDigest": "9f9fb251643fce8e89dfef38f237a488f84e7ab07808351ce51f337536d0271f"
+    },
+    {
+      "authorityPathId": "authority.parameter.source-upload-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.addSourceArtifact"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.sourceArtifactIds",
+        "SourceArtifact.record",
+        "SourceArtifactContent.bytes"
+      ],
+      "implementationDigest": "ef1d7c2277643a9449b076c16a2b713ddb10aa8bcc42858159e84a73ffccaac1"
+    },
+    {
+      "authorityPathId": "authority.parameter.source-upload-defaults",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.addSourceArtifactFromSpool"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.sourceArtifactIds",
+        "SourceArtifact.record",
+        "SourceArtifactContent.bytes"
+      ],
+      "implementationDigest": "07ba84448cbe9af771cd89828017ff2ea576b0e8589547ae8f11b508572aa646"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-service.ts",
+        "selector": "ArrangementService.adoptPassageCandidate"
+      },
+      "outputFields": [
+        "ArrangementBranch.record",
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds",
+        "ArrangementWorkspace.passageSearchIds",
+        "PassageSearch.record"
+      ],
+      "implementationDigest": "b7b1bb0e34a351c14e29529d3dac980913f48587c2aea94441a15b0b5402feaa"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-service.ts",
+        "selector": "ArrangementService.branchFromCandidate"
+      },
+      "outputFields": [
+        "ArrangementBranch.record",
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds"
+      ],
+      "implementationDigest": "60dfa667d04cbd71b5462c5ea6a74b0727b07026d1f146532c7c5e8991c53226"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-service.ts",
+        "selector": "ArrangementService.createFaithfulReduction"
+      },
+      "outputFields": [
+        "AnalysisRecord.record",
+        "ArrangementCandidate.record",
+        "ArrangementFamily.record",
+        "ArrangementPlan.record",
+        "ArrangementScore.record",
+        "ArrangementSearch.record",
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.arrangementCandidateIds",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementPlanIds",
+        "ArrangementWorkspace.arrangementScoreIds",
+        "ArrangementWorkspace.arrangementSearchIds",
+        "ArrangementWorkspace.brief",
+        "ArrangementWorkspace.performanceBriefIds",
+        "ArrangementWorkspace.planConflictIds",
+        "ArrangementWorkspace.revision",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "PerformanceBrief.record",
+        "PlanConflict.record",
+        "SourceTruthAssessment.record"
+      ],
+      "implementationDigest": "21a34fdc6aaef3b34ae2751da574e3e48eacce09a3e8dfa9f373b80e8538ef33"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-service.ts",
+        "selector": "ArrangementService.passageCandidates"
+      },
+      "outputFields": ["ArrangementWorkspace.passageSearchIds", "PassageSearch.record"],
+      "implementationDigest": "c0c9eb0c450907aea3c830072917c448cde79ae0108e521e5ceeee16fdb12e7e"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.create"
+      },
+      "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
+      "implementationDigest": "abb8f2068945846c6b08976ac793ebef48f6b10893e3fc5b7cca08c530333032"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveAnalysisRecord"
+      },
+      "outputFields": ["AnalysisRecord.record", "ArrangementWorkspace.analysisRecordIds"],
+      "implementationDigest": "911728087891f647977ecd8f219b34e6165f3e339070faabe70585198d40d070"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementBranch"
+      },
+      "outputFields": ["ArrangementBranch.record", "ArrangementWorkspace.arrangementBranchIds"],
+      "implementationDigest": "668c8a2b1caa5d672ca7e35661628cc7573d0866e237624c4e6646117384af2a"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementCandidate"
+      },
+      "outputFields": [
+        "ArrangementCandidate.record",
+        "ArrangementWorkspace.arrangementCandidateIds"
+      ],
+      "implementationDigest": "cf61134db34d520db5af505110dcacd8e21b95acba78a481c36661fb561ca329"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementFamily"
+      },
+      "outputFields": ["ArrangementFamily.record", "ArrangementWorkspace.arrangementFamilyIds"],
+      "implementationDigest": "6344ca405c8a7b49eb3cf230f19324fc3576a0d029822a16fbbd2acc809ab4d1"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementPlan"
+      },
+      "outputFields": ["ArrangementPlan.record", "ArrangementWorkspace.arrangementPlanIds"],
+      "implementationDigest": "f16fac1acb447f7ec5f7fbebc817b5f6fb20bfed1c460ff3cccf54772b9b7151"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementScore"
+      },
+      "outputFields": [
+        "ArrangementFamily.record",
+        "ArrangementScore.record",
+        "ArrangementWorkspace.arrangementFamilyIds",
+        "ArrangementWorkspace.arrangementScoreIds"
+      ],
+      "implementationDigest": "f633be7eef586f9bd4faaf2c60bd180c553590ff6756fd9eae7ca7e3e60849a7"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementSearch"
+      },
+      "outputFields": ["ArrangementSearch.record", "ArrangementWorkspace.arrangementSearchIds"],
+      "implementationDigest": "fb2081ad2190d479eda6b03bce99090855849b739698ba8c61d7df1e0391bf0a"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.savePassageSearch"
+      },
+      "outputFields": ["ArrangementWorkspace.passageSearchIds", "PassageSearch.record"],
+      "implementationDigest": "29effcb5bea19cdf333e9f53f2c649b6e4c9856f09465c825e798817ac7ef69b"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.savePerformanceBrief"
+      },
+      "outputFields": ["ArrangementWorkspace.performanceBriefIds", "PerformanceBrief.record"],
+      "implementationDigest": "9a88071cf82536e6bef62bcd77d4cd1b3efc1f705ab146e241b4e16034670a0a"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.savePlanConflict"
+      },
+      "outputFields": ["ArrangementWorkspace.planConflictIds", "PlanConflict.record"],
+      "implementationDigest": "5af9c38bf2a8349f082cd78239827760d49de9709c70582386987274badf0575"
+    },
+    {
+      "authorityPathId": "authority.ranker.plucked-string-arrangement",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.updateBrief"
+      },
+      "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
+      "implementationDigest": "e1e437aba732010f543d1c820da89e33e2ba3b7f264966e25d3d96c261dec60f"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.checkpoint"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "86cb586003662024914347cdc5ba3eb4cffc9e21f3e7a580d39846771649da08"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.create"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "27b3b017b452b23350ba5c69e975e653963101ee8b1f0372d7e4ef1d30343d7b"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.interrupt"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "39846cc30d8eca9fa868ae38c1a531f17b43d08b19acfdc6c18f18fbbe33bb93"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.restart"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "b3ced73468741db30f7121fbb7e8984a6a83cb3d48c2896602bc2f3f53bf3d71"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/guided-workflow-service.ts",
+        "selector": "GuidedWorkflowService.resume"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "37c993067d2b42643d5e5a741df66b61cc485179c94edf8907e00e45692c9072"
+    },
+    {
+      "authorityPathId": "authority.validator.ergonomic-thresholds",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveGuidedWorkflow"
+      },
+      "outputFields": ["ArrangementWorkspace.guidedWorkflowIds", "GuidedWorkflow.record"],
+      "implementationDigest": "7d1d232df111269cd265c81c6f6ac76764c110d60d8c63e3a7d21220e7954371"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/evaluation-comparison-cli.ts",
+        "selector": "main"
+      },
+      "outputFields": [
+        "EvaluationBaseline.record",
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationComparison.record",
+        "EvaluationPromotionReview.record",
+        "EvaluationReport.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "28e0c9079d366ccbabd0e917d4925a34d4a447a5320145707dea04f0b9940152"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/external-evaluation-cli.ts",
+        "selector": "main"
+      },
+      "outputFields": ["ExternalEvaluationEvidence.record", "ModelJudgeAction.record"],
+      "implementationDigest": "e5056b9e9dba6f9088626104734b1bea4ea2a4ba0d71cdf2c323b04b7893dc39"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/continuo-evaluation.ts",
+        "selector": "runContinuoEvaluation"
+      },
+      "outputFields": [
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "eff8d828c3382732c4b74f35ddec27ed494557995561f2c82d7884424b7d9ea8"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore"
+      },
+      "outputFields": ["EvaluationArtifactManifest.record"],
+      "implementationDigest": "18d5dc0573255159966cbf0daf64e343ece078279005eaca5cfd2a8299cc5513"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore.collect"
+      },
+      "outputFields": [
+        "EvaluationArtifact.record",
+        "EvaluationArtifactBlob.bytes",
+        "EvaluationArtifactManifest.record"
+      ],
+      "implementationDigest": "86b781c830175fd9760ef13099d1f32cfd03f51e9c1ae525bec3b8c5c4d51359"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore.deletePrivateWorkspace"
+      },
+      "outputFields": [
+        "EvaluationArtifact.record",
+        "EvaluationArtifactBlob.bytes",
+        "EvaluationArtifactManifest.record"
+      ],
+      "implementationDigest": "c9720e7f356601b5e02eb5c512b729d7719ca023c6fac984f8d8208c359a0e73"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore.invalidateBaseline"
+      },
+      "outputFields": ["EvaluationArtifact.record", "EvaluationArtifactManifest.record"],
+      "implementationDigest": "6b281c2c8c1a5cc84483676e25a0b6c8459271b07dccc4dfd664bc48d8669227"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore.pinBaseline"
+      },
+      "outputFields": ["EvaluationArtifact.record", "EvaluationArtifactManifest.record"],
+      "implementationDigest": "f5085215f9c34b68cfe71d991d8ddd2495d59a5558ad239b981bd466ce99e432"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-artifact-store.ts",
+        "selector": "EvaluationArtifactStore.put"
+      },
+      "outputFields": [
+        "EvaluationArtifact.record",
+        "EvaluationArtifactBlob.bytes",
+        "EvaluationArtifactManifest.record"
+      ],
+      "implementationDigest": "09a440d44450c469948090383295b261035a8b6de21b87f10c5c402bda667016"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-comparison.ts",
+        "selector": "EvaluationComparisonService.compare"
+      },
+      "outputFields": ["EvaluationComparison.record"],
+      "implementationDigest": "b64481bb99c52a00ff99d0cf830da1ef5f53bd8b18487541089dc8f44996ef3b"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-comparison.ts",
+        "selector": "EvaluationComparisonService.promoteBaseline"
+      },
+      "outputFields": ["EvaluationBaseline.record", "EvaluationPromotionReview.record"],
+      "implementationDigest": "5262b4cf68b94a105cc60dc4a44be800e7a9e694ca0271d9f1c12cc2c2dcdd32"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-comparison.ts",
+        "selector": "EvaluationComparisonService.renderReport"
+      },
+      "outputFields": ["EvaluationReport.record"],
+      "implementationDigest": "32f47e783f41847c68708d1d579e7d939d27ea2f90dd7e3a2294af5cf8aebb16"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-harness.ts",
+        "selector": "EvaluationHarness.run"
+      },
+      "outputFields": [
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "bbeda6f5691506f760b53a4306879e65d9713d733232b71e88ccaa3a6aed090d"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-promotion.ts",
+        "selector": "EvaluationPromotionService.review"
+      },
+      "outputFields": ["EvaluationPromotionReview.record"],
+      "implementationDigest": "818639356a27f11ffecda9d9ca46f98fbcf882585ea0ed3b8b4d278d31ada346"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveBaseline"
+      },
+      "outputFields": ["EvaluationBaseline.record"],
+      "implementationDigest": "39e07f9545eda847d1bb81d1fa6689e23f361a0182946f2a6f37e03fe46ee12e"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveCard"
+      },
+      "outputFields": ["EvaluationCard.record"],
+      "implementationDigest": "c1448114818c60a8c86b835d4ade63b61b30f529afc2710a73c8b24ddb38df3a"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveCaseRun"
+      },
+      "outputFields": ["EvaluationCaseRun.record"],
+      "implementationDigest": "1edb0fb67cd62c4ebf18c37d963452f5d24782c00692fa0fd423e36a95a00f22"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveComparison"
+      },
+      "outputFields": ["EvaluationComparison.record"],
+      "implementationDigest": "78d7d4711d6b7d7db3131bd3f34bcbbcf016418de7ddcefce96e120e3647f0d5"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveEvaluatorDatasetManifest"
+      },
+      "outputFields": ["EvaluatorDatasetManifest.record"],
+      "implementationDigest": "98531fdf38b2361d40c7180c52efbbd036acee1bd06ef01e0a1ddd10e3166c7e"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveEvaluatorRevision"
+      },
+      "outputFields": ["EvaluatorRevision.record"],
+      "implementationDigest": "aca900ef6d81d5ab8254dd57bcd796ecaac1550ec0d2aa67f316539fcb4193da"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveExternalEvaluationEvidence"
+      },
+      "outputFields": ["ExternalEvaluationEvidence.record"],
+      "implementationDigest": "eae0ead61589ccba5b8fa68723b599ece345c97f4fbedbd638eaf21a9f12c031"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveHumanComparisonConclusion"
+      },
+      "outputFields": ["HumanComparisonConclusion.record"],
+      "implementationDigest": "8b8bf1f476ac1f0f63585cd7cb6a5881ea723c6018c69a24295dc3527dffca15"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveHumanEvaluation"
+      },
+      "outputFields": ["HumanEvaluation.record"],
+      "implementationDigest": "6926015ba93d50e347cd81495640194f46487c2835781dcccf8961387a30f791"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveManifest"
+      },
+      "outputFields": ["ResolvedEvaluationManifest.record"],
+      "implementationDigest": "5901d1f2a7dafb6dac67589eee6d8c82506aa6a286e07345895dcf06fbee14f3"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveModelJudgeAction"
+      },
+      "outputFields": ["ModelJudgeAction.record"],
+      "implementationDigest": "d108ef3c6de53eb0a3866d7bb5ce764ea12c10a0f829f69c1b9cf42ad3ce4b90"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.savePromotionReview"
+      },
+      "outputFields": ["EvaluationPromotionReview.record"],
+      "implementationDigest": "42c9903aea3270c73485de09c83d7bb22625984cacf49d8c4f89eace90a41e16"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveReport"
+      },
+      "outputFields": ["EvaluationReport.record"],
+      "implementationDigest": "db027813755a1f42910407dcc587c277fa21de00258e25e29fdc471d3baa4c2e"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveReviewedLearningDecision"
+      },
+      "outputFields": ["ReviewedLearningDecision.record"],
+      "implementationDigest": "3f3ed5f3702ebb8cd3eb2921799d86b4a153fa1ff812a7b1c4935ee80878ac75"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveReviewedLearningOutputCandidate"
+      },
+      "outputFields": ["ReviewedLearningOutputCandidate.record"],
+      "implementationDigest": "a887828d2cef2ed3298ec7b32e75cfa05dd8a1dee84c14570df1baa5afb55de6"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveReviewedLearningProposal"
+      },
+      "outputFields": ["ReviewedLearningProposal.record"],
+      "implementationDigest": "a74ae72b20ebd738176529809d75705a9c6c57298571affaae06c72c484a2061"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/evaluation-store.ts",
+        "selector": "EvaluationStore.saveRun"
+      },
+      "outputFields": ["EvaluationRun.record"],
+      "implementationDigest": "31d20185c32f085beab0496416398eb708f152077d88d8027ede3a5927f27d6a"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/first-loop-evaluation.ts",
+        "selector": "runFirstLoopEvaluation"
+      },
+      "outputFields": [
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "dd9f6299a8bce7c7bcfd63db19b3073f89b34c99e5ace08d05d4416ecf00c8c1"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/human-comparison.ts",
+        "selector": "validateAndSaveHumanEvaluation"
+      },
+      "outputFields": ["HumanEvaluation.record"],
+      "implementationDigest": "f3132561d0afd7a8b31a86b62cc934a2d4100c978973c10881327492f7727ee3"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/imitative-evaluation.ts",
+        "selector": "runImitativeEvaluation"
+      },
+      "outputFields": [
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "21149fb62db431e502ea91ca0077c83d9f2c0a95c2e7e0b74760e11c0677de4b"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-learning.ts",
+        "selector": "ReviewedLearningService.accept"
+      },
+      "outputFields": [
+        "EvaluatorDatasetManifest.record",
+        "EvaluatorRevision.record",
+        "ReviewedLearningDecision.record",
+        "ReviewedLearningOutputCandidate.record"
+      ],
+      "implementationDigest": "3741de50184139f4e9d035100a7669b4cc43d8fa3c028983805af32be0edee2b"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-learning.ts",
+        "selector": "ReviewedLearningService.acceptCalibration"
+      },
+      "outputFields": [
+        "EvaluatorDatasetManifest.record",
+        "EvaluatorRevision.record",
+        "ReviewedLearningDecision.record"
+      ],
+      "implementationDigest": "93584250ea4397c64bfbe300420ab5ee158171279128177e8d0a55c8bab3ddee"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-learning.ts",
+        "selector": "ReviewedLearningService.decide"
+      },
+      "outputFields": ["ReviewedLearningDecision.record"],
+      "implementationDigest": "a34c4cf1225bc437c2e0b34ade9e6fecb4f77119336efa8dea77786365975302"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-learning.ts",
+        "selector": "ReviewedLearningService.propose"
+      },
+      "outputFields": ["ReviewedLearningProposal.record"],
+      "implementationDigest": "230723fc1d11ddeafa03fb3a0cc00bcfc16f5bc40392fb6e4bc2e341156306c9"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reviewed-learning.ts",
+        "selector": "ReviewedLearningService.reject"
+      },
+      "outputFields": ["ReviewedLearningDecision.record"],
+      "implementationDigest": "1eb1ada26c362a95853b756c28f3f64c537014e49b9a114c3feb6b514bb0dc57"
+    },
+    {
+      "authorityPathId": "authority.validator.evaluator-only",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/three-target-parity.ts",
+        "selector": "runThreeTargetParityEvaluation"
+      },
+      "outputFields": [
+        "EvaluationCard.record",
+        "EvaluationCaseRun.record",
+        "EvaluationRun.record",
+        "ResolvedEvaluationManifest.record"
+      ],
+      "implementationDigest": "db01e82a3b3b68262e885e44ce90419720f0c1dc6c7f23facfe96a391c76727a"
+    },
+    {
+      "authorityPathId": "authority.validator.knowledge-publication-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/knowledge-publication-store.ts",
+        "selector": "KnowledgePublicationStore.publish"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "fb9ddf5f3f6f7b5aa68db1a5f240cbfea8d1efab340bc3a2505cd1a8747038bd"
+    },
+    {
+      "authorityPathId": "authority.validator.legacy-arrangement-canonicality",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/arrangement-route.ts",
+        "selector": "createArrangement"
+      },
+      "outputFields": [
+        "Arrangement.canonicality.canonicalWorkspaceImportRequired",
+        "Arrangement.canonicality.rationale",
+        "Arrangement.canonicality.status"
+      ],
+      "implementationDigest": "499bf56903575f08ce0728a8c3cd5804f927aff495bcd10d591919d0e4ee04a3"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.authorize"
+      },
+      "outputFields": ["ModelAction.record"],
+      "implementationDigest": "5ec62ab892a7db157dfc9b32638eb843926416cfdd0ca537d38418d1c8cfd4d1"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.cancel"
+      },
+      "outputFields": ["ModelAction.record"],
+      "implementationDigest": "f1ed760ec42010e509d51f654ab0a2439cd2bad140213e52aec435427f2eb4d2"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.create"
+      },
+      "outputFields": ["ArrangementWorkspace.modelActionIds", "ModelAction.record"],
+      "implementationDigest": "ac8a1fcea2821bd7a9a94be0b27f8d57238eaca070ff21418faba14131658b4f"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.interrupt"
+      },
+      "outputFields": ["ModelAction.record"],
+      "implementationDigest": "63fb387523a5e09a5f68e17058d0920c9b32babfcb436c366f13a1f7f8fa3437"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.retry"
+      },
+      "outputFields": [
+        "ArrangementBranch.record",
+        "ArrangementWorkspace.arrangementBranchIds",
+        "ModelAction.record"
+      ],
+      "implementationDigest": "592c22d78e1dbcbaaceb0c563923f28585d67c4989a444d300041ee0ccdeadd9"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/model-action-service.ts",
+        "selector": "ModelActionService.run"
+      },
+      "outputFields": ["ModelAction.record", "ModelActionPublication.record"],
+      "implementationDigest": "94e574933d1a97391111ecff367f72a38ef2c842580e50773edf1cab7946f912"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.compareAndSwapModelAction"
+      },
+      "outputFields": ["ModelAction.record"],
+      "implementationDigest": "cafc23d5569c863a7c3259c289943b1de210fbb26bc43d269408a7063634e7f9"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.publishModelActionResult"
+      },
+      "outputFields": ["ModelAction.record", "ModelActionPublication.record"],
+      "implementationDigest": "53f501736fad23aa48ed092b34772edd1b096ee86f5aa5e25173afc6f8aff2aa"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveArrangementBranch"
+      },
+      "outputFields": ["ArrangementBranch.record", "ArrangementWorkspace.arrangementBranchIds"],
+      "implementationDigest": "668c8a2b1caa5d672ca7e35661628cc7573d0866e237624c4e6646117384af2a"
+    },
+    {
+      "authorityPathId": "authority.validator.model-action-commit",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveModelAction"
+      },
+      "outputFields": ["ArrangementWorkspace.modelActionIds", "ModelAction.record"],
+      "implementationDigest": "5fe23f4f0e6b0a75478d44c63f59a54287058b14922248aa9f8d38796a484778"
+    },
+    {
+      "authorityPathId": "authority.validator.musicological-analysis",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/analysis-service.ts",
+        "selector": "AnalysisService.correctClaim"
+      },
+      "outputFields": ["AnalysisRecord.record", "ArrangementWorkspace.analysisRecordIds"],
+      "implementationDigest": "23010d787dcb29f601284b8d40624606da9667da5f5e3c2e09f9b0d6e06f46b5"
+    },
+    {
+      "authorityPathId": "authority.validator.musicological-analysis",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/source-truth-service.ts",
+        "selector": "SourceTruthService.assess"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "SourceTruthAssessment.record"
+      ],
+      "implementationDigest": "5d2fece14565c576874251c34ebea1ca386ad5a8c972fafa055b9db7d1824c95"
+    },
+    {
+      "authorityPathId": "authority.validator.musicological-analysis",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveAnalysisRecord"
+      },
+      "outputFields": ["AnalysisRecord.record", "ArrangementWorkspace.analysisRecordIds"],
+      "implementationDigest": "911728087891f647977ecd8f219b34e6165f3e339070faabe70585198d40d070"
+    },
+    {
+      "authorityPathId": "authority.validator.musicological-analysis",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveSourceTruthAssessment"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "SourceTruthAssessment.record"
+      ],
+      "implementationDigest": "a4ac95ac07dc7e83c5665202b6ec7ab8703ab058fd4b11e03dff54aa74ccab00"
+    },
+    {
+      "authorityPathId": "authority.validator.owner-playtest-readiness",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-playtest-route.ts",
+        "selector": "createOwnerPlaytestCreateRoute"
+      },
+      "outputFields": ["ArrangementWorkspace.ownerPlaytestIds", "OwnerPlaytest.record"],
+      "implementationDigest": "c2e3739f439a6db2177754cffa984c6efada1da813334f23446f23f5997c7af4"
+    },
+    {
+      "authorityPathId": "authority.validator.owner-playtest-readiness",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveOwnerPlaytest"
+      },
+      "outputFields": ["ArrangementWorkspace.ownerPlaytestIds", "OwnerPlaytest.record"],
+      "implementationDigest": "e8fc82b0140c137350933d4fc518bbe03478b787da4ff6ae7b9ab249c3054381"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
+        "selector": "ReferenceSourceControlledArtifactStore.putDigitalAsset"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record"
+      ],
+      "implementationDigest": "716658b3c07cfeb35f4aa26ef169075495b8a8d34cc764834ee22bc176e5c714"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-controlled-artifact-store.ts",
+        "selector": "ReferenceSourceControlledArtifactStore.release"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record"
+      ],
+      "implementationDigest": "1ca0d337313ec52e1dc698521452508ce2eadb3ccf19de07c40c68c67ca4b2dc"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-controlled-asset-route.ts",
+        "selector": "createReferenceSourceControlledAssetUploadRoute"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "ReferenceAssetAcquisition.record",
+        "ReferenceDigitalAsset.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "24e0477474fdafca50de103ba94317d417c6dacb518c37fb2f69f5e91e73af53"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-controlled-asset-service.ts",
+        "selector": "ReferenceSourceControlledAssetIngestionService.ingest"
+      },
+      "outputFields": [
+        "ControlledArtifactCatalog.record",
+        "ReferenceAssetAcquisition.record",
+        "ReferenceDigitalAsset.record",
+        "ReferenceSourceBlob.bytes",
+        "ReferenceSourceControlledArtifactBinding.record",
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "5f1c7d4930291c640ceb9caf6fa85bfd119d25a2bb9efc8e0cd6655fb193bd61"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-staging-service.ts",
+        "selector": "ReferenceSourceStagingService.applyTransaction"
+      },
+      "outputFields": [
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "ddf9dd6f7b3f9dfdabc93d0ec56a1511453fd4e04c8cc303639252317bb28a9a"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-staging-service.ts",
+        "selector": "ReferenceSourceStagingService.migrateLegacyObservationHistory"
+      },
+      "outputFields": [
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "6e304448527655cc9beb699b71b3e364443670be71aca2f8f10d7b5b8a300d38"
+    },
+    {
+      "authorityPathId": "authority.validator.reference-source-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/reference-source-staging-store.ts",
+        "selector": "ReferenceSourceStagingStore.commit"
+      },
+      "outputFields": [
+        "ReferenceSourceStagingHead.record",
+        "ReferenceSourceStagingSnapshot.record"
+      ],
+      "implementationDigest": "529947a61441d0804970881f198cf5ffdbf1ef8bda82833157286c3f8910ce82"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/omr.ts",
+        "selector": "OmrService.recognize"
+      },
+      "outputFields": [
+        "ArrangementWorkspace.normalizedScoreIds",
+        "ArrangementWorkspace.omrRunIds",
+        "ArrangementWorkspace.scoreTranscriptionIds",
+        "NormalizedScore.record",
+        "OmrArtifact.bytes",
+        "OmrRun.record",
+        "ScoreTranscription.record"
+      ],
+      "implementationDigest": "faa46e955417abe929a01a8dcd2c916f345ef3712e568797a5232b58b50eee08"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/source-import-service.ts",
+        "selector": "SourceImportService.import"
+      },
+      "outputFields": [
+        "AnalysisRecord.record",
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.normalizedScoreIds",
+        "ArrangementWorkspace.scoreTranscriptionIds",
+        "NormalizedScore.record",
+        "ScoreTranscription.record"
+      ],
+      "implementationDigest": "227fdac399810d170f3cf406fa2d3df1ba28b6b1e266b8f9f2804f2295841ab6"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/transcription-service.ts",
+        "selector": "TranscriptionService.correct"
+      },
+      "outputFields": [
+        "AnalysisRecord.record",
+        "ArrangementWorkspace.analysisRecordIds",
+        "ArrangementWorkspace.normalizedScoreIds",
+        "ArrangementWorkspace.scoreTranscriptionIds",
+        "ArrangementWorkspace.sourceTruthAssessmentIds",
+        "ArrangementWorkspace.staleDerivationIds",
+        "NormalizedScore.record",
+        "ScoreTranscription.record",
+        "SourceTruthAssessment.record",
+        "StaleDerivation.record"
+      ],
+      "implementationDigest": "0a9144317ca4d4ea5a8cd011f27cc6bb7e1e5f14b8654314d2d227ba1ab4f02b"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveAnalysisRecord"
+      },
+      "outputFields": ["AnalysisRecord.record", "ArrangementWorkspace.analysisRecordIds"],
+      "implementationDigest": "911728087891f647977ecd8f219b34e6165f3e339070faabe70585198d40d070"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveNormalizedScore"
+      },
+      "outputFields": ["ArrangementWorkspace.normalizedScoreIds", "NormalizedScore.record"],
+      "implementationDigest": "30c6e0c4caf7bede51a310bc1611d38b1caad9cc959d624fd0aea3d5ead0f297"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveOmrRun"
+      },
+      "outputFields": ["ArrangementWorkspace.omrRunIds", "OmrRun.record"],
+      "implementationDigest": "12fee43ddd9fdb008b30417330150a3ff7d9119e8bc51c40bbda71a92e441aaf"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.saveScoreTranscription"
+      },
+      "outputFields": ["ArrangementWorkspace.scoreTranscriptionIds", "ScoreTranscription.record"],
+      "implementationDigest": "56f40cf81f4959f600088cbf799512c3442fd6c3061da0ed4eb396989fca8015"
+    },
+    {
+      "authorityPathId": "authority.validator.source-interpretation",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/workspace-store.ts",
+        "selector": "WorkspaceStore.writeOmrArtifact"
+      },
+      "outputFields": ["OmrArtifact.bytes"],
+      "implementationDigest": "3e911220b4c1904709806210ca54c52781c164098c947622aba4aec34c2f538e"
+    }
+  ]
+}

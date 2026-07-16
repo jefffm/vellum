@@ -1,4 +1,5 @@
 import { Chord, Interval, Key, Note, Progression, RomanNumeral, Scale } from "tonal";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 import type { TheoryParams } from "./types.js";
 
 export type TheoryValue = string | string[] | RomanParseResult;
@@ -12,6 +13,7 @@ export type RomanParseResult = {
 };
 
 export function runTheoryOperation(params: TheoryParams): TheoryValue {
+  assertAuthorityPathRuntime("authority.validator.theory-engine", "production");
   switch (params.operation) {
     case "interval":
       return normalizeInterval(

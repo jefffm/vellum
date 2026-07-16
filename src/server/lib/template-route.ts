@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { RequestHandler } from "express";
 import { createApiRoute, ApiRouteError } from "./create-route.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type TemplateSummary = {
   name: string;
@@ -13,7 +14,8 @@ type TemplateRouteOptions = {
 };
 
 export function templatesDirectory(): string {
-  return process.env.VELLUM_TEMPLATES_DIR ?? path.resolve(process.cwd(), "templates");
+  assertAuthorityPathRuntime("authority.compiler.editorial-layout", "production");
+  return path.resolve(process.cwd(), "templates");
 }
 
 export function createTemplateListRoute(options: TemplateRouteOptions = {}): RequestHandler {
@@ -38,7 +40,9 @@ export function createTemplateGetRoute(options: TemplateRouteOptions = {}): Requ
   };
 }
 
-export function listTemplates(directory = templatesDirectory()): TemplateSummary[] {
+export function listTemplates(directory?: string): TemplateSummary[] {
+  assertAuthorityPathRuntime("authority.compiler.editorial-layout", "production");
+  directory ??= templatesDirectory();
   return readdirSync(directory)
     .filter((fileName) => fileName.endsWith(".ly"))
     .map((fileName) => {
@@ -51,7 +55,9 @@ export function listTemplates(directory = templatesDirectory()): TemplateSummary
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function getTemplateSource(name: string, directory = templatesDirectory()): string {
+export function getTemplateSource(name: string, directory?: string): string {
+  assertAuthorityPathRuntime("authority.compiler.editorial-layout", "production");
+  directory ??= templatesDirectory();
   assertSafeTemplateName(name);
   const filePath = path.join(directory, `${name}.ly`);
 

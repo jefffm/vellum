@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.preservation-policy.v1",
+  "input": {
+    "policy": "idiomatic_adaptation",
+    "audit": {
+      "status": "fail",
+      "targetIds": ["target.principal"],
+      "findings": [
+        {
+          "targetId": "target.principal",
+          "sourceEventId": "event.1",
+          "severity": "hard",
+          "code": "principal.pitch_changed",
+          "message": "The protected pitch changed."
+        }
+      ]
+    }
+  },
+  "expectedLegacyOutput": {
+    "status": "pass",
+    "targetIds": ["target.principal"],
+    "findings": [
+      {
+        "targetId": "target.principal",
+        "sourceEventId": "event.1",
+        "severity": "observation",
+        "code": "idiomatic_adaptation.principal.pitch_changed",
+        "message": "Idiomatic Adaptation permits this source divergence: The protected pitch changed."
+      }
+    ]
+  }
+}

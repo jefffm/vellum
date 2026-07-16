@@ -5,6 +5,7 @@ import type { OmrBackend } from "./omr.js";
 import { AudiverisBackend, OmrService } from "./omr.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const OmrRequestSchema = Type.Object(
   {
@@ -33,6 +34,7 @@ type OmrRouteOptions = {
 };
 
 export function createOmrRunRoute(options: OmrRouteOptions = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
   const store = options.store ?? new WorkspaceStore();
   const service = options.service ?? new OmrService({ store });
   const backendFactory = options.backendFactory ?? (() => new AudiverisBackend());

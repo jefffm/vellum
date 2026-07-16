@@ -2,6 +2,7 @@ import { lstat, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "n
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   SubprocessError,
   SubprocessRunner,
@@ -9,6 +10,7 @@ import {
   type SubprocessResult,
 } from "./subprocess.js";
 
+assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
 export const DEFAULT_LILYPOND_IMAGE =
   "docker.io/codello/lilypond@sha256:e9aeee661e40f9cd4b7cd573e3787f09abc52858b074e03ba04c2e17326b69f4";
 
@@ -36,7 +38,8 @@ export class PodmanLilyPondRunner {
   private readonly defaultTimeout: number;
 
   constructor(options: PodmanLilyPondRunnerOptions = {}) {
-    this.image = options.image ?? process.env.VELLUM_LILYPOND_IMAGE ?? DEFAULT_LILYPOND_IMAGE;
+    assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
+    this.image = options.image ?? DEFAULT_LILYPOND_IMAGE;
     if (!/@sha256:[a-f0-9]{64}$/i.test(this.image)) {
       throw new SubprocessError("The LilyPond sandbox image must be pinned by sha256 digest");
     }

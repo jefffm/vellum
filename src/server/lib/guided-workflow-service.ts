@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { GuidedWorkflow } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 type Options = { store?: WorkspaceStore; now?: () => Date; createId?: () => string };
 export type CreateGuidedWorkflow = Pick<
@@ -45,6 +46,8 @@ export class GuidedWorkflowService {
   }
 
   create(workspaceId: string, input: CreateGuidedWorkflow): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     this.store.getSourceArtifact(workspaceId, input.sourceArtifactId);
     const workspace = this.store.get(workspaceId);
     const existing = this.store
@@ -85,6 +88,8 @@ export class GuidedWorkflowService {
     workflowId: string,
     update: GuidedWorkflowCheckpoint
   ): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
     if (current.status === "cancelled" || current.status === "complete") {
       throw new ApiRouteError(`Cannot update ${current.status} Guided Start workflow`, 409);
@@ -113,6 +118,8 @@ export class GuidedWorkflowService {
   }
 
   interrupt(workspaceId: string, workflowId: string, code: string): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
     if (current.status === "complete" || current.status === "cancelled") return current;
     return this.store.saveGuidedWorkflow(workspaceId, {
@@ -124,6 +131,8 @@ export class GuidedWorkflowService {
   }
 
   resume(workspaceId: string, workflowId: string): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
     if (current.status !== "interrupted") {
       throw new ApiRouteError("Only an interrupted Guided Start workflow can resume", 409);
@@ -142,6 +151,8 @@ export class GuidedWorkflowService {
     workflowId: string,
     input: Partial<RestartGuidedWorkflow> = {}
   ): GuidedWorkflow {
+    assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
     if (current.status !== "complete" && current.status !== "cancelled") {
       this.store.saveGuidedWorkflow(workspaceId, {
@@ -207,6 +218,7 @@ export class GuidedWorkflowService {
 }
 
 function defaultPerformanceBrief(): NonNullable<GuidedWorkflow["performanceBrief"]> {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
   return {
     intendedUse: "study",
     performerProfile: {

@@ -1,3 +1,5 @@
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
+
 const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 
@@ -74,6 +76,8 @@ export function renderKnowledgePublicationWorkbench(
   value: unknown,
   reclaim?: (generationId: string) => Promise<unknown>
 ): KnowledgePublicationWorkbenchState {
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
+
   const state = decodeWorkbenchState(value);
   const root = container.ownerDocument.createElement("div");
   root.className = "knowledge-publication-workbench";

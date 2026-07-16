@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { ArrangementScore, Deliverable } from "../../lib/music-domain.js";
 import type { WorkspaceStore } from "./workspace-store.js";
 
@@ -15,6 +16,8 @@ export function persistDeliverable(
     artifactPolicyVersion?: string;
   }
 ): Deliverable {
+  assertAuthorityPathRuntime("authority.compiler.deliverable-projection-dispatch", "production");
+  assertAuthorityPathRuntime("authority.compiler.playback-projection", "production");
   const sha256 = createHash("sha256").update(input.content).digest("hex");
   const identity = createHash("sha256")
     .update(

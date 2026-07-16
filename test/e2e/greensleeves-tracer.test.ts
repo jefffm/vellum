@@ -301,7 +301,7 @@ describe("Greensleeves PDF tracer bullet", () => {
         0
       )
     );
-    expect(luteEngraving.source).toContain('\include "instruments/baroque-lute-13.ily"');
+    expect(luteEngraving.source).toContain('\\include "instruments/baroque-lute-13.ily"');
     expect(luteEngraving.source).toContain(luteInstance.contentDigest.slice(0, 12));
     expect(luteEngraving.source).toContain(
       "additionalBassStrings = \\stringTuning <a,, bes,, c, d, ees, f, g,>"

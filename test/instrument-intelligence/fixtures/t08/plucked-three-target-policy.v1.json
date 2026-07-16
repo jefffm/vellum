@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.plucked-three-target-policy.v1",
+  "input": {
+    "sourceFixture": "test/fixtures/greensleeves/greensleeves-satb.ly",
+    "targets": ["baroque-guitar-5", "baroque-lute-13", "classical-guitar-6"]
+  },
+  "expectedLegacyOutput": {
+    "baroque-guitar-5": {
+      "candidateCount": 2,
+      "principalVoiceAudit": "pass",
+      "selectedTranspositionSemitones": -2
+    },
+    "baroque-lute-13": {
+      "candidateCount": 2,
+      "principalVoiceAudit": "pass",
+      "selectedTranspositionSemitones": -5
+    },
+    "classical-guitar-6": {
+      "candidateCount": 2,
+      "principalVoiceAudit": "pass",
+      "selectedTranspositionSemitones": 0
+    }
+  }
+}

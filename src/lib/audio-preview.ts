@@ -4,6 +4,7 @@ import type {
   PerformanceInterpretation,
   Rational,
 } from "./music-domain.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { noteToMidi } from "./pitch.js";
 import { soundingPitches as instrumentSoundingPitches } from "./instrument-instance.js";
 
@@ -64,6 +65,7 @@ export function buildAudioPreview(
   tempo = 70,
   options: { skipRepeats?: boolean } = {}
 ): AudioPreview {
+  assertAuthorityPathRuntime("authority.compiler.playback-projection", "production");
   const secondsPerQuarter = 60 / tempo;
   const canonicalOccurrences =
     score.performedForm?.measureOccurrences ??
@@ -216,6 +218,7 @@ export function buildInterpretedAudioPreview(
   score: NormalizedScore,
   interpretation: PerformanceInterpretation
 ): AudioPreview {
+  assertAuthorityPathRuntime("authority.parameter.performance-interpretation", "production");
   if (
     interpretation.arrangementScoreId !== arrangement.id ||
     interpretation.arrangementScoreVersion !== (arrangement.version ?? 1)

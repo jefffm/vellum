@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import JSZip from "jszip";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type {
   OmrBackendRecordSchema,
   OmrDiagnosticSchema,
@@ -101,7 +102,7 @@ export class AudiverisBackend implements OmrBackend {
     } catch (error) {
       if (error instanceof SubprocessError) {
         throw new ApiRouteError(
-          `Audiveris is unavailable. Install it or set VELLUM_AUDIVERIS_COMMAND: ${error.message}`,
+          `Audiveris is unavailable. Install Audiveris or configure an explicit backend command: ${error.message}`,
           503
         );
       }
@@ -187,7 +188,7 @@ export class AudiverisBackend implements OmrBackend {
     } catch (error) {
       if (error instanceof SubprocessError) {
         throw new ApiRouteError(
-          `Audiveris is unavailable. Install it or set VELLUM_AUDIVERIS_COMMAND: ${error.message}`,
+          `Audiveris is unavailable. Install Audiveris or configure an explicit backend command: ${error.message}`,
           503
         );
       }
@@ -197,7 +198,6 @@ export class AudiverisBackend implements OmrBackend {
 }
 
 export function audiverisCommand(): string {
-  if (process.env.VELLUM_AUDIVERIS_COMMAND) return process.env.VELLUM_AUDIVERIS_COMMAND;
   const macApp = "/Applications/Audiveris.app/Contents/MacOS/Audiveris";
   return process.platform === "darwin" && existsSync(macApp) ? macApp : "audiveris";
 }
@@ -310,6 +310,7 @@ export class OmrService {
   private readonly createId: () => string;
 
   constructor(options: OmrServiceOptions) {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
@@ -321,6 +322,7 @@ export class OmrService {
     backend: OmrBackend,
     options: OmrRecognitionOptions = {}
   ): Promise<OmrServiceResult> {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const source = this.store.getSourceArtifact(workspaceId, sourceArtifactId);
     const runId = `omr.${this.createId()}`;
     const createdAt = this.now().toISOString();

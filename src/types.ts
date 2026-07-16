@@ -1,4 +1,5 @@
 import { Static, Type } from "@sinclair/typebox";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 
 const Pitch = Type.String({ minLength: 1 });
 const InstrumentId = Type.String({ minLength: 1 });
@@ -219,6 +220,7 @@ export const ArrangementSummarySchema = Type.Object({
 
 export type ArrangementSummary = Static<typeof ArrangementSummarySchema>;
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const CompileParamsSchema = Type.Object({
   source: Type.String({ minLength: 1, description: "LilyPond source code" }),
   format: Type.Optional(
@@ -274,6 +276,7 @@ export const TransposeParamsSchema = Type.Object({
 
 export type TransposeParams = Static<typeof TransposeParamsSchema>;
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const DiapasonsParamsSchema = Type.Object({
   key: Type.String({ minLength: 1 }),
   instrument: Type.Optional(Type.String({ default: "baroque-lute-13" })),
@@ -294,6 +297,7 @@ export const ChordifyParamsSchema = Type.Object({
 
 export type ChordifyParams = Static<typeof ChordifyParamsSchema>;
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const AnalyzeParamsSchema = Type.Object({
   source: Type.String({
     description: "MusicXML source as string, or base64-encoded MusicXML file",
@@ -305,6 +309,7 @@ export const AnalyzeParamsSchema = Type.Object({
 
 export type AnalyzeParams = Static<typeof AnalyzeParamsSchema>;
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const LintParamsSchema = Type.Object({
   source: Type.String({ description: "LilyPond or MusicXML passage to check" }),
   format: Type.Optional(

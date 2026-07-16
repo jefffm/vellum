@@ -1,4 +1,5 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 import { loadBrowserProfile } from "./lib/browser-profiles.js";
 import { errorMessage } from "./lib/errors.js";
 import { PITCH_TO_LILYPOND } from "./lib/pitch.js";
@@ -32,6 +33,7 @@ function findScheme(
   schemes: Record<string, string[]>,
   key: string
 ): { name: string; pitches: string[]; warning?: string } | undefined {
+  assertAuthorityPathRuntime("authority.parameter.diapason-selection-defaults", "production");
   const normalized = normalizeKeyToScheme(key);
 
   // Exact match
@@ -75,6 +77,7 @@ function buildLilypondSyntax(pitches: string[]): string {
   return `\\stringTuning <${lilyParts.join(" ")}>`;
 }
 
+assertAuthorityPathRuntime("authority.parameter.diapason-selection-defaults", "production");
 export const diapasonsTool: AgentTool<typeof DiapasonsParamsSchema, DiapasonsResult> = {
   name: "diapasons",
   label: "Diapasons",

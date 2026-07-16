@@ -3,12 +3,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { EvaluationStore } from "./evaluation-store.js";
-import { runContinuoEvaluation } from "./continuo-evaluation.js";
+import { createContinuoEvaluationRegistry, runContinuoEvaluation } from "./continuo-evaluation.js";
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
 
 describe("contextual continuo shared evaluation loop", () => {
+  it("labels its repository-visible fixture as development data", () => {
+    expect(
+      createContinuoEvaluationRegistry().cases.map(({ provenance }) => provenance.datasetRole)
+    ).toEqual(["development", "development", "development"]);
+  });
+
   it("evaluates complete, separate-bass, and honest-reduction Plans without flattening state", async () => {
     const root = mkdtempSync(path.join(tmpdir(), "vellum-continuo-eval-store-"));
     roots.push(root);

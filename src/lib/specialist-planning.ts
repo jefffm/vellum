@@ -4,6 +4,7 @@ import type {
   PlanDecision,
   TargetConfiguration,
 } from "./music-domain.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 type PreservationPolicy = ArrangementPlan["preservationPolicy"];
 
@@ -13,6 +14,8 @@ export function specializeArrangementPlan(input: {
   target: TargetConfiguration;
   preservationPolicy: PreservationPolicy;
 }): ArrangementPlan {
+  assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
   const { base, analysis, target, preservationPolicy } = input;
   if (analysis.texture === "continuo" || target.realizationProfileId) {
     const foundations = analysis.preservationTargets.filter(

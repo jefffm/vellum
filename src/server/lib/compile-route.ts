@@ -9,6 +9,7 @@ import {
   type CompileResult,
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { createNodeGeneratedArtifactSecurity } from "./generated-artifact-security-node.js";
 import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import { SubprocessError, SubprocessRunner, type SubprocessResult } from "./subprocess.js";
@@ -16,6 +17,7 @@ import { SubprocessError, SubprocessRunner, type SubprocessResult } from "./subp
 const generatedArtifactSecurity = createNodeGeneratedArtifactSecurity();
 
 export function lilypondIncludeDirs(): string[] {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const base = process.cwd();
   return [base, path.join(base, "instruments"), path.join(base, "templates")];
 }
@@ -26,6 +28,7 @@ export type CompileRouteOptions = {
 };
 
 export function createCompileRoute(options: CompileRouteOptions = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const runner =
     options.runner ?? new PodmanLilyPondRunner({ defaultTimeout: options.timeout ?? 30_000 });
 
@@ -40,6 +43,7 @@ export async function compileLilyPond(
   runner: Pick<SubprocessRunner, "run">,
   timeout: number
 ): Promise<CompileResult> {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const format = params.format ?? "svg";
   const runs: SubprocessResult[] = [];
 
@@ -136,6 +140,7 @@ async function runLilyPond(
 }
 
 export function parseLilyPondErrors(stderr: string, source?: string): CompileError[] {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const errors: CompileError[] = [];
   const barMap = source ? buildLineToBarMap(source) : undefined;
   const lines = stderr.split(/\r?\n/);

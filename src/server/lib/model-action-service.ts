@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type {
   ModelAction,
   ModelActionAttempt,
@@ -44,6 +45,7 @@ export class ModelActionService {
   private readonly executeProvider: ModelActionProviderExecutor;
 
   constructor(options: ModelActionServiceOptions = {}) {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     this.store = options.store ?? new WorkspaceStore();
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
@@ -51,6 +53,7 @@ export class ModelActionService {
   }
 
   create(workspaceId: string, input: CreateModelAction): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     if (input.kind !== "interactive_guidance_v1") {
       throw new ApiRouteError("Unknown server-governed Model Action policy", 400);
     }
@@ -103,6 +106,7 @@ export class ModelActionService {
     decision: "authorize" | "deny" | "withdraw",
     disclosureDigest: string
   ): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const action = this.store.getModelAction(workspaceId, actionId);
     const attempt = action.attempts.at(-1)!;
     if (!attempt.disclosure || !attempt.disclosureDigest) {
@@ -162,6 +166,7 @@ export class ModelActionService {
     envelopeDigest: string,
     signal?: AbortSignal
   ): Promise<{ action: ModelAction; publication: ModelActionPublication }> {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const action = this.store.getModelAction(workspaceId, actionId);
     const attempt = action.attempts.at(-1)!;
     if (
@@ -224,6 +229,7 @@ export class ModelActionService {
   }
 
   interrupt(workspaceId: string, actionId: string, reason: string): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const action = this.store.getModelAction(workspaceId, actionId);
     if (!["awaiting_authorization", "authorized", "running"].includes(action.status)) {
       throw new ApiRouteError("Model Action is not active", 409);
@@ -239,6 +245,7 @@ export class ModelActionService {
   }
 
   cancel(workspaceId: string, actionId: string): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const action = this.store.getModelAction(workspaceId, actionId);
     if (action.status === "completed") {
       throw new ApiRouteError("A completed Model Action cannot be cancelled", 409);
@@ -259,6 +266,7 @@ export class ModelActionService {
     mode: "current_version" | "original_snapshot_branch" = "current_version",
     currentInputVersions?: ModelActionInputVersion[]
   ): ModelAction {
+    assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
     const action = this.store.getModelAction(workspaceId, actionId);
     if (!["interrupted", "denied"].includes(action.status)) {
       throw new ApiRouteError("Only an interrupted or denied Model Action can be retried", 409);

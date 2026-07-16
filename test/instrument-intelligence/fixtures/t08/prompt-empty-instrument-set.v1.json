@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.prompt-empty-instrument-set.v1",
+  "input": {
+    "instrumentProfiles": []
+  },
+  "expectedLegacyOutput": {
+    "canonicalByteLength": 10301,
+    "canonicalSha256": "cf383bbf8105720189fbf7d0853a23b24e27755303972111c309ff646178b01a"
+  }
+}

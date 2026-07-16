@@ -16,6 +16,7 @@ import type { AgentEvent, AgentTool, StreamFn } from "@mariozechner/pi-agent-cor
 import { diapasonsTool } from "./diapasons.js";
 import { fretboardTool } from "./fretboard.js";
 import { loadAllBrowserProfiles } from "./lib/browser-profiles.js";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 import { installCompileRetryGuard } from "./lib/compile-retry-guard.js";
 import { installDebugExport } from "./lib/debug-export.js";
 import { buildSystemPrompt } from "./prompts.js";
@@ -91,6 +92,7 @@ export function initializeAppStorage(): void {
   appStorageInitialized = true;
 }
 
+assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
 export const vellumTools: AgentTool[] = [
   tabulateTool,
   voicingsTool,

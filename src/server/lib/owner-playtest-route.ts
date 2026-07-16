@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import { withAuthorityPath } from "../../lib/authority-path-inventory.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
+import { digestValue } from "../../lib/content-digest.js";
 import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
 import type { ArrangementReadinessView, OwnerPlaytest } from "../../lib/music-domain.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
-import { digestValue } from "./evaluation-harness.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 const Params = Type.Object({
@@ -86,88 +88,116 @@ const CreateBody = Type.Object(
   { additionalProperties: false }
 );
 
-type Options = { store?: WorkspaceStore; now?: () => Date; createId?: () => string };
+export const OWNER_PLAYTEST_READINESS_AUTHORITY_PATH_ID =
+  "authority.validator.owner-playtest-readiness";
+
+type Options = {
+  store?: WorkspaceStore;
+  now?: () => Date;
+  createId?: () => string;
+  authorityGuard?: typeof withAuthorityPath;
+};
 
 export function createOwnerPlaytestCreateRoute(options: Options = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
   const store = options.store ?? new WorkspaceStore();
   const now = options.now ?? (() => new Date());
   const createId = options.createId ?? randomUUID;
+  const authorityGuard = options.authorityGuard ?? withAuthorityPath;
   return createApiRoute({
     validate: (body, request) => ({
       ...Value.Decode(Params, request.params),
       ...Value.Decode(CreateBody, body),
     }),
     handler: async (input) => {
-      const score = store.getArrangementScore(input.workspaceId, input.arrangementId);
-      const search = score.arrangementSearchId
-        ? store.getArrangementSearch(input.workspaceId, score.arrangementSearchId)
-        : undefined;
-      if (!search || !score.targetConfiguration.instrumentInstance) {
-        throw new ApiRouteError(
-          "Owner Playtest requires an exact Search, Performance Brief, and Instrument Instance",
-          409
+      assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
+      return authorityGuard(OWNER_PLAYTEST_READINESS_AUTHORITY_PATH_ID, "production", () => {
+        const score = store.getArrangementScore(input.workspaceId, input.arrangementId);
+        const search = score.arrangementSearchId
+          ? store.getArrangementSearch(input.workspaceId, score.arrangementSearchId)
+          : undefined;
+        if (!search || !score.targetConfiguration.instrumentInstance) {
+          throw new ApiRouteError(
+            "Owner Playtest requires an exact Search, Performance Brief, and Instrument Instance",
+            409
+          );
+        }
+        const brief = store.getPerformanceBrief(input.workspaceId, search.performanceBriefId);
+        const analysis = store.getAnalysisRecord(input.workspaceId, score.analysisRecordId);
+        const normalized = store.getNormalizedScore(input.workspaceId, analysis.normalizedScoreId);
+        const occurrenceIds = new Set(
+          normalized.performedForm?.measureOccurrences.map((occurrence) => occurrence.id) ?? []
         );
-      }
-      const brief = store.getPerformanceBrief(input.workspaceId, search.performanceBriefId);
-      const analysis = store.getAnalysisRecord(input.workspaceId, score.analysisRecordId);
-      const normalized = store.getNormalizedScore(input.workspaceId, analysis.normalizedScoreId);
-      const occurrenceIds = new Set(
-        normalized.performedForm?.measureOccurrences.map((occurrence) => occurrence.id) ?? []
-      );
-      if (input.playback_occurrence_ids.some((id) => !occurrenceIds.has(id))) {
-        throw new ApiRouteError("Owner Playtest references an unknown Playback Occurrence", 400);
-      }
-      const candidate = input.candidate_id
-        ? store.getArrangementCandidate(input.workspaceId, input.candidate_id)
-        : undefined;
-      const playtest: OwnerPlaytest = {
-        id: `playtest.${createId()}`,
-        arrangementScoreId: score.id,
-        arrangementScoreVersion: score.version ?? 1,
-        arrangementScoreDigest: digestValue(score),
-        ...(candidate
-          ? { candidateId: candidate.id, candidateDigest: digestValue(candidate) }
-          : {}),
-        arrangementEventIds: input.arrangement_event_ids,
-        playbackOccurrenceIds: input.playback_occurrence_ids,
-        instrumentInstanceDigest: digestInstrumentInstance(
-          score.targetConfiguration.instrumentInstance
-        ),
-        performanceBriefId: brief.id,
-        performanceBriefDigest: digestValue(brief),
-        actualContext: {
-          ...(input.tempo_bpm === undefined ? {} : { tempoBpm: input.tempo_bpm }),
-          practiceContext: input.practice_context,
-          evidenceBasis: input.evidence_basis,
-        },
-        outcome: input.outcome,
-        confidence: input.confidence,
-        observations: input.observations,
-        rationale: input.rationale,
-        proposedConsequences: input.proposed_consequences,
-        createdAt: now().toISOString(),
-      };
-      return {
-        playtest: store.saveOwnerPlaytest(input.workspaceId, playtest),
-        readiness: readiness(store, input.workspaceId, score.id),
-      };
+        if (input.playback_occurrence_ids.some((id) => !occurrenceIds.has(id))) {
+          throw new ApiRouteError("Owner Playtest references an unknown Playback Occurrence", 400);
+        }
+        const candidate = input.candidate_id
+          ? store.getArrangementCandidate(input.workspaceId, input.candidate_id)
+          : undefined;
+        const playtest: OwnerPlaytest = {
+          id: `playtest.${createId()}`,
+          arrangementScoreId: score.id,
+          arrangementScoreVersion: score.version ?? 1,
+          arrangementScoreDigest: digestValue(score),
+          ...(candidate
+            ? { candidateId: candidate.id, candidateDigest: digestValue(candidate) }
+            : {}),
+          arrangementEventIds: input.arrangement_event_ids,
+          playbackOccurrenceIds: input.playback_occurrence_ids,
+          instrumentInstanceDigest: digestInstrumentInstance(
+            score.targetConfiguration.instrumentInstance
+          ),
+          performanceBriefId: brief.id,
+          performanceBriefDigest: digestValue(brief),
+          actualContext: {
+            ...(input.tempo_bpm === undefined ? {} : { tempoBpm: input.tempo_bpm }),
+            practiceContext: input.practice_context,
+            evidenceBasis: input.evidence_basis,
+          },
+          outcome: input.outcome,
+          confidence: input.confidence,
+          observations: input.observations,
+          rationale: input.rationale,
+          proposedConsequences: input.proposed_consequences,
+          createdAt: now().toISOString(),
+        };
+        return {
+          playtest: store.saveOwnerPlaytest(input.workspaceId, playtest),
+          readiness: computeReadiness(store, input.workspaceId, score.id),
+        };
+      });
     },
   });
 }
 
 export function createArrangementReadinessRoute(options: Options = {}): RequestHandler {
   const store = options.store ?? new WorkspaceStore();
+  const authorityGuard = options.authorityGuard ?? withAuthorityPath;
   return createApiRoute({
     validate: (_body, request) => Value.Decode(Params, request.params),
-    handler: async ({ workspaceId, arrangementId }) => readiness(store, workspaceId, arrangementId),
+    handler: async ({ workspaceId, arrangementId }) =>
+      readiness(store, workspaceId, arrangementId, authorityGuard),
   });
 }
 
 export function readiness(
   store: WorkspaceStore,
   workspaceId: string,
+  arrangementId: string,
+  authorityGuard: typeof withAuthorityPath = withAuthorityPath
+): ArrangementReadinessView {
+  assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
+  return authorityGuard(OWNER_PLAYTEST_READINESS_AUTHORITY_PATH_ID, "production", () =>
+    computeReadiness(store, workspaceId, arrangementId)
+  );
+}
+
+function computeReadiness(
+  store: WorkspaceStore,
+  workspaceId: string,
   arrangementId: string
 ): ArrangementReadinessView {
+  assertAuthorityPathRuntime("authority.validator.owner-playtest-readiness", "production");
   const score = store.getArrangementScore(workspaceId, arrangementId);
   const exactDigest = digestValue(score);
   const lineageScoreIds = new Set([score.id]);

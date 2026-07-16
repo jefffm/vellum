@@ -23,6 +23,7 @@ import {
 import { platform } from "node:os";
 import path from "node:path";
 
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { canonicalReferenceJson } from "../../lib/reference-source-domain.js";
 
 const Strict = { additionalProperties: false } as const;
@@ -252,6 +253,10 @@ export class KnowledgePublicationStore {
   private readonly faultInjector?: (fault: KnowledgePublicationFault) => void;
 
   constructor(options: KnowledgePublicationStoreOptions = {}) {
+    assertAuthorityPathRuntime(
+      "authority.validator.knowledge-publication-governance",
+      "production"
+    );
     this.rootDirectory =
       options.rootDirectory ??
       path.join(process.env.HOME ?? process.cwd(), ".vellum", "owner", "knowledge-publication");
@@ -271,6 +276,10 @@ export class KnowledgePublicationStore {
 
   /** Capture one head and its exact immutable record closure. */
   readCurrent(): KnowledgePublicationSnapshot | null {
+    assertAuthorityPathRuntime(
+      "authority.validator.knowledge-publication-governance",
+      "production"
+    );
     for (let attempt = 0; attempt < 8; attempt += 1) {
       const before = this.readHead();
       if (!before) {
@@ -301,6 +310,10 @@ export class KnowledgePublicationStore {
   }
 
   publish(transactionValue: KnowledgePublicationTransaction): KnowledgePublicationPublishResult {
+    assertAuthorityPathRuntime(
+      "authority.validator.knowledge-publication-governance",
+      "production"
+    );
     const transaction = decodeTransaction(transactionValue);
     const normalized = normalizeTransaction(transaction);
     const requestDigest = publicationDigest("transaction", normalized);

@@ -62,6 +62,7 @@ import {
   assertRhythmicSourceSupported,
   UnsupportedRhythmicNotationError,
 } from "../../lib/rhythmic-semantics.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
@@ -153,6 +154,8 @@ export class ArrangementService {
     workspaceId: string,
     input: CreateFaithfulArrangementInput
   ): CreateFaithfulArrangementResult {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     let workspace = this.store.get(workspaceId);
     let targetConfiguration = workspace.brief.targetConfigurations.find(
       (target) => target.id === input.targetConfigurationId
@@ -789,6 +792,7 @@ export class ArrangementService {
     branchId: string;
     arrangementScore: ArrangementScore;
   } {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const candidate = this.store.getArrangementCandidate(workspaceId, candidateId);
     const search = this.store.getArrangementSearch(workspaceId, candidate.arrangementSearchId!);
     if (search.status !== "completed" || !search.selectedArrangementScoreId) {
@@ -852,6 +856,7 @@ export class ArrangementService {
     passageSearch: PassageSearch;
     candidates: PassageCandidate[];
   } {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
     const requested = selectedPassage(arrangement, arrangementEventIds);
     const search = this.store.getArrangementSearch(workspaceId, arrangement.arrangementSearchId!);
@@ -952,6 +957,7 @@ export class ArrangementService {
     candidateId: string,
     passageSearchId: string
   ) {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
     const arrangement = this.store.getArrangementScore(workspaceId, arrangementScoreId);
     const passage = this.passageCandidates(workspaceId, arrangementScoreId, arrangementEventIds);
     assertPassageSearchIdentity(passage.passageSearch, passageSearchId);

@@ -10,6 +10,7 @@ import type {
   SourceTruthAssessment,
   TargetConfiguration,
 } from "./music-domain.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type { PreservationPolicy } from "./preservation-policy.js";
 
 export type NarrowPlanningRecords = {
@@ -51,6 +52,8 @@ export function buildNarrowPlanningRecords(input: {
   preservationPolicy: PreservationPolicy;
   performanceBrief?: PerformanceBriefInput;
 }): NarrowPlanningRecords {
+  assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
+  assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
   const unresolved = input.transcription.uncertainties
     .filter((uncertainty) => uncertainty.critical && !uncertainty.resolved)
     .map((uncertainty) => uncertainty.id);
@@ -290,6 +293,7 @@ export function buildNarrowEvaluationCard(input: {
   planning: NarrowPlanningRecords;
   deliverableIds: string[];
 }): NarrowEvaluationCard {
+  assertAuthorityPathRuntime("authority.validator.arrangement-evaluation-card", "production");
   const planDecisionIds = input.planning.arrangementPlan.decisions.map((decision) => decision.id);
   const realized = new Set(input.score.realizedPlanDecisionIds ?? []);
   const dimensions: EvaluationCardDimension[] = [

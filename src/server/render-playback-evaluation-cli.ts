@@ -6,39 +6,41 @@ import {
   evaluateSemanticNotation,
 } from "./lib/render-playback-evaluation.js";
 
-const kind = process.argv[process.argv.indexOf("--kind") + 1];
-if (kind === "render") {
-  const semantic = [
-    {
-      id: "fixture.event.1",
-      pitches: ["G4"],
-      duration: "1/2",
-      role: "principal_voice",
-      notationIdentity: "standard-staff",
-    },
-  ];
-  const result = {
-    ok: true,
-    command: "eval:render",
-    semantic: evaluateSemanticNotation(semantic, semantic),
-    visual: evaluateFocusedVisualRegions([
-      { id: "fixture.region.principal-voice", changedFraction: 0, tolerance: 0.01 },
-    ]),
-  };
-  process.stdout.write(`${JSON.stringify(result)}\n`);
-} else if (kind === "playback") {
-  const fixture = preview();
-  const result = {
-    ok: true,
-    command: "eval:playback",
-    canonical: evaluateCanonicalPlayback(fixture, fixture),
-  };
-  process.stdout.write(`${JSON.stringify(result)}\n`);
-} else {
-  process.stderr.write(
-    `${JSON.stringify({ ok: false, error: "--kind must be render or playback" })}\n`
-  );
-  process.exitCode = 1;
+export function main(): void {
+  const kind = process.argv[process.argv.indexOf("--kind") + 1];
+  if (kind === "render") {
+    const semantic = [
+      {
+        id: "fixture.event.1",
+        pitches: ["G4"],
+        duration: "1/2",
+        role: "principal_voice",
+        notationIdentity: "standard-staff",
+      },
+    ];
+    const result = {
+      ok: true,
+      command: "eval:render",
+      semantic: evaluateSemanticNotation(semantic, semantic),
+      visual: evaluateFocusedVisualRegions([
+        { id: "fixture.region.principal-voice", changedFraction: 0, tolerance: 0.01 },
+      ]),
+    };
+    process.stdout.write(`${JSON.stringify(result)}\n`);
+  } else if (kind === "playback") {
+    const fixture = preview();
+    const result = {
+      ok: true,
+      command: "eval:playback",
+      canonical: evaluateCanonicalPlayback(fixture, fixture),
+    };
+    process.stdout.write(`${JSON.stringify(result)}\n`);
+  } else {
+    process.stderr.write(
+      `${JSON.stringify({ ok: false, error: "--kind must be render or playback" })}\n`
+    );
+    process.exitCode = 1;
+  }
 }
 
 function preview(): AudioPreview {
@@ -81,3 +83,5 @@ function preview(): AudioPreview {
     ],
   };
 }
+
+main();

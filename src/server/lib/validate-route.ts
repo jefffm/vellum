@@ -7,6 +7,7 @@ import {
   type ValidateResult,
 } from "../../types.js";
 import { createApiRoute } from "./create-route.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { lilypondIncludeDirs, parseLilyPondErrors } from "./compile-route.js";
 import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import { SubprocessRunner } from "./subprocess.js";
@@ -17,6 +18,7 @@ export type ValidateRouteOptions = {
 };
 
 export function createValidateRoute(options: ValidateRouteOptions = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const runner =
     options.runner ?? new PodmanLilyPondRunner({ defaultTimeout: options.timeout ?? 15_000 });
   const timeout = options.timeout ?? 15_000;
@@ -32,6 +34,7 @@ async function validateSource(
   runner: Pick<SubprocessRunner, "run">,
   timeout: number
 ): Promise<ValidateResult> {
+  assertAuthorityPathRuntime("authority.compiler.lilypond-execution", "production");
   const includeArgs = lilypondIncludeDirs().flatMap((dir) => ["-I", dir]);
   const result = await runner.run({
     command: "lilypond",

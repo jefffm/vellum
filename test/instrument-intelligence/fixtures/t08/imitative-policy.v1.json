@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.imitative-policy.v1",
+  "input": {
+    "sourceFixture": "test/fixtures/imitation/imitative-passage.ly",
+    "target": "renaissance-lute-6"
+  },
+  "expectedLegacyOutput": {
+    "candidateCount": 2,
+    "preservationAudit": "pass",
+    "selectedTranspositionSemitones": 0,
+    "voiceIds": ["part.voiceone", "part.voicetwo", "part.voicethree"]
+  }
+}

@@ -1,4 +1,5 @@
 import { Key } from "tonal";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { InstrumentModel } from "./instrument-model.js";
 import type {
   AnalysisRecord,
@@ -40,6 +41,7 @@ export function arrangeContinuo(
   analysis: AnalysisRecord,
   options: ContinuoArrangementOptions
 ): ContinuoSearchResult {
+  assertAuthorityPathRuntime("authority.ranker.continuo", "production");
   const profileId = options.targetConfiguration.realizationProfileId;
   if (!profileId) throw new Error("Continuo Realization requires an explicit Realization Profile");
   if (analysis.texture !== "continuo") {
@@ -390,6 +392,7 @@ export function auditContinuo(
   analysis: AnalysisRecord,
   events: ArrangementEvent[]
 ): PreservationAudit {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const findings: PreservationAudit["findings"] = [];
   const targets = analysis.preservationTargets.filter((target) =>
     ["principal_voice", "continuo_foundation", "relationship"].includes(target.kind)

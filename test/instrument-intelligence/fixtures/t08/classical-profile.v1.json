@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.classical-profile.v1",
+  "input": {
+    "instrumentId": "classical-guitar-6"
+  },
+  "expectedLegacyOutput": {
+    "canonicalByteLength": 697,
+    "canonicalSha256": "7d6166910333737bf49afa822f077212fc3f3477fb0615834fb2c06397d23589"
+  }
+}

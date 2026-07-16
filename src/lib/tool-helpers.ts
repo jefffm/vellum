@@ -3,6 +3,7 @@ import type { LintViolation, TabPosition } from "../types.js";
 import { InstrumentModel } from "./instrument-model.js";
 import { loadBrowserProfile } from "./browser-profiles.js";
 import { errorMessage } from "./errors.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 export function toolResult<T>(text: string, details: T): AgentToolResult<T> {
   return {
@@ -19,6 +20,7 @@ export function toolError<T = undefined>(message: string): AgentToolResult<T> {
 }
 
 export function formatViolations(violations: LintViolation[]): string {
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
   if (violations.length === 0) {
     return "No voice leading violations found. Passage is clean.";
   }
@@ -32,6 +34,7 @@ export function formatViolations(violations: LintViolation[]): string {
 }
 
 export function formatPositions(positions: TabPosition[]): string {
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
   if (positions.length === 0) {
     return "No playable positions found.";
   }
@@ -45,6 +48,7 @@ export function instrumentTool<TDetails>(
   instrument: string,
   handler: (model: InstrumentModel) => AgentToolResult<TDetails>
 ): AgentToolResult<TDetails> {
+  assertAuthorityPathRuntime("authority.tool.descriptions-defaults", "production");
   try {
     const model = InstrumentModel.fromProfile(loadBrowserProfile(instrument));
     return handler(model);

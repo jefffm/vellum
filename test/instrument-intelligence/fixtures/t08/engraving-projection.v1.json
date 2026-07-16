@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.engraving-projection.v1",
+  "input": {
+    "instrument": "classical-guitar-6",
+    "template": "solo-tab",
+    "bars": [
+      {
+        "events": [
+          {
+            "type": "note",
+            "input": "pitch",
+            "pitch": "C4",
+            "duration": "4"
+          },
+          {
+            "type": "note",
+            "input": "pitch",
+            "pitch": "Eb3",
+            "duration": "4"
+          }
+        ]
+      }
+    ]
+  },
+  "expectedLegacyOutput": {
+    "leafTypes": ["note", "note"],
+    "lilyPondPitches": ["c'", "ees"]
+  }
+}

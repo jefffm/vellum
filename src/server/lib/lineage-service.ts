@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { auditFaithfulPrincipalVoice } from "../../lib/baroque-guitar-arranger.js";
 import { auditContinuo } from "../../lib/continuo-arranger.js";
 import { auditImitative } from "../../lib/imitative-arranger.js";
@@ -58,6 +59,7 @@ export class LineageService {
   private readonly createId: () => string;
 
   constructor(options: LineageServiceOptions) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     this.store = options.store;
     this.arrangementService =
       options.arrangementService ?? new ArrangementService({ store: options.store });
@@ -72,6 +74,7 @@ export class LineageService {
     reason: string,
     changedObjectIds: string[] = []
   ): StaleDerivation[] {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const workspace = this.store.get(workspaceId);
     const current = this.store.getNormalizedScore(workspaceId, currentNormalizedScoreId);
     const prior = this.store.getNormalizedScore(workspaceId, priorNormalizedScoreId);
@@ -131,6 +134,7 @@ export class LineageService {
     reason: string,
     changedObjectIds: string[] = []
   ): StaleDerivation[] {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const workspace = this.store.get(workspaceId);
     const prior = this.store.getSourceTruthAssessment(workspaceId, priorAssessmentId);
     const current = this.store.getSourceTruthAssessment(workspaceId, currentAssessmentId);
@@ -225,6 +229,7 @@ export class LineageService {
     currentPlanId: string,
     reason: string
   ): StaleDerivation[] {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const workspace = this.store.get(workspaceId);
     const prior = this.store.getArrangementPlan(workspaceId, priorPlanId);
     const current = this.store.getArrangementPlan(workspaceId, currentPlanId);
@@ -291,6 +296,7 @@ export class LineageService {
     workspaceId: string,
     input: Omit<EditorialCommitment, "id" | "status" | "createdAt">
   ): EditorialCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     this.store.getArrangementScore(workspaceId, input.arrangementScoreId);
     this.store.getArrangementFamily(workspaceId, input.arrangementFamilyId);
     return this.store.saveEditorialCommitment(workspaceId, {
@@ -302,6 +308,7 @@ export class LineageService {
   }
 
   releaseEditorialCommitment(workspaceId: string, commitmentId: string): EditorialCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const commitment = this.store.getEditorialCommitment(workspaceId, commitmentId);
     return this.store.saveEditorialCommitment(workspaceId, {
       ...commitment,
@@ -314,6 +321,7 @@ export class LineageService {
     workspaceId: string,
     commitmentId: string
   ): EditorialCommitment | FamilyCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const workspace = this.store.get(workspaceId);
     if (workspace.editorialCommitmentIds.includes(commitmentId)) {
       return this.releaseEditorialCommitment(workspaceId, commitmentId);
@@ -331,6 +339,7 @@ export class LineageService {
   }
 
   acknowledgeStaleDerivation(workspaceId: string, staleDerivationId: string): StaleDerivation {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const record = this.store.getStaleDerivation(workspaceId, staleDerivationId);
     return this.store.saveStaleDerivation(workspaceId, { ...record, acknowledged: true });
   }
@@ -422,6 +431,7 @@ export class LineageService {
     commitmentId: string,
     targetConfigurationIds: string[]
   ): FamilyCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const source = this.store.getEditorialCommitment(workspaceId, commitmentId);
     if (source.status !== "active") {
       throw new ApiRouteError(`Released commitment cannot be promoted: ${source.id}`, 409);
@@ -498,6 +508,7 @@ export class LineageService {
     decisionId: string,
     targetConfigurationIds: string[]
   ): FamilyCommitment {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     if (targetConfigurationIds.length === 0) {
       throw new ApiRouteError("Family Commitment promotion requires at least one target", 400);
     }
@@ -576,6 +587,7 @@ export class LineageService {
       ownerApproved: true;
     }
   ) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const conflict = this.store.getCommitmentConflict(workspaceId, input.conflictId);
     if (conflict.status !== "unresolved") {
       throw new ApiRouteError(`Commitment Conflict is already resolved: ${conflict.id}`, 409);
@@ -613,6 +625,7 @@ export class LineageService {
     eventId: string,
     patch: ArrangementEventPatch
   ) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const result = this.editArrangementEvents(workspaceId, arrangementScoreId, [
       { eventId, patch },
     ]);
@@ -627,6 +640,7 @@ export class LineageService {
     arrangementScoreId: string,
     edits: ArrangementEventEdit[]
   ) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const validation = this.validateArrangementEvents(workspaceId, arrangementScoreId, edits);
     if (!validation.valid) {
       throw new ApiRouteError(
@@ -794,6 +808,7 @@ export class LineageService {
       changedSourceEventIds: string[];
     }
   ) {
+    assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
     const stale = this.store.getArrangementScore(workspaceId, input.arrangementScoreId);
     const workspace = this.store.get(workspaceId);
     const commitments = workspace.editorialCommitmentIds

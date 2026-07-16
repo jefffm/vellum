@@ -1,31 +1,36 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { assertAuthorityPathRuntime } from "../lib/authority-path-runtime.js";
 import { validateReviewCoverage } from "../lib/review-attestation.js";
 
-try {
-  const requestPath = requiredArgument("--request");
-  const attestationPaths = repeatedArguments("--attestation");
-  if (attestationPaths.length === 0) {
-    throw new Error("review:validate requires at least one --attestation <path>");
+export function main(): void {
+  assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
+
+  try {
+    const requestPath = requiredArgument("--request");
+    const attestationPaths = repeatedArguments("--attestation");
+    if (attestationPaths.length === 0) {
+      throw new Error("review:validate requires at least one --attestation <path>");
+    }
+    const request = readJson(requestPath);
+    const attestations = attestationPaths.map(readJson);
+    const coverage = validateReviewCoverage(request, attestations);
+    process.stdout.write(
+      `${JSON.stringify({
+        ok: coverage.status === "accepted",
+        request: path.resolve(requestPath),
+        attestations: attestationPaths.map((item) => path.resolve(item)),
+        ...coverage,
+      })}\n`
+    );
+    if (coverage.status !== "accepted") process.exitCode = 1;
+  } catch (error) {
+    process.stdout.write(
+      `${JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) })}\n`
+    );
+    process.exitCode = 1;
   }
-  const request = readJson(requestPath);
-  const attestations = attestationPaths.map(readJson);
-  const coverage = validateReviewCoverage(request, attestations);
-  process.stdout.write(
-    `${JSON.stringify({
-      ok: coverage.status === "accepted",
-      request: path.resolve(requestPath),
-      attestations: attestationPaths.map((item) => path.resolve(item)),
-      ...coverage,
-    })}\n`
-  );
-  if (coverage.status !== "accepted") process.exitCode = 1;
-} catch (error) {
-  process.stdout.write(
-    `${JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) })}\n`
-  );
-  process.exitCode = 1;
 }
 
 function readJson(filePath: string): unknown {
@@ -48,3 +53,5 @@ function repeatedArguments(flag: string): string[] {
   }
   return values;
 }
+
+main();

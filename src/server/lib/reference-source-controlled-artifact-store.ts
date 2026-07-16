@@ -38,6 +38,7 @@ import {
   type ReferenceSourceStoreEnumerationCore,
 } from "../../lib/reference-source-inventory.js";
 import type { ReferenceSourceControlledStoreInventoryAdapter } from "./reference-source-inventory-provider.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type { ReferenceSourceControlledArtifactBinding } from "../../lib/reference-source-inventory.js";
 
@@ -235,6 +236,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     binding: ReferenceSourceControlledArtifactBinding;
     created: boolean;
   } {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     let digitalAsset: ReferenceDigitalAsset;
     try {
       digitalAsset = Value.Decode(ReferenceDigitalAssetSchema, input.digitalAsset);
@@ -318,6 +320,7 @@ export class ReferenceSourceControlledArtifactStore implements ReferenceSourceCo
     blobDeleted: boolean;
     generation: number;
   } {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     const artifactRef = decodeArtifactRef(input.artifactRef);
     assertDigest(input.expectedBlobSha256, "expected blob SHA-256");
 

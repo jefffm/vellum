@@ -1,4 +1,5 @@
 import { rationalToLilyDuration } from "./arrangement-engrave.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   ArrangementEvent,
   ArrangementScore,
@@ -12,6 +13,7 @@ export function continuoArrangementToLilyPond(
   arrangement: ArrangementScore,
   score: NormalizedScore
 ): string {
+  assertAuthorityPathRuntime("authority.compiler.notation-projection", "production");
   if (!arrangement.targetConfiguration.notationLayouts.includes("continuo-score")) {
     throw new Error("Continuo engraving requires the continuo-score Notation Layout");
   }

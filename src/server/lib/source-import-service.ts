@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import { normalizeAbc } from "../../lib/abc-normalizer.js";
 import { parseExplicitVoiceLilypond } from "../../lib/restricted-lilypond.js";
@@ -37,6 +38,7 @@ export class SourceImportService {
   private readonly convertInterchange: typeof convertInterchangeToMusicXml;
 
   constructor(options: SourceImportServiceOptions) {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
@@ -49,6 +51,7 @@ export class SourceImportService {
     sourceArtifactId: string,
     options: { voiceNames?: string[]; bestEffortScore?: RecognizedScore } = {}
   ): Promise<SourceImportResult> {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const source = this.store.getSourceArtifact(workspaceId, sourceArtifactId);
     const content = this.store.readSourceContent(workspaceId, sourceArtifactId);
     let recognized: RecognizedScore;

@@ -1,4 +1,5 @@
 import { rationalToLilyDuration } from "./arrangement-engrave.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   ArrangementEvent,
   ArrangementScore,
@@ -11,6 +12,7 @@ export function imitativeArrangementToLilyPond(
   arrangement: ArrangementScore,
   score: NormalizedScore
 ): string {
+  assertAuthorityPathRuntime("authority.compiler.notation-projection", "production");
   if (arrangement.targetConfiguration.instrumentId !== "renaissance-lute-6") {
     throw new Error("Imitative intabulation engraving requires renaissance-lute-6");
   }

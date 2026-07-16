@@ -1,6 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import bundledInventoryJson from "./data/tracked-source-inventory.v1.json" with { type: "json" };
 
 const Sha256Schema = Type.String({ pattern: "^[a-f0-9]{64}$" });
@@ -249,6 +250,7 @@ export type TrackedSourceAuthorizer = (
 export type BundledTrackedSourceOperationRequest = Omit<TrackedSourceOperationRequest, "sha256">;
 
 export function parseTrackedSourceInventory(value: unknown): TrackedSourceInventory {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   const inventory = Value.Decode(TrackedSourceInventorySchema, structuredClone(value));
   requireUniqueIds(inventory.artifacts, "artifact");
   requireUniqueIds(inventory.decisions, "decision");
@@ -409,6 +411,7 @@ export function resolveTrackedSourceOperation(
   inventoryValue: TrackedSourceInventory,
   requestValue: TrackedSourceOperationRequest
 ): TrackedSourceResolution {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   const inventory = Value.Decode(TrackedSourceInventorySchema, inventoryValue);
   const request = Value.Decode(TrackedSourceOperationRequestSchema, requestValue);
   const artifacts = inventory.artifacts.filter((candidate) => candidate.id === request.artifactId);
@@ -482,6 +485,7 @@ export function resolveTrackedSourceOperation(
 export function createTrackedSourceAuthorizer(
   inventoryValue: TrackedSourceInventory
 ): TrackedSourceAuthorizer {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   const inventory = parseTrackedSourceInventory(inventoryValue);
   return (request) => resolveTrackedSourceOperation(inventory, request);
 }
@@ -496,11 +500,14 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
 const bundledInventory = deepFreeze(parseTrackedSourceInventory(bundledInventoryJson));
+assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
 const bundledAuthorizer = createTrackedSourceAuthorizer(bundledInventory);
 
 /** Returns the validated, deeply frozen production inventory. */
 export function loadBundledTrackedSourceInventory(): TrackedSourceInventory {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   return bundledInventory;
 }
 
@@ -508,6 +515,7 @@ export function loadBundledTrackedSourceInventory(): TrackedSourceInventory {
 export function authorizeTrackedSourceOperation(
   request: TrackedSourceOperationRequest
 ): TrackedSourceResolution {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   return bundledAuthorizer(request);
 }
 
@@ -518,6 +526,7 @@ export function authorizeTrackedSourceOperation(
 export function authorizeBundledTrackedSourceOperation(
   request: BundledTrackedSourceOperationRequest
 ): TrackedSourceResolution {
+  assertAuthorityPathRuntime("authority.validator.tracked-source-authorization", "production");
   const artifact = bundledInventory.artifacts.find(
     (candidate) => candidate.id === request.artifactId
   );

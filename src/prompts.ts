@@ -1,6 +1,11 @@
 import type { InstrumentProfile } from "./types.js";
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
 
 export function buildSystemPrompt(instruments: InstrumentProfile[]): string {
+  assertAuthorityPathRuntime("authority.prompt.instructions", "production");
+  assertAuthorityPathRuntime("authority.prompt.examples", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+
   const sections: string[] = [
     buildRole(),
     buildTools(),

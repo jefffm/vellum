@@ -1,5 +1,6 @@
 import { Type, type Static, type TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 import { ReferenceRecordRefSchema, referenceSourceDigest } from "./reference-source-domain.js";
 import { isReferenceSourceInstant } from "./reference-source-instant.js";
@@ -272,6 +273,7 @@ export function planReferenceSourceInventoryClosure(input: {
   currentRegistry: unknown;
   witness: unknown;
 }): ReferenceSourceInventoryClosurePlan {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const registry = decodeIfValid(ReferenceSourceRequiredStoreRegistrySchema, input.currentRegistry);
   if (!registry) {
     return blockedPlan([{ code: "invalid_required_store_registry" }]);

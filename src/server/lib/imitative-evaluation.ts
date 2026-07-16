@@ -70,7 +70,7 @@ export function createImitativeEvaluationRegistry(projectRoot = process.cwd()): 
     provenance: {
       origin: "Vellum CC0 Three-Voice Imitative Passage",
       license: "CC0-1.0",
-      datasetRole: "held_out" as const,
+      datasetRole: "development" as const,
       datasetVersion: 1,
     },
   };

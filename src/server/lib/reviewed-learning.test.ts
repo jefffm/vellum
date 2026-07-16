@@ -6,6 +6,7 @@ import { digestValue } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
 import { OwnerStore } from "./owner-store.js";
 import { ReviewedLearningService } from "./reviewed-learning.js";
+import { acceptReviewedOwnerDefault } from "./reviewed-owner-default-bridge.js";
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
@@ -69,19 +70,38 @@ describe("reviewed calibration and learning", () => {
         rationale: "Wrong authority.",
       })
     ).toThrow(/cannot accept/);
-    service.accept({
+    const defaultAcceptance = service.accept({
       proposalId: acceptedDefault.id,
       reviewerRole: "owner",
       rationale: "Create a Personal Default Candidate for separate approval.",
     });
+    expect(defaultAcceptance.output).toMatchObject({ status: "proposed" });
     expect(ownerStore.listDefaultCandidates()).toHaveLength(1);
     expect(ownerStore.listDefaults()).toEqual([]);
+
+    expect(() =>
+      acceptReviewedOwnerDefault(ownerStore, {
+        proposalId: acceptedDefault.id,
+        proposalKind: "personal_default",
+        reviewBoundary: "owner_personal_default",
+        reviewerRole: "evaluation_maintainer",
+        dimension: "stringing",
+        value: "french",
+        scope: { instrument: "baroque-guitar-5" },
+        evidenceChoiceIds: ["choice.2"],
+      })
+    ).toThrow(/explicit Owner review boundary/);
+    expect(ownerStore.listDefaultCandidates()).toHaveLength(1);
 
     const reference = ownerStore.addReference({
       title: "Reviewed facsimile note",
       citation: "Public-domain source, folio 1",
       mimeType: "text/plain",
       contentBase64: Buffer.from("historical evidence").toString("base64"),
+    });
+    expect(reference).toMatchObject({
+      authorityState: "raw_staged",
+      activationAllowed: false,
     });
     const knowledge = service.propose({
       kind: "knowledge_candidate",
@@ -102,12 +122,14 @@ describe("reviewed calibration and learning", () => {
       },
       reviewBoundary: "historical_specialist_knowledge",
     });
-    service.accept({
-      proposalId: knowledge.id,
-      reviewerRole: "historical_specialist",
-      rationale: "Create a cited Knowledge Candidate; do not promote Historical Knowledge yet.",
-    });
-    expect(ownerStore.listKnowledgeCandidates()).toHaveLength(1);
+    expect(() =>
+      service.accept({
+        proposalId: knowledge.id,
+        reviewerRole: "historical_specialist",
+        rationale: "Create a cited Knowledge Candidate; do not promote Historical Knowledge yet.",
+      })
+    ).toThrow(/quarantined for inspection only/i);
+    expect(ownerStore.listKnowledgeCandidates()).toEqual([]);
     expect(ownerStore.listClaims()).toEqual([]);
 
     const ergonomic = service.propose({

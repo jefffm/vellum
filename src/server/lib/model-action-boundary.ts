@@ -11,7 +11,9 @@ import {
   type ModelEgressDisclosure,
   type ModelEgressEnvelope,
 } from "../../lib/music-domain.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
+assertAuthorityPathRuntime("authority.prompt.model-action-guidance", "production");
 export const INTERACTIVE_GUIDANCE_POLICY = Object.freeze({
   kind: "interactive_guidance_v1",
   provider: "openai-codex",

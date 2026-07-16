@@ -1,4 +1,5 @@
 import type { NormalizedScore, NotationIssue, Rational, ScoreEvent } from "./music-domain.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 export class UnsupportedRhythmicNotationError extends Error {
   readonly issues: NotationIssue[];
@@ -15,12 +16,14 @@ export class UnsupportedRhythmicNotationError extends Error {
 }
 
 export function assertRhythmicSourceSupported(score: NormalizedScore): void {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const blocking = (score.notationIssues ?? []).filter((issue) => issue.severity === "error");
   if (blocking.length) throw new UnsupportedRhythmicNotationError(blocking);
   validateTupletGroups(score.events);
 }
 
 export function validateTupletGroups(events: ScoreEvent[]): void {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const active = new Map<string, { actual: number; normal: number; measureId: string }>();
   for (const event of events.slice().sort(compareEvents)) {
     const tuplet = event.rhythmicNotation?.tuplet;

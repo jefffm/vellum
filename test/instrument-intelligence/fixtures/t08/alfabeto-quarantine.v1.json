@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.alfabeto-quarantine.v1",
+  "input": {
+    "chordName": "G major"
+  },
+  "expectedLegacyOutput": {
+    "status": "review_required",
+    "matches": [],
+    "chartId": "tyler-universal",
+    "reviewRequired": {
+      "code": "tracked_source_review_required",
+      "artifactId": "tracked.alfabeto-tyler-universal",
+      "message": "Alfabeto chart use requires an exact rights-authorized Knowledge Pack release; no chart data was used.",
+      "reasons": ["review_required"]
+    }
+  }
+}

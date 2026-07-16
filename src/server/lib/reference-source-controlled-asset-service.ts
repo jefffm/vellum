@@ -17,6 +17,7 @@ import {
   type ReferenceSourceStagingDiagnostics,
 } from "./reference-source-staging-service.js";
 import { ReferenceSourceStagingConflictError } from "./reference-source-staging-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const OWNER_UPLOAD_PROCESSING_POLICY_REF = externalRef(
   "processing-policy.owner-local-reference-upload.v1"
@@ -79,6 +80,7 @@ export class ReferenceSourceControlledAssetIngestionService {
   }
 
   ingest(input: IngestOwnerReferenceSourceInput): Promise<IngestOwnerReferenceSourceResult> {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     const operation = this.queue.then(
       () => this.ingestSerialized(input),
       () => this.ingestSerialized(input)

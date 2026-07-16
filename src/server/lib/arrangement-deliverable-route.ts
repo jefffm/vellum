@@ -3,6 +3,8 @@ import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
 import { arrangementToEngraveParams } from "../../lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../lib/audio-preview.js";
+import { withAuthorityPath } from "../../lib/authority-path-inventory.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { continuoArrangementToLilyPond } from "../../lib/continuo-engrave.js";
 import { imitativeArrangementToLilyPond } from "../../lib/imitative-engrave.js";
 import { compileLilyPond } from "./compile-route.js";
@@ -16,6 +18,9 @@ import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import type { SubprocessRunner } from "./subprocess.js";
 
 const generatedArtifactSecurity = createNodeGeneratedArtifactSecurity();
+
+export const ARRANGEMENT_DELIVERABLE_DISPATCH_AUTHORITY_PATH_ID =
+  "authority.compiler.deliverable-projection-dispatch";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -112,62 +117,76 @@ export function createArrangementRestoreRoute(store = new WorkspaceStore()): Req
 }
 
 export function createArrangementCompileRoute(
-  store = new WorkspaceStore(),
-  runner: Pick<SubprocessRunner, "run"> = new PodmanLilyPondRunner({ defaultTimeout: 60_000 })
+  store?: WorkspaceStore,
+  runner?: Pick<SubprocessRunner, "run">,
+  authorityGuard: typeof withAuthorityPath = withAuthorityPath
 ): RequestHandler {
+  assertAuthorityPathRuntime("authority.compiler.deliverable-projection-dispatch", "production");
+  store ??= new WorkspaceStore();
+  runner ??= new PodmanLilyPondRunner({ defaultTimeout: 60_000 });
   return async (request, response, next) => {
     try {
       const { workspaceId, arrangementId } = Value.Decode(ParamsSchema, request.params);
-      const arrangement = store.getArrangementScore(workspaceId, arrangementId);
-      const analysis = store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
-      const score = store.getNormalizedScore(workspaceId, analysis.normalizedScoreId);
-      const source = arrangement.targetConfiguration.notationLayouts.includes("continuo-score")
-        ? continuoArrangementToLilyPond(arrangement, score)
-        : arrangement.targetConfiguration.instrumentId === "renaissance-lute-6" &&
-            arrangement.events.some((event) => event.role === "source_voice")
-          ? imitativeArrangementToLilyPond(arrangement, score)
-          : engrave(arrangementToEngraveParams(arrangement, score)).source;
-      const compiled = await compileLilyPond({ source, format: "both" }, runner, 60_000);
-      const deliverables = [
-        persistDeliverable(store, workspaceId, arrangement, {
-          kind: "lilypond",
-          mimeType: "text/x-lilypond",
-          extension: "ly",
-          content: Buffer.from(source),
-        }),
-        ...(compiled.svg
-          ? [
-              persistDeliverable(store, workspaceId, arrangement, {
-                kind: "browser_preview" as const,
-                mimeType: "image/svg+xml",
-                extension: "svg",
-                content: Buffer.from(compiled.svg),
-                artifactPolicyVersion: compiled.artifactPolicyVersion,
-              }),
-            ]
-          : []),
-        ...(compiled.pdf
-          ? [
-              persistDeliverable(store, workspaceId, arrangement, {
-                kind: "pdf" as const,
-                mimeType: "application/pdf",
-                extension: "pdf",
-                content: Buffer.from(compiled.pdf, "base64"),
-              }),
-            ]
-          : []),
-        ...(compiled.midi
-          ? [
-              persistDeliverable(store, workspaceId, arrangement, {
-                kind: "midi" as const,
-                mimeType: "audio/midi",
-                extension: "midi",
-                content: Buffer.from(compiled.midi, "base64"),
-              }),
-            ]
-          : []),
-      ];
-      response.json({ ok: true, data: { ...compiled, source, deliverables } });
+      assertAuthorityPathRuntime(
+        "authority.compiler.deliverable-projection-dispatch",
+        "production"
+      );
+      await authorityGuard(
+        "authority.compiler.deliverable-projection-dispatch",
+        "production",
+        async () => {
+          const arrangement = store.getArrangementScore(workspaceId, arrangementId);
+          const analysis = store.getAnalysisRecord(workspaceId, arrangement.analysisRecordId);
+          const score = store.getNormalizedScore(workspaceId, analysis.normalizedScoreId);
+          const source = arrangement.targetConfiguration.notationLayouts.includes("continuo-score")
+            ? continuoArrangementToLilyPond(arrangement, score)
+            : arrangement.targetConfiguration.instrumentId === "renaissance-lute-6" &&
+                arrangement.events.some((event) => event.role === "source_voice")
+              ? imitativeArrangementToLilyPond(arrangement, score)
+              : engrave(arrangementToEngraveParams(arrangement, score)).source;
+          const compiled = await compileLilyPond({ source, format: "both" }, runner, 60_000);
+          const deliverables = [
+            persistDeliverable(store, workspaceId, arrangement, {
+              kind: "lilypond",
+              mimeType: "text/x-lilypond",
+              extension: "ly",
+              content: Buffer.from(source),
+            }),
+            ...(compiled.svg
+              ? [
+                  persistDeliverable(store, workspaceId, arrangement, {
+                    kind: "browser_preview" as const,
+                    mimeType: "image/svg+xml",
+                    extension: "svg",
+                    content: Buffer.from(compiled.svg),
+                    artifactPolicyVersion: compiled.artifactPolicyVersion,
+                  }),
+                ]
+              : []),
+            ...(compiled.pdf
+              ? [
+                  persistDeliverable(store, workspaceId, arrangement, {
+                    kind: "pdf" as const,
+                    mimeType: "application/pdf",
+                    extension: "pdf",
+                    content: Buffer.from(compiled.pdf, "base64"),
+                  }),
+                ]
+              : []),
+            ...(compiled.midi
+              ? [
+                  persistDeliverable(store, workspaceId, arrangement, {
+                    kind: "midi" as const,
+                    mimeType: "audio/midi",
+                    extension: "midi",
+                    content: Buffer.from(compiled.midi, "base64"),
+                  }),
+                ]
+              : []),
+          ];
+          response.json({ ok: true, data: { ...compiled, source, deliverables } });
+        }
+      );
     } catch (error) {
       next(error);
     }

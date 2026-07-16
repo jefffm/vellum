@@ -1,63 +1,115 @@
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { Type, type Static } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { authorizeTrackedSourceOperation } from "../../lib/tracked-source-quarantine.js";
 
 export type EvaluationArtifactOperation = "fixture" | "report" | "export";
 
 export type EvaluationArtifactKind = "internal" | EvaluationArtifactOperation;
 
-export type EvaluationArtifactRightsSource = {
-  artifactId: string;
-  sha256: string;
-  substitutionId?: string;
-};
+const EvaluationArtifactRightsSourceSchema = Type.Object(
+  {
+    artifactId: Type.String(),
+    sha256: Type.String(),
+    substitutionId: Type.Optional(Type.String()),
+  },
+  { additionalProperties: false }
+);
+
+export type EvaluationArtifactRightsSource = Static<typeof EvaluationArtifactRightsSourceSchema>;
 
 export type EvaluationArtifactRightsRequest = {
   operation: EvaluationArtifactOperation;
   sources: EvaluationArtifactRightsSource[];
 };
 
-export type EvaluationArtifactRights = {
-  operation: EvaluationArtifactOperation;
-  sources: Array<
-    EvaluationArtifactRightsSource & {
-      resolvedArtifactId: string;
-      resolvedSha256: string;
-      decisionId: string;
-      provenanceEvidenceRefs: string[];
-    }
-  >;
-};
+const EvaluationArtifactOperationSchema = Type.Union([
+  Type.Literal("fixture"),
+  Type.Literal("report"),
+  Type.Literal("export"),
+]);
 
-export type EvaluationArtifactReference = {
-  id: string;
-  artifactKind: EvaluationArtifactKind;
-  ownerRecordId: string;
-  retentionClass: "ephemeral" | "ordinary" | "pinned_baseline";
-  expiresAt?: string;
-  baselineId?: string;
-  privateWorkspaceId?: string;
-  license?: string;
-  rights?: EvaluationArtifactRights;
-};
+const EvaluationArtifactKindSchema = Type.Union([
+  Type.Literal("internal"),
+  EvaluationArtifactOperationSchema,
+]);
 
-export type EvaluationArtifact = {
-  id: string;
-  sha256: string;
-  mediaType: string;
-  byteLength: number;
-  references: EvaluationArtifactReference[];
-  createdAt: string;
-};
+const EvaluationArtifactRightsSchema = Type.Object(
+  {
+    operation: EvaluationArtifactOperationSchema,
+    sources: Type.Array(
+      Type.Object(
+        {
+          artifactId: Type.String(),
+          sha256: Type.String(),
+          substitutionId: Type.Optional(Type.String()),
+          resolvedArtifactId: Type.String(),
+          resolvedSha256: Type.String(),
+          decisionId: Type.String(),
+          provenanceEvidenceRefs: Type.Array(Type.String()),
+        },
+        { additionalProperties: false }
+      )
+    ),
+  },
+  { additionalProperties: false }
+);
 
-type Manifest = { artifacts: EvaluationArtifact[] };
+export type EvaluationArtifactRights = Static<typeof EvaluationArtifactRightsSchema>;
+
+const EvaluationArtifactReferenceSchema = Type.Object(
+  {
+    id: Type.String(),
+    artifactKind: EvaluationArtifactKindSchema,
+    ownerRecordId: Type.String(),
+    retentionClass: Type.Union([
+      Type.Literal("ephemeral"),
+      Type.Literal("ordinary"),
+      Type.Literal("pinned_baseline"),
+    ]),
+    expiresAt: Type.Optional(Type.String()),
+    baselineId: Type.Optional(Type.String()),
+    privateWorkspaceId: Type.Optional(Type.String()),
+    license: Type.Optional(Type.String()),
+    rights: Type.Optional(EvaluationArtifactRightsSchema),
+  },
+  { additionalProperties: false }
+);
+
+export type EvaluationArtifactReference = Static<typeof EvaluationArtifactReferenceSchema>;
+
+export const EvaluationArtifactSchema = Type.Object(
+  {
+    id: Type.String(),
+    sha256: Type.String(),
+    mediaType: Type.String(),
+    byteLength: Type.Number(),
+    references: Type.Array(EvaluationArtifactReferenceSchema),
+    createdAt: Type.String(),
+  },
+  { additionalProperties: false }
+);
+
+export type EvaluationArtifact = Static<typeof EvaluationArtifactSchema>;
+
+export const EvaluationArtifactManifestSchema = Type.Object(
+  { artifacts: Type.Array(EvaluationArtifactSchema) },
+  { additionalProperties: false }
+);
+
+type Manifest = Static<typeof EvaluationArtifactManifestSchema>;
 
 export class EvaluationArtifactStore {
-  constructor(
-    readonly rootDirectory: string,
-    private readonly now: () => Date = () => new Date()
-  ) {
+  readonly rootDirectory: string;
+  private readonly now: () => Date;
+
+  constructor(rootDirectory: string, now: () => Date = () => new Date()) {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
+    this.rootDirectory = rootDirectory;
+    this.now = now;
     mkdirSync(path.join(rootDirectory, "blobs"), { recursive: true, mode: 0o700 });
     if (!existsSync(this.manifestPath())) this.writeManifest({ artifacts: [] });
   }
@@ -76,6 +128,7 @@ export class EvaluationArtifactStore {
       rights?: EvaluationArtifactRightsRequest;
     }
   ): EvaluationArtifact {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     if (input.retentionClass === "pinned_baseline" && !input.baselineId) {
       throw new Error("Pinned Evaluation Artifact requires a Baseline id");
     }
@@ -169,12 +222,14 @@ export class EvaluationArtifactStore {
   }
 
   get(id: string): EvaluationArtifact {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const artifact = this.manifest().artifacts.find((item) => item.id === id);
     if (!artifact) throw new Error(`Evaluation Artifact not found: ${id}`);
     return structuredClone(artifact);
   }
 
   readInternal(id: string): Buffer {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const artifact = this.get(id);
     if (
       !artifact.references.some(
@@ -187,6 +242,7 @@ export class EvaluationArtifactStore {
   }
 
   readForOperation(id: string, operation: EvaluationArtifactOperation): Buffer {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const artifact = this.get(id);
     const authorized = artifact.references.some(
       (reference) =>
@@ -204,6 +260,7 @@ export class EvaluationArtifactStore {
   }
 
   pinBaseline(baselineId: string, artifactIds: string[]): void {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const manifest = this.manifest();
     for (const id of artifactIds) {
       const artifact = manifest.artifacts.find((item) => item.id === id);
@@ -229,6 +286,7 @@ export class EvaluationArtifactStore {
   }
 
   invalidateBaseline(baselineId: string): void {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const manifest = this.manifest();
     manifest.artifacts.forEach((artifact) => {
       artifact.references = artifact.references.filter(
@@ -239,6 +297,7 @@ export class EvaluationArtifactStore {
   }
 
   deletePrivateWorkspace(workspaceId: string): string[] {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const manifest = this.manifest();
     const removed: string[] = [];
     manifest.artifacts = manifest.artifacts.filter((artifact) => {
@@ -255,6 +314,7 @@ export class EvaluationArtifactStore {
   }
 
   collect(now = this.now()): string[] {
+    assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
     const manifest = this.manifest();
     const removed: string[] = [];
     manifest.artifacts = manifest.artifacts.filter((artifact) => {
@@ -280,7 +340,10 @@ export class EvaluationArtifactStore {
   }
 
   private manifest(): Manifest {
-    return JSON.parse(readFileSync(this.manifestPath(), "utf8")) as Manifest;
+    return Value.Decode(
+      EvaluationArtifactManifestSchema,
+      JSON.parse(readFileSync(this.manifestPath(), "utf8"))
+    );
   }
 
   private writeManifest(manifest: Manifest): void {

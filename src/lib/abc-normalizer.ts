@@ -1,7 +1,9 @@
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type { RecognizedScore, ScoreEvent } from "./music-domain.js";
 import { rational } from "./music-domain.js";
 
 export function normalizeAbc(source: string): RecognizedScore {
+  assertAuthorityPathRuntime("authority.validator.source-normalization", "production");
   const title = header(source, "T");
   const meter = header(source, "M") ?? "4/4";
   const unit = parseFraction(header(source, "L") ?? "1/8");

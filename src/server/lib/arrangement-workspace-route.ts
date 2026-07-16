@@ -10,6 +10,7 @@ import { PerformanceBriefInputSchema } from "../../lib/music-domain.js";
 import { createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 import { OwnerStore } from "./owner-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ pattern: "^workspace\\.[a-f0-9-]{16,}$" }),
@@ -38,6 +39,7 @@ type RouteOptions = {
 };
 
 export function createFaithfulArrangementRoute(options: RouteOptions = {}): RequestHandler {
+  assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
   const store = options.store ?? new WorkspaceStore();
   const service =
     options.service ?? new ArrangementService({ store, ownerStore: new OwnerStore() });

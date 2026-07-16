@@ -1,3 +1,5 @@
+import { assertAuthorityPathRuntime } from "./lib/authority-path-runtime.js";
+
 export type ReferenceSourceStagingDiagnostics = {
   publicationState: "staging_only";
   view:
@@ -93,6 +95,8 @@ export function renderReferenceSourceStagingDiagnostics(
   container: HTMLElement,
   input: unknown
 ): void {
+  assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
+
   container.replaceChildren();
   container.classList.add("reference-source-staging-diagnostics");
 

@@ -1,4 +1,5 @@
 import type { InstrumentProfile, TabPosition, TuningEntry, Violation, Voicing } from "../types.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { noteToMidi, parsePitch, transposeNote } from "./pitch.js";
 import {
   instrumentInstanceRange,
@@ -13,11 +14,13 @@ export type PlayabilityResult = {
 
 export class InstrumentModel {
   private currentDiapasonScheme?: string;
+  private readonly profile: InstrumentProfile;
+  private readonly instance?: InstrumentInstanceConfiguration;
 
-  constructor(
-    private readonly profile: InstrumentProfile,
-    private readonly instance?: InstrumentInstanceConfiguration
-  ) {
+  constructor(profile: InstrumentProfile, instance?: InstrumentInstanceConfiguration) {
+    assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
+    this.profile = profile;
+    this.instance = instance;
     this.currentDiapasonScheme = this.defaultDiapasonScheme();
   }
 
@@ -120,6 +123,7 @@ export class InstrumentModel {
   }
 
   maxStretch(): number {
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const explicit = this.profile.constraints
       .map((constraint) => constraint.match(/stretch:\s*~?(\d+)/i)?.[1])
       .find((value): value is string => value !== undefined);
@@ -166,7 +170,9 @@ export class InstrumentModel {
     return this.courseCount();
   }
 
-  voicingsForChord(pitches: string[], maxStretch = this.maxStretch()): Voicing[] {
+  voicingsForChord(pitches: string[], maxStretch?: number): Voicing[] {
+    assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
+    maxStretch ??= this.maxStretch();
     if (pitches.length === 0) {
       return [];
     }
@@ -262,7 +268,9 @@ export class InstrumentModel {
     return Math.abs(pos1.fret - pos2.fret);
   }
 
-  isPlayable(positions: TabPosition[], maxStretch = this.maxStretch()): PlayabilityResult {
+  isPlayable(positions: TabPosition[], maxStretch?: number): PlayabilityResult {
+    assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
+    maxStretch ??= this.maxStretch();
     const violations: Violation[] = [];
     const courses = new Set<number>();
 

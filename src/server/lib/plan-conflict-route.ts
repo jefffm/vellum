@@ -2,6 +2,7 @@ import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const ParamsSchema = Type.Object({
   workspaceId: Type.String({ minLength: 1 }),
@@ -20,7 +21,9 @@ const ResolutionSchema = Type.Object(
   { additionalProperties: false }
 );
 
-export function createPlanConflictResolutionRoute(store = new WorkspaceStore()) {
+export function createPlanConflictResolutionRoute(store?: WorkspaceStore) {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
+  store ??= new WorkspaceStore();
   return createApiRoute({
     validate: (body, request) => ({
       ...Value.Decode(ParamsSchema, request.params),

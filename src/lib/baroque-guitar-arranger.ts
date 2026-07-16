@@ -1,4 +1,5 @@
 import { InstrumentModel } from "./instrument-model.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   AnalysisRecord,
   ArrangementCandidate,
@@ -85,6 +86,7 @@ export function arrangeFaithfulPluckedString(
   model: InstrumentModel,
   options: ArrangementOptions
 ): ArrangementSearchResult {
+  assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
   if (
     options.targetConfiguration.instrumentId !== "baroque-guitar-5" &&
     options.targetConfiguration.instrumentId !== "baroque-lute-13" &&
@@ -323,6 +325,7 @@ export function arrangeFaithfulBaroqueGuitar(
   model: InstrumentModel,
   options: ArrangementOptions
 ): ArrangementSearchResult {
+  assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
   if (options.targetConfiguration.instrumentId !== "baroque-guitar-5") {
     throw new Error("Baroque-guitar arrangement requires target instrument baroque-guitar-5");
   }
@@ -335,6 +338,7 @@ export function auditFaithfulPrincipalVoice(
   arrangedEvents: ArrangementEvent[],
   transpositionSemitones: number
 ): PreservationAudit {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const target = analysis.preservationTargets.find(
     (candidate) => candidate.kind === "principal_voice"
   );
@@ -1236,6 +1240,7 @@ export function styleBriseAuthorization(
   plan: ArrangementPlan | undefined,
   analysis: AnalysisRecord
 ): NonNullable<PhraseSearchEvidence["luteTechniqueEvidence"]>["styleBrise"] {
+  assertAuthorityPathRuntime("authority.ranker.plucked-string-arrangement", "production");
   const planDecisions = (plan?.decisions ?? []).filter((decision) =>
     `${decision.dimension} ${decision.selectedValue}`.toLowerCase().match(/style[_ -]?bris/)
   );

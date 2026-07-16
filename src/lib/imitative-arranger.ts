@@ -1,4 +1,5 @@
 import { InstrumentModel } from "./instrument-model.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   AnalysisRecord,
   ArrangementCandidate,
@@ -36,6 +37,7 @@ export function arrangeImitativeIntabulation(
   model: InstrumentModel,
   options: Options
 ): { candidates: ArrangementCandidate[]; selected: ArrangementScore } {
+  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");
   if (analysis.texture !== "imitative-polyphony") {
     throw new Error("Imitative intabulation requires imitative-polyphony analysis");
   }
@@ -110,6 +112,7 @@ export function rankImitativeAssignments(
   completeAssignmentCount: number;
   truncated: boolean;
 } {
+  assertAuthorityPathRuntime("authority.ranker.imitative-intabulation", "production");
   const notes = score.events
     .filter((event): event is Extract<ScoreEvent, { type: "note" }> => event.type === "note")
     .map((source) => ({
@@ -242,6 +245,7 @@ export function auditImitative(
   events: ArrangementEvent[],
   model: InstrumentModel
 ): PreservationAudit {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const findings: PreservationAudit["findings"] = [];
   const targets = analysis.preservationTargets;
   for (const target of targets.filter((candidate) => candidate.kind === "voice")) {

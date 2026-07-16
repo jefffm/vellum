@@ -7,6 +7,7 @@ import {
   type HumanComparisonProtocol,
   type HumanEvaluation,
 } from "../../lib/evaluation-domain.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { digestInstrumentInstance } from "../../lib/instrument-instance.js";
 import { digestValue, validateHumanComparisonProtocol } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
@@ -19,6 +20,7 @@ export function validateAndSaveHumanEvaluation(input: {
   workspaceStore: WorkspaceStore;
   evaluationStore: EvaluationStore;
 }): HumanEvaluation {
+  assertAuthorityPathRuntime("authority.validator.evaluator-only", "evaluation");
   const evaluation = Value.Decode(HumanEvaluationSchema, input.evaluation);
   if (input.protocolDefinition.kind !== "human_protocol") {
     throw new Error("Human Evaluation requires a human_protocol definition");

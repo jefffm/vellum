@@ -11,6 +11,7 @@ import voiceBassProfileYaml from "../../instruments/voice-bass.yaml?raw";
 import voiceSopranoProfileYaml from "../../instruments/voice-soprano.yaml?raw";
 import voiceTenorProfileYaml from "../../instruments/voice-tenor.yaml?raw";
 import { InstrumentProfile, InstrumentProfileSchema } from "../types.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { errorMessage } from "./errors.js";
 
 const profileSources: Record<string, string> = {
@@ -34,6 +35,10 @@ export class BrowserProfileLoadError extends Error {
 }
 
 export function loadBrowserProfile(id: string): InstrumentProfile {
+  assertAuthorityPathRuntime("authority.cache.browser-profile", "production");
+  assertAuthorityPathRuntime("authority.profile.mechanical-fields", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+
   const source = profileSources[id];
 
   if (!source) {
@@ -69,6 +74,10 @@ export function loadBrowserProfile(id: string): InstrumentProfile {
 }
 
 export function loadAllBrowserProfiles(): InstrumentProfile[] {
+  assertAuthorityPathRuntime("authority.cache.browser-profile", "production");
+  assertAuthorityPathRuntime("authority.profile.mechanical-fields", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+
   return Object.keys(profileSources)
     .sort()
     .map((id) => loadBrowserProfile(id));

@@ -9,6 +9,7 @@ import type {
 import { digestValue } from "./evaluation-harness.js";
 import { EvaluationStore } from "./evaluation-store.js";
 import { OwnerStore } from "./owner-store.js";
+import { acceptReviewedOwnerDefault } from "./reviewed-owner-default-bridge.js";
 
 type Options = {
   evaluationStore: EvaluationStore;
@@ -81,7 +82,11 @@ export class ReviewedLearningService {
     this.assertReviewer(proposal, input.reviewerRole);
     if (proposal.kind === "personal_default") {
       const value = objectValue(proposal.proposedValue);
-      const output = this.options.ownerStore.proposeDefaultCandidate({
+      const output = acceptReviewedOwnerDefault(this.options.ownerStore, {
+        proposalId: proposal.id,
+        proposalKind: proposal.kind,
+        reviewBoundary: proposal.reviewBoundary,
+        reviewerRole: input.reviewerRole,
         dimension: stringValue(value.dimension, "dimension"),
         value: value.value,
         scope: stringRecord(value.scope, "scope"),

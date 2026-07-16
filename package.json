@@ -15,7 +15,9 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "spec:verify": "node scripts/verify-current-spec.mjs && node scripts/verify-instrument-intelligence-plan.mjs --draft && node scripts/verify-arrangement-intelligence.mjs",
+    "spec:verify": "node scripts/verify-current-spec.mjs && node scripts/verify-instrument-intelligence-plan.mjs --draft && node scripts/verify-arrangement-intelligence.mjs && node scripts/build-authority-path-inventory.mjs",
+    "authority-paths:verify": "node scripts/build-authority-path-inventory.mjs",
+    "authority-paths:refresh": "node scripts/build-authority-path-inventory.mjs --write",
     "plan:instrument-intelligence:manifest": "node scripts/verify-instrument-intelligence-plan.mjs --write-manifest",
     "plan:instrument-intelligence:verify": "node scripts/verify-instrument-intelligence-plan.mjs",
     "plan:instrument-intelligence:trust-bootstrap": "node scripts/verify-instrument-intelligence-plan.mjs --trust-bootstrap",
@@ -55,7 +57,8 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
-    "vitest": "^3.1.2"
+    "vite-node": "^3.2.4",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20.19.0"

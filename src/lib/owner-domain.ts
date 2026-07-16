@@ -50,6 +50,8 @@ export const OwnerReferenceSchema = Type.Object({
   sha256: Type.String({ pattern: "^[a-f0-9]{64}$" }),
   byteLength: Type.Optional(Type.Integer({ minimum: 1 })),
   storedPath: Type.String({ minLength: 1 }),
+  authorityState: Type.Literal("raw_staged"),
+  activationAllowed: Type.Literal(false),
   createdAt: DateTime,
 });
 export type OwnerReference = Static<typeof OwnerReferenceSchema>;

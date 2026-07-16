@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import type { InstrumentProfile } from "../types.js";
 import { VELLUM_BROWSER_SECURITY_HEADERS } from "../lib/content-security-policy.js";
+import { assertAuthorityPathRuntime } from "../lib/authority-path-runtime.js";
 import { VELLUM_API_SCHEMA_VERSION, type RuntimeHealth } from "../lib/runtime-contract.js";
 import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
@@ -134,6 +135,7 @@ import {
   createOwnerPlaytestCreateRoute,
 } from "./lib/owner-playtest-route.js";
 import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventory-route.js";
+import { createAuthorityPathInventoryRoute } from "./lib/authority-path-inventory-route.js";
 import { OwnerStore } from "./lib/owner-store.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 import { ReferenceSourceStagingService } from "./lib/reference-source-staging-service.js";
@@ -240,6 +242,7 @@ type ApiRouterOptions = {
 };
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const router = Router();
   const knowledgePublicationStore =
     options.knowledgePublicationStore ?? new KnowledgePublicationStore();
@@ -328,6 +331,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
 
   router.get("/workspaces", createWorkspaceListRoute());
   router.get("/owner", createOwnerStateRoute());
+  router.get("/owner/authority-path-inventory", createAuthorityPathInventoryRoute());
   router.get("/owner/tracked-source-inventory", createTrackedSourceInventoryRoute());
   router.get(
     "/owner/reference-source-staging",

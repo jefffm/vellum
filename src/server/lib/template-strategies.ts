@@ -1,4 +1,5 @@
 import type { EngraveBar, EngraveParams } from "../../lib/engrave-schema.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { InstrumentLyVars, EngraveTemplateId } from "../../lib/instrument-registry.js";
 import {
   type LyContainer,
@@ -178,6 +179,7 @@ export function dispatchTemplate(
   diapasonTuning?: string,
   notationVoiceLeaves?: Array<{ id: string; leaves: LyLeaf[] }>
 ): TemplateResult {
+  assertAuthorityPathRuntime("authority.compiler.editorial-layout", "production");
   switch (templateId) {
     case "solo-staff":
       return buildSoloStaff(musicLeaves, vars, params, notationVoiceLeaves);

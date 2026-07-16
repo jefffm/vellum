@@ -1,7 +1,9 @@
 import type { Agent, AgentEvent, AgentMessage } from "@mariozechner/pi-agent-core";
 
 import type { CompileError, CompileResult } from "../types.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
+assertAuthorityPathRuntime("authority.parameter.compile-retry-policy", "production");
 export const DEFAULT_COMPILE_RETRY_LIMIT = 3;
 
 export type CompileRetryGuardOptions = {
@@ -15,6 +17,7 @@ export function installCompileRetryGuard(
   agent: CompileRetryAgent,
   options: CompileRetryGuardOptions = {}
 ): void {
+  assertAuthorityPathRuntime("authority.parameter.compile-retry-policy", "production");
   const maxAttempts = options.maxAttempts ?? DEFAULT_COMPILE_RETRY_LIMIT;
   const now = options.now ?? Date.now;
   let failedAttempts = 0;
@@ -72,6 +75,7 @@ export function evaluateCompileRetryEvent(
   failedAttempts: number,
   maxAttempts = DEFAULT_COMPILE_RETRY_LIMIT
 ): CompileRetryAction {
+  assertAuthorityPathRuntime("authority.parameter.compile-retry-policy", "production");
   if (event.type === "agent_start") {
     return { resetAttempts: true };
   }
@@ -140,6 +144,7 @@ export function evaluateCompileRetryEvent(
 }
 
 function buildStallRecoveryMessage(maxAttempts: number): string {
+  assertAuthorityPathRuntime("authority.parameter.compile-retry-policy", "production");
   return [
     "You stopped after an interim text response, but this task is still inside the mandatory compile repair workflow.",
     "Continue now without waiting for user approval: revise the LilyPond source and call `compile` again with SVG output.",

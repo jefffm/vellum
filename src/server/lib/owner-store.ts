@@ -10,6 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   HistoricalPracticeClaimSchema,
   KnowledgeCandidateSchema,
@@ -31,7 +32,7 @@ import type {
 import type { TargetConfiguration } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 
-type Manifest = {
+type OwnerStoreManifest = {
   choiceIds: string[];
   defaultCandidateIds: string[];
   defaultIds: string[];
@@ -39,6 +40,18 @@ type Manifest = {
   knowledgeCandidateIds: string[];
   claimIds: string[];
   packIds: string[];
+};
+
+const LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID = "authority.cache.owner-legacy-knowledge";
+
+export type QuarantinedLegacyKnowledgeInspection = {
+  authorityPathId: typeof LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID;
+  state: "quarantined";
+  compatibilityMode: "quarantined_inspection_only";
+  activationAllowed: false;
+  knowledgeCandidates: KnowledgeCandidate[];
+  historicalPracticeClaims: HistoricalPracticeClaim[];
+  knowledgePacks: KnowledgePack[];
 };
 
 export class OwnerStore {
@@ -58,6 +71,7 @@ export class OwnerStore {
     choice: OwnerChoice;
     candidate?: PersonalDefaultCandidate;
   } {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     const choice = this.save("choices", "choiceIds", OwnerChoiceSchema, {
       ...input,
       id: `choice.${this.createId()}`,
@@ -95,6 +109,7 @@ export class OwnerStore {
   }
 
   approveDefaultCandidate(id: string): PersonalDefault {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     const candidate = this.read<PersonalDefaultCandidate>(
       "default-candidates",
       id,
@@ -130,6 +145,7 @@ export class OwnerStore {
     scope: Record<string, string>;
     evidenceChoiceIds: string[];
   }): PersonalDefaultCandidate {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     return this.save<PersonalDefaultCandidate>(
       "default-candidates",
       "defaultCandidateIds",
@@ -147,6 +163,7 @@ export class OwnerStore {
     id: string,
     correction: { dimension: string; value: unknown; scope: Record<string, string> }
   ): PersonalDefaultCandidate {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     const original = this.read<PersonalDefaultCandidate>(
       "default-candidates",
       id,
@@ -162,6 +179,7 @@ export class OwnerStore {
   }
 
   rejectDefaultCandidate(id: string): PersonalDefaultCandidate {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     const candidate = this.read<PersonalDefaultCandidate>(
       "default-candidates",
       id,
@@ -180,6 +198,7 @@ export class OwnerStore {
   }
 
   releaseDefault(id: string): PersonalDefault {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     const record = this.read<PersonalDefault>("defaults", id, PersonalDefaultSchema);
     return this.save<PersonalDefault>("defaults", "defaultIds", PersonalDefaultSchema, {
       ...record,
@@ -209,6 +228,8 @@ export class OwnerStore {
       sha256,
       byteLength: content.byteLength,
       storedPath,
+      authorityState: "raw_staged",
+      activationAllowed: false,
       createdAt: this.now().toISOString(),
     });
   }
@@ -244,28 +265,20 @@ export class OwnerStore {
       sha256: input.sha256,
       byteLength: input.byteLength,
       storedPath,
+      authorityState: "raw_staged",
+      activationAllowed: false,
       createdAt: this.now().toISOString(),
     });
   }
 
   proposeKnowledge(
-    input: Omit<KnowledgeCandidate, "id" | "status" | "createdAt">
+    _input: Omit<KnowledgeCandidate, "id" | "status" | "createdAt">
   ): KnowledgeCandidate {
-    this.read("references", input.referenceId, OwnerReferenceSchema);
-    return this.save<KnowledgeCandidate>(
-      "knowledge-candidates",
-      "knowledgeCandidateIds",
-      KnowledgeCandidateSchema,
-      {
-        ...input,
-        id: `knowledge-candidate.${this.createId()}`,
-        status: "proposed",
-        createdAt: this.now().toISOString(),
-      }
-    );
+    assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");
+    throw legacyKnowledgeMutationError("proposal");
   }
 
-  promoteKnowledge(input: {
+  promoteKnowledge(_input: {
     candidateId: string;
     packId: string;
     packName: string;
@@ -274,119 +287,71 @@ export class OwnerStore {
     claim: HistoricalPracticeClaim;
     pack: KnowledgePack;
   } {
-    const candidate = this.read<KnowledgeCandidate>(
-      "knowledge-candidates",
-      input.candidateId,
-      KnowledgeCandidateSchema
-    );
-    if (candidate.status !== "proposed")
-      throw new ApiRouteError(`Knowledge Candidate is already ${candidate.status}`, 409);
-    const timestamp = this.now().toISOString();
-    const claim = this.save<HistoricalPracticeClaim>(
-      "claims",
-      "claimIds",
-      HistoricalPracticeClaimSchema,
-      {
-        id: `historical-claim.${this.createId()}`,
-        statement: candidate.statement,
-        scope: candidate.scope,
-        authority: input.authority,
-        referenceId: candidate.referenceId,
-        citationLocator: candidate.citationLocator,
-        sourceCandidateId: candidate.id,
-        status: "active",
-        reviewedAt: timestamp,
-      }
-    );
-    this.save<KnowledgeCandidate>(
-      "knowledge-candidates",
-      "knowledgeCandidateIds",
-      KnowledgeCandidateSchema,
-      {
-        ...candidate,
-        status: "promoted",
-        reviewedAt: timestamp,
-      }
-    );
-    const manifest = this.manifest();
-    const existing = manifest.packIds.includes(input.packId)
-      ? this.read<KnowledgePack>("packs", input.packId, KnowledgePackSchema)
-      : undefined;
-    const pack = this.save<KnowledgePack>("packs", "packIds", KnowledgePackSchema, {
-      id: input.packId,
-      name: input.packName,
-      version: (existing?.version ?? 0) + 1,
-      reviewed: true,
-      claimIds: [...(existing?.claimIds ?? []), claim.id],
-      createdAt: existing?.createdAt ?? timestamp,
-      updatedAt: timestamp,
-    });
-    return { claim, pack };
+    assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");
+    throw legacyKnowledgeMutationError("promotion");
   }
 
-  rejectKnowledge(id: string): KnowledgeCandidate {
-    const candidate = this.read<KnowledgeCandidate>(
-      "knowledge-candidates",
-      id,
-      KnowledgeCandidateSchema
-    );
-    if (candidate.status !== "proposed")
-      throw new ApiRouteError(`Knowledge Candidate is already ${candidate.status}`, 409);
-    return this.save<KnowledgeCandidate>(
-      "knowledge-candidates",
-      "knowledgeCandidateIds",
-      KnowledgeCandidateSchema,
-      { ...candidate, status: "rejected", reviewedAt: this.now().toISOString() }
-    );
+  rejectKnowledge(_id: string): KnowledgeCandidate {
+    assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");
+    throw legacyKnowledgeMutationError("rejection");
   }
 
   reviseKnowledge(
-    id: string,
-    correction: Pick<KnowledgeCandidate, "statement" | "scope" | "citationLocator">
+    _id: string,
+    _correction: Pick<KnowledgeCandidate, "statement" | "scope" | "citationLocator">
   ): KnowledgeCandidate {
-    const original = this.read<KnowledgeCandidate>(
-      "knowledge-candidates",
-      id,
-      KnowledgeCandidateSchema
-    );
-    this.rejectKnowledge(id);
-    return this.proposeKnowledge({
-      ...correction,
-      referenceId: original.referenceId,
-    });
+    assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");
+    throw legacyKnowledgeMutationError("correction");
   }
 
-  releaseClaim(id: string): HistoricalPracticeClaim {
-    const claim = this.read<HistoricalPracticeClaim>("claims", id, HistoricalPracticeClaimSchema);
-    if ((claim.status ?? "active") === "released")
-      throw new ApiRouteError("Historical Practice Claim is already released", 409);
-    return this.save<HistoricalPracticeClaim>("claims", "claimIds", HistoricalPracticeClaimSchema, {
-      ...claim,
-      status: "released",
-      releasedAt: this.now().toISOString(),
-    });
+  releaseClaim(_id: string): HistoricalPracticeClaim {
+    assertAuthorityPathRuntime("authority.cache.owner-legacy-knowledge", "inspection");
+    throw legacyKnowledgeMutationError("claim release");
   }
 
   listChoices(): OwnerChoice[] {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     return this.list("choiceIds", "choices", OwnerChoiceSchema);
   }
   listDefaultCandidates(): PersonalDefaultCandidate[] {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     return this.list("defaultCandidateIds", "default-candidates", PersonalDefaultCandidateSchema);
   }
   listDefaults(): PersonalDefault[] {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
     return this.list("defaultIds", "defaults", PersonalDefaultSchema);
   }
   listReferences(): OwnerReference[] {
     return this.list("referenceIds", "references", OwnerReferenceSchema);
   }
   listKnowledgeCandidates(): KnowledgeCandidate[] {
+    assertAuthorityPathRuntime(LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID, "inspection");
     return this.list("knowledgeCandidateIds", "knowledge-candidates", KnowledgeCandidateSchema);
   }
   listClaims(): HistoricalPracticeClaim[] {
+    assertAuthorityPathRuntime(LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID, "inspection");
     return this.list("claimIds", "claims", HistoricalPracticeClaimSchema);
   }
   listPacks(): KnowledgePack[] {
+    assertAuthorityPathRuntime(LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID, "inspection");
     return this.list("packIds", "packs", KnowledgePackSchema);
+  }
+
+  inspectQuarantinedLegacyKnowledge(): QuarantinedLegacyKnowledgeInspection {
+    assertAuthorityPathRuntime(LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID, "inspection");
+    return {
+      authorityPathId: LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID,
+      state: "quarantined",
+      compatibilityMode: "quarantined_inspection_only",
+      activationAllowed: false,
+      knowledgeCandidates: this.list(
+        "knowledgeCandidateIds",
+        "knowledge-candidates",
+        KnowledgeCandidateSchema
+      ),
+      historicalPracticeClaims: this.list("claimIds", "claims", HistoricalPracticeClaimSchema),
+      knowledgePacks: this.list("packIds", "packs", KnowledgePackSchema),
+    };
   }
 
   applyDefaults(target: TargetConfiguration): {
@@ -398,6 +363,8 @@ export class OwnerStore {
       reason: string;
     }>;
   } {
+    assertAuthorityPathRuntime("authority.cache.owner-personal-defaults", "production");
+
     let resolved = { ...target };
     const applications = this.listDefaults()
       .filter((record) => record.status === "active")
@@ -455,13 +422,13 @@ export class OwnerStore {
   private manifestPath(): string {
     return path.join(this.rootDirectory, "manifest.json");
   }
-  private manifest(): Manifest {
-    return JSON.parse(readFileSync(this.manifestPath(), "utf8")) as Manifest;
+  private manifest(): OwnerStoreManifest {
+    return JSON.parse(readFileSync(this.manifestPath(), "utf8")) as OwnerStoreManifest;
   }
-  private writeManifest(value: Manifest): void {
+  private writeManifest(value: OwnerStoreManifest): void {
     writeJsonAtomic(this.manifestPath(), value);
   }
-  private save<T>(category: string, key: keyof Manifest, schema: any, value: T): T {
+  private save<T>(category: string, key: keyof OwnerStoreManifest, schema: any, value: T): T {
     const decoded = Value.Decode(schema, value) as T;
     const id = (decoded as { id: string }).id;
     writeJsonAtomic(path.join(this.rootDirectory, category, `${id}.json`), decoded);
@@ -473,11 +440,34 @@ export class OwnerStore {
   private read<T>(category: string, id: string, schema: any): T {
     const file = path.join(this.rootDirectory, category, `${path.basename(id)}.json`);
     if (!existsSync(file)) throw new ApiRouteError(`Owner record not found: ${id}`, 404);
-    return Value.Decode(schema, JSON.parse(readFileSync(file, "utf8"))) as T;
+    const stored = JSON.parse(readFileSync(file, "utf8"));
+    const value =
+      schema === OwnerReferenceSchema && stored && typeof stored === "object"
+        ? {
+            ...stored,
+            authorityState: "raw_staged",
+            activationAllowed: false,
+          }
+        : stored;
+    return Value.Decode(schema, value) as T;
   }
-  private list<T>(key: keyof Manifest, category: string, schema: any): T[] {
+  private list<T>(key: keyof OwnerStoreManifest, category: string, schema: any): T[] {
     return this.manifest()[key].map((id) => this.read(category, id, schema));
   }
+}
+
+function legacyKnowledgeMutationError(operation: string): ApiRouteError {
+  return new ApiRouteError(
+    `Legacy Owner knowledge ${operation} is unavailable because this compatibility path is quarantined for inspection only`,
+    410,
+    "conflict",
+    {
+      reason: "legacy_knowledge_quarantined",
+      authorityPathId: LEGACY_KNOWLEDGE_AUTHORITY_PATH_ID,
+      compatibilityMode: "quarantined_inspection_only",
+      activationAllowed: false,
+    }
+  );
 }
 
 function stable(value: unknown): string {

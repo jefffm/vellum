@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS,
   referenceAuthorityReceiptSigningPayload,
@@ -63,6 +64,7 @@ export type ReferenceSourceLifecycleSecurityOptions = {
 export function createReferenceSourceLifecycleSecurityBundle(
   options: ReferenceSourceLifecycleSecurityOptions = {}
 ): ReferenceSourceLifecycleSecurityBundle {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const secret = randomBytes(32);
   const keyFingerprint = createHash("sha256").update(secret).digest("hex").slice(0, 24);
   const keyId = `vellum.local.lifecycle-hmac.${keyFingerprint}`;

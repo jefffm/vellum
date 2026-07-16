@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { getModel, streamSimple } from "@mariozechner/pi-ai";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { ModelEgressEnvelope } from "../../lib/music-domain.js";
 import {
   serializeModelActionRequest,
@@ -14,6 +15,7 @@ export async function executeServerModelAction(
   envelopeDigest: string,
   signal?: AbortSignal
 ): Promise<ModelActionProviderResponse> {
+  assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
   const authorizedEnvelope = validateModelActionEnvelopeForDispatch(envelope, envelopeDigest);
   const request = serializeModelActionRequest(authorizedEnvelope);
   const apiKey = await resolveApiKeyForProvider(request.model.provider);

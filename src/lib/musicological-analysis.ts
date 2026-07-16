@@ -1,3 +1,4 @@
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import { noteToMidi } from "./pitch.js";
 import type { AnalysisRecord, NormalizedScore, ScoreEvent, ScorePart } from "./music-domain.js";
 
@@ -10,6 +11,7 @@ export function analyzeMusicologicalScore(
   score: NormalizedScore,
   options: AnalyzeMusicOptions
 ): AnalysisRecord {
+  assertAuthorityPathRuntime("authority.validator.musicological-analysis", "production");
   const imitation = detectImitativeTexture(score);
   if (imitation) return analyzeImitativeScore(score, options, imitation);
   const principal = selectPrincipalVoice(score);

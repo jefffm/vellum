@@ -1,6 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { noteToMidi, transposeNote } from "./pitch.js";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 const Id = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 const Digest = Type.String({ pattern: "^[a-f0-9]{64}$" });
@@ -100,6 +101,7 @@ export function createBaroqueGuitarInstance(
   stringing: BaroqueGuitarStringing = "french",
   overrides: { scaleLengthMm?: number; referencePitchHz?: number } = {}
 ): InstrumentInstanceConfiguration {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const withoutIdentity = {
     profileId: "baroque-guitar-5",
     profileVersion: "2.0.0",
@@ -186,6 +188,7 @@ export function createBaroqueLuteInstance(
   bassTuning: BaroqueLuteBassTuning = "d_minor",
   overrides: { scaleLengthMm?: number; referencePitchHz?: number } = {}
 ): InstrumentInstanceConfiguration {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const stoppedPitches = ["F4", "D4", "A3", "F3", "D3", "A2"];
   const pitches = [...stoppedPitches, ...BAROQUE_LUTE_DIAPASONS[bassTuning]];
   const withoutIdentity = {
@@ -264,6 +267,7 @@ export function createClassicalGuitarInstance(
     actionBassMm?: number;
   } = {}
 ): InstrumentInstanceConfiguration {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const pitches = ["E4", "B3", "G3", "D3", "A2", "E2"];
   const withoutIdentity = {
     profileId: "classical-guitar-6",
@@ -341,6 +345,7 @@ export function createClassicalGuitarInstance(
 }
 
 export function assertInstrumentInstanceIdentity(instance: InstrumentInstanceConfiguration): void {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const { id, contentDigest, ...content } = instance;
   const expected = digestInstrumentInstance(content);
   if (contentDigest !== expected || id !== `instrument-instance.${expected.slice(0, 24)}`) {
@@ -367,6 +372,7 @@ export function soundingPitches(
   courseNumber: number,
   fret: number
 ): string[] {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const course = instance.courses.find((candidate) => candidate.course === courseNumber);
   if (!course) throw new Error(`Instrument Instance has no course ${courseNumber}`);
   if (!Number.isInteger(fret) || fret < 0) throw new Error(`Invalid fret: ${fret}`);
@@ -380,6 +386,7 @@ export function soundingPitches(
 }
 
 export function instrumentInstanceRange(instance: InstrumentInstanceConfiguration, frets = 8) {
+  assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const pitches = instance.courses.flatMap((course) =>
     course.strings.flatMap((string) => [
       string.openPitch,

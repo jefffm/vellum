@@ -1,3 +1,4 @@
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type { ArrangementScore, PreservationAudit } from "./music-domain.js";
 
 export type PreservationPolicy = ArrangementScore["preservationPolicy"];
@@ -11,6 +12,7 @@ export function applyPreservationPolicy(
   audit: PreservationAudit,
   policy: PreservationPolicy
 ): PreservationAudit {
+  assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   if (policy === "faithful_reduction") return audit;
   return {
     ...audit,

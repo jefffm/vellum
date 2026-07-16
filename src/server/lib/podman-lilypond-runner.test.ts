@@ -3,11 +3,23 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
+import { DEFAULT_LILYPOND_IMAGE, PodmanLilyPondRunner } from "./podman-lilypond-runner.js";
 import type { SubprocessConfig, SubprocessResult } from "./subprocess.js";
 
 function result(overrides: Partial<SubprocessResult> = {}): SubprocessResult {
   return { stdout: "", stderr: "", exitCode: 0, files: new Map(), durationMs: 1, ...overrides };
+}
+
+function successfulPodmanRun() {
+  return vi
+    .fn<(config: SubprocessConfig) => Promise<SubprocessResult>>()
+    .mockResolvedValueOnce(result({ stdout: `${"a".repeat(64)}\n` }))
+    .mockResolvedValueOnce(result())
+    .mockResolvedValueOnce(result())
+    .mockResolvedValueOnce(result({ stdout: "0" }))
+    .mockResolvedValueOnce(result())
+    .mockResolvedValueOnce(result())
+    .mockResolvedValueOnce(result());
 }
 
 describe("PodmanLilyPondRunner policy", () => {
@@ -15,6 +27,28 @@ describe("PodmanLilyPondRunner policy", () => {
     expect(() => new PodmanLilyPondRunner({ image: "example/lilypond:latest" })).toThrow(
       "pinned by sha256"
     );
+  });
+
+  it("ignores process environment overrides when choosing the production compiler image", async () => {
+    const hostileImage = `example/hostile@sha256:${"1".repeat(64)}`;
+    const previous = process.env.VELLUM_LILYPOND_IMAGE;
+    process.env.VELLUM_LILYPOND_IMAGE = hostileImage;
+    try {
+      const run = successfulPodmanRun();
+      await new PodmanLilyPondRunner({ commandRunner: { run } }).run({
+        command: "lilypond",
+        args: [],
+        inputFile: { name: "source.ly", content: "{ c'4 }" },
+        outputGlobs: [],
+      });
+
+      const createArgs = run.mock.calls[0]![0].args;
+      expect(createArgs).toContain(DEFAULT_LILYPOND_IMAGE);
+      expect(createArgs).not.toContain(hostileImage);
+    } finally {
+      if (previous === undefined) delete process.env.VELLUM_LILYPOND_IMAGE;
+      else process.env.VELLUM_LILYPOND_IMAGE = previous;
+    }
   });
 
   it("creates a pinned, no-network, read-only, bounded container without host environment", async () => {

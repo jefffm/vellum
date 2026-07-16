@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { AnalysisClaim, AnalysisRecord } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import type { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type AnalysisClaimCorrection = {
   statement: string;
@@ -34,6 +35,7 @@ export class AnalysisService {
     claimId: string,
     correction: AnalysisClaimCorrection
   ): AnalysisRecord {
+    assertAuthorityPathRuntime("authority.validator.musicological-analysis", "production");
     const previous = this.store.getAnalysisRecord(workspaceId, analysisRecordId);
     const claim = previous.claims.find((candidate) => candidate.id === claimId);
     if (!claim) throw new ApiRouteError(`Analysis Claim not found: ${claimId}`, 404);

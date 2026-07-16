@@ -6,6 +6,7 @@ import {
   type Context,
   type Model,
 } from "@mariozechner/pi-ai";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type { ModelAction, ModelActionPublication, ModelEgressDisclosure } from "./music-domain.js";
 import { apiErrorFromResponse, isApiFailure } from "./api-contract.js";
 
@@ -32,6 +33,7 @@ export function vellumStreamProxy(
   context: Context,
   options: ProxyStreamOptions
 ) {
+  assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
   const stream = createAssistantMessageEventStream();
 
   void (async () => {
@@ -143,6 +145,7 @@ function activeWorkspaceId(): string {
 }
 
 function latestOwnerIntent(context: Context): string {
+  assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
   const message = [...context.messages].reverse().find((candidate) => candidate.role === "user");
   if (!message) throw new Error("A Model Action requires an Owner intent");
   if (typeof message.content === "string" && message.content.trim()) return message.content.trim();

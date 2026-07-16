@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 import {
   ReferenceAccessDecisionSchema,
@@ -55,6 +56,7 @@ export type ReferenceAuthoritySubjectFacetRequirement = Static<
  * caller from weakening a provider, repository, or export decision by choosing
  * one convenient rights category.
  */
+assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
 export const REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS = Object.freeze({
   underlying_work_use: ["underlying_work_status"],
   manifestation_use: ["underlying_work_status", "manifestation_editorial"],
@@ -301,6 +303,7 @@ export type ReferenceSourceAuthorityEvaluationInput = ReferenceSourceAuthorityEv
 export function evaluateReferenceSourceAuthority(
   input: ReferenceSourceAuthorityEvaluationInput
 ): ReferenceSourceAuthorityEvaluation {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const { verifyServerReceipt, ...data } = input;
   if (!Value.Check(ReferenceSourceAuthorityEvaluationDataSchema, data)) {
     throw new TypeError("Reference-source authority input does not match the closed schema");
@@ -402,6 +405,7 @@ export function evaluateReferenceSourceAuthority(
 export function referenceAuthorityReceiptSigningPayload(
   receipt: ReferenceAuthorityVerificationReceipt
 ): string {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const { digest: _digest, proof, ...core } = receipt;
   const { signature: _signature, ...proofCore } = proof;
   return canonicalReferenceJson({ ...core, proof: proofCore });

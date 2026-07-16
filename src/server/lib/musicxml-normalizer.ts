@@ -1,5 +1,6 @@
 import { Value } from "@sinclair/typebox/value";
 import path from "node:path";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import {
   OmrDiagnosticSchema,
   OmrPageMappingSchema,
@@ -27,6 +28,7 @@ export async function normalizeMusicXml(
   filename: string,
   options: MusicXmlNormalizerOptions = {}
 ): Promise<RecognizedScore> {
+  assertAuthorityPathRuntime("authority.validator.source-normalization", "production");
   return (await runNormalizer(content, filename, options)).recognizedScore;
 }
 

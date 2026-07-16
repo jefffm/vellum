@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -107,6 +108,29 @@ describe("evaluation retention and CI impact", () => {
     expect(store.deletePrivateWorkspace("workspace.private")).toEqual([privateArtifact.id]);
     expect(() => store.readInternal(privateArtifact.id)).toThrow(/not found/);
     expect(existsSync(path.join(root, "blobs", privateArtifact.sha256))).toBe(false);
+  });
+
+  it("rejects a malformed canonical artifact manifest before writing new bytes", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "vellum-evaluation-artifact-schema-"));
+    roots.push(root);
+    const store = new EvaluationArtifactStore(root);
+    writeFileSync(
+      path.join(root, "manifest.json"),
+      `${JSON.stringify({ artifacts: [{ id: "malformed", byteLength: "not-a-number" }] })}\n`
+    );
+    const content = Buffer.from("must not be persisted");
+    const sha256 = createHash("sha256").update(content).digest("hex");
+
+    expect(() =>
+      store.put(content, {
+        mediaType: "text/plain",
+        artifactKind: "internal",
+        ownerRecordId: "run.schema-check",
+        retentionClass: "ordinary",
+        expiresAt: "2026-07-11T00:00:00.000Z",
+      })
+    ).toThrow();
+    expect(existsSync(path.join(root, "blobs", sha256))).toBe(false);
   });
 
   it("requires exact operation-scoped authorization for fixtures, reports, and exports", () => {

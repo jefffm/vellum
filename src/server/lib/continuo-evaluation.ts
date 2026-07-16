@@ -120,7 +120,7 @@ export function createContinuoEvaluationRegistry(projectRoot = process.cwd()): E
     provenance: {
       origin: "Vellum CC0 Continuo Suspension Exercise",
       license: "CC0-1.0",
-      datasetRole: "held_out" as const,
+      datasetRole: "development" as const,
       datasetVersion: 1,
     },
   }));

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.legacy-denial.v1",
+  "input": {
+    "operations": ["loadBuiltInKnowledgePacks", "listChartIds", "getChart", "alfabetoLookup"]
+  },
+  "expectedLegacyOutput": {
+    "activeBuiltInPackCount": 0,
+    "activeChartIds": [],
+    "getChartStatus": "review_required",
+    "alfabetoLookupStatus": "review_required",
+    "productionActivation": "unchanged"
+  }
+}

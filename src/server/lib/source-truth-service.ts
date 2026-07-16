@@ -11,6 +11,7 @@ import type {
 } from "../../lib/music-domain.js";
 import { ApiRouteError } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 export type SourceTruthAssessmentInput = {
   source: SourceArtifact;
@@ -131,6 +132,7 @@ export class SourceTruthService {
       priorAssessmentId?: string;
     }
   ): SourceTruthAssessment {
+    assertAuthorityPathRuntime("authority.validator.musicological-analysis", "production");
     const assessment = assessSourceTruth({
       source: this.options.store.getSourceArtifact(workspaceId, input.sourceArtifactId),
       transcription: this.options.store.getScoreTranscription(

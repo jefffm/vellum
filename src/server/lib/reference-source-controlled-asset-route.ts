@@ -1,5 +1,6 @@
 import { Value } from "@sinclair/typebox/value";
 import type { RequestHandler } from "express";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 import {
   ReferenceRecordRefSchema,
@@ -34,6 +35,7 @@ export function createReferenceSourceControlledAssetUploadRoute(
   service: IngestionServiceProvider,
   options: { maxBytes?: number } = {}
 ): RequestHandler {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const maxBytes = options.maxBytes ?? 32 * 1024 * 1024;
   return async (request, response, next) => {
     try {

@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "policyId": "authority-path-classification-policy.v1",
+  "builderId": "build-authority-path-inventory.v1",
+  "inventoryRoots": ["instruments", "knowledge-packs", "src", "templates"],
+  "evaluatorRoots": ["test/fixtures"],
+  "allowedExtensions": [
+    ".abc",
+    ".css",
+    ".ily",
+    ".json",
+    ".ly",
+    ".md",
+    ".musicxml",
+    ".mxl",
+    ".omr",
+    ".pdf",
+    ".py",
+    ".ts",
+    ".xml",
+    ".yaml",
+    ".yml"
+  ],
+  "ignoredPaths": [
+    "instruments/.gitkeep",
+    "src/lib/data/authority-path-inventory.v1.json",
+    "src/server/.gitkeep",
+    "templates/.gitkeep"
+  ],
+  "ignoredDirectoryNames": ["__tests__"],
+  "ignoredDirectoryPaths": ["src/server/test-support"],
+  "ignoredFileSuffixes": [".real-smoke.test.ts", ".test.ts"],
+  "noAuthorityDeclarationExceptions": [
+    {
+      "sourcePath": "src/lib/owner-domain.ts",
+      "selector": "OwnerReferenceSchema",
+      "reason": "OwnerReference is a raw-staging receipt with authorityState fixed to raw_staged and activationAllowed fixed to false; it cannot supply musical authority before a separate reviewed promotion.",
+      "declarationDigest": "2e7303cdb5199cd18877abb168d537558e5ec42822c24992a59f9eb80aa86556"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-route.ts",
+      "selector": "createOwnerReferenceRoute",
+      "reason": "The upload route can only invoke the raw-staging store boundary and return its non-authoritative receipt; it has no activation or promotion operation.",
+      "declarationDigest": "0181368bbe6f5b6beb98837dfabe6033fcec5bcfcf893b8dfeb0cf90faf7760e"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-route.ts",
+      "selector": "decodeReferenceHeader",
+      "reason": "This declaration decodes transport metadata for raw staging only and cannot activate, promote, or apply the uploaded material.",
+      "declarationDigest": "b167c5cb37bfbf1dd887b1e71ababa7f4447d0cb6d4a9ea24bcb1cbba12f8846"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-route.ts",
+      "selector": "ownerReferenceSummary",
+      "reason": "This declaration exposes a raw-staging receipt that preserves authorityState raw_staged and activationAllowed false; it does not create authority.",
+      "declarationDigest": "315597e77a5b10ca142c4bda95a724ac89ae085296c0493cd35eeca1c25d0e7c"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-store.ts",
+      "selector": "OwnerStore.addReference",
+      "reason": "This store operation stages raw source bytes while forcing authorityState raw_staged and activationAllowed false; reviewed promotion remains a separate boundary.",
+      "declarationDigest": "d5d0c1422216c48b04f5bd44b10b0e3729a124045f5402ae8f53eec90e5f9a4c"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-store.ts",
+      "selector": "OwnerStore.addReferenceFromSpool",
+      "reason": "This streaming store operation stages raw source bytes while forcing authorityState raw_staged and activationAllowed false; reviewed promotion remains a separate boundary.",
+      "declarationDigest": "341e59cc496e2cccac1019c75307ea068f2d52ad0e482396294e3def2eee9301"
+    },
+    {
+      "sourcePath": "src/server/lib/owner-store.ts",
+      "selector": "OwnerStore.listReferences",
+      "reason": "This read returns only raw-staging receipts whose schema forbids activation; it cannot make staged material authoritative.",
+      "declarationDigest": "888e8b0afdf5f4b877691ec7080f23466496eb056a9be40fd6ffcdc383eed119"
+    }
+  ],
+  "classifications": [
+    "editorial_convention",
+    "evaluator_only_logic",
+    "forbidden_unregistered_bypass",
+    "maintainer_reviewed_software_heuristic",
+    "mechanical_fact",
+    "owner_local_preference",
+    "reviewed_knowledge_consequence"
+  ],
+  "authorityLanes": [
+    "editorial_convention",
+    "historical_practice",
+    "modern_pedagogy",
+    "owner_local_reviewed_guidance",
+    "software_heuristic"
+  ],
+  "runtimeContexts": ["evaluation", "inspection", "production"],
+  "quarantineStates": ["not_quarantined", "quarantined", "read_only_compatibility"],
+  "compatibilityModes": [
+    "evaluation_only_exact_identity",
+    "exact_current_reader",
+    "legacy_reader_shadow_required",
+    "quarantined_inspection_only",
+    "quarantined_no_read",
+    "read_only_no_activation"
+  ],
+  "futureBindingStatuses": ["not_applicable", "planned", "unknown"],
+  "requiredSurfaceCategories": [
+    "builtin_lookup_table",
+    "cache",
+    "compiler_branch",
+    "legacy_pack",
+    "parameter",
+    "presentation_label",
+    "profile_constant",
+    "prompt_example",
+    "prompt_instruction",
+    "ranker",
+    "tool_description_default",
+    "validator"
+  ],
+  "bypassRules": [
+    {
+      "id": "no-production-raw-alfabeto-chart-api",
+      "forbiddenPattern": "lookupAlfabetoChart",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/alfabeto/lookup.ts",
+          "expectedCount": 2
+        }
+      ]
+    },
+    {
+      "id": "no-production-raw-alfabeto-barre-api",
+      "forbiddenPattern": "barreTranspose(",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/alfabeto/barre-transpose.ts",
+          "expectedCount": 1
+        },
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/alfabeto/lookup.ts",
+          "expectedCount": 1
+        }
+      ]
+    },
+    {
+      "id": "no-production-direct-alfabeto-lookup-module",
+      "forbiddenPattern": "alfabeto/lookup.js",
+      "allowedOccurrences": []
+    },
+    {
+      "id": "no-production-sibling-alfabeto-lookup-module",
+      "forbiddenPattern": "from \"./lookup.js\"",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/alfabeto/index.ts",
+          "expectedCount": 1
+        }
+      ]
+    },
+    {
+      "id": "no-production-direct-alfabeto-barre-module",
+      "forbiddenPattern": "from \"./barre-transpose.js\"",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/alfabeto/lookup.ts",
+          "expectedCount": 1
+        }
+      ]
+    },
+    {
+      "id": "no-production-legacy-knowledge-pack-read",
+      "forbiddenPattern": "knowledge-packs/core-baroque-guitar.json",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.builtin.alfabeto-charts",
+          "sourcePath": "src/lib/data/tracked-source-inventory.v1.json",
+          "expectedCount": 3
+        }
+      ]
+    },
+    {
+      "id": "no-production-raw-profile-import",
+      "forbiddenPattern": ".yaml?raw",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.cache.browser-profile",
+          "sourcePath": "src/lib/browser-profiles.ts",
+          "expectedCount": 10
+        }
+      ]
+    },
+    {
+      "id": "no-unclassified-owner-knowledge-proposal",
+      "forbiddenPattern": "proposeKnowledge(",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.cache.owner-legacy-knowledge",
+          "sourcePath": "src/server/lib/owner-route.ts",
+          "expectedCount": 1
+        },
+        {
+          "authorityPathId": "authority.cache.owner-legacy-knowledge",
+          "sourcePath": "src/server/lib/owner-store.ts",
+          "expectedCount": 1
+        }
+      ]
+    },
+    {
+      "id": "no-unclassified-owner-knowledge-promotion",
+      "forbiddenPattern": "promoteKnowledge(",
+      "allowedOccurrences": [
+        {
+          "authorityPathId": "authority.cache.owner-legacy-knowledge",
+          "sourcePath": "src/server/lib/owner-route.ts",
+          "expectedCount": 1
+        },
+        {
+          "authorityPathId": "authority.cache.owner-legacy-knowledge",
+          "sourcePath": "src/server/lib/owner-store.ts",
+          "expectedCount": 1
+        }
+      ]
+    }
+  ],
+  "cutoverRule": "classification_only_no_resolver_or_activation",
+  "independentRebuildRule": "compiled snapshot must be independently revalidated against pinned builder, policy, source, and fixture bytes",
+  "writerSinkRules": [
+    {
+      "id": "continuo-evaluation-runner-persistence-closure",
+      "sourcePath": "src/server/lib/continuo-evaluation.ts",
+      "sinkSelectors": ["run"],
+      "allowedRoots": []
+    },
+    {
+      "id": "evaluation-artifact-persistence-closure",
+      "sourcePath": "src/server/lib/evaluation-artifact-store.ts",
+      "sinkSelectors": ["renameSync", "rmSync", "writeFileSync"],
+      "allowedRoots": []
+    },
+    {
+      "id": "evaluation-comparison-persistence-closure",
+      "sourcePath": "src/server/lib/evaluation-comparison.ts",
+      "sinkSelectors": ["saveBaseline", "saveComparison", "saveReport"],
+      "allowedRoots": []
+    },
+    {
+      "id": "evaluation-harness-persistence-closure",
+      "sourcePath": "src/server/lib/evaluation-harness.ts",
+      "sinkSelectors": ["saveCard", "saveCaseRun", "saveManifest", "saveRun"],
+      "allowedRoots": []
+    },
+    {
+      "id": "evaluation-promotion-persistence-closure",
+      "sourcePath": "src/server/lib/evaluation-promotion.ts",
+      "sinkSelectors": ["savePromotionReview"],
+      "allowedRoots": []
+    },
+    {
+      "id": "first-loop-evaluation-runner-persistence-closure",
+      "sourcePath": "src/server/lib/first-loop-evaluation.ts",
+      "sinkSelectors": ["run"],
+      "allowedRoots": []
+    },
+    {
+      "id": "guided-workflow-persistence-closure",
+      "sourcePath": "src/server/lib/guided-workflow-service.ts",
+      "sinkSelectors": ["saveGuidedWorkflow"],
+      "allowedRoots": []
+    },
+    {
+      "id": "human-evaluation-persistence-closure",
+      "sourcePath": "src/server/lib/human-comparison.ts",
+      "sinkSelectors": ["saveHumanEvaluation"],
+      "allowedRoots": []
+    },
+    {
+      "id": "imitative-evaluation-runner-persistence-closure",
+      "sourcePath": "src/server/lib/imitative-evaluation.ts",
+      "sinkSelectors": ["run"],
+      "allowedRoots": []
+    },
+    {
+      "id": "owner-playtest-persistence-closure",
+      "sourcePath": "src/server/lib/owner-playtest-route.ts",
+      "sinkSelectors": ["saveOwnerPlaytest"],
+      "allowedRoots": []
+    },
+    {
+      "id": "reviewed-learning-persistence-closure",
+      "sourcePath": "src/server/lib/reviewed-learning.ts",
+      "sinkSelectors": [
+        "saveEvaluatorDatasetManifest",
+        "saveEvaluatorRevision",
+        "saveReviewedLearningDecision",
+        "saveReviewedLearningOutputCandidate",
+        "saveReviewedLearningProposal"
+      ],
+      "allowedRoots": []
+    },
+    {
+      "id": "reviewed-owner-default-persistence-closure",
+      "sourcePath": "src/server/lib/reviewed-owner-default-bridge.ts",
+      "sinkSelectors": ["proposeDefaultCandidate"],
+      "allowedRoots": []
+    },
+    {
+      "id": "three-target-evaluation-runner-persistence-closure",
+      "sourcePath": "src/server/lib/three-target-parity.ts",
+      "sinkSelectors": ["run"],
+      "allowedRoots": []
+    },
+    {
+      "id": "workspace-persistence-closure",
+      "sourcePath": "src/server/lib/workspace-store.ts",
+      "sinkSelectors": [
+        "WorkspaceStore.linkWorkspaceRecord",
+        "WorkspaceStore.writeImmutableRecord",
+        "WorkspaceStore.writeRecord",
+        "WorkspaceStore.writeWorkspace",
+        "writeJsonAtomic"
+      ],
+      "allowedRoots": [
+        {
+          "selector": "WorkspaceStore.rename",
+          "reason": "Renaming changes only the owner-visible workspace title and concurrency revision; it does not alter musical behavior or an authority claim."
+        }
+      ]
+    }
+  ],
+  "writeOutputFieldRegistry": [
+    "AnalysisRecord.record",
+    "Arrangement.canonicality.canonicalWorkspaceImportRequired",
+    "Arrangement.canonicality.rationale",
+    "Arrangement.canonicality.status",
+    "ArrangementBranch.record",
+    "ArrangementCandidate.record",
+    "ArrangementFamily.record",
+    "ArrangementPlan.record",
+    "ArrangementScore.record",
+    "ArrangementSearch.record",
+    "ArrangementWorkspace.analysisRecordIds",
+    "ArrangementWorkspace.arrangementBranchIds",
+    "ArrangementWorkspace.arrangementCandidateIds",
+    "ArrangementWorkspace.arrangementFamilyIds",
+    "ArrangementWorkspace.arrangementPlanIds",
+    "ArrangementWorkspace.arrangementScoreIds",
+    "ArrangementWorkspace.arrangementSearchIds",
+    "ArrangementWorkspace.brief",
+    "ArrangementWorkspace.commitmentConflictIds",
+    "ArrangementWorkspace.deliverableIds",
+    "ArrangementWorkspace.editorialCommitmentIds",
+    "ArrangementWorkspace.familyCommitmentIds",
+    "ArrangementWorkspace.guidedWorkflowIds",
+    "ArrangementWorkspace.modelActionIds",
+    "ArrangementWorkspace.normalizedScoreIds",
+    "ArrangementWorkspace.omrRunIds",
+    "ArrangementWorkspace.ownerPlaytestIds",
+    "ArrangementWorkspace.passageSearchIds",
+    "ArrangementWorkspace.performanceBriefIds",
+    "ArrangementWorkspace.performanceInterpretationIds",
+    "ArrangementWorkspace.planConflictIds",
+    "ArrangementWorkspace.policyExceptionIds",
+    "ArrangementWorkspace.revision",
+    "ArrangementWorkspace.scoreTranscriptionIds",
+    "ArrangementWorkspace.schemaVersion",
+    "ArrangementWorkspace.sourceArtifactIds",
+    "ArrangementWorkspace.sourceTruthAssessmentIds",
+    "ArrangementWorkspace.staleDerivationIds",
+    "CommitmentConflict.record",
+    "ControlledArtifactCatalog.record",
+    "Deliverable.arrangementScoreId",
+    "Deliverable.arrangementScoreVersion",
+    "Deliverable.artifactPolicyVersion",
+    "Deliverable.byteLength",
+    "Deliverable.createdAt",
+    "Deliverable.id",
+    "Deliverable.kind",
+    "Deliverable.mimeType",
+    "Deliverable.notationLayout",
+    "Deliverable.sha256",
+    "Deliverable.storedPath",
+    "DeliverableArtifact.bytes",
+    "EditorialCommitment.record",
+    "EvaluationArtifact.record",
+    "EvaluationArtifactBlob.bytes",
+    "EvaluationArtifactManifest.record",
+    "EvaluationBaseline.record",
+    "EvaluationCard.record",
+    "EvaluationCaseRun.record",
+    "EvaluationComparison.record",
+    "EvaluationPromotionReview.record",
+    "EvaluationReport.record",
+    "EvaluationRun.record",
+    "EvaluatorDatasetManifest.record",
+    "EvaluatorRevision.record",
+    "ExternalEvaluationEvidence.record",
+    "FamilyCommitment.record",
+    "GuidedWorkflow.record",
+    "HumanComparisonConclusion.record",
+    "HumanEvaluation.record",
+    "KnowledgePublicationGeneration.record",
+    "KnowledgePublicationHead.record",
+    "KnowledgePublicationRecord.record",
+    "ModelAction.record",
+    "ModelActionPublication.record",
+    "ModelJudgeAction.record",
+    "NormalizedScore.record",
+    "OmrArtifact.bytes",
+    "OmrRun.record",
+    "OwnerChoice.createdAt",
+    "OwnerChoice.dimension",
+    "OwnerChoice.id",
+    "OwnerChoice.scope",
+    "OwnerChoice.value",
+    "OwnerChoice.workspaceId",
+    "OwnerPlaytest.record",
+    "OwnerStoreManifest.choiceIds",
+    "OwnerStoreManifest.defaultCandidateIds",
+    "OwnerStoreManifest.defaultIds",
+    "PassageSearch.record",
+    "PerformanceBrief.record",
+    "PerformanceInterpretation.record",
+    "PersonalDefault.candidateId",
+    "PersonalDefault.createdAt",
+    "PersonalDefault.dimension",
+    "PersonalDefault.id",
+    "PersonalDefault.releasedAt",
+    "PersonalDefault.scope",
+    "PersonalDefault.status",
+    "PersonalDefault.value",
+    "PersonalDefaultCandidate.createdAt",
+    "PersonalDefaultCandidate.dimension",
+    "PersonalDefaultCandidate.evidenceChoiceIds",
+    "PersonalDefaultCandidate.id",
+    "PersonalDefaultCandidate.resolvedAt",
+    "PersonalDefaultCandidate.scope",
+    "PersonalDefaultCandidate.status",
+    "PersonalDefaultCandidate.value",
+    "PlanConflict.record",
+    "PolicyException.record",
+    "PublicationTransactionBinding.record",
+    "ReferenceAssetAcquisition.record",
+    "ReferenceDigitalAsset.record",
+    "ReferenceSourceBlob.bytes",
+    "ReferenceSourceControlledArtifactBinding.record",
+    "ReferenceSourceStagingHead.record",
+    "ReferenceSourceStagingSnapshot.record",
+    "ResolvedEvaluationManifest.record",
+    "ReviewedLearningDecision.record",
+    "ReviewedLearningOutputCandidate.record",
+    "ReviewedLearningProposal.record",
+    "ScoreTranscription.record",
+    "SourceArtifact.record",
+    "SourceArtifactContent.bytes",
+    "SourceTruthAssessment.record",
+    "StaleDerivation.record"
+  ]
+}

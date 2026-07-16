@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 
 const Id = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 
@@ -37,6 +38,7 @@ export const ComparisonMetricDefinitionSchema = Type.Object(
 );
 export type ComparisonMetricDefinition = Static<typeof ComparisonMetricDefinitionSchema>;
 
+assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
 export const DEFAULT_CANDIDATE_METRICS: ComparisonMetricDefinition[] = [
   {
     id: "metric.adapter-preferred-strategy",
@@ -94,6 +96,7 @@ export const DEFAULT_CANDIDATE_METRICS: ComparisonMetricDefinition[] = [
   },
 ];
 
+assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
 export const DEFAULT_LEXICOGRAPHIC_PRIORITIES = [
   "metric.adapter-preferred-strategy",
   "metric.source-pitch-class-coverage",
@@ -189,6 +192,7 @@ export function selectLexicographically(
   metricDefinitions: ComparisonMetricDefinition[],
   priorityMetricIds: string[]
 ): LexicographicSelection {
+  assertAuthorityPathRuntime("authority.ranker.shared-search", "production");
   const definitionById = new Map(
     metricDefinitions.map((definition) => [definition.id, definition])
   );

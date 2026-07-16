@@ -5,6 +5,7 @@ import {
   buildNarrowEvaluationCard,
   type NarrowPlanningRecords,
 } from "../../lib/narrow-intelligence.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { ApiRouteError, createApiRoute } from "./create-route.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
@@ -13,29 +14,34 @@ const Params = Type.Object({
   arrangementId: Type.String({ pattern: "^arrangement\\.[a-f0-9-]{16,}$" }),
 });
 
-export function createNarrowEvaluationCardRoute(store = new WorkspaceStore()): RequestHandler {
+export function createNarrowEvaluationCardRoute(store?: WorkspaceStore): RequestHandler {
+  assertAuthorityPathRuntime("authority.validator.arrangement-evaluation-card", "production");
+  const resolvedStore = store ?? new WorkspaceStore();
   return createApiRoute({
     validate: (_body, request) => Value.Decode(Params, request.params),
     handler: async ({ workspaceId, arrangementId }) => {
-      const score = store.getArrangementScore(workspaceId, arrangementId);
+      const score = resolvedStore.getArrangementScore(workspaceId, arrangementId);
       if (!score.arrangementPlanId) {
         throw new ApiRouteError("Arrangement Score has no Arrangement Plan lineage", 409);
       }
-      const arrangementPlan = store.getArrangementPlan(workspaceId, score.arrangementPlanId);
+      const arrangementPlan = resolvedStore.getArrangementPlan(
+        workspaceId,
+        score.arrangementPlanId
+      );
       const planning: NarrowPlanningRecords = {
         arrangementPlan,
-        sourceTruthAssessment: store.getSourceTruthAssessment(
+        sourceTruthAssessment: resolvedStore.getSourceTruthAssessment(
           workspaceId,
           arrangementPlan.sourceTruthAssessmentId
         ),
-        performanceBrief: store.getPerformanceBrief(
+        performanceBrief: resolvedStore.getPerformanceBrief(
           workspaceId,
           arrangementPlan.performanceBriefId
         ),
       };
-      const deliverableIds = store
+      const deliverableIds = resolvedStore
         .get(workspaceId)
-        .deliverableIds.map((id) => store.getDeliverable(workspaceId, id))
+        .deliverableIds.map((id) => resolvedStore.getDeliverable(workspaceId, id))
         .filter(
           (deliverable) =>
             deliverable.arrangementScoreId === score.id &&

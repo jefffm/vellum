@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "shadow.owner-default-precedence.v1",
+  "input": {
+    "target": {
+      "id": "target.baroque-lute",
+      "instrumentId": "baroque-lute-13",
+      "tuningId": "d_minor"
+    },
+    "activeDefault": {
+      "dimension": "tuning",
+      "value": "alternate"
+    }
+  },
+  "expectedLegacyOutput": {
+    "tuningId": "d_minor",
+    "defaultStatus": "yielded",
+    "precedence": "explicit_target_configuration"
+  }
+}

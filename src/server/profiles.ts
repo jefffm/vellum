@@ -2,6 +2,7 @@ import { Value } from "@sinclair/typebox/value";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
+import { assertAuthorityPathRuntime } from "../lib/authority-path-runtime.js";
 import { InstrumentProfile, InstrumentProfileSchema } from "../types.js";
 
 export class ProfileLoadError extends Error {
@@ -12,7 +13,9 @@ export class ProfileLoadError extends Error {
 }
 
 export function instrumentsDirectory(): string {
-  return process.env.VELLUM_INSTRUMENTS_DIR ?? path.join(process.cwd(), "instruments");
+  assertAuthorityPathRuntime("authority.profile.mechanical-fields", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+  return path.join(process.cwd(), "instruments");
 }
 
 export function validateProfile(value: unknown, source: string): InstrumentProfile {
@@ -30,6 +33,9 @@ export function validateProfile(value: unknown, source: string): InstrumentProfi
 }
 
 export function loadProfile(id: string): InstrumentProfile {
+  assertAuthorityPathRuntime("authority.profile.mechanical-fields", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+
   const filePath = path.join(instrumentsDirectory(), `${id}.yaml`);
 
   try {
@@ -48,6 +54,9 @@ export function loadProfile(id: string): InstrumentProfile {
 }
 
 export function loadAllProfiles(): InstrumentProfile[] {
+  assertAuthorityPathRuntime("authority.profile.mechanical-fields", "production");
+  assertAuthorityPathRuntime("authority.profile.guidance-fields", "production");
+
   try {
     return readdirSync(instrumentsDirectory())
       .filter((fileName) => fileName.endsWith(".yaml") || fileName.endsWith(".yml"))

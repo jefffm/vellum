@@ -58,6 +58,18 @@ describe("OMR pipeline", () => {
       expect(audiverisCommand()).toMatch(/Audiveris\.app\/Contents\/MacOS\/Audiveris$|audiveris$/);
     }
   });
+
+  it("ignores process environment overrides when choosing the production Audiveris command", () => {
+    const previous = process.env.VELLUM_AUDIVERIS_COMMAND;
+    process.env.VELLUM_AUDIVERIS_COMMAND = "/tmp/hostile-audiveris";
+    try {
+      expect(audiverisCommand()).not.toBe("/tmp/hostile-audiveris");
+      expect(audiverisCommand()).toMatch(/Audiveris\.app\/Contents\/MacOS\/Audiveris$|^audiveris$/);
+    } finally {
+      if (previous === undefined) delete process.env.VELLUM_AUDIVERIS_COMMAND;
+      else process.env.VELLUM_AUDIVERIS_COMMAND = previous;
+    }
+  });
   let rootDirectory: string;
   let store: WorkspaceStore;
   let workspaceId: string;
@@ -361,7 +373,7 @@ describe("OMR pipeline", () => {
         ]),
         durationMs: 2,
       });
-    const backend = new AudiverisBackend({ runner: { run } });
+    const backend = new AudiverisBackend({ command: "/test/audiveris", runner: { run } });
     const ids = [
       "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
       "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
@@ -454,7 +466,11 @@ describe("Audiveris backend", () => {
       pageMappings: [{ sourcePage: 1, recognizedPage: 1 }],
       diagnostics: [],
     }));
-    const backend = new AudiverisBackend({ runner: { run }, normalizer });
+    const backend = new AudiverisBackend({
+      command: "/test/audiveris",
+      runner: { run },
+      normalizer,
+    });
 
     const result = await backend.recognize({
       source: {
@@ -472,6 +488,8 @@ describe("Audiveris backend", () => {
     });
 
     expect(result.backend.version).toBe("5.10.0");
+    expect(run.mock.calls[0]![0].command).toBe("/test/audiveris");
+    expect(run.mock.calls[1]![0].command).toBe("/test/audiveris");
     expect(run.mock.calls[1]![0].args).toEqual([
       "-batch",
       "-transcribe",
@@ -495,6 +513,7 @@ describe("Audiveris backend", () => {
 
   it("reports an unavailable Audiveris runtime as a service dependency", async () => {
     const backend = new AudiverisBackend({
+      command: "/test/audiveris",
       runner: {
         run: async () => {
           throw new SubprocessError("spawn ENOENT");

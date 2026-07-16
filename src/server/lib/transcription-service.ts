@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import { analyzeMusicologicalScore } from "../../lib/musicological-analysis.js";
 import type {
   AnalysisRecord,
@@ -50,12 +51,14 @@ export class TranscriptionService {
   private readonly createId: () => string;
 
   constructor(options: TranscriptionServiceOptions) {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
   }
 
   review(workspaceId: string, transcriptionId: string): ScoreAnchoredReview {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     const transcription = this.store.getScoreTranscription(workspaceId, transcriptionId);
     const source = this.store.getSourceArtifact(workspaceId, transcription.sourceArtifactId);
     if (!transcription.omrRunId) {
@@ -120,6 +123,7 @@ export class TranscriptionService {
     transcriptionId: string,
     correction: TranscriptionCorrection
   ): TranscriptionCorrectionResult {
+    assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
     if (correction.correctionId) {
       const existing = this.findCompletedCorrection(workspaceId, correction.correctionId);
       if (existing) return existing;

@@ -3,12 +3,21 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { EvaluationStore } from "./evaluation-store.js";
-import { runImitativeEvaluation } from "./imitative-evaluation.js";
+import {
+  createImitativeEvaluationRegistry,
+  runImitativeEvaluation,
+} from "./imitative-evaluation.js";
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
 
 describe("imitative intabulation shared evaluation loop", () => {
+  it("labels its repository-visible fixture as development data", () => {
+    expect(createImitativeEvaluationRegistry().cases[0]!.provenance.datasetRole).toBe(
+      "development"
+    );
+  });
+
   it("ranks complete assignments and protects domain-specific voice relationships", async () => {
     const root = mkdtempSync(path.join(tmpdir(), "vellum-imitative-eval-store-"));
     roots.push(root);

@@ -53,6 +53,7 @@ import {
   ReferenceSourceStagingStore,
   type ReferenceSourceStagingHead,
 } from "./reference-source-staging-store.js";
+import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 
 const Strict = { additionalProperties: false } as const;
 
@@ -137,6 +138,7 @@ export class ReferenceSourceLifecyclePlanningService {
   }
 
   planDryRun(request: ReferenceSourceLifecycleDryRunRequest): ReferenceSourceLifecyclePlanResult {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
     const decoded = decodeRequest(request);
     const state = this.store.readCurrentState();
     if (!state) {
@@ -624,6 +626,7 @@ export function deriveReferenceSourceAuthoritySubjectClosure(
   snapshot: Readonly<ReferenceSourceStagingSnapshot>,
   decision: Readonly<ReferenceAccessDecision>
 ): ReferenceRecordRef[] {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const byRef = new Map(snapshot.records.map((record) => [refKey(record), record]));
   const pending = uniqueRefs([...decision.sourceRefs, ...decision.derivativeRefs]);
   const closure = new Map<string, ReferenceRecordRef>();
@@ -784,6 +787,7 @@ export function deriveRequiredReviewedProvenanceSubstitutionRefs(
   decision: Readonly<ReferenceAccessDecision>,
   effectiveAt: string
 ): ReferenceRecordRef[] {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   return activeProvenanceSubstitutions(snapshot, effectiveAt)
     .filter(({ accessDecisionRef }) => refsEqual(accessDecisionRef, recordRef(decision)))
     .map(recordRef)
@@ -795,6 +799,7 @@ export function deriveRequiredReferenceSourceAuthoritySubjectFacets(
   decision: ReferenceAccessDecision,
   authoritySubjectRefs: ReferenceRecordRef[]
 ): ReferenceAuthoritySubjectFacetRequirement[] {
+  assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
   const scope = new Map(authoritySubjectRefs.map((ref) => [refKey(ref), ref]));
   const recordsByRef = new Map(snapshot.records.map((record) => [refKey(record), record]));
   const refsOfKinds = (...kinds: ReferenceSourceStagingRecord["recordKind"][]) =>
