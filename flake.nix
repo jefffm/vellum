@@ -55,6 +55,7 @@
                 pkgs.podman
                 python
               ]
+              # The sealed Linux evaluation path needs an explicit nested sandbox binary.
               ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.bubblewrap ];
 
             shellHook = ''

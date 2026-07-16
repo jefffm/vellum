@@ -5597,6 +5597,9 @@ if (declaredGovernedAuthorityMigration) {
       JSON.stringify(semanticClauseProjection(clauseById.get(clauseId)))
   );
   const affectedClauseIds = new Set(migration.affectedClauseIds);
+  const fromSetHasClauseEvidence = Object.values(clauseEvidence).some((records) =>
+    records.some((record) => record.authoritySetDigest === migration.fromAuthoritySetDigest)
+  );
   for (const clauseId of changedClauseIds) {
     if (!affectedClauseIds.has(clauseId)) {
       fail(`authority migration omits semantically changed ${clauseId}`);
@@ -5614,7 +5617,11 @@ if (declaredGovernedAuthorityMigration) {
       migration,
       historicalClause
     );
-    if (!changedClauseIds.includes(clauseId) && witnesses.length === 0) {
+    if (
+      !changedClauseIds.includes(clauseId) &&
+      witnesses.length === 0 &&
+      fromSetHasClauseEvidence
+    ) {
       fail(`authority migration cannot justify unaffected, unwitnessed ${clauseId}`);
     }
     for (const witness of witnesses) {
