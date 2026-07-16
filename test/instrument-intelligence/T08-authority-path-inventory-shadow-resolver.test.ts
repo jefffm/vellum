@@ -88,9 +88,7 @@ describe("T08 authority-path inventory and compatibility classification", () => 
     ) as { entries: Array<{ locator: { path: string; selector: string } }> };
     expect(
       writerContract.entries
-        .filter(
-          ({ locator }) => locator.path === "src/server/lib/reviewer-authority-service.ts"
-        )
+        .filter(({ locator }) => locator.path === "src/server/lib/reviewer-authority-service.ts")
         .map(({ locator }) => locator.selector)
         .sort()
     ).toEqual([

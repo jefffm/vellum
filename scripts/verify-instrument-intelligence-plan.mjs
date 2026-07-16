@@ -5270,9 +5270,9 @@ const semanticAuthorityMigrationBySourceKey = new Map();
 for (const migration of authorityHistory.migrations) {
   if (migration.reasonCode === "compatible_registry_tail_change") continue;
   const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
-  const hasAnyClauseEvidence = Object.values(
-    compatibleExistingManifest?.clauseEvidence ?? {}
-  ).some((records) => records.length > 0);
+  const hasAnyClauseEvidence = Object.values(compatibleExistingManifest?.clauseEvidence ?? {}).some(
+    (records) => records.length > 0
+  );
   if (semanticAuthorityMigrationBySourceKey.has(sourceKey) && hasAnyClauseEvidence) {
     fail(`authority migrations reuse invalidation source ${sourceKey}`);
   }
