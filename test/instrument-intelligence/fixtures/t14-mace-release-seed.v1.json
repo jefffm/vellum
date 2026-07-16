@@ -1,0 +1,350 @@
+{
+  "stagingSnapshotRef": {
+    "id": "reference-source-snapshot.t12-staging-3",
+    "digest": "9b1e493053b5cb597a0c927fd99bab8d3477360a3941c78d7fcfe891ac0d5577"
+  },
+  "work": {
+    "creatorIdentityRefs": [],
+    "digest": "7364352516ae8bc5fac687a34d106625232ef7dbcdf75a83c78389f433ddf164",
+    "id": "work.owner-page-atlas.2198e6edf622767c1102588bca587ca4",
+    "identityAssertionRefs": [],
+    "identityState": "candidate",
+    "preferredTitle": "Synthetic Mace T12 fixture",
+    "recordKind": "work",
+    "version": 1,
+    "workDate": {
+      "display": "1676",
+      "end": "1676",
+      "start": "1676"
+    }
+  },
+  "manifestation": {
+    "declaredChanges": [],
+    "digest": "21846b4419ffe9f0b165c7a960b4d5efc0d7e7740d6e6051e382fda8114157f0",
+    "editorIdentityRefs": [],
+    "id": "manifestation.owner-page-atlas.2198e6edf622767c1102588bca587ca4",
+    "identityAssertionRefs": [],
+    "identityState": "candidate",
+    "languages": ["en"],
+    "manifestationKind": "edition",
+    "parentRelations": [],
+    "publicationDate": {
+      "display": "1676",
+      "end": "1676",
+      "start": "1676"
+    },
+    "recordKind": "source_manifestation",
+    "translatorIdentityRefs": [],
+    "version": 1,
+    "workRelations": [
+      {
+        "role": "edition_of",
+        "workRef": {
+          "digest": "7364352516ae8bc5fac687a34d106625232ef7dbcdf75a83c78389f433ddf164",
+          "id": "work.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+        }
+      }
+    ]
+  },
+  "exemplar": {
+    "completeness": "unknown",
+    "digest": "c698d6484d3e4e4fe8de8697e6b992bbd05d76653006109d204b0c5fd04c8e90",
+    "exemplarNotes": ["Exact public source-profile match; exemplar details require review."],
+    "id": "exemplar.owner-page-atlas.2198e6edf622767c1102588bca587ca4",
+    "identityAssertionRefs": [],
+    "identityState": "candidate",
+    "manifestationRefs": [
+      {
+        "digest": "21846b4419ffe9f0b165c7a960b4d5efc0d7e7740d6e6051e382fda8114157f0",
+        "id": "manifestation.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+      }
+    ],
+    "recordKind": "exemplar",
+    "version": 1
+  },
+  "digitalAsset": {
+    "recordKind": "digital_asset",
+    "id": "asset.t12-mace",
+    "sha256": "8bef3561788e53bab3d9acd30890378e6f28ab7b0dc9fbdc55d97b82396bdc8f",
+    "mediaType": "application/pdf",
+    "byteLength": 66,
+    "digest": "92dbad6ece2bee61ce646a2e7b9d897014976ece46dab1e17d1499418e401d40"
+  },
+  "acquisition": {
+    "recordKind": "asset_acquisition",
+    "id": "acquisition.t12-mace",
+    "digitalAssetRef": {
+      "id": "asset.t12-mace",
+      "digest": "92dbad6ece2bee61ce646a2e7b9d897014976ece46dab1e17d1499418e401d40"
+    },
+    "representedExemplarRefs": [],
+    "origin": {
+      "sourceKind": "upload",
+      "ownerActionRef": {
+        "id": "owner-action.t12",
+        "digest": "10d8db6d86836092a07064c683b04799c3a1a0485db85d2add9f4df7f2ab0c54"
+      }
+    },
+    "acquiredAt": "2026-07-16T16:00:00.000Z",
+    "rightsAssertionRefs": [],
+    "processingPolicyRef": {
+      "id": "processing-policy.t12",
+      "digest": "82a416f8ee066dc82a5bf456335f02faec4c9f664bf263959d948295ae06fb64"
+    },
+    "digest": "d2263c33c0d7603e3cef2ede042ff593fe6aafef95b0db450dbfed5e868a906e"
+  },
+  "segment": {
+    "acquisitionRefs": [
+      {
+        "digest": "d2263c33c0d7603e3cef2ede042ff593fe6aafef95b0db450dbfed5e868a906e",
+        "id": "acquisition.t12-mace"
+      }
+    ],
+    "canvasId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105",
+    "coordinateSystem": "normalized-top-left.v1",
+    "cropDigest": "c8f83b79e786c3f7b5f9f2594cdec484f3f3c18e852cd4736309e334eb785e44",
+    "digest": "735a0ef561fa9895cb31865a1b71f64efe87fced9ec2d2007e1a96876e553945",
+    "digitalAssetRef": {
+      "digest": "92dbad6ece2bee61ce646a2e7b9d897014976ece46dab1e17d1499418e401d40",
+      "id": "asset.t12-mace"
+    },
+    "id": "source-segment.owner-page-atlas.2198e6edf622767c1102588bca587ca4",
+    "modality": "mixed",
+    "musicalRange": "Courses 7-12; course 13 deliberately unresolved",
+    "pageAtlasRef": {
+      "digest": "7d380b17676537d2b41577a983a3b98cdb3d4bd647678b977dc5e16122f087b6",
+      "id": "page-atlas.owner.mace.2198e6edf622767c1102588bca587ca4"
+    },
+    "printedLocator": "75",
+    "provenancePathRefs": [
+      {
+        "digest": "d2263c33c0d7603e3cef2ede042ff593fe6aafef95b0db450dbfed5e868a906e",
+        "id": "acquisition.t12-mace"
+      }
+    ],
+    "recordKind": "source_segment_version",
+    "regionTransforms": [
+      {
+        "kind": "identity",
+        "matrix": [1, 0, 0, 1, 0, 0]
+      },
+      {
+        "kind": "identity",
+        "matrix": [1, 0, 0, 1, 0, 0]
+      },
+      {
+        "kind": "identity",
+        "matrix": [1, 0, 0, 1, 0, 0]
+      }
+    ],
+    "regions": [
+      {
+        "height": 1,
+        "id": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.image",
+        "unit": "normalized",
+        "width": 1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "height": 0.064,
+        "id": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.text",
+        "unit": "normalized",
+        "width": 0.655,
+        "x": 0.103,
+        "y": 0.644
+      },
+      {
+        "height": 0.085,
+        "id": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "unit": "normalized",
+        "width": 0.249,
+        "x": 0.511,
+        "y": 0.554
+      }
+    ],
+    "scanLocator": "scan:105",
+    "sourceImageRef": {
+      "digest": "92dbad6ece2bee61ce646a2e7b9d897014976ece46dab1e17d1499418e401d40",
+      "id": "asset.t12-mace"
+    },
+    "version": 1
+  },
+  "extraction": {
+    "accessDecisionRefs": [
+      {
+        "digest": "838230c38ed84d1eaf85b6e6f05f9df3f6d7c9a71b13a13ef39f718af17e49af",
+        "id": "access-decision.owner-local-extraction.2198e6edf622767c1102588bca587ca4"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "citation-anchor.owner-page-atlas.2198e6edf622767c1102588bca587ca4.image.v1",
+        "kind": "image",
+        "regionIds": ["canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.image"],
+        "sourceSegmentRef": {
+          "digest": "735a0ef561fa9895cb31865a1b71f64efe87fced9ec2d2007e1a96876e553945",
+          "id": "source-segment.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+        }
+      },
+      {
+        "characterRange": {
+          "end": 17,
+          "start": 0
+        },
+        "id": "citation-anchor.owner-page-atlas.2198e6edf622767c1102588bca587ca4.text.v1",
+        "kind": "text",
+        "regionIds": ["canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.text"],
+        "sourceSegmentRef": {
+          "digest": "735a0ef561fa9895cb31865a1b71f64efe87fced9ec2d2007e1a96876e553945",
+          "id": "source-segment.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+        }
+      },
+      {
+        "id": "citation-anchor.owner-page-atlas.2198e6edf622767c1102588bca587ca4.notation.v1",
+        "kind": "notation",
+        "regionIds": ["canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation"],
+        "sourceSegmentRef": {
+          "digest": "735a0ef561fa9895cb31865a1b71f64efe87fced9ec2d2007e1a96876e553945",
+          "id": "source-segment.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+        },
+        "tokenIds": [
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.1.v1",
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.2.v1",
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.3.v1",
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.4.v1",
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.5.v1",
+          "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.6.v1"
+        ]
+      }
+    ],
+    "componentRef": {
+      "digest": "8a4a44d501a14fb40a53e28aa60f714a2ecfe94d421192fc51dc0feef46d36d1",
+      "id": "component.typed-source-profile-extraction.v1"
+    },
+    "confidence": {
+      "applicability": {
+        "kind": "unknown"
+      },
+      "extraction": {
+        "kind": "unknown"
+      },
+      "interpretation": {
+        "kind": "unknown"
+      },
+      "sourceIdentity": {
+        "kind": "unknown"
+      }
+    },
+    "configurationDigest": "2fcfa363caa38343715a41fe469345d7a2ba5654fa1b73d0065e043d4f21658b",
+    "createdAt": "2026-07-16T16:00:00.000Z",
+    "digest": "a8effe67b88324cf4eba7c970bada9ea044f040b904ed64c8d5a965f4c93d7a4",
+    "id": "cited-extraction.owner-page-atlas.2198e6edf622767c1102588bca587ca4",
+    "normalizedTranscription": "a /a //a ///a 4 5",
+    "notationTokens": [
+      {
+        "course": 7,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.1.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "a"
+      },
+      {
+        "course": 8,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.2.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "/a"
+      },
+      {
+        "course": 9,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.3.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "//a"
+      },
+      {
+        "course": 10,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.4.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "///a"
+      },
+      {
+        "course": 11,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.5.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "4"
+      },
+      {
+        "course": 12,
+        "id": "notation-token.owner-page-atlas.2198e6edf622767c1102588bca587ca4.6.v1",
+        "regionId": "canvas.owner-page-atlas.2198e6edf622767c1102588bca587ca4.scan-105.notation",
+        "value": "5"
+      }
+    ],
+    "originalTranscription": "a /a //a ///a 4 5",
+    "recordKind": "cited_extraction_version",
+    "reviewState": "proposed",
+    "sourceSegmentRefs": [
+      {
+        "digest": "735a0ef561fa9895cb31865a1b71f64efe87fced9ec2d2007e1a96876e553945",
+        "id": "source-segment.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+      }
+    ],
+    "unresolvedAlternatives": [
+      "The thirteenth-course historical sign is not established by this twelve-course source."
+    ],
+    "version": 1
+  },
+  "mapping": {
+    "activationAllowed": false,
+    "attestationRefs": [],
+    "authorityState": "nonauthoritative",
+    "citedExtractionRef": {
+      "digest": "a8effe67b88324cf4eba7c970bada9ea044f040b904ed64c8d5a965f4c93d7a4",
+      "id": "cited-extraction.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+    },
+    "createdAt": "2026-07-16T16:00:00.000Z",
+    "digest": "1f3bc9ae90cef399f8a259100826317be59da3e21ecd7150af7e9b9ef804f146",
+    "id": "extraction-proposal.owner-page-atlas.2198e6edf622767c1102588bca587ca4.mapping",
+    "proposal": {
+      "courses": [7, 8, 9, 10, 11, 12],
+      "kind": "twelve_course_diapason_mapping",
+      "numericSymbolsHaveSlashes": false,
+      "symbols": ["a", "/a", "//a", "///a", "4", "5"]
+    },
+    "recordKind": "extraction_proposal",
+    "releaseRefs": [],
+    "reviewState": "proposed",
+    "scope": {
+      "instrument": "baroque_lute",
+      "notationSystem": "french_tablature",
+      "sourceCourseCount": 12
+    },
+    "version": 1
+  },
+  "question": {
+    "activationAllowed": false,
+    "attestationRefs": [],
+    "authorityState": "nonauthoritative",
+    "citedExtractionRef": {
+      "digest": "a8effe67b88324cf4eba7c970bada9ea044f040b904ed64c8d5a965f4c93d7a4",
+      "id": "cited-extraction.owner-page-atlas.2198e6edf622767c1102588bca587ca4"
+    },
+    "createdAt": "2026-07-16T16:00:00.000Z",
+    "digest": "11d3d83a6df2316343c8e2d51b42e5e98b9bdeb4e458202e912a054faac196ff",
+    "id": "extraction-proposal.owner-page-atlas.2198e6edf622767c1102588bca587ca4.course-13-question",
+    "proposal": {
+      "course": 13,
+      "forbiddenInference": "sequence_extrapolation",
+      "kind": "course_thirteen_notation_question",
+      "state": "unresolved"
+    },
+    "recordKind": "extraction_proposal",
+    "releaseRefs": [],
+    "reviewState": "proposed",
+    "scope": {
+      "instrument": "baroque_lute",
+      "notationSystem": "french_tablature",
+      "sourceCourseCount": 12
+    },
+    "version": 1
+  }
+}

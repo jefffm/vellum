@@ -1,5 +1,6 @@
 import { Type, type Static, type TSchema } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { KnowledgeExecutionIdentitySchema } from "./knowledge-resolution-identity.js";
 
 const Id = Type.String({ pattern: "^[a-z0-9][a-z0-9._:-]*$", minLength: 1 });
 const Digest = Type.String({ pattern: "^[a-f0-9]{64}$" });
@@ -47,6 +48,7 @@ export const SearchExecutionIdentitySchema = Type.Object(
     orderingDigest: Digest,
     pruningDigest: Digest,
     seed: Type.Integer({ minimum: 0 }),
+    knowledgeResolutionIdentity: Type.Optional(KnowledgeExecutionIdentitySchema),
   },
   { additionalProperties: false }
 );

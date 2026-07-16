@@ -63,6 +63,7 @@ import {
   UnsupportedRhythmicNotationError,
 } from "../../lib/rhythmic-semantics.js";
 import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
+import type { KnowledgeExecutionIdentity } from "../../lib/knowledge-resolution-identity.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
@@ -73,6 +74,8 @@ type ArrangementServiceOptions = {
     instance?: InstrumentInstanceConfiguration
   ) => InstrumentModel;
   ownerStore?: OwnerStore;
+  /** T14 provisional seam; T15 owns mandatory canonical resolver cutover. */
+  knowledgeResolutionIdentity?: KnowledgeExecutionIdentity;
 };
 
 export type CreateFaithfulArrangementInput = {
@@ -138,12 +141,14 @@ export class ArrangementService {
     instance?: InstrumentInstanceConfiguration
   ) => InstrumentModel;
   private readonly ownerStore?: OwnerStore;
+  private readonly knowledgeResolutionIdentity?: KnowledgeExecutionIdentity;
 
   constructor(options: ArrangementServiceOptions) {
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
     this.ownerStore = options.ownerStore;
+    this.knowledgeResolutionIdentity = options.knowledgeResolutionIdentity;
     this.loadInstrument =
       options.loadInstrument ??
       ((instrumentId, instance) =>
@@ -518,6 +523,7 @@ export class ArrangementService {
       targetConfiguration,
       performanceBriefId: planning.performanceBrief.id,
       preservationPolicy,
+      knowledgeResolutionIdentity: this.knowledgeResolutionIdentity,
     });
     let arrangementSearch = this.store.saveArrangementSearch(workspaceId, {
       id: searchId,
@@ -1560,6 +1566,7 @@ function buildSearchProtocol(input: {
   targetConfiguration: TargetConfiguration;
   performanceBriefId: string;
   preservationPolicy: PreservationPolicy;
+  knowledgeResolutionIdentity?: KnowledgeExecutionIdentity;
 }): {
   constraintSpecifications: ConstraintSpecification[];
   attemptConfiguration: SearchAttemptConfiguration;
@@ -1787,6 +1794,9 @@ function buildSearchProtocol(input: {
     orderingDigest: digestJson({ order: "source-event-then-adapter-successor" }),
     pruningDigest: digestJson({ policy: attemptConfiguration.pruningPolicy }),
     seed: attemptConfiguration.seed,
+    ...(input.knowledgeResolutionIdentity
+      ? { knowledgeResolutionIdentity: input.knowledgeResolutionIdentity }
+      : {}),
   };
   return {
     constraintSpecifications,

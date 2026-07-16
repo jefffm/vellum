@@ -1247,17 +1247,17 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/subprocess.ts",
-          "selector": "SubprocessRunner.run"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/subprocess.ts",
           "selector": "isTrustedExecutableResolution"
         },
         {
           "kind": "symbol",
           "path": "src/server/lib/subprocess.ts",
           "selector": "resolveTrustedExecutable"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/subprocess.ts",
+          "selector": "SubprocessRunner.run"
         }
       ],
       "currentWritePaths": [],
@@ -1280,19 +1280,6 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/subprocess.ts",
-            "selector": "SubprocessRunner.run"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/subprocess.ts",
-            "selector": "SubprocessRunner.run"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/subprocess.ts",
             "selector": "isTrustedExecutableResolution"
           },
           "guardScope": {
@@ -1312,6 +1299,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/subprocess.ts",
             "selector": "resolveTrustedExecutable"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/subprocess.ts",
+            "selector": "SubprocessRunner.run"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/subprocess.ts",
+            "selector": "SubprocessRunner.run"
           }
         }
       ],
@@ -1843,6 +1843,11 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/provider-credential-store.ts",
+          "selector": "macOsSecurityEnvironment"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/provider-credential-store.ts",
           "selector": "RestrictedFileCredentialStore.delete"
         },
         {
@@ -1854,11 +1859,6 @@
           "kind": "symbol",
           "path": "src/server/lib/provider-credential-store.ts",
           "selector": "RestrictedFileCredentialStore.write"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/provider-credential-store.ts",
-          "selector": "macOsSecurityEnvironment"
         },
         {
           "kind": "symbol",
@@ -1938,6 +1938,19 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/provider-credential-store.ts",
+            "selector": "macOsSecurityEnvironment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/provider-credential-store.ts",
+            "selector": "macOsSecurityEnvironment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/provider-credential-store.ts",
             "selector": "RestrictedFileCredentialStore.delete"
           },
           "guardScope": {
@@ -1970,19 +1983,6 @@
             "mode": "function_prologue",
             "path": "src/server/lib/provider-credential-store.ts",
             "selector": "RestrictedFileCredentialStore.write"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/provider-credential-store.ts",
-            "selector": "macOsSecurityEnvironment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/provider-credential-store.ts",
-            "selector": "macOsSecurityEnvironment"
           }
         },
         {
@@ -2068,6 +2068,43 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/workspace-store.ts",
+            "selector": "WorkspaceStore.create"
+          },
+          "outputFields": [
+            "ArrangementWorkspace.analysisRecordIds",
+            "ArrangementWorkspace.arrangementBranchIds",
+            "ArrangementWorkspace.arrangementCandidateIds",
+            "ArrangementWorkspace.arrangementFamilyIds",
+            "ArrangementWorkspace.arrangementPlanIds",
+            "ArrangementWorkspace.arrangementScoreIds",
+            "ArrangementWorkspace.arrangementSearchIds",
+            "ArrangementWorkspace.brief",
+            "ArrangementWorkspace.commitmentConflictIds",
+            "ArrangementWorkspace.deliverableIds",
+            "ArrangementWorkspace.editorialCommitmentIds",
+            "ArrangementWorkspace.familyCommitmentIds",
+            "ArrangementWorkspace.guidedWorkflowIds",
+            "ArrangementWorkspace.modelActionIds",
+            "ArrangementWorkspace.normalizedScoreIds",
+            "ArrangementWorkspace.omrRunIds",
+            "ArrangementWorkspace.ownerPlaytestIds",
+            "ArrangementWorkspace.passageSearchIds",
+            "ArrangementWorkspace.performanceBriefIds",
+            "ArrangementWorkspace.performanceInterpretationIds",
+            "ArrangementWorkspace.planConflictIds",
+            "ArrangementWorkspace.policyExceptionIds",
+            "ArrangementWorkspace.revision",
+            "ArrangementWorkspace.schemaVersion",
+            "ArrangementWorkspace.scoreTranscriptionIds",
+            "ArrangementWorkspace.sourceArtifactIds",
+            "ArrangementWorkspace.sourceTruthAssessmentIds",
+            "ArrangementWorkspace.staleDerivationIds"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/workspace-store.ts",
             "selector": "WorkspaceStore.get"
           },
           "outputFields": [
@@ -2124,43 +2161,6 @@
             "ArrangementWorkspace.policyExceptionIds",
             "ArrangementWorkspace.revision",
             "ArrangementWorkspace.scoreTranscriptionIds",
-            "ArrangementWorkspace.sourceTruthAssessmentIds",
-            "ArrangementWorkspace.staleDerivationIds"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/workspace-store.ts",
-            "selector": "WorkspaceStore.create"
-          },
-          "outputFields": [
-            "ArrangementWorkspace.analysisRecordIds",
-            "ArrangementWorkspace.arrangementBranchIds",
-            "ArrangementWorkspace.arrangementCandidateIds",
-            "ArrangementWorkspace.arrangementFamilyIds",
-            "ArrangementWorkspace.arrangementPlanIds",
-            "ArrangementWorkspace.arrangementScoreIds",
-            "ArrangementWorkspace.arrangementSearchIds",
-            "ArrangementWorkspace.brief",
-            "ArrangementWorkspace.commitmentConflictIds",
-            "ArrangementWorkspace.deliverableIds",
-            "ArrangementWorkspace.editorialCommitmentIds",
-            "ArrangementWorkspace.familyCommitmentIds",
-            "ArrangementWorkspace.guidedWorkflowIds",
-            "ArrangementWorkspace.modelActionIds",
-            "ArrangementWorkspace.normalizedScoreIds",
-            "ArrangementWorkspace.omrRunIds",
-            "ArrangementWorkspace.ownerPlaytestIds",
-            "ArrangementWorkspace.passageSearchIds",
-            "ArrangementWorkspace.performanceBriefIds",
-            "ArrangementWorkspace.performanceInterpretationIds",
-            "ArrangementWorkspace.planConflictIds",
-            "ArrangementWorkspace.policyExceptionIds",
-            "ArrangementWorkspace.revision",
-            "ArrangementWorkspace.schemaVersion",
-            "ArrangementWorkspace.scoreTranscriptionIds",
-            "ArrangementWorkspace.sourceArtifactIds",
             "ArrangementWorkspace.sourceTruthAssessmentIds",
             "ArrangementWorkspace.staleDerivationIds"
           ]
@@ -2210,6 +2210,19 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/workspace-store.ts",
+            "selector": "WorkspaceStore.create"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/workspace-store.ts",
+            "selector": "WorkspaceStore.create"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/workspace-store.ts",
             "selector": "WorkspaceStore.get"
           },
           "guardScope": {
@@ -2229,19 +2242,6 @@
             "mode": "function_prologue",
             "path": "src/server/lib/workspace-store.ts",
             "selector": "WorkspaceStore.recoverWorkspace"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/workspace-store.ts",
-            "selector": "WorkspaceStore.create"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/workspace-store.ts",
-            "selector": "WorkspaceStore.create"
           }
         }
       ],
@@ -2340,6 +2340,11 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/guided-workflow-service.ts",
+          "selector": "defaultPerformanceBrief"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/guided-workflow-service.ts",
           "selector": "GuidedWorkflowService.checkpoint"
         },
         {
@@ -2361,11 +2366,6 @@
           "kind": "symbol",
           "path": "src/server/lib/guided-workflow-service.ts",
           "selector": "GuidedWorkflowService.resume"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/guided-workflow-service.ts",
-          "selector": "defaultPerformanceBrief"
         },
         {
           "kind": "symbol",
@@ -2558,6 +2558,19 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/guided-workflow-service.ts",
+            "selector": "defaultPerformanceBrief"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/guided-workflow-service.ts",
+            "selector": "defaultPerformanceBrief"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/guided-workflow-service.ts",
             "selector": "GuidedWorkflowService.checkpoint"
           },
           "guardScope": {
@@ -2616,19 +2629,6 @@
             "mode": "function_prologue",
             "path": "src/server/lib/guided-workflow-service.ts",
             "selector": "GuidedWorkflowService.resume"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/guided-workflow-service.ts",
-            "selector": "defaultPerformanceBrief"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/guided-workflow-service.ts",
-            "selector": "defaultPerformanceBrief"
           }
         },
         {
@@ -2774,12 +2774,12 @@
         {
           "kind": "symbol",
           "path": "src/lib/compile-retry-guard.ts",
-          "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
+          "selector": "buildStallRecoveryMessage"
         },
         {
           "kind": "symbol",
           "path": "src/lib/compile-retry-guard.ts",
-          "selector": "buildStallRecoveryMessage"
+          "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
         },
         {
           "kind": "symbol",
@@ -2800,12 +2800,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/compile-retry-guard.ts",
-            "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
+            "selector": "buildStallRecoveryMessage"
           },
           "guardScope": {
-            "mode": "module_constant_prologue",
+            "mode": "function_prologue",
             "path": "src/lib/compile-retry-guard.ts",
-            "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
+            "selector": "buildStallRecoveryMessage"
           }
         },
         {
@@ -2813,12 +2813,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/compile-retry-guard.ts",
-            "selector": "buildStallRecoveryMessage"
+            "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
           },
           "guardScope": {
-            "mode": "function_prologue",
+            "mode": "module_constant_prologue",
             "path": "src/lib/compile-retry-guard.ts",
-            "selector": "buildStallRecoveryMessage"
+            "selector": "DEFAULT_COMPILE_RETRY_LIMIT"
           }
         },
         {
@@ -2970,11 +2970,6 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/lineage-service.ts",
-          "selector": "LineageService"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/lineage-service.ts",
           "selector": "LineageService.acknowledgeStaleDerivation"
         },
         {
@@ -3036,6 +3031,11 @@
           "kind": "symbol",
           "path": "src/server/lib/lineage-service.ts",
           "selector": "LineageService.releaseEditorialCommitment"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/lineage-service.ts",
+          "selector": "LineageService"
         },
         {
           "kind": "symbol",
@@ -3431,181 +3431,181 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.acknowledgeStaleDerivation"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.acknowledgeStaleDerivation"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.approvePolicyException"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.approvePolicyException"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.conservativeRegenerate"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.conservativeRegenerate"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.createEditorialCommitment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.createEditorialCommitment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.editArrangementEvent"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.editArrangementEvent"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.editArrangementEvents"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.editArrangementEvents"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markArrangementsStale"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markArrangementsStale"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markPlanDependentsStale"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markPlanDependentsStale"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markSourceTruthDependentsStale"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.markSourceTruthDependentsStale"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.promoteFamilyCommitment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.promoteFamilyCommitment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.promotePlanDecisionToFamilyCommitment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.promotePlanDecisionToFamilyCommitment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.releaseCommitment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.releaseCommitment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.releaseEditorialCommitment"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/lineage-service.ts",
+            "selector": "LineageService.releaseEditorialCommitment"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/lineage-service.ts",
             "selector": "LineageService"
           },
           "guardScope": {
             "mode": "constructor_prologue",
             "path": "src/server/lib/lineage-service.ts",
             "selector": "LineageService"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.acknowledgeStaleDerivation"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.acknowledgeStaleDerivation"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.approvePolicyException"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.approvePolicyException"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.conservativeRegenerate"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.conservativeRegenerate"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.createEditorialCommitment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.createEditorialCommitment"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.editArrangementEvent"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.editArrangementEvent"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.editArrangementEvents"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.editArrangementEvents"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markArrangementsStale"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markArrangementsStale"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markPlanDependentsStale"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markPlanDependentsStale"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markSourceTruthDependentsStale"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.markSourceTruthDependentsStale"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.promoteFamilyCommitment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.promoteFamilyCommitment"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.promotePlanDecisionToFamilyCommitment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.promotePlanDecisionToFamilyCommitment"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.releaseCommitment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.releaseCommitment"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.releaseEditorialCommitment"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/lineage-service.ts",
-            "selector": "LineageService.releaseEditorialCommitment"
           }
         },
         {
@@ -4344,12 +4344,13 @@
       "sourcePaths": [
         "src/guided-start.ts",
         "src/knowledge-publication-workbench.ts",
+        "src/knowledge-resolution-workbench.ts",
         "src/lib/tool-helpers.ts",
+        "src/owner-reference-page-atlas-workbench.ts",
         "src/owner-reference-workbench.ts",
         "src/reference-source-staging-diagnostics.ts",
         "src/renderers.ts",
         "src/reviewer-authority-workbench.ts",
-        "src/owner-reference-page-atlas-workbench.ts",
         "src/typed-knowledge-release-workbench.ts"
       ],
       "selector": "status|readiness|authority|historical|playability presentation labels",
@@ -4377,6 +4378,11 @@
         },
         {
           "kind": "symbol",
+          "path": "src/knowledge-resolution-workbench.ts",
+          "selector": "renderKnowledgeResolutionWorkbench"
+        },
+        {
+          "kind": "symbol",
           "path": "src/lib/tool-helpers.ts",
           "selector": "formatPositions"
         },
@@ -4384,6 +4390,11 @@
           "kind": "symbol",
           "path": "src/lib/tool-helpers.ts",
           "selector": "formatViolations"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/owner-reference-page-atlas-workbench.ts",
+          "selector": "openOwnerReferencePageAtlasWorkbench"
         },
         {
           "kind": "symbol",
@@ -4399,11 +4410,6 @@
           "kind": "symbol",
           "path": "src/reviewer-authority-workbench.ts",
           "selector": "renderReviewerAuthorityWorkbench"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/owner-reference-page-atlas-workbench.ts",
-          "selector": "openOwnerReferencePageAtlasWorkbench"
         },
         {
           "kind": "symbol",
@@ -4479,6 +4485,19 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/knowledge-resolution-workbench.ts",
+            "selector": "renderKnowledgeResolutionWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/knowledge-resolution-workbench.ts",
+            "selector": "renderKnowledgeResolutionWorkbench"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/lib/tool-helpers.ts",
             "selector": "formatPositions"
           },
@@ -4499,6 +4518,19 @@
             "mode": "function_prologue",
             "path": "src/lib/tool-helpers.ts",
             "selector": "formatViolations"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/owner-reference-page-atlas-workbench.ts",
+            "selector": "openOwnerReferencePageAtlasWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/owner-reference-page-atlas-workbench.ts",
+            "selector": "openOwnerReferencePageAtlasWorkbench"
           }
         },
         {
@@ -4538,19 +4570,6 @@
             "mode": "function_prologue",
             "path": "src/reviewer-authority-workbench.ts",
             "selector": "renderReviewerAuthorityWorkbench"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/owner-reference-page-atlas-workbench.ts",
-            "selector": "openOwnerReferencePageAtlasWorkbench"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/owner-reference-page-atlas-workbench.ts",
-            "selector": "openOwnerReferencePageAtlasWorkbench"
           }
         },
         {
@@ -6861,6 +6880,11 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/continuo-evaluation.ts",
+          "selector": "runContinuoEvaluation"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/evaluation-artifact-store.ts",
           "selector": "EvaluationArtifactStore.get"
         },
@@ -6896,8 +6920,18 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/imitative-evaluation.ts",
+          "selector": "runImitativeEvaluation"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/reviewed-learning.ts",
           "selector": "ReviewedLearningService.acceptCalibration"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/three-target-parity.ts",
+          "selector": "runThreeTargetParityEvaluation"
         },
         {
           "kind": "symbol",
@@ -6913,31 +6947,46 @@
           "kind": "symbol",
           "path": "src/server/three-target-parity-cli.ts",
           "selector": "main"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/continuo-evaluation.ts",
-          "selector": "runContinuoEvaluation"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/imitative-evaluation.ts",
-          "selector": "runImitativeEvaluation"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/three-target-parity.ts",
-          "selector": "runThreeTargetParityEvaluation"
         }
       ],
       "currentWritePaths": [
         {
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/evaluation-artifact-store.ts",
-            "selector": "EvaluationArtifactStore"
+            "path": "src/server/evaluation-comparison-cli.ts",
+            "selector": "main"
           },
-          "outputFields": ["EvaluationArtifactManifest.record"]
+          "outputFields": [
+            "EvaluationBaseline.record",
+            "EvaluationCard.record",
+            "EvaluationCaseRun.record",
+            "EvaluationComparison.record",
+            "EvaluationPromotionReview.record",
+            "EvaluationReport.record",
+            "EvaluationRun.record",
+            "ResolvedEvaluationManifest.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/external-evaluation-cli.ts",
+            "selector": "main"
+          },
+          "outputFields": ["ExternalEvaluationEvidence.record", "ModelJudgeAction.record"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/continuo-evaluation.ts",
+            "selector": "runContinuoEvaluation"
+          },
+          "outputFields": [
+            "EvaluationCard.record",
+            "EvaluationCaseRun.record",
+            "EvaluationRun.record",
+            "ResolvedEvaluationManifest.record"
+          ]
         },
         {
           "locator": {
@@ -6994,27 +7043,10 @@
         {
           "locator": {
             "kind": "symbol",
-            "path": "src/server/evaluation-comparison-cli.ts",
-            "selector": "main"
+            "path": "src/server/lib/evaluation-artifact-store.ts",
+            "selector": "EvaluationArtifactStore"
           },
-          "outputFields": [
-            "EvaluationBaseline.record",
-            "EvaluationCard.record",
-            "EvaluationCaseRun.record",
-            "EvaluationComparison.record",
-            "EvaluationPromotionReview.record",
-            "EvaluationReport.record",
-            "EvaluationRun.record",
-            "ResolvedEvaluationManifest.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/external-evaluation-cli.ts",
-            "selector": "main"
-          },
-          "outputFields": ["ExternalEvaluationEvidence.record", "ModelJudgeAction.record"]
+          "outputFields": ["EvaluationArtifactManifest.record"]
         },
         {
           "locator": {
@@ -7200,6 +7232,40 @@
         {
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/first-loop-evaluation.ts",
+            "selector": "runFirstLoopEvaluation"
+          },
+          "outputFields": [
+            "EvaluationCard.record",
+            "EvaluationCaseRun.record",
+            "EvaluationRun.record",
+            "ResolvedEvaluationManifest.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/human-comparison.ts",
+            "selector": "validateAndSaveHumanEvaluation"
+          },
+          "outputFields": ["HumanEvaluation.record"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/imitative-evaluation.ts",
+            "selector": "runImitativeEvaluation"
+          },
+          "outputFields": [
+            "EvaluationCard.record",
+            "EvaluationCaseRun.record",
+            "EvaluationRun.record",
+            "ResolvedEvaluationManifest.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/reviewed-learning.ts",
             "selector": "ReviewedLearningService.accept"
           },
@@ -7245,53 +7311,6 @@
             "selector": "ReviewedLearningService.reject"
           },
           "outputFields": ["ReviewedLearningDecision.record"]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/continuo-evaluation.ts",
-            "selector": "runContinuoEvaluation"
-          },
-          "outputFields": [
-            "EvaluationCard.record",
-            "EvaluationCaseRun.record",
-            "EvaluationRun.record",
-            "ResolvedEvaluationManifest.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/first-loop-evaluation.ts",
-            "selector": "runFirstLoopEvaluation"
-          },
-          "outputFields": [
-            "EvaluationCard.record",
-            "EvaluationCaseRun.record",
-            "EvaluationRun.record",
-            "ResolvedEvaluationManifest.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/human-comparison.ts",
-            "selector": "validateAndSaveHumanEvaluation"
-          },
-          "outputFields": ["HumanEvaluation.record"]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/imitative-evaluation.ts",
-            "selector": "runImitativeEvaluation"
-          },
-          "outputFields": [
-            "EvaluationCard.record",
-            "EvaluationCaseRun.record",
-            "EvaluationRun.record",
-            "ResolvedEvaluationManifest.record"
-          ]
         },
         {
           "locator": {
@@ -7384,12 +7403,12 @@
         {
           "kind": "symbol",
           "path": "src/lib/instrument-registry.ts",
-          "selector": "INSTRUMENT_LY_VARS"
+          "selector": "getInstrumentLyVars"
         },
         {
           "kind": "symbol",
           "path": "src/lib/instrument-registry.ts",
-          "selector": "getInstrumentLyVars"
+          "selector": "INSTRUMENT_LY_VARS"
         },
         {
           "kind": "symbol",
@@ -7550,12 +7569,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/instrument-registry.ts",
-            "selector": "INSTRUMENT_LY_VARS"
+            "selector": "getInstrumentLyVars"
           },
           "guardScope": {
-            "mode": "module_constant_prologue",
+            "mode": "function_prologue",
             "path": "src/lib/instrument-registry.ts",
-            "selector": "INSTRUMENT_LY_VARS"
+            "selector": "getInstrumentLyVars"
           }
         },
         {
@@ -7563,12 +7582,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/instrument-registry.ts",
-            "selector": "getInstrumentLyVars"
+            "selector": "INSTRUMENT_LY_VARS"
           },
           "guardScope": {
-            "mode": "function_prologue",
+            "mode": "module_constant_prologue",
             "path": "src/lib/instrument-registry.ts",
-            "selector": "getInstrumentLyVars"
+            "selector": "INSTRUMENT_LY_VARS"
           }
         },
         {
@@ -7600,11 +7619,6 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/knowledge-publication-store.ts",
-          "selector": "KnowledgePublicationStore"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/knowledge-publication-store.ts",
           "selector": "KnowledgePublicationStore.publish"
         },
         {
@@ -7616,6 +7630,11 @@
           "kind": "symbol",
           "path": "src/server/lib/knowledge-publication-store.ts",
           "selector": "KnowledgePublicationStore.reclaimExactTransactionOrphan"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-publication-store.ts",
+          "selector": "KnowledgePublicationStore"
         }
       ],
       "currentWritePaths": [
@@ -7744,12 +7763,16 @@
       "id": "authority.validator.reviewed-knowledge-governance",
       "category": "validator",
       "sourcePaths": [
+        "src/lib/knowledge-resolution-contract.ts",
+        "src/lib/knowledge-resolution-identity.ts",
         "src/lib/reviewed-knowledge-contract.ts",
         "src/lib/reviewer-authority-contract.ts",
         "src/lib/reviewer-authority-wire.ts",
         "src/lib/typed-knowledge-authority-verification.ts",
         "src/lib/typed-knowledge-release-contract.ts",
         "src/server/index.ts",
+        "src/server/lib/knowledge-resolution-route.ts",
+        "src/server/lib/knowledge-resolution-service.ts",
         "src/server/lib/owner-reference-page-atlas-service.ts",
         "src/server/lib/owner-reference-workbench-service.ts",
         "src/server/lib/reviewer-authority-route.ts",
@@ -7760,6 +7783,16 @@
       "selector": "typed evidence graph|source closure|pack citation authority|test-only attestation|immutable reviewed-knowledge release",
       "owner": "maintainers.vellum",
       "currentReadPaths": [
+        {
+          "kind": "symbol",
+          "path": "src/lib/knowledge-resolution-contract.ts",
+          "selector": "KnowledgeResolutionRefSchema"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/lib/knowledge-resolution-identity.ts",
+          "selector": "KnowledgeExecutionRefSchema"
+        },
         {
           "kind": "symbol",
           "path": "src/lib/reviewed-knowledge-contract.ts",
@@ -7807,6 +7840,21 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolution-route.ts",
+          "selector": "createKnowledgeResolutionRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolution-service.ts",
+          "selector": "KnowledgeResolutionService.preview"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolution-service.ts",
+          "selector": "KnowledgeResolutionService.resolve"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/owner-reference-page-atlas-service.ts",
           "selector": "OwnerReferencePageAtlasService.resolveKnowledgeReleaseSeed"
         },
@@ -7823,12 +7871,12 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/reviewer-authority-service.ts",
-          "selector": "ReviewerAuthorityService.verify"
+          "selector": "ReviewerAuthorityService.refreshCurrentStatus"
         },
         {
           "kind": "symbol",
           "path": "src/server/lib/reviewer-authority-service.ts",
-          "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          "selector": "ReviewerAuthorityService.verify"
         },
         {
           "kind": "symbol",
@@ -7842,6 +7890,29 @@
         }
       ],
       "currentWritePaths": [
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.resolve"
+          },
+          "outputFields": [
+            "AppliedKnowledgeManifest.record",
+            "KnowledgeActivationDecision.record",
+            "KnowledgeCatalogSnapshot.record",
+            "KnowledgeComponentRegistrySnapshot.record",
+            "KnowledgeInventoryOutcome.record",
+            "KnowledgeLibraryInventorySnapshot.record",
+            "KnowledgePredicateResult.record",
+            "KnowledgeProvisionalConsequence.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "KnowledgeResolutionContext.record",
+            "KnowledgeResolutionPolicy.record",
+            "PublicationTransactionBinding.record"
+          ]
+        },
         {
           "locator": {
             "kind": "symbol",
@@ -7866,6 +7937,62 @@
             "PublicationTransactionBinding.record",
             "SystemTestOnlyAttestation.record",
             "TypedKnowledgeAuthorityVerification.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.publishMaterials"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerAuthorityScope.record",
+            "ReviewerCredentialAssertion.record",
+            "ReviewerIdentitySnapshot.record",
+            "ReviewerRevocationSnapshot.record",
+            "ReviewerTrustPolicy.record",
+            "ReviewerVerifierReceipt.record",
+            "ScopedReleaseAdvisory.record",
+            "ScopedReleaseAttestation.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerVerifierReceipt.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reviewer-authority-service.ts",
+            "selector": "ReviewerAuthorityService.verify"
+          },
+          "outputFields": [
+            "AdvisoryVerification.record",
+            "AttestationVerification.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "PublicationTransactionBinding.record",
+            "ReviewerAuthorityScope.record",
+            "ReviewerVerifierReceipt.record"
           ]
         },
         {
@@ -7919,62 +8046,6 @@
             "SystemTestOnlyAttestation.record",
             "TypedKnowledgeAuthorityVerification.record"
           ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reviewer-authority-service.ts",
-            "selector": "ReviewerAuthorityService.publishMaterials"
-          },
-          "outputFields": [
-            "AdvisoryVerification.record",
-            "AttestationVerification.record",
-            "KnowledgePublicationGeneration.record",
-            "KnowledgePublicationHead.record",
-            "KnowledgePublicationRecord.record",
-            "PublicationTransactionBinding.record",
-            "ReviewerAuthorityScope.record",
-            "ReviewerCredentialAssertion.record",
-            "ReviewerIdentitySnapshot.record",
-            "ReviewerRevocationSnapshot.record",
-            "ReviewerTrustPolicy.record",
-            "ReviewerVerifierReceipt.record",
-            "ScopedReleaseAdvisory.record",
-            "ScopedReleaseAttestation.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reviewer-authority-service.ts",
-            "selector": "ReviewerAuthorityService.verify"
-          },
-          "outputFields": [
-            "AdvisoryVerification.record",
-            "AttestationVerification.record",
-            "KnowledgePublicationGeneration.record",
-            "KnowledgePublicationHead.record",
-            "KnowledgePublicationRecord.record",
-            "PublicationTransactionBinding.record",
-            "ReviewerAuthorityScope.record",
-            "ReviewerVerifierReceipt.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reviewer-authority-service.ts",
-            "selector": "ReviewerAuthorityService.refreshCurrentStatus"
-          },
-          "outputFields": [
-            "AdvisoryVerification.record",
-            "AttestationVerification.record",
-            "KnowledgePublicationGeneration.record",
-            "KnowledgePublicationHead.record",
-            "KnowledgePublicationRecord.record",
-            "PublicationTransactionBinding.record",
-            "ReviewerVerifierReceipt.record"
-          ]
         }
       ],
       "authorityEffect": "authority_claim",
@@ -8000,6 +8071,32 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/lib/knowledge-resolution-contract.ts",
+            "selector": "KnowledgeResolutionRefSchema"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/knowledge-resolution-contract.ts",
+            "selector": "KnowledgeResolutionRefSchema"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/lib/knowledge-resolution-identity.ts",
+            "selector": "KnowledgeExecutionRefSchema"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/knowledge-resolution-identity.ts",
+            "selector": "KnowledgeExecutionRefSchema"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/lib/reviewed-knowledge-contract.ts",
             "selector": "KnowledgeRecordRefSchema"
           },
@@ -8117,6 +8214,45 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolution-route.ts",
+            "selector": "createKnowledgeResolutionRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolution-route.ts",
+            "selector": "createKnowledgeResolutionRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.preview"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.preview"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.resolve"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.resolve"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-page-atlas-service.ts",
             "selector": "OwnerReferencePageAtlasService.resolveKnowledgeReleaseSeed"
           },
@@ -8202,6 +8338,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/typed-knowledge-release-service.ts",
             "selector": "TypedKnowledgeReleaseService.preview"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.resolve"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolution-service.ts",
+            "selector": "KnowledgeResolutionService.resolve"
           }
         },
         {
@@ -8460,11 +8609,6 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/model-action-service.ts",
-          "selector": "ModelActionService"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/model-action-service.ts",
           "selector": "ModelActionService.authorize"
         },
         {
@@ -8491,6 +8635,11 @@
           "kind": "symbol",
           "path": "src/server/lib/model-action-service.ts",
           "selector": "ModelActionService.run"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/model-action-service.ts",
+          "selector": "ModelActionService"
         },
         {
           "kind": "symbol",
@@ -8644,90 +8793,90 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.authorize"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.authorize"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.cancel"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.cancel"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.create"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.create"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.interrupt"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.interrupt"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.retry"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.retry"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.run"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/model-action-service.ts",
+            "selector": "ModelActionService.run"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/model-action-service.ts",
             "selector": "ModelActionService"
           },
           "guardScope": {
             "mode": "constructor_prologue",
             "path": "src/server/lib/model-action-service.ts",
             "selector": "ModelActionService"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.authorize"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.authorize"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.cancel"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.cancel"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.create"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.create"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.interrupt"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.interrupt"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.retry"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.retry"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.run"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/model-action-service.ts",
-            "selector": "ModelActionService.run"
           }
         },
         {
@@ -9455,6 +9604,7 @@
         "src/lib/owner-reference-migration-reason.ts",
         "src/lib/owner-reference-migration.ts",
         "src/lib/owner-reference-workbench-contract.ts",
+        "src/lib/reference-page-atlas-contract.ts",
         "src/lib/reference-source-authority.ts",
         "src/lib/reference-source-domain.ts",
         "src/lib/reference-source-instant.ts",
@@ -9467,6 +9617,8 @@
         "src/server/lib/owner-reference-local-study-service.ts",
         "src/server/lib/owner-reference-migration-route.ts",
         "src/server/lib/owner-reference-migration-service.ts",
+        "src/server/lib/owner-reference-page-atlas-route.ts",
+        "src/server/lib/owner-reference-page-atlas-service.ts",
         "src/server/lib/owner-reference-workbench-route.ts",
         "src/server/lib/owner-reference-workbench-service.ts",
         "src/server/lib/owner-route.ts",
@@ -9481,10 +9633,7 @@
         "src/server/lib/reference-source-operation-route.ts",
         "src/server/lib/reference-source-protected-operation-adapter.ts",
         "src/server/lib/reference-source-staging-service.ts",
-        "src/server/lib/reference-source-staging-store.ts",
-        "src/lib/reference-page-atlas-contract.ts",
-        "src/server/lib/owner-reference-page-atlas-route.ts",
-        "src/server/lib/owner-reference-page-atlas-service.ts"
+        "src/server/lib/reference-source-staging-store.ts"
       ],
       "selector": "authority facet policy|inventory closure|rights and retention consequences|controlled source identity",
       "owner": "maintainers.vellum",
@@ -9492,12 +9641,12 @@
         {
           "kind": "symbol",
           "path": "src/lib/reference-source-authority.ts",
-          "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
+          "selector": "evaluateReferenceSourceAuthority"
         },
         {
           "kind": "symbol",
           "path": "src/lib/reference-source-authority.ts",
-          "selector": "evaluateReferenceSourceAuthority"
+          "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
         },
         {
           "kind": "symbol",
@@ -9596,6 +9745,46 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+          "selector": "createOwnerReferencePageAtlasOperationRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+          "selector": "createOwnerReferencePageAtlasPreviewRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.cancel"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.correctMapping"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.preview"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.read"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.resume"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+          "selector": "OwnerReferencePageAtlasService.start"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/owner-reference-workbench-route.ts",
           "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
         },
@@ -9623,6 +9812,16 @@
           "kind": "symbol",
           "path": "src/server/lib/owner-reference-workbench-service.ts",
           "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/owner-reference-workbench-service.ts",
+          "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
         },
         {
           "kind": "symbol",
@@ -9677,11 +9876,6 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/reference-source-lifecycle-service.ts",
-          "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/reference-source-lifecycle-service.ts",
           "selector": "deriveReferenceSourceAuthoritySubjectClosure"
         },
         {
@@ -9693,6 +9887,11 @@
           "kind": "symbol",
           "path": "src/server/lib/reference-source-lifecycle-service.ts",
           "selector": "deriveRequiredReviewedProvenanceSubstitutionRefs"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-lifecycle-service.ts",
+          "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
         },
         {
           "kind": "symbol",
@@ -9732,7 +9931,17 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
           "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/reference-source-staging-service.ts",
+          "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
         },
         {
           "kind": "symbol",
@@ -9748,69 +9957,21 @@
           "kind": "symbol",
           "path": "src/server/lib/reference-source-staging-store.ts",
           "selector": "ReferenceSourceStagingStore.commit"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-          "selector": "createOwnerReferencePageAtlasOperationRoute"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-          "selector": "createOwnerReferencePageAtlasPreviewRoute"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.cancel"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.correctMapping"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.preview"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.read"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.resume"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-          "selector": "OwnerReferencePageAtlasService.start"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-workbench-service.ts",
-          "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/owner-reference-workbench-service.ts",
-          "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/reference-source-staging-service.ts",
-          "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/reference-source-staging-service.ts",
-          "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
         }
       ],
       "currentWritePaths": [
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
         {
           "locator": {
             "kind": "symbol",
@@ -9936,6 +10097,81 @@
         {
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-workbench-route.ts",
             "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
           },
@@ -9956,6 +10192,26 @@
             "ReferenceSourceStagingHead.record",
             "ReferenceSourceStagingSnapshot.record"
           ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "outputFields": [
+            "ReferenceSourceOperationSink.bytes",
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "outputFields": ["ReferenceSourceOperationSink.bytes"]
         },
         {
           "locator": {
@@ -10090,7 +10346,29 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          },
+          "outputFields": [
+            "ReferenceSourceStagingHead.record",
+            "ReferenceSourceStagingSnapshot.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           },
           "outputFields": [
             "ReferenceSourceStagingHead.record",
@@ -10124,135 +10402,6 @@
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-store.ts",
             "selector": "ReferenceSourceStagingStore.commit"
-          },
-          "outputFields": [
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-local-study-service.ts",
-            "selector": "OwnerReferenceLocalStudyService.execute"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasOperationRoute"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasPreviewRoute"
-          },
-          "outputFields": ["ReferenceSourceOperationSink.bytes"]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.cancel"
-          },
-          "outputFields": [
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.correctMapping"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.preview"
-          },
-          "outputFields": ["ReferenceSourceOperationSink.bytes"]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.resume"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.start"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-          },
-          "outputFields": [
-            "ReferenceSourceOperationSink.bytes",
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
-          },
-          "outputFields": ["ReferenceSourceOperationSink.bytes"]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
-          },
-          "outputFields": [
-            "ReferenceSourceStagingHead.record",
-            "ReferenceSourceStagingSnapshot.record"
-          ]
-        },
-        {
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           },
           "outputFields": [
             "ReferenceSourceStagingHead.record",
@@ -10280,12 +10429,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/reference-source-authority.ts",
-            "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
+            "selector": "evaluateReferenceSourceAuthority"
           },
           "guardScope": {
-            "mode": "module_constant_prologue",
+            "mode": "function_prologue",
             "path": "src/lib/reference-source-authority.ts",
-            "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
+            "selector": "evaluateReferenceSourceAuthority"
           }
         },
         {
@@ -10293,12 +10442,12 @@
           "locator": {
             "kind": "symbol",
             "path": "src/lib/reference-source-authority.ts",
-            "selector": "evaluateReferenceSourceAuthority"
+            "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
           },
           "guardScope": {
-            "mode": "function_prologue",
+            "mode": "module_constant_prologue",
             "path": "src/lib/reference-source-authority.ts",
-            "selector": "evaluateReferenceSourceAuthority"
+            "selector": "REFERENCE_OPERATION_REQUIRED_AUTHORITY_FACETS"
           }
         },
         {
@@ -10552,6 +10701,110 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.read"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.read"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/server/lib/owner-reference-workbench-route.ts",
             "selector": "createOwnerReferenceWorkbenchLocalOperationReviewRoute"
           },
@@ -10624,6 +10877,32 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-workbench-service.ts",
             "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
           }
         },
         {
@@ -10761,19 +11040,6 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-lifecycle-service.ts",
-            "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-lifecycle-service.ts",
-            "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-lifecycle-service.ts",
             "selector": "deriveReferenceSourceAuthoritySubjectClosure"
           },
           "guardScope": {
@@ -10806,6 +11072,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-lifecycle-service.ts",
             "selector": "deriveRequiredReviewedProvenanceSubstitutionRefs"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-lifecycle-service.ts",
+            "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-lifecycle-service.ts",
+            "selector": "ReferenceSourceLifecyclePlanningService.planDryRun"
           }
         },
         {
@@ -10904,12 +11183,38 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
           },
           "guardScope": {
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           }
         },
         {
@@ -10949,6 +11254,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-store.ts",
             "selector": "ReferenceSourceStagingStore.commit"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-local-study-service.ts",
+            "selector": "OwnerReferenceLocalStudyService.execute"
           }
         },
         {
@@ -11027,6 +11345,149 @@
             "mode": "function_prologue",
             "path": "src/server/lib/owner-reference-migration-service.ts",
             "selector": "OwnerReferenceMigrationService.rollbackInterrupted"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasOperationRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
+            "selector": "createOwnerReferencePageAtlasPreviewRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.cancel"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.correctMapping"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.preview"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.resume"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
+            "selector": "OwnerReferencePageAtlasService.start"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-route.ts",
+            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/owner-reference-workbench-service.ts",
+            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
           }
         },
         {
@@ -11137,71 +11598,6 @@
           "access": "write",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyTransaction"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyTransaction"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.migrateLegacyObservationHistory"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.migrateLegacyObservationHistory"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-store.ts",
-            "selector": "ReferenceSourceStagingStore.commit"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-staging-store.ts",
-            "selector": "ReferenceSourceStagingStore.commit"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-route.ts",
-            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-route.ts",
-            "selector": "createOwnerReferenceWorkbenchLocalStudyRoute"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executeLocalStudy"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
             "path": "src/server/lib/reference-source-operation-route.ts",
             "selector": "createReferenceSourceProtectedOperationRoute"
           },
@@ -11242,6 +11638,19 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyOwnerPrivateStudyTransaction"
           },
           "guardScope": {
@@ -11254,162 +11663,6 @@
           "access": "write",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/owner-reference-local-study-service.ts",
-            "selector": "OwnerReferenceLocalStudyService.execute"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-local-study-service.ts",
-            "selector": "OwnerReferenceLocalStudyService.execute"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasOperationRoute"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasOperationRoute"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasPreviewRoute"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasPreviewRoute"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.cancel"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.cancel"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.correctMapping"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.correctMapping"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.preview"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.preview"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.read"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.read"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.resume"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.resume"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.start"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.start"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
             "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
           },
@@ -11423,117 +11676,13 @@
           "access": "write",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasOperationRoute"
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyTransaction"
           },
           "guardScope": {
             "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasOperationRoute"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasPreviewRoute"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-route.ts",
-            "selector": "createOwnerReferencePageAtlasPreviewRoute"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.cancel"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.cancel"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.correctMapping"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.correctMapping"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.preview"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.preview"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.resume"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.resume"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.start"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-            "selector": "OwnerReferencePageAtlasService.start"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.executePageAtlas"
-          }
-        },
-        {
-          "access": "write",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
-          },
-          "guardScope": {
-            "mode": "function_prologue",
-            "path": "src/server/lib/owner-reference-workbench-service.ts",
-            "selector": "OwnerReferenceWorkbenchService.previewPageAtlas"
+            "path": "src/server/lib/reference-source-staging-service.ts",
+            "selector": "ReferenceSourceStagingService.applyTransaction"
           }
         },
         {
@@ -11541,25 +11690,25 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+            "selector": "ReferenceSourceStagingService.migrateLegacyObservationHistory"
           },
           "guardScope": {
             "mode": "function_prologue",
             "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyOwnerLocalExtractionTransaction"
+            "selector": "ReferenceSourceStagingService.migrateLegacyObservationHistory"
           }
         },
         {
           "access": "write",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
+            "path": "src/server/lib/reference-source-staging-store.ts",
+            "selector": "ReferenceSourceStagingStore.commit"
           },
           "guardScope": {
             "mode": "function_prologue",
-            "path": "src/server/lib/reference-source-staging-service.ts",
-            "selector": "ReferenceSourceStagingService.applyPageAtlasTransaction"
+            "path": "src/server/lib/reference-source-staging-store.ts",
+            "selector": "ReferenceSourceStagingStore.commit"
           }
         }
       ],
@@ -11601,17 +11750,12 @@
         {
           "kind": "symbol",
           "path": "src/server/lib/omr.ts",
-          "selector": "OmrService"
-        },
-        {
-          "kind": "symbol",
-          "path": "src/server/lib/omr.ts",
           "selector": "OmrService.recognize"
         },
         {
           "kind": "symbol",
-          "path": "src/server/lib/source-import-service.ts",
-          "selector": "SourceImportService"
+          "path": "src/server/lib/omr.ts",
+          "selector": "OmrService"
         },
         {
           "kind": "symbol",
@@ -11620,8 +11764,8 @@
         },
         {
           "kind": "symbol",
-          "path": "src/server/lib/transcription-service.ts",
-          "selector": "TranscriptionService"
+          "path": "src/server/lib/source-import-service.ts",
+          "selector": "SourceImportService"
         },
         {
           "kind": "symbol",
@@ -11632,6 +11776,11 @@
           "kind": "symbol",
           "path": "src/server/lib/transcription-service.ts",
           "selector": "TranscriptionService.review"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/transcription-service.ts",
+          "selector": "TranscriptionService"
         },
         {
           "kind": "symbol",
@@ -11811,19 +11960,6 @@
           "locator": {
             "kind": "symbol",
             "path": "src/server/lib/omr.ts",
-            "selector": "OmrService"
-          },
-          "guardScope": {
-            "mode": "constructor_prologue",
-            "path": "src/server/lib/omr.ts",
-            "selector": "OmrService"
-          }
-        },
-        {
-          "access": "read",
-          "locator": {
-            "kind": "symbol",
-            "path": "src/server/lib/omr.ts",
             "selector": "OmrService.recognize"
           },
           "guardScope": {
@@ -11836,13 +11972,13 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/source-import-service.ts",
-            "selector": "SourceImportService"
+            "path": "src/server/lib/omr.ts",
+            "selector": "OmrService"
           },
           "guardScope": {
             "mode": "constructor_prologue",
-            "path": "src/server/lib/source-import-service.ts",
-            "selector": "SourceImportService"
+            "path": "src/server/lib/omr.ts",
+            "selector": "OmrService"
           }
         },
         {
@@ -11862,13 +11998,13 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
-            "path": "src/server/lib/transcription-service.ts",
-            "selector": "TranscriptionService"
+            "path": "src/server/lib/source-import-service.ts",
+            "selector": "SourceImportService"
           },
           "guardScope": {
             "mode": "constructor_prologue",
-            "path": "src/server/lib/transcription-service.ts",
-            "selector": "TranscriptionService"
+            "path": "src/server/lib/source-import-service.ts",
+            "selector": "SourceImportService"
           }
         },
         {
@@ -11895,6 +12031,19 @@
             "mode": "function_prologue",
             "path": "src/server/lib/transcription-service.ts",
             "selector": "TranscriptionService.review"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/transcription-service.ts",
+            "selector": "TranscriptionService"
+          },
+          "guardScope": {
+            "mode": "constructor_prologue",
+            "path": "src/server/lib/transcription-service.ts",
+            "selector": "TranscriptionService"
           }
         },
         {
@@ -12078,8 +12227,8 @@
         "src/server/interchange_convert.py",
         "src/server/lib/interchange-converter.ts",
         "src/server/lib/musicxml-normalizer.ts",
-        "src/server/musicxml_normalize.py",
-        "src/server/lib/reference-page-atlas-parser.ts"
+        "src/server/lib/reference-page-atlas-parser.ts",
+        "src/server/musicxml_normalize.py"
       ],
       "selector": "symbolic parser|written event|voice|meter|key deterministic normalization",
       "owner": "maintainers.vellum",
@@ -13062,7 +13211,7 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
-      "sourceDigest": "742e65d902eb53544592c5ea27a96ae42dc19af78a673e489a9a647b0eb69b21",
+      "sourceDigest": "510fc69ea1df15ed590dcfa6e3d0bd313805ca14b45003aa9b58244d7a6baa52",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.parameter.arrangement-defaults",
@@ -14911,7 +15060,7 @@
     },
     {
       "sourcePath": "src/knowledge-publication-workbench.ts",
-      "sourceDigest": "d3fbfc8a717aa3b84b1eb3f38fb8d2dd194cfb47ca2987155b677c0f7c603ce8",
+      "sourceDigest": "bd2c26ea14a032b1303800ca61cf87621bd94f265e6c740e3d1240b6dc0ff7be",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.presentation.claim-labels"],
       "declarations": [
@@ -15077,6 +15226,64 @@
         },
         {
           "selector": "uniqueRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/knowledge-resolution-workbench.ts",
+      "sourceDigest": "0c47070fb91c7dbe16bb8a79efc08859663f945cfcd31902c86fd74d1ab6f45f",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.presentation.claim-labels"],
+      "declarations": [
+        {
+          "selector": "Digest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "Mode",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "Ref",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "WorkbenchProjectionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "definition",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "formatRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "humanize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderControls",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderKnowledgeResolutionWorkbench",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderProvisionalConsequences",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.presentation.claim-labels"]
         }
@@ -15550,7 +15757,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "58e4076bb1d76a43a57d52a081e7a32a1a9e09b04162f21e32a3fd713dc5f749",
+      "sourceDigest": "d15e195d4a5e66b704a1ea48d4b2ef7ae97c1923cb1adc79dfa3367d3b3774f2",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -15923,7 +16130,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "20ae2bf069c24e7224ab069685f0819a42690614736d55f84a5ab061da1a695c",
+      "sourceDigest": "fdb17340f690355f82d8febc259ea51ecf32ac725c01c8c5b07ca55bc5a59e63",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -16569,7 +16776,7 @@
     },
     {
       "sourcePath": "src/lib/constraint-search.ts",
-      "sourceDigest": "a1bac9b1dd0bd4a3f5e0ce41c21d1ca60f0a25c03b4ac193608dc70b138f917c",
+      "sourceDigest": "2b3eb33192940ca9cf5b40e40d77e2bc5d004666024f7062cd17c682b727c09a",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.ranker.shared-search"],
       "declarations": [
@@ -17041,14 +17248,14 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-classification-policy.v1.json",
-      "sourceDigest": "c48c500622dbe842e16b28999f304e048074725debd573be49d8384e4aed0689",
+      "sourceDigest": "5d38f6c576e54cc9237126d7f42e535a1868c03f46f60c902a24b16a5c6796e3",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "a5521c94344edee643e11515c53f4d5ed15017b6762ac3091a9ab3a022f98121",
+      "sourceDigest": "4946a239e95c103ca70648262194b3fe807488d76011096d213caa78d61ccf91",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -17268,7 +17475,7 @@
     },
     {
       "sourcePath": "src/lib/evaluation-domain.ts",
-      "sourceDigest": "b89e8fe2046b968712a67f81cbec676cabe1961ab645c30bba36ab17cae1a862",
+      "sourceDigest": "f75caaef9e7ae4260938ee02868409e254b9d94b38038da853ab025a705f44bc",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -18419,6 +18626,202 @@
           "selector": "validateTemplateId",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.instrument-mechanics"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/lib/knowledge-resolution-contract.ts",
+      "sourceDigest": "299d36df3741a57292833801601daa5a82cce9e792d94871ea41c667fadcaf03",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ActivationDecisionBase",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "AppliedKnowledgeEntrySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "AppliedKnowledgeManifestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "DigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IsoTimestampSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeActivationDecisionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeAuthorityPathOutcomeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeCatalogSnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeComponentRegistryEntrySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeComponentRegistrySnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeInventoryOutcomeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeInventoryOutcomeStateSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeLibraryInventorySnapshotSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgePredicateResultSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeProvisionalConsequenceSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionContextSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionGenerationRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionModeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionPolicySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionProjectionSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "TestOnlyActivationAuthoritySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildKnowledgeExecutionIdentity",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildKnowledgeResolutionRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "knowledgeResolutionRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "recordDigestDomain",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateKnowledgeResolutionRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/lib/knowledge-resolution-identity.ts",
+      "sourceDigest": "9a2bed1ea36ac8ba14cff137f1af572a9faa5928dea0276baa5e1aac3e2fc3f8",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "DigestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "IdSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeExecutionIdentitySchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeExecutionRefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         }
       ]
     },
@@ -25212,7 +25615,7 @@
     },
     {
       "sourcePath": "src/server/index.ts",
-      "sourceDigest": "2594684bd826e01c352446b78a95a0adff5b86c279d9f9c66112891991cf6167",
+      "sourceDigest": "d88694285353ca934ba1e3fd3369a02ed6b8fe111afcc84588855d1814f7c8de",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance",
@@ -25803,7 +26206,7 @@
     },
     {
       "sourcePath": "src/server/lib/arrangement-service.ts",
-      "sourceDigest": "48d96906cbe9a376d0e8ddd677a91fd43359ae252d2917a6be50c18cf7e2e901",
+      "sourceDigest": "ebbbc9f5fa9eba6fc059edd684a3224a5482a9f931ed2b7066843637ee27a368",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.cache.owner-personal-defaults",
@@ -25852,6 +26255,14 @@
         },
         {
           "selector": "ArrangementService.createId",
+          "disposition": "authority_path",
+          "authorityPathIds": [
+            "authority.cache.owner-personal-defaults",
+            "authority.ranker.plucked-string-arrangement"
+          ]
+        },
+        {
+          "selector": "ArrangementService.knowledgeResolutionIdentity",
           "disposition": "authority_path",
           "authorityPathIds": [
             "authority.cache.owner-personal-defaults",
@@ -26912,7 +27323,7 @@
     },
     {
       "sourcePath": "src/server/lib/evaluation-harness.ts",
-      "sourceDigest": "a476b23493ed4ff254f23c584130adb4a23e5793b234d7f931dbc9c9f90b9ef7",
+      "sourceDigest": "955e8b7658e2dad227d5ee072e6e6e77302ce6dc7fb7740e65ffbd9804360fa6",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -27894,7 +28305,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-publication-store.ts",
-      "sourceDigest": "4e158ca2077ca08b43cb98cb068d7e53efd301b3bf13d1c90db2af1fd713c331",
+      "sourceDigest": "c099c31741069ee5335bf184f3237c993521fb6d877dc24e0c40539060e22ad4",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.knowledge-publication-governance"],
       "declarations": [
@@ -28532,6 +28943,287 @@
           "selector": "writeJsonAtomic",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.knowledge-publication-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/knowledge-resolution-route.ts",
+      "sourceDigest": "84d7a345c6814c546aff6f55e5dda94b04a5542d4f6970b109e610bf40a8404e",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "HeadSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "RefSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "RequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "createKnowledgeResolutionRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "defaultContextRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "fixedRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "resolutionRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/knowledge-resolution-service.ts",
+      "sourceDigest": "a6d674319410e439c6bbdbb01bb9de95b3c5770c66ff80c0f4e3bb9d02fca215",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "KnowledgeResolutionService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionService.buildProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionService.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionService.preview",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionService.publicationStore",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolutionService.resolve",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "T14_KNOWLEDGE_RESOLUTION_POLICY",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "aggregatePredicates",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertAcyclicReleaseClosure",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertAuthorityPathClosure",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertCompleteOutcomes",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertExactRefSet",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertManifestEntries",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertOneEntryPerProfile",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertPublishedProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertRefEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertUniqueIds",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "assertUniqueRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildActivationDecision",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildCatalog",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildComponentRegistry",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildConsequences",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildContext",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildInventory",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildManifest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildOutcome",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildPredicateResult",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "comparePublicationRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "compareRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "entryRationale",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "fixedRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "generationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "genericComponentEntry",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "graphContextForRelease",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "isRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "manifestStatus",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "projectionWrites",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "publicationGenerationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "rebuildAuthoritativeReleaseClosures",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "recordContentRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "refKey",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "refsEqual",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameGeneration",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sortRefs",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateKnowledgeResolutionProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         }
       ]
     },
@@ -40675,7 +41367,7 @@
     },
     {
       "sourcePath": "src/styles.css",
-      "sourceDigest": "b5fdc0d7f8560fda0dd7a7b6433772432e358b3f34007bac2e017f315e28d585",
+      "sourceDigest": "8a0d1e3007a74c81ad5a72e6606eef4fef66ce273eed8b98f740ba41c8fe721e",
       "disposition": "no_authority_effect",
       "authorityPathIds": [],
       "declarations": []

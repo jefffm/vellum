@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "a5521c94344edee643e11515c53f4d5ed15017b6762ac3091a9ab3a022f98121";
+  "4946a239e95c103ca70648262194b3fe807488d76011096d213caa78d61ccf91";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -102,6 +102,25 @@ const canonicalWriteOutputRootBindings = new Map([
     "ReferenceDigitalAsset",
     "ReferenceSourceStagingSnapshot",
   ]),
+  ...schemaBindings("src/lib/knowledge-resolution-contract.ts", [
+    "AppliedKnowledgeManifest",
+    "KnowledgeCatalogSnapshot",
+    "KnowledgeComponentRegistrySnapshot",
+    "KnowledgeInventoryOutcome",
+    "KnowledgeLibraryInventorySnapshot",
+    "KnowledgePredicateResult",
+    "KnowledgeProvisionalConsequence",
+    "KnowledgeResolutionContext",
+    "KnowledgeResolutionPolicy",
+  ]),
+  [
+    "KnowledgeActivationDecision",
+    {
+      kind: "typebox_union",
+      path: "src/lib/knowledge-resolution-contract.ts",
+      selector: "KnowledgeActivationDecisionSchema",
+    },
+  ],
   ...schemaBindings("src/lib/reviewed-knowledge-contract.ts", [
     "KnowledgeApplicabilityPredicate",
     "KnowledgeCandidate",
@@ -1730,7 +1749,7 @@ function validateWriteOutputFieldRegistry(registry, reviewedSourcePaths) {
 }
 
 function findCanonicalOutputDeclaration(sourceFile, binding) {
-  if (binding.kind === "typebox_object") {
+  if (binding.kind === "typebox_object" || binding.kind === "typebox_union") {
     const matches = sourceFile.statements.flatMap((statement) =>
       ts.isVariableStatement(statement)
         ? statement.declarationList.declarations.filter(
@@ -1742,10 +1761,12 @@ function findCanonicalOutputDeclaration(sourceFile, binding) {
     if (
       matches.length !== 1 ||
       !matches[0].initializer ||
-      !isDirectTypeObject(matches[0].initializer)
+      (binding.kind === "typebox_object"
+        ? !isDirectTypeObject(matches[0].initializer)
+        : !isDirectTypeUnion(matches[0].initializer))
     ) {
       fail(
-        `canonical write output schema must be exactly one Type.Object declaration: ${binding.path}::${binding.selector}`
+        `canonical write output schema must be exactly one direct TypeBox ${binding.kind === "typebox_object" ? "object" : "union"} declaration: ${binding.path}::${binding.selector}`
       );
     }
     return matches[0];
@@ -1764,6 +1785,20 @@ function findCanonicalOutputDeclaration(sourceFile, binding) {
     );
   }
   return matches[0];
+}
+
+function isDirectTypeUnion(expression) {
+  return (
+    ts.isCallExpression(expression) &&
+    ts.isPropertyAccessExpression(expression.expression) &&
+    ts.isIdentifier(expression.expression.expression) &&
+    expression.expression.expression.text === "Type" &&
+    expression.expression.name.text === "Union" &&
+    expression.arguments.length >= 1 &&
+    ts.isArrayLiteralExpression(expression.arguments[0]) &&
+    expression.arguments[0].elements.length > 0 &&
+    expression.arguments[0].elements.every(isDirectTypeObject)
+  );
 }
 
 function isDirectTypeObject(expression) {

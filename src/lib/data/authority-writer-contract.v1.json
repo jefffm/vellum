@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "c48c500622dbe842e16b28999f304e048074725debd573be49d8384e4aed0689",
+  "classificationPolicyDigest": "5d38f6c576e54cc9237126d7f42e535a1868c03f46f60c902a24b16a5c6796e3",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -25,7 +25,7 @@
     },
     {
       "path": "src/server/lib/arrangement-service.ts",
-      "digest": "48d96906cbe9a376d0e8ddd677a91fd43359ae252d2917a6be50c18cf7e2e901"
+      "digest": "ebbbc9f5fa9eba6fc059edd684a3224a5482a9f931ed2b7066843637ee27a368"
     },
     {
       "path": "src/server/lib/continuo-evaluation.ts",
@@ -45,7 +45,7 @@
     },
     {
       "path": "src/server/lib/evaluation-harness.ts",
-      "digest": "a476b23493ed4ff254f23c584130adb4a23e5793b234d7f931dbc9c9f90b9ef7"
+      "digest": "955e8b7658e2dad227d5ee072e6e6e77302ce6dc7fb7740e65ffbd9804360fa6"
     },
     {
       "path": "src/server/lib/evaluation-promotion.ts",
@@ -73,7 +73,11 @@
     },
     {
       "path": "src/server/lib/knowledge-publication-store.ts",
-      "digest": "4e158ca2077ca08b43cb98cb068d7e53efd301b3bf13d1c90db2af1fd713c331"
+      "digest": "c099c31741069ee5335bf184f3237c993521fb6d877dc24e0c40539060e22ad4"
+    },
+    {
+      "path": "src/server/lib/knowledge-resolution-service.ts",
+      "digest": "a6d674319410e439c6bbdbb01bb9de95b3c5770c66ff80c0f4e3bb9d02fca215"
     },
     {
       "path": "src/server/lib/lineage-service.ts",
@@ -352,7 +356,7 @@
         "selector": "ArrangementService.createFaithfulReduction"
       },
       "outputFields": ["ArrangementWorkspace.brief", "ArrangementWorkspace.revision"],
-      "implementationDigest": "21a34fdc6aaef3b34ae2751da574e3e48eacce09a3e8dfa9f373b80e8538ef33"
+      "implementationDigest": "fa8d6d4b0f76c902f2188db1a882391bfbe63d77ac87ecccb641a07797dc67aa"
     },
     {
       "authorityPathId": "authority.cache.owner-personal-defaults",
@@ -1089,7 +1093,7 @@
         "PlanConflict.record",
         "SourceTruthAssessment.record"
       ],
-      "implementationDigest": "21a34fdc6aaef3b34ae2751da574e3e48eacce09a3e8dfa9f373b80e8538ef33"
+      "implementationDigest": "fa8d6d4b0f76c902f2188db1a882391bfbe63d77ac87ecccb641a07797dc67aa"
     },
     {
       "authorityPathId": "authority.ranker.plucked-string-arrangement",
@@ -1448,7 +1452,7 @@
         "EvaluationRun.record",
         "ResolvedEvaluationManifest.record"
       ],
-      "implementationDigest": "bbeda6f5691506f760b53a4306879e65d9713d733232b71e88ccaa3a6aed090d"
+      "implementationDigest": "4d59887ee9565d5b00ee97caf38b02940a46036406eeda38fcd7f4a57caacb3b"
     },
     {
       "authorityPathId": "authority.validator.evaluator-only",
@@ -2474,6 +2478,31 @@
         "ReferenceSourceStagingSnapshot.record"
       ],
       "implementationDigest": "529947a61441d0804970881f198cf5ffdbf1ef8bda82833157286c3f8910ce82"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/knowledge-resolution-service.ts",
+        "selector": "KnowledgeResolutionService.resolve"
+      },
+      "outputFields": [
+        "AppliedKnowledgeManifest.record",
+        "KnowledgeActivationDecision.record",
+        "KnowledgeCatalogSnapshot.record",
+        "KnowledgeComponentRegistrySnapshot.record",
+        "KnowledgeInventoryOutcome.record",
+        "KnowledgeLibraryInventorySnapshot.record",
+        "KnowledgePredicateResult.record",
+        "KnowledgeProvisionalConsequence.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeResolutionContext.record",
+        "KnowledgeResolutionPolicy.record",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "988db0d9db14ddd95d2535881ba7a84e0e1353a7626b248d2d89213a916685eb"
     },
     {
       "authorityPathId": "authority.validator.reviewed-knowledge-governance",

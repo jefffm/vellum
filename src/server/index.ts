@@ -214,6 +214,8 @@ import {
   type ExternalReviewerVerifier,
   type ReviewerVerifierReceiptVerifier,
 } from "./lib/reviewer-authority-service.js";
+import { createKnowledgeResolutionRoute } from "./lib/knowledge-resolution-route.js";
+import { KnowledgeResolutionService } from "./lib/knowledge-resolution-service.js";
 import {
   PopplerReferencePageAtlasParser,
   type ReferencePageAtlasParser,
@@ -418,6 +420,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     verifier: options.reviewerAuthorityVerifier,
     verifyReceipt: options.reviewerAuthorityReceiptVerifier,
   });
+  const knowledgeResolutionService = new KnowledgeResolutionService({
+    publicationStore: knowledgePublicationStore,
+  });
   const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
     staging: referenceSourceStagingService,
     migration: {
@@ -594,6 +599,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     "/owner/reviewer-authority",
     createReviewerAuthorityWorkbenchRoute(reviewerAuthorityService)
   );
+  const knowledgeResolutionRoute = createKnowledgeResolutionRoute(knowledgeResolutionService);
+  router.get("/owner/knowledge-resolution", knowledgeResolutionRoute);
+  router.post("/owner/knowledge-resolution", knowledgeResolutionRoute);
   if (options.knowledgePublicationWriter) {
     router.post(
       "/owner/knowledge-publication/generations",

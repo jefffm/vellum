@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+import { KnowledgeExecutionIdentitySchema } from "./knowledge-resolution-identity.js";
 
 const Id = Type.String({ minLength: 1 });
 const Version = Type.Integer({ minimum: 1 });
@@ -862,6 +863,7 @@ export const EvaluationRunSchema = Type.Object(
     caseRunIds: Type.Array(Id),
     startedAt: IsoDate,
     completedAt: Type.Optional(IsoDate),
+    knowledgeResolutionIdentity: Type.Optional(KnowledgeExecutionIdentitySchema),
   },
   { additionalProperties: false }
 );

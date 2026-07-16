@@ -42,6 +42,7 @@ import {
   type KnowledgePublicationWorkbenchState,
 } from "./knowledge-publication-workbench.js";
 import { renderReviewerAuthorityWorkbench } from "./reviewer-authority-workbench.js";
+import { renderKnowledgeResolutionWorkbench } from "./knowledge-resolution-workbench.js";
 import {
   OwnerReferenceWorkbenchLocalStudyError,
   OwnerReferenceWorkbenchUploadError,
@@ -2990,6 +2991,54 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         error instanceof Error
           ? `Reviewer authority unavailable: ${error.message}`
           : "Reviewer authority unavailable.";
+    }
+    const knowledgeResolution = section("Applied knowledge — exact resolution");
+    knowledgeResolution.className = "knowledge-resolution-section";
+    const knowledgeResolutionWorkbench = document.createElement("div");
+    knowledgeResolution.append(knowledgeResolutionWorkbench);
+    const renderResolution = (projection: unknown) => {
+      renderKnowledgeResolutionWorkbench(
+        knowledgeResolutionWorkbench,
+        projection,
+        async (selectedMode, expectedHead) => {
+          const updated = await api<unknown>("/api/owner/knowledge-resolution", {
+            method: "POST",
+            body: JSON.stringify({
+              schemaVersion: 1,
+              mode: selectedMode,
+              ...(expectedHead ? { expectedHead } : {}),
+            }),
+          });
+          if (expectedHead) {
+            const refreshed = await api<unknown>("/api/owner/knowledge-resolution", {
+              method: "POST",
+              body: JSON.stringify({ schemaVersion: 1, mode: selectedMode }),
+            });
+            renderResolution(refreshed);
+          } else {
+            renderResolution(updated);
+          }
+        }
+      );
+    };
+    const loadKnowledgeResolution = async (mode = "ordinary_default") => {
+      const request =
+        mode === "ordinary_default"
+          ? api<unknown>("/api/owner/knowledge-resolution")
+          : api<unknown>("/api/owner/knowledge-resolution", {
+              method: "POST",
+              body: JSON.stringify({ schemaVersion: 1, mode }),
+            });
+      const projection = await request;
+      renderResolution(projection);
+    };
+    try {
+      await loadKnowledgeResolution();
+    } catch (error) {
+      knowledgeResolutionWorkbench.textContent =
+        error instanceof Error
+          ? `Knowledge resolution unavailable: ${error.message}`
+          : "Knowledge resolution unavailable.";
     }
     return result;
   };
