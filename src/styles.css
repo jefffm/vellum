@@ -2364,6 +2364,100 @@ chat-panel > div > div:has(agent-interface) {
   background: #fff;
 }
 
+.typed-knowledge-release-workbench {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  border: 1px solid #8aa1bc;
+  border-radius: 0.45rem;
+  background: #f3f7fb;
+}
+
+.typed-knowledge-release-boundary,
+.typed-knowledge-release-empty,
+.typed-knowledge-release-status {
+  padding: 0.5rem;
+  border-left: 0.22rem solid #52779f;
+  color: #334c68;
+  background: #e8f1fa;
+  font-size: 0.74rem;
+  line-height: 1.42;
+}
+
+.typed-knowledge-release-comparison {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.typed-knowledge-release-card {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid #c4d0dc;
+  border-radius: 0.35rem;
+  background: #fff;
+}
+
+.typed-knowledge-release-card-question {
+  border-color: #d6bd8b;
+  background: #fffaf0;
+}
+
+.typed-knowledge-release-card strong {
+  color: #304963;
+  font-size: 0.76rem;
+}
+
+.typed-knowledge-release-card code {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #4e5e70;
+  font-size: 0.65rem;
+  line-height: 1.35;
+}
+
+.typed-knowledge-release-card p {
+  color: #536579;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.typed-knowledge-release-lifecycle {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+  gap: 0.3rem 0.55rem;
+  margin: 0;
+  padding: 0.55rem;
+  border: 1px solid #cdd8e3;
+  border-radius: 0.35rem;
+  background: #fff;
+  font-size: 0.69rem;
+}
+
+.typed-knowledge-release-lifecycle dt {
+  font-weight: 760;
+}
+
+.typed-knowledge-release-lifecycle dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.typed-knowledge-release-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.typed-knowledge-release-actions button:last-child:not(:only-child) {
+  border-color: #315f8f;
+  color: #fff;
+  background: #315f8f;
+}
+
 @media (max-width: 1100px) {
   .owner-reference-page-atlas-layout {
     grid-template-columns: minmax(15rem, 18rem) minmax(22rem, 1fr);

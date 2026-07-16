@@ -35,8 +35,17 @@ const IsoTimestampSchema = Type.String({
 });
 
 export const KnowledgePublicationRecordKindSchema = Type.Union([
+  Type.Literal("knowledge_applicability_predicate"),
+  Type.Literal("knowledge_candidate"),
+  Type.Literal("knowledge_evidence_edge"),
+  Type.Literal("knowledge_constraint_derivation"),
+  Type.Literal("knowledge_component_binding"),
+  Type.Literal("knowledge_component_mapping"),
+  Type.Literal("knowledge_profile"),
   Type.Literal("knowledge_pack_draft"),
   Type.Literal("knowledge_pack_release"),
+  Type.Literal("knowledge_system_identity_snapshot"),
+  Type.Literal("knowledge_test_policy"),
   Type.Literal("release_attestation"),
   Type.Literal("release_advisory"),
   Type.Literal("identity_verification"),
@@ -115,6 +124,16 @@ export const KnowledgePublicationTransactionSchema = Type.Object(
   Strict
 );
 export type KnowledgePublicationTransaction = Static<typeof KnowledgePublicationTransactionSchema>;
+
+/**
+ * Reproduce the exact digest T07 binds to an immutable publication generation.
+ * Callers use this only to verify a durable generation against the complete,
+ * reconstructed transaction; it does not grant publication authority.
+ */
+export function knowledgePublicationRequestDigestForTransaction(value: unknown): string {
+  const decoded = decodeTransaction(value);
+  return publicationDigest("transaction", normalizeTransaction(decoded));
+}
 
 const KnowledgePublicationRecordCoreSchema = Type.Object(
   {
@@ -426,7 +445,7 @@ export class KnowledgePublicationStore {
       });
     }
 
-    return orphans.sort((left, right) => left.generationId.localeCompare(right.generationId));
+    return orphans.sort((left, right) => compareCodePoints(left.generationId, right.generationId));
   }
 
   reclaimOrphan(generationId: string): { reclaimed: boolean } {
@@ -1389,7 +1408,7 @@ function normalizeTransaction(
     }))
     .sort(
       (left, right) =>
-        left.recordKind.localeCompare(right.recordKind) || left.id.localeCompare(right.id)
+        compareCodePoints(left.recordKind, right.recordKind) || compareCodePoints(left.id, right.id)
     );
   // Canonicalization rejects non-JSON values before any filesystem side effect.
   canonicalReferenceJson(writes);
@@ -1620,9 +1639,9 @@ function sameHead(left: KnowledgePublicationHead, right: KnowledgePublicationHea
 function sortRecordRefs<T extends KnowledgePublicationRecordRef>(refs: readonly T[]): T[] {
   return [...refs].sort(
     (left, right) =>
-      left.recordKind.localeCompare(right.recordKind) ||
-      left.id.localeCompare(right.id) ||
-      left.digest.localeCompare(right.digest)
+      compareCodePoints(left.recordKind, right.recordKind) ||
+      compareCodePoints(left.id, right.id) ||
+      compareCodePoints(left.digest, right.digest)
   );
 }
 
@@ -1631,10 +1650,14 @@ function compareRecords(
   right: KnowledgePublicationRecord
 ): number {
   return (
-    left.recordKind.localeCompare(right.recordKind) ||
-    left.id.localeCompare(right.id) ||
-    left.digest.localeCompare(right.digest)
+    compareCodePoints(left.recordKind, right.recordKind) ||
+    compareCodePoints(left.id, right.id) ||
+    compareCodePoints(left.digest, right.digest)
   );
+}
+
+function compareCodePoints(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function assertUniqueRecordRefs(refs: KnowledgePublicationRecordRef[], label: string): void {

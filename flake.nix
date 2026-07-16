@@ -46,14 +46,16 @@
         in
         {
           default = pkgs.mkShell {
-            packages = [
-              pkgs.git
-              pkgs.nodejs_20
-              pkgs.lilypond
-              pkgs.musescore
-              pkgs.podman
-              python
-            ];
+            packages =
+              [
+                pkgs.git
+                pkgs.nodejs_20
+                pkgs.lilypond
+                pkgs.musescore
+                pkgs.podman
+                python
+              ]
+              ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.bubblewrap ];
 
             shellHook = ''
               echo "Vellum dev shell: Node $(node --version), npm $(npm --version), Python $(python --version)"
@@ -129,12 +131,15 @@
               makeWrapper ${pkgs.nodejs_20}/bin/node "$out/bin/vellum-server" \
                 --add-flags "$out/lib/vellum/dist-server/server/index.js" \
                 --set NODE_PATH "$out/lib/vellum/node_modules" \
-                --prefix PATH : ${pkgs.lib.makeBinPath [
-                  pkgs.nodejs_20
-                  pkgs.lilypond
-                  pkgs.musescore
-                  vellumPython
-                ]} \
+                --prefix PATH : ${pkgs.lib.makeBinPath (
+                  [
+                    pkgs.nodejs_20
+                    pkgs.lilypond
+                    pkgs.musescore
+                    vellumPython
+                  ]
+                  ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.bubblewrap ]
+                )} \
                 --set VELLUM_INSTRUMENTS_DIR "$out/lib/vellum/instruments" \
                 --set VELLUM_TEMPLATES_DIR "$out/lib/vellum/templates" \
                 --chdir "$out/lib/vellum"

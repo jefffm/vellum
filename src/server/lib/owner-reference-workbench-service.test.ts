@@ -179,6 +179,45 @@ describe("OwnerReferenceWorkbenchService", () => {
     );
   });
 
+  it("keeps the source snapshot stable across unrelated publication heads", () => {
+    const fixture = mixedFixture();
+    let migration = fixture.migration;
+    const service = new OwnerReferenceWorkbenchService({
+      staging: { readCurrent: () => fixture.staging },
+      migration: { readCompatibility: () => migration },
+      controlledArtifacts: { observe: () => fixture.controlledArtifacts },
+      opaqueProjector: projector(),
+    });
+
+    const first = service.read();
+    migration = {
+      ...migration,
+      head: {
+        generationId: "generation.unrelated-reviewed-knowledge-release",
+        digest: "c".repeat(64),
+        revision: 2,
+      },
+    };
+    const afterUnrelatedHead = service.read();
+
+    expect(afterUnrelatedHead).toEqual(first);
+
+    migration = {
+      ...migration,
+      ownerReferences: migration.ownerReferences.map((reference) => {
+        const { quarantineReason: _quarantineReason, ...current } = reference;
+        return { ...current, state: "mapped" as const };
+      }),
+    };
+    const afterCompatibilityChange = service.read();
+
+    expect(afterCompatibilityChange.snapshotRef).not.toEqual(first.snapshotRef);
+    expect(
+      afterCompatibilityChange.references.find(({ origin }) => origin === "migrated")?.migration
+        ?.state
+    ).toBe("mapped");
+  });
+
   it("confirms a retry key only through its healthy opaque Workbench card", () => {
     const fixture = mixedFixture();
     const service = new OwnerReferenceWorkbenchService({

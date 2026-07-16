@@ -2808,6 +2808,12 @@ function assertRightsSemantics(
     translation: ["source_manifestation", "source_derivation"],
     exemplar_restriction: ["exemplar"],
     scan_provider_terms: ["digital_asset", "asset_acquisition"],
+    pack_citation_excerpt: [
+      "digital_asset",
+      "source_segment_version",
+      "cited_extraction_version",
+      "extraction_proposal",
+    ],
   };
   const allowedSubjects = constrainedSubjects[assertion.rightsKind];
   if (allowedSubjects && !allowedSubjects.includes(assertion.subjectKind)) {

@@ -23,6 +23,10 @@ import {
   type ReferencePageAtlasStartRequest,
 } from "../../lib/reference-page-atlas-contract.js";
 import {
+  TypedKnowledgeReleaseSelectionSchema,
+  type TypedKnowledgeReleaseSelection,
+} from "../../lib/typed-knowledge-release-contract.js";
+import {
   referenceSourceDigest,
   verifyReferenceRecordDigest,
   withReferenceRecordDigest,
@@ -105,6 +109,37 @@ export type OwnerReferencePageAtlasPreview = Readonly<{
   bytes: Uint8Array;
   widthPixels: number;
   heightPixels: number;
+}>;
+
+/**
+ * Exact process-private source material for the typed release compiler.
+ *
+ * This value must never cross the HTTP boundary. The browser supplies only
+ * keyed Page Atlas commitments; this service resolves them again against the
+ * current staging snapshot and returns the complete rights-scoped source
+ * closure to the server-side publisher.
+ */
+export type OwnerReferencePageAtlasKnowledgeReleaseSeed = Readonly<{
+  stagingSnapshotRef: ReferenceRecordRef;
+  work: ReferenceWork;
+  manifestation: ReferenceSourceManifestation;
+  exemplar: ReferenceExemplar;
+  digitalAsset: ReferenceDigitalAsset;
+  acquisition: ReferenceAssetAcquisition;
+  segment: ReferenceSourceSegmentVersion;
+  extraction: ReferenceCitedExtractionVersion;
+  mapping: ReferenceExtractionProposal & {
+    proposal: Extract<
+      ReferenceExtractionProposal["proposal"],
+      { kind: "twelve_course_diapason_mapping" }
+    >;
+  };
+  question: ReferenceExtractionProposal & {
+    proposal: Extract<
+      ReferenceExtractionProposal["proposal"],
+      { kind: "course_thirteen_notation_question" }
+    >;
+  };
 }>;
 
 export type OwnerReferencePageAtlasServiceOptions = Readonly<{
@@ -422,6 +457,120 @@ export class OwnerReferencePageAtlasService {
     assertCurrentSource(state, input.context, this.now().toISOString());
     const graph = this.resolveOperation(state, request.operationRef, input.context);
     return this.project(graph, state, request, input.context);
+  }
+
+  /** Resolve an exact current Mace candidate without reversing opaque refs. */
+  resolveKnowledgeReleaseSeed(
+    input: Readonly<{
+      selection: TypedKnowledgeReleaseSelection;
+      context: OwnerReferencePageAtlasResolvedContext;
+    }>
+  ): OwnerReferencePageAtlasKnowledgeReleaseSeed {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    assertAuthorityPathRuntime("authority.validator.reviewed-knowledge-governance", "production");
+    const selection = Value.Decode(TypedKnowledgeReleaseSelectionSchema, input.selection);
+    assertWorkbenchScope(selection, input.context);
+    const state = this.readCurrentState();
+    assertCurrentSource(state, input.context, this.now().toISOString());
+    const graph = this.resolveOperation(state, selection.operationRef, input.context);
+    if (graph.profile !== "mace-musicks-monument-1676") {
+      throw new OwnerReferencePageAtlasUnavailableError();
+    }
+    const projection = this.project(graph, state, selection, input.context);
+    if (!refsEqual(projection.projectionRef, selection.expectedProjectionRef)) {
+      throw new OwnerReferencePageAtlasStaleError();
+    }
+    if (
+      projection.stagedKnowledge.kind !== "mace_twelve_course_diapason_notation" ||
+      !refsEqual(projection.stagedKnowledge.candidateRef, selection.candidateRef)
+    ) {
+      throw new OwnerReferencePageAtlasUnavailableError();
+    }
+    const segment = deriveCitationLineage(graph).current;
+    const extraction = segment ? latestExtractionForSegment(graph, segment) : undefined;
+    const mapping = extraction
+      ? latestProposalForExtraction(graph, extraction, "twelve_course_diapason_mapping")
+      : undefined;
+    const question = extraction
+      ? latestProposalForExtraction(graph, extraction, "course_thirteen_notation_question")
+      : undefined;
+    if (
+      !segment ||
+      !extraction ||
+      !mapping ||
+      mapping.proposal.kind !== "twelve_course_diapason_mapping" ||
+      !question ||
+      question.proposal.kind !== "course_thirteen_notation_question" ||
+      mapping.reviewState !== "proposed" ||
+      mapping.authorityState !== "nonauthoritative" ||
+      mapping.activationAllowed ||
+      question.reviewState !== "proposed" ||
+      question.authorityState !== "nonauthoritative" ||
+      question.activationAllowed
+    ) {
+      throw new OwnerReferencePageAtlasUnavailableError();
+    }
+    const typedMapping: OwnerReferencePageAtlasKnowledgeReleaseSeed["mapping"] = {
+      ...mapping,
+      proposal: mapping.proposal,
+    };
+    const typedQuestion: OwnerReferencePageAtlasKnowledgeReleaseSeed["question"] = {
+      ...question,
+      proposal: question.proposal,
+    };
+
+    const records = state.snapshot.records;
+    const resolution = records.find(
+      (record): record is ReferenceAssetIdentityResolution =>
+        record.recordKind === "asset_identity_resolution" &&
+        record.id === `asset-identity-resolution.owner-page-atlas.${graph.suffix}`
+    );
+    if (
+      !resolution ||
+      !verifyReferenceRecordDigest(resolution) ||
+      !refsEqual(resolution.digitalAssetRef, input.context.digitalAsset) ||
+      resolution.acquisitionRefs.length !== 1 ||
+      !refsEqual(resolution.acquisitionRefs[0]!, input.context.acquisition) ||
+      resolution.exemplarRefs.length !== 1
+    ) {
+      throw new OwnerReferencePageAtlasUnavailableError();
+    }
+    const work = records.find(
+      (record): record is ReferenceWork =>
+        record.recordKind === "work" && refsEqual(record, resolution.workRef)
+    );
+    const manifestation = records.find(
+      (record): record is ReferenceSourceManifestation =>
+        record.recordKind === "source_manifestation" &&
+        refsEqual(record, resolution.manifestationRef)
+    );
+    const exemplar = records.find(
+      (record): record is ReferenceExemplar =>
+        record.recordKind === "exemplar" && refsEqual(record, resolution.exemplarRefs[0]!)
+    );
+    if (
+      !work ||
+      !manifestation ||
+      !exemplar ||
+      !verifyReferenceRecordDigest(work) ||
+      !verifyReferenceRecordDigest(manifestation) ||
+      !verifyReferenceRecordDigest(exemplar)
+    ) {
+      throw new OwnerReferencePageAtlasUnavailableError();
+    }
+
+    return Object.freeze({
+      stagingSnapshotRef: refFor(state.snapshot),
+      work: structuredClone(work),
+      manifestation: structuredClone(manifestation),
+      exemplar: structuredClone(exemplar),
+      digitalAsset: structuredClone(input.context.digitalAsset),
+      acquisition: structuredClone(input.context.acquisition),
+      segment: structuredClone(segment),
+      extraction: structuredClone(extraction),
+      mapping: structuredClone(typedMapping),
+      question: structuredClone(typedQuestion),
+    });
   }
 
   async resume(

@@ -836,6 +836,8 @@ const RightsSubjectKindSchema = Type.Union([
   Type.Literal("asset_acquisition"),
   Type.Literal("source_derivation"),
   Type.Literal("source_segment_version"),
+  Type.Literal("cited_extraction_version"),
+  Type.Literal("extraction_proposal"),
 ]);
 
 export const ReferenceRightsAssertionSchema = Type.Object(

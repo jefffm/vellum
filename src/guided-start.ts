@@ -2785,6 +2785,14 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         cancel: operate,
         correctMapping: operate,
         preview: fetchPrivateReferencePageAtlasPreview,
+        typedKnowledgeRelease: {
+          operate: (request, signal) =>
+            api<unknown>("/api/owner/reference-source-workbench/typed-knowledge-release", {
+              method: "POST",
+              body: JSON.stringify(request),
+              ...(signal ? { signal } : {}),
+            }),
+        },
       }
     );
   };

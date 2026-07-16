@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "e4370aec374896db2d5cab72e2451af967e8114b24b721a4159886b68d657527";
+  "119ca7eacf43aee5ca4659acf1d71b071c4104898332bccf3ca54abf59c513ee";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -101,6 +101,23 @@ const canonicalWriteOutputRootBindings = new Map([
     "ReferenceAssetAcquisition",
     "ReferenceDigitalAsset",
     "ReferenceSourceStagingSnapshot",
+  ]),
+  ...schemaBindings("src/lib/reviewed-knowledge-contract.ts", [
+    "KnowledgeApplicabilityPredicate",
+    "KnowledgeCandidate",
+    "KnowledgeComponentBinding",
+    "KnowledgeComponentMapping",
+    "KnowledgeConstraintDerivation",
+    "KnowledgeEvidenceEdge",
+    "KnowledgePackDraft",
+    "KnowledgePackRelease",
+    "KnowledgeProfile",
+    "KnowledgeSystemIdentitySnapshot",
+    "KnowledgeTestPolicy",
+    "SystemTestOnlyAttestation",
+  ]),
+  ...schemaBindings("src/lib/typed-knowledge-authority-verification.ts", [
+    "TypedKnowledgeAuthorityVerification",
   ]),
   ...schemaBindings("src/server/lib/knowledge-publication-store.ts", [
     "KnowledgePublicationGeneration",

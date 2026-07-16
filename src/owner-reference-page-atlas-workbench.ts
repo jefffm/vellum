@@ -25,6 +25,10 @@ import {
   type ReferencePageAtlasStartRequest,
   type ReferencePageAtlasStartedRetryState,
 } from "./lib/reference-page-atlas-contract.js";
+import {
+  createTypedKnowledgeReleaseWorkbench,
+  type TypedKnowledgeReleaseWorkbenchCallbacks,
+} from "./typed-knowledge-release-workbench.js";
 
 export type OwnerReferencePageAtlasWorkbenchCallbacks = Readonly<{
   start: (request: ReferencePageAtlasStartRequest, signal?: AbortSignal) => Promise<unknown>;
@@ -38,6 +42,7 @@ export type OwnerReferencePageAtlasWorkbenchCallbacks = Readonly<{
     request: ReferencePageAtlasCorrectMappingRequest,
     signal?: AbortSignal
   ) => Promise<unknown>;
+  typedKnowledgeRelease?: TypedKnowledgeReleaseWorkbenchCallbacks;
 }>;
 
 export type OwnerReferencePageAtlasPreviewResult = Readonly<{
@@ -144,7 +149,7 @@ export function openOwnerReferencePageAtlasWorkbench(
   const boundary = document.createElement("p");
   boundary.className = "owner-reference-page-atlas-boundary";
   boundary.textContent =
-    "Network access is disabled. Provider egress, fixture and repository inclusion, export, redistribution, and publication are denied. Source pixels and parser diagnostics never enter this projection.";
+    "Network access is disabled. This extraction grants no provider egress, fixture or repository inclusion, export, redistribution, or publication authority. A typed test-only release requires separate pack-citation rights verification. Source pixels and parser diagnostics never enter either projection.";
 
   const workspace = document.createElement("div");
   workspace.className = "owner-reference-page-atlas-layout";
@@ -160,6 +165,9 @@ export function openOwnerReferencePageAtlasWorkbench(
   dialog.append(header, boundary, workspace);
 
   const retryKeys = retryStorageKeys(cardRef);
+  const typedKnowledgeRelease = callbacks.typedKnowledgeRelease
+    ? createTypedKnowledgeReleaseWorkbench(document, callbacks.typedKnowledgeRelease)
+    : undefined;
   let retryState = inspectRetryState(document, cardRef);
   const revokePreview = () => {
     state.previewGeneration += 1;
@@ -463,7 +471,7 @@ export function openOwnerReferencePageAtlasWorkbench(
   const renderProjection = (projection: ReferencePageAtlasProjection) => {
     renderOperationControls(document, controls, projection, state, invoke);
     renderPageTarget(document, page, projection, state, loadPreview);
-    renderReview(document, review, projection, state, invoke);
+    renderReview(document, review, projection, state, invoke, typedKnowledgeRelease);
   };
 
   const validateProjection = (
@@ -647,6 +655,7 @@ export function openOwnerReferencePageAtlasWorkbench(
     state.closed = true;
     state.activeMutationController?.abort();
     state.activeMutationController = undefined;
+    typedKnowledgeRelease?.close();
     revokePreview();
     dialog.remove();
     if (activeWorkbenches.get(document)?.dialog === dialog) activeWorkbenches.delete(document);
@@ -907,7 +916,8 @@ function renderReview(
     status: HTMLElement,
     expectedProfile: ReferencePageAtlasProfile,
     button: HTMLButtonElement
-  ) => void
+  ) => void,
+  typedKnowledgeRelease?: ReturnType<typeof createTypedKnowledgeReleaseWorkbench>
 ): void {
   container.replaceChildren();
   append(container, "h3", "Citation and extraction", "owner-reference-page-atlas-section-title");
@@ -922,6 +932,7 @@ function renderReview(
 
   renderConfidence(document, container, projection);
   renderStagedKnowledge(document, container, projection);
+  typedKnowledgeRelease?.render(container, projection);
   renderLineage(document, container, projection);
   renderCorrection(document, container, projection, state, invoke);
 }
@@ -970,7 +981,7 @@ function renderStagedKnowledge(
   append(
     section,
     "p",
-    "Twelve-course diapason notation · staged · non-authoritative. Review is required before any pack or arranging consequence.",
+    "Twelve-course diapason notation · staged · non-authoritative. Separate pack-citation rights are required for a test-only release; verified human review is required before authority or any arranging consequence.",
     "owner-reference-page-atlas-candidate-boundary"
   );
   const table = document.createElement("table");

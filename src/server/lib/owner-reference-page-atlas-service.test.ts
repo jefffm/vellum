@@ -110,6 +110,33 @@ describe("OwnerReferencePageAtlasService", () => {
         proposedSign: null,
       },
     });
+    if (projection.stagedKnowledge.kind !== "mace_twelve_course_diapason_notation") {
+      throw new Error("Expected the exact synthetic Mace release seed");
+    }
+    const releaseSeed = harness.service.resolveKnowledgeReleaseSeed({
+      selection: {
+        workbenchSnapshotRef: projection.workbenchSnapshotRef,
+        workbenchCardRef: projection.workbenchCardRef,
+        operationRef: projection.operationRef,
+        expectedProjectionRef: projection.projectionRef,
+        candidateRef: projection.stagedKnowledge.candidateRef,
+      },
+      context: readContext,
+    });
+    expect(releaseSeed.stagingSnapshotRef).toEqual(ref(harness.store.readCurrentState()!.snapshot));
+    expect(releaseSeed.mapping.proposal).toEqual({
+      kind: "twelve_course_diapason_mapping",
+      courses: [7, 8, 9, 10, 11, 12],
+      symbols: ["a", "/a", "//a", "///a", "4", "5"],
+      numericSymbolsHaveSlashes: false,
+    });
+    expect(releaseSeed.question.proposal).toEqual({
+      kind: "course_thirteen_notation_question",
+      course: 13,
+      state: "unresolved",
+      forbiddenInference: "sequence_extrapolation",
+    });
+    expect(releaseSeed.extraction.sourceSegmentRefs).toEqual([ref(releaseSeed.segment)]);
     expect(projection.confidence.sourceIdentity).toEqual({
       state: "unknown",
       reason: "not_assessed",

@@ -1,6 +1,7 @@
 export const apiErrorCodes = [
   "invalid_request",
   "unauthorized",
+  "forbidden",
   "forbidden_origin",
   "not_found",
   "conflict",

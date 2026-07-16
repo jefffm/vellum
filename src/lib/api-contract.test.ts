@@ -43,6 +43,24 @@ describe("API contract", () => {
     });
   });
 
+  it("preserves a generic 403 authorization denial separately from origin rejection", () => {
+    const error = apiErrorFromResponse(403, {
+      ok: false,
+      error: {
+        code: "forbidden",
+        message: "Separate publication authority is required",
+        status: 403,
+        correlationId: "request-typed-release",
+      },
+    });
+    expect(error).toMatchObject({
+      code: "forbidden",
+      status: 403,
+      correlationId: "request-typed-release",
+    });
+    expect(error.code).not.toBe("forbidden_origin");
+  });
+
   it("uses a non-disclosing fallback for malformed failures", () => {
     expect(apiErrorFromResponse(500, { error: "raw server secret" })).toMatchObject({
       code: "internal_error",

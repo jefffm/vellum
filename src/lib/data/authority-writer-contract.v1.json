@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "d6093288eab79b5e47696491047f9a296ee38028505274dc9d2aa96346bb9b56",
+  "classificationPolicyDigest": "8b6cba7819a95374b3c89887797671f8cee075038aee6f58642b444b8fb42dd6",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -73,7 +73,7 @@
     },
     {
       "path": "src/server/lib/knowledge-publication-store.ts",
-      "digest": "c381577f8911f281fc3961fa1d45d30f64ba6999dc95ff49e400926dfc12d6be"
+      "digest": "1db7d54b8b7d34869f621d7e91e127673ebbffc16cb035b1cd4d1dba7ab3a31a"
     },
     {
       "path": "src/server/lib/lineage-service.ts",
@@ -109,7 +109,7 @@
     },
     {
       "path": "src/server/lib/owner-reference-page-atlas-service.ts",
-      "digest": "fb92f19d94be0ec7e0ccac2cdf9b2333d833765b28a3f1ef7ed965351fe41354"
+      "digest": "f43c0cc0f0f2ab0229d3eb555a89b04e2e542e37bc6b8a3991c38133bf3a51ae"
     },
     {
       "path": "src/server/lib/owner-reference-workbench-route.ts",
@@ -117,7 +117,7 @@
     },
     {
       "path": "src/server/lib/owner-reference-workbench-service.ts",
-      "digest": "32de0c0f6180896b3847588c84f92021ead914c4a944bd4ed917a6ea3df37b26"
+      "digest": "60b28fb7712aafadff6eb3f07a58bba663273a719cab984a640b2e3f5d729579"
     },
     {
       "path": "src/server/lib/owner-store.ts",
@@ -153,7 +153,7 @@
     },
     {
       "path": "src/server/lib/reference-source-staging-service.ts",
-      "digest": "ff4a5e87281865c88dfa168904d2e2afe27518fcbf6c2ec909bedb04a4670fdb"
+      "digest": "caaa6e71750e57b514b5fac6cc3b867e3a926bf54c52d0619e1ad623cf514a24"
     },
     {
       "path": "src/server/lib/reference-source-staging-store.ts",
@@ -182,6 +182,14 @@
     {
       "path": "src/server/lib/transcription-service.ts",
       "digest": "f54ae12fe494b73c3a2dcd76ef0bc5858e059321ae0f94fe52a819bbf76bb291"
+    },
+    {
+      "path": "src/server/lib/typed-knowledge-release-route.ts",
+      "digest": "b4d9d0113e881e4029db3a38e6281ebf735484d200ed03cb0005a69b80a20859"
+    },
+    {
+      "path": "src/server/lib/typed-knowledge-release-service.ts",
+      "digest": "15b5486e72c25508d5df846d5e13b050a2486113b4108895ad84e971b7f713c5"
     },
     {
       "path": "src/server/lib/workspace-route.ts",
@@ -2462,6 +2470,90 @@
         "ReferenceSourceStagingSnapshot.record"
       ],
       "implementationDigest": "529947a61441d0804970881f198cf5ffdbf1ef8bda82833157286c3f8910ce82"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/owner-reference-workbench-service.ts",
+        "selector": "OwnerReferenceWorkbenchService.executeTypedKnowledgeRelease"
+      },
+      "outputFields": [
+        "KnowledgeApplicabilityPredicate.record",
+        "KnowledgeCandidate.record",
+        "KnowledgeComponentBinding.record",
+        "KnowledgeComponentMapping.record",
+        "KnowledgeConstraintDerivation.record",
+        "KnowledgeEvidenceEdge.record",
+        "KnowledgePackDraft.record",
+        "KnowledgePackRelease.record",
+        "KnowledgeProfile.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeSystemIdentitySnapshot.record",
+        "KnowledgeTestPolicy.record",
+        "PublicationTransactionBinding.record",
+        "SystemTestOnlyAttestation.record",
+        "TypedKnowledgeAuthorityVerification.record"
+      ],
+      "implementationDigest": "012edab4db188ee5ba3b1a27a4b1ef8da5a12b55dbb7832dc2edd76922628d1e"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/typed-knowledge-release-route.ts",
+        "selector": "createTypedKnowledgeReleaseRoute"
+      },
+      "outputFields": [
+        "KnowledgeApplicabilityPredicate.record",
+        "KnowledgeCandidate.record",
+        "KnowledgeComponentBinding.record",
+        "KnowledgeComponentMapping.record",
+        "KnowledgeConstraintDerivation.record",
+        "KnowledgeEvidenceEdge.record",
+        "KnowledgePackDraft.record",
+        "KnowledgePackRelease.record",
+        "KnowledgeProfile.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeSystemIdentitySnapshot.record",
+        "KnowledgeTestPolicy.record",
+        "PublicationTransactionBinding.record",
+        "SystemTestOnlyAttestation.record",
+        "TypedKnowledgeAuthorityVerification.record"
+      ],
+      "implementationDigest": "cb7182e34067c9c7d7680d540d00b21a9bf91c79f5bf023095b9c6927db6a1e6"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/typed-knowledge-release-service.ts",
+        "selector": "TypedKnowledgeReleaseService.publish"
+      },
+      "outputFields": [
+        "KnowledgeApplicabilityPredicate.record",
+        "KnowledgeCandidate.record",
+        "KnowledgeComponentBinding.record",
+        "KnowledgeComponentMapping.record",
+        "KnowledgeConstraintDerivation.record",
+        "KnowledgeEvidenceEdge.record",
+        "KnowledgePackDraft.record",
+        "KnowledgePackRelease.record",
+        "KnowledgeProfile.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeSystemIdentitySnapshot.record",
+        "KnowledgeTestPolicy.record",
+        "PublicationTransactionBinding.record",
+        "SystemTestOnlyAttestation.record",
+        "TypedKnowledgeAuthorityVerification.record"
+      ],
+      "implementationDigest": "fd690c55a4fe513d53c9d96f79b55d1da3ea81bcbb6c4dcb1f42cdec3ca44ed0"
     },
     {
       "authorityPathId": "authority.validator.source-interpretation",

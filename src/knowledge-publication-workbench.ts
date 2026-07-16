@@ -4,8 +4,17 @@ const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 
 const RECORD_KINDS = new Set([
+  "knowledge_applicability_predicate",
+  "knowledge_candidate",
+  "knowledge_evidence_edge",
+  "knowledge_constraint_derivation",
+  "knowledge_component_binding",
+  "knowledge_component_mapping",
+  "knowledge_profile",
   "knowledge_pack_draft",
   "knowledge_pack_release",
+  "knowledge_system_identity_snapshot",
+  "knowledge_test_policy",
   "release_attestation",
   "release_advisory",
   "identity_verification",
@@ -454,6 +463,12 @@ function humanize(value: string): string {
 }
 
 function labelForKind(kind: string): string {
+  if (kind === "knowledge_system_identity_snapshot") {
+    return "System Test Metadata · Identity Snapshot (No Authority)";
+  }
+  if (kind === "knowledge_test_policy") {
+    return "System Test Metadata · Test Policy (No Activation)";
+  }
   return kind
     .split("_")
     .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)

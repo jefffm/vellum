@@ -202,6 +202,12 @@ import {
   createOwnerReferencePageAtlasOperationRoute,
   createOwnerReferencePageAtlasPreviewRoute,
 } from "./lib/owner-reference-page-atlas-route.js";
+import { createTypedKnowledgeReleaseRoute } from "./lib/typed-knowledge-release-route.js";
+import {
+  TypedKnowledgeReleaseService,
+  type TypedKnowledgePackCitationAuthorityProvider,
+  type TypedKnowledgeSystemIdentityProvider,
+} from "./lib/typed-knowledge-release-service.js";
 import {
   PopplerReferencePageAtlasParser,
   type ReferencePageAtlasParser,
@@ -294,6 +300,8 @@ type ApiRouterOptions = {
   ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
   referencePageAtlasParser?: ReferencePageAtlasParser;
   referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
+  typedKnowledgePackCitationAuthorityProvider?: TypedKnowledgePackCitationAuthorityProvider;
+  typedKnowledgeSystemIdentityProvider?: TypedKnowledgeSystemIdentityProvider;
   /**
    * Trusted server-bootstrap seam for future source-bearing workflows. HTTP
    * callers never select, replace, or receive these sinks.
@@ -303,6 +311,7 @@ type ApiRouterOptions = {
 
 export function createApiRouter(options: ApiRouterOptions = {}): Router {
   assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+  assertAuthorityPathRuntime("authority.validator.reviewed-knowledge-governance", "production");
   const router = Router();
   const ownerStore = new OwnerStore({
     rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
@@ -390,6 +399,12 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     sourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
     opaqueProjector: ownerReferenceWorkbenchOpaqueProjector,
   });
+  const typedKnowledgeReleaseService = new TypedKnowledgeReleaseService({
+    pageAtlasService: ownerReferencePageAtlasService,
+    publicationStore: knowledgePublicationStore,
+    packCitationAuthorityProvider: options.typedKnowledgePackCitationAuthorityProvider,
+    systemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
+  });
   const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
     staging: referenceSourceStagingService,
     migration: {
@@ -402,6 +417,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     }),
     localStudyService: ownerReferenceLocalStudyService,
     pageAtlasService: ownerReferencePageAtlasService,
+    typedKnowledgeReleaseService,
   });
   const referenceSourceProtectedOperationAdapter = new ReferenceSourceProtectedOperationAdapter({
     gateway: new ReferenceSourceOperationGateway({
@@ -495,6 +511,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post(
     "/owner/reference-source-workbench/page-atlas/preview",
     createOwnerReferencePageAtlasPreviewRoute(ownerReferenceWorkbenchService)
+  );
+  router.post(
+    "/owner/reference-source-workbench/typed-knowledge-release",
+    createTypedKnowledgeReleaseRoute(ownerReferenceWorkbenchService)
   );
   router.post(
     "/owner/reference-source-operations/default-decision",
@@ -876,6 +896,8 @@ type CreateAppOptions = {
   ownerReferenceWorkbenchOpaqueKey?: Uint8Array;
   referencePageAtlasParser?: ReferencePageAtlasParser;
   referencePageAtlasSourceProfileResolver?: ReferencePageAtlasSourceProfileResolver;
+  typedKnowledgePackCitationAuthorityProvider?: TypedKnowledgePackCitationAuthorityProvider;
+  typedKnowledgeSystemIdentityProvider?: TypedKnowledgeSystemIdentityProvider;
   referenceSourceProtectedOperationSinks?: ReferenceSourceProtectedOperationSinks;
 };
 
@@ -942,6 +964,9 @@ export function createApp(options: CreateAppOptions = {}) {
       ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
       referencePageAtlasParser: options.referencePageAtlasParser,
       referencePageAtlasSourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
+      typedKnowledgePackCitationAuthorityProvider:
+        options.typedKnowledgePackCitationAuthorityProvider,
+      typedKnowledgeSystemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
       referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
     })
   );
@@ -984,6 +1009,9 @@ export function startServer(
     ownerReferenceWorkbenchOpaqueKey: options.ownerReferenceWorkbenchOpaqueKey,
     referencePageAtlasParser: options.referencePageAtlasParser,
     referencePageAtlasSourceProfileResolver: options.referencePageAtlasSourceProfileResolver,
+    typedKnowledgePackCitationAuthorityProvider:
+      options.typedKnowledgePackCitationAuthorityProvider,
+    typedKnowledgeSystemIdentityProvider: options.typedKnowledgeSystemIdentityProvider,
     referenceSourceProtectedOperationSinks: options.referenceSourceProtectedOperationSinks,
   });
   const server = createServer(app);

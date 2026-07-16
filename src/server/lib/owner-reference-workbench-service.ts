@@ -9,6 +9,12 @@ import {
   type ReferencePageAtlasProjection,
 } from "../../lib/reference-page-atlas-contract.js";
 import {
+  TypedKnowledgeReleaseOperationRequestSchema,
+  TypedKnowledgeReleaseProjectionSchema,
+  type TypedKnowledgeReleaseOperationRequest,
+  type TypedKnowledgeReleaseProjection,
+} from "../../lib/typed-knowledge-release-contract.js";
+import {
   constants,
   closeSync,
   fstatSync,
@@ -88,6 +94,15 @@ type PageAtlasExecutor = Pick<
   OwnerReferencePageAtlasService,
   "start" | "read" | "resume" | "cancel" | "correctMapping" | "preview"
 >;
+type TypedKnowledgeReleaseExecutor = Readonly<{
+  execute: (
+    input: Readonly<{
+      request: TypedKnowledgeReleaseOperationRequest;
+      context: OwnerReferencePageAtlasResolvedContext;
+      signal?: AbortSignal;
+    }>
+  ) => TypedKnowledgeReleaseProjection | Promise<TypedKnowledgeReleaseProjection>;
+}>;
 
 export type OwnerReferenceWorkbenchServiceOptions = {
   staging: StagingReader;
@@ -97,6 +112,7 @@ export type OwnerReferenceWorkbenchServiceOptions = {
   operationGateway?: DefaultOperationGateway;
   localStudyService?: LocalStudyExecutor;
   pageAtlasService?: PageAtlasExecutor;
+  typedKnowledgeReleaseService?: TypedKnowledgeReleaseExecutor;
   maxSnapshotAttempts?: number;
 };
 
@@ -276,6 +292,7 @@ export class OwnerReferenceWorkbenchService {
   private readonly operationGateway: DefaultOperationGateway | undefined;
   private readonly localStudyService: LocalStudyExecutor | undefined;
   private readonly pageAtlasService: PageAtlasExecutor | undefined;
+  private readonly typedKnowledgeReleaseService: TypedKnowledgeReleaseExecutor | undefined;
   private readonly maxSnapshotAttempts: number;
 
   constructor(options: OwnerReferenceWorkbenchServiceOptions) {
@@ -286,6 +303,7 @@ export class OwnerReferenceWorkbenchService {
     this.operationGateway = options.operationGateway;
     this.localStudyService = options.localStudyService;
     this.pageAtlasService = options.pageAtlasService;
+    this.typedKnowledgeReleaseService = options.typedKnowledgeReleaseService;
     this.maxSnapshotAttempts = options.maxSnapshotAttempts ?? DEFAULT_SNAPSHOT_ATTEMPTS;
     if (!Number.isSafeInteger(this.maxSnapshotAttempts) || this.maxSnapshotAttempts < 1) {
       throw new OwnerReferenceWorkbenchIntegrityError(
@@ -472,6 +490,30 @@ export class OwnerReferenceWorkbenchService {
     const projection = this.captureProjection();
     const context = this.pageAtlasContext(projection, decoded.workbenchCardRef);
     return this.requirePageAtlasService().preview({ request: decoded, context });
+  }
+
+  /**
+   * Resolve the five opaque Page Atlas commitments inside the server boundary,
+   * then delegate one closed preview or publication operation. The private
+   * source context is never returned to the route or browser.
+   */
+  async executeTypedKnowledgeRelease(
+    request: TypedKnowledgeReleaseOperationRequest,
+    signal?: AbortSignal
+  ): Promise<TypedKnowledgeReleaseProjection> {
+    assertAuthorityPathRuntime("authority.validator.reference-source-governance", "production");
+    assertAuthorityPathRuntime("authority.validator.reviewed-knowledge-governance", "production");
+    const decoded = Value.Decode(TypedKnowledgeReleaseOperationRequestSchema, request);
+    const projection = this.captureProjection();
+    const context = this.pageAtlasContext(projection, decoded.selection.workbenchCardRef);
+    const service = this.typedKnowledgeReleaseService;
+    if (!service) {
+      throw Object.assign(new Error("Typed knowledge release service is unavailable"), {
+        code: "typed_knowledge_release_unavailable",
+      });
+    }
+    const result = await service.execute({ request: decoded, context, signal });
+    return Value.Decode(TypedKnowledgeReleaseProjectionSchema, result);
   }
 
   private requirePageAtlasService(): PageAtlasExecutor {
@@ -927,7 +969,13 @@ function coherenceReceipt(inputs: WorkbenchInputs): unknown {
         : null,
       view: inputs.staging.view,
     },
-    migration: inputs.migration,
+    migration: {
+      schemaVersion: inputs.migration.schemaVersion,
+      publicationState: inputs.migration.publicationState,
+      legacySourceState: inputs.migration.legacySourceState,
+      ownerReferences: inputs.migration.ownerReferences,
+      capabilities: inputs.migration.capabilities,
+    },
     controlledArtifacts: inputs.controlledArtifacts,
   };
 }

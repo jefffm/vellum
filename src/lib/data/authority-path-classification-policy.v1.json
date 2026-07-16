@@ -409,6 +409,18 @@
       "allowedRoots": []
     },
     {
+      "id": "typed-knowledge-release-route-persistence-closure",
+      "sourcePath": "src/server/lib/typed-knowledge-release-route.ts",
+      "sinkSelectors": ["executeTypedKnowledgeRelease"],
+      "allowedRoots": []
+    },
+    {
+      "id": "typed-knowledge-release-service-persistence-closure",
+      "sourcePath": "src/server/lib/typed-knowledge-release-service.ts",
+      "sinkSelectors": ["publish"],
+      "allowedRoots": []
+    },
+    {
       "id": "workspace-persistence-closure",
       "sourcePath": "src/server/lib/workspace-store.ts",
       "sinkSelectors": [
@@ -497,9 +509,20 @@
     "GuidedWorkflow.record",
     "HumanComparisonConclusion.record",
     "HumanEvaluation.record",
+    "KnowledgeApplicabilityPredicate.record",
+    "KnowledgeCandidate.record",
+    "KnowledgeComponentBinding.record",
+    "KnowledgeComponentMapping.record",
+    "KnowledgeConstraintDerivation.record",
+    "KnowledgeEvidenceEdge.record",
+    "KnowledgePackDraft.record",
+    "KnowledgePackRelease.record",
+    "KnowledgeProfile.record",
     "KnowledgePublicationGeneration.record",
     "KnowledgePublicationHead.record",
     "KnowledgePublicationRecord.record",
+    "KnowledgeSystemIdentitySnapshot.record",
+    "KnowledgeTestPolicy.record",
     "ModelAction.record",
     "ModelActionPublication.record",
     "ModelJudgeAction.record",
@@ -563,6 +586,8 @@
     "SourceArtifact.record",
     "SourceArtifactContent.bytes",
     "SourceTruthAssessment.record",
-    "StaleDerivation.record"
+    "StaleDerivation.record",
+    "SystemTestOnlyAttestation.record",
+    "TypedKnowledgeAuthorityVerification.record"
   ]
 }

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   renderKnowledgePublicationWorkbench,
+  type KnowledgePublicationRecord,
   type KnowledgePublicationWorkbenchState,
 } from "./knowledge-publication-workbench.js";
 
@@ -191,6 +192,42 @@ describe("knowledge publication Workbench", () => {
     expect(() => renderKnowledgePublicationWorkbench(container, state)).toThrow(
       /Unknown publication record kind/
     );
+  });
+
+  it("labels system identity and test policy records as non-authoritative test metadata", () => {
+    const container = document.createElement("div");
+    const state = fixture();
+    const generation = state.current!.generation;
+    const metadataRecords: KnowledgePublicationRecord[] = [
+      {
+        schemaVersion: 1,
+        recordKind: "knowledge_system_identity_snapshot",
+        id: "published.knowledge_system_identity_snapshot.test",
+        digest: "7".repeat(64),
+        successorRefs: [],
+      },
+      {
+        schemaVersion: 1,
+        recordKind: "knowledge_test_policy",
+        id: "published.knowledge_test_policy.test",
+        digest: "8".repeat(64),
+        successorRefs: [],
+      },
+    ];
+    state.current!.records.push(...metadataRecords);
+    generation.recordRefs.push(
+      ...metadataRecords.map(({ recordKind, id, digest }) => ({ recordKind, id, digest }))
+    );
+    generation.newRecordRefs.push(
+      ...metadataRecords.map(({ recordKind, id, digest }) => ({ recordKind, id, digest }))
+    );
+
+    renderKnowledgePublicationWorkbench(container, state);
+
+    expect(container.textContent).toContain(
+      "System Test Metadata · Identity Snapshot (No Authority)"
+    );
+    expect(container.textContent).toContain("System Test Metadata · Test Policy (No Activation)");
   });
 
   it("fails closed for unknown fields and mixed head/generation state", () => {

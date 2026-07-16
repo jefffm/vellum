@@ -8,6 +8,7 @@ import {
   ReferenceEvaluationSourceBindingCommitmentSchema,
   ReferenceExtractionProposalSchema,
   ReferenceProvenanceSubstitutionSchema,
+  ReferenceRightsAssertionSchema,
   ReferenceSourceIdentityAssertionSchema,
   ReferenceSourceStagingOperationSchema,
   ReferenceSourceStagingSnapshotSchema,
@@ -89,6 +90,29 @@ describe("reference-source domain", () => {
     expect(
       Value.Check(ReferenceDigitalAssetSchema, { ...asset, id: `asset.${"a".repeat(251)}` })
     ).toBe(false);
+  });
+
+  it("can scope pack-citation rights to exact extracted knowledge records", () => {
+    for (const [subjectKind, subjectId] of [
+      ["source_segment_version", "segment.1"],
+      ["cited_extraction_version", "extraction.1"],
+      ["extraction_proposal", "proposal.1"],
+    ] as const) {
+      const assertion = withReferenceRecordDigest({
+        recordKind: "rights_assertion",
+        id: `rights.pack-citation.${subjectKind}`,
+        version: 1,
+        subjectRef: ref(subjectId),
+        subjectKind,
+        rightsKind: "pack_citation_excerpt",
+        status: "permitted",
+        claimant: { kind: "system", claimantRef: ref("rights-review.synthetic") },
+        evidenceRefs: [ref("evidence.pack-citation.synthetic")],
+        assertedAt: NOW,
+      });
+
+      expect(Value.Check(ReferenceRightsAssertionSchema, assertion)).toBe(true);
+    }
   });
 
   it("requires explicit unknown or evidence-based assessed identity confidence", () => {
