@@ -81,8 +81,23 @@ describe("T08 authority-path inventory and compatibility classification", () => 
       id: "authority-writer-contract.v1",
       version: 1,
       path: "src/lib/data/authority-writer-contract.v1.json",
-      digest: "119ca7eacf43aee5ca4659acf1d71b071c4104898332bccf3ca54abf59c513ee",
+      digest: "a5521c94344edee643e11515c53f4d5ed15017b6762ac3091a9ab3a022f98121",
     });
+    const writerContract = JSON.parse(
+      readFileSync(path.join(projectRoot, inventory.writerContractRef.path), "utf8")
+    ) as { entries: Array<{ locator: { path: string; selector: string } }> };
+    expect(
+      writerContract.entries
+        .filter(
+          ({ locator }) => locator.path === "src/server/lib/reviewer-authority-service.ts"
+        )
+        .map(({ locator }) => locator.selector)
+        .sort()
+    ).toEqual([
+      "ReviewerAuthorityService.publishMaterials",
+      "ReviewerAuthorityService.refreshCurrentStatus",
+      "ReviewerAuthorityService.verify",
+    ]);
     expect(new Set(inventory.entries.map((entry) => entry.id)).size).toBe(inventory.entries.length);
     expect(inventory.coverage.length).toBeGreaterThan(200);
     expect(inventory.shadowFixtures.length).toBeGreaterThanOrEqual(12);

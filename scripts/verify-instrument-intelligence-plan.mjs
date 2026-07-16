@@ -5188,9 +5188,28 @@ function validateAuthorityHistory(value, previousValue) {
     );
     const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
     const sourceGeneration = generationByKey.get(sourceKey);
+    const sourceAuthoritySetIndex = value.authoritySets.findIndex(
+      (authoritySet) =>
+        authoritySet.authoritySetDigest === sourceGeneration?.authoritySnapshot.authoritySetDigest
+    );
+    const interveningAuthoritySetDigests = new Set(
+      value.authoritySets
+        .slice(sourceAuthoritySetIndex + 1, index + 1)
+        .map((authoritySet) => authoritySet.authoritySetDigest)
+    );
+    const interveningSetHasClauseEvidence = Object.values(
+      compatibleExistingManifest?.clauseEvidence ?? {}
+    ).some((records) =>
+      records.some((record) => interveningAuthoritySetDigests.has(record.authoritySetDigest))
+    );
+    const sourceAuthorityIsEligible =
+      sourceAuthoritySetIndex === index ||
+      (sourceAuthoritySetIndex >= 0 &&
+        sourceAuthoritySetIndex < index &&
+        !interveningSetHasClauseEvidence);
     if (
       !sourceGeneration ||
-      sourceGeneration.authoritySnapshot.authoritySetDigest !== migration.fromAuthoritySetDigest ||
+      !sourceAuthorityIsEligible ||
       sourceGeneration.issueCompletion !== "complete" ||
       sourceGeneration.freshness !== "current" ||
       sourceGeneration.compatibility !== "compatible" ||
@@ -5251,7 +5270,10 @@ const semanticAuthorityMigrationBySourceKey = new Map();
 for (const migration of authorityHistory.migrations) {
   if (migration.reasonCode === "compatible_registry_tail_change") continue;
   const sourceKey = `${migration.invalidationGeneration.tracerId}:${migration.invalidationGeneration.generation}`;
-  if (semanticAuthorityMigrationBySourceKey.has(sourceKey)) {
+  const hasAnyClauseEvidence = Object.values(
+    compatibleExistingManifest?.clauseEvidence ?? {}
+  ).some((records) => records.length > 0);
+  if (semanticAuthorityMigrationBySourceKey.has(sourceKey) && hasAnyClauseEvidence) {
     fail(`authority migrations reuse invalidation source ${sourceKey}`);
   }
   semanticAuthorityMigrationBySourceKey.set(sourceKey, migration);
