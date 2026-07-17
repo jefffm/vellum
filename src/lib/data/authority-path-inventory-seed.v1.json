@@ -6819,6 +6819,7 @@
         "src/server/lib/evaluation-artifact-store.ts",
         "src/server/lib/evaluation-comparison.ts",
         "src/server/lib/evaluation-harness.ts",
+        "src/server/lib/evaluation-leak-canary.ts",
         "src/server/lib/evaluation-impact.ts",
         "src/server/lib/evaluation-promotion.ts",
         "src/server/lib/evaluation-run-report.ts",
@@ -6926,6 +6927,11 @@
           "kind": "symbol",
           "path": "src/server/lib/evaluation-harness.ts",
           "selector": "EvaluationHarness"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/evaluation-leak-canary.ts",
+          "selector": "EvaluationLeakCanaryGuard"
         },
         {
           "kind": "symbol",
@@ -16041,7 +16047,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "8e97e84b4fc2b0728d5225b5daaee8f97240915f2f41f50baf5f24ccf7888163",
+      "sourceDigest": "4c47f495d697518d27b1e0d49bb3fc3186c5754d4d0ddd0bd0c0dbc0b6b09f95",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -16414,7 +16420,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "f9184bd3294a79c04a3339e1933a7f72f58aeeacd1fd80eb54ffa696ce5cc953",
+      "sourceDigest": "1d6b0c747e70c9f341397a7f9b6d76a81667a74bf32ef21c6cf8e6bfb1e07898",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -17539,7 +17545,7 @@
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "cb7ad15ad1bb34e91f6c5407e4015ee63724c38cfa0933a87f72e83c7e3247ee",
+      "sourceDigest": "46b1d862e384ff01bddf801359dfb738c1edf46cc9cd0b0efe62a17f2a87f212",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -27685,7 +27691,7 @@
     },
     {
       "sourcePath": "src/server/lib/evaluation-harness.ts",
-      "sourceDigest": "50c988c44c2bb88c925ebb10bcbdcc6a964796ea93c33f93e0703dfe40fc2d71",
+      "sourceDigest": "7ea75c014f5b2aefdb77c59bc882c1eec73b68d73e6ab10cb5972f95cfa8fa1c",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -27754,6 +27760,114 @@
         },
         {
           "selector": "selectEvaluationSuites",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/evaluation-leak-canary.ts",
+      "sourceDigest": "35d267a2514700339c18e37635e750f6fc8c519bd810e1a19c148bb7735d0998",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.evaluator-only"],
+      "declarations": [
+        {
+          "selector": "EvaluationLeakCanaryError",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.active",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.assertActive",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.assertFilesSafe",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.assertSafe",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.close",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.createdAt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.receipt",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.sessionCommitment",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.sessionId",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "EvaluationLeakCanaryGuard.variants",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "buildVariants",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "candidateBuffers",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "createEvaluationLeakCanaryGuard",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "guardedLeakBoundaryEffect",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "guardedPublicWrite",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "serialize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.evaluator-only"]
+        },
+        {
+          "selector": "variant",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.evaluator-only"]
         }

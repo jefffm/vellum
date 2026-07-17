@@ -45,7 +45,7 @@
     },
     {
       "path": "src/server/lib/evaluation-harness.ts",
-      "digest": "50c988c44c2bb88c925ebb10bcbdcc6a964796ea93c33f93e0703dfe40fc2d71"
+      "digest": "7ea75c014f5b2aefdb77c59bc882c1eec73b68d73e6ab10cb5972f95cfa8fa1c"
     },
     {
       "path": "src/server/lib/evaluation-promotion.ts",
@@ -1456,7 +1456,7 @@
         "EvaluationRun.record",
         "ResolvedEvaluationManifest.record"
       ],
-      "implementationDigest": "f4bc1cc11373d225732b6c540284e9b42c7af98f117920d9d4b0caa1f0bb2f9e"
+      "implementationDigest": "3ea7bad4cf32a7dc54ae93f7f96661ee6fb7eef34236792fdb751e24675f291d"
     },
     {
       "authorityPathId": "authority.validator.evaluator-only",
