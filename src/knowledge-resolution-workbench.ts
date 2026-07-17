@@ -63,6 +63,18 @@ const WorkbenchProjectionSchema = Type.Object({
     })
   ),
   executionIdentity: Type.Unknown(),
+  authorityReadiness: Type.Object({
+    schemaVersion: Type.Literal(1),
+    authorityLane: Type.String({ minLength: 1 }),
+    authorityState: Type.String({ minLength: 1 }),
+    activationState: Type.String({ minLength: 1 }),
+    releaseState: Type.String({ minLength: 1 }),
+    qualificationState: Type.String({ minLength: 1 }),
+    readinessState: Type.String({ minLength: 1 }),
+    historicalPresentation: Type.String({ minLength: 1 }),
+    syntheticEvidencePresent: Type.Boolean(),
+    reasonCode: Type.String({ minLength: 1 }),
+  }),
   ordinaryActivation: Type.Literal(false),
   readinessClaim: Type.Literal(false),
 });
@@ -116,7 +128,48 @@ export function renderKnowledgeResolutionWorkbench(
     "Closure",
     `${projection.inventory.allReleaseRefs.length} release(s) · ${projection.outcomes.length} outcome(s) · ${projection.manifest.entries.length} profile entry/entries · ${projection.componentRegistry.authorityPathOutcomes.length} authority paths`
   );
-  definition(document, summary, "Target readiness", "Not claimed");
+  definition(
+    document,
+    summary,
+    "Authority lane",
+    humanize(projection.authorityReadiness.authorityLane)
+  );
+  definition(
+    document,
+    summary,
+    "Authority state",
+    humanize(projection.authorityReadiness.authorityState)
+  );
+  definition(
+    document,
+    summary,
+    "Activation",
+    humanize(projection.authorityReadiness.activationState)
+  );
+  definition(
+    document,
+    summary,
+    "Release state",
+    humanize(projection.authorityReadiness.releaseState)
+  );
+  definition(
+    document,
+    summary,
+    "Qualification",
+    humanize(projection.authorityReadiness.qualificationState)
+  );
+  definition(
+    document,
+    summary,
+    "Target readiness",
+    humanize(projection.authorityReadiness.readinessState)
+  );
+  definition(
+    document,
+    summary,
+    "Historical presentation",
+    humanize(projection.authorityReadiness.historicalPresentation)
+  );
   root.append(summary);
 
   const states = document.createElement("p");

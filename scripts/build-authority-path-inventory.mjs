@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "d697314adee981d9186a21566640a0a38243f33a353d9e0b82d53bb911eea97d";
+  "cb7ad15ad1bb34e91f6c5407e4015ee63724c38cfa0933a87f72e83c7e3247ee";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",

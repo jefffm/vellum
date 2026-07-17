@@ -85,7 +85,7 @@ export const KnowledgeResolutionPolicySchema = Type.Object(
       Type.Literal("isolated_evaluation"),
       Type.Literal("provisional_research"),
     ]),
-    ordinaryTestOnlyDisposition: Type.Literal("deny"),
+    ordinaryTestOnlyDisposition: Type.Literal("review_required"),
     unknownDisposition: Type.Literal("review_required"),
     digest: DigestSchema,
   },
@@ -370,6 +370,34 @@ export const AppliedKnowledgeManifestSchema = Type.Object(
 );
 export type AppliedKnowledgeManifest = Static<typeof AppliedKnowledgeManifestSchema>;
 
+export const KnowledgeAuthorityReadinessSchema = Type.Object(
+  {
+    schemaVersion: Type.Literal(1),
+    authorityLane: Type.Union([Type.Literal("human_maintainer"), Type.Literal("test_only")]),
+    authorityState: Type.Union([
+      Type.Literal("review_required"),
+      Type.Literal("test_only_no_authority"),
+    ]),
+    activationState: Type.Union([
+      Type.Literal("blocked"),
+      Type.Literal("provisional_only"),
+      Type.Literal("isolated_only"),
+    ]),
+    releaseState: Type.Literal("provisional"),
+    qualificationState: Type.Literal("ineligible"),
+    readinessState: Type.Literal("not_claimed"),
+    historicalPresentation: Type.Literal("unclaimed"),
+    syntheticEvidencePresent: Type.Boolean(),
+    reasonCode: Type.Union([
+      Type.Literal("real_scope_limited_maintainer_attestation_required"),
+      Type.Literal("test_only_provisional_research"),
+      Type.Literal("test_only_isolated_evaluation"),
+    ]),
+  },
+  Strict
+);
+export type KnowledgeAuthorityReadiness = Static<typeof KnowledgeAuthorityReadinessSchema>;
+
 export const KnowledgeResolutionProjectionSchema = Type.Object(
   {
     schemaVersion: Type.Literal(1),
@@ -386,6 +414,7 @@ export const KnowledgeResolutionProjectionSchema = Type.Object(
     consequences: Type.Array(KnowledgeProvisionalConsequenceSchema),
     manifest: AppliedKnowledgeManifestSchema,
     executionIdentity: KnowledgeExecutionIdentitySchema,
+    authorityReadiness: KnowledgeAuthorityReadinessSchema,
     ordinaryActivation: Type.Literal(false),
     readinessClaim: Type.Literal(false),
   },

@@ -158,7 +158,7 @@ export const T14_KNOWLEDGE_RESOLUTION_POLICY =
         ),
       ],
       allowedTestUses: ["isolated_evaluation", "provisional_research"],
-      ordinaryTestOnlyDisposition: "deny",
+      ordinaryTestOnlyDisposition: "review_required",
       unknownDisposition: "review_required",
     }
   );
@@ -318,6 +318,7 @@ export class KnowledgeResolutionService {
         consequences,
         manifest,
         executionIdentity,
+        authorityReadiness: buildAuthorityReadiness(request.mode, activationDecisions),
         ordinaryActivation: false,
         readinessClaim: false,
       },
@@ -349,6 +350,17 @@ export function validateKnowledgeResolutionProjection(
   projection.activationDecisions.forEach((decision) =>
     validateKnowledgeResolutionRecord(KnowledgeActivationDecisionSchema, decision)
   );
+  const expectedAuthorityReadiness = buildAuthorityReadiness(
+    projection.mode,
+    projection.activationDecisions
+  );
+  if (
+    JSON.stringify(projection.authorityReadiness) !== JSON.stringify(expectedAuthorityReadiness)
+  ) {
+    throw new KnowledgeResolutionIntegrityError(
+      "Authority and readiness vocabulary does not match the exact activation decisions"
+    );
+  }
   projection.consequences.forEach((consequence) =>
     validateKnowledgeResolutionRecord(KnowledgeProvisionalConsequenceSchema, consequence)
   );
@@ -995,20 +1007,65 @@ function buildActivationDecision(input: {
       rationaleCode: "test_only_exact_provisional_scope",
     });
   }
+  const testOnlyOrdinary =
+    input.context.mode === "ordinary_default" &&
+    input.closure.attestations.some(({ kind }) => kind === "test_only");
   const result =
-    input.status === "unknown" || input.status === "conflicting" ? "review_required" : "deny";
+    testOnlyOrdinary || input.status === "unknown" || input.status === "conflicting"
+      ? "review_required"
+      : "deny";
   return buildKnowledgeResolutionRecord<KnowledgeActivationDecision>(
     KnowledgeActivationDecisionSchema,
     "activation_decision",
     {
       ...base,
       result,
-      rationaleCode:
-        input.context.mode === "ordinary_default"
-          ? "test_only_forbidden_for_ordinary_default"
-          : `manifest_${input.status}`,
+      rationaleCode: testOnlyOrdinary
+        ? "maintainer_attestation_required_for_ordinary_default"
+        : `manifest_${input.status}`,
     }
   );
+}
+
+function buildAuthorityReadiness(
+  mode: KnowledgeResolutionMode,
+  decisions: readonly KnowledgeActivationDecision[]
+): KnowledgeResolutionProjection["authorityReadiness"] {
+  const syntheticEvidencePresent = decisions.some(
+    (decision) =>
+      decision.attestationRefs.length > 0 &&
+      (decision.result === "allow" ||
+        decision.rationaleCode === "maintainer_attestation_required_for_ordinary_default")
+  );
+  if (mode === "ordinary_default") {
+    return {
+      schemaVersion: 1,
+      authorityLane: "human_maintainer",
+      authorityState: "review_required",
+      activationState: "blocked",
+      releaseState: "provisional",
+      qualificationState: "ineligible",
+      readinessState: "not_claimed",
+      historicalPresentation: "unclaimed",
+      syntheticEvidencePresent,
+      reasonCode: "real_scope_limited_maintainer_attestation_required",
+    };
+  }
+  return {
+    schemaVersion: 1,
+    authorityLane: "test_only",
+    authorityState: "test_only_no_authority",
+    activationState: mode === "provisional_research" ? "provisional_only" : "isolated_only",
+    releaseState: "provisional",
+    qualificationState: "ineligible",
+    readinessState: "not_claimed",
+    historicalPresentation: "unclaimed",
+    syntheticEvidencePresent,
+    reasonCode:
+      mode === "provisional_research"
+        ? "test_only_provisional_research"
+        : "test_only_isolated_evaluation",
+  };
 }
 
 function buildConsequences(

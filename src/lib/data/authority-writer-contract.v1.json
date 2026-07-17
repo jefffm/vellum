@@ -45,7 +45,7 @@
     },
     {
       "path": "src/server/lib/evaluation-harness.ts",
-      "digest": "955e8b7658e2dad227d5ee072e6e6e77302ce6dc7fb7740e65ffbd9804360fa6"
+      "digest": "50c988c44c2bb88c925ebb10bcbdcc6a964796ea93c33f93e0703dfe40fc2d71"
     },
     {
       "path": "src/server/lib/evaluation-promotion.ts",
@@ -57,7 +57,7 @@
     },
     {
       "path": "src/server/lib/first-loop-evaluation.ts",
-      "digest": "dc8a3356d9ff8268d8b5e5cd4f5e1297c4e52a8a0debd457d5f82bce9940dab2"
+      "digest": "7bb22f0d94160db530aa0843c88c88919cb829edf5caa049521f244537506b1c"
     },
     {
       "path": "src/server/lib/guided-workflow-service.ts",
@@ -77,7 +77,7 @@
     },
     {
       "path": "src/server/lib/knowledge-resolution-service.ts",
-      "digest": "d7e3daf0dfe12988a1822885563dab3f411266550218ec59c16d1ec69ba2e03e"
+      "digest": "5de10aa6a3b5539a2b1f5afa50329bff93d94517e50c07a29540ba3a2c9a1f37"
     },
     {
       "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
@@ -1456,7 +1456,7 @@
         "EvaluationRun.record",
         "ResolvedEvaluationManifest.record"
       ],
-      "implementationDigest": "4d59887ee9565d5b00ee97caf38b02940a46036406eeda38fcd7f4a57caacb3b"
+      "implementationDigest": "f4bc1cc11373d225732b6c540284e9b42c7af98f117920d9d4b0caa1f0bb2f9e"
     },
     {
       "authorityPathId": "authority.validator.evaluator-only",
@@ -1651,7 +1651,7 @@
         "EvaluationRun.record",
         "ResolvedEvaluationManifest.record"
       ],
-      "implementationDigest": "dd9f6299a8bce7c7bcfd63db19b3073f89b34c99e5ace08d05d4416ecf00c8c1"
+      "implementationDigest": "04ca86b9124e901338f798f6ca1db041ddc9f2b1b4b4c659c08f2a0b1d30e04a"
     },
     {
       "authorityPathId": "authority.validator.evaluator-only",

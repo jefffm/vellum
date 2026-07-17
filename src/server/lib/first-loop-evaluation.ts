@@ -241,6 +241,7 @@ export async function runFirstLoopEvaluation(options: {
   now?: () => Date;
   createId?: () => string;
   mutationId?: "mutation.principal-voice-omission";
+  knowledgeAuthorityReadiness?: import("../../lib/knowledge-resolution-contract.js").KnowledgeAuthorityReadiness;
 }): Promise<{
   manifestId: string;
   manifestDigest: string;
@@ -344,13 +345,18 @@ export async function runFirstLoopEvaluation(options: {
       }
     },
   });
-  const result = await harness.run(FIRST_LOOP_SUITE_REF, {
-    productVersion: "0.1.0",
-    runtime: process.version,
-    platform: process.platform,
-    architecture: process.arch,
-    command: "eval:fast",
-  });
+  const result = await harness.run(
+    FIRST_LOOP_SUITE_REF,
+    {
+      productVersion: "0.1.0",
+      runtime: process.version,
+      platform: process.platform,
+      architecture: process.arch,
+      command: "eval:fast",
+    },
+    undefined,
+    options.knowledgeAuthorityReadiness
+  );
   return {
     manifestId: result.manifest.id,
     manifestDigest: result.manifest.digest,

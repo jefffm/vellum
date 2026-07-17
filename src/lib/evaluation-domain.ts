@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 import { KnowledgeExecutionIdentitySchema } from "./knowledge-resolution-identity.js";
+import { KnowledgeAuthorityReadinessSchema } from "./knowledge-resolution-contract.js";
 
 const Id = Type.String({ minLength: 1 });
 const Version = Type.Integer({ minimum: 1 });
@@ -864,6 +865,7 @@ export const EvaluationRunSchema = Type.Object(
     startedAt: IsoDate,
     completedAt: Type.Optional(IsoDate),
     knowledgeResolutionIdentity: Type.Optional(KnowledgeExecutionIdentitySchema),
+    knowledgeAuthorityReadiness: Type.Optional(KnowledgeAuthorityReadinessSchema),
   },
   { additionalProperties: false }
 );
@@ -882,6 +884,7 @@ export const EvaluationCardSchema = Type.Object(
       Type.Literal("incomplete"),
     ]),
     dimensions: Type.Array(AbsoluteDimensionResultSchema, { minItems: 1 }),
+    knowledgeAuthorityReadiness: Type.Optional(KnowledgeAuthorityReadinessSchema),
     generatedAt: IsoDate,
   },
   { additionalProperties: false }

@@ -18,6 +18,7 @@ import {
   type HumanComparisonProtocol,
 } from "../../lib/evaluation-domain.js";
 import type { KnowledgeExecutionIdentity } from "../../lib/knowledge-resolution-identity.js";
+import type { KnowledgeAuthorityReadiness } from "../../lib/knowledge-resolution-contract.js";
 import { digestValue as digestContentValue } from "../../lib/content-digest.js";
 import { EvaluationStore } from "./evaluation-store.js";
 
@@ -234,7 +235,8 @@ export class EvaluationHarness {
   async run(
     suiteRef: VersionedRef,
     executionIdentity: ResolvedEvaluationManifest["executionIdentity"],
-    knowledgeResolutionIdentity?: KnowledgeExecutionIdentity
+    knowledgeResolutionIdentity?: KnowledgeExecutionIdentity,
+    knowledgeAuthorityReadiness?: KnowledgeAuthorityReadiness
   ): Promise<{
     manifest: ResolvedEvaluationManifest;
     run: EvaluationRun;
@@ -255,6 +257,7 @@ export class EvaluationHarness {
       caseRunIds: [],
       startedAt,
       ...(knowledgeResolutionIdentity ? { knowledgeResolutionIdentity } : {}),
+      ...(knowledgeAuthorityReadiness ? { knowledgeAuthorityReadiness } : {}),
     });
     const caseRuns: EvaluationCaseRun[] = [];
     const cards: EvaluationCard[] = [];
@@ -326,6 +329,7 @@ export class EvaluationHarness {
         hardGateStatus: hardFailure ? "fail" : "pass",
         acceptanceStatus,
         dimensions: caseRun.dimensionResults,
+        ...(knowledgeAuthorityReadiness ? { knowledgeAuthorityReadiness } : {}),
         generatedAt: now().toISOString(),
       };
       this.options.store.saveCard(card);
@@ -341,6 +345,7 @@ export class EvaluationHarness {
       startedAt,
       completedAt: now().toISOString(),
       ...(knowledgeResolutionIdentity ? { knowledgeResolutionIdentity } : {}),
+      ...(knowledgeAuthorityReadiness ? { knowledgeAuthorityReadiness } : {}),
     };
     this.options.store.saveRun(run);
     return { manifest, run, cards };

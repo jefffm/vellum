@@ -15464,7 +15464,7 @@
     },
     {
       "sourcePath": "src/knowledge-resolution-workbench.ts",
-      "sourceDigest": "0c47070fb91c7dbe16bb8a79efc08859663f945cfcd31902c86fd74d1ab6f45f",
+      "sourceDigest": "15f19d5404f05874deb03a7cd4302d4e8621d2611abe5bbde1b7ce05acf6763e",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.presentation.claim-labels"],
       "declarations": [
@@ -16041,7 +16041,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "69f21414f3d6b21b16e8f92694b207ba46fa9b2a7a305eda07305e3546974e1d",
+      "sourceDigest": "8e97e84b4fc2b0728d5225b5daaee8f97240915f2f41f50baf5f24ccf7888163",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -16414,7 +16414,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "67909beb631398397b009d4717b4ca86feaadb77480b0cd57f64a2e2194a35ef",
+      "sourceDigest": "f9184bd3294a79c04a3339e1933a7f72f58aeeacd1fd80eb54ffa696ce5cc953",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -17539,7 +17539,7 @@
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "d697314adee981d9186a21566640a0a38243f33a353d9e0b82d53bb911eea97d",
+      "sourceDigest": "cb7ad15ad1bb34e91f6c5407e4015ee63724c38cfa0933a87f72e83c7e3247ee",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -17759,7 +17759,7 @@
     },
     {
       "sourcePath": "src/lib/evaluation-domain.ts",
-      "sourceDigest": "f75caaef9e7ae4260938ee02868409e254b9d94b38038da853ab025a705f44bc",
+      "sourceDigest": "2489bf8643d28f7a2fcf624e836c7084435dc88bd01d4daaade59703fc175740",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -18915,7 +18915,7 @@
     },
     {
       "sourcePath": "src/lib/knowledge-resolution-contract.ts",
-      "sourceDigest": "299d36df3741a57292833801601daa5a82cce9e792d94871ea41c667fadcaf03",
+      "sourceDigest": "2dac851f404a3332210604296c1a9a64c24c0e0906386802706014beb0a0d17d",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
       "declarations": [
@@ -18961,6 +18961,11 @@
         },
         {
           "selector": "KnowledgeAuthorityPathOutcomeSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeAuthorityReadinessSchema",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
@@ -27680,7 +27685,7 @@
     },
     {
       "sourcePath": "src/server/lib/evaluation-harness.ts",
-      "sourceDigest": "955e8b7658e2dad227d5ee072e6e6e77302ce6dc7fb7740e65ffbd9804360fa6",
+      "sourceDigest": "50c988c44c2bb88c925ebb10bcbdcc6a964796ea93c33f93e0703dfe40fc2d71",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -28106,7 +28111,7 @@
     },
     {
       "sourcePath": "src/server/lib/first-loop-evaluation.ts",
-      "sourceDigest": "dc8a3356d9ff8268d8b5e5cd4f5e1297c4e52a8a0debd457d5f82bce9940dab2",
+      "sourceDigest": "7bb22f0d94160db530aa0843c88c88919cb829edf5caa049521f244537506b1c",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.evaluator-only"],
       "declarations": [
@@ -29353,7 +29358,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-resolution-service.ts",
-      "sourceDigest": "d7e3daf0dfe12988a1822885563dab3f411266550218ec59c16d1ec69ba2e03e",
+      "sourceDigest": "5de10aa6a3b5539a2b1f5afa50329bff93d94517e50c07a29540ba3a2c9a1f37",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
       "declarations": [
@@ -29449,6 +29454,11 @@
         },
         {
           "selector": "buildActivationDecision",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildAuthorityReadiness",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
