@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "public.old-hundredth-three-target",
+      "role": "primary",
+      "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts"
+    },
+    {
+      "id": "public.continuo-suspension",
+      "role": "supporting",
+      "testFile": "test/e2e/continuo-tracer.test.ts"
+    },
+    {
+      "id": "public.imitative-passage",
+      "role": "supporting",
+      "testFile": "test/e2e/imitative-counterpoint-tracer.test.ts"
+    },
+    {
+      "id": "public.greensleeves-regression",
+      "role": "secondary-regression",
+      "testFile": "test/e2e/greensleeves-tracer.test.ts"
+    },
+    {
+      "id": "public.notation-playback-mutations",
+      "role": "supporting",
+      "testFile": "src/server/lib/render-playback-evaluation.test.ts"
+    },
+    {
+      "id": "public.source-backed-idiom-loop",
+      "role": "supporting",
+      "testFile": "src/server/lib/local-idiom-knowledge-store.test.ts"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "source_fidelity",
+      "evidence": [
+        {
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "omit-principal-event",
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ]
+    },
+    {
+      "id": "phrase_and_cadence",
+      "evidence": [
+        {
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "omit-bass-cadential-goal",
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ]
+    },
+    {
+      "id": "subordinate_voice_continuity",
+      "evidence": [
+        {
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        },
+        {
+          "testFile": "test/e2e/continuo-tracer.test.ts",
+          "testTitle": "imports, analyzes, realizes, audits, engraves, and previews semantic parts"
+        },
+        {
+          "testFile": "test/e2e/imitative-counterpoint-tracer.test.ts",
+          "testTitle": "preserves ordered entries and voice lineages in a Renaissance-lute intabulation"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "change-bass-duration-and-continuity",
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ]
+    },
+    {
+      "id": "target_mechanics",
+      "evidence": [
+        {
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "oversized-punteado-and-lute-first-position-reach",
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ]
+    },
+    {
+      "id": "historical_and_target_idiom",
+      "evidence": [
+        {
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        },
+        {
+          "testFile": "src/server/lib/local-idiom-knowledge-store.test.ts",
+          "testTitle": "keeps extraction inert, explicitly reviews v2, and reversibly changes only punteado"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "force-all-punteado-and-interior-course-skip",
+          "testFile": "test/e2e/old-hundredth-three-target-baseline.test.ts",
+          "testTitle": "runs the exact public SATB source through three independent target searches"
+        }
+      ]
+    },
+    {
+      "id": "notation_correctness",
+      "evidence": [
+        {
+          "testFile": "src/server/lib/render-playback-evaluation.test.ts",
+          "testTitle": "keeps semantic notation, focused visual, and canonical playback outcomes independent"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "change-notated-pitch",
+          "testFile": "src/server/lib/render-playback-evaluation.test.ts",
+          "testTitle": "keeps semantic notation, focused visual, and canonical playback outcomes independent"
+        }
+      ]
+    },
+    {
+      "id": "playback_identity",
+      "evidence": [
+        {
+          "testFile": "src/server/lib/render-playback-evaluation.test.ts",
+          "testTitle": "detects duration, repeat, occurrence, part, and display-staff duplication mutations"
+        }
+      ],
+      "mutations": [
+        {
+          "id": "duplicate-playback-occurrence-and-change-repeat",
+          "testFile": "src/server/lib/render-playback-evaluation.test.ts",
+          "testTitle": "detects duration, repeat, occurrence, part, and display-staff duplication mutations"
+        }
+      ]
+    }
+  ]
+}
