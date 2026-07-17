@@ -2,11 +2,15 @@
   "pack": {
     "id": "pack.builtin-baroque-guitar",
     "name": "Built-in reviewed baroque guitar practice",
-    "version": 1,
+    "version": 2,
     "reviewed": true,
-    "claimIds": ["historical-claim.sanz-alfabeto"],
+    "claimIds": [
+      "historical-claim.sanz-alfabeto",
+      "historical-claim.sanz-rasgueado-contiguous-courses",
+      "historical-claim.sanz-punteado-right-hand"
+    ],
     "createdAt": "2026-07-11T00:00:00.000Z",
-    "updatedAt": "2026-07-11T00:00:00.000Z"
+    "updatedAt": "2026-07-16T00:00:00.000Z"
   },
   "claims": [
     {
@@ -20,10 +24,42 @@
         "ensembleRole": "accompaniment"
       },
       "authority": "documented_practice",
-      "referenceId": "reference.builtin-sanz-1674",
-      "citationLocator": "Gaspar Sanz, Instruccion de musica sobre la guitarra espanola (1674), alfabeto tables",
+      "referenceId": "reference.local-sanz-1697-facsimile",
+      "citationLocator": "Gaspar Sanz, Instruccion de musica sobre la guitarra espanola (1697 facsimile), Rule 4 and first labyrinth/alfabeto plate, PDF pages 13 and 24",
       "sourceCandidateId": "knowledge-candidate.builtin-reviewed-sanz",
       "reviewedAt": "2026-07-11T00:00:00.000Z"
+    },
+    {
+      "id": "historical-claim.sanz-rasgueado-contiguous-courses",
+      "statement": "In rasgueado, unnumbered courses sound as part of the chord; a strummed course span therefore cannot silently omit an interior course.",
+      "scope": {
+        "period": "seventeenth century",
+        "region": "Spain",
+        "genre": "accompaniment",
+        "instrument": "five-course guitar",
+        "ensembleRole": "accompaniment"
+      },
+      "authority": "documented_practice",
+      "referenceId": "reference.local-sanz-1697-facsimile",
+      "citationLocator": "Sanz (1697 facsimile), Rule 4, PDF page 13: courses without numbers in rasgueado are also sounded",
+      "sourceCandidateId": "knowledge-candidate.builtin-reviewed-sanz",
+      "reviewedAt": "2026-07-16T00:00:00.000Z"
+    },
+    {
+      "id": "historical-claim.sanz-punteado-right-hand",
+      "statement": "Punteado assigns simultaneous and successive attacks to explicit right-hand resources, including the thumb for the bass voice; Vellum's beginner default conservatively limits simultaneous plucked attacks to p-i-m.",
+      "scope": {
+        "period": "seventeenth century",
+        "region": "Spain",
+        "genre": "solo and accompaniment",
+        "instrument": "five-course guitar",
+        "ensembleRole": "solo"
+      },
+      "authority": "documented_practice",
+      "referenceId": "reference.local-sanz-1697-facsimile",
+      "citationLocator": "Sanz (1697 facsimile), Rules 1-2 for punteado, PDF page 17",
+      "sourceCandidateId": "knowledge-candidate.builtin-reviewed-sanz",
+      "reviewedAt": "2026-07-16T00:00:00.000Z"
     }
   ]
 }

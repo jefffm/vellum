@@ -110,6 +110,49 @@ export function buildAudioPreview(
       const transformationEntries = (arrangement.transformationReport ?? []).filter((entry) =>
         entry.arrangementEventIds.includes(event.id)
       );
+      if (event.baroqueGuitarGesture && usesTargetInstance) {
+        const principal = event.voiceConstituents?.find(
+          (constituent) => constituent.role === "principal_voice"
+        );
+        let principalEmitted = false;
+        for (const position of event.positions) {
+          const course = exactInstance!.courses.find(
+            (candidate) => candidate.course === position.course
+          )!;
+          const pitches = instrumentSoundingPitches(exactInstance!, position.course, position.fret);
+          for (const [stringIndex, pitch] of pitches.entries()) {
+            const isPrincipal =
+              !principalEmitted &&
+              principal?.position.course === position.course &&
+              noteToMidi(pitch) === noteToMidi(principal.pitch);
+            if (isPrincipal) principalEmitted = true;
+            events.push({
+              occurrenceId: `playback-occurrence.${occurrence.id}.${event.id}.course.${position.course}.string.${stringIndex + 1}`,
+              measureOccurrenceId: occurrence.id,
+              iteration: occurrence.iteration,
+              arrangementEventId: event.id,
+              sourceEventIds:
+                isPrincipal && principal ? [principal.sourceEventId] : event.sourceEventIds,
+              transformationEntryIds: transformationEntries.flatMap((entry) =>
+                entry.id ? [entry.id] : []
+              ),
+              auditTargetIds: transformationEntries.flatMap(
+                (entry) =>
+                  entry.preservationTargetIds ??
+                  (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
+              ),
+              instrumentId: event.instrumentId,
+              constituentStringId: course.strings[stringIndex]!.id,
+              part: isPrincipal ? "principal-voice" : "accompaniment",
+              midi: noteToMidi(pitch),
+              startSeconds:
+                occurrence.startSeconds + rationalValue(event.onset) * secondsPerQuarter,
+              durationSeconds: rationalValue(event.duration) * secondsPerQuarter,
+            });
+          }
+        }
+        continue;
+      }
       if (event.voiceConstituents?.length) {
         for (const [constituentIndex, constituent] of event.voiceConstituents.entries()) {
           const course = usesTargetInstance

@@ -4,9 +4,15 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  auditBaroqueGuitarIdiom,
   auditFaithfulPrincipalVoice,
   auditPlannedVoiceObligations,
+  SANZ_G_MAJOR_ALFABETO,
+  validateBaroqueGuitarGesture,
 } from "../../src/lib/baroque-guitar-arranger.js";
+import { arrangementToEngraveParams } from "../../src/lib/arrangement-engrave.js";
+import { buildAudioPreview } from "../../src/lib/audio-preview.js";
+import { soundingPitches } from "../../src/lib/instrument-instance.js";
 import { midiToNote, noteToMidi } from "../../src/lib/pitch.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
@@ -125,6 +131,105 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
       expect(mutationAudit.findings.some(({ code }) => code === "principal.omitted")).toBe(true);
     }
 
+    const baroqueGuitar = results.find(
+      (result) => result.arrangementScore.targetConfiguration.instrumentId === "baroque-guitar-5"
+    )!;
+    const guitarEvents = baroqueGuitar.arrangementScore.events.filter(
+      (event) => event.type !== "rest"
+    );
+    const guitarGestures = guitarEvents.map((event) => event.baroqueGuitarGesture!);
+    expect(auditBaroqueGuitarIdiom(baroqueGuitar.arrangementScore.events)).toEqual([]);
+    expect(new Set(guitarGestures.map(({ technique }) => technique))).toEqual(
+      new Set(["punteado", "alfabeto"])
+    );
+    expect(
+      guitarGestures
+        .filter(({ technique }) => technique === "punteado")
+        .every(
+          ({ attackCourses, rightHandFingers }) =>
+            attackCourses.length <= 3 &&
+            rightHandFingers.length === attackCourses.length &&
+            rightHandFingers.every(({ finger }) => ["p", "i", "m"].includes(finger))
+        )
+    ).toBe(true);
+    const alfabetoGestures = guitarGestures.filter(({ technique }) => technique === "alfabeto");
+    expect(alfabetoGestures.length).toBeGreaterThan(0);
+    expect(alfabetoGestures).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          attackCourses: [1, 2, 3, 4, 5],
+          contiguousAttack: true,
+          alfabeto: expect.objectContaining({
+            symbol: SANZ_G_MAJOR_ALFABETO.symbol,
+            chordName: SANZ_G_MAJOR_ALFABETO.chordName,
+            shapeFrets: [...SANZ_G_MAJOR_ALFABETO.shapeFrets],
+            historicalClaimId: SANZ_G_MAJOR_ALFABETO.historicalClaimId,
+          }),
+        }),
+      ])
+    );
+
+    const oversized = structuredClone(
+      guitarGestures.find(({ technique }) => technique === "punteado")!
+    );
+    oversized.attackCourses = [1, 2, 3, 4];
+    expect(validateBaroqueGuitarGesture(oversized)).toContain(
+      "baroque_guitar.punteado_oversized_attack"
+    );
+    const skipped = structuredClone(alfabetoGestures[0]!);
+    skipped.technique = "rasgueado";
+    skipped.attackCourses = [1, 2, 4, 5];
+    skipped.contiguousAttack = false;
+    expect(validateBaroqueGuitarGesture(skipped)).toContain(
+      "baroque_guitar.rasgueado_interior_course_skip"
+    );
+    const ungrounded = structuredClone(alfabetoGestures[0]!);
+    delete ungrounded.alfabeto;
+    expect(validateBaroqueGuitarGesture(ungrounded)).toContain(
+      "baroque_guitar.alfabeto_shape_missing"
+    );
+    const allPunteado = structuredClone(baroqueGuitar.arrangementScore.events);
+    for (const event of allPunteado) {
+      if (event.baroqueGuitarGesture) event.baroqueGuitarGesture.technique = "punteado";
+    }
+    expect(auditBaroqueGuitarIdiom(allPunteado)).toContain(
+      "baroque_guitar.non_idiomatic_all_punteado_reduction"
+    );
+
+    const guitarParams = arrangementToEngraveParams(
+      baroqueGuitar.arrangementScore,
+      recognized.normalizedScore
+    );
+    const engravedPositions = guitarParams.bars.flatMap(({ events }) =>
+      events.flatMap((event) =>
+        event.type === "chord"
+          ? event.positions.map(({ course, fret }) => `${course}:${fret}`)
+          : event.type === "note" && event.input === "position"
+            ? [`${event.course}:${event.fret}`]
+            : []
+      )
+    );
+    expect(engravedPositions.sort()).toEqual(
+      guitarEvents
+        .flatMap((event) => event.positions.map(({ course, fret }) => `${course}:${fret}`))
+        .sort()
+    );
+    const preview = buildAudioPreview(baroqueGuitar.arrangementScore, recognized.normalizedScore);
+    const guitarInstance = baroqueGuitar.arrangementScore.targetConfiguration.instrumentInstance!;
+    for (const event of guitarEvents) {
+      const expectedMidi = event.positions
+        .flatMap(({ course, fret }) => soundingPitches(guitarInstance, course, fret))
+        .map(noteToMidi)
+        .sort((left, right) => left - right);
+      const actualMidi = preview.events
+        .filter(
+          ({ arrangementEventId, iteration }) => arrangementEventId === event.id && iteration === 1
+        )
+        .map(({ midi }) => midi)
+        .sort((left, right) => left - right);
+      expect(actualMidi).toEqual(expectedMidi);
+    }
+
     const classical = results.find(
       (result) => result.arrangementScore.targetConfiguration.instrumentId === "classical-guitar-6"
     )!;
@@ -228,7 +333,10 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         techniques[0] === "punteado"
           ? ["baroque_guitar.single_generic_punteado_technique"]
           : []),
-        ...(instrumentId === "baroque-guitar-5" && voiceIds.length < 2
+        ...(instrumentId === "baroque-guitar-5" &&
+        !result.arrangementScore.events.some(
+          ({ baroqueGuitarGesture }) => (baroqueGuitarGesture?.attackCourses.length ?? 0) > 1
+        )
           ? ["baroque_guitar.subordinate_idiom_deferred"]
           : []),
         ...(instrumentId === "baroque-lute-13" && maxStoppedCourseFretDelta >= 5
@@ -255,8 +363,6 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
       };
     });
     expect(observations.flatMap(({ knownDefects }) => knownDefects).sort()).toEqual([
-      "baroque_guitar.single_generic_punteado_technique",
-      "baroque_guitar.subordinate_idiom_deferred",
       "baroque_lute.subordinate_idiom_deferred",
       "classical_guitar.right_hand_unmodeled",
     ]);

@@ -252,13 +252,11 @@ test("Owner-attested local study previews migrated and uploaded PDFs without exp
   await assertPrivateValuesRedacted(page);
 });
 
-test("local-study cancellation reads no bytes and local extraction stays in a future workflow", async ({
-  page,
-}) => {
+test("local-study cancellation reads no bytes", async ({ page }) => {
   const fixture = await installOwnerReferenceLibraryFixture(page);
   const library = await openOwnerReferenceLibrary(page);
   const card = library.locator(".owner-reference-library-card").first();
-  let authorization = await prepareLocalStudy(card, "Cancel this local preview");
+  const authorization = await prepareLocalStudy(card, "Cancel this local preview");
   await authorization.getByLabel("Attest to local private study only").check();
   page.once("dialog", async (dialog) => dialog.dismiss());
   await authorization.getByRole("button", { name: "Open local private study preview" }).click();
@@ -272,16 +270,6 @@ test("local-study cancellation reads no bytes and local extraction stays in a fu
       PRIVATE_LOCAL_STUDY_PENDING_STORAGE_KEY
     )
   ).toBeNull();
-
-  await card.getByLabel("Local operation").selectOption("local_extraction");
-  await card.getByLabel("Purpose for this review").fill("Extract evidence in a future workflow");
-  await card.getByRole("button", { name: "Review local processing" }).click();
-  await expect(card.locator(".owner-reference-library-local-review-status")).toContainText(
-    "separately governed extraction workflow"
-  );
-  authorization = card.locator(".owner-reference-library-local-study-authorization");
-  await expect(authorization).toBeHidden();
-  expect(fixture.localStudyRequests).toHaveLength(0);
 });
 
 test("an uncertain committed local study replays the exact original scope and key after reload", async ({

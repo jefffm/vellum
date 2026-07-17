@@ -1034,7 +1034,14 @@ function isTrustedExecutableDirectory(directory: string): boolean {
 
 function minimalSubprocessEnvironment(executable: string, isolatedHome: string): NodeJS.ProcessEnv {
   const executableDirectory = path.dirname(executable);
-  const home = path.basename(executable).startsWith("podman") ? trustedHome : isolatedHome;
+  const podman = path.basename(executable).startsWith("podman");
+  const home = podman ? trustedHome : isolatedHome;
+  const containerHost =
+    podman &&
+    process.env.CONTAINER_HOST === "unix:///run/podman/podman.sock" &&
+    existsSync("/run/podman/podman.sock")
+      ? process.env.CONTAINER_HOST
+      : undefined;
   const fontconfigFile =
     path.basename(executable) === "lilypond" && executable.startsWith("/nix/store/")
       ? trustedNixFontconfigFile()
@@ -1044,6 +1051,7 @@ function minimalSubprocessEnvironment(executable: string, isolatedHome: string):
   );
   const runtimeDependencyDirectories = trustedRuntimeDependencyDirectories(executable);
   return {
+    ...(containerHost ? { CONTAINER_HOST: containerHost } : {}),
     ...(fontconfigFile ? { FONTCONFIG_FILE: fontconfigFile } : {}),
     HOME: home,
     LANG: "C.UTF-8",

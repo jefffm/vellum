@@ -24,7 +24,7 @@
     "id": "authority-path-inventory.v1.seed",
     "version": 1,
     "path": "src/lib/data/authority-path-inventory-seed.v1.json",
-    "digest": "6a49d17ec88fddf3750d3a74e879d0ec6520346a2370cb39329e55f641fc2467"
+    "digest": "c363586af3276381ade56acee84da4c7b8beb2540115cc72612a25d3c1be89c5"
   },
   "writerContractRef": {
     "id": "authority-writer-contract.v1",
@@ -242,7 +242,7 @@
     },
     {
       "sourcePath": "knowledge-packs/core-baroque-guitar.json",
-      "sourceDigest": "21310478c1932c2e40eb1c23a4be665d74e394a153f12882b600c8b3ea077c70",
+      "sourceDigest": "26880f7ec7f15c8ad57ff61788287f086832600d79dbf1a35f54720f36650ff9",
       "surfaceScope": "production",
       "disposition": "authority_path",
       "authorityPathIds": [
@@ -44122,7 +44122,7 @@
       "definitionSources": [
         {
           "path": "knowledge-packs/core-baroque-guitar.json",
-          "digest": "21310478c1932c2e40eb1c23a4be665d74e394a153f12882b600c8b3ea077c70"
+          "digest": "26880f7ec7f15c8ad57ff61788287f086832600d79dbf1a35f54720f36650ff9"
         },
         {
           "path": "src/server/lib/knowledge-pack-loader.ts",
@@ -44183,7 +44183,7 @@
         "The legacy loader returns no active packs.",
         "The self-declared reviewed field is not release or activation authority."
       ],
-      "digest": "b3b1816b29dfc7898305bca2a64891a99ed4affc84e42d4b4158d742b85cb527"
+      "digest": "28a65c020a589a5bd3f36822e8a3b78789cf7839fdff53c31e6bfa004a4b6b32"
     },
     {
       "id": "authority.parameter.arrangement-defaults",
@@ -57151,5 +57151,5 @@
       "digest": "47cc8dd23212dfaa5215a765732624db22bed6a774b0880b4ee4ce2708a7aa7e"
     }
   ],
-  "digest": "83af14161a042fa999a6d33a3260148c471789f9d40442e0945c61a4a2b1b050"
+  "digest": "19cdc27a99e64fde9441da23357a499e9986927c0d50e4ba9f775d3774eed6cd"
 }

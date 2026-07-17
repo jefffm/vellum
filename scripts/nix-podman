@@ -301,6 +301,11 @@ run_args=(
 # pinned connection's live Podman info rather than a hard-coded host UID.
 if [[ "$PODMAN_GATE" == "1" ]]; then
   run_args+=(
+    # The remote Podman client's `cp` extraction uses a local chroot to keep
+    # archive paths contained. Grant that one capability only in this explicit
+    # nested-sandbox gate; ordinary Nix runs still have no Podman socket or
+    # chroot capability.
+    --cap-add=sys_chroot
     --volume="$podman_socket:/run/podman/podman.sock"
     --env=CONTAINER_HOST=unix:///run/podman/podman.sock
   )

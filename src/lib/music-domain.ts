@@ -1898,6 +1898,55 @@ export const ArrangementEventSchema = Type.Object(
     ),
     voiceId: Type.Optional(IdSchema),
     instrumentId: Type.Optional(Type.String({ minLength: 1 })),
+    baroqueGuitarGesture: Type.Optional(
+      Type.Object(
+        {
+          technique: Type.Union([
+            Type.Literal("punteado"),
+            Type.Literal("rasgueado"),
+            Type.Literal("alfabeto"),
+          ]),
+          attackCourses: Type.Array(Type.Integer({ minimum: 1, maximum: 5 }), {
+            minItems: 1,
+            maxItems: 5,
+          }),
+          contiguousAttack: Type.Boolean(),
+          soundingPitches: Type.Array(Type.String({ pattern: "^[A-G](?:#|b)?-?\\d+$" }), {
+            minItems: 1,
+          }),
+          rightHandFingers: Type.Array(
+            Type.Object(
+              {
+                course: Type.Integer({ minimum: 1, maximum: 5 }),
+                finger: Type.Union([Type.Literal("p"), Type.Literal("i"), Type.Literal("m")]),
+              },
+              { additionalProperties: false }
+            )
+          ),
+          strokeDirection: Type.Optional(Type.Union([Type.Literal("down"), Type.Literal("up")])),
+          notationAttack: Type.Union([Type.Literal("simultaneous"), Type.Literal("successive")]),
+          alfabeto: Type.Optional(
+            Type.Object(
+              {
+                symbol: Type.String({ minLength: 1 }),
+                chordName: Type.String({ minLength: 1 }),
+                shapeFrets: Type.Tuple([
+                  Type.Integer({ minimum: 0 }),
+                  Type.Integer({ minimum: 0 }),
+                  Type.Integer({ minimum: 0 }),
+                  Type.Integer({ minimum: 0 }),
+                  Type.Integer({ minimum: 0 }),
+                ]),
+                historicalClaimId: IdSchema,
+                citationLocator: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
+        },
+        { additionalProperties: false }
+      )
+    ),
     notationSemantics: Type.Optional(
       Type.Object(
         {
@@ -2145,6 +2194,15 @@ export const ArrangementCandidateSchema = Type.Object(
                 barreChanged: Type.Boolean(),
                 technique: Type.String({ minLength: 1 }),
                 violentCrossNeckJump: Type.Boolean(),
+                attackCourses: Type.Optional(
+                  Type.Array(Type.Integer({ minimum: 1, maximum: 5 }), {
+                    minItems: 1,
+                    maxItems: 5,
+                  })
+                ),
+                contiguousAttack: Type.Optional(Type.Boolean()),
+                rightHandFingerCount: Type.Optional(Type.Integer({ minimum: 0, maximum: 3 })),
+                alfabetoSymbol: Type.Optional(Type.String({ minLength: 1 })),
                 stoppedCourseFretDelta: Type.Optional(Type.Integer({ minimum: 0 })),
                 diapasonCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
                 preparedBassCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),

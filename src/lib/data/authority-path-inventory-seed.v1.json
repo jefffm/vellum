@@ -13244,7 +13244,7 @@
     },
     {
       "sourcePath": "knowledge-packs/core-baroque-guitar.json",
-      "sourceDigest": "21310478c1932c2e40eb1c23a4be665d74e394a153f12882b600c8b3ea077c70",
+      "sourceDigest": "26880f7ec7f15c8ad57ff61788287f086832600d79dbf1a35f54720f36650ff9",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.legacy.built-in-knowledge-pack"],
       "declarations": []
