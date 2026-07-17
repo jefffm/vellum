@@ -112,35 +112,50 @@ export function buildAudioPreview(
       );
       if (event.voiceConstituents?.length) {
         for (const [constituentIndex, constituent] of event.voiceConstituents.entries()) {
-          const stringId = usesTargetInstance
-            ? exactInstance!.courses.find((course) => course.course === constituent.position.course)
-                ?.strings[0]?.id
+          const course = usesTargetInstance
+            ? exactInstance!.courses.find(
+                (candidate) => candidate.course === constituent.position.course
+              )
             : undefined;
-          events.push({
-            occurrenceId: `playback-occurrence.${occurrence.id}.${event.id}.voice.${constituentIndex + 1}`,
-            measureOccurrenceId: occurrence.id,
-            iteration: occurrence.iteration,
-            arrangementEventId: event.id,
-            sourceEventIds: [constituent.sourceEventId],
-            transformationEntryIds: transformationEntries.flatMap((entry) =>
-              entry.id ? [entry.id] : []
-            ),
-            auditTargetIds: transformationEntries.flatMap(
-              (entry) =>
-                entry.preservationTargetIds ??
-                (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
-            ),
-            instrumentId: event.instrumentId,
-            ...(stringId ? { constituentStringId: stringId } : {}),
-            part:
-              constituent.role === "principal_voice"
-                ? "principal-voice"
-                : (`voice:${constituent.voiceId}` as const),
-            midi: noteToMidi(constituent.pitch),
-            startSeconds:
-              occurrence.startSeconds + rationalValue(constituent.onset) * secondsPerQuarter,
-            durationSeconds: rationalValue(constituent.duration) * secondsPerQuarter,
-          });
+          const soundingPitches = course
+            ? instrumentSoundingPitches(
+                exactInstance!,
+                constituent.position.course,
+                constituent.position.fret
+              )
+            : [constituent.pitch];
+          let canonicalVoiceEmitted = false;
+          for (const [stringIndex, pitch] of soundingPitches.entries()) {
+            const canonicalVoicePitch =
+              !canonicalVoiceEmitted && noteToMidi(pitch) === noteToMidi(constituent.pitch);
+            if (canonicalVoicePitch) canonicalVoiceEmitted = true;
+            const stringId = course?.strings[stringIndex]?.id;
+            events.push({
+              occurrenceId: `playback-occurrence.${occurrence.id}.${event.id}.voice.${constituentIndex + 1}.string.${stringIndex + 1}`,
+              measureOccurrenceId: occurrence.id,
+              iteration: occurrence.iteration,
+              arrangementEventId: event.id,
+              sourceEventIds: [constituent.sourceEventId],
+              transformationEntryIds: transformationEntries.flatMap((entry) =>
+                entry.id ? [entry.id] : []
+              ),
+              auditTargetIds: transformationEntries.flatMap(
+                (entry) =>
+                  entry.preservationTargetIds ??
+                  (entry.sourceRelationshipId ? [entry.sourceRelationshipId] : [])
+              ),
+              instrumentId: event.instrumentId,
+              ...(stringId ? { constituentStringId: stringId } : {}),
+              part:
+                constituent.role === "principal_voice" && canonicalVoicePitch
+                  ? "principal-voice"
+                  : (`voice:${constituent.voiceId}` as const),
+              midi: noteToMidi(pitch),
+              startSeconds:
+                occurrence.startSeconds + rationalValue(constituent.onset) * secondsPerQuarter,
+              durationSeconds: rationalValue(constituent.duration) * secondsPerQuarter,
+            });
+          }
         }
         continue;
       }

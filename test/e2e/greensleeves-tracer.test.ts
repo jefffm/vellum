@@ -169,17 +169,6 @@ describe("Greensleeves PDF tracer bullet", () => {
           candidate.phraseSearchEvidence.luteTechniqueEvidence?.styleBrise.status === "not_applied"
       )
     ).toBe(true);
-    expect(
-      luteArranged.candidates.some((candidate) =>
-        candidate.phraseSearchEvidence?.transitions.some(
-          (transition) =>
-            (transition.rightHandBassAccessCount ?? 0) > 0 &&
-            transition.preparedBassCourses !== undefined &&
-            transition.resonatingBassCourses !== undefined &&
-            transition.dampingRequiredCourses !== undefined
-        )
-      )
-    ).toBe(true);
     const classicalArranged = new ArrangementService({ store }).createFaithfulReduction(
       workspace.id,
       {

@@ -504,6 +504,69 @@ export const PlanDecisionSchema = Type.Object(
 );
 export type PlanDecision = Static<typeof PlanDecisionSchema>;
 
+export const PhraseObligationSchema = Type.Object(
+  {
+    passageId: IdSchema,
+    targetVoices: Type.Array(
+      Type.Object(
+        {
+          id: IdSchema,
+          sourceVoiceId: IdSchema,
+          sourcePartId: IdSchema,
+          role: Type.Union([
+            Type.Literal("principal_voice"),
+            Type.Literal("bass"),
+            Type.Literal("subordinate"),
+          ]),
+          sourceEventIds: Type.Array(IdSchema, { minItems: 1 }),
+          phraseIds: Type.Array(IdSchema),
+          restEventIds: Type.Array(IdSchema),
+          continuity: Type.Union([Type.Literal("required"), Type.Literal("advisory")]),
+          omissionPolicy: Type.Union([
+            Type.Literal("forbidden"),
+            Type.Literal("explicit_transformation_only"),
+          ]),
+          allowedTransformations: Type.Array(
+            Type.Union([
+              Type.Literal("uniform_transposition"),
+              Type.Literal("octave_relocation"),
+              Type.Literal("rhythmic_simplification"),
+            ])
+          ),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    harmonicPlan: Type.Object(
+      {
+        bassVoiceId: Type.Optional(IdSchema),
+        cadenceGoalEventIds: Type.Array(IdSchema),
+        preserveSourceBassFunction: Type.Boolean(),
+      },
+      { additionalProperties: false }
+    ),
+    relationshipPlan: Type.Array(
+      Type.Object(
+        {
+          id: IdSchema,
+          kind: Type.Union([
+            Type.Literal("phrase_contour"),
+            Type.Literal("cadential_goal"),
+            Type.Literal("voice_continuity"),
+          ]),
+          sourceTargetId: Type.Optional(IdSchema),
+          sourceEventGroups: Type.Array(Type.Array(IdSchema, { minItems: 1 }), { minItems: 1 }),
+          required: Type.Boolean(),
+        },
+        { additionalProperties: false }
+      )
+    ),
+  },
+  { additionalProperties: false }
+);
+export type PhraseObligation = Static<typeof PhraseObligationSchema>;
+
 export const ArrangementPlanSchema = Type.Object(
   {
     id: IdSchema,
@@ -538,6 +601,7 @@ export const ArrangementPlanSchema = Type.Object(
       },
       { additionalProperties: false }
     ),
+    phraseObligations: Type.Optional(Type.Array(PhraseObligationSchema, { minItems: 1 })),
     transpositionPlan: Type.Union([
       Type.Object(
         { status: Type.Literal("resolved"), semitones: Type.Integer(), rationale: Type.String() },
@@ -1733,6 +1797,40 @@ export const AnalysisAmbiguitySchema = Type.Object(
   { additionalProperties: false }
 );
 
+export const SourceVoiceGraphSchema = Type.Object(
+  {
+    voices: Type.Array(
+      Type.Object(
+        {
+          id: IdSchema,
+          partId: IdSchema,
+          notationCarrierPartId: IdSchema,
+          identityBasis: Type.Literal("event_continuity_within_notation_carrier"),
+          eventIds: Type.Array(IdSchema, { minItems: 1 }),
+          restEventIds: Type.Array(IdSchema),
+          activitySpans: Type.Array(
+            Type.Object(
+              {
+                id: IdSchema,
+                passageId: IdSchema,
+                phraseId: IdSchema,
+                eventIds: Type.Array(IdSchema, { minItems: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    identityIndependentOfPitchHeight: Type.Literal(true),
+    identityIndependentOfNotationCarrier: Type.Literal(true),
+  },
+  { additionalProperties: false }
+);
+export type SourceVoiceGraph = Static<typeof SourceVoiceGraphSchema>;
+
 export const AnalysisRecordSchema = Type.Object(
   {
     id: IdSchema,
@@ -1743,6 +1841,7 @@ export const AnalysisRecordSchema = Type.Object(
     validationProfileId: Type.Optional(Type.String({ minLength: 1 })),
     contrapuntalTechniques: Type.Optional(Type.Array(Type.String({ minLength: 1 }))),
     summary: Type.Optional(Type.String({ minLength: 1 })),
+    sourceVoiceGraph: Type.Optional(SourceVoiceGraphSchema),
     passages: Type.Optional(Type.Array(PassageAnalysisSchema, { minItems: 1 })),
     profiles: Type.Optional(Type.Array(AnalysisProfileSchema)),
     ambiguities: Type.Optional(Type.Array(AnalysisAmbiguitySchema)),

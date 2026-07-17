@@ -200,7 +200,13 @@ export function arrangeFaithfulPluckedString(
           ),
         };
     const audit = applyPreservationPolicy(
-      auditFaithfulPrincipalVoice(score, analysis, built.events, selectedAttempt.plan.semitones),
+      auditFaithfulPrincipalVoice(
+        score,
+        analysis,
+        built.events,
+        selectedAttempt.plan.semitones,
+        options.arrangementPlan
+      ),
       policy
     );
     return {
@@ -217,8 +223,13 @@ export function arrangeFaithfulPluckedString(
   finalists.sort((left, right) => compareCandidatesForPolicy(left, right, policy));
   const selectedCandidate = finalists[0];
   if (!selectedCandidate) {
+    const failureCodes = [
+      ...new Set(
+        candidates.flatMap((candidate) => candidate.audit.findings.map((finding) => finding.code))
+      ),
+    ];
     throw new Error(
-      `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit`
+      `No ${options.targetConfiguration.instrumentId} candidate passed Preservation Audit (${failureCodes.join(", ")})`
     );
   }
   selectedCandidate.status = "selected";
@@ -336,7 +347,8 @@ export function auditFaithfulPrincipalVoice(
   score: NormalizedScore,
   analysis: AnalysisRecord,
   arrangedEvents: ArrangementEvent[],
-  transpositionSemitones: number
+  transpositionSemitones: number,
+  arrangementPlan?: ArrangementPlan
 ): PreservationAudit {
   assertAuthorityPathRuntime("authority.validator.preservation-editorial", "production");
   const target = analysis.preservationTargets.find(
@@ -539,11 +551,134 @@ export function auditFaithfulPrincipalVoice(
     }
   }
 
+  findings.push(
+    ...auditPlannedVoiceObligations(score, arrangedEvents, transpositionSemitones, arrangementPlan)
+  );
+
+  const plannedTargetIds = (arrangementPlan?.phraseObligations ?? []).flatMap((obligation) => [
+    ...obligation.targetVoices.map((voice) => voice.id),
+    ...obligation.relationshipPlan.map((relationship) => relationship.id),
+  ]);
+
   return {
     status: findings.some((finding) => finding.severity === "hard") ? "fail" : "pass",
-    targetIds: analysis.preservationTargets.map((candidate) => candidate.id),
+    targetIds: [
+      ...analysis.preservationTargets.map((candidate) => candidate.id),
+      ...plannedTargetIds,
+    ],
     findings,
   };
+}
+
+export function auditPlannedVoiceObligations(
+  score: NormalizedScore,
+  arrangedEvents: ArrangementEvent[],
+  transpositionSemitones: number,
+  arrangementPlan?: ArrangementPlan
+): PreservationAudit["findings"] {
+  const findings: PreservationAudit["findings"] = [];
+  for (const obligation of arrangementPlan?.phraseObligations ?? []) {
+    for (const targetVoice of obligation.targetVoices) {
+      const realized: Array<{
+        source: Extract<ScoreEvent, { type: "note" }>;
+        arrangement: ArrangementEvent;
+        pitch: string;
+      }> = [];
+      for (const sourceEventId of targetVoice.sourceEventIds) {
+        const source = score.events.find(
+          (event): event is Extract<ScoreEvent, { type: "note" }> =>
+            event.id === sourceEventId && event.type === "note"
+        );
+        if (!source) continue;
+        const arrangement = arrangedEvents.find((event) =>
+          event.voiceConstituents?.some(
+            (constituent) =>
+              constituent.sourceEventId === source.id &&
+              constituent.voiceId === targetVoice.sourcePartId
+          )
+        );
+        const constituent = arrangement?.voiceConstituents?.find(
+          (item) => item.sourceEventId === source.id && item.voiceId === targetVoice.sourcePartId
+        );
+        if (!arrangement || !constituent) {
+          findings.push({
+            targetId: targetVoice.id,
+            sourceEventId: source.id,
+            severity: "hard",
+            code: "voice.obligation_omitted",
+            message: `Planned ${targetVoice.role} event disappeared without an explicit transformation.`,
+          });
+          continue;
+        }
+        const expected = transposeNote(source.pitch, transpositionSemitones);
+        if (noteToMidi(constituent.pitch) % 12 !== noteToMidi(expected) % 12) {
+          findings.push({
+            targetId: targetVoice.id,
+            sourceEventId: source.id,
+            arrangementEventId: arrangement.id,
+            severity: "hard",
+            code: "voice.pitch_identity_changed",
+            message: `Planned ${targetVoice.role} pitch identity changed outside its allowed transformations.`,
+          });
+        }
+        if (
+          arrangement.measureId !== source.measureId ||
+          compareRational(constituent.onset, source.onset) !== 0 ||
+          compareRational(constituent.duration, source.duration) !== 0
+        ) {
+          findings.push({
+            targetId: targetVoice.id,
+            sourceEventId: source.id,
+            arrangementEventId: arrangement.id,
+            severity: "hard",
+            code: "voice.phrase_timing_changed",
+            message: `Planned ${targetVoice.role} phrase timing changed without authorization.`,
+          });
+        }
+        realized.push({ source, arrangement, pitch: constituent.pitch });
+      }
+      if (targetVoice.continuity === "required") {
+        for (let index = 1; index < realized.length; index += 1) {
+          const prior = realized[index - 1]!;
+          const current = realized[index]!;
+          const sourceMotion = noteToMidi(current.source.pitch) - noteToMidi(prior.source.pitch);
+          const targetMotion = noteToMidi(current.pitch) - noteToMidi(prior.pitch);
+          const disproportionateLeap =
+            Math.abs(targetMotion) > Math.max(12, Math.abs(sourceMotion) + 7);
+          if (disproportionateLeap) {
+            findings.push({
+              targetId: targetVoice.id,
+              sourceEventId: current.source.id,
+              arrangementEventId: current.arrangement.id,
+              severity: "hard",
+              code: "voice.continuity_jump",
+              message: `Planned ${targetVoice.role} continuity contains an unplanned registral jump.`,
+            });
+          }
+        }
+      }
+    }
+    for (const cadenceId of obligation.harmonicPlan.cadenceGoalEventIds) {
+      const targetVoice = obligation.targetVoices.find((voice) =>
+        voice.sourceEventIds.includes(cadenceId)
+      );
+      if (
+        targetVoice &&
+        !arrangedEvents.some((event) =>
+          event.voiceConstituents?.some((constituent) => constituent.sourceEventId === cadenceId)
+        )
+      ) {
+        findings.push({
+          targetId: targetVoice.id,
+          sourceEventId: cadenceId,
+          severity: "hard",
+          code: "voice.cadential_goal_omitted",
+          message: `Planned ${targetVoice.role} does not reach its cadential goal.`,
+        });
+      }
+    }
+  }
+  return findings;
 }
 
 function absoluteEventOnset(
@@ -682,7 +817,29 @@ function buildHistoricalPluckedPhraseCandidate(
 
     const melodyPitch = transposeNote(sourceEvent.pitch, semitones);
     const sourceHarmony = sourceEventsAt(score, sourceEvent.measureId, sourceEvent.onset);
-    const choices = enumerateVoicings(melodyPitch, sourceHarmony, model, semitones)
+    const requiredParts = new Set(
+      plannedActiveVoiceParts(
+        options.arrangementPlan,
+        sourceHarmony.map((event) => event.id)
+      )
+    );
+    const requiredSourceEventIds = sourceHarmony
+      .filter((event) => event.id !== sourceEvent.id && requiredParts.has(event.partId))
+      .map((event) => event.id);
+    const plannedHarmony = requiredParts.size
+      ? sourceHarmony.filter((event) => requiredParts.has(event.partId))
+      : sourceHarmony;
+    const choices = enumerateVoicings(
+      melodyPitch,
+      plannedHarmony,
+      model,
+      semitones,
+      sourceEvent.id,
+      Boolean(options.arrangementPlan?.phraseObligations?.length)
+    )
+      .filter((choice) =>
+        requiredSourceEventIds.every((sourceId) => choice.sourceEventIds.includes(sourceId))
+      )
       .sort((left, right) =>
         strategy === "source-coverage"
           ? right.sourcePitchClassCoverage - left.sourcePitchClassCoverage ||
@@ -694,12 +851,13 @@ function buildHistoricalPluckedPhraseCandidate(
       )
       .slice(0, 12);
     const successors: PhraseState[] = [];
+    const rejected = { principalPosition: 0, violentJump: 0, fingering: 0, voicePlan: 0 };
     for (const state of frontier) {
       for (const choice of choices) {
         expandedStates += 1;
         if (expandedStates > limits.maximumExpandedStates) {
           throw new PhraseSearchExhaustedError(
-            `Bounded phrase search exhausted after ${limits.maximumExpandedStates} expanded states; no impossibility claim is made`,
+            `${instance.profileId} bounded phrase search exhausted after ${limits.maximumExpandedStates} expanded states; no impossibility claim is made`,
             expandedStates,
             limits.maximumExpandedStates
           );
@@ -716,7 +874,10 @@ function buildHistoricalPluckedPhraseCandidate(
             .soundingPitches(position.course, position.fret)
             .some((pitch) => noteToMidi(pitch) === noteToMidi(melodyPitch))
         );
-        if (!principalPosition) continue;
+        if (!principalPosition) {
+          rejected.principalPosition += 1;
+          continue;
+        }
         const handPosition = positionCentroid(positions);
         const transition = buildPhraseTransition(
           state,
@@ -729,13 +890,58 @@ function buildHistoricalPluckedPhraseCandidate(
           styleBrise.status === "applied",
           sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration }))
         );
-        if (baroqueGuitar && transition.violentCrossNeckJump) continue;
+        if (baroqueGuitar && transition.violentCrossNeckJump) {
+          rejected.violentJump += 1;
+          continue;
+        }
         const occupiedFingers = positions.flatMap((position) =>
           position.leftHandFinger
             ? [{ finger: position.leftHandFinger, fret: position.fret, course: position.course }]
             : []
         );
-        if (!fingerOccupationIsPossible(occupiedFingers)) continue;
+        if (!fingerOccupationIsPossible(occupiedFingers)) {
+          rejected.fingering += 1;
+          continue;
+        }
+        const voiceConstituents =
+          classicalGuitar || options.arrangementPlan?.phraseObligations?.length
+            ? buildTargetVoiceConstituents(
+                score,
+                sourceEvent,
+                sourceHarmony,
+                choice,
+                positions,
+                semitones,
+                options.arrangementPlan,
+                classicalGuitar
+              )
+            : [];
+        const requiredActiveParts = plannedActiveVoiceParts(
+          options.arrangementPlan,
+          sourceHarmony.map((event) => event.id)
+        );
+        if (
+          requiredActiveParts.some(
+            (partId) =>
+              !voiceConstituents.some((voice) => voice.voiceId === partId) &&
+              !state.events.some((priorEvent) =>
+                priorEvent.voiceConstituents?.some(
+                  (voice) =>
+                    voice.voiceId === partId && requiredSourceEventIds.includes(voice.sourceEventId)
+                )
+              )
+          )
+        ) {
+          rejected.voicePlan += 1;
+          continue;
+        }
+        if (
+          options.arrangementPlan?.phraseObligations?.length &&
+          hasUnplannedVoiceJump(score, state.events, voiceConstituents)
+        ) {
+          rejected.voicePlan += 1;
+          continue;
+        }
         const arranged: ArrangementEvent = {
           id: eventId,
           type: choice.pitches.length > 1 ? "chord" : "note",
@@ -746,6 +952,7 @@ function buildHistoricalPluckedPhraseCandidate(
           positions,
           sourceEventIds: Array.from(new Set([sourceEvent.id, ...choice.sourceEventIds])),
           principalVoiceSourceEventId: sourceEvent.id,
+          ...(voiceConstituents.length ? { voiceConstituents } : {}),
           ...(classicalGuitar
             ? {
                 notationSemantics: {
@@ -758,14 +965,6 @@ function buildHistoricalPluckedPhraseCandidate(
                   duration: sourceEvent.duration,
                   tie: sourceEvent.tie ?? ("none" as const),
                 },
-                voiceConstituents: buildClassicalVoiceConstituents(
-                  score,
-                  sourceEvent,
-                  sourceHarmony,
-                  choice,
-                  positions,
-                  semitones
-                ),
               }
             : {}),
         };
@@ -790,7 +989,7 @@ function buildHistoricalPluckedPhraseCandidate(
     }
     if (successors.length === 0) {
       throw new PhraseSearchExhaustedError(
-        `Bounded phrase search found no surviving state at Principal Voice event ${sourceEvent.id}; no impossibility claim is made`,
+        `${instance.profileId} bounded phrase search found no surviving state at Principal Voice event ${sourceEvent.id} after examining ${choices.length} planned voicing(s) from ${frontier.length} state(s) (${JSON.stringify(rejected)}); no impossibility claim is made`,
         expandedStates,
         limits.maximumExpandedStates
       );
@@ -951,46 +1150,55 @@ function physicalMotionSummary(events: ArrangementEvent[]): {
   return { totalMotion, maximumHandShift, diapasonPreparations };
 }
 
-function buildClassicalVoiceConstituents(
+function buildTargetVoiceConstituents(
   score: NormalizedScore,
   principalEvent: Extract<ScoreEvent, { type: "note" }>,
   soundingSourceEvents: Extract<ScoreEvent, { type: "note" }>[],
   choice: VoicingChoice,
   positions: ArrangementPosition[],
-  semitones: number
+  semitones: number,
+  plan: ArrangementPlan | undefined,
+  classicalGuitar: boolean
 ): NonNullable<ArrangementEvent["voiceConstituents"]> {
-  const partIds = Array.from(
-    new Set(
-      score.events.flatMap((event) =>
-        event.type === "note" && event.partId !== principalEvent.partId ? [event.partId] : []
-      )
-    )
+  const plannedParts = plannedActiveVoiceParts(
+    plan,
+    soundingSourceEvents.map((event) => event.id)
   );
-  const orderedPartIds = [principalEvent.partId, ...partIds].slice(0, 4);
+  const orderedPartIds = plannedParts.length
+    ? [principalEvent.partId, ...plannedParts.filter((id) => id !== principalEvent.partId)]
+    : [
+        principalEvent.partId,
+        ...Array.from(
+          new Set(
+            score.events.flatMap((event) =>
+              event.type === "note" && event.partId !== principalEvent.partId ? [event.partId] : []
+            )
+          )
+        ),
+      ].slice(0, 4);
   const usedCourses = new Set<number>();
-  const retainedSources = [
-    principalEvent,
-    ...soundingSourceEvents.filter(
-      (event) =>
-        event.id !== principalEvent.id &&
-        choice.sourceEventIds.includes(event.id) &&
-        compareRational(event.onset, principalEvent.onset) === 0
-    ),
-  ];
+  const retainedSources = orderedPartIds.flatMap((partId) => {
+    if (partId === principalEvent.partId) return [principalEvent];
+    const event = soundingSourceEvents.find(
+      (candidate) =>
+        candidate.partId === partId &&
+        choice.sourceEventIds.includes(candidate.id) &&
+        compareRational(candidate.onset, principalEvent.onset) === 0
+    );
+    return event ? [event] : [];
+  });
   const constituents = retainedSources.flatMap((source) => {
     const desired = transposeNote(source.pitch, semitones);
     const desiredMidi = noteToMidi(desired);
-    const positionIndex = positions.findIndex((position, index) => {
+    const positionIndex = positions.findIndex((position) => {
       if (usedCourses.has(position.course)) return false;
-      const sounded = choice.pitches[index];
-      if (!sounded) return false;
       return source.id === principalEvent.id
-        ? noteToMidi(sounded) === desiredMidi
-        : noteToMidi(sounded) % 12 === desiredMidi % 12;
+        ? noteToMidi(position.pitch) === desiredMidi
+        : noteToMidi(position.pitch) % 12 === desiredMidi % 12;
     });
     if (positionIndex < 0) return [];
     const position = positions[positionIndex]!;
-    const pitch = respellAtPhysicalOctave(desired, choice.pitches[positionIndex]!);
+    const pitch = respellAtPhysicalOctave(desired, position.pitch);
     usedCourses.add(position.course);
     const voiceLayer = Math.max(1, orderedPartIds.indexOf(source.partId) + 1);
     return [
@@ -1008,16 +1216,55 @@ function buildClassicalVoiceConstituents(
         duration: source.duration,
         voiceLayer,
         stemDirection: source.id === principalEvent.id ? ("up" as const) : ("down" as const),
-        writtenPitch: raiseWrittenOctave(pitch),
-        writtenToSoundingSemitones: -12,
+        writtenPitch: classicalGuitar ? raiseWrittenOctave(pitch) : pitch,
+        writtenToSoundingSemitones: classicalGuitar ? -12 : 0,
         tie: source.tie ?? ("none" as const),
       },
     ];
   });
   if (!constituents.some((constituent) => constituent.role === "principal_voice")) {
-    throw new Error(`Classical-guitar phrase state lost Principal Voice ${principalEvent.id}`);
+    throw new Error(`Phrase state lost Principal Voice ${principalEvent.id}`);
   }
   return constituents;
+}
+
+function plannedActiveVoiceParts(
+  plan: ArrangementPlan | undefined,
+  sourceEventIds: string[]
+): string[] {
+  const active = new Set(sourceEventIds);
+  return (plan?.phraseObligations ?? []).flatMap((obligation) =>
+    obligation.targetVoices.flatMap((voice) =>
+      voice.sourceEventIds.some((id) => active.has(id)) ? [voice.sourcePartId] : []
+    )
+  );
+}
+
+function hasUnplannedVoiceJump(
+  score: NormalizedScore,
+  priorEvents: ArrangementEvent[],
+  current: NonNullable<ArrangementEvent["voiceConstituents"]>
+): boolean {
+  return current.some((voice) => {
+    if (voice.role === "principal_voice") return false;
+    const prior = priorEvents
+      .flatMap((event) => event.voiceConstituents ?? [])
+      .filter((candidate) => candidate.voiceId === voice.voiceId)
+      .at(-1);
+    if (!prior) return false;
+    const sourcePrior = score.events.find(
+      (event): event is Extract<ScoreEvent, { type: "note" }> =>
+        event.id === prior.sourceEventId && event.type === "note"
+    );
+    const sourceCurrent = score.events.find(
+      (event): event is Extract<ScoreEvent, { type: "note" }> =>
+        event.id === voice.sourceEventId && event.type === "note"
+    );
+    if (!sourcePrior || !sourceCurrent) return true;
+    const sourceMotion = noteToMidi(sourceCurrent.pitch) - noteToMidi(sourcePrior.pitch);
+    const targetMotion = noteToMidi(voice.pitch) - noteToMidi(prior.pitch);
+    return Math.abs(targetMotion) > Math.max(12, Math.abs(sourceMotion) + 7);
+  });
 }
 
 function respellAtPhysicalOctave(desired: string, physical: string): string {
@@ -1313,7 +1560,13 @@ function buildCandidateEvents(
 
     const melodyPitch = transposeNote(sourceEvent.pitch, semitones);
     const soundingSourceEvents = sourceEventsAt(score, sourceEvent.measureId, sourceEvent.onset);
-    const enumerated = enumerateVoicings(melodyPitch, soundingSourceEvents, model, semitones);
+    const enumerated = enumerateVoicings(
+      melodyPitch,
+      soundingSourceEvents,
+      model,
+      semitones,
+      sourceEvent.id
+    );
     const choices =
       model.exactInstance()?.profileId === "classical-guitar-6"
         ? enumerated.filter(classicalGuitarFingeringFeasible)
@@ -1429,24 +1682,32 @@ function enumerateVoicings(
   melodyPitch: string,
   sourceEvents: Extract<ScoreEvent, { type: "note" }>[],
   model: InstrumentModel,
-  semitones: number
+  semitones: number,
+  principalSourceEventId: string,
+  preserveSourceVoiceIdentity = false
 ): VoicingChoice[] {
   const melodyMidi = noteToMidi(melodyPitch);
   const melodyPositions = principalPositions(model, melodyPitch);
-  const sourceByPitchClass = new Map<number, Extract<ScoreEvent, { type: "note" }>[]>();
+  const sourceByPitchClass = new Map<number, Array<Extract<ScoreEvent, { type: "note" }>>>();
   for (const event of sourceEvents) {
-    const transposed = transposeNote(event.pitch, semitones);
-    const pitchClass = noteToMidi(transposed) % 12;
-    if (pitchClass === melodyMidi % 12) continue;
-    const entries = sourceByPitchClass.get(pitchClass) ?? [];
-    entries.push(event);
-    sourceByPitchClass.set(pitchClass, entries);
+    if (event.id === principalSourceEventId) continue;
+    const pitchClass = noteToMidi(transposeNote(event.pitch, semitones)) % 12;
+    if (!preserveSourceVoiceIdentity && pitchClass === melodyMidi % 12) continue;
+    const key = preserveSourceVoiceIdentity
+      ? noteToMidi(transposeNote(event.pitch, semitones)) * 10_000 + sourceEvents.indexOf(event)
+      : pitchClass;
+    sourceByPitchClass.set(key, [...(sourceByPitchClass.get(key) ?? []), event]);
   }
-  const accompanimentOptions = [...sourceByPitchClass.entries()].map(([pitchClass, events]) => ({
-    events,
-    positions: playablePitchClassPositions(pitchClass, melodyMidi, model),
-  }));
-  const totalPitchClasses = accompanimentOptions.filter(
+  const accompanimentOptions = [...sourceByPitchClass.entries()].map(([key, events]) => {
+    const pitchClass = preserveSourceVoiceIdentity
+      ? noteToMidi(transposeNote(events[0]!.pitch, semitones)) % 12
+      : key;
+    return {
+      events,
+      positions: playablePitchClassPositions(pitchClass, melodyMidi, model),
+    };
+  });
+  const totalSourceVoices = accompanimentOptions.filter(
     (option) => option.positions.length > 0
   ).length;
   const results: VoicingChoice[] = [];
@@ -1483,9 +1744,7 @@ function enumerateVoicings(
         positions,
         sourceEventIds: sourceIds,
         sourcePitchClassCoverage:
-          totalPitchClasses === 0
-            ? 1
-            : new Set(pitches.map((pitch) => noteToMidi(pitch) % 12)).size / totalPitchClasses,
+          totalSourceVoices === 0 ? 1 : new Set(sourceIds).size / totalSourceVoices,
         averageFret: positions.reduce((sum, position) => sum + position.fret, 0) / positions.length,
         openStringCount: positions.filter((position) => position.fret === 0).length,
       });
@@ -1569,11 +1828,12 @@ function candidateMetrics(events: ArrangementEvent[]): ArrangementCandidate["met
 function deduplicateVoicings(choices: VoicingChoice[]): VoicingChoice[] {
   const seen = new Set<string>();
   return choices.filter((choice) => {
-    const key = choice.positions
-      .slice()
-      .sort((left, right) => left.course - right.course)
-      .map((position) => `${position.course}:${position.fret}`)
-      .join("|");
+    const key =
+      choice.positions
+        .slice()
+        .sort((left, right) => left.course - right.course)
+        .map((position) => `${position.course}:${position.fret}`)
+        .join("|") + `;${choice.sourceEventIds.slice().sort().join(",")}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

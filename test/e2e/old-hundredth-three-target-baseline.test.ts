@@ -3,7 +3,11 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { auditFaithfulPrincipalVoice } from "../../src/lib/baroque-guitar-arranger.js";
+import {
+  auditFaithfulPrincipalVoice,
+  auditPlannedVoiceObligations,
+} from "../../src/lib/baroque-guitar-arranger.js";
+import { midiToNote, noteToMidi } from "../../src/lib/pitch.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
 import { OmrService, type OmrBackend } from "../../src/server/lib/omr.js";
@@ -87,6 +91,17 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
 
     expect(results).toHaveLength(3);
     expect(new Set(results.map(({ analysisRecordId }) => analysisRecordId)).size).toBe(1);
+    const analysis = store.getAnalysisRecord(workspace.id, results[0]!.analysisRecordId);
+    expect(analysis.sourceVoiceGraph).toMatchObject({
+      identityIndependentOfPitchHeight: true,
+      identityIndependentOfNotationCarrier: true,
+    });
+    expect(analysis.sourceVoiceGraph?.voices).toHaveLength(4);
+    expect(
+      analysis.sourceVoiceGraph?.voices.every(
+        (voice) => voice.identityBasis === "event_continuity_within_notation_carrier"
+      )
+    ).toBe(true);
     for (const result of results) {
       expect(result.arrangementScore.preservationAudit.status).toBe("pass");
       expect(
@@ -95,6 +110,7 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         )
       ).toBe(true);
       expect(result.arrangementSearch.normalizedScoreId).toBe(recognized.normalizedScore.id);
+      expect(result.arrangementPlan.phraseObligations?.length).toBeGreaterThan(0);
 
       const firstPrincipal = result.arrangementScore.events.find(
         ({ principalVoiceSourceEventId }) => principalVoiceSourceEventId
@@ -108,6 +124,78 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
       expect(mutationAudit.status).toBe("fail");
       expect(mutationAudit.findings.some(({ code }) => code === "principal.omitted")).toBe(true);
     }
+
+    const classical = results.find(
+      (result) => result.arrangementScore.targetConfiguration.instrumentId === "classical-guitar-6"
+    )!;
+    const classicalVoices = classical.arrangementPlan.phraseObligations!.flatMap(
+      (obligation) => obligation.targetVoices
+    );
+    expect(classicalVoices.map((voice) => voice.role)).toEqual(
+      expect.arrayContaining(["principal_voice", "bass"])
+    );
+    expect(
+      auditPlannedVoiceObligations(
+        recognized.normalizedScore,
+        classical.arrangementScore.events,
+        classical.arrangementScore.transpositionPlan.semitones,
+        classical.arrangementPlan
+      )
+    ).toEqual([]);
+
+    const bassConstituents = classical.arrangementScore.events.flatMap((event) =>
+      (event.voiceConstituents ?? [])
+        .filter((voice) => voice.role === "source_voice")
+        .map((voice) => ({ event, voice }))
+    );
+    const timingMutation = structuredClone(classical.arrangementScore.events);
+    const timingVoice = timingMutation
+      .flatMap((event) => event.voiceConstituents ?? [])
+      .find((voice) => voice.role === "source_voice")!;
+    timingVoice.duration = {
+      numerator: timingVoice.duration.numerator + 1,
+      denominator: timingVoice.duration.denominator,
+    };
+    expect(
+      auditPlannedVoiceObligations(
+        recognized.normalizedScore,
+        timingMutation,
+        classical.arrangementScore.transpositionPlan.semitones,
+        classical.arrangementPlan
+      ).some(({ code }) => code === "voice.phrase_timing_changed")
+    ).toBe(true);
+
+    const jumpMutation = structuredClone(classical.arrangementScore.events);
+    const jumpVoice = jumpMutation
+      .flatMap((event) => event.voiceConstituents ?? [])
+      .filter((voice) => voice.role === "source_voice")[1]!;
+    jumpVoice.pitch = midiToNote(noteToMidi(jumpVoice.pitch) + 24);
+    expect(
+      auditPlannedVoiceObligations(
+        recognized.normalizedScore,
+        jumpMutation,
+        classical.arrangementScore.transpositionPlan.semitones,
+        classical.arrangementPlan
+      ).some(({ code }) => code === "voice.continuity_jump")
+    ).toBe(true);
+
+    const bassCadenceId = classical.arrangementPlan
+      .phraseObligations!.flatMap((obligation) => obligation.harmonicPlan.cadenceGoalEventIds)
+      .find((id) => bassConstituents.some(({ voice }) => voice.sourceEventId === id))!;
+    const cadenceMutation = structuredClone(classical.arrangementScore.events).map((event) => ({
+      ...event,
+      voiceConstituents: event.voiceConstituents?.filter(
+        (voice) => voice.sourceEventId !== bassCadenceId
+      ),
+    }));
+    expect(
+      auditPlannedVoiceObligations(
+        recognized.normalizedScore,
+        cadenceMutation,
+        classical.arrangementScore.transpositionPlan.semitones,
+        classical.arrangementPlan
+      ).some(({ code }) => code === "voice.cadential_goal_omitted")
+    ).toBe(true);
 
     const observations = results.map((result) => {
       const instrumentId = result.arrangementScore.targetConfiguration.instrumentId;
@@ -140,14 +228,14 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         techniques[0] === "punteado"
           ? ["baroque_guitar.single_generic_punteado_technique"]
           : []),
-        ...(instrumentId === "baroque-guitar-5" && voiceIds.length === 0
-          ? ["baroque_guitar.no_explicit_subordinate_voice_lineage"]
+        ...(instrumentId === "baroque-guitar-5" && voiceIds.length < 2
+          ? ["baroque_guitar.subordinate_idiom_deferred"]
           : []),
         ...(instrumentId === "baroque-lute-13" && maxStoppedCourseFretDelta >= 5
           ? ["baroque_lute.five_fret_stopped_course_delta"]
           : []),
-        ...(instrumentId === "baroque-lute-13" && voiceIds.length === 0
-          ? ["baroque_lute.no_explicit_subordinate_voice_lineage"]
+        ...(instrumentId === "baroque-lute-13" && voiceIds.length < 2
+          ? ["baroque_lute.subordinate_idiom_deferred"]
           : []),
         ...(instrumentId === "classical-guitar-6" &&
         result.candidates.some(
@@ -155,9 +243,6 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
             phraseSearchEvidence?.classicalTechniqueEvidence?.rightHandScope === "unknown"
         )
           ? ["classical_guitar.right_hand_unmodeled"]
-          : []),
-        ...(instrumentId === "classical-guitar-6"
-          ? ["classical_guitar.bass_phrase_coherence_unevaluated"]
           : []),
       ];
       return {
@@ -170,11 +255,9 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
       };
     });
     expect(observations.flatMap(({ knownDefects }) => knownDefects).sort()).toEqual([
-      "baroque_guitar.no_explicit_subordinate_voice_lineage",
       "baroque_guitar.single_generic_punteado_technique",
-      "baroque_lute.five_fret_stopped_course_delta",
-      "baroque_lute.no_explicit_subordinate_voice_lineage",
-      "classical_guitar.bass_phrase_coherence_unevaluated",
+      "baroque_guitar.subordinate_idiom_deferred",
+      "baroque_lute.subordinate_idiom_deferred",
       "classical_guitar.right_hand_unmodeled",
     ]);
 

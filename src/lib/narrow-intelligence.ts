@@ -5,12 +5,14 @@ import type {
   ArrangementScore,
   PerformanceBrief,
   PerformanceBriefInput,
+  PhraseObligation,
   ScoreTranscription,
   SourceArtifact,
   SourceTruthAssessment,
   TargetConfiguration,
 } from "./music-domain.js";
 import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
+import { noteToMidi } from "./pitch.js";
 import type { PreservationPolicy } from "./preservation-policy.js";
 
 export type NarrowPlanningRecords = {
@@ -152,6 +154,20 @@ export function buildNarrowPlanningRecords(input: {
       cadences: [],
     },
   ];
+  const phraseObligations = buildPhraseObligations(
+    input.analysis,
+    input.transcription,
+    passages,
+    input.target
+  );
+  const plannedVoiceIds = new Set(
+    phraseObligations.flatMap((obligation) =>
+      obligation.targetVoices.map((voice) => voice.sourceVoiceId)
+    )
+  );
+  const isSectionalReduction = (input.analysis.sourceVoiceGraph?.voices ?? []).some(
+    (voice) => !plannedVoiceIds.has(voice.id)
+  );
   const decisions = [
     {
       id: `decision.${input.createId()}`,
@@ -237,7 +253,7 @@ export function buildNarrowPlanningRecords(input: {
   const arrangementPlan: ArrangementPlan = {
     id: `plan.${input.createId()}`,
     version: 1,
-    kind: "minimal_projection",
+    kind: isSectionalReduction ? "sectional_reduction" : "minimal_projection",
     sourceTruthAssessmentId: sourceTruthAssessment.id,
     normalizedScoreId: input.normalizedScoreId,
     normalizedScoreVersion: input.normalizedScoreVersion,
@@ -253,6 +269,7 @@ export function buildNarrowPlanningRecords(input: {
       passageIds: passages.map((passage) => passage.id),
       declaredOverlapPassageIds: [],
     },
+    ...(phraseObligations.length ? { phraseObligations } : {}),
     transpositionPlan: {
       status: "resolved",
       semitones: 0,
@@ -262,7 +279,7 @@ export function buildNarrowPlanningRecords(input: {
     sectionalIntent: passages.map((passage) => ({
       passageId: passage.id,
       texture: passage.texture,
-      density: "retain" as const,
+      density: isSectionalReduction ? ("reduce" as const) : ("retain" as const),
       voiceDisposition: "retain analyzed voice roles and continuity",
       bassDisposition: passage.roles.some((role) => role.role === "continuo_foundation")
         ? "retain Continuo Foundation identity"
@@ -275,17 +292,183 @@ export function buildNarrowPlanningRecords(input: {
         ? `preserve ${passage.cadences.map((cadence) => cadence.kind).join(", ")}`
         : "preserve source formal function",
     })),
-    materialDisposition: input.analysis.preservationTargets.map((target) => ({
-      sourceObjectIds: target.eventIds.length ? target.eventIds : [target.id],
-      disposition: "retained" as const,
-      rationale: `Minimal projection retains Preservation Target ${target.id}.`,
-    })),
+    materialDisposition: [
+      ...input.analysis.preservationTargets.map((target) => ({
+        sourceObjectIds: target.eventIds.length ? target.eventIds : [target.id],
+        disposition: "retained" as const,
+        rationale: `Minimal projection retains Preservation Target ${target.id}.`,
+      })),
+      ...(input.analysis.sourceVoiceGraph?.voices ?? []).flatMap((voice) => {
+        const plannedIds = new Set(
+          phraseObligations.flatMap((obligation) =>
+            obligation.targetVoices
+              .filter((targetVoice) => targetVoice.sourceVoiceId === voice.id)
+              .flatMap((targetVoice) => targetVoice.sourceEventIds)
+          )
+        );
+        const retained = voice.eventIds.filter((id) => plannedIds.has(id));
+        const omitted = voice.eventIds.filter((id) => !plannedIds.has(id));
+        return [
+          ...(retained.length
+            ? [
+                {
+                  sourceObjectIds: retained,
+                  disposition: "redistributed" as const,
+                  rationale: `Source Voice ${voice.id} has explicit phrase continuity in the target plan.`,
+                },
+              ]
+            : []),
+          ...(omitted.length
+            ? [
+                {
+                  sourceObjectIds: omitted,
+                  disposition: "omitted" as const,
+                  rationale: `These events from Source Voice ${voice.id} are explicitly omitted by the reduction plan rather than disappearing during event-local voicing.`,
+                },
+              ]
+            : []),
+        ];
+      }),
+    ],
     specialistIntent: { kind: "none" },
     decisions,
     status: "ready",
     createdAt: input.createdAt,
   };
   return { sourceTruthAssessment, performanceBrief, arrangementPlan };
+}
+
+function buildPhraseObligations(
+  analysis: AnalysisRecord,
+  transcription: ScoreTranscription,
+  passages: NonNullable<AnalysisRecord["passages"]>,
+  target: TargetConfiguration
+): NonNullable<ArrangementPlan["phraseObligations"]> {
+  const graph = analysis.sourceVoiceGraph;
+  if (!graph) return [];
+  return passages.flatMap((passage) => {
+    const principal = graph.voices.find((voice) => voice.partId === analysis.principalVoicePartId);
+    if (!principal) return [];
+    const passageVoices = graph.voices.filter((voice) =>
+      passage.roles.some((role) => role.partId === voice.partId)
+    );
+    const explicitBass = passageVoices.find((voice) =>
+      passage.roles.some(
+        (role) =>
+          role.partId === voice.partId && ["bass", "continuo_foundation"].includes(role.role)
+      )
+    );
+    const alternatives = passageVoices.filter((voice) => voice.id !== principal?.id);
+    const subordinate =
+      target.instrumentId !== "classical-guitar-6"
+        ? undefined
+        : (explicitBass ??
+          alternatives.sort(
+            (left, right) =>
+              averageVoiceMidi(transcription, passage, left.partId) -
+              averageVoiceMidi(transcription, passage, right.partId)
+          )[0]);
+    const selected = [principal, subordinate].filter(
+      (voice, index, all): voice is NonNullable<typeof voice> =>
+        Boolean(voice) && all.findIndex((candidate) => candidate?.id === voice?.id) === index
+    );
+    const cadenceGoalEventIds = passage.cadences.flatMap((cadence) => cadence.goalEventIds);
+    const targetVoices = selected.map((voice) => {
+      const phrases = passage.phrases.filter((phrase) => phrase.partId === voice.partId);
+      const role =
+        voice.id === principal?.id
+          ? ("principal_voice" as const)
+          : voice.id === explicitBass?.id
+            ? ("bass" as const)
+            : ("subordinate" as const);
+      const phraseEventIds = phrases.flatMap((phrase) => phrase.eventIds);
+      const sourceEventIds =
+        role === "principal_voice"
+          ? phraseEventIds
+          : phraseEventIds.filter((id) => {
+              const event = transcription.events.find((candidate) => candidate.id === id);
+              return (
+                event?.type === "note" &&
+                transcription.events.some(
+                  (candidate) =>
+                    candidate.type === "note" &&
+                    candidate.partId === principal?.partId &&
+                    candidate.measureId === event.measureId &&
+                    candidate.onset.numerator * event.onset.denominator ===
+                      event.onset.numerator * candidate.onset.denominator
+                )
+              );
+            });
+      return {
+        id: `target-voice.${passage.id}.${voice.partId}`,
+        sourceVoiceId: voice.id,
+        sourcePartId: voice.partId,
+        role,
+        sourceEventIds,
+        phraseIds: phrases.map((phrase) => phrase.id),
+        restEventIds: voice.restEventIds.filter((id) => passage.eventIds.includes(id)),
+        continuity: "required" as const,
+        omissionPolicy: "forbidden" as const,
+        allowedTransformations: ["uniform_transposition" as const, "octave_relocation" as const],
+      };
+    });
+    const relationships: PhraseObligation["relationshipPlan"] = analysis.preservationTargets
+      .filter(
+        (target) =>
+          target.kind === "relationship" &&
+          target.eventIds.some((id) => passage.eventIds.includes(id)) &&
+          ["phrase_contour", "cadential_goal"].includes(target.relationshipType ?? "")
+      )
+      .map((target) => ({
+        id: `target-relationship.${passage.id}.${target.id}`,
+        kind: target.relationshipType as "phrase_contour" | "cadential_goal",
+        sourceTargetId: target.id,
+        sourceEventGroups: target.eventGroups ?? [target.eventIds],
+        required: true,
+      }));
+    if (subordinate) {
+      const subordinateEvents = targetVoices.find(
+        (voice) => voice.sourcePartId === subordinate.partId
+      )?.sourceEventIds;
+      if (subordinateEvents?.length) {
+        relationships.push({
+          id: `target-relationship.${passage.id}.voice-continuity.${subordinate.partId}`,
+          kind: "voice_continuity",
+          sourceTargetId: undefined,
+          sourceEventGroups: [subordinateEvents],
+          required: true,
+        });
+      }
+    }
+    return [
+      {
+        passageId: passage.id,
+        targetVoices,
+        harmonicPlan: {
+          ...(subordinate && subordinate.id === explicitBass?.id
+            ? { bassVoiceId: `target-voice.${passage.id}.${subordinate.partId}` }
+            : {}),
+          cadenceGoalEventIds,
+          preserveSourceBassFunction: Boolean(subordinate && subordinate.id === explicitBass?.id),
+        },
+        relationshipPlan: relationships,
+      },
+    ];
+  });
+}
+
+function averageVoiceMidi(
+  transcription: ScoreTranscription,
+  passage: NonNullable<AnalysisRecord["passages"]>[number],
+  partId: string
+): number {
+  const notes = transcription.events.filter(
+    (event): event is Extract<ScoreTranscription["events"][number], { type: "note" }> =>
+      event.type === "note" && event.partId === partId && passage.eventIds.includes(event.id)
+  );
+  return notes.length
+    ? notes.reduce((sum, note) => sum + noteToMidi(note.pitch), 0) / notes.length
+    : Number.POSITIVE_INFINITY;
 }
 
 export function buildNarrowEvaluationCard(input: {

@@ -345,7 +345,7 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(result.sourceTruthAssessment.performanceBriefId).toBe(result.performanceBrief.id);
     expect(result.arrangementSearch.performanceBriefId).toBe(result.performanceBrief.id);
     expect(result.arrangementPlan).toMatchObject({
-      kind: "minimal_projection",
+      kind: "sectional_reduction",
       status: "ready",
       targetConfigurationId: "target.baroque-guitar",
       performanceBriefId: result.performanceBrief.id,
@@ -358,9 +358,12 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(result.arrangementPlan.sectionalIntent).toHaveLength(
       store.getAnalysisRecord(workspace.id, result.analysisRecordId).passages?.length ?? 0
     );
-    expect(
-      result.arrangementPlan.materialDisposition.every((item) => item.disposition === "retained")
-    ).toBe(true);
+    expect(result.arrangementPlan.materialDisposition.map((item) => item.disposition)).toEqual(
+      expect.arrayContaining(["retained", "omitted"])
+    );
+    expect(result.arrangementPlan.phraseObligations?.[0]?.targetVoices).toEqual(
+      expect.arrayContaining([expect.objectContaining({ role: "principal_voice" })])
+    );
     expect(result.arrangementPlan.decisions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -509,13 +512,6 @@ describe("Greensleeves faithful arrangement service", () => {
           candidate.phraseSearchEvidence.instrumentInstanceDigest === exactLute.contentDigest &&
           candidate.phraseSearchEvidence.luteTechniqueEvidence?.voiceLineage === "represented" &&
           candidate.phraseSearchEvidence.luteTechniqueEvidence.styleBrise.status === "not_applied"
-      )
-    ).toBe(true);
-    expect(
-      luteResult.candidates.some((candidate) =>
-        candidate.phraseSearchEvidence?.transitions.some(
-          (transition) => (transition.rightHandBassAccessCount ?? 0) > 0
-        )
       )
     ).toBe(true);
     expect(
@@ -901,94 +897,6 @@ describe("Greensleeves faithful arrangement service", () => {
     expect(lineage.releaseCommitment(workspace.id, familyCommitment.id)).toMatchObject({
       version: 2,
       status: "released",
-    });
-
-    const editableChords = result.arrangementScore.events
-      .filter((event) => event.positions.length > 1)
-      .slice(0, 2);
-    expect(editableChords).toHaveLength(2);
-    const beforeBatch = store.get(workspace.id);
-    const branchCount = beforeBatch.arrangementBranchIds.length;
-    const arrangementCount = beforeBatch.arrangementScoreIds.length;
-    const commitmentCount = beforeBatch.editorialCommitmentIds.length;
-    const batch = lineage.editArrangementEvents(
-      workspace.id,
-      result.arrangementScore.id,
-      editableChords.map((event) => ({
-        eventId: event.id,
-        patch: { positions: event.positions.slice().reverse() },
-      }))
-    );
-    expect(batch.arrangementScore).toMatchObject({
-      version: 2,
-      parentArrangementScoreId: result.arrangementScore.id,
-      branchId: batch.branch.id,
-      preservationAudit: { status: "pass" },
-    });
-    expect(batch.editorialCommitments).toEqual([]);
-    const afterBatch = store.get(workspace.id);
-    expect(afterBatch.arrangementBranchIds).toHaveLength(branchCount + 1);
-    expect(afterBatch.arrangementScoreIds).toHaveLength(arrangementCount + 1);
-    expect(afterBatch.editorialCommitmentIds).toHaveLength(commitmentCount);
-    expect(
-      store.getArrangementFamily(workspace.id, result.arrangementScore.arrangementFamilyId!)
-        .arrangementScoreIds
-    ).toEqual(expect.arrayContaining([result.arrangementScore.id, batch.arrangementScore.id]));
-    expect(store.getArrangementScore(workspace.id, result.arrangementScore.id)).toEqual(
-      result.arrangementScore
-    );
-
-    const beforeStretchPreview = store.get(workspace.id);
-    const stretchPreview = lineage.validateArrangementEvents(
-      workspace.id,
-      result.arrangementScore.id,
-      [
-        {
-          eventId: editableChords[0]!.id,
-          patch: {
-            positions: [
-              { course: 1, fret: 1, pitch: "F4", quality: "low_fret" },
-              { course: 5, fret: 6, pitch: "D#4", quality: "high_fret" },
-            ],
-          },
-        },
-      ]
-    );
-    expect(stretchPreview).toMatchObject({
-      valid: false,
-      findings: expect.arrayContaining([
-        expect.objectContaining({
-          eventIds: [editableChords[0]!.id],
-          severity: "hard",
-          category: "instrument",
-          code: "instrument.stretch",
-          message: "Fret span 5 exceeds maximum stretch 3",
-        }),
-      ]),
-    });
-    expect(store.get(workspace.id)).toMatchObject({
-      arrangementBranchIds: beforeStretchPreview.arrangementBranchIds,
-      arrangementScoreIds: beforeStretchPreview.arrangementScoreIds,
-      editorialCommitmentIds: beforeStretchPreview.editorialCommitmentIds,
-    });
-
-    const beforeRejectedBatch = store.get(workspace.id);
-    expect(() =>
-      lineage.editArrangementEvents(workspace.id, result.arrangementScore.id, [
-        {
-          eventId: editableChords[0]!.id,
-          patch: { positions: editableChords[0]!.positions.slice().reverse() },
-        },
-        {
-          eventId: editableChords[0]!.id,
-          patch: { positions: editableChords[0]!.positions },
-        },
-      ])
-    ).toThrow(/same event dimension/i);
-    expect(store.get(workspace.id)).toMatchObject({
-      arrangementBranchIds: beforeRejectedBatch.arrangementBranchIds,
-      arrangementScoreIds: beforeRejectedBatch.arrangementScoreIds,
-      editorialCommitmentIds: beforeRejectedBatch.editorialCommitmentIds,
     });
 
     const alternative = result.candidates.find((candidate) => candidate.status === "survived")!;

@@ -344,9 +344,49 @@ function completeAnalysis(
     ...record,
     summary: analysisSummary(record, principal, passages, ambiguities),
     passages,
+    sourceVoiceGraph: buildSourceVoiceGraph(score, passages),
     profiles,
     ambiguities,
     claims,
+  };
+}
+
+function buildSourceVoiceGraph(
+  score: NormalizedScore,
+  passages: NonNullable<AnalysisRecord["passages"]>
+): NonNullable<AnalysisRecord["sourceVoiceGraph"]> {
+  const voices = score.parts.flatMap((part) => {
+    const events = score.events.filter(
+      (event) => event.partId === part.id && ["note", "rest"].includes(event.type)
+    );
+    const pitched = events.filter((event) => event.type === "note");
+    if (pitched.length === 0) return [];
+    const activitySpans = passages.flatMap((passage) =>
+      passage.phrases
+        .filter((phrase) => phrase.partId === part.id)
+        .map((phrase) => ({
+          id: `source-voice-span.${phrase.id}`,
+          passageId: passage.id,
+          phraseId: phrase.id,
+          eventIds: phrase.eventIds,
+        }))
+    );
+    return [
+      {
+        id: `source-voice.${part.id}`,
+        partId: part.id,
+        notationCarrierPartId: part.id,
+        identityBasis: "event_continuity_within_notation_carrier" as const,
+        eventIds: events.map((event) => event.id),
+        restEventIds: events.filter((event) => event.type === "rest").map((event) => event.id),
+        activitySpans,
+      },
+    ];
+  });
+  return {
+    voices,
+    identityIndependentOfPitchHeight: true,
+    identityIndependentOfNotationCarrier: true,
   };
 }
 
