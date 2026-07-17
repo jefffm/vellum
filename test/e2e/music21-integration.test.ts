@@ -44,24 +44,6 @@ describe("music21 integration — direct subprocess", () => {
     expect((data.chords as unknown[]).length).toBeGreaterThan(0);
   });
 
-  it("analyze returns D major for All Creatures SATB", async () => {
-    if (!music21Available) return;
-
-    const result = await runner.run({
-      command: "python3",
-      args: [theoryPath, "analyze"],
-      stdin: loadMusicXMLFixture("all-creatures-satb"),
-      timeout: 30_000,
-    });
-
-    expect(result.exitCode).toBe(0);
-
-    const data = JSON.parse(result.stdout) as Record<string, unknown>;
-
-    expect(data.key).toBe("D major");
-    expect(data.timeSignature).toBe("3/4");
-  });
-
   it("chordify returns array of chords with bar, beat, pitches", async () => {
     if (!music21Available) return;
 

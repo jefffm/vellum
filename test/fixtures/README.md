@@ -7,6 +7,16 @@ Source Artifact; the original Mutopia LilyPond file is reviewed test ground trut
 See [`greensleeves/PROVENANCE.md`](greensleeves/PROVENANCE.md) for rights, source
 URLs, checksums, and usage constraints.
 
+## `old-hundredth/`
+
+Public-domain four-part _Old 100th_ from the 1551 Genevan Psalter. The Mutopia
+PDF is the Source Artifact and its exact LilyPond file is reviewed symbolic truth.
+This is the primary non-Greensleeves product baseline. See
+[`old-hundredth/PROVENANCE.md`](old-hundredth/PROVENANCE.md).
+
+Run `npm run proof:baseline` to exercise its reviewed source through all three
+priority target searches and print the current target-specific defects.
+
 ## `continuo/`
 
 CC0 soprano-plus-figured-bass golden fixture with a prepared `4-3`
@@ -50,9 +60,8 @@ mutations, and multiple acceptable alternatives. See
 
 ## MusicXML Fixtures
 
-| File                   | Source                           | License       |
-| ---------------------- | -------------------------------- | ------------- |
-| bach-chorale-cmaj.xml  | Hand-encoded (Bach style)        | N/A           |
-| parallel-fifths.xml    | Hand-written (deliberate errors) | N/A           |
-| hymn-simple.xml        | Hand-written                     | N/A           |
-| all-creatures-satb.xml | LASST UNS ERFREUEN (1623)        | Public domain |
+| File                  | Source                           | License |
+| --------------------- | -------------------------------- | ------- |
+| bach-chorale-cmaj.xml | Hand-encoded (Bach style)        | N/A     |
+| parallel-fifths.xml   | Hand-written (deliberate errors) | N/A     |
+| hymn-simple.xml       | Hand-written                     | N/A     |

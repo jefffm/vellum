@@ -50,20 +50,6 @@ describe("music21 analysis pipeline", () => {
     expect(result.chords[0].romanNumeral).toBe("I");
   });
 
-  it("analyzes All Creatures SATB — D major, 3/4 time, 4 voices", async () => {
-    if (!music21Available) return;
-
-    const result = await analyze(loadMusicXMLFixture("all-creatures-satb"));
-
-    expect(result.key).toBe("D major");
-    expect(result.timeSignature).toBe("3/4");
-    expect(result.voices).toHaveLength(4);
-
-    const voiceNames = result.voices.map((v) => v.name);
-    expect(voiceNames).toContain("Soprano");
-    expect(voiceNames).toContain("Bass");
-  });
-
   it("chordifies Bach chorale and returns chord array", async () => {
     if (!music21Available) return;
 

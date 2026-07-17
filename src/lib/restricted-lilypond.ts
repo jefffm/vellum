@@ -32,10 +32,13 @@ export function parseExplicitVoiceLilypond(
   const measureDuration = timeSignatureDuration(timeSignature);
   const pickupDuration =
     partialDenominator > 0 ? durationFromDenominator(partialDenominator) : undefined;
-  const parsedVoices = voiceNames.map((name) => ({
-    name,
-    events: parseVoice(extractAssignmentBlock(withoutComments, name)),
-  }));
+  const parsedVoices = voiceNames.map((name) => {
+    const assignment = extractAssignmentBlock(withoutComments, name);
+    return {
+      name,
+      events: parseVoice(assignment.block, assignment.relativeAnchor),
+    };
+  });
   const totalDuration = sumDurations(parsedVoices[0]!.events);
   const measures = buildMeasures(totalDuration, measureDuration, pickupDuration);
   const parts = parsedVoices.map(({ name }) => ({
@@ -58,8 +61,14 @@ export function parseExplicitVoiceLilypond(
   };
 }
 
-function extractAssignmentBlock(source: string, name: string): string {
-  const assignment = new RegExp(`\\b${escapeRegExp(name)}\\s*=\\s*\\{`, "g");
+function extractAssignmentBlock(
+  source: string,
+  name: string
+): { block: string; relativeAnchor?: string } {
+  const assignment = new RegExp(
+    `\\b${escapeRegExp(name)}\\s*=\\s*(?:\\\\relative\\s+([a-g](?:isis|eses|is|es)?[,']*)\\s*)?\\{`,
+    "g"
+  );
   const match = assignment.exec(source);
   if (!match) {
     throw new Error(`LilyPond voice assignment not found: ${name}`);
@@ -71,13 +80,18 @@ function extractAssignmentBlock(source: string, name: string): string {
   for (let index = openBraceIndex; index < source.length; index += 1) {
     if (source[index] === "{") depth += 1;
     if (source[index] === "}") depth -= 1;
-    if (depth === 0) return source.slice(openBraceIndex + 1, index);
+    if (depth === 0) {
+      return {
+        block: source.slice(openBraceIndex + 1, index),
+        ...(match[1] ? { relativeAnchor: match[1] } : {}),
+      };
+    }
   }
 
   throw new Error(`Unclosed LilyPond voice assignment: ${name}`);
 }
 
-function parseVoice(block: string): ParsedEvent[] {
+function parseVoice(block: string, relativeAnchor?: string): ParsedEvent[] {
   const musicalBody = block
     .replace(/\\key\s+[a-g](?:is|es)?[,']*\s+\\(?:major|minor)/g, " ")
     .replace(/\\time\s+\d+\/\d+/g, " ")
@@ -88,6 +102,10 @@ function parseVoice(block: string): ParsedEvent[] {
     /(?:^|[\s(){}|])([a-g](?:isis|eses|is|es)?[,']*|[rs])(\d+)?(\.)?(?=$|[\s(){}|])/g;
   const events: ParsedEvent[] = [];
   let inheritedDenominator: number | undefined;
+  const relativeMode = relativeAnchor !== undefined;
+  let previousMidi = relativeAnchor
+    ? scientificPitchToMidi(lilyPitchToScientific(relativeAnchor))
+    : undefined;
 
   for (const match of musicalBody.matchAll(tokenPattern)) {
     const token = match[1]!;
@@ -105,7 +123,12 @@ function parseVoice(block: string): ParsedEvent[] {
     if (token === "r" || token === "s") {
       events.push({ type: "rest", duration });
     } else {
-      events.push({ type: "note", pitch: lilyPitchToScientific(token), duration });
+      const pitch =
+        relativeMode && previousMidi !== undefined
+          ? relativeLilyPitchToScientific(token, previousMidi)
+          : lilyPitchToScientific(token);
+      if (relativeMode) previousMidi = scientificPitchToMidi(pitch);
+      events.push({ type: "note", pitch, duration });
     }
   }
 
@@ -226,6 +249,49 @@ function lilyPitchToScientific(token: string): string {
   return `${letter!.toUpperCase()}${accidental}${octave}`;
 }
 
+function relativeLilyPitchToScientific(token: string, previousMidi: number): string {
+  const match = token.match(/^([a-g])((?:isis|eses|is|es)?)([,']*)$/);
+  if (!match) throw new Error(`Unsupported LilyPond pitch: ${token}`);
+  const [, letter, accidentalToken, octaveMarks] = match;
+  if (accidentalToken === "isis" || accidentalToken === "eses") {
+    throw new Error(`Double accidentals are not supported yet: ${token}`);
+  }
+  const pitchClass =
+    ({ c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 } as const)[
+      letter as keyof typeof relativePitchClasses
+    ] + (accidentalToken === "is" ? 1 : accidentalToken === "es" ? -1 : 0);
+  const previousOctave = Math.floor(previousMidi / 12) - 1;
+  const candidates = [previousOctave - 1, previousOctave, previousOctave + 1].map(
+    (octave) => 12 * (octave + 1) + pitchClass
+  );
+  let midi = candidates.reduce((best, candidate) =>
+    Math.abs(candidate - previousMidi) < Math.abs(best - previousMidi) ? candidate : best
+  );
+  midi +=
+    12 *
+    ([...octaveMarks].filter((mark) => mark === "'").length -
+      [...octaveMarks].filter((mark) => mark === ",").length);
+  return midiToScientific(midi);
+}
+
+const relativePitchClasses = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 } as const;
+
+function scientificPitchToMidi(pitch: string): number {
+  const match = pitch.match(/^([A-G])([#b]?)(-?\d+)$/);
+  if (!match) throw new Error(`Unsupported scientific pitch: ${pitch}`);
+  const pitchClass =
+    ({ C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 } as const)[
+      match[1] as "A" | "B" | "C" | "D" | "E" | "F" | "G"
+    ] + (match[2] === "#" ? 1 : match[2] === "b" ? -1 : 0);
+  return 12 * (Number(match[3]) + 1) + pitchClass;
+}
+
+function midiToScientific(midi: number): string {
+  const pitchClasses = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const pitchClass = ((midi % 12) + 12) % 12;
+  return `${pitchClasses[pitchClass]}${Math.floor(midi / 12) - 1}`;
+}
+
 function durationFromDenominator(denominator: number): Rational {
   if (!Number.isInteger(denominator) || denominator <= 0) {
     throw new Error(`Invalid LilyPond duration denominator: ${denominator}`);
@@ -253,9 +319,9 @@ function parseKey(source: string): string | undefined {
 
 function voiceRole(name: string): ScorePart["role"] {
   const normalized = name.toLowerCase();
-  if (normalized === "soprano") return "soprano";
-  if (normalized === "alto") return "alto";
-  if (normalized === "tenor") return "tenor";
+  if (normalized === "soprano" || normalized === "sop") return "soprano";
+  if (normalized === "alto" || normalized === "alt") return "alto";
+  if (normalized === "tenor" || normalized === "ten") return "tenor";
   if (normalized === "bass") return "bass";
   return "other";
 }

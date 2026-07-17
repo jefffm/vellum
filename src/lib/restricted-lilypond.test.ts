@@ -50,6 +50,28 @@ describe("restricted explicit-voice LilyPond parser", () => {
     expect(score.events.filter((event) => event.partId === "part.bass").length).toBeGreaterThan(40);
   });
 
+  it("imports relative-pitch voices from the exact Old 100th Mutopia source", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "test/fixtures/old-hundredth/old-hundredth-satb.ly"),
+      "utf8"
+    );
+    const score = parseExplicitVoiceLilypond(source, ["sop", "alt", "ten", "bass"]);
+
+    expect(score).toMatchObject({
+      title: "Old 100th",
+      key: "G major",
+      timeSignature: "4/2",
+    });
+    expect(score.parts.map(({ role }) => role)).toEqual(["soprano", "alto", "tenor", "bass"]);
+    expect(
+      score.events
+        .filter(({ partId }) => partId === "part.sop")
+        .slice(0, 12)
+        .map((event) => (event.type === "note" ? event.pitch : "rest"))
+    ).toEqual(["G4", "G4", "F#4", "E4", "D4", "G4", "A4", "B4", "B4", "B4", "B4", "A4"]);
+    expect(score.events.filter(({ partId }) => partId === "part.bass")).toHaveLength(34);
+  });
+
   it("rejects a voice that crosses a measure boundary", () => {
     const source = `\nTitle = { }\nVoice = { \\time 3/4 \\partial 4 c'2 c'2 }`;
     expect(() => parseExplicitVoiceLilypond(source, ["Voice"])).toThrow(

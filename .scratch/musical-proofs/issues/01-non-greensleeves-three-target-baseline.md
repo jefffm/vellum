@@ -1,6 +1,6 @@
 # 01 — Non-Greensleeves three-target baseline
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -17,11 +17,11 @@ This tracer diagnoses and locks the baseline; it does not repair every failure.
 
 ## Acceptance criteria
 
-- [ ] The source identity, rights basis, transcription truth, and expected musical roles are documented.
-- [ ] One command generates or evaluates all three target candidates using production boundaries.
-- [ ] Tests detect Principal Voice loss, incoherent subordinate material, and at least one target-specific mechanical or idiomatic failure.
-- [ ] The baseline does not depend on Greensleeves and does not silently substitute a synthetic source.
-- [ ] Existing Greensleeves regressions remain intact.
+- [x] The source identity, rights basis, transcription truth, and expected musical roles are documented.
+- [x] One command generates or evaluates all three target candidates using production boundaries.
+- [x] Tests detect Principal Voice loss, incoherent subordinate material, and at least one target-specific mechanical or idiomatic failure.
+- [x] The baseline does not depend on Greensleeves and does not silently substitute a synthetic source.
+- [x] Existing Greensleeves regressions remain intact.
 
 ## Gates
 
