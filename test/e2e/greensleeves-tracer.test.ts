@@ -16,19 +16,31 @@ import {
   DEFAULT_LILYPOND_IMAGE,
   PodmanLilyPondRunner,
 } from "../../src/server/lib/podman-lilypond-runner.js";
+import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
 
-let lilypondSandboxAvailable = false;
+const realSandboxEnabled = process.env.VELLUM_REAL_LILYPOND_SANDBOX === "1";
+let compilerAvailable = false;
 
 beforeAll(() => {
   try {
-    execFileSync("podman", ["info"], { stdio: "pipe" });
-    execFileSync("podman", ["image", "exists", DEFAULT_LILYPOND_IMAGE], { stdio: "pipe" });
-    lilypondSandboxAvailable = true;
+    if (realSandboxEnabled) {
+      execFileSync("podman", ["info"], { stdio: "pipe" });
+      execFileSync("podman", ["image", "exists", DEFAULT_LILYPOND_IMAGE], { stdio: "pipe" });
+    } else {
+      execFileSync("lilypond", ["--version"], { stdio: "pipe" });
+    }
+    compilerAvailable = true;
   } catch {
-    lilypondSandboxAvailable = false;
+    compilerAvailable = false;
   }
 });
+
+function compilerRunner() {
+  return realSandboxEnabled
+    ? new PodmanLilyPondRunner({ defaultTimeout: 60_000 })
+    : new SubprocessRunner(60_000);
+}
 
 describe("Greensleeves PDF tracer bullet", () => {
   const rootDirectory = mkdtempSync(path.join(tmpdir(), "vellum-greensleeves-e2e-"));
@@ -38,7 +50,7 @@ describe("Greensleeves PDF tracer bullet", () => {
   });
 
   it("uploads, recognizes, analyzes, arranges, audits, engraves, and compiles", async () => {
-    if (!lilypondSandboxAvailable) return;
+    if (!compilerAvailable) return;
 
     const store = new WorkspaceStore({ rootDirectory });
     const workspace = store.create({
@@ -235,7 +247,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     );
     const compiled = await compileLilyPond(
       { source: engraving.source, format: "both" },
-      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
+      compilerRunner(),
       60_000
     );
     const luteEngraving = engrave(
@@ -243,7 +255,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     );
     const luteCompiled = await compileLilyPond(
       { source: luteEngraving.source, format: "both" },
-      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
+      compilerRunner(),
       60_000
     );
     const classicalParams = arrangementToEngraveParams(
@@ -254,7 +266,7 @@ describe("Greensleeves PDF tracer bullet", () => {
     const classicalEngraving = engrave(classicalParams);
     const classicalCompiled = await compileLilyPond(
       { source: classicalEngraving.source, format: "both" },
-      new PodmanLilyPondRunner({ defaultTimeout: 60_000 }),
+      compilerRunner(),
       60_000
     );
 

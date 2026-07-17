@@ -1,205 +1,132 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const archiveRoot = "docs/archive/specifications/2026-07-13";
+const activeWave = ".scratch/musical-proofs";
+const frozenWave = ".scratch/instrument-intelligence";
+const archive = "docs/archive/specifications/2026-07-16-high-assurance-program";
 
 function fail(message) {
-  throw new Error("Current specification verification failed: " + message);
+  throw new Error(`Current specification verification failed: ${message}`);
 }
 
-function requirePaths(paths, label) {
+function text(file) {
+  return readFileSync(path.join(root, file), "utf8");
+}
+
+function requirePaths(paths) {
   const missing = paths.filter((file) => !existsSync(path.join(root, file)));
-  if (missing.length) fail(label + " missing: " + missing.join(", "));
+  if (missing.length) fail(`missing current or historical paths: ${missing.join(", ")}`);
 }
 
-requirePaths(
-  [
-    "SPEC.md",
-    "CONTEXT.md",
-    "AGENTS.md",
-    "README.md",
-    ".scratch/README.md",
-    "docs/agents/domain.md",
-    "docs/adr/0022-govern-reviewed-knowledge-library.md",
-    "docs/architecture/arrangement-intelligence-boundaries.md",
-    ".scratch/instrument-intelligence/README.md",
-    ".scratch/instrument-intelligence/PLAN.md",
-    ".scratch/instrument-intelligence/REQUIREMENTS.md",
-    ".scratch/instrument-intelligence/completion-manifest.json",
-    "scripts/verify-instrument-intelligence-plan.mjs",
-    archiveRoot + "/README.md",
-    archiveRoot + "/repository/SPEC.md",
-    archiveRoot + "/repository/docs/SPEC_RECONCILIATION.md",
-    archiveRoot + "/repository/docs/proposals/instrument-knowledge-source-ingestion.md",
-    archiveRoot + "/repository/.scratch/arrangement-intelligence-followup/PLAN.md",
-    ".scratch/arrangement-intelligence/completion-manifest.json",
-  ],
-  "canonical or historical document"
-);
+requirePaths([
+  "SPEC.md",
+  "CONTEXT.md",
+  "AGENTS.md",
+  "README.md",
+  ".scratch/README.md",
+  "docs/agents/domain.md",
+  "docs/agents/issue-tracker.md",
+  "docs/adr/0023-prioritize-musical-proofs.md",
+  `${activeWave}/README.md`,
+  `${activeWave}/PLAN.md`,
+  `${frozenWave}/PLAN.md`,
+  `${frozenWave}/completion-manifest.json`,
+  `${archive}/README.md`,
+  `${archive}/SPEC.md`,
+  ".scratch/arrangement-intelligence/completion-manifest.json",
+]);
 
-requirePaths(
-  [
-    "src/server/lib/omr.ts",
-    "src/server/lib/source-import-service.ts",
-    "src/server/lib/owner-store.ts",
-    "src/server/lib/knowledge-pack-loader.ts",
-    "src/server/lib/arrangement-service.ts",
-    "src/lib/instrument-instance.ts",
-    "src/lib/preservation-policy.ts",
-    "src/lib/transformation-report.ts",
-    "src/lib/audio-preview.ts",
-    "test/e2e/greensleeves-tracer.test.ts",
-    "test/e2e/continuo-tracer.test.ts",
-    "test/e2e/imitative-counterpoint-tracer.test.ts",
-    "test/e2e/lute-diapason-tracer.test.ts",
-  ],
-  "prototype baseline evidence"
-);
-
-const forbiddenCurrentPaths = [
-  "ALFABETO-SPEC.md",
-  "HISTORICAL-RENDERING-SPEC.md",
-  "HYMNARY-IMPORT-SPEC.md",
-  "TEMPLATE-FILL-SPEC.md",
-  "OPEN-QUESTIONS.md",
-  "TECH_DEBT_AUDIT.md",
-  "docs/SPEC_RECONCILIATION.md",
-  "docs/proposals",
-  ".scratch/arrangement-intelligence-followup",
-  ".scratch/interactive-score-workspace",
-];
-const stillActive = forbiddenCurrentPaths.filter((file) => existsSync(path.join(root, file)));
-if (stillActive.length) fail("superseded paths still look current: " + stillActive.join(", "));
-
-const unexpectedRootPlans = readdirSync(root).filter(
-  (name) =>
-    /^(?:WAVE.*|.*-SPEC)\.md$/i.test(name) || /^(?:BLUNDER-HUNT.*|OPEN-QUESTIONS)\.md$/i.test(name)
-);
-if (unexpectedRootPlans.length) {
-  fail(
-    "historical planning documents remain at repository root: " + unexpectedRootPlans.join(", ")
-  );
-}
-
-const spec = readFileSync(path.join(root, "SPEC.md"), "utf8");
-for (const phrase of [
+const spec = text("SPEC.md");
+for (const marker of [
   "Status: Current and authoritative next-work specification",
   "This is the only current implementation specification in the repository.",
-  "Five-course baroque guitar, thirteen-course baroque lute, and six-string classical guitar are coequal initial targets.",
-  "Reference-source substrate",
-  "Reviewed Knowledge Library",
-  "Knowledge Library Inventory Snapshot",
-  "Activation Decision",
-  "Advisory Verification",
-  "Applied Knowledge Manifest",
-  "Target Voice and Relationship Plans",
-  "Continuo Realization and Disposition Plan",
-  "Intended Technique Plan",
-  "Five-course baroque-guitar compiler",
-  "Thirteen-course baroque-lute compiler",
-  "Six-string classical-guitar compiler",
-  "Evaluation and grading",
-  "Generation System",
-  "Capability Qualification",
-  "Adoption Decision",
-  "Vault Split Manifest",
-  "Development regressions and held-out acceptance",
-  "Late human review and release",
-  "Completion boundary",
+  "Vellum Musical Proofs",
+  "Five-course baroque-guitar proof",
+  "Thirteen-course baroque-lute proof",
+  "Six-string classical-guitar proof",
+  "PDF, review, and output proof",
+  "Interaction and versions",
+  "Evaluation exists to improve musical output, not to certify the execution process.",
+  "Deferred until triggered by evidence",
 ]) {
-  if (!spec.includes(phrase)) fail("SPEC.md lacks required contract marker: " + phrase);
-}
-if (spec.includes("proposed ADR 0022") || spec.includes("must be accepted before Slice 1")) {
-  fail("SPEC.md still treats accepted ADR 0022 as proposed");
+  if (!spec.includes(marker)) fail(`SPEC.md lacks marker: ${marker}`);
 }
 
-const agents = readFileSync(path.join(root, "AGENTS.md"), "utf8");
-for (const phrase of [
-  "The sole current implementation specification is SPEC.md",
-  "do not create beads unless the Owner explicitly requests",
-  "Do not reopen .scratch/arrangement-intelligence",
+for (const prohibited of [
+  "This committed base graph contains 107 stable tracer IDs",
+  "satisfies its goal only at **Release Complete**",
+  "one-time Owner bootstrap ceremony",
 ]) {
-  if (!agents.includes(phrase)) fail("AGENTS.md lacks current-work marker: " + phrase);
-}
-for (const stale of ["Alfabeto Pipeline Integration", "vellum-chj", "~/workspace/vellum"]) {
-  if (agents.includes(stale)) fail("AGENTS.md retains stale instruction: " + stale);
+  if (spec.includes(prohibited)) fail(`SPEC.md retains superseded contract: ${prohibited}`);
 }
 
-const frozenWaveReadme = readFileSync(
-  path.join(root, ".scratch/arrangement-intelligence/README.md"),
-  "utf8"
-);
-if (!frozenWaveReadme.includes("Status: frozen completed prototype evidence")) {
-  fail("completed Arrangement Intelligence evidence is not clearly marked frozen");
+const adr = text("docs/adr/0023-prioritize-musical-proofs.md");
+if (!adr.includes("Accepted — Owner approved the aggressive product pivot on 2026-07-16.")) {
+  fail("ADR 0023 is not accepted");
 }
 
-const context = readFileSync(path.join(root, "CONTEXT.md"), "utf8");
-for (const term of [
-  "Reviewed Knowledge Library",
-  "Knowledge Pack Release",
-  "Release Attestation",
-  "Attestation Verification",
-  "Release Advisory",
-  "Advisory Verification",
-  "Activation Decision",
-  "Knowledge Library Inventory Snapshot",
-  "Applied Knowledge Manifest",
-  "Source Segment Version",
-  "Knowledge Reassessment",
-  "Target Voice Plan",
-  "Target Relationship Plan",
-  "Continuo Realization Plan",
-  "Intended Technique Plan",
-  "Adoption Decision",
-  "Generation System",
-  "Capability Qualification",
-  "Artifact Readiness",
-  "Contamination Group",
-  "Owner Evaluation Vault",
-  "Vault Split Manifest",
-  "Owner Ergonomic Profile",
-  "Instrument Instance",
-  "Performance Brief",
-  "Arrangement Plan",
+const agents = text("AGENTS.md");
+for (const marker of [
+  "The sole current implementation specification is `SPEC.md`: **Vellum Musical Proofs**.",
+  "The active execution wave is `.scratch/musical-proofs`.",
+  "Do not reopen `.scratch/instrument-intelligence`.",
+  "history is the execution record",
 ]) {
-  if (!context.includes("**" + term + "**")) fail("CONTEXT.md lacks current domain term: " + term);
+  if (!agents.includes(marker)) fail(`AGENTS.md lacks pivot marker: ${marker}`);
 }
-
-const adr0022 = readFileSync(
-  path.join(root, "docs/adr/0022-govern-reviewed-knowledge-library.md"),
-  "utf8"
-);
-if (!adr0022.includes("Accepted — Owner approved on 2026-07-13.")) {
-  fail("ADR 0022 acceptance is not recorded");
-}
-
-const currentClaims = [
-  readFileSync(path.join(root, "CONTEXT.md"), "utf8"),
-  readFileSync(path.join(root, "README.md"), "utf8"),
-  readFileSync(path.join(root, "docs/architecture/arrangement-intelligence-boundaries.md"), "utf8"),
-].join("\n");
 for (const stale of [
-  "historical default sequence",
-  "historical default 13-course",
-  "ADRs are not Owner-accepted architecture",
+  "plan:instrument-intelligence:trust-bootstrap",
+  "three-ref tuple",
+  "strict publication verifier",
 ]) {
-  if (currentClaims.includes(stale)) fail("current documentation retains stale claim: " + stale);
+  if (agents.includes(stale)) fail(`AGENTS.md retains active high-assurance instruction: ${stale}`);
 }
 
-const readme = readFileSync(path.join(root, "README.md"), "utf8");
-for (const staleLink of [
-  "./ALFABETO-SPEC.md",
-  "./HISTORICAL-RENDERING-SPEC.md",
-  "./HYMNARY-IMPORT-SPEC.md",
-  "./TEMPLATE-FILL-SPEC.md",
-]) {
-  if (readme.includes(staleLink)) fail("README links a historical spec as current: " + staleLink);
+const scratchReadme = text(".scratch/README.md");
+if (!scratchReadme.includes("Active implementation wave: [Musical Proofs]")) {
+  fail(".scratch/README.md does not identify Musical Proofs as active");
+}
+if (!scratchReadme.includes("superseded 107-tracer high-assurance program")) {
+  fail("frozen Instrument Intelligence wave is not clearly classified");
+}
+
+const issueDirectory = path.join(root, activeWave, "issues");
+const issues = readdirSync(issueDirectory)
+  .filter((name) => /^\d{2}-.*\.md$/.test(name))
+  .sort();
+if (issues.length !== 11) fail(`active wave must have 11 tracers, found ${issues.length}`);
+const ids = issues.map((name) => name.slice(0, 2));
+const expectedIds = Array.from({ length: 11 }, (_, index) => String(index + 1).padStart(2, "0"));
+if (JSON.stringify(ids) !== JSON.stringify(expectedIds)) {
+  fail(`active tracer IDs are not contiguous 01–11: ${ids.join(", ")}`);
+}
+
+let hitl = 0;
+for (const issue of issues) {
+  const body = text(`${activeWave}/issues/${issue}`);
+  for (const field of ["Status:", "Type:", "Blocked by:", "## What to"]) {
+    if (!body.includes(field)) fail(`${issue} lacks ${field}`);
+  }
+  if (body.includes("Type: HITL")) hitl += 1;
+}
+if (
+  hitl !== 1 ||
+  !text(`${activeWave}/issues/10-owner-three-target-playtest.md`).includes("Type: HITL")
+) {
+  fail("T10 must be the sole HITL tracer");
+}
+
+const packageJson = JSON.parse(text("package.json"));
+if (packageJson.scripts["plan:instrument-intelligence:trust-bootstrap"]) {
+  fail("package.json still exposes the superseded trust bootstrap as active plan tooling");
+}
+if (packageJson.scripts["spec:verify"].includes("verify-instrument-intelligence-plan")) {
+  fail("spec:verify still executes the frozen high-assurance plan verifier");
 }
 
 function verifyLocalMarkdownLinks(file) {
-  const absoluteFile = path.join(root, file);
-  const markdown = readFileSync(absoluteFile, "utf8");
+  const markdown = text(file);
   const pattern = /\[[^\]]+\]\(([^)]+)\)/g;
   for (const match of markdown.matchAll(pattern)) {
     let target = match[1].trim();
@@ -215,8 +142,8 @@ function verifyLocalMarkdownLinks(file) {
     if (target.startsWith("<") && target.endsWith(">")) target = target.slice(1, -1);
     target = target.split("#", 1)[0];
     if (!target) continue;
-    const resolved = path.resolve(path.dirname(absoluteFile), target);
-    if (!existsSync(resolved)) fail(file + " has broken local link: " + match[1]);
+    const resolved = path.resolve(path.dirname(path.join(root, file)), target);
+    if (!existsSync(resolved)) fail(`${file} has broken local link: ${match[1]}`);
   }
 }
 
@@ -224,23 +151,13 @@ for (const file of [
   "SPEC.md",
   "README.md",
   ".scratch/README.md",
-  ".scratch/instrument-intelligence/README.md",
-  ".scratch/instrument-intelligence/PLAN.md",
-  ".scratch/instrument-intelligence/REQUIREMENTS.md",
-  "docs/archive/specifications/2026-07-13/README.md",
+  `${activeWave}/README.md`,
+  `${activeWave}/PLAN.md`,
+  `${archive}/README.md`,
 ]) {
   verifyLocalMarkdownLinks(file);
 }
 
-const archivedRepository = path.join(root, archiveRoot, "repository");
-if (!statSync(archivedRepository).isDirectory())
-  fail("historical repository snapshot is not a directory");
-
-const prompt = readFileSync(path.join(root, "src/prompts.ts"), "utf8");
-if (prompt.includes("unsupported v2 templates")) {
-  fail("system prompt still mislabels maintained templates as unsupported v2 work");
-}
-
 console.log(
-  "Current specification verified: one active spec, archived predecessors, current domain terms, and intact prototype baseline."
+  "Current specification verified: one active Musical Proofs spec, 11 product tracers, one late HITL boundary, and frozen high-assurance history."
 );

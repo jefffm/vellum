@@ -2,10 +2,15 @@
 
 Current implementation authority: [SPEC.md](../SPEC.md)
 
-Active implementation wave: [instrument-intelligence](instrument-intelligence/README.md)
+Active implementation wave: [Musical Proofs](musical-proofs/README.md)
 
-The active wave has its own plan, append-only issue queue, requirement-family index, generated completion manifest, and evidence directory. Tracer IDs are stable locators; dependencies and typed result predicates define execution order. Only tracer 01 is initially eligible. Late human commitments are followed by automatic verification, sealed execution/remediation, Machine Complete aggregation and package generation, then role-scoped reviews and Release Complete aggregation.
+The active wave contains ten small product-facing tracer bullets. Ordinary commits, tests, and
+pushes are its execution record.
 
-The remaining arrangement-intelligence directory is a frozen completed prototype record. Its exact paths and hashes are part of its evidence identity; it is not active work.
+Frozen historical waves:
 
-Completed and superseded plans that did not require path-bound retention were moved to [the specification archive](../docs/archive/specifications/2026-07-13/README.md).
+- `instrument-intelligence` — superseded 107-tracer high-assurance program; retained because
+  existing tests and evidence are path-bound.
+- `arrangement-intelligence` — completed prototype evidence; do not modify.
+
+Historical specifications are under [the specification archive](../docs/archive/specifications/).

@@ -10,4 +10,13 @@ Before planning or changing behavior:
 4. Use the exact domain terms from the glossary in code, tests, and tracer titles.
 5. Surface any proposed contradiction with an accepted ADR instead of silently overriding it.
 
-For current instrument-intelligence work, the governing concepts additionally include Reviewed Knowledge Library, Knowledge Pack Release, Release Attestation, Attestation Verification, Release Advisory, Advisory Verification, Activation Authority, Activation Decision, Knowledge Library Inventory Snapshot, Applied Knowledge Manifest, Authority Path Inventory, Source Segment Version, Asset Acquisition, Model Egress Envelope, Model Action Result Commit, Knowledge Reassessment, Source Voice Graph, Musical Context Map, Transposition Plan, Target Voice Plan, Target Harmonic Plan, Target Relationship Plan, Figured Bass Sign and Span, Continuo Realization Plan, Intended Technique Plan, Instrument Instance, Instrument Calibration, Owner Ergonomic Profile, Performance Brief, Search Measurement, Selection Policy, Adoption Decision, Generation System, Qualification Claim Scope, Capability Qualification, Artifact Readiness, Contamination Group, Owner Evaluation Vault, Vault Split Manifest, Holdout Run Ledger, and Performance Acceptance Profile.
+For the current Musical Proofs work, prefer the smallest relevant vocabulary: Source Artifact,
+Score Transcription, Source Voice Graph, Principal Voice, Preservation Target, Preservation
+Policy, Target Voice Plan, Target Harmonic Plan, Target Relationship Plan, Intended Technique
+Plan, Instrument Instance, Instrument Calibration, Arrangement Candidate, Arrangement Score,
+Transformation Report, Preservation Audit, Evaluation Card, Knowledge Candidate, Knowledge Pack,
+Source Segment Version, Owner Playtest, and Arrangement Workspace.
+
+Terms for external release attestations, complete inventory resolution, sealed qualification,
+Vault ledgers, and artifact-readiness certification remain in the glossary for future use but
+are not current implementation obligations. ADR 0023 defines the trigger for revisiting them.

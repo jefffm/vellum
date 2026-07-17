@@ -147,14 +147,17 @@ describe("PodmanLilyPondRunner policy", () => {
   });
 });
 
-const podmanAvailable = (() => {
-  try {
-    execFileSync("podman", ["info"], { stdio: "ignore", timeout: 5_000 });
-    return true;
-  } catch {
-    return false;
-  }
-})();
+const realSandboxEnabled = process.env.VELLUM_REAL_LILYPOND_SANDBOX === "1";
+const podmanAvailable =
+  realSandboxEnabled &&
+  (() => {
+    try {
+      execFileSync("podman", ["info"], { stdio: "ignore", timeout: 5_000 });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
 
 const REAL_SANDBOX_RUN_BUDGET_MS = 60_000;
 const SERIALIZED_GREENSLEEVES_SANDBOX_RUNS = 6;
@@ -167,7 +170,7 @@ const SANDBOX_TEST_CLEANUP_BUDGET_MS = 30_000;
 const QUEUE_AWARE_SANDBOX_TEST_TIMEOUT_MS =
   FULL_SUITE_COMPILER_QUEUE_BUDGET_MS + REAL_SANDBOX_RUN_BUDGET_MS + SANDBOX_TEST_CLEANUP_BUDGET_MS;
 
-describe.skipIf(!podmanAvailable)("PodmanLilyPondRunner isolation", () => {
+describe.skipIf(!realSandboxEnabled || !podmanAvailable)("PodmanLilyPondRunner isolation", () => {
   const tempPaths: string[] = [];
 
   afterEach(async () => {

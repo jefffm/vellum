@@ -126,4 +126,4 @@ Preservation Audits recompute protected musical relationships from the selected 
 - [SPEC.md](./SPEC.md) — sole current implementation specification
 - [CONTEXT.md](./CONTEXT.md) — domain language and enduring invariants
 - [Accepted ADRs](./docs/adr/) — governing architecture decisions
-- [Specification archive](./docs/archive/specifications/2026-07-13/README.md) — non-current design and execution history
+- [Specification archive](./docs/archive/specifications/) — non-current design and execution history
