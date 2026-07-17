@@ -1,6 +1,6 @@
 # 08 — Incremental source-backed knowledge loop
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -15,12 +15,21 @@ the other targets and inapplicable passages unchanged.
 
 ## Acceptance criteria
 
-- [ ] Source bytes, bibliographic identity, rights basis, and cited segment remain distinguishable.
-- [ ] Extraction produces a candidate and never activates itself.
-- [ ] Owner review records authority lane, domain, applicability, citation, and declarative consequence.
-- [ ] Activation is explicit, versioned, local, and reversible by selecting a prior version.
-- [ ] One instrument proof demonstrably changes only where the entry applies.
-- [ ] The UI exposes the applied citation and expert details without requiring them for the default workflow.
+- [x] Source bytes, bibliographic identity, rights basis, and cited segment remain distinguishable.
+- [x] Extraction produces a candidate and never activates itself.
+- [x] Owner review records authority lane, domain, applicability, citation, and declarative consequence.
+- [x] Activation is explicit, versioned, local, and reversible by selecting a prior version.
+- [x] One instrument proof demonstrably changes only where the entry applies.
+- [x] The UI exposes the applied citation and expert details without requiring them for the default workflow.
+
+## Completion note
+
+The first loop uses a one-page public-domain Sanz excerpt. Knowledge Pack v1 preserves Vellum's
+original conservative p-i-m heuristic. Explicit Owner review creates immutable v2, whose cited
+consequence permits an explicit fourth right-hand resource for a necessary fourth punteado voice.
+Selecting v1 or v2 is local and reversible; the policy resolver returns no consequence for lute or
+classical guitar. The Instrument idioms panel exposes the source digest, scope, citation, review
+state, and active version behind optional expert details.
 
 ## Gates
 

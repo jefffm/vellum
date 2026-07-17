@@ -1919,13 +1919,32 @@ export const ArrangementEventSchema = Type.Object(
             Type.Object(
               {
                 course: Type.Integer({ minimum: 1, maximum: 5 }),
-                finger: Type.Union([Type.Literal("p"), Type.Literal("i"), Type.Literal("m")]),
+                finger: Type.Union([
+                  Type.Literal("p"),
+                  Type.Literal("i"),
+                  Type.Literal("m"),
+                  Type.Literal("a"),
+                ]),
               },
               { additionalProperties: false }
             )
           ),
           strokeDirection: Type.Optional(Type.Union([Type.Literal("down"), Type.Literal("up")])),
           notationAttack: Type.Union([Type.Literal("simultaneous"), Type.Literal("successive")]),
+          appliedKnowledge: Type.Optional(
+            Type.Object(
+              {
+                packId: IdSchema,
+                version: Type.Integer({ minimum: 1 }),
+                authorityLane: Type.Union([
+                  Type.Literal("software_heuristic"),
+                  Type.Literal("historical_practice"),
+                ]),
+                citationLocator: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            )
+          ),
           alfabeto: Type.Optional(
             Type.Object(
               {

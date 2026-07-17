@@ -64,6 +64,8 @@ import {
 } from "../../lib/rhythmic-semantics.js";
 import { assertAuthorityPathRuntime } from "../../lib/authority-path-runtime.js";
 import type { KnowledgeExecutionIdentity } from "../../lib/knowledge-resolution-identity.js";
+import { baroqueGuitarPunteadoPolicyForTarget } from "../../lib/local-idiom-knowledge.js";
+import { LocalIdiomKnowledgeStore } from "./local-idiom-knowledge-store.js";
 
 type ArrangementServiceOptions = {
   store: WorkspaceStore;
@@ -76,6 +78,7 @@ type ArrangementServiceOptions = {
   ownerStore?: OwnerStore;
   /** T14 provisional seam; T15 owns mandatory canonical resolver cutover. */
   knowledgeResolutionIdentity?: KnowledgeExecutionIdentity;
+  localIdiomKnowledgeStore?: LocalIdiomKnowledgeStore;
 };
 
 export type CreateFaithfulArrangementInput = {
@@ -142,6 +145,7 @@ export class ArrangementService {
   ) => InstrumentModel;
   private readonly ownerStore?: OwnerStore;
   private readonly knowledgeResolutionIdentity?: KnowledgeExecutionIdentity;
+  private readonly localIdiomKnowledgeStore?: LocalIdiomKnowledgeStore;
 
   constructor(options: ArrangementServiceOptions) {
     this.store = options.store;
@@ -149,6 +153,11 @@ export class ArrangementService {
     this.createId = options.createId ?? randomUUID;
     this.ownerStore = options.ownerStore;
     this.knowledgeResolutionIdentity = options.knowledgeResolutionIdentity;
+    this.localIdiomKnowledgeStore =
+      options.localIdiomKnowledgeStore ??
+      (options.ownerStore
+        ? new LocalIdiomKnowledgeStore({ ownerRoot: options.ownerStore.rootDirectory })
+        : undefined);
     this.loadInstrument =
       options.loadInstrument ??
       ((instrumentId, instance) =>
@@ -620,6 +629,14 @@ export class ArrangementService {
             frontierWidth: searchProtocol.attemptConfiguration.width,
             maximumExpandedStates: searchProtocol.attemptConfiguration.maximumExpandedStates,
           },
+          ...(this.localIdiomKnowledgeStore
+            ? {
+                baroqueGuitarPunteadoPolicy: baroqueGuitarPunteadoPolicyForTarget(
+                  this.localIdiomKnowledgeStore.snapshot().activePack,
+                  targetConfiguration.instrumentId
+                ),
+              }
+            : {}),
         });
       }
     } catch (error) {

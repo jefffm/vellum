@@ -348,6 +348,10 @@ describe("Owner Knowledge workbench", () => {
     expect(implementation).toContain("Knowledge library — transactional publications");
     expect(implementation).toContain("/api/owner/knowledge-publication");
     expect(implementation).toContain("renderKnowledgePublicationWorkbench");
+    expect(implementation).toContain("Instrument idioms");
+    expect(implementation).toContain("Citation and expert details");
+    expect(implementation).toContain("Proposed only · cannot affect arrangements");
+    expect(implementation).toContain("/api/owner/idiom-knowledge/activate");
     expect(implementation).not.toContain("confidence ?? 0.75");
   });
 

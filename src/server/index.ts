@@ -137,6 +137,13 @@ import {
 import { createTrackedSourceInventoryRoute } from "./lib/tracked-source-inventory-route.js";
 import { createAuthorityPathInventoryRoute } from "./lib/authority-path-inventory-route.js";
 import { OwnerStore } from "./lib/owner-store.js";
+import { LocalIdiomKnowledgeStore } from "./lib/local-idiom-knowledge-store.js";
+import {
+  createLocalIdiomKnowledgeActivationRoute,
+  createLocalIdiomKnowledgeExtractRoute,
+  createLocalIdiomKnowledgeReadRoute,
+  createLocalIdiomKnowledgeReviewRoute,
+} from "./lib/local-idiom-knowledge-route.js";
 import { ReferenceSourceStagingStore } from "./lib/reference-source-staging-store.js";
 import {
   createOwnerLocalExtractionStagingWriter,
@@ -328,6 +335,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const ownerStore = new OwnerStore({
     rootDirectory: options.ownerReferenceMigrationOwnerRootDirectory,
   });
+  const localIdiomKnowledgeStore = new LocalIdiomKnowledgeStore({
+    ownerRoot: ownerStore.rootDirectory,
+  });
   const knowledgePublicationStore =
     options.knowledgePublicationStore ?? new KnowledgePublicationStore();
   let referenceSourceControlledArtifactStore =
@@ -505,6 +515,22 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
 
   router.get("/workspaces", createWorkspaceListRoute());
   router.get("/owner", createOwnerStateRoute(ownerStore));
+  router.get(
+    "/owner/idiom-knowledge",
+    createLocalIdiomKnowledgeReadRoute(localIdiomKnowledgeStore)
+  );
+  router.post(
+    "/owner/idiom-knowledge/extract-bundled-sanz",
+    createLocalIdiomKnowledgeExtractRoute(localIdiomKnowledgeStore)
+  );
+  router.post(
+    "/owner/idiom-knowledge/review",
+    createLocalIdiomKnowledgeReviewRoute(localIdiomKnowledgeStore)
+  );
+  router.post(
+    "/owner/idiom-knowledge/activate",
+    createLocalIdiomKnowledgeActivationRoute(localIdiomKnowledgeStore)
+  );
   router.get("/owner/authority-path-inventory", createAuthorityPathInventoryRoute());
   router.get("/owner/tracked-source-inventory", createTrackedSourceInventoryRoute());
   router.get(

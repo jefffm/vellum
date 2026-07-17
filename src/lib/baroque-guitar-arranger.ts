@@ -18,6 +18,10 @@ import { addRational, compareRational } from "./music-domain.js";
 import { midiToNote, noteToMidi, transposeNote } from "./pitch.js";
 import { buildCompleteTransformationReport } from "./transformation-report.js";
 import { applyPreservationPolicy, type PreservationPolicy } from "./preservation-policy.js";
+import {
+  BASELINE_PUNTEADO_POLICY,
+  type BaroqueGuitarPunteadoPolicy,
+} from "./local-idiom-knowledge.js";
 
 type ArrangementOptions = {
   arrangementId: string;
@@ -30,6 +34,7 @@ type ArrangementOptions = {
     frontierWidth: number;
     maximumExpandedStates: number;
   };
+  baroqueGuitarPunteadoPolicy?: BaroqueGuitarPunteadoPolicy;
 };
 
 export type ArrangementSearchResult = {
@@ -810,7 +815,8 @@ function sanzAlfabetoChoice(
 
 function planBaroqueGuitarGesture(
   positions: readonly ArrangementPosition[],
-  soundingPitches: readonly string[]
+  soundingPitches: readonly string[],
+  policy: BaroqueGuitarPunteadoPolicy = BASELINE_PUNTEADO_POLICY
 ): BaroqueGuitarGesture | undefined {
   const attackCourses = [...new Set(positions.map(({ course }) => course))].sort((a, b) => a - b);
   if (attackCourses.length === 0) return undefined;
@@ -837,8 +843,8 @@ function planBaroqueGuitarGesture(
       },
     };
   }
-  if (attackCourses.length <= 3) {
-    const fingers = ["p", "i", "m"] as const;
+  if (attackCourses.length <= policy.consequence.maximumSimultaneousAttacks) {
+    const fingers = policy.consequence.rightHandFingers;
     return {
       technique: "punteado",
       attackCourses,
@@ -849,6 +855,12 @@ function planBaroqueGuitarGesture(
         .sort((a, b) => b - a)
         .map((course, index) => ({ course, finger: fingers[index]! })),
       notationAttack: "simultaneous",
+      appliedKnowledge: {
+        packId: policy.packId,
+        version: policy.version,
+        authorityLane: policy.authorityLane,
+        citationLocator: policy.citation.locator,
+      },
     };
   }
   if (!contiguousAttack) return undefined;
@@ -863,9 +875,15 @@ function planBaroqueGuitarGesture(
   };
 }
 
-export function validateBaroqueGuitarGesture(gesture: BaroqueGuitarGesture): string[] {
+export function validateBaroqueGuitarGesture(
+  gesture: BaroqueGuitarGesture,
+  policy: BaroqueGuitarPunteadoPolicy = BASELINE_PUNTEADO_POLICY
+): string[] {
   const failures: string[] = [];
-  if (gesture.technique === "punteado" && gesture.attackCourses.length > 3)
+  if (
+    gesture.technique === "punteado" &&
+    gesture.attackCourses.length > policy.consequence.maximumSimultaneousAttacks
+  )
     failures.push("baroque_guitar.punteado_oversized_attack");
   if (
     gesture.technique === "punteado" &&
@@ -879,11 +897,14 @@ export function validateBaroqueGuitarGesture(gesture: BaroqueGuitarGesture): str
   return failures;
 }
 
-export function auditBaroqueGuitarIdiom(events: readonly ArrangementEvent[]): string[] {
+export function auditBaroqueGuitarIdiom(
+  events: readonly ArrangementEvent[],
+  policy: BaroqueGuitarPunteadoPolicy = BASELINE_PUNTEADO_POLICY
+): string[] {
   const sounding = events.filter((event) => event.type !== "rest");
   const failures = sounding.flatMap((event) =>
     event.baroqueGuitarGesture
-      ? validateBaroqueGuitarGesture(event.baroqueGuitarGesture)
+      ? validateBaroqueGuitarGesture(event.baroqueGuitarGesture, policy)
       : ["baroque_guitar.gesture_missing"]
   );
   if (
@@ -1308,9 +1329,13 @@ function buildHistoricalPluckedPhraseCandidate(
           continue;
         }
         const gesture = baroqueGuitar
-          ? planBaroqueGuitarGesture(positions, choice.pitches)
+          ? planBaroqueGuitarGesture(positions, choice.pitches, options.baroqueGuitarPunteadoPolicy)
           : undefined;
-        if (baroqueGuitar && (!gesture || validateBaroqueGuitarGesture(gesture).length > 0)) {
+        if (
+          baroqueGuitar &&
+          (!gesture ||
+            validateBaroqueGuitarGesture(gesture, options.baroqueGuitarPunteadoPolicy).length > 0)
+        ) {
           rejected.fingering += 1;
           continue;
         }
@@ -1340,7 +1365,8 @@ function buildHistoricalPluckedPhraseCandidate(
           instance.profileId,
           instance.scaleLength?.value,
           styleBrise.status === "applied",
-          sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration }))
+          sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration })),
+          options.baroqueGuitarPunteadoPolicy
         );
         if (classicalGesture) transition.heldPitchCount = classicalGesture.heldCourses.length;
         if (baroqueGuitar && transition.violentCrossNeckJump) {
@@ -1446,7 +1472,10 @@ function buildHistoricalPluckedPhraseCandidate(
   }
 
   const idiomaticFrontier = baroqueGuitar
-    ? frontier.filter((state) => auditBaroqueGuitarIdiom(state.events).length === 0)
+    ? frontier.filter(
+        (state) =>
+          auditBaroqueGuitarIdiom(state.events, options.baroqueGuitarPunteadoPolicy).length === 0
+      )
     : frontier;
   if (idiomaticFrontier.length === 0) {
     throw new PhraseSearchExhaustedError(
@@ -1795,7 +1824,8 @@ function buildPhraseTransition(
   profileId: string,
   scaleLengthMillimeters: number | undefined,
   styleBriseApplied: boolean,
-  activeVoiceDurations: Array<{ voiceId: string; duration: Rational }>
+  activeVoiceDurations: Array<{ voiceId: string; duration: Rational }>,
+  baroqueGuitarPunteadoPolicy?: BaroqueGuitarPunteadoPolicy
 ): PhraseSearchEvidence["transitions"][number] {
   const previousCourses = new Set(state.occupiedCourses);
   const nextCourses = new Set(positions.map((position) => position.course));
@@ -1869,7 +1899,8 @@ function buildPhraseTransition(
       ? (() => {
           const gesture = planBaroqueGuitarGesture(
             positions,
-            positions.flatMap((position) => [position.pitch])
+            positions.flatMap((position) => [position.pitch]),
+            baroqueGuitarPunteadoPolicy
           );
           return gesture
             ? {

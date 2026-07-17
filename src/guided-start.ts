@@ -2622,6 +2622,31 @@ type OwnerKnowledgeRefreshResult = {
   ownerReferenceSnapshot?: OwnerReferenceWorkbenchSnapshot;
 };
 
+type LocalIdiomKnowledgeSnapshot = {
+  schemaVersion: 1;
+  activeVersion: 1 | 2;
+  activePack: {
+    packId: string;
+    version: number;
+    authorityLane: string;
+    domain: string;
+    applicability: { instrumentFamily: string; technique: string };
+    citation: { sourceId: string; locator: string; publicUrl?: string };
+    consequence: {
+      maximumSimultaneousAttacks: number;
+      rightHandFingers: string[];
+    };
+  };
+  candidate?: { status: string; proposition: string; activationAllowed: false };
+  reviewed?: { reviewState: string; reviewedAt: string; rationale: string };
+  bundledSource: {
+    sha256: string;
+    byteLength: number;
+    repositoryPath: string;
+    publicUrl: string;
+  };
+};
+
 export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
   assertAuthorityPathRuntime("authority.presentation.claim-labels", "production");
 
@@ -2835,6 +2860,7 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
     confirmedOwnerReferenceSnapshot?: OwnerReferenceWorkbenchSnapshot
   ): Promise<OwnerKnowledgeRefreshResult> => {
     const state = await api<OwnerState>("/api/owner");
+    const idiomKnowledge = await api<LocalIdiomKnowledgeSnapshot>("/api/owner/idiom-knowledge");
     const result: OwnerKnowledgeRefreshResult = {};
     content.replaceChildren();
     status.textContent = `${state.historicalPracticeClaims.length} reviewed claims · ${state.personalDefaults.filter((item) => item.status === "active").length} active defaults`;
@@ -2861,6 +2887,60 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
           )
         );
       claims.append(row);
+    }
+    const idioms = section("Instrument idioms");
+    const applied = idiomKnowledge.activePack;
+    const summary = ownerRecord(
+      `Five-course baroque guitar · punteado · Knowledge Pack v${applied.version} active`,
+      `Allows ${applied.consequence.maximumSimultaneousAttacks} simultaneous attacks with ${applied.consequence.rightHandFingers.join("-")} · ${applied.authorityLane} · ${applied.citation.locator}`
+    );
+    const expert = document.createElement("details");
+    const expertSummary = document.createElement("summary");
+    expertSummary.textContent = "Citation and expert details";
+    const expertText = document.createElement("p");
+    expertText.textContent = `${applied.citation.sourceId} · scope ${JSON.stringify(applied.applicability)} · domain ${applied.domain} · source ${idiomKnowledge.bundledSource.repositoryPath} · SHA-256 ${idiomKnowledge.bundledSource.sha256}`;
+    expert.append(expertSummary, expertText);
+    const sourceUrl = applied.citation.publicUrl ?? idiomKnowledge.bundledSource.publicUrl;
+    if (sourceUrl) {
+      const sourceLink = document.createElement("a");
+      sourceLink.href = sourceUrl;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noreferrer";
+      sourceLink.textContent = "Open bundled public source record";
+      expert.append(sourceLink);
+    }
+    summary.append(expert);
+    idioms.append(summary);
+    if (!idiomKnowledge.candidate) {
+      idioms.append(
+        ownerButton("Extract bundled Sanz excerpt", () =>
+          mutate("/api/owner/idiom-knowledge/extract-bundled-sanz")
+        )
+      );
+    } else if (!idiomKnowledge.reviewed) {
+      idioms.append(
+        ownerRecord(
+          idiomKnowledge.candidate.proposition,
+          "Proposed only · cannot affect arrangements before explicit Owner review"
+        ),
+        ownerButton("Review candidate", async () => {
+          const rationale = window
+            .prompt(
+              "Why should this cited rule affect Vellum's five-course-guitar compiler?",
+              "The cited primary source explicitly permits a fourth right-hand finger when a fourth voice requires it."
+            )
+            ?.trim();
+          if (!rationale) return;
+          await mutate("/api/owner/idiom-knowledge/review", "POST", { rationale });
+        })
+      );
+    } else {
+      const alternate = idiomKnowledge.activeVersion === 1 ? 2 : 1;
+      idioms.append(
+        ownerButton(`Use Knowledge Pack v${alternate}`, () =>
+          mutate("/api/owner/idiom-knowledge/activate", "POST", { version: alternate })
+        )
+      );
     }
     const knowledge = section("Knowledge Candidates");
     for (const candidate of state.knowledgeCandidates) {
