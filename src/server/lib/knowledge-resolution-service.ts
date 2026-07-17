@@ -189,7 +189,7 @@ export class KnowledgeResolutionService {
       );
     }
     const projection = this.buildProjection(before, request);
-    const writes = projectionWrites(projection);
+    const writes = knowledgeResolutionWrites(projection);
     const transactionId = `knowledge-resolution.${projection.manifest.digest}`;
     const snapshot = this.publicationStore.publish({
       schemaVersion: 1,
@@ -1096,7 +1096,9 @@ function buildManifest(input: {
   );
 }
 
-function projectionWrites(projection: KnowledgeResolutionProjection): KnowledgePublicationWrite[] {
+export function knowledgeResolutionWrites(
+  projection: KnowledgeResolutionProjection
+): KnowledgePublicationWrite[] {
   const content = [
     projection.context,
     projection.policy,

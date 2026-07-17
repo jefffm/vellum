@@ -4345,6 +4345,7 @@
         "src/guided-start.ts",
         "src/knowledge-publication-workbench.ts",
         "src/knowledge-resolution-workbench.ts",
+        "src/knowledge-resolver-cutover-workbench.ts",
         "src/lib/tool-helpers.ts",
         "src/owner-reference-page-atlas-workbench.ts",
         "src/owner-reference-workbench.ts",
@@ -4380,6 +4381,11 @@
           "kind": "symbol",
           "path": "src/knowledge-resolution-workbench.ts",
           "selector": "renderKnowledgeResolutionWorkbench"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/knowledge-resolver-cutover-workbench.ts",
+          "selector": "renderKnowledgeResolverCutoverWorkbench"
         },
         {
           "kind": "symbol",
@@ -4492,6 +4498,19 @@
             "mode": "function_prologue",
             "path": "src/knowledge-resolution-workbench.ts",
             "selector": "renderKnowledgeResolutionWorkbench"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/knowledge-resolver-cutover-workbench.ts",
+            "selector": "renderKnowledgeResolverCutoverWorkbench"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/knowledge-resolver-cutover-workbench.ts",
+            "selector": "renderKnowledgeResolverCutoverWorkbench"
           }
         },
         {
@@ -7765,6 +7784,7 @@
       "sourcePaths": [
         "src/lib/knowledge-resolution-contract.ts",
         "src/lib/knowledge-resolution-identity.ts",
+        "src/lib/knowledge-resolver-cutover-contract.ts",
         "src/lib/reviewed-knowledge-contract.ts",
         "src/lib/reviewer-authority-contract.ts",
         "src/lib/reviewer-authority-wire.ts",
@@ -7773,6 +7793,8 @@
         "src/server/index.ts",
         "src/server/lib/knowledge-resolution-route.ts",
         "src/server/lib/knowledge-resolution-service.ts",
+        "src/server/lib/knowledge-resolver-cutover-route.ts",
+        "src/server/lib/knowledge-resolver-cutover-service.ts",
         "src/server/lib/owner-reference-page-atlas-service.ts",
         "src/server/lib/owner-reference-workbench-service.ts",
         "src/server/lib/reviewer-authority-route.ts",
@@ -7792,6 +7814,11 @@
           "kind": "symbol",
           "path": "src/lib/knowledge-resolution-identity.ts",
           "selector": "KnowledgeExecutionRefSchema"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/lib/knowledge-resolver-cutover-contract.ts",
+          "selector": "KnowledgeResolverPreflightSchema"
         },
         {
           "kind": "symbol",
@@ -7855,6 +7882,41 @@
         },
         {
           "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-route.ts",
+          "selector": "createKnowledgeResolverCutoverRoute"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.assertExecutionAuthority"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.cutover"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.preflight"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.readActive"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.resolveForExecution"
+        },
+        {
+          "kind": "symbol",
+          "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+          "selector": "KnowledgeResolverCutoverService.rollback"
+        },
+        {
+          "kind": "symbol",
           "path": "src/server/lib/owner-reference-page-atlas-service.ts",
           "selector": "OwnerReferencePageAtlasService.resolveKnowledgeReleaseSeed"
         },
@@ -7910,6 +7972,45 @@
             "KnowledgePublicationRecord.record",
             "KnowledgeResolutionContext.record",
             "KnowledgeResolutionPolicy.record",
+            "PublicationTransactionBinding.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.cutover"
+          },
+          "outputFields": [
+            "AppliedKnowledgeManifest.record",
+            "KnowledgeActivationDecision.record",
+            "KnowledgeCatalogSnapshot.record",
+            "KnowledgeComponentRegistrySnapshot.record",
+            "KnowledgeInventoryOutcome.record",
+            "KnowledgeLibraryInventorySnapshot.record",
+            "KnowledgePredicateResult.record",
+            "KnowledgeProvisionalConsequence.record",
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "KnowledgeResolutionContext.record",
+            "KnowledgeResolutionPolicy.record",
+            "KnowledgeResolverControlState.record",
+            "KnowledgeResolverPreflight.record",
+            "PublicationTransactionBinding.record"
+          ]
+        },
+        {
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.rollback"
+          },
+          "outputFields": [
+            "KnowledgePublicationGeneration.record",
+            "KnowledgePublicationHead.record",
+            "KnowledgePublicationRecord.record",
+            "KnowledgeResolverControlState.record",
             "PublicationTransactionBinding.record"
           ]
         },
@@ -8097,6 +8198,19 @@
           "access": "read",
           "locator": {
             "kind": "symbol",
+            "path": "src/lib/knowledge-resolver-cutover-contract.ts",
+            "selector": "KnowledgeResolverPreflightSchema"
+          },
+          "guardScope": {
+            "mode": "module_constant_prologue",
+            "path": "src/lib/knowledge-resolver-cutover-contract.ts",
+            "selector": "KnowledgeResolverPreflightSchema"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
             "path": "src/lib/reviewed-knowledge-contract.ts",
             "selector": "KnowledgeRecordRefSchema"
           },
@@ -8247,6 +8361,97 @@
             "mode": "function_prologue",
             "path": "src/server/lib/knowledge-resolution-service.ts",
             "selector": "KnowledgeResolutionService.resolve"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-route.ts",
+            "selector": "createKnowledgeResolverCutoverRoute"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-route.ts",
+            "selector": "createKnowledgeResolverCutoverRoute"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.assertExecutionAuthority"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.assertExecutionAuthority"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.cutover"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.cutover"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.preflight"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.preflight"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.readActive"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.readActive"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.resolveForExecution"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.resolveForExecution"
+          }
+        },
+        {
+          "access": "read",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.rollback"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.rollback"
           }
         },
         {
@@ -8351,6 +8556,32 @@
             "mode": "function_prologue",
             "path": "src/server/lib/knowledge-resolution-service.ts",
             "selector": "KnowledgeResolutionService.resolve"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.cutover"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.cutover"
+          }
+        },
+        {
+          "access": "write",
+          "locator": {
+            "kind": "symbol",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.rollback"
+          },
+          "guardScope": {
+            "mode": "function_prologue",
+            "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+            "selector": "KnowledgeResolverCutoverService.rollback"
           }
         },
         {
@@ -13211,7 +13442,7 @@
     },
     {
       "sourcePath": "src/guided-start.ts",
-      "sourceDigest": "510fc69ea1df15ed590dcfa6e3d0bd313805ca14b45003aa9b58244d7a6baa52",
+      "sourceDigest": "f60a551255ace3efbbe708743f5b4afd7aac2ffdd4e78313ccd9298e476a8265",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.parameter.arrangement-defaults",
@@ -15290,6 +15521,59 @@
       ]
     },
     {
+      "sourcePath": "src/knowledge-resolver-cutover-workbench.ts",
+      "sourceDigest": "83409d0f6ffb844a5ae6b906cd82902eeb4eafb9c1389c059463cde1631423f7",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.presentation.claim-labels"],
+      "declarations": [
+        {
+          "selector": "ActiveSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "Digest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "GenerationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "PreflightSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "Ref",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "StateSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "button",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "humanize",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        },
+        {
+          "selector": "renderKnowledgeResolverCutoverWorkbench",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.presentation.claim-labels"]
+        }
+      ]
+    },
+    {
       "sourcePath": "src/lib/abc-normalizer.ts",
       "sourceDigest": "d0fd372e5230dc18fae3fd676ab45c394b1a7a76637b3a02a43b7033f5d242fb",
       "disposition": "authority_path",
@@ -15757,7 +16041,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-inventory.ts",
-      "sourceDigest": "d15e195d4a5e66b704a1ea48d4b2ef7ae97c1923cb1adc79dfa3367d3b3774f2",
+      "sourceDigest": "69f21414f3d6b21b16e8f92694b207ba46fa9b2a7a305eda07305e3546974e1d",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": [
@@ -16130,7 +16414,7 @@
     },
     {
       "sourcePath": "src/lib/authority-path-runtime.ts",
-      "sourceDigest": "fdb17340f690355f82d8febc259ea51ecf32ac725c01c8c5b07ca55bc5a59e63",
+      "sourceDigest": "67909beb631398397b009d4717b4ca86feaadb77480b0cd57f64a2e2194a35ef",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.runtime-guard"],
       "declarations": [
@@ -17248,14 +17532,14 @@
     },
     {
       "sourcePath": "src/lib/data/authority-path-classification-policy.v1.json",
-      "sourceDigest": "5d38f6c576e54cc9237126d7f42e535a1868c03f46f60c902a24b16a5c6796e3",
+      "sourceDigest": "af8c95a4dd35e8c2b6f4fd057ca138278cb89416349da04cb8db787d26fc9548",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
     },
     {
       "sourcePath": "src/lib/data/authority-writer-contract.v1.json",
-      "sourceDigest": "4946a239e95c103ca70648262194b3fe807488d76011096d213caa78d61ccf91",
+      "sourceDigest": "d697314adee981d9186a21566640a0a38243f33a353d9e0b82d53bb911eea97d",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.governance.inventory-definition"],
       "declarations": []
@@ -18820,6 +19104,79 @@
         },
         {
           "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/lib/knowledge-resolver-cutover-contract.ts",
+      "sourceDigest": "d82c918c12a25d0fdc82df4b3f62961927f0c26ad8fd6f622ec2c77ba5a194a9",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "<module:1>",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Digest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Id",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverControlStateSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverPreflightCheckNameSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverPreflightCheckSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverPreflightSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Strict",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "Timestamp",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "buildCutoverRecord",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateDigest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateKnowledgeResolverControlState",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "validateKnowledgeResolverPreflight",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         }
@@ -25615,7 +25972,7 @@
     },
     {
       "sourcePath": "src/server/index.ts",
-      "sourceDigest": "d88694285353ca934ba1e3fd3369a02ed6b8fe111afcc84588855d1814f7c8de",
+      "sourceDigest": "65707950e5369802301d971467df8b1b5a37d74925fa04784129782ba1a47bc5",
       "disposition": "authority_path",
       "authorityPathIds": [
         "authority.validator.reference-source-governance",
@@ -28305,7 +28662,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-publication-store.ts",
-      "sourceDigest": "c099c31741069ee5335bf184f3237c993521fb6d877dc24e0c40539060e22ad4",
+      "sourceDigest": "f68ffec690f79938b7a3c6087ac6c235c0ab8bf327c84d216c2a6fcfb32352b7",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.knowledge-publication-governance"],
       "declarations": [
@@ -28948,7 +29305,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-resolution-route.ts",
-      "sourceDigest": "84d7a345c6814c546aff6f55e5dda94b04a5542d4f6970b109e610bf40a8404e",
+      "sourceDigest": "535e3a0f938781ab5828e7d3191deb6210007c5bf70cecbe496f4e6435f455d2",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
       "declarations": [
@@ -28978,6 +29335,11 @@
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
         {
+          "selector": "defaultKnowledgeResolutionRequest",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
           "selector": "fixedRef",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
@@ -28991,7 +29353,7 @@
     },
     {
       "sourcePath": "src/server/lib/knowledge-resolution-service.ts",
-      "sourceDigest": "a6d674319410e439c6bbdbb01bb9de95b3c5770c66ff80c0f4e3bb9d02fca215",
+      "sourceDigest": "d7e3daf0dfe12988a1822885563dab3f411266550218ec59c16d1ec69ba2e03e",
       "disposition": "authority_path",
       "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
       "declarations": [
@@ -29171,12 +29533,12 @@
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
         {
-          "selector": "manifestStatus",
+          "selector": "knowledgeResolutionWrites",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
         {
-          "selector": "projectionWrites",
+          "selector": "manifestStatus",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         },
@@ -29222,6 +29584,147 @@
         },
         {
           "selector": "validateKnowledgeResolutionProjection",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/knowledge-resolver-cutover-route.ts",
+      "sourceDigest": "b7feb6b5cec94de36b4b330f765bcd2c83b931696154645b94bd76b6f60c7096",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "RequestSchema",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "createKnowledgeResolverCutoverRoute",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        }
+      ]
+    },
+    {
+      "sourcePath": "src/server/lib/knowledge-resolver-cutover-service.ts",
+      "sourceDigest": "4ef77fe1a889226084a56c3a4f72c3a83b27b1957e91f28158fde1be0b29168a",
+      "disposition": "authority_path",
+      "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"],
+      "declarations": [
+        {
+          "selector": "KnowledgeResolverCutoverService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.assertExecutionAuthority",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.cutover",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.now",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.preflight",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.publicationStore",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.readActive",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.resolutionService",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.resolveForExecution",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "KnowledgeResolverCutoverService.rollback",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "check",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "controlStates",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "deterministicSuccessorTimestamp",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "effectiveBehavior",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "generationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "legacyView",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "publicationWrite",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "ref",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireControlLeaf",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "requireSnapshot",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameGeneration",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameGenerationRef",
+          "disposition": "authority_path",
+          "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
+        },
+        {
+          "selector": "sameOptionalRef",
           "disposition": "authority_path",
           "authorityPathIds": ["authority.validator.reviewed-knowledge-governance"]
         }

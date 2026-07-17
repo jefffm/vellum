@@ -271,6 +271,18 @@
       "allowedRoots": []
     },
     {
+      "id": "knowledge-resolution-persistence-closure",
+      "sourcePath": "src/server/lib/knowledge-resolution-service.ts",
+      "sinkSelectors": ["publish"],
+      "allowedRoots": []
+    },
+    {
+      "id": "knowledge-resolver-cutover-persistence-closure",
+      "sourcePath": "src/server/lib/knowledge-resolver-cutover-service.ts",
+      "sinkSelectors": ["publish", "reclaimExactTransactionOrphan"],
+      "allowedRoots": []
+    },
+    {
       "id": "owner-playtest-persistence-closure",
       "sourcePath": "src/server/lib/owner-playtest-route.ts",
       "sinkSelectors": ["saveOwnerPlaytest"],
@@ -366,12 +378,6 @@
           "reason": "This decision-only route constructs a gateway without an allow verifier and supplies fixed effects that throw on byte reads or sink writes."
         }
       ]
-    },
-    {
-      "id": "knowledge-resolution-persistence-closure",
-      "sourcePath": "src/server/lib/knowledge-resolution-service.ts",
-      "sinkSelectors": ["publish"],
-      "allowedRoots": []
     },
     {
       "id": "reference-source-protected-operation-output-closure",
@@ -545,6 +551,8 @@
     "KnowledgePublicationRecord.record",
     "KnowledgeResolutionContext.record",
     "KnowledgeResolutionPolicy.record",
+    "KnowledgeResolverControlState.record",
+    "KnowledgeResolverPreflight.record",
     "KnowledgeSystemIdentitySnapshot.record",
     "KnowledgeTestPolicy.record",
     "ModelAction.record",
@@ -612,9 +620,9 @@
     "ReviewerRevocationSnapshot.record",
     "ReviewerTrustPolicy.record",
     "ReviewerVerifierReceipt.record",
-    "ScoreTranscription.record",
     "ScopedReleaseAdvisory.record",
     "ScopedReleaseAttestation.record",
+    "ScoreTranscription.record",
     "SourceArtifact.record",
     "SourceArtifactContent.bytes",
     "SourceTruthAssessment.record",

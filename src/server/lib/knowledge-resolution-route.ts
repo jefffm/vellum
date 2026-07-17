@@ -114,6 +114,10 @@ function resolutionRequest(
   };
 }
 
+export function defaultKnowledgeResolutionRequest() {
+  return resolutionRequest("ordinary_default", defaultContextRefs());
+}
+
 function defaultContextRefs() {
   return {
     passageRef: fixedRef("passage.guided-start.unbound"),

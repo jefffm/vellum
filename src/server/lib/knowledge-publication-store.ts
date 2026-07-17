@@ -68,6 +68,8 @@ export const KnowledgePublicationRecordKindSchema = Type.Union([
   Type.Literal("knowledge_component_registry_snapshot"),
   Type.Literal("knowledge_provisional_consequence"),
   Type.Literal("applied_knowledge_manifest"),
+  Type.Literal("knowledge_resolver_preflight"),
+  Type.Literal("knowledge_resolver_control_state"),
   Type.Literal("owner_reference_migration_mapping"),
   Type.Literal("owner_reference_migration_quarantine"),
   Type.Literal("owner_reference_migration_journal"),

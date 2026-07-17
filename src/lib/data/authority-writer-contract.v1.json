@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contractId": "authority-writer-contract.v1",
-  "classificationPolicyDigest": "5d38f6c576e54cc9237126d7f42e535a1868c03f46f60c902a24b16a5c6796e3",
+  "classificationPolicyDigest": "af8c95a4dd35e8c2b6f4fd057ca138278cb89416349da04cb8db787d26fc9548",
   "sourceDigests": [
     {
       "path": "src/server/evaluation-comparison-cli.ts",
@@ -73,11 +73,15 @@
     },
     {
       "path": "src/server/lib/knowledge-publication-store.ts",
-      "digest": "c099c31741069ee5335bf184f3237c993521fb6d877dc24e0c40539060e22ad4"
+      "digest": "f68ffec690f79938b7a3c6087ac6c235c0ab8bf327c84d216c2a6fcfb32352b7"
     },
     {
       "path": "src/server/lib/knowledge-resolution-service.ts",
-      "digest": "a6d674319410e439c6bbdbb01bb9de95b3c5770c66ff80c0f4e3bb9d02fca215"
+      "digest": "d7e3daf0dfe12988a1822885563dab3f411266550218ec59c16d1ec69ba2e03e"
+    },
+    {
+      "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+      "digest": "4ef77fe1a889226084a56c3a4f72c3a83b27b1957e91f28158fde1be0b29168a"
     },
     {
       "path": "src/server/lib/lineage-service.ts",
@@ -2502,7 +2506,50 @@
         "KnowledgeResolutionPolicy.record",
         "PublicationTransactionBinding.record"
       ],
-      "implementationDigest": "988db0d9db14ddd95d2535881ba7a84e0e1353a7626b248d2d89213a916685eb"
+      "implementationDigest": "ac7c54ce5846bd0b8d0c8bbff2c3d81e155c99b92f2250ce50b6629de7844e1c"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+        "selector": "KnowledgeResolverCutoverService.cutover"
+      },
+      "outputFields": [
+        "AppliedKnowledgeManifest.record",
+        "KnowledgeActivationDecision.record",
+        "KnowledgeCatalogSnapshot.record",
+        "KnowledgeComponentRegistrySnapshot.record",
+        "KnowledgeInventoryOutcome.record",
+        "KnowledgeLibraryInventorySnapshot.record",
+        "KnowledgePredicateResult.record",
+        "KnowledgeProvisionalConsequence.record",
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeResolutionContext.record",
+        "KnowledgeResolutionPolicy.record",
+        "KnowledgeResolverControlState.record",
+        "KnowledgeResolverPreflight.record",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "760ac4e1083d451d03063a0b90eedae169d023dbf294459e85d47b4c22cf45bc"
+    },
+    {
+      "authorityPathId": "authority.validator.reviewed-knowledge-governance",
+      "locator": {
+        "kind": "symbol",
+        "path": "src/server/lib/knowledge-resolver-cutover-service.ts",
+        "selector": "KnowledgeResolverCutoverService.rollback"
+      },
+      "outputFields": [
+        "KnowledgePublicationGeneration.record",
+        "KnowledgePublicationHead.record",
+        "KnowledgePublicationRecord.record",
+        "KnowledgeResolverControlState.record",
+        "PublicationTransactionBinding.record"
+      ],
+      "implementationDigest": "010c6cb497b0c887e13d804f7147547503bea01652b06fba821add1117a12bf2"
     },
     {
       "authorityPathId": "authority.validator.reviewed-knowledge-governance",

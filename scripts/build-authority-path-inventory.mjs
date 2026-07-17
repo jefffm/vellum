@@ -26,7 +26,7 @@ const writerContractRelativePath = path
   .split(path.sep)
   .join("/");
 const expectedWriterContractDigest =
-  "4946a239e95c103ca70648262194b3fe807488d76011096d213caa78d61ccf91";
+  "d697314adee981d9186a21566640a0a38243f33a353d9e0b82d53bb911eea97d";
 const locatorKinds = new Set(["cache", "file_region", "json_pointer", "symbol", "yaml_pointer"]);
 const guardModes = new Set([
   "constructor_prologue",
@@ -113,6 +113,17 @@ const canonicalWriteOutputRootBindings = new Map([
     "KnowledgeResolutionContext",
     "KnowledgeResolutionPolicy",
   ]),
+  ...schemaBindings("src/lib/knowledge-resolver-cutover-contract.ts", [
+    "KnowledgeResolverPreflight",
+  ]),
+  [
+    "KnowledgeResolverControlState",
+    {
+      kind: "typebox_union",
+      path: "src/lib/knowledge-resolver-cutover-contract.ts",
+      selector: "KnowledgeResolverControlStateSchema",
+    },
+  ],
   [
     "KnowledgeActivationDecision",
     {

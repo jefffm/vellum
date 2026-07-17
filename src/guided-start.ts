@@ -43,6 +43,7 @@ import {
 } from "./knowledge-publication-workbench.js";
 import { renderReviewerAuthorityWorkbench } from "./reviewer-authority-workbench.js";
 import { renderKnowledgeResolutionWorkbench } from "./knowledge-resolution-workbench.js";
+import { renderKnowledgeResolverCutoverWorkbench } from "./knowledge-resolver-cutover-workbench.js";
 import {
   OwnerReferenceWorkbenchLocalStudyError,
   OwnerReferenceWorkbenchUploadError,
@@ -3039,6 +3040,25 @@ export function installOwnerKnowledgeWorkbench(): HTMLDialogElement {
         error instanceof Error
           ? `Knowledge resolution unavailable: ${error.message}`
           : "Knowledge resolution unavailable.";
+    }
+    const resolverCutover = section("Resolver authority — transactional cutover");
+    resolverCutover.className = "knowledge-resolver-cutover-section";
+    const resolverCutoverWorkbench = document.createElement("div");
+    resolverCutover.append(resolverCutoverWorkbench);
+    const renderResolverCutover = (state: unknown) =>
+      renderKnowledgeResolverCutoverWorkbench(resolverCutoverWorkbench, state, async (operation) =>
+        api<unknown>("/api/owner/knowledge-resolver-cutover", {
+          method: "POST",
+          body: JSON.stringify({ schemaVersion: 1, ...operation }),
+        })
+      );
+    try {
+      renderResolverCutover(await api<unknown>("/api/owner/knowledge-resolver-cutover"));
+    } catch (error) {
+      resolverCutoverWorkbench.textContent =
+        error instanceof Error
+          ? `Resolver cutover unavailable: ${error.message}`
+          : "Resolver cutover unavailable.";
     }
     return result;
   };

@@ -216,6 +216,8 @@ import {
 } from "./lib/reviewer-authority-service.js";
 import { createKnowledgeResolutionRoute } from "./lib/knowledge-resolution-route.js";
 import { KnowledgeResolutionService } from "./lib/knowledge-resolution-service.js";
+import { createKnowledgeResolverCutoverRoute } from "./lib/knowledge-resolver-cutover-route.js";
+import { KnowledgeResolverCutoverService } from "./lib/knowledge-resolver-cutover-service.js";
 import {
   PopplerReferencePageAtlasParser,
   type ReferencePageAtlasParser,
@@ -423,6 +425,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const knowledgeResolutionService = new KnowledgeResolutionService({
     publicationStore: knowledgePublicationStore,
   });
+  const knowledgeResolverCutoverService = new KnowledgeResolverCutoverService({
+    publicationStore: knowledgePublicationStore,
+  });
   const ownerReferenceWorkbenchService = new OwnerReferenceWorkbenchService({
     staging: referenceSourceStagingService,
     migration: {
@@ -602,6 +607,11 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const knowledgeResolutionRoute = createKnowledgeResolutionRoute(knowledgeResolutionService);
   router.get("/owner/knowledge-resolution", knowledgeResolutionRoute);
   router.post("/owner/knowledge-resolution", knowledgeResolutionRoute);
+  const knowledgeResolverCutoverRoute = createKnowledgeResolverCutoverRoute(
+    knowledgeResolverCutoverService
+  );
+  router.get("/owner/knowledge-resolver-cutover", knowledgeResolverCutoverRoute);
+  router.post("/owner/knowledge-resolver-cutover", knowledgeResolverCutoverRoute);
   if (options.knowledgePublicationWriter) {
     router.post(
       "/owner/knowledge-publication/generations",

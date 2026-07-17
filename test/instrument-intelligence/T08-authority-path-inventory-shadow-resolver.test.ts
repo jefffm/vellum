@@ -81,7 +81,7 @@ describe("T08 authority-path inventory and compatibility classification", () => 
       id: "authority-writer-contract.v1",
       version: 1,
       path: "src/lib/data/authority-writer-contract.v1.json",
-      digest: "4946a239e95c103ca70648262194b3fe807488d76011096d213caa78d61ccf91",
+      digest: "d697314adee981d9186a21566640a0a38243f33a353d9e0b82d53bb911eea97d",
     });
     const writerContract = JSON.parse(
       readFileSync(path.join(projectRoot, inventory.writerContractRef.path), "utf8")
