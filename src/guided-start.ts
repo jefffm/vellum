@@ -1841,12 +1841,29 @@ export async function refreshGuidedWorkflowRecovery(
     `/api/workspaces/${workspaceId}/guided-workflows/active`
   );
   const workflow = result.workflow;
-  if (!workflow || workflow.status !== "interrupted") {
+  if (!workflow || (workflow.status !== "active" && workflow.status !== "interrupted")) {
     panel.hidden = true;
     return;
   }
+  const thresholdField = dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]");
+  const threshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
+  const thresholdWasHidden = thresholdField?.hidden ?? true;
+  if (thresholdField) thresholdField.hidden = !workflow.optical;
+  if (
+    workflow.optical &&
+    thresholdWasHidden &&
+    threshold &&
+    workflow.ocrAutoAcceptConfidence !== undefined
+  ) {
+    threshold.value = String(Math.round(workflow.ocrAutoAcceptConfidence * 100));
+    const thresholdValue = dialog.querySelector<HTMLElement>("[data-ocr-threshold-value]");
+    if (thresholdValue) thresholdValue.textContent = `${threshold.value}%`;
+  }
   panel.hidden = false;
-  message.textContent = `Stopped at ${workflow.stage.replaceAll("_", " ")} (${workflow.failureCode ?? "workflow_interrupted"}). Completed outputs are retained.`;
+  message.textContent =
+    workflow.status === "interrupted"
+      ? `Stopped at ${workflow.stage.replaceAll("_", " ")} (${workflow.failureCode ?? "workflow_interrupted"}). Completed outputs are retained.`
+      : `Retained at ${workflow.stage.replaceAll("_", " ")} after the page closed or reloaded. Completed outputs will not be repeated.`;
   const targetConfigurations = (
     await api<{ brief: { targetConfigurations: TargetConfiguration[] } }>(
       `/api/workspaces/${workspaceId}`
@@ -1857,8 +1874,6 @@ export async function refreshGuidedWorkflowRecovery(
     restart.disabled = true;
     let continuingWorkflow: GuidedWorkflow | undefined;
     try {
-      const thresholdField = dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]");
-      const threshold = dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]');
       const restartInput =
         action === "restart" && workflow.optical && thresholdField && !thresholdField.hidden
           ? { ocrAutoAcceptConfidence: Number(threshold?.value ?? "80") / 100 }

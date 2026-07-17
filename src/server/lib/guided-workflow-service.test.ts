@@ -58,6 +58,8 @@ describe("GuidedWorkflowService", () => {
       reliabilityGoal: "repeatable",
     });
     expect(created.targets.map((target) => target.status)).toEqual(["pending", "pending"]);
+    expect(service.resume(workspace.id, created.id)).toEqual(created);
+    expect(service.resume(workspace.id, created.id).resumeCount).toBe(0);
 
     service.checkpoint(workspace.id, created.id, {
       stage: "target_search",

@@ -60,3 +60,86 @@ test("source upload reaches reviewed completion and opens the exact artifact", a
     /^arrangement\./
   );
 });
+
+test("PDF input discloses OCR threshold and score review remains zoomable and unobscured", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const dialog = page.locator("#guided-start");
+  const threshold = dialog.locator("[data-ocr-threshold-field]");
+  await expect(threshold).toBeHidden();
+  await dialog
+    .locator('input[type="file"]')
+    .setInputFiles(path.resolve("test/fixtures/greensleeves/greensleeves-satb.pdf"));
+  await expect(threshold).toBeVisible();
+  await threshold.locator("input").fill("72");
+  await expect(threshold.locator("[data-ocr-threshold-value]")).toHaveText("72%");
+
+  await page.evaluate(async () => {
+    const { presentScoreAnchoredReview } = await import("/src/guided-start.ts");
+    const dialog = document.querySelector<HTMLDialogElement>("#guided-start")!;
+    const image =
+      "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1200"><rect width="100%" height="100%" fill="white"/><text x="300" y="400" font-size="80">♩</text></svg>'
+      );
+    void presentScoreAnchoredReview(
+      dialog,
+      {
+        transcriptionId: "transcription.browser-review",
+        version: 1,
+        status: "needs_review",
+        sourceArtifactId: "source.browser-review",
+        sourceFilename: "greensleeves-satb.pdf",
+        sourceContentUrl: image,
+        acceptanceBatches: [],
+        items: [],
+      },
+      {
+        uncertainty: {
+          id: "uncertainty.browser-review",
+          eventIds: ["event.browser-review"],
+          critical: true,
+          category: "pitch_recognition",
+          message: "Confirm this note against the retained source crop.",
+          alternatives: ["G4"],
+          resolved: false,
+          region: {
+            page: 1,
+            x: 280,
+            y: 320,
+            width: 160,
+            height: 140,
+            coordinateSpace: "omr_raster",
+          },
+        },
+        sourceImageUrl: image,
+        events: [
+          {
+            id: "event.browser-review",
+            type: "note",
+            partId: "part.browser-review",
+            measureId: "measure.browser-review",
+            onset: { numerator: 0, denominator: 1 },
+            duration: { numerator: 1, denominator: 1 },
+            pitch: "G4",
+            confidence: 0.72,
+          },
+        ],
+      }
+    ).catch(() => undefined);
+  });
+
+  const review = dialog.locator("[data-score-review]");
+  await expect(review).toBeVisible();
+  const highlight = review.locator("[data-review-source-highlight]");
+  await expect(highlight).toBeVisible();
+  await expect(highlight).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await review.locator("[data-review-zoom-in]").click();
+  await expect(review.locator("[data-review-zoom-value]")).toHaveText("150%");
+  expect(
+    await review.locator("[data-review-source-canvas]").evaluate((node) => node.style.width)
+  ).toBe("150%");
+  const dialogBounds = await dialog.boundingBox();
+  expect(dialogBounds?.width).toBeGreaterThan(900);
+});

@@ -118,6 +118,47 @@ describe("Guided Start workflow recovery", () => {
     expect(dialog.querySelector<HTMLElement>("[data-guided-workflow-recovery]")?.hidden).toBe(true);
   });
 
+  it("restores an active optical checkpoint after reload without losing its OCR threshold", async () => {
+    const dialog = document.createElement("dialog");
+    dialog.innerHTML = guidedStartMarkup();
+    document.body.append(dialog);
+    const workflow = {
+      id: "workflow.11111111-1111-4111-8111-111111111111",
+      workspaceId: "workspace.11111111-1111-4111-8111-111111111111",
+      status: "active",
+      stage: "transcription_review",
+      sourceArtifactId: "source.11111111-1111-4111-8111-111111111111",
+      optical: true,
+      ocrAutoAcceptConfidence: 0.72,
+      preservationPolicy: "faithful_reduction",
+      targets: [],
+      resumeCount: 0,
+      createdAt: "2026-07-12T12:00:00.000Z",
+      updatedAt: "2026-07-12T12:01:00.000Z",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        jsonResponse(
+          url.endsWith("/active") ? { workflow } : { brief: { targetConfigurations: [] } }
+        )
+      )
+    );
+
+    await refreshGuidedWorkflowRecovery(dialog, workflow.workspaceId, vi.fn());
+
+    const panel = dialog.querySelector<HTMLElement>("[data-guided-workflow-recovery]")!;
+    expect(panel.hidden).toBe(false);
+    expect(panel.textContent).toContain(
+      "Retained at transcription review after the page closed or reloaded"
+    );
+    expect(dialog.querySelector<HTMLElement>("[data-ocr-threshold-field]")?.hidden).toBe(false);
+    expect(dialog.querySelector<HTMLInputElement>('[name="ocrAutoAcceptConfidence"]')?.value).toBe(
+      "72"
+    );
+    expect(dialog.querySelector("[data-ocr-threshold-value]")?.textContent).toBe("72%");
+  });
+
   it("restarts an optical workflow with the threshold currently shown in the form", async () => {
     const dialog = document.createElement("dialog");
     dialog.innerHTML = guidedStartMarkup();

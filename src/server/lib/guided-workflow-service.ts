@@ -134,8 +134,15 @@ export class GuidedWorkflowService {
     assertAuthorityPathRuntime("authority.parameter.arrangement-defaults", "production");
     assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     const current = this.store.getGuidedWorkflow(workspaceId, workflowId);
+    // A browser reload can abandon the client-side promise while the last durable
+    // checkpoint is still active. Resuming that checkpoint is intentionally
+    // idempotent; only a genuinely interrupted run increments resumeCount.
+    if (current.status === "active") return current;
     if (current.status !== "interrupted") {
-      throw new ApiRouteError("Only an interrupted Guided Start workflow can resume", 409);
+      throw new ApiRouteError(
+        "Only an active or interrupted Guided Start workflow can resume",
+        409
+      );
     }
     return this.store.saveGuidedWorkflow(workspaceId, {
       ...current,

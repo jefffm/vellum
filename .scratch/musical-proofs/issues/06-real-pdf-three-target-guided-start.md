@@ -1,6 +1,6 @@
 # 06 — Real PDF to three target outputs
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -15,12 +15,12 @@ that path.
 
 ## Acceptance criteria
 
-- [ ] PDF bytes, OMR evidence, MusicXML, transcription versions, corrections, and source regions remain linked.
-- [ ] The confidence threshold appears only for OMR input and is adjustable before acceptance.
-- [ ] Review crops are readable, zoomable, and unobscured by overlays.
-- [ ] Completing OCR review advances to analysis or an honest non-OCR blocker without looping.
-- [ ] All three independently planned target arrangements are saved from one reviewed source version.
-- [ ] Reload resumes the exact durable workflow state.
+- [x] PDF bytes, OMR evidence, MusicXML, transcription versions, corrections, and source regions remain linked.
+- [x] The confidence threshold appears only for OMR input and is adjustable before acceptance.
+- [x] Review crops are readable, zoomable, and unobscured by overlays.
+- [x] Completing OCR review advances to analysis or an honest non-OCR blocker without looping.
+- [x] All three independently planned target arrangements are saved from one reviewed source version.
+- [x] Reload resumes the exact durable workflow state.
 
 ## Gates
 

@@ -190,6 +190,16 @@ describe("TranscriptionService", () => {
     ).toThrow("outside transcription uncertainty");
   });
 
+  it("rejects an empty correction with a domain error before schema persistence", () => {
+    expect(() =>
+      new TranscriptionService({ store }).correct(workspaceId, transcriptionId, {
+        uncertaintyId: "uncertainty.opening",
+        eventEdits: [],
+        rationale: "No event was confirmed.",
+      })
+    ).toThrow("must confirm or edit at least one recognized event");
+  });
+
   it("versions reviewed voice identity assignments into deterministic score parts", () => {
     const ids = [
       "44444444-4444-4444-8444-444444444444",

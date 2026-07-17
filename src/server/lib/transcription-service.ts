@@ -124,6 +124,12 @@ export class TranscriptionService {
     correction: TranscriptionCorrection
   ): TranscriptionCorrectionResult {
     assertAuthorityPathRuntime("authority.validator.source-interpretation", "production");
+    if (correction.eventEdits.length === 0) {
+      throw new ApiRouteError(
+        "A transcription correction must confirm or edit at least one recognized event",
+        400
+      );
+    }
     if (correction.correctionId) {
       const existing = this.findCompletedCorrection(workspaceId, correction.correctionId);
       if (existing) return existing;
