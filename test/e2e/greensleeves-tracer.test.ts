@@ -3,9 +3,14 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { auditBaroqueLuteIdiom } from "../../src/lib/baroque-guitar-arranger.js";
 import { arrangementToEngraveParams } from "../../src/lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { GENERATED_ARTIFACT_POLICY_VERSION } from "../../src/lib/generated-artifact-security.js";
+import {
+  BAROQUE_LUTE_MAX_STOPPED_REACH_MM,
+  InstrumentModel,
+} from "../../src/lib/instrument-model.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
 import { compileLilyPond } from "../../src/server/lib/compile-route.js";
@@ -17,6 +22,7 @@ import {
   PodmanLilyPondRunner,
 } from "../../src/server/lib/podman-lilypond-runner.js";
 import { SubprocessRunner } from "../../src/server/lib/subprocess.js";
+import { loadProfile } from "../../src/server/profiles.js";
 import { WorkspaceStore } from "../../src/server/lib/workspace-store.js";
 
 const realSandboxEnabled = process.env.VELLUM_REAL_LILYPOND_SANDBOX === "1";
@@ -161,6 +167,24 @@ describe("Greensleeves PDF tracer bullet", () => {
     expect(luteArranged.arrangementSearch.executionIdentity.instrumentInstanceDigest).toBe(
       luteInstance.contentDigest
     );
+    const luteModel = InstrumentModel.fromProfile(loadProfile("baroque-lute-13"), luteInstance);
+    expect(luteInstance.scaleLength).toEqual({ value: 690, unit: "mm" });
+    expect(auditBaroqueLuteIdiom(luteArranged.arrangementScore.events, luteModel)).toEqual([]);
+    expect(
+      new Set(
+        luteArranged.arrangementScore.events.flatMap((event) =>
+          (event.voiceConstituents ?? []).map(({ voiceId }) => voiceId)
+        )
+      ).size
+    ).toBeGreaterThanOrEqual(2);
+    expect(
+      luteArranged.candidates
+        .flatMap(({ phraseSearchEvidence }) => phraseSearchEvidence?.transitions ?? [])
+        .every(
+          ({ stoppedCourseReachMillimeters }) =>
+            (stoppedCourseReachMillimeters ?? 0) <= BAROQUE_LUTE_MAX_STOPPED_REACH_MM
+        )
+    ).toBe(true);
     expect(
       luteArranged.candidates.every(
         (candidate) =>

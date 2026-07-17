@@ -110,7 +110,7 @@ export function buildAudioPreview(
       const transformationEntries = (arrangement.transformationReport ?? []).filter((entry) =>
         entry.arrangementEventIds.includes(event.id)
       );
-      if (event.baroqueGuitarGesture && usesTargetInstance) {
+      if ((event.baroqueGuitarGesture || event.baroqueLuteGesture) && usesTargetInstance) {
         const principal = event.voiceConstituents?.find(
           (constituent) => constituent.role === "principal_voice"
         );

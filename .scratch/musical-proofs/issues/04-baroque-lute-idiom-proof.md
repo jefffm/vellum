@@ -1,6 +1,6 @@
 # 04 — Thirteen-course baroque-lute idiom proof
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -14,13 +14,13 @@ courses, diapasons, resonance, notation identity, and playback.
 
 ## Acceptance criteria
 
-- [ ] Physical reach uses scale length and fret position rather than fret-count alone.
-- [ ] The known first-position five-fret reach is rejected or musically revoiced.
-- [ ] Held notes, shifts, releases, and right-hand allocation are coherent across the phrase.
-- [ ] Diapasons follow the configured tuning and course identity.
-- [ ] French tablature renders courses 7–12 as `a`, `/a`, `//a`, `///a`, `4`, `5` without slashes on numeric identities.
-- [ ] Course 13 remains configurable and honestly disclosed until sourced.
-- [ ] Engraving and playback derive from the same sounding events.
+- [x] Physical reach uses scale length and fret position rather than fret-count alone.
+- [x] The known first-position five-fret reach is rejected or musically revoiced.
+- [x] Held notes, shifts, releases, and right-hand allocation are coherent across the phrase.
+- [x] Diapasons follow the configured tuning and course identity.
+- [x] French tablature renders courses 7–12 as `a`, `/a`, `//a`, `///a`, `4`, `5` without slashes on numeric identities.
+- [x] Course 13 remains configurable and honestly disclosed until sourced.
+- [x] Engraving and playback derive from the same sounding events.
 
 ## Gates
 

@@ -181,12 +181,15 @@ const LUTE_NOTATION_IDENTITIES = [
   "///a",
   "4",
   "5",
-  "6",
 ] as const;
 
 export function createBaroqueLuteInstance(
   bassTuning: BaroqueLuteBassTuning = "d_minor",
-  overrides: { scaleLengthMm?: number; referencePitchHz?: number } = {}
+  overrides: {
+    scaleLengthMm?: number;
+    referencePitchHz?: number;
+    course13NotationIdentity?: string;
+  } = {}
 ): InstrumentInstanceConfiguration {
   assertAuthorityPathRuntime("authority.validator.instrument-mechanics", "production");
   const stoppedPitches = ["F4", "D4", "A3", "F3", "D3", "A2"];
@@ -194,7 +197,7 @@ export function createBaroqueLuteInstance(
   const withoutIdentity = {
     profileId: "baroque-lute-13",
     profileVersion: "2.0.0",
-    scaleLength: { value: overrides.scaleLengthMm ?? 680, unit: "mm" as const },
+    scaleLength: { value: overrides.scaleLengthMm ?? 690, unit: "mm" as const },
     physicalSetup: {
       frets: 8,
       courseCount: 13,
@@ -214,7 +217,10 @@ export function createBaroqueLuteInstance(
           openPitch,
           fretsWithCourse: stopped,
         })),
-        notationIdentity: LUTE_NOTATION_IDENTITIES[courseIndex]!,
+        notationIdentity:
+          course === 13
+            ? (overrides.course13NotationIdentity ?? "?")
+            : LUTE_NOTATION_IDENTITIES[courseIndex]!,
       };
     }),
     tuningState: {
@@ -225,7 +231,10 @@ export function createBaroqueLuteInstance(
     notationConfiguration: {
       system: "french-letter",
       courseOrder: "highest_first" as const,
-      notationIdentityByCourse: [...LUTE_NOTATION_IDENTITIES],
+      notationIdentityByCourse: [
+        ...LUTE_NOTATION_IDENTITIES,
+        overrides.course13NotationIdentity ?? "?",
+      ],
     },
     techniqueApplicability: [
       {

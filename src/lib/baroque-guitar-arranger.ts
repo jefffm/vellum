@@ -1,4 +1,4 @@
-import { InstrumentModel } from "./instrument-model.js";
+import { BAROQUE_LUTE_MAX_STOPPED_REACH_MM, InstrumentModel } from "./instrument-model.js";
 import { assertAuthorityPathRuntime } from "./authority-path-runtime.js";
 import type {
   AnalysisRecord,
@@ -48,6 +48,7 @@ type VoicingChoice = {
 
 type PhraseSearchEvidence = NonNullable<ArrangementCandidate["phraseSearchEvidence"]>;
 type BaroqueGuitarGesture = NonNullable<ArrangementEvent["baroqueGuitarGesture"]>;
+type BaroqueLuteGesture = NonNullable<ArrangementEvent["baroqueLuteGesture"]>;
 
 export const SANZ_G_MAJOR_ALFABETO = {
   symbol: "A",
@@ -872,6 +873,77 @@ export function auditBaroqueGuitarIdiom(events: readonly ArrangementEvent[]): st
   return [...new Set(failures)];
 }
 
+function planBaroqueLuteGesture(
+  positions: readonly ArrangementPosition[],
+  model: InstrumentModel
+): BaroqueLuteGesture | undefined {
+  const instance = model.exactInstance();
+  if (!instance || positions.length === 0) return undefined;
+  if (positions.length > 3) return undefined;
+  const ordered = positions.slice().sort((left, right) => right.course - left.course);
+  const rightHandAssignments = ordered
+    .map(({ course }, index) => ({
+      course,
+      finger: index === 0 ? ("p" as const) : (["i", "m"] as const)[index - 1]!,
+    }))
+    .sort((left, right) => left.course - right.course);
+  return {
+    stoppedReachMillimeters: model.stoppedReachMillimeters(positions) ?? 0,
+    maximumStoppedReachMillimeters: BAROQUE_LUTE_MAX_STOPPED_REACH_MM,
+    rightHandAssignments,
+    notationIdentities: positions
+      .map(({ course }) => ({
+        course,
+        identity: instance.courses.find((candidate) => candidate.course === course)!
+          .notationIdentity,
+      }))
+      .sort((left, right) => left.course - right.course),
+    course13IdentityStatus:
+      instance.courses.find(({ course }) => course === 13)?.notationIdentity === "?"
+        ? "unresolved"
+        : "configured",
+    allocationBasis: "instrument_profile_mechanics",
+  };
+}
+
+export function auditBaroqueLuteIdiom(
+  events: readonly ArrangementEvent[],
+  model: InstrumentModel
+): string[] {
+  const instance = model.exactInstance();
+  if (!instance?.scaleLength) return ["baroque_lute.scale_length_missing"];
+  const failures: string[] = [];
+  for (const event of events.filter(({ type }) => type !== "rest")) {
+    const gesture = event.baroqueLuteGesture;
+    if (!gesture) {
+      failures.push("baroque_lute.gesture_missing");
+      continue;
+    }
+    if (gesture.stoppedReachMillimeters > gesture.maximumStoppedReachMillimeters)
+      failures.push("baroque_lute.physical_reach_exceeded");
+    const fingers = gesture.rightHandAssignments.map(({ finger }) => finger);
+    if (new Set(fingers).size !== fingers.length)
+      failures.push("baroque_lute.right_hand_resource_collision");
+    const thumbCourse = Math.max(...gesture.rightHandAssignments.map(({ course }) => course));
+    if (
+      gesture.rightHandAssignments.some(
+        ({ course, finger }) =>
+          (course === thumbCourse && finger !== "p") || (course !== thumbCourse && finger === "p")
+      )
+    )
+      failures.push("baroque_lute.right_hand_allocation_invalid");
+    if (
+      gesture.notationIdentities.some(
+        ({ course, identity }) =>
+          instance.courses.find((candidate) => candidate.course === course)?.notationIdentity !==
+          identity
+      )
+    )
+      failures.push("baroque_lute.notation_identity_mismatch");
+  }
+  return [...new Set(failures)];
+}
+
 function buildHistoricalPluckedPhraseCandidate(
   score: NormalizedScore,
   analysis: AnalysisRecord,
@@ -1001,8 +1073,10 @@ function buildHistoricalPluckedPhraseCandidate(
           ]
         : []),
     ]
-      .filter((choice) =>
-        requiredSourceEventIds.every((sourceId) => choice.sourceEventIds.includes(sourceId))
+      .filter(
+        (choice) =>
+          (!baroqueLute || choice.positions.length <= 3) &&
+          requiredSourceEventIds.every((sourceId) => choice.sourceEventIds.includes(sourceId))
       )
       .sort((left, right) =>
         strategy === "source-coverage"
@@ -1049,7 +1123,12 @@ function buildHistoricalPluckedPhraseCandidate(
           rejected.fingering += 1;
           continue;
         }
-        const eventTechnique = gesture?.technique ?? technique;
+        const luteGesture = baroqueLute ? planBaroqueLuteGesture(positions, model) : undefined;
+        if (baroqueLute && !luteGesture) {
+          rejected.fingering += 1;
+          continue;
+        }
+        const eventTechnique = gesture?.technique ?? (luteGesture ? "lute_thumb_i_m" : technique);
         const handPosition = positionCentroid(positions);
         const transition = buildPhraseTransition(
           state,
@@ -1059,6 +1138,7 @@ function buildHistoricalPluckedPhraseCandidate(
           handPosition,
           eventTechnique,
           instance.profileId,
+          instance.scaleLength?.value,
           styleBrise.status === "applied",
           sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration }))
         );
@@ -1126,6 +1206,7 @@ function buildHistoricalPluckedPhraseCandidate(
           principalVoiceSourceEventId: sourceEvent.id,
           ...(voiceConstituents.length ? { voiceConstituents } : {}),
           ...(gesture ? { baroqueGuitarGesture: gesture } : {}),
+          ...(luteGesture ? { baroqueLuteGesture: luteGesture } : {}),
           ...(classicalGuitar
             ? {
                 notationSemantics: {
@@ -1499,6 +1580,7 @@ function buildPhraseTransition(
   handPositionTo: number,
   technique: string,
   profileId: string,
+  scaleLengthMillimeters: number | undefined,
   styleBriseApplied: boolean,
   activeVoiceDurations: Array<{ voiceId: string; duration: Rational }>
 ): PhraseSearchEvidence["transitions"][number] {
@@ -1525,6 +1607,23 @@ function buildPhraseTransition(
       );
       return Math.max(maximum, prior ? Math.abs(prior.fret - position.fret) : position.fret);
     }, 0);
+  const stoppedCourseReachMillimeters =
+    profileId === "baroque-lute-13"
+      ? Math.max(
+          0,
+          ...positions
+            .filter((position) => position.quality !== "diapason" && position.fret > 0)
+            .flatMap((left) =>
+              positions
+                .filter((right) => right.quality !== "diapason" && right.fret > 0)
+                .map((right) => {
+                  const scaleLength = scaleLengthMillimeters ?? 690;
+                  const fretPosition = (fret: number) => scaleLength * (1 - 2 ** (-fret / 12));
+                  return Math.abs(fretPosition(left.fret) - fretPosition(right.fret));
+                })
+            )
+        )
+      : undefined;
   return {
     fromEventId: state.events.at(-1)?.id,
     toEventId,
@@ -1572,6 +1671,7 @@ function buildPhraseTransition(
     ...(profileId === "baroque-lute-13"
       ? {
           stoppedCourseFretDelta,
+          stoppedCourseReachMillimeters,
           diapasonCourses,
           preparedBassCourses: diapasonCourses.filter(
             (course) => !state.occupiedCourses.includes(course)

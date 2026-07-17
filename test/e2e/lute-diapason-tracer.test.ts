@@ -106,7 +106,7 @@ describe("13-course lute diapason engraving tracer", () => {
       60_000
     );
     expect(compiled.errors).toEqual([]);
-    for (const sign of ["a", "/a", "//a", "///a", "4", "5", "6"]) {
+    for (const sign of ["a", "/a", "//a", "///a", "4", "5", "?"]) {
       expect(compiled.svg).toContain(`>${sign}<`);
     }
     expect(midiNoteOns(Buffer.from(compiled.midi!, "base64")).sort((a, b) => a - b)).toEqual([

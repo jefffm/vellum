@@ -33,7 +33,7 @@ describe("exact thirteen-course baroque-lute Instrument Instances", () => {
       "///a",
       "4",
       "5",
-      "6",
+      "?",
     ]);
     expect(instance.courses[9]).toMatchObject({
       course: 10,

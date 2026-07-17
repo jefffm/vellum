@@ -1947,6 +1947,40 @@ export const ArrangementEventSchema = Type.Object(
         { additionalProperties: false }
       )
     ),
+    baroqueLuteGesture: Type.Optional(
+      Type.Object(
+        {
+          stoppedReachMillimeters: Type.Number({ minimum: 0 }),
+          maximumStoppedReachMillimeters: Type.Number({ exclusiveMinimum: 0 }),
+          rightHandAssignments: Type.Array(
+            Type.Object(
+              {
+                course: Type.Integer({ minimum: 1, maximum: 13 }),
+                finger: Type.Union([Type.Literal("p"), Type.Literal("i"), Type.Literal("m")]),
+              },
+              { additionalProperties: false }
+            ),
+            { minItems: 1 }
+          ),
+          notationIdentities: Type.Array(
+            Type.Object(
+              {
+                course: Type.Integer({ minimum: 1, maximum: 13 }),
+                identity: Type.String({ minLength: 1 }),
+              },
+              { additionalProperties: false }
+            ),
+            { minItems: 1 }
+          ),
+          course13IdentityStatus: Type.Union([
+            Type.Literal("unresolved"),
+            Type.Literal("configured"),
+          ]),
+          allocationBasis: Type.Literal("instrument_profile_mechanics"),
+        },
+        { additionalProperties: false }
+      )
+    ),
     notationSemantics: Type.Optional(
       Type.Object(
         {
@@ -2204,6 +2238,7 @@ export const ArrangementCandidateSchema = Type.Object(
                 rightHandFingerCount: Type.Optional(Type.Integer({ minimum: 0, maximum: 3 })),
                 alfabetoSymbol: Type.Optional(Type.String({ minLength: 1 })),
                 stoppedCourseFretDelta: Type.Optional(Type.Integer({ minimum: 0 })),
+                stoppedCourseReachMillimeters: Type.Optional(Type.Number({ minimum: 0 })),
                 diapasonCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
                 preparedBassCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),
                 resonatingBassCourses: Type.Optional(Type.Array(Type.Integer({ minimum: 1 }))),

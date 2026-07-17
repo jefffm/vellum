@@ -12,6 +12,8 @@ export type PlayabilityResult = {
   violations: Violation[];
 };
 
+export const BAROQUE_LUTE_MAX_STOPPED_REACH_MM = 120;
+
 export class InstrumentModel {
   private currentDiapasonScheme?: string;
   private readonly profile: InstrumentProfile;
@@ -268,6 +270,17 @@ export class InstrumentModel {
     return Math.abs(pos1.fret - pos2.fret);
   }
 
+  stoppedReachMillimeters(positions: readonly TabPosition[]): number | undefined {
+    const scaleLength = this.instance?.scaleLength?.value;
+    if (!scaleLength) return undefined;
+    const stoppedFrets = positions
+      .filter((position) => this.isFretted(position.course) && position.fret > 0)
+      .map((position) => position.fret);
+    if (stoppedFrets.length < 2) return 0;
+    const fretPosition = (fret: number) => scaleLength * (1 - 2 ** (-fret / 12));
+    return fretPosition(Math.max(...stoppedFrets)) - fretPosition(Math.min(...stoppedFrets));
+  }
+
   isPlayable(positions: TabPosition[], maxStretch?: number): PlayabilityResult {
     assertAuthorityPathRuntime("authority.validator.ergonomic-thresholds", "production");
     maxStretch ??= this.maxStretch();
@@ -299,6 +312,18 @@ export class InstrumentModel {
         bar: 0,
         type: "stretch",
         description: `Fret span ${stretch} exceeds maximum stretch ${maxStretch}`,
+      });
+    }
+    const physicalReach = this.stoppedReachMillimeters(positions);
+    if (
+      this.instance?.profileId === "baroque-lute-13" &&
+      physicalReach !== undefined &&
+      physicalReach > BAROQUE_LUTE_MAX_STOPPED_REACH_MM
+    ) {
+      violations.push({
+        bar: 0,
+        type: "stretch",
+        description: `Stopped-course reach ${physicalReach.toFixed(1)} mm exceeds the ${BAROQUE_LUTE_MAX_STOPPED_REACH_MM} mm calibrated limit for the ${this.instance.scaleLength?.value} mm scale`,
       });
     }
 

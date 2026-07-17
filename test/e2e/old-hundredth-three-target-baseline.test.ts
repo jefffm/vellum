@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   auditBaroqueGuitarIdiom,
+  auditBaroqueLuteIdiom,
   auditFaithfulPrincipalVoice,
   auditPlannedVoiceObligations,
   SANZ_G_MAJOR_ALFABETO,
@@ -13,6 +14,12 @@ import {
 import { arrangementToEngraveParams } from "../../src/lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { soundingPitches } from "../../src/lib/instrument-instance.js";
+import { createBaroqueLuteInstance } from "../../src/lib/instrument-instance.js";
+import {
+  BAROQUE_LUTE_MAX_STOPPED_REACH_MM,
+  InstrumentModel,
+} from "../../src/lib/instrument-model.js";
+import { loadProfile } from "../../src/server/profiles.js";
 import { midiToNote, noteToMidi } from "../../src/lib/pitch.js";
 import { parseExplicitVoiceLilypond } from "../../src/lib/restricted-lilypond.js";
 import { ArrangementService } from "../../src/server/lib/arrangement-service.js";
@@ -230,6 +237,109 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
       expect(actualMidi).toEqual(expectedMidi);
     }
 
+    const baroqueLute = results.find(
+      (result) => result.arrangementScore.targetConfiguration.instrumentId === "baroque-lute-13"
+    )!;
+    const luteInstance = baroqueLute.arrangementScore.targetConfiguration.instrumentInstance!;
+    const luteModel = InstrumentModel.fromProfile(loadProfile("baroque-lute-13"), luteInstance);
+    expect(luteInstance.scaleLength).toEqual({ value: 690, unit: "mm" });
+    expect(
+      luteInstance.courses.slice(6, 12).map(({ notationIdentity }) => notationIdentity)
+    ).toEqual(["a", "/a", "//a", "///a", "4", "5"]);
+    expect(luteInstance.courses[12]?.notationIdentity).toBe("?");
+    const configuredCourse13 = createBaroqueLuteInstance("d_minor", {
+      course13NotationIdentity: "6",
+    });
+    expect(configuredCourse13.courses[12]?.notationIdentity).toBe("6");
+    expect(configuredCourse13.contentDigest).not.toBe(luteInstance.contentDigest);
+
+    expect(
+      luteModel.stoppedReachMillimeters([
+        { course: 1, fret: 1, quality: "low_fret" },
+        { course: 2, fret: 5, quality: "high_fret" },
+      ])
+    ).toBeGreaterThan(BAROQUE_LUTE_MAX_STOPPED_REACH_MM);
+    expect(
+      luteModel.isPlayable([
+        { course: 1, fret: 1, quality: "low_fret" },
+        { course: 2, fret: 5, quality: "high_fret" },
+      ]).ok
+    ).toBe(false);
+    expect(
+      luteModel.isPlayable([
+        { course: 1, fret: 1, quality: "low_fret" },
+        { course: 2, fret: 4, quality: "low_fret" },
+      ]).ok
+    ).toBe(true);
+    expect(auditBaroqueLuteIdiom(baroqueLute.arrangementScore.events, luteModel)).toEqual([]);
+    expect(
+      auditPlannedVoiceObligations(
+        recognized.normalizedScore,
+        baroqueLute.arrangementScore.events,
+        baroqueLute.arrangementScore.transpositionPlan.semitones,
+        baroqueLute.arrangementPlan
+      )
+    ).toEqual([]);
+    const luteTransitions = baroqueLute.candidates.flatMap(
+      ({ phraseSearchEvidence }) => phraseSearchEvidence?.transitions ?? []
+    );
+    expect(
+      luteTransitions.every(
+        ({ stoppedCourseReachMillimeters }) =>
+          (stoppedCourseReachMillimeters ?? 0) <= BAROQUE_LUTE_MAX_STOPPED_REACH_MM
+      )
+    ).toBe(true);
+    expect(
+      luteTransitions.every(({ resonatingBassCourses = [], dampingRequiredCourses = [] }) =>
+        resonatingBassCourses.every((course) => !dampingRequiredCourses.includes(course))
+      )
+    ).toBe(true);
+    expect(
+      baroqueLute.arrangementScore.events
+        .filter(({ type }) => type !== "rest")
+        .every(({ baroqueLuteGesture }) => {
+          const assignments = baroqueLuteGesture?.rightHandAssignments ?? [];
+          const thumbCourse = Math.max(...assignments.map(({ course }) => course));
+          return assignments.every(
+            ({ course, finger }) =>
+              (course === thumbCourse && finger === "p") ||
+              (course !== thumbCourse && ["i", "m"].includes(finger))
+          );
+        })
+    ).toBe(true);
+    const luteParams = arrangementToEngraveParams(
+      baroqueLute.arrangementScore,
+      recognized.normalizedScore
+    );
+    const luteEngravedPositions = luteParams.bars.flatMap(({ events }) =>
+      events.flatMap((event) =>
+        event.type === "chord"
+          ? event.positions.map(({ course, fret }) => `${course}:${fret}`)
+          : event.type === "note" && event.input === "position"
+            ? [`${event.course}:${event.fret}`]
+            : []
+      )
+    );
+    expect(luteEngravedPositions.sort()).toEqual(
+      baroqueLute.arrangementScore.events
+        .flatMap((event) => event.positions.map(({ course, fret }) => `${course}:${fret}`))
+        .sort()
+    );
+    const lutePreview = buildAudioPreview(baroqueLute.arrangementScore, recognized.normalizedScore);
+    for (const event of baroqueLute.arrangementScore.events.filter(({ type }) => type !== "rest")) {
+      const expectedMidi = event.positions
+        .flatMap(({ course, fret }) => soundingPitches(luteInstance, course, fret))
+        .map(noteToMidi)
+        .sort((left, right) => left - right);
+      const actualMidi = lutePreview.events
+        .filter(
+          ({ arrangementEventId, iteration }) => arrangementEventId === event.id && iteration === 1
+        )
+        .map(({ midi }) => midi)
+        .sort((left, right) => left - right);
+      expect(actualMidi).toEqual(expectedMidi);
+    }
+
     const classical = results.find(
       (result) => result.arrangementScore.targetConfiguration.instrumentId === "classical-guitar-6"
     )!;
@@ -327,6 +437,14 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
             ) ?? []
         )
       );
+      const maxStoppedCourseReachMillimeters = Math.max(
+        ...result.candidates.flatMap(
+          ({ phraseSearchEvidence }) =>
+            phraseSearchEvidence?.transitions.map(
+              ({ stoppedCourseReachMillimeters }) => stoppedCourseReachMillimeters ?? 0
+            ) ?? []
+        )
+      );
       const knownDefects = [
         ...(instrumentId === "baroque-guitar-5" &&
         techniques.length === 1 &&
@@ -339,8 +457,9 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         )
           ? ["baroque_guitar.subordinate_idiom_deferred"]
           : []),
-        ...(instrumentId === "baroque-lute-13" && maxStoppedCourseFretDelta >= 5
-          ? ["baroque_lute.five_fret_stopped_course_delta"]
+        ...(instrumentId === "baroque-lute-13" &&
+        maxStoppedCourseReachMillimeters > BAROQUE_LUTE_MAX_STOPPED_REACH_MM
+          ? ["baroque_lute.physical_reach_exceeded"]
           : []),
         ...(instrumentId === "baroque-lute-13" && voiceIds.length < 2
           ? ["baroque_lute.subordinate_idiom_deferred"]
@@ -359,11 +478,11 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         voiceIds,
         techniques,
         maxStoppedCourseFretDelta,
+        maxStoppedCourseReachMillimeters,
         knownDefects,
       };
     });
     expect(observations.flatMap(({ knownDefects }) => knownDefects).sort()).toEqual([
-      "baroque_lute.subordinate_idiom_deferred",
       "classical_guitar.right_hand_unmodeled",
     ]);
 

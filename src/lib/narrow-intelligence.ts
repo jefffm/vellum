@@ -359,15 +359,14 @@ function buildPhraseObligations(
       )
     );
     const alternatives = passageVoices.filter((voice) => voice.id !== principal?.id);
-    const subordinate =
-      target.instrumentId !== "classical-guitar-6"
-        ? undefined
-        : (explicitBass ??
-          alternatives.sort(
-            (left, right) =>
-              averageVoiceMidi(transcription, passage, left.partId) -
-              averageVoiceMidi(transcription, passage, right.partId)
-          )[0]);
+    const subordinate = !["baroque-lute-13", "classical-guitar-6"].includes(target.instrumentId)
+      ? undefined
+      : (explicitBass ??
+        alternatives.sort(
+          (left, right) =>
+            averageVoiceMidi(transcription, passage, left.partId) -
+            averageVoiceMidi(transcription, passage, right.partId)
+        )[0]);
     const selected = [principal, subordinate].filter(
       (voice, index, all): voice is NonNullable<typeof voice> =>
         Boolean(voice) && all.findIndex((candidate) => candidate?.id === voice?.id) === index

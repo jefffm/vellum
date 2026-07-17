@@ -1,6 +1,6 @@
 # 03 — Five-course baroque-guitar idiom proof
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -15,13 +15,13 @@ rather than relabeling a generic chordal reduction.
 
 ## Acceptance criteria
 
-- [ ] Punteado uses the configured historical right-hand resources and rejects oversized simultaneous attacks.
-- [ ] Rasgueado spans contiguous courses and never skips an interior course silently.
-- [ ] Alfabeto gestures use supported shapes with scoped harmonic and historical meaning.
-- [ ] Mixed-style transitions have explicit sounding, held, notation, and playback consequences.
-- [ ] Known large-cross-course and non-idiomatic all-punteado regressions are rejected.
-- [ ] French tablature, sounding events, and Audio Preview agree.
-- [ ] The Principal Voice remains recognizable throughout the generated phrase.
+- [x] Punteado uses the configured historical right-hand resources and rejects oversized simultaneous attacks.
+- [x] Rasgueado spans contiguous courses and never skips an interior course silently.
+- [x] Alfabeto gestures use supported shapes with scoped harmonic and historical meaning.
+- [x] Mixed-style transitions have explicit sounding, held, notation, and playback consequences.
+- [x] Known large-cross-course and non-idiomatic all-punteado regressions are rejected.
+- [x] French tablature, sounding events, and Audio Preview agree.
+- [x] The Principal Voice remains recognizable throughout the generated phrase.
 
 ## Gates
 
