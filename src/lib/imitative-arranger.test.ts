@@ -8,6 +8,7 @@ import {
   rankImitativeAssignments,
 } from "./imitative-arranger.js";
 import { InstrumentModel } from "./instrument-model.js";
+import { imitativeArrangementToLilyPond } from "./imitative-engrave.js";
 import { analyzeMusicologicalScore } from "./musicological-analysis.js";
 import { parseExplicitVoiceLilypond } from "./restricted-lilypond.js";
 
@@ -84,6 +85,9 @@ describe("three-voice imitative intabulation search", () => {
     ).toHaveLength(
       analysis.preservationTargets.filter((target) => target.kind === "relationship").length
     );
+    const lilypond = imitativeArrangementToLilyPond(result.selected, score);
+    expect(lilypond).toContain(`data-arrangement-event-id . "${result.selected.events[0]!.id}"`);
+    expect(lilypond).toContain(`data-measure-id . "${result.selected.events[0]!.measureId}"`);
 
     const orderedEntries = analysis.preservationTargets.find(
       (target) => target.relationshipType === "ordered_entries"

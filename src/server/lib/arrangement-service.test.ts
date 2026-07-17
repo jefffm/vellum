@@ -842,6 +842,20 @@ describe("Greensleeves faithful arrangement service", () => {
       editorialCommitmentIds: [],
     });
     expect(directEdit.editorialCommitment).toBeUndefined();
+    const explainedBatch = lineage.editArrangementEvents(
+      workspace.id,
+      result.arrangementScore.id,
+      [
+        {
+          eventId: protectedEvent.id,
+          patch: { positions: protectedEvent.positions.slice().reverse() },
+        },
+      ],
+      "Prefer this equivalent fingering because it reads in course order."
+    );
+    expect(store.getArrangementBranch(workspace.id, explainedBatch.branch.id)).toMatchObject({
+      rationale: "Prefer this equivalent fingering because it reads in course order.",
+    });
     const promotedEdit = lineage.createEditorialCommitment(workspace.id, {
       arrangementScoreId: directEdit.arrangementScore.id,
       arrangementFamilyId: directEdit.arrangementScore.arrangementFamilyId!,

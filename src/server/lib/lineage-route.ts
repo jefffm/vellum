@@ -44,6 +44,7 @@ const ArrangementEventPatchSchema = Type.Object(
 );
 const EditBatchBodySchema = Type.Object(
   {
+    rationale: Type.Optional(Type.String({ minLength: 1 })),
     edits: Type.Array(
       Type.Object(
         {
@@ -160,8 +161,8 @@ export function createArrangementEditBatchRoute(options: Options = {}): RequestH
       ...Value.Decode(ArrangementParams, request.params),
       ...Value.Decode(EditBatchBodySchema, body),
     }),
-    handler: async ({ workspaceId, arrangementId, edits }) =>
-      service.editArrangementEvents(workspaceId, arrangementId, edits),
+    handler: async ({ workspaceId, arrangementId, edits, rationale }) =>
+      service.editArrangementEvents(workspaceId, arrangementId, edits, rationale),
   });
 }
 

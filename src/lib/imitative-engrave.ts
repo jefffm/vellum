@@ -137,12 +137,24 @@ function renderVoice(events: ArrangementEvent[], score: NormalizedScore): string
 
 function eventToken(event: ArrangementEvent): string {
   const duration = rationalToLilyDuration(event.duration);
-  if (event.type === "rest") return `r${duration}`;
+  const identity = eventIdentityOverride(event);
+  if (event.type === "rest") return `${identity} r${duration}`;
   const position = event.positions[0];
   if (!position || event.pitches.length !== 1) {
     throw new Error(`Imitative voice event must have one explicit lute position: ${event.id}`);
   }
-  return `${scientificToLilyPond(event.pitches[0]!)}${duration}\\${position.course}`;
+  return `${identity} ${scientificToLilyPond(event.pitches[0]!)}${duration}\\${position.course}`;
+}
+
+function eventIdentityOverride(event: ArrangementEvent): string {
+  const attributes = [
+    '(class . "vellum-score-event")',
+    `(data-arrangement-event-id . "${escapeLilyString(event.id)}")`,
+    `(data-measure-id . "${escapeLilyString(event.measureId)}")`,
+  ].join(" ");
+  return ["NoteHead", "TabNoteHead", "Rest"]
+    .map((grob) => `\\once \\override ${grob}.output-attributes = #'(${attributes})`)
+    .join(" ");
 }
 
 function lilyKey(key: string | undefined): string {

@@ -638,9 +638,12 @@ export class LineageService {
   editArrangementEvents(
     workspaceId: string,
     arrangementScoreId: string,
-    edits: ArrangementEventEdit[]
+    edits: ArrangementEventEdit[],
+    rationale = "Owner manual Edit Batch."
   ) {
     assertAuthorityPathRuntime("authority.parameter.owner-intent-and-edit", "production");
+    rationale = rationale.trim();
+    if (!rationale) throw new ApiRouteError("An Edit Batch rationale is required", 400);
     const validation = this.validateArrangementEvents(workspaceId, arrangementScoreId, edits);
     if (!validation.valid) {
       throw new ApiRouteError(
@@ -715,6 +718,7 @@ export class LineageService {
     const branch = {
       id: branchId,
       label: `Owner Edit Batch · ${changes.length} change${changes.length === 1 ? "" : "s"}`,
+      rationale,
       rootInputVersions: [
         {
           recordType: "arrangement_score",

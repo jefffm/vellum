@@ -797,6 +797,13 @@ export function openEditBatchDialog(
     );
     form.append(fieldset);
   }
+  const rationale = document.createElement("textarea");
+  rationale.name = "rationale";
+  rationale.required = true;
+  rationale.rows = 2;
+  rationale.placeholder = "Why should this version differ from its parent?";
+  rationale.setAttribute("aria-label", "Edit batch rationale");
+  form.append(labeledControl("Rationale for this new version", rationale));
   const status = document.createElement("p");
   status.className = "edit-batch-status";
   const findings = document.createElement("section");
@@ -853,7 +860,10 @@ export function openEditBatchDialog(
       status.textContent = "Validating the complete Edit Batch…";
       const result = await api<EditBatchResult>(
         `/api/workspaces/${deliverable.workspaceId}/arrangements/${deliverable.arrangementScoreId}/edit-batches`,
-        { method: "POST", body: JSON.stringify({ edits }) }
+        {
+          method: "POST",
+          body: JSON.stringify({ edits, rationale: rationale.value.trim() }),
+        }
       );
       document.dispatchEvent(
         new CustomEvent("vellum-arrangement-version-created", { detail: { result, deliverable } })
@@ -1220,6 +1230,7 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
   }
   const renderSelection = (seekEventId?: string) => {
     const selectedEvents = deliverable.arrangementEvents.filter((event) => selected.has(event.id));
+    summary.dataset.arrangementEventIds = selectedEvents.map((event) => event.id).join(" ");
     notation.querySelectorAll<SVGGElement>("[data-arrangement-event-id]").forEach((group) => {
       const active = selected.has(group.dataset.arrangementEventId ?? "");
       group.classList.toggle("score-selected", active);
@@ -1239,6 +1250,12 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     title.textContent = `${selectedEvents.length} musical object${selectedEvents.length === 1 ? "" : "s"} selected`;
     const facts = document.createElement("span");
     facts.textContent = selectedEvents.map(describeArrangementEvent).join(" | ");
+    const identities = document.createElement("details");
+    const identitiesSummary = document.createElement("summary");
+    identitiesSummary.textContent = "Exact selection identity";
+    const identityList = document.createElement("code");
+    identityList.textContent = selectedEvents.map((event) => event.id).join("\n");
+    identities.append(identitiesSummary, identityList);
     const request = document.createElement("input");
     request.type = "text";
     request.placeholder = "Ask about this passage…";
@@ -1333,7 +1350,7 @@ export function installNotationSelection(panel: HTMLElement, deliverable: Guided
     const actions = document.createElement("span");
     actions.className = "score-selection-actions";
     actions.append(request, ask, edit, alternatives, proposeDefault, loop, playtest, clear);
-    summary.replaceChildren(title, facts, actions);
+    summary.replaceChildren(title, facts, identities, actions);
     summary.hidden = false;
     panel.dispatchEvent(
       new CustomEvent("vellum-score-selection-changed", {
@@ -5433,14 +5450,20 @@ export function highlightLineage(
         ?.measureId
     : undefined;
   const measureGroups = notation.querySelectorAll<SVGGElement>("[data-measure-id]");
-  let markerTarget: SVGGElement | undefined;
+  let activeMeasure: SVGGElement | undefined;
   for (const group of measureGroups) {
     const active = Boolean(activeMeasureId && group.dataset.measureId === activeMeasureId);
     group.classList.toggle("playback-measure-active", active);
-    if (active && !markerTarget) markerTarget = group;
+    if (active && !activeMeasure) activeMeasure = group;
   }
+  const activeEventId = events[0]?.arrangementEventId;
+  const activeEvent = activeEventId
+    ? notation.querySelector<SVGGElement>(
+        `[data-arrangement-event-id="${CSS.escape(activeEventId)}"]`
+      )
+    : undefined;
   let marker = notation.querySelector<SVGLineElement>(".score-playhead");
-  if (!markerTarget || !activeOccurrenceId) {
+  if (!activeMeasure || !activeOccurrenceId) {
     marker?.remove();
     notation.removeAttribute("data-playback-occurrence-id");
     followedMeasureOccurrences.delete(panel);
@@ -5452,14 +5475,16 @@ export function highlightLineage(
     marker.classList.add("score-playhead");
     notation.append(marker);
   }
-  const box = markerTarget.getBBox();
-  marker.setAttribute("x1", String(box.x - 0.7));
-  marker.setAttribute("x2", String(box.x - 0.7));
-  marker.setAttribute("y1", String(box.y - 1.2));
-  marker.setAttribute("y2", String(box.y + box.height + 1.2));
+  const measureBox = activeMeasure.getBBox();
+  const eventBox = activeEvent?.getBBox();
+  const x = (eventBox ?? measureBox).x - 0.7;
+  marker.setAttribute("x1", String(x));
+  marker.setAttribute("x2", String(x));
+  marker.setAttribute("y1", String(measureBox.y - 1.2));
+  marker.setAttribute("y2", String(measureBox.y + measureBox.height + 1.2));
   if (followedMeasureOccurrences.get(panel) !== activeOccurrenceId) {
     followedMeasureOccurrences.set(panel, activeOccurrenceId);
-    markerTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    activeMeasure.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
   }
 }
 

@@ -143,3 +143,136 @@ test("PDF input discloses OCR threshold and score review remains zoomable and un
   const dialogBounds = await dialog.boundingBox();
   expect(dialogBounds?.width).toBeGreaterThan(900);
 });
+
+test("selected notes drive anchored feedback, a reasoned child version, and note-level seeking", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const guided = page.locator("#guided-start");
+  await guided
+    .locator('input[type="file"]')
+    .setInputFiles(path.resolve("test/fixtures/imitation/imitative-passage.ly"));
+  await guided.locator('input[name="title"]').fill("Interactive revision browser proof");
+  await guided.locator('input[value="target.baroque-guitar"]').uncheck();
+  await guided.locator('input[value="target.renaissance-lute"]').check();
+  await guided.locator('button[type="submit"]').click();
+  const status = guided.locator("[data-guided-status]");
+  const analysisChoices = guided.locator("[data-analysis-choices] button");
+  const deadline = Date.now() + 300_000;
+  while (Date.now() < deadline) {
+    if (await analysisChoices.first().isVisible()) await analysisChoices.first().click();
+    const message = (await status.textContent()) ?? "";
+    if (message.includes("Arrangement ready")) break;
+    if ((await status.getAttribute("data-error")) === "true") throw new Error(message);
+    await page.waitForTimeout(500);
+  }
+  await expect(status).toContainText("Arrangement ready", { timeout: 300_000 });
+
+  const panel = page.locator("#artifacts-panel");
+  const notes = panel.locator("svg [data-arrangement-event-id]");
+  await expect(notes.first()).toBeVisible();
+  const firstId = await notes.nth(0).getAttribute("data-arrangement-event-id");
+  const secondId = await notes.nth(1).getAttribute("data-arrangement-event-id");
+  expect(firstId).toBeTruthy();
+  expect(secondId).toBeTruthy();
+  await notes.nth(0).click();
+  const firstPlayheadX = await panel.locator(".score-playhead").getAttribute("x1");
+  await notes.nth(1).click({ modifiers: ["Shift"] });
+
+  const selection = panel.locator(".score-selection-summary");
+  await expect(selection).toContainText("2 musical objects selected");
+  await expect(selection).toHaveAttribute("data-arrangement-event-ids", `${firstId} ${secondId}`);
+  await selection.locator("summary", { hasText: "Exact selection identity" }).click();
+  await expect(selection.locator("code")).toContainText(firstId!);
+  await expect(selection.locator("code")).toContainText(secondId!);
+  await expect(notes.nth(0)).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  const secondPlayheadX = await panel.locator(".score-playhead").getAttribute("x1");
+  expect(secondPlayheadX).not.toBe(firstPlayheadX);
+  const playbackPosition = panel.getByLabel("Playback position");
+  const startedAt = Number(await playbackPosition.inputValue());
+  await panel.getByRole("button", { name: "▶ Play" }).click();
+  await expect(panel.getByRole("button", { name: "Ⅱ Pause" })).toBeEnabled();
+  await expect
+    .poll(async () => Number(await playbackPosition.inputValue()))
+    .toBeGreaterThan(startedAt);
+  await panel.getByRole("button", { name: "Ⅱ Pause" }).click();
+  const pausedAt = Number(await playbackPosition.inputValue());
+  await page.waitForTimeout(250);
+  expect(Number(await playbackPosition.inputValue())).toBe(pausedAt);
+  await panel.getByRole("button", { name: "▶ Play" }).click();
+  await expect
+    .poll(async () => Number(await playbackPosition.inputValue()))
+    .toBeGreaterThan(pausedAt);
+  await panel.getByRole("button", { name: "Ⅱ Pause" }).click();
+
+  await page.evaluate(() => {
+    (window as Window & { capturedSelectionPrompt?: unknown }).capturedSelectionPrompt = undefined;
+    document.addEventListener(
+      "vellum-ask-selection",
+      (event) => {
+        (window as Window & { capturedSelectionPrompt?: unknown }).capturedSelectionPrompt = (
+          event as CustomEvent
+        ).detail;
+      },
+      { once: true }
+    );
+  });
+  await selection
+    .getByLabel("Question about selected score events")
+    .fill("Why is this passage awkward?");
+  await selection.getByRole("button", { name: "Ask Vellum" }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.stringify(
+          (window as Window & { capturedSelectionPrompt?: unknown }).capturedSelectionPrompt
+        )
+      )
+    )
+    .toContain(firstId!);
+  expect(
+    await page.evaluate(() =>
+      JSON.stringify(
+        (window as Window & { capturedSelectionPrompt?: unknown }).capturedSelectionPrompt
+      )
+    )
+  ).toContain(secondId!);
+  const disclosure = page.getByRole("dialog", { name: "Authorize this one-time ChatGPT request?" });
+  await expect(disclosure).toBeVisible();
+  await disclosure.getByRole("button", { name: "Don't send" }).click();
+
+  await selection.getByRole("button", { name: "Clear" }).click();
+  await notes.nth(0).click();
+  const parentId = new URL(page.url()).searchParams.get("arrangement");
+  await panel.getByRole("button", { name: "Edit selection" }).click();
+  await panel.getByRole("button", { name: "Continue with arrangement score" }).click();
+
+  const edit = page.locator("#vellum-edit-batch");
+  await expect(edit).toBeVisible();
+  const positions = edit.locator('textarea[name="positions"]');
+  await positions.fill(
+    JSON.stringify([{ course: 6, fret: 7, quality: "high_fret", pitch: "D3" }], null, 2)
+  );
+  await edit
+    .getByLabel("Edit batch rationale")
+    .fill("Use the equivalent sixth-course position for this D.");
+  await expect(edit.getByRole("button", { name: "Save as new version" })).toBeEnabled({
+    timeout: 30_000,
+  });
+  await edit.getByRole("button", { name: "Save as new version" }).click();
+
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("arrangement"), { timeout: 120_000 })
+    .not.toBe(parentId);
+  await expect(panel.locator(".arrangement-version-navigator summary")).toContainText(
+    "Arrangement Score v2"
+  );
+  await panel.locator(".arrangement-version-navigator summary").click();
+  await panel.getByRole("button", { name: "Open parent v1" }).click();
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("arrangement"), { timeout: 120_000 })
+    .toBe(parentId);
+  await expect(panel.locator(".arrangement-version-navigator")).toContainText(
+    /positions|course fingering/
+  );
+});

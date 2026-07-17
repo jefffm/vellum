@@ -1150,6 +1150,7 @@ export const ArrangementBranchSchema = Type.Object(
   {
     id: IdSchema,
     label: Type.String({ minLength: 1 }),
+    rationale: Type.Optional(Type.String({ minLength: 1 })),
     rootInputVersions: Type.Array(ModelActionInputVersionSchema, { minItems: 1 }),
     createdByModelActionId: Type.Optional(IdSchema),
     createdByAttemptId: Type.Optional(IdSchema),
