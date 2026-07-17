@@ -293,7 +293,9 @@ async function realizeTargets(input: {
       60_000
     );
     if (compiled.errors.length || !compiled.svg || !compiled.pdf || !compiled.midi) {
-      throw new Error(`Parity projection failed for ${target.instrumentId}`);
+      throw new Error(
+        `Parity projection failed for ${target.instrumentId}: ${compiled.errors.length ? JSON.stringify(compiled.errors) : "one or more required artifacts were absent"}`
+      );
     }
     const preview = buildAudioPreview(arranged.arrangementScore, imported.normalizedScore);
     const reviewArtifacts = input.reviewArtifactRoot

@@ -1,6 +1,6 @@
 # 05 — Six-string classical-guitar two-voice proof
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -14,12 +14,12 @@ left hand, and right hand across the phrase rather than choosing locally conveni
 
 ## Acceptance criteria
 
-- [ ] Principal Voice and bass have explicit activity, rest, continuity, and cadence obligations.
-- [ ] Bass choices reflect harmonic function and phrase direction.
-- [ ] The bass cannot pop in and out solely because a local voicing is convenient.
-- [ ] Left- and right-hand realization preserves feasible sustain and voice separation.
-- [ ] Standard notation uses independent voice identity and produces matching playback.
-- [ ] Mutations that break bass continuity or cadence obligations fail evaluation.
+- [x] Principal Voice and bass have explicit activity, rest, continuity, and cadence obligations.
+- [x] Bass choices reflect harmonic function and phrase direction.
+- [x] The bass cannot pop in and out solely because a local voicing is convenient.
+- [x] Left- and right-hand realization preserves feasible sustain and voice separation.
+- [x] Standard notation uses independent voice identity and produces matching playback.
+- [x] Mutations that break bass continuity or cadence obligations fail evaluation.
 
 ## Gates
 

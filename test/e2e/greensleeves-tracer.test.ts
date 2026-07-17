@@ -3,7 +3,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { auditBaroqueLuteIdiom } from "../../src/lib/baroque-guitar-arranger.js";
+import {
+  auditBaroqueLuteIdiom,
+  auditClassicalGuitarIdiom,
+  auditPlannedVoiceObligations,
+} from "../../src/lib/baroque-guitar-arranger.js";
 import { arrangementToEngraveParams } from "../../src/lib/arrangement-engrave.js";
 import { buildAudioPreview } from "../../src/lib/audio-preview.js";
 import { GENERATED_ARTIFACT_POLICY_VERSION } from "../../src/lib/generated-artifact-security.js";
@@ -236,8 +240,76 @@ describe("Greensleeves PDF tracer bullet", () => {
             classicalArranged.arrangementPlan.id &&
           candidate.phraseSearchEvidence.performanceBriefId ===
             classicalArranged.performanceBrief.id &&
-          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope === "unknown"
+          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope ===
+            "represented"
       )
+    ).toBe(true);
+    const classicalModel = InstrumentModel.fromProfile(
+      loadProfile("classical-guitar-6"),
+      classicalInstance
+    );
+    expect(
+      auditClassicalGuitarIdiom(classicalArranged.arrangementScore.events, classicalModel)
+    ).toEqual([]);
+    expect(
+      classicalArranged.arrangementScore.events
+        .filter(({ type }) => type !== "rest")
+        .every(({ classicalGuitarGesture }) =>
+          classicalGuitarGesture?.rightHandAssignments.every(({ finger, voiceRole }) =>
+            voiceRole === "bass" ? finger === "p" : ["i", "m"].includes(finger)
+          )
+        )
+    ).toBe(true);
+    expect(
+      classicalArranged.arrangementScore.events.some(
+        ({ classicalGuitarGesture }) => (classicalGuitarGesture?.heldCourses.length ?? 0) > 0
+      )
+    ).toBe(true);
+    expect(
+      classicalArranged.candidates.some(({ phraseSearchEvidence }) =>
+        phraseSearchEvidence?.transitions.some(
+          ({ heldPitchCount, sustainedPositionCount }) =>
+            heldPitchCount > 0 && (sustainedPositionCount ?? 0) > 0
+        )
+      )
+    ).toBe(true);
+    const heldMutation = structuredClone(classicalArranged.arrangementScore.events);
+    const heldEvent = heldMutation.find(
+      ({ classicalGuitarGesture }) => (classicalGuitarGesture?.heldCourses.length ?? 0) > 0
+    )!;
+    const heldCourse = heldEvent.classicalGuitarGesture!.heldCourses[0]!;
+    heldEvent.positions.find(({ course }) => course === heldCourse)!.fret += 1;
+    expect(auditClassicalGuitarIdiom(heldMutation, classicalModel)).toContain(
+      "classical_guitar.held_voice_relocated"
+    );
+    const bassTarget = classicalArranged.arrangementPlan
+      .phraseObligations!.flatMap(({ targetVoices }) => targetVoices)
+      .find(({ role }) => role === "bass")!;
+    expect(bassTarget.restEventIds.length).toBeGreaterThan(0);
+    const bassRest = omr.normalizedScore.events.find(
+      ({ id }) => id === bassTarget.restEventIds[0]
+    )!;
+    if (bassRest.type !== "rest") throw new Error("Expected planned bass rest");
+    const restMutation = structuredClone(classicalArranged.arrangementScore.events);
+    const restCarrier = restMutation.find(({ measureId }) => measureId === bassRest.measureId)!;
+    const priorBass = restMutation
+      .flatMap(({ voiceConstituents = [] }) => voiceConstituents)
+      .find(({ voiceId }) => voiceId === bassTarget.sourcePartId)!;
+    restCarrier.voiceConstituents = [
+      ...(restCarrier.voiceConstituents ?? []),
+      {
+        ...priorBass,
+        id: `voice-constituent.rest-mutation.${bassRest.id}`,
+        onset: bassRest.onset,
+      },
+    ];
+    expect(
+      auditPlannedVoiceObligations(
+        omr.normalizedScore,
+        restMutation,
+        classicalArranged.arrangementScore.transpositionPlan.semitones,
+        classicalArranged.arrangementPlan
+      ).some(({ code }) => code === "voice.rest_violated")
     ).toBe(true);
     expect(
       classicalArranged.arrangementScore.events

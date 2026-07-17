@@ -152,7 +152,7 @@ describe("faithful classical-guitar arrangement search", () => {
       ]),
       classicalTechniqueEvidence: {
         leftHandScope: "represented",
-        rightHandScope: "unknown",
+        rightHandScope: "represented",
         independentVoiceDuration: "represented",
         standardNotationVoices: "represented",
       },

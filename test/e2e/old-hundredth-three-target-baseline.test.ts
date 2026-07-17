@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   auditBaroqueGuitarIdiom,
   auditBaroqueLuteIdiom,
+  auditClassicalGuitarIdiom,
   auditFaithfulPrincipalVoice,
   auditPlannedVoiceObligations,
   SANZ_G_MAJOR_ALFABETO,
@@ -357,12 +358,64 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         classical.arrangementPlan
       )
     ).toEqual([]);
+    const classicalInstance = classical.arrangementScore.targetConfiguration.instrumentInstance!;
+    const classicalModel = InstrumentModel.fromProfile(
+      loadProfile("classical-guitar-6"),
+      classicalInstance
+    );
+    expect(auditClassicalGuitarIdiom(classical.arrangementScore.events, classicalModel)).toEqual(
+      []
+    );
+    expect(
+      classical.arrangementScore.events
+        .filter(({ type }) => type !== "rest")
+        .every(({ classicalGuitarGesture }) =>
+          classicalGuitarGesture?.rightHandAssignments.every(({ finger, voiceRole }) =>
+            voiceRole === "bass" ? finger === "p" : ["i", "m"].includes(finger)
+          )
+        )
+    ).toBe(true);
 
     const bassConstituents = classical.arrangementScore.events.flatMap((event) =>
       (event.voiceConstituents ?? [])
         .filter((voice) => voice.role === "source_voice")
         .map((voice) => ({ event, voice }))
     );
+    const plannedBassIds = classical.arrangementPlan
+      .phraseObligations!.flatMap((obligation) => obligation.targetVoices)
+      .filter(({ role }) => role === "bass")
+      .flatMap(({ sourceEventIds }) => sourceEventIds);
+    expect(bassConstituents.map(({ voice }) => voice.sourceEventId)).toEqual(plannedBassIds);
+    expect(bassConstituents.map(({ voice }) => noteToMidi(voice.pitch) % 12)).toEqual(
+      plannedBassIds.map((sourceId) => {
+        const source = recognized.normalizedScore.events.find(({ id }) => id === sourceId)!;
+        if (source.type !== "note") throw new Error(`Expected bass note ${sourceId}`);
+        return noteToMidi(source.pitch) % 12;
+      })
+    );
+    const classicalParams = arrangementToEngraveParams(
+      classical.arrangementScore,
+      recognized.normalizedScore
+    );
+    expect(classicalParams.notation_voices?.map(({ id }) => id).sort()).toEqual(
+      ["part.bass", "part.sop"].sort()
+    );
+    const classicalPreview = buildAudioPreview(
+      classical.arrangementScore,
+      recognized.normalizedScore
+    );
+    for (const constituent of classical.arrangementScore.events.flatMap(
+      ({ voiceConstituents = [] }) => voiceConstituents
+    )) {
+      expect(
+        classicalPreview.events.some(
+          ({ sourceEventIds, midi, durationSeconds }) =>
+            sourceEventIds.includes(constituent.sourceEventId) &&
+            midi === noteToMidi(constituent.pitch) &&
+            durationSeconds > 0
+        )
+      ).toBe(true);
+    }
     const timingMutation = structuredClone(classical.arrangementScore.events);
     const timingVoice = timingMutation
       .flatMap((event) => event.voiceConstituents ?? [])
@@ -482,9 +535,7 @@ describe("Old 100th non-Greensleeves three-target baseline", () => {
         knownDefects,
       };
     });
-    expect(observations.flatMap(({ knownDefects }) => knownDefects).sort()).toEqual([
-      "classical_guitar.right_hand_unmodeled",
-    ]);
+    expect(observations.flatMap(({ knownDefects }) => knownDefects).sort()).toEqual([]);
 
     if (process.env.VELLUM_PRINT_MUSICAL_PROOF_BASELINE === "1") {
       process.stderr.write(

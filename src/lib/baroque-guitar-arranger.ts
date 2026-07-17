@@ -49,6 +49,7 @@ type VoicingChoice = {
 type PhraseSearchEvidence = NonNullable<ArrangementCandidate["phraseSearchEvidence"]>;
 type BaroqueGuitarGesture = NonNullable<ArrangementEvent["baroqueGuitarGesture"]>;
 type BaroqueLuteGesture = NonNullable<ArrangementEvent["baroqueLuteGesture"]>;
+type ClassicalGuitarGesture = NonNullable<ArrangementEvent["classicalGuitarGesture"]>;
 
 export const SANZ_G_MAJOR_ALFABETO = {
   symbol: "A",
@@ -648,6 +649,34 @@ export function auditPlannedVoiceObligations(
         }
         realized.push({ source, arrangement, pitch: constituent.pitch });
       }
+      for (const restEventId of targetVoice.restEventIds) {
+        const rest = score.events.find(
+          (event): event is Extract<ScoreEvent, { type: "rest" }> =>
+            event.id === restEventId && event.type === "rest"
+        );
+        if (!rest) continue;
+        const restEnd = addRational(rest.onset, rest.duration);
+        const violating = arrangedEvents.find(
+          (event) =>
+            event.measureId === rest.measureId &&
+            event.voiceConstituents?.some(
+              (voice) =>
+                voice.voiceId === targetVoice.sourcePartId &&
+                compareRational(voice.onset, rest.onset) >= 0 &&
+                compareRational(voice.onset, restEnd) < 0
+            )
+        );
+        if (violating) {
+          findings.push({
+            targetId: targetVoice.id,
+            sourceEventId: rest.id,
+            arrangementEventId: violating.id,
+            severity: "hard",
+            code: "voice.rest_violated",
+            message: `Planned ${targetVoice.role} activity sounds inside an explicit source rest.`,
+          });
+        }
+      }
       if (targetVoice.continuity === "required") {
         for (let index = 1; index < realized.length; index += 1) {
           const prior = realized[index - 1]!;
@@ -944,6 +973,128 @@ export function auditBaroqueLuteIdiom(
   return [...new Set(failures)];
 }
 
+function stabilizeClassicalHeldPositions(
+  positions: readonly ArrangementPosition[],
+  voiceConstituents: NonNullable<ArrangementEvent["voiceConstituents"]>,
+  priorPositions: readonly ArrangementPosition[],
+  eventId: string
+): ArrangementPosition[] | undefined {
+  const attackCourses = new Set(voiceConstituents.map(({ position }) => position.course));
+  const stabilized: ArrangementPosition[] = [];
+  for (const position of positions) {
+    if (attackCourses.has(position.course)) {
+      stabilized.push(position);
+      continue;
+    }
+    const prior = priorPositions.find(
+      (candidate) =>
+        candidate.course === position.course &&
+        candidate.fret === position.fret &&
+        noteToMidi(candidate.pitch) === noteToMidi(position.pitch)
+    );
+    if (!prior) return undefined;
+    stabilized.push({ ...prior, sustainThroughEventId: eventId });
+  }
+  return stabilized;
+}
+
+function planClassicalGuitarGesture(
+  positions: readonly ArrangementPosition[],
+  voiceConstituents: NonNullable<ArrangementEvent["voiceConstituents"]>,
+  priorEvents: readonly ArrangementEvent[]
+): ClassicalGuitarGesture | undefined {
+  if (voiceConstituents.length === 0) return undefined;
+  const priorPrincipalFinger = priorEvents
+    .flatMap(({ classicalGuitarGesture }) => classicalGuitarGesture?.rightHandAssignments ?? [])
+    .filter(({ voiceRole }) => voiceRole === "principal_voice")
+    .at(-1)?.finger;
+  const principalFinger = priorPrincipalFinger === "i" ? ("m" as const) : ("i" as const);
+  const rightHandAssignments = voiceConstituents
+    .map((voice) => ({
+      course: voice.position.course,
+      finger: voice.role === "principal_voice" ? principalFinger : ("p" as const),
+      voiceId: voice.voiceId,
+      voiceRole:
+        voice.role === "principal_voice" ? ("principal_voice" as const) : ("bass" as const),
+    }))
+    .sort((left, right) => left.course - right.course);
+  if (
+    new Set(rightHandAssignments.map(({ course }) => course)).size !==
+      rightHandAssignments.length ||
+    new Set(rightHandAssignments.map(({ finger }) => finger)).size !== rightHandAssignments.length
+  ) {
+    return undefined;
+  }
+  const attackCourses = rightHandAssignments.map(({ course }) => course).sort((a, b) => a - b);
+  return {
+    rightHandAssignments,
+    attackCourses,
+    heldCourses: positions
+      .filter(({ course }) => !attackCourses.includes(course))
+      .map(({ course }) => course)
+      .sort((a, b) => a - b),
+    allocationBasis: "independent_voice_mechanics",
+  };
+}
+
+export function auditClassicalGuitarIdiom(
+  events: readonly ArrangementEvent[],
+  model: InstrumentModel
+): string[] {
+  const failures: string[] = [];
+  let priorPositions: readonly ArrangementPosition[] = [];
+  for (const event of events.filter(({ type }) => type !== "rest")) {
+    const gesture = event.classicalGuitarGesture;
+    if (!gesture) {
+      failures.push("classical_guitar.gesture_missing");
+      continue;
+    }
+    if (!model.isPlayable(event.positions).ok)
+      failures.push("classical_guitar.left_hand_unplayable");
+    const attacks = event.voiceConstituents ?? [];
+    if (
+      attacks.length !== gesture.rightHandAssignments.length ||
+      attacks.some(
+        (voice) =>
+          !gesture.rightHandAssignments.some(
+            (assignment) =>
+              assignment.course === voice.position.course &&
+              assignment.voiceId === voice.voiceId &&
+              assignment.voiceRole ===
+                (voice.role === "principal_voice" ? "principal_voice" : "bass")
+          )
+      )
+    )
+      failures.push("classical_guitar.attack_voice_mismatch");
+    if (
+      gesture.rightHandAssignments.some(
+        ({ finger, voiceRole }) =>
+          (voiceRole === "bass" && finger !== "p") ||
+          (voiceRole === "principal_voice" && finger === "p")
+      )
+    )
+      failures.push("classical_guitar.right_hand_allocation_invalid");
+    if (
+      new Set(gesture.rightHandAssignments.map(({ finger }) => finger)).size !==
+      gesture.rightHandAssignments.length
+    )
+      failures.push("classical_guitar.right_hand_resource_collision");
+    for (const course of gesture.heldCourses) {
+      const current = event.positions.find((position) => position.course === course);
+      const prior = priorPositions.find((position) => position.course === course);
+      if (
+        !current ||
+        !prior ||
+        current.fret !== prior.fret ||
+        noteToMidi(current.pitch) !== noteToMidi(prior.pitch)
+      )
+        failures.push("classical_guitar.held_voice_relocated");
+    }
+    priorPositions = event.positions;
+  }
+  return [...new Set(failures)];
+}
+
 function buildHistoricalPluckedPhraseCandidate(
   score: NormalizedScore,
   analysis: AnalysisRecord,
@@ -1032,13 +1183,19 @@ function buildHistoricalPluckedPhraseCandidate(
         sourceHarmony.map((event) => event.id)
       )
     );
+    const realizationParts =
+      requiredParts.size > 0
+        ? requiredParts
+        : classicalGuitar
+          ? new Set(defaultClassicalTwoVoiceParts(score, sourceEvent.partId))
+          : requiredParts;
     const requiredSourceEventIds = sourceHarmony
       .filter((event) => event.id !== sourceEvent.id && requiredParts.has(event.partId))
       .map((event) => event.id);
     const plannedHarmony = baroqueGuitar
       ? sourceHarmony
-      : requiredParts.size
-        ? sourceHarmony.filter((event) => requiredParts.has(event.partId))
+      : realizationParts.size
+        ? sourceHarmony.filter((event) => realizationParts.has(event.partId))
         : sourceHarmony;
     const generatedChoices = enumerateVoicings(
       melodyPitch,
@@ -1100,13 +1257,47 @@ function buildHistoricalPluckedPhraseCandidate(
             limits.maximumExpandedStates
           );
         }
-        const positions = annotatePhraseFingering(
+        let positions = annotatePhraseFingering(
           choice.positions,
           eventId,
           sourceEvent.tie === "start" ? `arrangement-event.${strategy}.${index + 2}` : undefined,
           classicalGuitar ? state.positions : [],
           classicalGuitar ? state.events.at(-1)?.id : undefined
         );
+        let voiceConstituents =
+          classicalGuitar || options.arrangementPlan?.phraseObligations?.length
+            ? buildTargetVoiceConstituents(
+                score,
+                sourceEvent,
+                sourceHarmony,
+                choice,
+                positions,
+                semitones,
+                options.arrangementPlan,
+                classicalGuitar
+              )
+            : [];
+        if (classicalGuitar) {
+          const stabilized = stabilizeClassicalHeldPositions(
+            positions,
+            voiceConstituents,
+            state.positions,
+            eventId
+          );
+          if (!stabilized) {
+            rejected.voicePlan += 1;
+            continue;
+          }
+          positions = stabilized;
+          voiceConstituents = voiceConstituents.map((voice) => ({
+            ...voice,
+            position:
+              positions.find(
+                ({ course, fret }) =>
+                  course === voice.position.course && fret === voice.position.fret
+              ) ?? voice.position,
+          }));
+        }
         const principalPosition = positions.find((position) =>
           model
             .soundingPitches(position.course, position.fret)
@@ -1128,7 +1319,16 @@ function buildHistoricalPluckedPhraseCandidate(
           rejected.fingering += 1;
           continue;
         }
-        const eventTechnique = gesture?.technique ?? (luteGesture ? "lute_thumb_i_m" : technique);
+        const classicalGesture = classicalGuitar
+          ? planClassicalGuitarGesture(positions, voiceConstituents, state.events)
+          : undefined;
+        if (classicalGuitar && !classicalGesture) {
+          rejected.fingering += 1;
+          continue;
+        }
+        const eventTechnique =
+          gesture?.technique ??
+          (luteGesture ? "lute_thumb_i_m" : classicalGesture ? "classical_two_voice" : technique);
         const handPosition = positionCentroid(positions);
         const transition = buildPhraseTransition(
           state,
@@ -1142,6 +1342,7 @@ function buildHistoricalPluckedPhraseCandidate(
           styleBrise.status === "applied",
           sourceHarmony.map((event) => ({ voiceId: event.partId, duration: event.duration }))
         );
+        if (classicalGesture) transition.heldPitchCount = classicalGesture.heldCourses.length;
         if (baroqueGuitar && transition.violentCrossNeckJump) {
           rejected.violentJump += 1;
           continue;
@@ -1155,19 +1356,6 @@ function buildHistoricalPluckedPhraseCandidate(
           rejected.fingering += 1;
           continue;
         }
-        const voiceConstituents =
-          classicalGuitar || options.arrangementPlan?.phraseObligations?.length
-            ? buildTargetVoiceConstituents(
-                score,
-                sourceEvent,
-                sourceHarmony,
-                choice,
-                positions,
-                semitones,
-                options.arrangementPlan,
-                classicalGuitar
-              )
-            : [];
         const requiredActiveParts = plannedActiveVoiceParts(
           options.arrangementPlan,
           sourceHarmony.map((event) => event.id)
@@ -1207,6 +1395,7 @@ function buildHistoricalPluckedPhraseCandidate(
           ...(voiceConstituents.length ? { voiceConstituents } : {}),
           ...(gesture ? { baroqueGuitarGesture: gesture } : {}),
           ...(luteGesture ? { baroqueLuteGesture: luteGesture } : {}),
+          ...(classicalGesture ? { classicalGuitarGesture: classicalGesture } : {}),
           ...(classicalGuitar
             ? {
                 notationSemantics: {
@@ -1359,9 +1548,9 @@ function buildHistoricalPluckedPhraseCandidate(
           : {
               classicalTechniqueEvidence: {
                 leftHandScope: "represented" as const,
-                rightHandScope: "unknown" as const,
+                rightHandScope: "represented" as const,
                 rightHandRationale:
-                  "No right-hand fingering has been generated or evaluated; phrase feasibility is limited to represented left-hand and notation state.",
+                  "Every retained voice attack has an explicit collision-free right-hand resource; held courses remain physically stable without reattack.",
                 independentVoiceDuration: "represented" as const,
                 standardNotationVoices: "represented" as const,
               },
@@ -1430,16 +1619,20 @@ function buildTargetVoiceConstituents(
   );
   const orderedPartIds = plannedParts.length
     ? [principalEvent.partId, ...plannedParts.filter((id) => id !== principalEvent.partId)]
-    : [
-        principalEvent.partId,
-        ...Array.from(
-          new Set(
-            score.events.flatMap((event) =>
-              event.type === "note" && event.partId !== principalEvent.partId ? [event.partId] : []
+    : classicalGuitar
+      ? defaultClassicalTwoVoiceParts(score, principalEvent.partId)
+      : [
+          principalEvent.partId,
+          ...Array.from(
+            new Set(
+              score.events.flatMap((event) =>
+                event.type === "note" && event.partId !== principalEvent.partId
+                  ? [event.partId]
+                  : []
+              )
             )
-          )
-        ),
-      ].slice(0, 4);
+          ),
+        ].slice(0, 4);
   const usedCourses = new Set<number>();
   const retainedSources = orderedPartIds.flatMap((partId) => {
     if (partId === principalEvent.partId) return [principalEvent];
@@ -1502,6 +1695,26 @@ function plannedActiveVoiceParts(
       voice.sourceEventIds.some((id) => active.has(id)) ? [voice.sourcePartId] : []
     )
   );
+}
+
+function defaultClassicalTwoVoiceParts(score: NormalizedScore, principalPartId: string): string[] {
+  const alternatives = Array.from(
+    new Set(
+      score.events.flatMap((event) =>
+        event.type === "note" && event.partId !== principalPartId ? [event.partId] : []
+      )
+    )
+  ).sort((left, right) => {
+    const average = (partId: string) => {
+      const notes = score.events.filter(
+        (event): event is Extract<ScoreEvent, { type: "note" }> =>
+          event.type === "note" && event.partId === partId
+      );
+      return notes.reduce((sum, event) => sum + noteToMidi(event.pitch), 0) / notes.length;
+    };
+    return average(left) - average(right) || left.localeCompare(right);
+  });
+  return [principalPartId, ...alternatives.slice(0, 1)];
 }
 
 function hasUnplannedVoiceJump(

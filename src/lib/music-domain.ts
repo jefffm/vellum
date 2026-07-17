@@ -1981,6 +1981,35 @@ export const ArrangementEventSchema = Type.Object(
         { additionalProperties: false }
       )
     ),
+    classicalGuitarGesture: Type.Optional(
+      Type.Object(
+        {
+          rightHandAssignments: Type.Array(
+            Type.Object(
+              {
+                course: Type.Integer({ minimum: 1, maximum: 6 }),
+                finger: Type.Union([
+                  Type.Literal("p"),
+                  Type.Literal("i"),
+                  Type.Literal("m"),
+                  Type.Literal("a"),
+                ]),
+                voiceId: IdSchema,
+                voiceRole: Type.Union([Type.Literal("principal_voice"), Type.Literal("bass")]),
+              },
+              { additionalProperties: false }
+            ),
+            { minItems: 1 }
+          ),
+          attackCourses: Type.Array(Type.Integer({ minimum: 1, maximum: 6 }), {
+            minItems: 1,
+          }),
+          heldCourses: Type.Array(Type.Integer({ minimum: 1, maximum: 6 })),
+          allocationBasis: Type.Literal("independent_voice_mechanics"),
+        },
+        { additionalProperties: false }
+      )
+    ),
     notationSemantics: Type.Optional(
       Type.Object(
         {
@@ -2173,7 +2202,7 @@ export const ArrangementCandidateSchema = Type.Object(
             Type.Object(
               {
                 leftHandScope: Type.Literal("represented"),
-                rightHandScope: Type.Literal("unknown"),
+                rightHandScope: Type.Union([Type.Literal("unknown"), Type.Literal("represented")]),
                 rightHandRationale: Type.String({ minLength: 1 }),
                 independentVoiceDuration: Type.Literal("represented"),
                 standardNotationVoices: Type.Literal("represented"),

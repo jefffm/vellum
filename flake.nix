@@ -46,6 +46,7 @@
         in
         {
           default = pkgs.mkShell {
+            FONTCONFIG_FILE = "${pkgs.fontconfig.out}/etc/fonts/fonts.conf";
             packages =
               [
                 pkgs.git

@@ -609,7 +609,8 @@ describe("Greensleeves faithful arrangement service", () => {
             classicalResult.arrangementPlan.id &&
           candidate.phraseSearchEvidence.performanceBriefId ===
             classicalResult.performanceBrief.id &&
-          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope === "unknown" &&
+          candidate.phraseSearchEvidence.classicalTechniqueEvidence?.rightHandScope ===
+            "represented" &&
           candidate.phraseSearchEvidence.classicalTechniqueEvidence.independentVoiceDuration ===
             "represented"
       )
