@@ -55,6 +55,7 @@ import { vellumStreamProxy } from "./lib/vellum-stream-proxy.js";
 import { renderCompilePreview } from "./artifact-preview.js";
 import { isCompatibleRuntimeHealth, VELLUM_API_SCHEMA_VERSION } from "./lib/runtime-contract.js";
 import { completeArtifactHandoff } from "./lib/artifact-handoff.js";
+import { installMeiEditionProofLauncher } from "./mei-edition-surface.js";
 
 export { renderCompilePreview } from "./artifact-preview.js";
 
@@ -265,6 +266,7 @@ function renderArtifactPlaceholder(panel: HTMLElement): void {
     </div>
   `;
   panel.append(placeholder);
+  installMeiEditionProofLauncher(panel);
 }
 
 function isCompileResult(value: unknown): value is CompileResult {
@@ -334,12 +336,14 @@ export async function main(): Promise<void> {
       artifactsPanel.replaceChildren(failure);
     });
   }
-  installGuidedStart({
-    onComplete: (deliverables) => {
-      const panel = document.querySelector<HTMLElement>("#artifacts-panel");
-      if (panel) openCompletedDeliverables(panel, deliverables);
-    },
-  });
+  if (new URL(window.location.href).searchParams.get("editionProof") !== "1") {
+    installGuidedStart({
+      onComplete: (deliverables) => {
+        const panel = document.querySelector<HTMLElement>("#artifacts-panel");
+        if (panel) openCompletedDeliverables(panel, deliverables);
+      },
+    });
+  }
 }
 
 export async function assertCompatibleRuntime(request: typeof fetch = fetch): Promise<void> {

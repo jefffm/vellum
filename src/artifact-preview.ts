@@ -53,6 +53,27 @@ export function mountSafeNotationSvg(container: HTMLElement, input: string): SVG
   return svg;
 }
 
+export function createSafeVerovioSvgElement(
+  input: string,
+  document: Document = globalThis.document
+): SVGSVGElement {
+  const sanitized = securityFor(document).sanitizeVerovioSvg(input);
+  const parsed = parserFor(document).parseFromString(sanitized.markup, "image/svg+xml");
+  const root = parsed.documentElement;
+  if (root.localName.toLowerCase() !== "svg" || root.namespaceURI !== SVG_NAMESPACE) {
+    throw new Error("Sanitized Verovio output did not produce an SVG root");
+  }
+  return document.importNode(root, true) as unknown as SVGSVGElement;
+}
+
+export function mountSafeVerovioSvg(container: HTMLElement, input: string): SVGSVGElement {
+  const svg = createSafeVerovioSvgElement(input, container.ownerDocument);
+  container.replaceChildren(svg);
+  container.dataset.artifactPolicyVersion = securityFor(container.ownerDocument).policyVersion;
+  container.dataset.artifactProfile = "verovio-svg";
+  return svg;
+}
+
 /**
  * Minimal consumer for generated Evaluation Report fragments. T11 can build
  * richer host-owned report controls around this surface without adding a new

@@ -83,6 +83,35 @@ describe("generated artifact security", () => {
     expect(result).toContain('d="M 0 0 L 1 1"');
   });
 
+  it("preserves only fragment-local Verovio glyph references and interaction identities", () => {
+    const security = createSecurity();
+    const input = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" id="score-root">
+      <defs><g id="glyph-a"><path d="M0 0 L1 1"/></g></defs>
+      <style>body { display:none }</style>
+      <g data-id="note-1" data-class="note" class="note"><use href="#glyph-a" transform="translate(2, 3)"/></g>
+    </svg>`;
+
+    const result = security.sanitizeVerovioSvg(input);
+
+    expect(result.profile).toBe("verovio-svg");
+    expect(result.markup).toContain('<defs><g id="vellum-vrv-definition-1">');
+    expect(result.markup).toContain('data-id="note-1"');
+    expect(result.markup).toContain('data-class="note"');
+    expect(result.markup).toContain('href="#vellum-vrv-definition-1"');
+    expect(result.markup).not.toContain("<style");
+  });
+
+  it.each([
+    `<svg xmlns="http://www.w3.org/2000/svg"><use href="https://attacker.invalid/glyph.svg#a"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg"><use href="#missing"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg"><defs><g id="same"/><g id="same"/></defs></svg>`,
+  ])("rejects unsafe or malformed Verovio references", (input) => {
+    const security = createSecurity();
+    expect(() => security.sanitizeVerovioSvg(input)).toThrowError(
+      expect.objectContaining({ profile: "verovio-svg", code: "sanitization_failed" })
+    );
+  });
+
   it("strips hostile SVG elements, handlers, resources, URLs, and CSS", () => {
     const security = createSecurity();
     const input = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 20 20" onload="globalThis.pwned=1">

@@ -2,7 +2,7 @@
 
 Status: active
 
-Current tracer: T01 — secure pinned Verovio edition vertical.
+Current tracer: T02 — de Visée diplomatic transcription and corrections.
 
 ## Outcome
 

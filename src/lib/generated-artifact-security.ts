@@ -5,7 +5,7 @@ import createDOMPurify, {
   type WindowLike,
 } from "dompurify";
 
-export const GENERATED_ARTIFACT_POLICY_VERSION = "vellum-generated-artifact-v1" as const;
+export const GENERATED_ARTIFACT_POLICY_VERSION = "vellum-generated-artifact-v2" as const;
 
 export const DEFAULT_GENERATED_ARTIFACT_MAX_INPUT_BYTES = 8 * 1024 * 1024;
 
@@ -41,7 +41,7 @@ export const GENERATED_ARTIFACT_CONTENT_SECURITY_POLICY = [
   "sandbox",
 ].join("; ");
 
-export type GeneratedArtifactProfile = "notation-svg" | "evaluation-report";
+export type GeneratedArtifactProfile = "notation-svg" | "verovio-svg" | "evaluation-report";
 
 declare const sanitizedGeneratedMarkupBrand: unique symbol;
 
@@ -98,6 +98,7 @@ export type GeneratedArtifactSecurity = Readonly<{
   maxInputBytes: number;
   limits: GeneratedArtifactSecurityLimits;
   sanitizeNotationSvg(input: string): SanitizedGeneratedMarkup<"notation-svg">;
+  sanitizeVerovioSvg(input: string): SanitizedGeneratedMarkup<"verovio-svg">;
   sanitizeEvaluationReport(input: string): SanitizedGeneratedMarkup<"evaluation-report">;
 }>;
 
@@ -167,6 +168,19 @@ const SVG_ALLOWED_ATTR = Object.freeze([
   "aria-hidden",
   "data-arrangement-event-id",
   "data-measure-id",
+]);
+
+const VEROVIO_SVG_ALLOWED_TAGS = Object.freeze([...SVG_ALLOWED_TAGS, "defs", "use"]);
+
+const VEROVIO_SVG_ALLOWED_ATTR = Object.freeze([
+  ...SVG_ALLOWED_ATTR,
+  "id",
+  "href",
+  "data-id",
+  "data-class",
+  "color",
+  "overflow",
+  "type",
 ]);
 
 const REPORT_ALLOWED_TAGS = Object.freeze([
@@ -244,7 +258,6 @@ const DANGEROUS_TAGS = Object.freeze([
   "animatetransform",
   "set",
   "image",
-  "use",
   "a",
   "link",
   "base",
@@ -305,7 +318,7 @@ export function createGeneratedArtifactSecurity(
     limits,
     sanitizeNotationSvg(input) {
       validateInput(input, "notation-svg", limits.maxInputBytes);
-      const parsed = parseSvg(windowLike, input);
+      const parsed = parseSvg(windowLike, input, "notation-svg");
       validateTreeBudget(parsed.documentElement, "notation-svg", limits);
       const sanitized = sanitizeWithIsolatedPurifier(
         windowLike,
@@ -314,6 +327,20 @@ export function createGeneratedArtifactSecurity(
       );
       validateSanitizedSvg(windowLike, sanitized, limits);
       return brandedResult("notation-svg", sanitized);
+    },
+    sanitizeVerovioSvg(input) {
+      validateInput(input, "verovio-svg", limits.maxInputBytes);
+      const parsed = parseSvg(windowLike, input, "verovio-svg");
+      validateTreeBudget(parsed.documentElement, "verovio-svg", limits);
+      validateVerovioReferences(parsed.documentElement);
+      namespaceVerovioDefinitionIds(parsed.documentElement);
+      const sanitized = sanitizeWithIsolatedPurifier(
+        windowLike,
+        parsed.documentElement.outerHTML,
+        "verovio-svg"
+      );
+      validateSanitizedSvg(windowLike, sanitized, limits, "verovio-svg");
+      return brandedResult("verovio-svg", sanitized);
     },
     sanitizeEvaluationReport(input) {
       validateInput(input, "evaluation-report", limits.maxInputBytes);
@@ -353,21 +380,25 @@ function validateInput(
   }
 }
 
-function parseSvg(windowLike: WindowLike, input: string): Document {
+function parseSvg(
+  windowLike: WindowLike,
+  input: string,
+  profile: "notation-svg" | "verovio-svg"
+): Document {
   let document: Document;
   try {
     document = new windowLike.DOMParser().parseFromString(input, "image/svg+xml");
   } catch {
     throw new GeneratedArtifactSecurityError(
       "malformed_markup",
-      "notation-svg",
+      profile,
       "Generated notation is not well-formed SVG"
     );
   }
   if (hasParserError(document)) {
     throw new GeneratedArtifactSecurityError(
       "malformed_markup",
-      "notation-svg",
+      profile,
       "Generated notation is not well-formed SVG"
     );
   }
@@ -375,7 +406,7 @@ function parseSvg(windowLike: WindowLike, input: string): Document {
   if (root.localName.toLowerCase() !== "svg" || root.namespaceURI !== SVG_NAMESPACE) {
     throw new GeneratedArtifactSecurityError(
       "invalid_svg_root",
-      "notation-svg",
+      profile,
       "Generated notation must have one SVG root in the SVG namespace"
     );
   }
@@ -400,7 +431,8 @@ function sanitizeWithIsolatedPurifier(
     const attribute = event.attrName.toLowerCase();
     if (
       attribute.startsWith("on") ||
-      DANGEROUS_ATTRIBUTES.includes(attribute) ||
+      (DANGEROUS_ATTRIBUTES.includes(attribute) &&
+        !(profile === "verovio-svg" && attribute === "href")) ||
       DANGEROUS_CSS_VALUE.test(event.attrValue)
     ) {
       event.keepAttr = false;
@@ -440,11 +472,15 @@ function configFor(profile: GeneratedArtifactProfile): Config {
     RETURN_TRUSTED_TYPE: false,
   };
 
-  if (profile === "notation-svg") {
+  if (profile === "notation-svg" || profile === "verovio-svg") {
+    const verovio = profile === "verovio-svg";
     return {
       ...common,
-      ALLOWED_TAGS: [...SVG_ALLOWED_TAGS],
-      ALLOWED_ATTR: [...SVG_ALLOWED_ATTR],
+      ALLOWED_TAGS: [...(verovio ? VEROVIO_SVG_ALLOWED_TAGS : SVG_ALLOWED_TAGS)],
+      ALLOWED_ATTR: [...(verovio ? VEROVIO_SVG_ALLOWED_ATTR : SVG_ALLOWED_ATTR)],
+      FORBID_TAGS: DANGEROUS_TAGS.filter((tag) => !(verovio && tag === "use")),
+      FORBID_ATTR: DANGEROUS_ATTRIBUTES.filter((attribute) => !(verovio && attribute === "href")),
+      SANITIZE_NAMED_PROPS: !verovio,
       ALLOWED_NAMESPACES: [SVG_NAMESPACE],
       NAMESPACE: SVG_NAMESPACE,
       PARSER_MEDIA_TYPE: "image/svg+xml",
@@ -464,11 +500,84 @@ function configFor(profile: GeneratedArtifactProfile): Config {
 function validateSanitizedSvg(
   windowLike: WindowLike,
   output: string,
-  limits: GeneratedArtifactSecurityLimits
+  limits: GeneratedArtifactSecurityLimits,
+  profile: "notation-svg" | "verovio-svg" = "notation-svg"
 ): void {
-  const document = parseSvg(windowLike, output);
-  validateTreeBudget(document.documentElement, "notation-svg", limits);
-  validateTree(document.documentElement, "notation-svg", SVG_ALLOWED_TAGS, SVG_ALLOWED_ATTR);
+  const document = parseSvg(windowLike, output, profile);
+  validateTreeBudget(document.documentElement, profile, limits);
+  validateTree(
+    document.documentElement,
+    profile,
+    profile === "verovio-svg" ? VEROVIO_SVG_ALLOWED_TAGS : SVG_ALLOWED_TAGS,
+    profile === "verovio-svg" ? VEROVIO_SVG_ALLOWED_ATTR : SVG_ALLOWED_ATTR
+  );
+  if (profile === "verovio-svg") validateVerovioReferences(document.documentElement);
+}
+
+function validateVerovioReferences(root: Element): void {
+  const ids = new Set<string>();
+  for (const element of [root, ...Array.from(root.querySelectorAll("*"))]) {
+    const id = element.getAttribute("id");
+    if (!id) continue;
+    if (!/^[A-Za-z_][A-Za-z0-9_.:-]*$/.test(id) || ids.has(id)) {
+      throw new GeneratedArtifactSecurityError(
+        "sanitization_failed",
+        "verovio-svg",
+        "Verovio SVG contains an invalid or duplicate local identifier"
+      );
+    }
+    ids.add(id);
+  }
+  for (const use of Array.from(root.querySelectorAll("use"))) {
+    const href = use.getAttribute("href");
+    if (!href || !/^#[A-Za-z_][A-Za-z0-9_.:-]*$/.test(href) || !ids.has(href.slice(1))) {
+      throw new GeneratedArtifactSecurityError(
+        "sanitization_failed",
+        "verovio-svg",
+        "Verovio glyph references must resolve to a fragment-local definition"
+      );
+    }
+  }
+}
+
+function namespaceVerovioDefinitionIds(root: Element): void {
+  const replacements = new Map<string, string>();
+  let definitionIndex = 0;
+  for (const element of [root, ...Array.from(root.querySelectorAll("[id]"))]) {
+    const id = element.getAttribute("id");
+    if (!id) continue;
+    const replacement = `vellum-vrv-definition-${definitionIndex++}`;
+    replacements.set(id, replacement);
+    element.setAttribute("id", replacement);
+  }
+  for (const use of Array.from(root.querySelectorAll("use[href]"))) {
+    const href = use.getAttribute("href")!;
+    const replacement = replacements.get(href.slice(1));
+    if (replacement) use.setAttribute("href", `#${replacement}`);
+  }
+  let generatedNodeIndex = 0;
+  for (const element of Array.from(root.querySelectorAll("[data-id]"))) {
+    const id = element.getAttribute("data-id")!;
+    if (/^[a-z][a-z0-9]{3,10}$/.test(id)) {
+      element.setAttribute("data-id", `vellum-vrv-node-${generatedNodeIndex++}`);
+    }
+  }
+  for (const element of Array.from(root.querySelectorAll("[class]"))) {
+    const semanticClass = element.getAttribute("data-class");
+    if (!semanticClass) continue;
+    const stable = element
+      .getAttribute("class")!
+      .split(/\s+/)
+      .filter(
+        (token) =>
+          token === semanticClass ||
+          token === "pageMilestone" ||
+          token === "systemMilestone" ||
+          token === "systemMilestoneEnd"
+      );
+    if (stable.length > 0) element.setAttribute("class", stable.join(" "));
+    else element.removeAttribute("class");
+  }
 }
 
 function validateSanitizedReport(

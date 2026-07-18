@@ -247,6 +247,35 @@ chat-panel > div > div:has(agent-interface) {
   height: auto;
 }
 
+.artifact-preview-content[data-artifact-profile="verovio-svg"] path,
+.artifact-preview-content[data-artifact-profile="verovio-svg"] ellipse,
+.artifact-preview-content[data-artifact-profile="verovio-svg"] rect,
+.artifact-preview-content[data-artifact-profile="verovio-svg"] polygon,
+.artifact-preview-content[data-artifact-profile="verovio-svg"] polyline {
+  stroke: currentColor;
+}
+
+.mei-edition-surface {
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  background: #ecece6;
+}
+
+.mei-edition-launcher {
+  margin-top: 0.75rem;
+}
+
+.mei-edition-surface .vellum-selectable-event {
+  cursor: pointer;
+}
+
+.mei-edition-surface .mei-playback-active {
+  color: #8a6d1d;
+  filter: drop-shadow(0 0 2px rgba(138, 109, 29, 0.65));
+}
+
 /* LilyPond emits this rule inside generated SVG. Keep it host-owned so the
  * generated-artifact policy can remove all active CSS and <style> elements. */
 .artifact-preview-content > svg tspan,

@@ -45,7 +45,10 @@
     "js-yaml": "^4.1.0",
     "jsdom": "^29.1.1",
     "jszip": "^3.10.1",
-    "tonal": "^6.4.3"
+    "pdfkit": "0.17.2",
+    "svg-to-pdfkit": "0.1.8",
+    "tonal": "^6.4.3",
+    "verovio": "6.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -53,6 +56,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^22.15.3",
+    "@types/pdfkit": "0.17.5",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",

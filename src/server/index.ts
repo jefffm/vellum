@@ -12,6 +12,10 @@ import { VELLUM_API_SCHEMA_VERSION, type RuntimeHealth } from "../lib/runtime-co
 import { createApiRoute, ApiRouteError } from "./lib/create-route.js";
 import { loadAllProfiles, loadProfile, ProfileLoadError } from "./profiles.js";
 import { createCompileRoute } from "./lib/compile-route.js";
+import {
+  createMeiEditionProofPdfRoute,
+  createMeiEditionProofRoute,
+} from "./lib/mei-edition-route.js";
 import type { SubprocessRunner } from "./lib/subprocess.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
 import { providerConnection } from "./lib/provider-runtime.js";
@@ -499,6 +503,8 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post("/provider-connection/reconnect", createProviderReconnectRoute(providerConnection));
   router.delete("/provider-connection", createProviderDisconnectRoute(providerConnection));
   router.post("/compile", createCompileRoute({ runner: options.compilerRunner }));
+  router.get("/mei-editions/proof", createMeiEditionProofRoute());
+  router.post("/mei-editions/proof/export", createMeiEditionProofPdfRoute());
   router.post("/engrave", createEngraveRoute());
   router.post("/validate", createValidateRoute({ runner: options.compilerRunner }));
   router.post("/chordify", createChordifyRoute());

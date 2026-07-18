@@ -8,6 +8,7 @@ describe("Vellum browser content-security policy", () => {
   it("permits the local app transport without granting script or object fallbacks", () => {
     expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("default-src 'self'");
     expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("script-src 'self'");
+    expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("'wasm-unsafe-eval'");
     expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("object-src 'none'");
     expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("frame-ancestors 'none'");
     expect(VELLUM_APP_CONTENT_SECURITY_POLICY).toContain("ws://127.0.0.1:*");

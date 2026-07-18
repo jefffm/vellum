@@ -30,7 +30,7 @@ export function createNodeGeneratedArtifactSecurity(
   const security = createGeneratedArtifactSecurity(dom.window as unknown as WindowLike, options);
   let disposed = false;
 
-  const ensureActive = (profile: "notation-svg" | "evaluation-report") => {
+  const ensureActive = (profile: "notation-svg" | "verovio-svg" | "evaluation-report") => {
     if (disposed) {
       throw new GeneratedArtifactSecurityError(
         "unsupported_environment",
@@ -47,6 +47,10 @@ export function createNodeGeneratedArtifactSecurity(
     sanitizeNotationSvg(input: string): SanitizedGeneratedMarkup<"notation-svg"> {
       ensureActive("notation-svg");
       return security.sanitizeNotationSvg(input);
+    },
+    sanitizeVerovioSvg(input: string): SanitizedGeneratedMarkup<"verovio-svg"> {
+      ensureActive("verovio-svg");
+      return security.sanitizeVerovioSvg(input);
     },
     sanitizeEvaluationReport(input: string): SanitizedGeneratedMarkup<"evaluation-report"> {
       ensureActive("evaluation-report");
