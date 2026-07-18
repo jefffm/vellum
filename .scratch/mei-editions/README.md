@@ -2,7 +2,7 @@
 
 Status: active
 
-Current work: T03 — interpretation acceptance and synchronized playback.
+Current work: T04 — Passage Selection prompting and model-assisted edits.
 
 Authority: [`SPEC.md`](../../SPEC.md) and
 [ADR 0024](../../docs/adr/0024-use-verovio-for-mei-edition-surfaces.md)

@@ -2,7 +2,7 @@
 
 Status: active
 
-Current tracer: T03 — interpretation acceptance and synchronized playback.
+Current tracer: T04 — Passage Selection prompting and model-assisted edits.
 
 ## Outcome
 

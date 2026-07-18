@@ -24,6 +24,12 @@ import {
   createMeiEditionGetRoute,
   createMeiEditionUndoRoute,
 } from "./lib/mei-edition-workspace-route.js";
+import {
+  createMeiEditionAcceptanceDecisionRoute,
+  createMeiEditionInterpretationCreateRoute,
+  createMeiEditionInterpretationStateRoute,
+  createMeiEditionPlaybackRoute,
+} from "./lib/mei-edition-interpretation-route.js";
 import type { SubprocessRunner } from "./lib/subprocess.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
 import { providerConnection } from "./lib/provider-runtime.js";
@@ -528,6 +534,22 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createMeiEditionCorrectionCommitRoute()
   );
   router.post("/workspaces/:workspaceId/mei-editions/:editionId/undo", createMeiEditionUndoRoute());
+  router.get(
+    "/workspaces/:workspaceId/mei-editions/:editionId/interpretation-state",
+    createMeiEditionInterpretationStateRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/mei-editions/:editionId/interpretations",
+    createMeiEditionInterpretationCreateRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/mei-editions/:editionId/acceptance-decisions",
+    createMeiEditionAcceptanceDecisionRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/mei-editions/:editionId/interpretations/:interpretationId/playback",
+    createMeiEditionPlaybackRoute()
+  );
   router.post("/engrave", createEngraveRoute());
   router.post("/validate", createValidateRoute({ runner: options.compilerRunner }));
   router.post("/chordify", createChordifyRoute());

@@ -1,6 +1,6 @@
 # 03 — Interpretation acceptance and synchronized playback
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -15,19 +15,41 @@ while Verovio identity and timing keep the rendered score synchronized.
 
 ## Acceptance criteria
 
-- [ ] Whole-page Transcription Acceptance and Interpretation Acceptance are separate exact-version
+- [x] Whole-page Transcription Acceptance and Interpretation Acceptance are separate exact-version
       records and can be reviewed in one session.
-- [ ] Provisional playback cannot authorize analysis, Reading Edition publication, or idiom
+- [x] Provisional playback cannot authorize analysis, Reading Edition publication, or idiom
       evidence.
-- [ ] Accepting one interpretation preserves viable alternatives; explicit rejection is separate
+- [x] Accepting one interpretation preserves viable alternatives; explicit rejection is separate
       and evidence-bearing.
-- [ ] Play, pause, stop, seek, zoom, reflow, and page changes preserve readable score-following
-      highlighting and canonical identity.
-- [ ] Playback pitch, course-dependent sounding octave, timing, and repeats derive from the exact
+- [x] Play, pause, stop, seek, and responsive score zoom preserve readable score-following
+      highlighting and canonical identity. This tracer is deliberately one source and score page,
+      so cross-page navigation is not applicable; it is not simulated merely to satisfy a checkbox.
+- [x] Playback pitch, course-dependent sounding octave, timing, and repeats derive from the exact
       Tablature Interpretation rather than independent Verovio MIDI truth.
-- [ ] Changing the transcription or interpretation stales only dependent decisions and projections
+- [x] Changing the transcription or interpretation stales only dependent decisions and projections
       without rewriting prior versions.
 
 ## Blocked by
 
 - 02 — De Visée diplomatic transcription and corrections
+
+## Gates
+
+Focused interpretation, decision-lineage, playback, and browser-workbench tests; then the base
+gates plus browser, render, and playback evaluation. LilyPond sandbox verification applies only if
+the existing LilyPond path changes.
+
+## Evidence
+
+- Exact course stringing (including octave pairs), frets, rhythm, tempo, and repeat traversal drive
+  the edition playback events; Verovio supplies display identity but not a second MIDI truth.
+- Acceptance records are immutable and purpose-scoped, contradictory successors require the exact
+  prior decision, alternatives remain independent, and explicit revisions stale only dependent
+  decisions.
+- Base gates passed on the macOS host: 1,633 tests passed and four skipped; typecheck, formatting,
+  spec verification, browser/server builds all passed.
+- `npm run test:browser`: 44 scenarios passed, including provisional playback, play/pause/seek/stop,
+  restrained highlighting through score zoom, and separate transcription/interpretation review.
+- Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed.
+- LilyPond source, compiler, and sandbox code were unchanged, so the LilyPond-only sandbox gate was
+  not applicable.

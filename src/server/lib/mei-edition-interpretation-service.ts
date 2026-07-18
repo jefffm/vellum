@@ -1,0 +1,426 @@
+import { randomUUID } from "node:crypto";
+import { JSDOM } from "jsdom";
+
+import type {
+  CreateEditionAcceptanceDecisionCommand,
+  CreateTablatureInterpretationCommand,
+  EditionAcceptanceDecision,
+  MeiEditionVersion,
+  TablatureInterpretation,
+} from "../../lib/mei-edition-domain.js";
+import { ApiRouteError } from "./create-route.js";
+import { MeiEditionInterpretationStore } from "./mei-edition-interpretation-store.js";
+import { MeiEditionStore } from "./mei-edition-store.js";
+
+export type EditionPlaybackEvent = Readonly<{
+  occurrenceId: string;
+  measureOccurrenceId: string;
+  measureNumber: number;
+  iteration: number;
+  meiId: string;
+  course: number;
+  fret: number;
+  stringIndex: number;
+  midi: number;
+  startSeconds: number;
+  durationSeconds: number;
+}>;
+
+export type EditionPlaybackPreview = Readonly<{
+  editionId: string;
+  editionVersion: number;
+  interpretationId: string;
+  interpretationVersion: number;
+  authority: "provisional_audition" | "accepted_interpretation";
+  permits: readonly ("literal_playback" | "analysis" | "reading_edition" | "idiom_evidence")[];
+  durationSeconds: number;
+  events: readonly EditionPlaybackEvent[];
+  measureOccurrences: readonly Readonly<{
+    id: string;
+    measureNumber: number;
+    iteration: number;
+    startSeconds: number;
+    durationSeconds: number;
+  }>[];
+}>;
+
+export type EditionInterpretationState = Readonly<{
+  editionVersion: number;
+  interpretations: readonly TablatureInterpretation[];
+  decisions: readonly EditionAcceptanceDecision[];
+  interpretationStatuses: readonly Readonly<{
+    interpretationId: string;
+    stale: boolean;
+    staleDecisionIds: readonly string[];
+  }>[];
+  transcription: Readonly<{
+    unresolvedCriticalCount: number;
+    accepted: boolean;
+    staleDecisionIds: readonly string[];
+  }>;
+}>;
+
+export class MeiEditionInterpretationService {
+  private readonly editions: MeiEditionStore;
+  private readonly records: MeiEditionInterpretationStore;
+  private readonly now: () => Date;
+  private readonly createId: () => string;
+
+  constructor(options: {
+    editions: MeiEditionStore;
+    records: MeiEditionInterpretationStore;
+    now?: () => Date;
+    createId?: () => string;
+  }) {
+    this.editions = options.editions;
+    this.records = options.records;
+    this.now = options.now ?? (() => new Date());
+    this.createId = options.createId ?? randomUUID;
+  }
+
+  state(workspaceId: string, editionId: string): EditionInterpretationState {
+    const edition = this.editions.get(workspaceId, editionId);
+    const decisions = this.records.listDecisions(workspaceId, editionId);
+    const interpretations = this.records.listInterpretations(workspaceId, editionId);
+    return {
+      editionVersion: edition.version,
+      interpretations,
+      decisions,
+      interpretationStatuses: interpretations.map((interpretation) => {
+        const superseded = interpretations.some(
+          (candidate) => candidate.parentInterpretationId === interpretation.id
+        );
+        const stale = interpretation.editionVersion !== edition.version || superseded;
+        return {
+          interpretationId: interpretation.id,
+          stale,
+          staleDecisionIds: stale
+            ? decisions
+                .filter((decision) => decision.interpretationId === interpretation.id)
+                .map((decision) => decision.id)
+            : [],
+        };
+      }),
+      transcription: {
+        unresolvedCriticalCount: edition.tokens.filter((token) => token.critical).length,
+        accepted: Boolean(this.currentTranscriptionAcceptance(decisions, edition.version)),
+        staleDecisionIds: decisions
+          .filter(
+            (decision) =>
+              decision.scope === "transcription" && decision.editionVersion !== edition.version
+          )
+          .map((decision) => decision.id),
+      },
+    };
+  }
+
+  createInterpretation(
+    workspaceId: string,
+    editionId: string,
+    command: CreateTablatureInterpretationCommand
+  ): TablatureInterpretation {
+    const edition = this.editions.get(workspaceId, editionId);
+    this.assertExpectedEdition(edition, command.expectedEditionVersion);
+    const parent = command.parentInterpretationId
+      ? this.records.getInterpretation(workspaceId, editionId, command.parentInterpretationId)
+      : undefined;
+    const courseNumbers = command.courseTunings.map((course) => course.course);
+    if (new Set(courseNumbers).size !== courseNumbers.length)
+      throw new ApiRouteError("Course tunings must name each course once", 400);
+    const requirements = readTablatureRequirements(edition.mei);
+    const available = new Set(courseNumbers);
+    const missing = requirements.courses.filter((course) => !available.has(course));
+    if (missing.length)
+      throw new ApiRouteError(
+        `Interpretation has no sounding tuning for course ${missing.join(", ")}`,
+        400
+      );
+    for (const tuning of command.courseTunings) {
+      const maxFret = requirements.maxFretByCourse.get(tuning.course) ?? 0;
+      if (tuning.openMidis.some((midi) => midi + maxFret > 127))
+        throw new ApiRouteError(`Course ${tuning.course} interpretation exceeds MIDI range`, 400);
+    }
+    if (
+      command.repeat.startMeasure > command.repeat.endMeasure ||
+      command.repeat.endMeasure > requirements.measureCount
+    ) {
+      throw new ApiRouteError("Interpretation repeat bounds leave the transcription", 400);
+    }
+    const interpretation: TablatureInterpretation = {
+      id: `tab-interpretation.${this.createId()}`,
+      editionId,
+      editionVersion: edition.version,
+      version: (parent?.version ?? 0) + 1,
+      ...(parent ? { parentInterpretationId: parent.id } : {}),
+      tempo: command.tempo,
+      courseTunings: command.courseTunings,
+      repeat: command.repeat,
+      rationale: command.rationale,
+      createdAt: this.now().toISOString(),
+    };
+    return this.records.saveInterpretation(workspaceId, editionId, interpretation);
+  }
+
+  decide(
+    workspaceId: string,
+    editionId: string,
+    command: CreateEditionAcceptanceDecisionCommand
+  ): EditionAcceptanceDecision {
+    const edition = this.editions.get(workspaceId, editionId);
+    const existingDecisions = this.records.listDecisions(workspaceId, editionId);
+    this.assertExpectedEdition(edition, command.expectedEditionVersion);
+    if (command.decision === "rejected" && command.purposes.length)
+      throw new ApiRouteError("A rejection cannot grant purposes", 400);
+    if (command.decision === "accepted" && !command.purposes.length)
+      throw new ApiRouteError("An acceptance must name at least one purpose", 400);
+    let interpretation: TablatureInterpretation | undefined;
+    if (command.scope === "transcription") {
+      if (command.interpretationId)
+        throw new ApiRouteError("Transcription Acceptance cannot target an interpretation", 400);
+      if (command.purposes.some((purpose) => purpose !== "reading_edition"))
+        throw new ApiRouteError("Transcription Acceptance can grant only Reading Edition use", 400);
+      if (command.decision === "accepted" && edition.tokens.some((token) => token.critical)) {
+        throw new ApiRouteError("Transcription has unresolved Critical Uncertainty", 409);
+      }
+    } else {
+      if (!command.interpretationId)
+        throw new ApiRouteError("Interpretation Acceptance requires an exact interpretation", 400);
+      if (command.purposes.includes("reading_edition"))
+        throw new ApiRouteError("Reading Edition use belongs to Transcription Acceptance", 400);
+      interpretation = this.records.getInterpretation(
+        workspaceId,
+        editionId,
+        command.interpretationId
+      );
+      if (interpretation.editionVersion !== edition.version)
+        throw new ApiRouteError("Interpretation targets a stale transcription version", 409);
+      if (
+        command.decision === "accepted" &&
+        !this.currentTranscriptionAcceptance(existingDecisions, edition.version)
+      ) {
+        throw new ApiRouteError("Accept the exact transcription before its interpretation", 409);
+      }
+    }
+    const sameSubject = existingDecisions.filter(
+      (decision) =>
+        decision.scope === command.scope &&
+        (command.scope === "transcription" || decision.interpretationId === interpretation?.id)
+    );
+    const prior = latestDecision(sameSubject);
+    if (prior?.id !== command.expectedPriorDecisionId)
+      throw new ApiRouteError("Acceptance Decision parent is stale", 409);
+    return this.records.saveDecision(workspaceId, editionId, {
+      id: `edition-acceptance.${this.createId()}`,
+      version: Math.max(0, ...sameSubject.map((decision) => decision.version)) + 1,
+      editionId,
+      editionVersion: edition.version,
+      scope: command.scope,
+      ...(interpretation
+        ? { interpretationId: interpretation.id, interpretationVersion: interpretation.version }
+        : {}),
+      decision: command.decision,
+      purposes: command.purposes,
+      evidence: command.evidence,
+      decidedAt: this.now().toISOString(),
+    });
+  }
+
+  playback(
+    workspaceId: string,
+    editionId: string,
+    interpretationId: string
+  ): EditionPlaybackPreview {
+    const edition = this.editions.get(workspaceId, editionId);
+    const interpretation = this.records.getInterpretation(workspaceId, editionId, interpretationId);
+    if (interpretation.editionVersion !== edition.version)
+      throw new ApiRouteError("Interpretation targets a stale transcription version", 409);
+    const decisions = this.records.listDecisions(workspaceId, editionId);
+    const superseded = this.records
+      .listInterpretations(workspaceId, editionId)
+      .some((candidate) => candidate.parentInterpretationId === interpretation.id);
+    const accepted = latestDecision(
+      decisions.filter(
+        (decision) =>
+          decision.scope === "interpretation" &&
+          decision.interpretationId === interpretation.id &&
+          decision.interpretationVersion === interpretation.version &&
+          decision.editionVersion === edition.version
+      )
+    );
+    const authority =
+      accepted?.decision === "accepted" && !superseded
+        ? "accepted_interpretation"
+        : "provisional_audition";
+    const built = buildEditionPlayback(edition, interpretation);
+    return {
+      ...built,
+      authority,
+      permits:
+        authority === "accepted_interpretation"
+          ? accepted!.purposes
+          : (["literal_playback"] as const),
+    };
+  }
+
+  private currentTranscriptionAcceptance(
+    decisions: readonly EditionAcceptanceDecision[],
+    editionVersion: number
+  ): EditionAcceptanceDecision | undefined {
+    const latest = latestDecision(
+      decisions.filter(
+        (decision) =>
+          decision.scope === "transcription" && decision.editionVersion === editionVersion
+      )
+    );
+    return latest?.decision === "accepted" ? latest : undefined;
+  }
+
+  private assertExpectedEdition(edition: MeiEditionVersion, expectedVersion: number): void {
+    if (edition.version !== expectedVersion) {
+      throw new ApiRouteError(
+        `MEI Edition parent is stale: expected v${expectedVersion}, current v${edition.version}`,
+        409
+      );
+    }
+  }
+}
+
+function latestDecision(
+  decisions: readonly EditionAcceptanceDecision[]
+): EditionAcceptanceDecision | undefined {
+  return [...decisions].sort(
+    (left, right) => right.version - left.version || right.decidedAt.localeCompare(left.decidedAt)
+  )[0];
+}
+
+function readTablatureRequirements(mei: string): {
+  courses: number[];
+  measureCount: number;
+  maxFretByCourse: Map<number, number>;
+} {
+  const dom = new JSDOM(mei, { contentType: "application/xml" });
+  try {
+    const courses = new Set<number>();
+    const maxFretByCourse = new Map<number, number>();
+    for (const note of Array.from(dom.window.document.querySelectorAll("note[tab\\.course]"))) {
+      const course = Number(note.getAttribute("tab.course"));
+      const fret = Number(note.getAttribute("tab.fret"));
+      if (!Number.isInteger(course) || !Number.isInteger(fret) || course < 1 || fret < 0)
+        throw new ApiRouteError("Tablature Interpretation requires integer course and fret", 400);
+      courses.add(course);
+      maxFretByCourse.set(course, Math.max(maxFretByCourse.get(course) ?? 0, fret));
+    }
+    return {
+      courses: [...courses].sort((left, right) => left - right),
+      measureCount: dom.window.document.querySelectorAll("measure").length,
+      maxFretByCourse,
+    };
+  } finally {
+    dom.window.close();
+  }
+}
+
+function buildEditionPlayback(
+  edition: MeiEditionVersion,
+  interpretation: TablatureInterpretation
+): Omit<EditionPlaybackPreview, "authority" | "permits"> {
+  const dom = new JSDOM(edition.mei, { contentType: "application/xml" });
+  try {
+    const measures = Array.from(dom.window.document.querySelectorAll("measure"));
+    const before = measures.slice(0, interpretation.repeat.startMeasure - 1);
+    const repeated = measures.slice(
+      interpretation.repeat.startMeasure - 1,
+      interpretation.repeat.endMeasure
+    );
+    const after = measures.slice(interpretation.repeat.endMeasure);
+    const traversal = [
+      ...before.map((measure) => ({ measure, iteration: 1 })),
+      ...Array.from({ length: interpretation.repeat.totalPasses }, (_, pass) =>
+        repeated.map((measure) => ({ measure, iteration: pass + 1 }))
+      ).flat(),
+      ...after.map((measure) => ({ measure, iteration: 1 })),
+    ];
+    const tunings = new Map(
+      interpretation.courseTunings.map((course) => [course.course, course.openMidis] as const)
+    );
+    const quarterSeconds = 60 / interpretation.tempo;
+    const events: EditionPlaybackEvent[] = [];
+    const measureOccurrences: EditionPlaybackPreview["measureOccurrences"] extends readonly (infer T)[]
+      ? T[]
+      : never = [];
+    let elapsedQuarters = 0;
+    for (const [occurrenceIndex, { measure, iteration }] of traversal.entries()) {
+      const measureNumber = Number(measure.getAttribute("n")) || measures.indexOf(measure) + 1;
+      const measureStart = elapsedQuarters;
+      const measureOccurrenceId = `edition-measure-occurrence.${measureNumber}.${iteration}.${occurrenceIndex + 1}`;
+      let inMeasure = 0;
+      for (const group of Array.from(measure.querySelectorAll("tabGrp"))) {
+        const dur = Number(group.getAttribute("dur"));
+        const dots = Number(group.getAttribute("dots") ?? 0);
+        if (
+          ![1, 2, 4, 8, 16, 32, 64].includes(dur) ||
+          !Number.isInteger(dots) ||
+          dots < 0 ||
+          dots > 3
+        )
+          throw new ApiRouteError("Tablature Interpretation encountered invalid duration", 400);
+        const durationQuarters = (4 / dur) * (2 - 1 / 2 ** dots);
+        for (const note of Array.from(group.querySelectorAll("note"))) {
+          const meiId =
+            note.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") ??
+            note.getAttribute("xml:id")!;
+          const course = Number(note.getAttribute("tab.course"));
+          const fret = Number(note.getAttribute("tab.fret"));
+          if (!Number.isInteger(course) || !Number.isInteger(fret) || course < 1 || fret < 0)
+            throw new ApiRouteError(
+              "Tablature Interpretation encountered invalid course or fret",
+              400
+            );
+          const openMidis = tunings.get(course);
+          if (!openMidis)
+            throw new ApiRouteError(
+              `Interpretation has no sounding tuning for course ${course}`,
+              400
+            );
+          for (const [stringIndex, openMidi] of openMidis.entries()) {
+            if (openMidi + fret > 127)
+              throw new ApiRouteError(`Course ${course} interpretation exceeds MIDI range`, 400);
+            events.push({
+              occurrenceId: `edition-playback.${interpretation.id}.${occurrenceIndex + 1}.${meiId}.${stringIndex + 1}`,
+              measureOccurrenceId,
+              measureNumber,
+              iteration,
+              meiId,
+              course,
+              fret,
+              stringIndex: stringIndex + 1,
+              midi: openMidi + fret,
+              startSeconds: (measureStart + inMeasure) * quarterSeconds,
+              durationSeconds: durationQuarters * quarterSeconds,
+            });
+          }
+        }
+        inMeasure += durationQuarters;
+      }
+      measureOccurrences.push({
+        id: measureOccurrenceId,
+        measureNumber,
+        iteration,
+        startSeconds: measureStart * quarterSeconds,
+        durationSeconds: inMeasure * quarterSeconds,
+      });
+      elapsedQuarters += inMeasure;
+    }
+    return {
+      editionId: edition.editionId,
+      editionVersion: edition.version,
+      interpretationId: interpretation.id,
+      interpretationVersion: interpretation.version,
+      durationSeconds: elapsedQuarters * quarterSeconds,
+      events,
+      measureOccurrences,
+    };
+  } finally {
+    dom.window.close();
+  }
+}
