@@ -35,7 +35,9 @@ The milestone passes when the Owner can:
    an inspectable prompt;
 7. review model-proposed changes individually and commit only an approved typed batch; and
 8. create one cited Attested Realization from the accepted passage without claiming that one
-   occurrence is a recurring or preferred idiom.
+   occurrence is a recurring or preferred idiom; and
+9. run without the superseded proof-only edition implementations, adapters, routes, fixtures, and
+   tests once replacement coverage is demonstrated.
 
 ## Canonical musical state
 
@@ -153,7 +155,8 @@ The active tracer queue is [`.scratch/mei-editions/PLAN.md`](.scratch/mei-editio
 3. interpretation acceptance and synchronized playback;
 4. Passage Selection prompting and model-assisted edits;
 5. late whole-page Owner acceptance; and
-6. first accepted Attested Realization.
+6. first accepted Attested Realization; and
+7. replacement-proven deletion of superseded edition paths.
 
 Complete, test, commit, and push each autonomous tracer before beginning its dependent. Ordinary
 Git history and focused tests are sufficient; do not create completion manifests, trust
@@ -162,10 +165,12 @@ ceremonies, evidence receipts, or qualification machinery.
 ## Completion boundary
 
 This specification is complete when the product proof passes, T05 records both Owner decisions,
-and T06 creates one properly bounded Attested Realization from the accepted page. It does not claim
-complete transcription of the de Visée book, recognition of every historical tablature system,
-historical-performance authenticity, a recurring baroque-guitar idiom, or readiness for
-multi-owner publication.
+T06 creates one properly bounded Attested Realization from the accepted page, and T07 deletes the
+edition prototypes and compatibility paths that the accepted vertical demonstrably replaces. T07
+must inventory reachability before deletion and retain code that still serves an unreplaced
+arrangement or deliverable capability. Completion does not claim complete transcription of the de
+Visée book, recognition of every historical tablature system, historical-performance authenticity,
+a recurring baroque-guitar idiom, or readiness for multi-owner publication.
 
 ## Deferred until demonstrated need
 

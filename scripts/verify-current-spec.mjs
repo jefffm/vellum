@@ -94,11 +94,11 @@ const issueDirectory = path.join(root, activeWave, "issues");
 const issues = readdirSync(issueDirectory)
   .filter((name) => /^\d{2}-.*\.md$/.test(name))
   .sort();
-if (issues.length !== 6) fail(`active wave must have 6 tracers, found ${issues.length}`);
+if (issues.length !== 7) fail(`active wave must have 7 tracers, found ${issues.length}`);
 const ids = issues.map((name) => name.slice(0, 2));
-const expectedIds = Array.from({ length: 6 }, (_, index) => String(index + 1).padStart(2, "0"));
+const expectedIds = Array.from({ length: 7 }, (_, index) => String(index + 1).padStart(2, "0"));
 if (JSON.stringify(ids) !== JSON.stringify(expectedIds)) {
-  fail(`active tracer IDs are not contiguous 01–06: ${ids.join(", ")}`);
+  fail(`active tracer IDs are not contiguous 01–07: ${ids.join(", ")}`);
 }
 
 let hitl = 0;
@@ -159,5 +159,5 @@ for (const file of [
 }
 
 console.log(
-  "Current specification verified: one active MEI Editions spec, six small tracers, one late Owner gate, and prior waves archived."
+  "Current specification verified: one active MEI Editions spec, seven small tracers, one late Owner gate, and prior waves archived."
 );

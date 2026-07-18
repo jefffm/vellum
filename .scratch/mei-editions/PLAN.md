@@ -19,6 +19,7 @@ MEI edition, then use one accepted selection as bounded repertoire evidence.
 |  04 | Passage prompting and model-assisted edits          | AFK  | 03         | Versioned selections drive inspectable prompts and reviewed edits      |
 |  05 | Owner page-9 acceptance                             | HITL | 04         | Owner accepts the whole-page transcription and one interpretation      |
 |  06 | First accepted Attested Realization                 | AFK  | 05         | One accepted selection becomes bounded candidate-only evidence         |
+|  07 | Retire superseded edition paths                     | AFK  | 06         | Replacement-proven prototype code and tests are deleted                |
 
 ## Execution rules
 
@@ -28,7 +29,12 @@ MEI edition, then use one accepted selection as bounded repertoire evidence.
   editor, library crawler, recognition model, or knowledge-publication system.
 - The Owner-local de Visée scan is an execution input, not a tracked fixture. Automated tests use
   rights-approved or project-authored substitutes.
-- T05 is the sole planned HITL gate. T06 resumes automatically from its accepted version IDs.
+- T05 is the sole planned HITL gate. T06 and T07 resume automatically from its accepted version
+  IDs.
+- T07 removes superseded implementations rather than preserving compatibility by default. It may
+  delete a path only after mapping its callers and proving the accepted MEI path covers the
+  retained behavior. Still-live arrangement and LilyPond deliverable capabilities are not
+  superseded merely because the edition path is MEI-native.
 - A failed renderer, model, or tool call is a diagnosis problem, not permission to bypass
   canonical versions, security, or acceptance.
 
