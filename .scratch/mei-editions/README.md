@@ -2,7 +2,7 @@
 
 Status: active
 
-Current work: T04 — Passage Selection prompting and model-assisted edits.
+Current work: T05 — Owner page-9 acceptance.
 
 Authority: [`SPEC.md`](../../SPEC.md) and
 [ADR 0024](../../docs/adr/0024-use-verovio-for-mei-edition-surfaces.md)

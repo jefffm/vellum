@@ -7,6 +7,7 @@ import type {
 } from "./lib/mei-edition-domain.js";
 import { renderMeiDocumentInWorker } from "./mei-edition-surface.js";
 import { installMeiEditionInterpretationWorkbench } from "./mei-edition-interpretation-workbench.js";
+import { installMeiEditionSelectionWorkbench } from "./mei-edition-selection-workbench.js";
 
 type ProjectedEdition = Readonly<{
   edition: MeiEditionVersion;
@@ -235,6 +236,9 @@ export async function renderMeiEditionWorkspace(
     }
     if (!preview) {
       await installMeiEditionInterpretationWorkbench(shell, workspaceId, edition, svg);
+      await installMeiEditionSelectionWorkbench(shell, workspaceId, edition, svg, async (result) =>
+        render(result)
+      );
     }
     shell.dataset.ready = "true";
   };

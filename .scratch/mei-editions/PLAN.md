@@ -2,7 +2,7 @@
 
 Status: active
 
-Current tracer: T04 — Passage Selection prompting and model-assisted edits.
+Current tracer: T05 — Owner page-9 acceptance.
 
 ## Outcome
 

@@ -5,6 +5,8 @@ const SourceIdSchema = Type.String({ pattern: "^source\\.[a-f0-9-]{16,}$" });
 const BatchIdSchema = Type.String({ pattern: "^correction-batch\\.[a-f0-9-]{16,}$" });
 const InterpretationIdSchema = Type.String({ pattern: "^tab-interpretation\\.[a-f0-9-]{16,}$" });
 const AcceptanceIdSchema = Type.String({ pattern: "^edition-acceptance\\.[a-f0-9-]{16,}$" });
+const SelectionIdSchema = Type.String({ pattern: "^passage-selection\\.[a-f0-9-]{16,}$" });
+const DigestSchema = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const MeiIdSchema = Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_.:-]*$" });
 const IsoDateSchema = Type.String({
   pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
@@ -56,6 +58,97 @@ export const MeiAttributeChangeSchema = Type.Object(
   { additionalProperties: false }
 );
 
+export const PassageSelectionSchema = Type.Object(
+  {
+    id: SelectionIdSchema,
+    editionId: EditionIdSchema,
+    editionVersion: Type.Integer({ minimum: 1 }),
+    mode: Type.Union([Type.Literal("contiguous"), Type.Literal("noncontiguous")]),
+    roleFilter: Type.Union([
+      Type.Literal("all"),
+      Type.Literal("treble_courses"),
+      Type.Literal("middle_course"),
+      Type.Literal("bass_courses"),
+      Type.Literal("rhythm"),
+    ]),
+    meiIds: Type.Array(MeiIdSchema, { minItems: 1, uniqueItems: true }),
+  },
+  { additionalProperties: false }
+);
+
+export const SelectionContextEnvelopeSchema = Type.Object(
+  {
+    kind: Type.Literal("vellum_mei_selection_context_v1"),
+    selection: PassageSelectionSchema,
+    sourcePage: Type.Integer({ minimum: 1 }),
+    meter: Type.Object(
+      { count: Type.Integer({ minimum: 1 }), unit: Type.Integer({ minimum: 1 }) },
+      { additionalProperties: false }
+    ),
+    tuning: Type.Array(
+      Type.Object(
+        {
+          course: Type.Integer({ minimum: 1, maximum: 13 }),
+          pname: Type.String({ minLength: 1 }),
+          octave: Type.Integer(),
+        },
+        { additionalProperties: false }
+      )
+    ),
+    selectedObjects: Type.Array(
+      Type.Object(
+        {
+          id: MeiIdSchema,
+          kind: DiplomaticTokenSchema.properties.kind,
+          measureId: Type.Optional(MeiIdSchema),
+          measureNumber: Type.Optional(Type.Integer({ minimum: 1 })),
+          course: Type.Optional(Type.Integer({ minimum: 1, maximum: 13 })),
+          fret: Type.Optional(Type.Integer({ minimum: 0, maximum: 12 })),
+          dur: Type.Optional(Type.Integer({ minimum: 1 })),
+          dots: Type.Optional(Type.Integer({ minimum: 0, maximum: 3 })),
+        },
+        { additionalProperties: false }
+      ),
+      { minItems: 1 }
+    ),
+    neighborIds: Type.Array(MeiIdSchema, { uniqueItems: true }),
+    facsimileIncluded: Type.Literal(false),
+  },
+  { additionalProperties: false }
+);
+
+const ModelSuggestionDecisionSchema = Type.Object(
+  {
+    suggestionId: Type.String({ minLength: 1, maxLength: 120 }),
+    decision: Type.Union([
+      Type.Literal("approved"),
+      Type.Literal("rejected"),
+      Type.Literal("revised"),
+    ]),
+    finalChange: Type.Optional(MeiAttributeChangeSchema),
+    rationale: Type.String({ minLength: 1, maxLength: 500 }),
+  },
+  { additionalProperties: false }
+);
+
+export const ModelCorrectionProvenanceSchema = Type.Object(
+  {
+    modelActionId: Type.String({ pattern: "^model-action\\.[a-f0-9-]{16,}$" }),
+    publicationId: Type.String({ pattern: "^model-publication\\.[a-f0-9-]{16,}$" }),
+    resultCommitId: Type.String({ pattern: "^result-commit\\.[a-f0-9-]{16,}$" }),
+    selectionContext: SelectionContextEnvelopeSchema,
+    selectionContextDigest: DigestSchema,
+    proposalDigest: DigestSchema,
+    proposalLayer: Type.Union([
+      Type.Literal("transcription"),
+      Type.Literal("interpretation"),
+      Type.Literal("emendation"),
+    ]),
+    decisions: Type.Array(ModelSuggestionDecisionSchema, { minItems: 1 }),
+  },
+  { additionalProperties: false }
+);
+
 export const CorrectionBatchCommandSchema = Type.Object(
   {
     id: BatchIdSchema,
@@ -63,6 +156,7 @@ export const CorrectionBatchCommandSchema = Type.Object(
     expectedVersion: Type.Integer({ minimum: 1 }),
     layer: Type.Literal("transcription"),
     changes: Type.Array(MeiAttributeChangeSchema, { minItems: 1 }),
+    modelProvenance: Type.Optional(ModelCorrectionProvenanceSchema),
   },
   { additionalProperties: false }
 );
@@ -74,6 +168,7 @@ export const CorrectionBatchRecordSchema = Type.Object(
     expectedVersion: Type.Integer({ minimum: 1 }),
     layer: Type.Literal("transcription"),
     changes: Type.Array(MeiAttributeChangeSchema, { minItems: 1 }),
+    modelProvenance: Type.Optional(ModelCorrectionProvenanceSchema),
     committedAt: IsoDateSchema,
     inverseOfBatchId: Type.Optional(BatchIdSchema),
   },
@@ -216,6 +311,9 @@ export const CreateEditionAcceptanceDecisionCommandSchema = Type.Object(
 export type FacsimileRegion = Static<typeof FacsimileRegionSchema>;
 export type DiplomaticToken = Static<typeof DiplomaticTokenSchema>;
 export type MeiAttributeChange = Static<typeof MeiAttributeChangeSchema>;
+export type PassageSelection = Static<typeof PassageSelectionSchema>;
+export type SelectionContextEnvelope = Static<typeof SelectionContextEnvelopeSchema>;
+export type ModelCorrectionProvenance = Static<typeof ModelCorrectionProvenanceSchema>;
 export type CorrectionBatchCommand = Static<typeof CorrectionBatchCommandSchema>;
 export type CorrectionBatchRecord = Static<typeof CorrectionBatchRecordSchema>;
 export type MeiEditionVersion = Static<typeof MeiEditionVersionSchema>;

@@ -12,6 +12,9 @@ import { apiErrorFromResponse, isApiFailure } from "./api-contract.js";
 
 type ApiSuccess<T> = { data: T };
 type ModelActionRunResult = { action: ModelAction; publication: ModelActionPublication };
+export type BoundedModelActionResult =
+  | { status: "denied"; action: ModelAction; message: string }
+  | ({ status: "completed" } & ModelActionRunResult);
 type EgressAuthorizer = (disclosure: ModelEgressDisclosure) => Promise<boolean>;
 
 let egressAuthorizer: EgressAuthorizer = presentEgressDisclosure;
@@ -41,61 +44,12 @@ export function vellumStreamProxy(
     try {
       const workspaceId = activeWorkspaceId();
       const intent = latestOwnerIntent(context);
-      const action = await api<ModelAction>(`/api/workspaces/${workspaceId}/model-actions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "interactive_guidance_v1", intent }),
-        signal: options.signal,
-      });
-      const attempt = action.attempts.at(-1);
-      if (!attempt?.disclosure || !attempt.disclosureDigest) {
-        throw new Error("The server did not return a complete Model Action disclosure");
-      }
-
-      const authorizedByOwner = await egressAuthorizer(attempt.disclosure);
-      const decided = await api<ModelAction>(
-        `/api/workspaces/${workspaceId}/model-actions/${action.id}/authorization`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            decision: authorizedByOwner ? "authorize" : "deny",
-            disclosureDigest: attempt.disclosureDigest,
-          }),
-          signal: options.signal,
-        }
+      const result = await runBoundedModelAction(workspaceId, intent, options.signal);
+      pushAssistantText(
+        stream,
+        partial,
+        result.status === "completed" ? result.publication.result.content : result.message
       );
-      if (!authorizedByOwner || decided.status === "denied") {
-        pushAssistantText(
-          stream,
-          partial,
-          authorizedByOwner
-            ? `Nothing was sent. ${attempt.disclosure.policyReason}`
-            : "Nothing was sent. You declined this one-time Model Action egress request."
-        );
-        return;
-      }
-
-      const authorizedAttempt = decided.attempts.at(-1);
-      if (!authorizedAttempt?.envelopeDigest) {
-        throw new Error("The server did not mint an authorized Egress Envelope");
-      }
-      const completed = await api<ModelActionRunResult>(
-        `/api/workspaces/${workspaceId}/model-actions/${action.id}/run`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ envelopeDigest: authorizedAttempt.envelopeDigest }),
-          signal: options.signal,
-        }
-      );
-      if (
-        completed.action.status !== "completed" ||
-        completed.action.publicationReference !== completed.publication.id
-      ) {
-        throw new Error("The Model Action result was not atomically published");
-      }
-      pushAssistantText(stream, partial, completed.publication.result.content);
     } catch (error) {
       const reason = options.signal?.aborted ? "aborted" : "error";
       partial.stopReason = reason;
@@ -106,6 +60,68 @@ export function vellumStreamProxy(
   })();
 
   return stream;
+}
+
+export async function runBoundedModelAction(
+  workspaceId: string,
+  intent: string,
+  signal?: AbortSignal
+): Promise<BoundedModelActionResult> {
+  assertAuthorityPathRuntime("authority.validator.model-action-commit", "production");
+  const action = await api<ModelAction>(`/api/workspaces/${workspaceId}/model-actions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind: "interactive_guidance_v1", intent }),
+    signal,
+  });
+  const attempt = action.attempts.at(-1);
+  if (!attempt?.disclosure || !attempt.disclosureDigest) {
+    throw new Error("The server did not return a complete Model Action disclosure");
+  }
+
+  const authorizedByOwner = await egressAuthorizer(attempt.disclosure);
+  const decided = await api<ModelAction>(
+    `/api/workspaces/${workspaceId}/model-actions/${action.id}/authorization`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        decision: authorizedByOwner ? "authorize" : "deny",
+        disclosureDigest: attempt.disclosureDigest,
+      }),
+      signal,
+    }
+  );
+  if (!authorizedByOwner || decided.status === "denied") {
+    return {
+      status: "denied",
+      action: decided,
+      message: authorizedByOwner
+        ? `Nothing was sent. ${attempt.disclosure.policyReason}`
+        : "Nothing was sent. You declined this one-time Model Action egress request.",
+    };
+  }
+
+  const authorizedAttempt = decided.attempts.at(-1);
+  if (!authorizedAttempt?.envelopeDigest) {
+    throw new Error("The server did not mint an authorized Egress Envelope");
+  }
+  const completed = await api<ModelActionRunResult>(
+    `/api/workspaces/${workspaceId}/model-actions/${action.id}/run`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ envelopeDigest: authorizedAttempt.envelopeDigest }),
+      signal,
+    }
+  );
+  if (
+    completed.action.status !== "completed" ||
+    completed.action.publicationReference !== completed.publication.id
+  ) {
+    throw new Error("The Model Action result was not atomically published");
+  }
+  return { status: "completed", ...completed };
 }
 
 async function api<T>(path: string, init: RequestInit): Promise<T> {

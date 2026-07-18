@@ -1,11 +1,14 @@
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { FRENCH_TAB_MEI_FIXTURE } from "../../lib/mei-edition-fixtures.js";
-import type { DiplomaticToken } from "../../lib/mei-edition-domain.js";
+import type { DiplomaticToken, SelectionContextEnvelope } from "../../lib/mei-edition-domain.js";
+import { canonicalJson } from "../../lib/canonical-json.js";
 import { ApiRouteError } from "./create-route.js";
+import { ModelActionService } from "./model-action-service.js";
 import { MeiEditionService } from "./mei-edition-service.js";
 import { MeiEditionStore } from "./mei-edition-store.js";
 import { WorkspaceStore } from "./workspace-store.js";
@@ -68,7 +71,17 @@ function harness() {
       diagnostics: ["Project-authored deterministic fixture"],
     },
   });
-  return { service, workspaceId: workspace.id, edition };
+  return {
+    service,
+    workspaces,
+    createId: () => createIdForTest(++sequence),
+    workspaceId: workspace.id,
+    edition,
+  };
+}
+
+function createIdForTest(sequence: number): string {
+  return `00000000-0000-4000-8000-${String(sequence).padStart(12, "0")}`;
 }
 
 describe("diplomatic MEI Edition Correction Batches", () => {
@@ -140,5 +153,127 @@ describe("diplomatic MEI Edition Correction Batches", () => {
         ],
       })
     ).toThrowError(ApiRouteError);
+  });
+
+  it("binds a reviewed model proposal and every individual decision to the canonical successor", async () => {
+    const { service, workspaces, createId, workspaceId, edition } = harness();
+    const context: SelectionContextEnvelope = {
+      kind: "vellum_mei_selection_context_v1",
+      selection: {
+        id: "passage-selection.00000000-0000-4000-8000-000000000201",
+        editionId: edition.editionId,
+        editionVersion: 1,
+        mode: "contiguous",
+        roleFilter: "all",
+        meiIds: ["note-1"],
+      },
+      sourcePage: 9,
+      meter: { count: 3, unit: 4 },
+      tuning: [
+        { course: 1, pname: "e", octave: 4 },
+        { course: 2, pname: "b", octave: 3 },
+        { course: 3, pname: "g", octave: 3 },
+        { course: 4, pname: "d", octave: 3 },
+        { course: 5, pname: "a", octave: 3 },
+      ],
+      selectedObjects: [
+        {
+          id: "note-1",
+          kind: "tablature",
+          measureId: "measure-1",
+          measureNumber: 1,
+          course: 1,
+          fret: 1,
+        },
+      ],
+      neighborIds: ["rhythm-1", "note-2"],
+      facsimileIncluded: false,
+    };
+    const contextDigest = createHash("sha256").update(canonicalJson(context)).digest("hex");
+    const proposal = JSON.stringify({
+      summary: "One bounded correction",
+      layer: "transcription",
+      suggestions: [
+        {
+          id: "suggestion.1",
+          tokenId: "note-1",
+          attribute: "tab.fret",
+          replacementValue: "2",
+          rationale: "Project-authored fake provider proposal.",
+        },
+      ],
+    });
+    const actions = new ModelActionService({
+      store: workspaces,
+      createId,
+      now: () => new Date("2026-07-17T20:10:00.000Z"),
+      executeProvider: async (envelope, envelopeDigest) => ({
+        envelopeDigest,
+        provider: envelope.provider,
+        model: envelope.model,
+        providerResponseId: "provider-response.fake",
+        content: proposal,
+      }),
+    });
+    const action = actions.create(workspaceId, {
+      kind: "interactive_guidance_v1",
+      intent: `Review exact selection\nSelection-Context-SHA256: ${contextDigest}\n${JSON.stringify(context)}`,
+    });
+    const authorized = actions.authorize(
+      workspaceId,
+      action.id,
+      "authorize",
+      action.attempts[0]!.disclosureDigest!
+    );
+    const completed = await actions.run(
+      workspaceId,
+      action.id,
+      authorized.attempts[0]!.envelopeDigest!
+    );
+    const finalChange = {
+      tokenId: "note-1",
+      attribute: "tab.fret" as const,
+      expectedValue: "1",
+      replacementValue: "2",
+      rationale: "Project-authored fake provider proposal.",
+    };
+    const command = {
+      id: "correction-batch.00000000-0000-4000-8000-000000000202",
+      name: "Reviewed model proposal",
+      expectedVersion: 1,
+      layer: "transcription" as const,
+      changes: [finalChange],
+      modelProvenance: {
+        modelActionId: action.id,
+        publicationId: completed.publication.id,
+        resultCommitId: completed.publication.commit.id,
+        selectionContext: context,
+        selectionContextDigest: contextDigest,
+        proposalDigest: createHash("sha256").update(proposal).digest("hex"),
+        proposalLayer: "transcription" as const,
+        decisions: [
+          {
+            suggestionId: "suggestion.1",
+            decision: "approved" as const,
+            finalChange,
+            rationale: "Included after individual review.",
+          },
+        ],
+      },
+    };
+
+    expect(service.preview(workspaceId, edition.editionId, command).version).toBe(2);
+    expect(() =>
+      service.preview(workspaceId, edition.editionId, {
+        ...command,
+        modelProvenance: { ...command.modelProvenance, proposalDigest: "0".repeat(64) },
+      })
+    ).toThrowError(/proposal digest mismatch/);
+    const committed = service.commit(workspaceId, edition.editionId, command);
+    expect(committed.correctionBatch?.modelProvenance).toMatchObject({
+      modelActionId: action.id,
+      publicationId: completed.publication.id,
+      resultCommitId: completed.publication.commit.id,
+    });
   });
 });
