@@ -19,31 +19,38 @@ in `docs/adr`, and the current `SPEC.md`. See `docs/agents/domain.md`.
 
 ## Current work
 
-The sole current implementation specification is `SPEC.md`: **Vellum Musical Proofs**.
+The sole current implementation specification is `SPEC.md`: **Vellum MEI Editions and Repertoire
+Intelligence**.
 
-The active execution wave is `.scratch/musical-proofs`. Before implementation:
+The active execution wave is `.scratch/mei-editions`. Before implementation:
 
-1. Read `CONTEXT.md`, applicable accepted ADRs—especially ADR 0023—and `SPEC.md`.
-2. Read `.scratch/musical-proofs/PLAN.md` and the selected tracer issue.
+1. Read `CONTEXT.md`, applicable accepted ADRs—especially ADRs 0023 and 0024—and `SPEC.md`.
+2. Read `.scratch/mei-editions/PLAN.md` and the selected tracer issue.
 3. Build a thin, demoable product path. Do not add generalized governance, migration,
    qualification, publication, or review infrastructure unless the selected tracer directly
    requires it.
-4. Keep five-course baroque guitar, thirteen-course baroque lute, and six-string classical
-   guitar coequal. Shared code must not smuggle one target's mechanics or idiom into another.
-5. Preserve source understanding, musical relationships, explicit uncertainty, version lineage,
-   and source-backed knowledge while using the smallest implementation that proves the behavior.
+4. Keep the current de Visée baroque-guitar source vertical from becoming a universal instrument
+   model. Shared MEI, rendering, selection, playback, and knowledge code must remain usable by
+   thirteen-course baroque lute and ordinary notation without smuggling five-course mechanics.
+5. Preserve diplomatic evidence, interpretation, editorial action, explicit uncertainty, version
+   lineage, and source-backed knowledge as separate layers while using the smallest implementation
+   that proves the behavior.
 6. Complete, test, commit, and push one tracer before beginning a dependent tracer. Ordinary Git
    history is the execution record; no separate evidence-receipt or publication-attestation
    commit is required.
-7. Sequence autonomous work before the single late Owner playtest.
+7. T01 is current. Execute T01–T04 autonomously in dependency order, stop at T05 for the exact
+   Owner acceptance decisions, and resume T06 only from accepted version IDs.
 
-Do not reopen `.scratch/instrument-intelligence`. It is the frozen superseded 107-tracer
-high-assurance program. Do not run its trust bootstrap, manifest writer, strict verifier, or
-completion machinery. Do not reopen `.scratch/arrangement-intelligence`; it is frozen completed
-prototype evidence with path- and hash-bound records.
+Do not reopen `docs/archive/execution-waves/2026-07-17/instrument-intelligence`. It is the frozen,
+superseded 107-tracer high-assurance program. Do not run its trust bootstrap, manifest writer,
+strict verifier, or completion machinery. Do not reopen
+`docs/archive/execution-waves/2026-07-17/arrangement-intelligence`; it is completed prototype
+evidence with historical path- and hash-bound records.
+Do not reopen `docs/archive/execution-waves/2026-07-17/musical-proofs`; its unfinished T11 is a
+frozen historical proposal, not current work.
 
-Historical specifications are under `docs/archive/specifications`. They are evidence, not
-current work.
+Historical specifications and execution waves are under `docs/archive`. They are evidence, not
+current work or a backlog.
 
 ## Quality gates
 
@@ -63,8 +70,8 @@ Add only the relevant conditional gates:
 
 - UI or workflow changes: `npm run test:browser`
 - evaluation changes: the affected `npm run eval:*` suites
-- notation or playback: `npm run sandbox:lilypond:verify`, `npm run eval:render`, and
-  `npm run eval:playback`
+- notation or playback: `npm run eval:render` and `npm run eval:playback`; add
+  `npm run sandbox:lilypond:verify` only when the LilyPond path changes
 - cross-target behavior: `npm run eval:golden` and `npm run eval:parity`
 - OMR changes: the focused fake adapter tests and one real Audiveris smoke test on macOS
 - provider or rights changes: the focused fake-provider, egress, or rights tests

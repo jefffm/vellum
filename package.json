@@ -23,7 +23,6 @@
     "authority-paths:refresh": "node scripts/build-authority-path-inventory.mjs --write",
     "history:arrangement-intelligence:verify": "node scripts/verify-arrangement-intelligence.mjs",
     "history:arrangement-intelligence:complete": "node scripts/verify-arrangement-intelligence.mjs --complete",
-    "history:arrangement-intelligence:close": "node scripts/final-completion-audit.mjs",
     "sandbox:lilypond:verify": "node scripts/verify-lilypond-sandbox.mjs && VELLUM_REAL_LILYPOND_SANDBOX=1 vitest run src/server/lib/podman-lilypond-runner.test.ts test/e2e/greensleeves-tracer.test.ts",
     "eval:fast": "npm run server:build --silent && node dist-server/server/evaluation-cli.js",
     "eval:golden": "npm run server:build --silent && node dist-server/server/golden-evaluation-cli.js",

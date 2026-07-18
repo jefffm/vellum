@@ -2,6 +2,9 @@
 
 Status: active
 
+Current tracer: T11 — direct-PDF source-voice reconstruction and milestone closure. T01–T10 are
+complete; no other tracer in this plan is current.
+
 ## Outcome
 
 Deliver one real, understandable PDF-to-arrangement workflow whose outputs are recognizably and

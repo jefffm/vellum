@@ -1,312 +1,179 @@
-# Vellum Musical Proofs
+# Vellum MEI Editions and Repertoire Intelligence
 
 Status: Current and authoritative next-work specification
 
-This is the only current implementation specification in the repository. It replaces the
-high-assurance Instrument Intelligence program archived at
-[`docs/archive/specifications/2026-07-16-high-assurance-program`](docs/archive/specifications/2026-07-16-high-assurance-program/README.md).
+This is the only current implementation specification in the repository. The completed and
+superseded Musical Proofs program is archived at
+[`docs/archive/specifications/2026-07-17-musical-proofs.md`](docs/archive/specifications/2026-07-17-musical-proofs.md).
 
 ## Outcome
 
-Prove that Vellum can turn an uploaded score into recognizable, playable, idiomatic,
-inspectable arrangements for three coequal targets:
+Prove that Vellum can turn one page of historical tablature into a trustworthy, interactive,
+playable MEI edition and then—only after review—use an exact selected passage as evidence for
+instrument intelligence.
 
-- five-course baroque guitar;
-- thirteen-course baroque lute; and
-- six-string classical guitar.
+The first vertical is page 9 of Robert de Visée's 1686 _Pièces pour la guittare_. It must proceed
+through facsimile import, Diplomatic Tablature Transcription, uncertainty correction, Verovio
+rendering, Transcription Acceptance, Tablature Interpretation, Interpretation Acceptance,
+synchronized literal playback, Passage Selection, and one source-backed Attested Realization.
 
-Vellum should behave like a personal musicologist and practical arranger. The Owner should
-not need to know which historical technique, voice-leading rule, fingering constraint, or
-notation convention must be named in a prompt. Expert reasoning and evidence remain
-inspectable, but good defaults must work without expert prompting.
+This milestone is not a general OCR system, full scholarly editor, digital library, or automatic
+style learner. It is one convincing path that makes later corpus growth cheap and trustworthy.
 
-The next milestone is not a general certification platform. It is three convincing musical
-proofs exercised through the real product.
+## Product proof
 
-## Product test
+The milestone passes when the Owner can:
 
-The milestone passes when the Owner can upload one rights-approved, non-Greensleeves PDF,
-review uncertain transcription only where necessary, request all three targets, and receive:
+1. open the selected de Visée page beside a rendered five-line French tablature edition;
+2. inspect every uncertain token at a legible source region without an overlay obscuring it;
+3. stage several corrections, preview them, and commit one atomic Correction Batch as a new
+   canonical transcription version;
+4. approve separately that the transcription matches the page and that one interpretation is
+   suitable for literal playback and analysis;
+5. play, pause, seek, zoom, reflow, and follow a restrained marker without losing MEI identity;
+6. select a contiguous passage or noncontiguous musical objects and use that Passage Selection in
+   an inspectable prompt;
+7. review model-proposed changes individually and commit only an approved typed batch; and
+8. create one cited Attested Realization from the accepted passage without claiming that one
+   occurrence is a recurring or preferred idiom.
 
-1. a recognizable Principal Voice with phrase and cadence identity intact;
-2. idiomatic subordinate material rather than pitch coverage masquerading as arrangement;
-3. mechanically plausible fingerings and technique for the selected Instrument Instance;
-4. readable engraving in the target's expected notation;
-5. synchronized literal playback from the same canonical musical events;
-6. an understandable explanation of transformations, compromises, and uncertainty; and
-7. a saved new version after either a prompted revision or a manual batch edit.
+## Canonical musical state
 
-Each target must also pass its target-specific proof below. Passing one target cannot
-compensate for another target's failure.
+The Diplomatic Tablature Transcription is constrained, deterministically serialized MEI 5.1. It
+records visible tablature tokens, stable identifiers, facsimile zones, layout anchors, uncertainty,
+and editorial alternatives without silently imposing sounding pitch or analytical interpretation.
 
-## Product principles
+MEI does not replace Vellum's separate domain records for Source Artifacts, recognition attempts,
+Tablature Interpretations, acceptance decisions, Analysis Records, Knowledge Candidates, or
+arrangements. Browser indexes and rendering products are rebuildable projections.
 
-### Musical value before assurance machinery
+Typed server commands are the only write path. A command names the expected parent version and
+either creates one complete canonical successor or changes nothing. The browser worker never owns
+canonical MEI.
 
-New infrastructure must be justified by an immediate product proof. Do not build generalized
-trust, migration, qualification, publication, or reviewer systems in anticipation of future
-deployment. Ordinary Git history, tests, local storage, source citations, and explicit Owner
-review are sufficient for this milestone.
+## Rendering and exports
 
-### Source understanding before fingering
+A locally bundled, exactly pinned Verovio WASM runtime renders the Interactive Edition Surface in
+a Web Worker. Vellum owns the surrounding UI, selection state, version state, playback semantics,
+and security boundary; it does not embed the hosted Verovio App or load executable code from a CDN.
 
-The Source Voice Graph, musical context, phrases, cadences, Preservation Targets, Target Voice
-Plan, Target Harmonic Plan, Target Relationship Plan, and Intended Technique Plan are the
-shared musical substrate. They may begin as deliberately narrow structures, but a target
-compiler may not infer musical importance solely from pitch height, staff, or event order.
+Verovio SVG is untrusted generated markup. A dedicated versioned sanitizer may retain only the
+elements, fragment-local references, styles, and mapped interaction attributes required by the
+pinned output. No external resource URL, script, event handler, foreign object, or direct
+unsanitized `innerHTML` insertion is permitted.
 
-The default reduction policy is Faithful Reduction unless the Owner asks otherwise. A
-Principal Voice is a hard Preservation Target under that policy. In polyphonic or continuo
-sources, Vellum must preserve the actual relationship structure rather than inventing a
-permanent melody role.
+The local server uses the same Verovio version and rendering profile for reproducible SVG and PDF
+Deliverables. Browser and server fixtures must agree on editorial reading, stable musical IDs,
+tablature semantics, and timing identity. LilyPond remains available for Arrangement Score
+deliverables but is not required in this MEI-native edition path.
 
-### Idiom is constitutive, not decorative
+## Transcription and interpretation review
 
-Technique changes which notes may sound, how they are held, which fingers are available, and
-how the result is notated. Intended Technique is therefore planned before physical search,
-not labeled after a generic voicing has been selected.
+Initial historical-tablature recognition uses a structured multimodal-model extraction behind a
+backend-neutral adapter, notation-specific examples, and deterministic validation. Custom model
+training is deferred until measured need. A confidence threshold prioritizes review but grants no
+authority.
 
-### Three coequal targets
+Transcription Acceptance requires:
 
-Five-course baroque guitar, thirteen-course baroque lute, and six-string classical guitar are
-coequal. Shared abstractions may reduce duplication, but no target may define the default
-mechanics, texture, notation, or evaluation model for the other two.
+- schema-valid constrained MEI;
+- a facsimile region for every diplomatic token;
+- passing deterministic structural and consistency checks;
+- no unresolved Critical Uncertainty affecting visible source evidence; and
+- one whole-page Owner review beside the facsimile.
 
-### Honest uncertainty
+High-confidence tokens do not require individual approval. Transcription Acceptance and
+Interpretation Acceptance are distinct version-bound decisions even if shown in one review
+session. An unaccepted interpretation may be auditioned as provisional playback but cannot support
+analysis, idiom evidence, or publication as an accepted Reading Edition. Accepting one
+interpretation does not reject viable alternatives.
 
-Vellum uses `pass`, `fail`, `blocked`, and `incomplete` where an aggregate status is useful.
-A conclusive hard violation is `fail`; an unavailable required external dependency is
-`blocked`; missing or unfinished evidence is `incomplete`; only complete passing evidence is
-`pass`. No digest-pinned status-policy migration is required for this milestone.
+## Correction and model-assisted editing
 
-### Local-first, source-backed knowledge
+Manual and model-proposed transcription changes use typed Correction Batches. A batch is staged
+against one parent, optimistically rendered, and committed atomically as one named version. Cancel
+discards staging state; undo creates a new inverse version; a stale parent requires review rather
+than silent replay.
 
-Knowledge remains local to the Owner by default. A usable Knowledge Pack entry needs:
+Transcription Corrections, Interpretation Revisions, and Editorial Emendations remain separate
+layers. A model cannot mix them into an opaque patch or commit canonical state. The Owner may
+accept, reject, or revise individual suggestions before the remaining set is validated and
+committed. Compact provenance links the original model proposal, per-change decisions, final
+approved batch, and resulting version; rejected suggestions never enter canonical MEI.
 
-- a stable local ID and schema version;
-- an authority lane and musical domain;
-- a claim or observation with applicability;
-- a citation to a Reference Work and, where available, a Source Segment Version;
-- its review state and the Owner decision that permits use; and
-- the declarative compiler or evaluator consequence it supports.
+## Selection and playback
 
-For this milestone, an Owner-reviewed local release and a simple versioned activation record
-are enough. External reviewer credentials, Merkle publication graphs, complete registry
-inventories, attestation verification, advisory verification, and cryptographic publication
-ceremonies are deferred until an actual multi-author or externally distributed library needs
-them.
+A Passage Selection binds exact canonical identifiers and a version, not page coordinates. It may
+be a contiguous musical range, a noncontiguous set, or both. Zoom and reflow preserve it; a later
+transcription version remaps it only through unambiguous lineage and otherwise marks it stale.
 
-Unreviewed extraction may propose Knowledge Candidates but may not silently change generation.
-Historical claims, modern pedagogy, editorial convention, software heuristics, instrument
-mechanics, and personal ergonomic evidence remain distinguishable.
+Prompting receives a deterministic, inspectable Selection Context Envelope containing the minimum
+required symbolic context, such as meter, tuning, measure boundaries, active voices, cadence
+context, and linked evidence. Facsimile bytes require explicit inclusion and applicable access.
 
-## Shared musical proof
+Vellum derives literal playback from the accepted Tablature Interpretation. Verovio timemaps and
+element lookup synchronize the rendered surface but do not become independent musical truth.
+Playback highlighting must remain restrained and readable.
 
-The first shared vertical must carry one source phrase through import, transcription,
-analysis, planning, target search, engraving, playback, and evaluation. It must demonstrate:
+## Repertoire intelligence boundary
 
-- Principal Voice identity across pickup, phrase, cadence, rests, and staff changes;
-- continuous subordinate-voice obligations rather than isolated chord snapshots;
-- explicit omissions and transformations;
-- phrase-level search with bounded outcomes;
-- target-specific Intended Technique; and
-- score-anchored findings that can drive a prompted revision.
+No de Visée passage may support analysis or reusable knowledge until its exact transcription and
+applicable interpretation are accepted. After acceptance, a Guided Knowledge Session may create a
+cited Attested Realization from an exact Passage Selection and Realization Context.
 
-The implementation should deepen existing domain records only where this proof requires it.
-It must not create a second parallel planning model.
-
-## Five-course baroque-guitar proof
-
-The target uses the selected five-course Instrument Instance, including re-entrancy and
-component-string identity. French tablature is the default output convention unless the
-Owner selects another supported convention.
-
-The compiler must plan punteado, rasgueado, alfabeto, or mixed style passage by passage.
-
-- Punteado may not assume classical-guitar right-hand technique. Its default plucking resource
-  is thumb, index, and middle, with simultaneous plucked attacks constrained accordingly.
-- Larger sonorities must either be a supported strummed gesture or be reduced. A strum crosses
-  a contiguous course span; it may omit courses at an edge but may not silently skip an
-  interior course.
-- Alfabeto is both a physical shape and a historically scoped harmonic/technique choice. A
-  generic vertical chord is not alfabeto merely because it can be strummed.
-- Mixed style must encode transitions and held-state consequences, not alternate labels over
-  one generic realization.
-- A Continuo Reduction must disclose unsounded foundation events and may not claim to be a
-  complete Continuo Realization.
-
-The proof rejects the previously observed unplayable and non-idiomatic behavior, including
-large cross-course reaches chosen merely because every pitch exists somewhere on the fingerboard.
-
-## Thirteen-course baroque-lute proof
-
-The target binds an exact thirteen-course Instrument Instance, including scale length,
-stringing, D-minor tuning state, bass-course retuning, and notation identity. French tablature
-is the default.
-
-The compiler must jointly plan:
-
-- left-hand positions, fingers, held notes, releases, shifts, and spans;
-- right-hand allocation and idiomatic course use;
-- stopped courses versus diatonic diapasons;
-- resonance, repeated basses, and phrase continuity; and
-- sounding pitch, course identity, tablature identity, and playback identity.
-
-A nominal fret difference is not a sufficient playability model. Physical distance depends on
-scale length and fret position; the known first-position five-fret span must be rejected or
-revoiced for the Owner's 69 cm instrument unless explicit reviewed ergonomic evidence says
-otherwise.
-
-The default diapason tablature mapping is:
-
-```text
-course 7   a
-course 8  /a
-course 9 //a
-course 10 ///a
-course 11 4
-course 12 5
-course 13 configurable pending source-backed convention
-```
-
-Numeric lower-course identities do not acquire leading slashes. Unresolved course-13 notation
-must be disclosed and configurable rather than presented as historical fact.
-
-## Six-string classical-guitar proof
-
-The target uses a selected six-string EADGBE Instrument Instance and standard notation by
-default. Tablature may be added later but is not required for this proof.
-
-The compiler must create a coherent multi-voice reduction rather than preserve the Principal
-Voice while allowing the bass to appear opportunistically. At minimum:
-
-- Principal Voice and bass have explicit activity and rest spans;
-- the bass has phrase direction, harmonic function, cadence obligations, and continuity costs;
-- omissions and register changes are planned across the phrase, not selected event by event;
-- left-hand fingering, right-hand fingering, sustain, release, and voice separation are searched
-  jointly; and
-- notation and playback preserve independent voice identity.
-
-The proof fails if the bass line pops in and out without musical rationale even when every
-individual sonority is mechanically playable.
-
-## PDF, review, and output proof
-
-The real product path begins with an arbitrary uploaded PDF rather than a LilyPond-only fixture.
-Audiveris remains the first OMR backend, behind the existing adapter. The immutable source,
-native OMR evidence, exported MusicXML, transcription version, uncertainty, and corrections
-remain linked.
-
-The OCR auto-accept threshold appears only when OMR evidence is in use and is adjustable before
-or during review. Review crops must be large enough to identify the symbol, support zoom, and
-must not obscure the symbol with an overlay. Accepting all required uncertainties must advance
-the workflow; a downstream musicological finding must not loop the Owner back into completed
-OCR review.
-
-The same reviewed source version feeds all three target arrangements. Each output retains its
-own plan, search, score, evaluation, engraving, and playback while sharing source analysis.
-
-## Interaction and versions
-
-The arrangement view must support multi-note selection. A prompt may refer to the selection as
-explicit score-anchored context. The Owner may also perform supported manual edits. A batch of
-prompted or manual edits is saved as a new Arrangement Score version with parentage, rationale,
-and a recomputed audit; it never overwrites the prior score.
-
-Playback must follow the rendered score with a restrained, readable play-position marker that
-does not obscure tablature or notation. Seeking from notation and selecting during paused
-playback must remain usable.
+One Attested Realization may support a research-only or candidate-only alternative. It cannot by
+itself establish recurrence, prevalence, preference, obligation, or prohibition. A later Recurring
+Idiom requires independent evidence lineages and explicit review. Knowledge remains data expressed
+through supported typed operations; arbitrary code and prompt-only rules are forbidden.
 
 ## Evaluation
 
-Evaluation exists to improve musical output, not to certify the execution process.
+Evaluation is small and property-focused:
 
-### Development fixtures
+- MEI schema/profile and facsimile-link completeness;
+- renderer security against external references and active content;
+- browser/server identity and editorial-reading parity;
+- five-course French tablature and thirteen-course diapason visual semantics;
+- selection identity through zoom, pagination, and version changes;
+- playback pitch, timing, and highlighting identity;
+- atomic batch conflict, cancel, commit, and inverse-version behavior; and
+- authority gates preventing unaccepted material from becoming idiom evidence.
 
-Maintain a small rights-approved corpus containing at least:
-
-- one melody-with-accompaniment or SATB source suitable for all three target reductions;
-- one explicit continuo source;
-- one imitative-polyphony source;
-- target-specific known-bad passages for baroque-guitar technique, lute reach/diapasons, and
-  classical-guitar bass continuity.
-
-Greensleeves may remain a regression, but it cannot be the only or primary proof.
-
-### Holdouts
-
-Keep a small Owner-local holdout set outside the repository. It may initially contain one work
-per target or one common source plus target-specific passages. Its identity and reviewed truth
-remain private. A simple local manifest and ordinary attempt log are sufficient. Do not build
-an encrypted Vault, sealed evaluator service, curator role system, or qualification ledger
-until real use demonstrates that process isolation is necessary.
-
-### Measures
-
-Evaluation must expose separate results for:
-
-- source and Principal Voice fidelity;
-- phrase and cadence preservation;
-- subordinate-voice continuity and harmonic function;
-- target mechanics and ergonomics;
-- historical/idiomatic technique applicability;
-- notation correctness and readability;
-- playback/engraving identity; and
-- Owner playability and usefulness when reviewed.
-
-Hard failures cannot be averaged away. Tests should include mutations that break the property
-being claimed. Snapshot similarity alone is not musical evaluation.
+The Owner-local de Visée scan remains outside Git unless a separate repository-inclusion decision
+approves its bytes. Public automated tests use rights-approved or project-authored minimal MEI and
+facsimile fixtures. Snapshot similarity alone is insufficient where semantic assertions are
+available.
 
 ## Execution plan
 
-The active tracer-bullet queue is
-[`.scratch/musical-proofs/PLAN.md`](.scratch/musical-proofs/PLAN.md). It contains eleven vertical
-slices:
+The active tracer queue is [`.scratch/mei-editions/PLAN.md`](.scratch/mei-editions/PLAN.md):
 
-1. establish a non-Greensleeves three-target baseline;
-2. carry shared phrase and voice obligations end to end;
-3. prove the baroque-guitar idiom;
-4. prove the thirteen-course lute idiom;
-5. prove the classical-guitar two-voice idiom;
-6. exercise real PDF-to-three-target Guided Start;
-7. complete interactive selection, revision, versions, and score-following playback;
-8. prove the incremental source-backed Knowledge Pack loop;
-9. consolidate public regressions and simple private holdouts; and
-10. perform one late Owner playtest; and
-11. autonomously remediate its concrete failures and close the milestone.
+1. secure pinned Verovio edition vertical;
+2. de Visée page 9 diplomatic transcription and Correction Batches;
+3. interpretation acceptance and synchronized playback;
+4. Passage Selection prompting and model-assisted edits;
+5. late whole-page Owner acceptance; and
+6. first accepted Attested Realization.
 
-Tracer completion uses one implementation commit and ordinary tests. No evidence receipt,
-manifest-only commit, remote GraphQL observation, trust bootstrap, temporal execution generation,
-or machine/release closure aggregator is required.
+Complete, test, commit, and push each autonomous tracer before beginning its dependent. Ordinary
+Git history and focused tests are sufficient; do not create completion manifests, trust
+ceremonies, evidence receipts, or qualification machinery.
 
 ## Completion boundary
 
-This specification is complete when:
+This specification is complete when the product proof passes, T05 records both Owner decisions,
+and T06 creates one properly bounded Attested Realization from the accepted page. It does not claim
+complete transcription of the de Visée book, recognition of every historical tablature system,
+historical-performance authenticity, a recurring baroque-guitar idiom, or readiness for
+multi-owner publication.
 
-- the real uploaded source completes the product test for all three targets;
-- all target-specific proofs pass automated known-bad and generative regressions;
-- the Owner can inspect citations, planning, transformations, and uncertainty;
-- prompted and manual revisions save as new versions;
-- playback and engraving derive from the same canonical events and stay synchronized; and
-- the late Owner playtest finds the outputs useful enough to continue arranging, or its concrete
-  failures have been turned into passing regressions and repaired.
+## Deferred until demonstrated need
 
-This is product completion, not a universal claim of historical authenticity, comfort for every
-performer, global search optimality, or readiness for multi-user publication.
-
-## Deferred until triggered by evidence
-
-The following are explicitly outside the critical path:
-
-- external Knowledge Pack registries and third-party release trust;
-- cryptographic reviewer credentials, attestations, advisories, and verification graphs;
-- complete inventory snapshots and Merkle publication DAGs;
-- encrypted Evaluation Vaults and sealed evaluators;
-- qualification roles, adjudication rounds, and Machine/Release Complete aggregators;
-- per-tracer evidence receipts, trust anchors, and GitHub GraphQL publication checks;
-- generalized legacy migration frameworks without deployed legacy data;
-- remote multi-owner operation; and
-- model training or autonomous learning from unreviewed behavior.
-
-Any deferred capability requires a new concrete use case, an ADR, and a thin product-facing
-tracer before implementation.
+- custom tablature-recognition model training;
+- automated whole-library transcription or idiom mining;
+- Italian and German tablature beyond a small representation check;
+- collaborative scholarly editing and remote multi-owner operation;
+- external Knowledge Pack registries and reviewer credentials;
+- arbitrary MEI profiles or a general-purpose XML editor;
+- automatic activation of learned idioms; and
+- replacing LilyPond in workflows not proven by representative parity fixtures.

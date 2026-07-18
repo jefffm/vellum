@@ -2,15 +2,12 @@
 
 Current implementation authority: [SPEC.md](../SPEC.md)
 
-Active implementation wave: [Musical Proofs](musical-proofs/README.md)
+Active implementation wave: [MEI Editions](mei-editions/README.md)
 
-The active wave contains ten small product-facing tracer bullets. Ordinary commits, tests, and
-pushes are its execution record.
+The active wave contains six small product-facing tracer bullets. T01 is the current autonomous
+implementation task; T05 is the sole planned Owner gate. Ordinary commits, tests, and pushes are
+its execution record.
 
-Frozen historical waves:
-
-- `instrument-intelligence` — superseded 107-tracer high-assurance program; retained because
-  existing tests and evidence are path-bound.
-- `arrangement-intelligence` — completed prototype evidence; do not modify.
-
-Historical specifications are under [the specification archive](../docs/archive/specifications/).
+No historical execution wave lives under `.scratch`. Superseded and completed waves are under
+[the execution-wave archive](../docs/archive/execution-waves/README.md). Historical specifications
+are under [the specification archive](../docs/archive/specifications/).

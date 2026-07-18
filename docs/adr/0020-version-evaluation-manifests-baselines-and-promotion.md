@@ -21,7 +21,7 @@ Held-out evaluation uses a Vault-only append-only attempt ledger whose unique ge
 ## Implemented evidence
 
 - Production: `src/lib/evaluation-domain.ts`, `src/server/lib/evaluation-harness.ts`, `src/server/lib/evaluation-comparison.ts`, `src/server/lib/evaluation-promotion.ts`, and `src/server/lib/evaluation-store.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T10/verification.json`, `T11/verification.json`, and `T32/verification.json` through `T36/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T10/verification.json`, `T11/verification.json`, and `T32/verification.json` through `T36/verification.json`.
 
 ## Consequences
 

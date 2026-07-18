@@ -17,7 +17,7 @@ Calibration Candidates must disclose fitting data, remain isolated from held-out
 ## Implemented evidence
 
 - Production: `src/server/lib/owner-store.ts`, `src/server/lib/owner-playtest-route.ts`, `src/server/lib/reviewed-learning.ts`, and `src/server/lib/human-comparison.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T29/verification.json` through `T34/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T29/verification.json` through `T34/verification.json`.
 
 ## Consequences
 

@@ -37,7 +37,7 @@ describe("pre-HITL review package", () => {
   it("pins every exact target artifact and keeps human-only protocol boundaries explicit", () => {
     const root = path.join(
       process.cwd(),
-      ".scratch/arrangement-intelligence/evidence/T40/review-packages"
+      "docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T40/review-packages"
     );
     for (const [instrument, files] of Object.entries(expected)) {
       for (const [filename, digest] of Object.entries(files)) {
@@ -66,7 +66,7 @@ describe("pre-HITL review package", () => {
     const protocol = readFileSync(
       path.join(
         process.cwd(),
-        ".scratch/arrangement-intelligence/evidence/T40/REVIEW_PROTOCOLS.md"
+        "docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T40/REVIEW_PROTOCOLS.md"
       ),
       "utf8"
     );

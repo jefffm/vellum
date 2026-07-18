@@ -10,12 +10,11 @@ Before planning or changing behavior:
 4. Use the exact domain terms from the glossary in code, tests, and tracer titles.
 5. Surface any proposed contradiction with an accepted ADR instead of silently overriding it.
 
-For the current Musical Proofs work, prefer the smallest relevant vocabulary: Source Artifact,
-Score Transcription, Source Voice Graph, Principal Voice, Preservation Target, Preservation
-Policy, Target Voice Plan, Target Harmonic Plan, Target Relationship Plan, Intended Technique
-Plan, Instrument Instance, Instrument Calibration, Arrangement Candidate, Arrangement Score,
-Transformation Report, Preservation Audit, Evaluation Card, Knowledge Candidate, Knowledge Pack,
-Source Segment Version, Owner Playtest, and Arrangement Workspace.
+For the current MEI Editions work, prefer the smallest relevant vocabulary: Source Artifact,
+Diplomatic Tablature Transcription, Transcription Acceptance, Tablature Interpretation,
+Interpretation Acceptance, Transcription Correction, Correction Batch, Diplomatic Edition,
+Reading Edition, Interactive Edition Surface, Critical Uncertainty, Passage Selection, Selection
+Context Envelope, Attested Realization, Guided Knowledge Session, and Arrangement Workspace.
 
 Terms for external release attestations, complete inventory resolution, sealed qualification,
 Vault ledgers, and artifact-readiness certification remain in the glossary for future use but

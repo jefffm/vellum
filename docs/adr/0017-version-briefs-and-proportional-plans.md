@@ -17,7 +17,7 @@ Principal Voice is one possible Preservation Target, not a mandatory plan field.
 ## Implemented evidence
 
 - Production: `src/lib/performance-brief.ts`, `src/lib/arrangement-plan.ts`, `src/lib/musicological-analysis.ts`, and `src/server/lib/arrangement-service.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T16/verification.json`, `T18/verification.json`, `T36/verification.json`, `T37/verification.json`, and `T38/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T16/verification.json`, `T18/verification.json`, `T36/verification.json`, `T37/verification.json`, and `T38/verification.json`.
 
 ## Consequences
 

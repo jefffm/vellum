@@ -24,7 +24,7 @@ describe("Arrangement Intelligence architecture boundary", () => {
       expect(document).toMatch(/## Implemented evidence/);
       expect(document).toMatch(/- Production: `src\//);
       expect(document).toMatch(
-        /- Evaluation: `\.scratch\/arrangement-intelligence\/evidence\/T\d+/
+        /- Evaluation: `docs\/archive\/execution-waves\/2026-07-17\/arrangement-intelligence\/evidence\/T\d+/
       );
       expect(document).toMatch(/## Consequences/);
       expect(document).toMatch(/T44/);
@@ -37,7 +37,7 @@ describe("Arrangement Intelligence architecture boundary", () => {
         readFileSync(
           path.join(
             projectRoot,
-            ".scratch/arrangement-intelligence/evidence",
+            "docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence",
             tracer,
             "verification.json"
           ),

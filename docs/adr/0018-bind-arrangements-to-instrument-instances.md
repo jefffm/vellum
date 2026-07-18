@@ -19,7 +19,7 @@ The first priority instances are five-course baroque guitar, thirteen-course bar
 ## Implemented evidence
 
 - Production: `src/lib/instrument-instance.ts`, `src/lib/instrument-model.ts`, `src/lib/baroque-lute-instance.ts`, and `src/lib/classical-guitar-instance.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T20/verification.json` through `T22/verification.json`, plus `T35/verification.json` and `T36/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T20/verification.json` through `T22/verification.json`, plus `T35/verification.json` and `T36/verification.json`.
 
 ## Consequences
 

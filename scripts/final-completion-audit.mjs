@@ -8,8 +8,10 @@ import {
   loadArrangementIntelligenceState,
 } from "./verify-arrangement-intelligence.mjs";
 
+// Historical replay tool only. The package entry point that could close this completed wave was
+// removed when the wave was archived; current product work must not invoke this mutating script.
 const root = process.cwd();
-const scratch = path.join(root, ".scratch/arrangement-intelligence");
+const scratch = path.join(root, "docs/archive/execution-waves/2026-07-17/arrangement-intelligence");
 const evidenceDirectory = path.join(scratch, "evidence/T45");
 const suiteDirectory = path.join(evidenceDirectory, "suites");
 const browserSmokePath = path.join(evidenceDirectory, "browser-smoke.json");
@@ -65,7 +67,12 @@ function assertMetadataOnlyWorktree() {
     .filter(Boolean);
   const unexpected = lines
     .map((line) => line.slice(3))
-    .filter((filename) => !filename.startsWith(".scratch/arrangement-intelligence/evidence/T45/"));
+    .filter(
+      (filename) =>
+        !filename.startsWith(
+          "docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T45/"
+        )
+    );
   if (unexpected.length > 0) {
     throw new Error(
       `Final suites require a committed candidate; unexpected worktree changes: ${unexpected.join(", ")}`

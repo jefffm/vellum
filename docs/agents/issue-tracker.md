@@ -24,8 +24,9 @@ The current product scope is `SPEC.md`; `.scratch/README.md` identifies the one 
 - If a tracer becomes too large to demonstrate as one narrow behavior, split it by user-visible
   outcome—not by database/API/UI layer.
 
-The frozen `.scratch/instrument-intelligence` directory follows an older high-assurance protocol.
-Its instructions are historical and do not apply to current work.
+Completed and superseded waves live under `docs/archive/execution-waves`. Internal status fields,
+unchecked boxes, and dependency graphs in those archived snapshots describe their historical
+state; they are not current work or a backlog. Never move an archived issue back into `.scratch`.
 
 When a workflow says to publish an issue, create the corresponding tracer file. Do not create
 beads unless the Owner explicitly requests them.

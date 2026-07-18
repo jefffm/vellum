@@ -3,7 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export function runPreHitlAudit(projectRoot) {
-  const scratch = path.join(projectRoot, ".scratch/arrangement-intelligence");
+  const scratch = path.join(
+    projectRoot,
+    "docs/archive/execution-waves/2026-07-17/arrangement-intelligence"
+  );
   const requirements = parseTableRows(
     readFileSync(path.join(scratch, "REQUIREMENTS.md"), "utf8"),
     /^AI-/

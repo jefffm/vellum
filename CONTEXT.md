@@ -20,6 +20,10 @@ _Avoid_: Counterpoint type
 A compositional procedure relating voices, such as imitation, canon, fugue, invertible counterpoint, ground bass, sequence, or a suspension chain.
 _Avoid_: Texture
 
+**Cadential Hemiola**:
+A metric regrouping near a cadence in which triple-meter events temporarily articulate two-beat groupings across the notated meter.
+_Avoid_: Meter change when the notated meter is unchanged, any syncopation near a cadence
+
 **Species Counterpoint**:
 The first-through-fifth-species pedagogical framework for controlled counterpoint exercises.
 _Avoid_: General label for contrapuntal repertoire
@@ -43,6 +47,30 @@ _Avoid_: Continuo Realization, simplified continuo
 **Realization Profile**:
 A historically scoped set of continuo practices associated with a period, region, genre, ensemble role, and target instrument.
 _Avoid_: Style when the historical constraints matter
+
+**Realization Context**:
+A passage-level analytical abstraction of musical conditions such as phrase function, cadence, Texture, voices, harmony, meter, and available technique, used to compare instrumental treatments without asserting a reconstructed source.
+_Avoid_: Reconstructed source, original version, instrument-neutral source
+
+**Attested Realization**:
+A cited observation that an exact instrumental treatment occurs in one passage under a stated Realization Context, without claiming that the treatment is typical or preferred.
+_Avoid_: Idiom, rule, default
+
+**Idiom Evidence Lineage**:
+The reviewed relationship among observations that may derive from the same underlying passage or treatment and therefore cannot be counted as independent merely because they occur in different assets, editions, or transcriptions.
+_Avoid_: File count, occurrence count, evaluation Contamination Group
+
+**Recurring Idiom**:
+A reviewed, scoped generalization supported by sufficiently independent Attested Realizations or stronger explicit evidence.
+_Avoid_: Any recurring-looking fragment, universal instrument rule
+
+**Musical Idiom**:
+A scoped Recurring Idiom concerning composition or musical practice, such as genre, dance, regional, formal, contrapuntal, rhythmic, or harmonic behavior, independently of target-instrument mechanics.
+_Avoid_: Instrument idiom when the evidence concerns broader musical practice
+
+**Instrumental Idiom**:
+A scoped Recurring Idiom concerning how a Realization Context is treated using the resources, technique, mechanics, resonance, or notation of an instrument or Instrument Instance.
+_Avoid_: Musical idiom merely observed in instrumental repertoire
 
 **Historical Practice Claim**:
 A source-backed assertion about historical musical practice with an explicit period, region, genre, instrument, and ensemble scope.
@@ -148,6 +176,22 @@ _Avoid_: Training data, uploads
 A versioned cited node proposed for review but not yet admitted to a Knowledge Pack Release, classified independently by graph-node kind, authority lane, musical domain, epistemic form, evidence role, applicability, and review state.
 _Avoid_: Learned fact
 
+**Guided Knowledge Session**:
+A user-directed collaboration in which a model analyzes selected evidence, proposes an inactive executable Knowledge Candidate, and auditions its consequences without granting it authority or activation.
+_Avoid_: Automatic learning, chat as historical authority, prompt-only rule
+
+**Realization Strategy**:
+A typed, versioned, declarative operation that matches a Realization Context and proposes bounded Arrangement Plan changes, expected preservation effects, target requirements, and validation predicates without containing arbitrary executable code.
+_Avoid_: Copied passage, prompt-only instruction, executable script in a Knowledge Pack
+
+**Strategy Use Policy**:
+The scoped authority granted to one Realization Strategy to remain research-only, generate candidate-only alternatives, compete as selection-eligible, or receive an explicit preference.
+_Avoid_: Binary activation, historical prevalence, implicit ranking boost
+
+**Strategy Refinement Candidate**:
+A versioned proposed change to a Realization Strategy's scope, operation, composition, or preference derived from reviewed use while preserving the authority and identity of the strategy that inspired it.
+_Avoid_: Mutating historical evidence, automatic learning from an edit
+
 **Reference Work**:
 The abstract authored work represented in the Owner Reference Library independently from any edition, exemplar, or scan.
 _Avoid_: PDF title
@@ -216,6 +260,10 @@ _Avoid_: LLM summary, chord analysis
 The hybrid system that combines symbolic analysis, curated historical knowledge, model judgment, and constraint verification to produce Musicological Analysis and arrangements.
 _Avoid_: LLM, theory helper
 
+**Musicology Core**:
+The curated, source-backed analytical vocabulary, retrieval features, typed musical operations, and validation concepts that ground corpus study and model collaboration without purporting to contain every historical or instrumental practice.
+_Avoid_: Model training, universal style pack, opaque system prompt
+
 **Analysis Summary**:
 A concise plain-language account of the findings and arrangement consequences most relevant to the current request.
 _Avoid_: Simplified analysis
@@ -264,9 +312,61 @@ _Avoid_: Arrangement when the degree of freedom is unstated
 A reviewable musical representation extracted from a source artifact together with its uncertainties and validation results.
 _Avoid_: Source score when referring to unverified OMR output
 
+**Diplomatic Tablature Transcription**:
+A facsimile-anchored symbolic record, canonically serialized in Vellum's constrained MEI 5.1 profile, of visible historical tablature tokens, layout locations, and unresolved glyph alternatives before sounding-pitch, voice, duration, tuning, or musical interpretation is imposed.
+_Avoid_: MusicXML conversion, interpreted score, modernized edition, co-authoritative JSON transcription
+
+**Transcription Acceptance**:
+The Owner's whole-page approval of one schema-valid, facsimile-linked Diplomatic Tablature Transcription version after deterministic checks pass and every Critical Uncertainty affecting visible source evidence is resolved.
+_Avoid_: Per-token approval requirement, OCR confidence threshold, interpretation approval, implied source infallibility
+
+**Tablature Interpretation**:
+A versioned, evidence-bearing mapping from one Diplomatic Tablature Transcription through an instrument, tuning, notation convention, and rhythmic reading to sounding musical events, retaining viable alternatives where the source is ambiguous.
+_Avoid_: Diplomatic transcription, silently assumed tuning
+
+**Interpretation Acceptance**:
+The Owner's approval of one Tablature Interpretation version for a stated purpose such as literal playback, analysis, or idiom study, without altering or re-attesting its Diplomatic Tablature Transcription.
+_Avoid_: Transcription Acceptance, universal correctness, silent choice among viable readings
+
+**Transcription Correction**:
+A correction to Vellum's record of what is visibly present in a source region.
+_Avoid_: Editorial emendation, interpretation change
+
+**Correction Batch**:
+A named, atomic set of typed Transcription Corrections staged against one exact Diplomatic Tablature Transcription parent version and committed together as one new canonical version.
+_Avoid_: Autosave mutation, mixed interpretation or editorial changes, unversioned undo stack
+
+**Interpretation Revision**:
+A new reading of unchanged visible source tokens under a tuning, rhythmic, notational, or musical hypothesis.
+_Avoid_: Transcription correction, silent reinterpretation
+
+**Editorial Emendation**:
+A disclosed editorial departure from a reviewed source reading adopted because the source is judged anomalous, erroneous, damaged, or impractical.
+_Avoid_: Transcription correction, silent repair
+
+**Retypeset Edition**:
+A same-instrument engraved publication derived from a Score Transcription without passing through arrangement planning or target search.
+_Avoid_: Arrangement Score, facsimile reproduction
+
+**Diplomatic Edition**:
+A Retypeset Edition that preserves the source's reviewed notation semantics and irregularities while permitting modern page layout.
+_Avoid_: Pixel-faithful facsimile, silently corrected edition
+
+**Reading Edition**:
+A Retypeset Edition that regularizes presentation for legibility while preserving musical content and disclosing every editorial normalization.
+_Avoid_: Diplomatic Edition, undocumented modernization
+
+**Interactive Edition Surface**:
+A Vellum-owned browser projection of an exact canonical score or transcription version, rendered through a pinned notation engine and connected to selection, Lineage Navigation, editorial state, and synchronized playback without becoming canonical musical state itself.
+_Avoid_: Hosted notation-app embed, canonical MEI, static SVG preview
+
 **OMR Run**:
 A versioned, reproducible recognition attempt that links a PDF or image Source Artifact to a Score Transcription and retains the recognition backend, version, configuration, logs, page mappings, native project data, and interchange exports.
 _Avoid_: Import result, MusicXML file
+
+**Notation Recognition Profile**:
+A scoped, versioned collection of reviewed glyph examples, correction-derived priors, notation vocabulary, and recognition settings for a notation system, source family, typeface, manuscript hand, or image condition.
+_Avoid_: Knowledge Pack, historical claim, universal OCR rule
 
 **Normalized Score**:
 A source-format-neutral temporal and voice graph derived from a specific Score Transcription version for analysis and planning.
@@ -412,6 +512,14 @@ _Avoid_: Performance Interpretation, tempo edit
 Bidirectional selection and highlighting across linked Source Artifact regions, Score Transcription objects, Arrangement Score events, Playback Occurrences, Analysis Claims, and Preservation Audit findings.
 _Avoid_: Playback cursor, when navigation crosses multiple musical layers
 
+**Passage Selection**:
+A version-bound contiguous musical-time range, explicit noncontiguous set of canonical musical object identifiers, or combination of both, with optional facsimile regions, chosen for prompting, playback, review, editing, analysis, or idiom study independently of rendered page coordinates.
+_Avoid_: SVG rectangle, browser text selection, unversioned note list
+
+**Selection Context Envelope**:
+A deterministic, inspectable expansion of one Passage Selection with the minimum versioned musical context required for a stated action, such as meter, tuning, measure boundaries, active voices, nearby cadence context, and linked evidence.
+_Avoid_: Whole-score prompt by default, model-selected hidden context, Egress Envelope
+
 **Performance Interpretation**:
 An optional, versioned layer of sounding choices—such as ornament realization, arpeggiation, inequality, articulation, tempo shaping, and rubato—applied to an exact Arrangement Score without changing its notation.
 _Avoid_: Arrangement Score, when the change exists only in playback
@@ -498,8 +606,115 @@ _Avoid_: French tab
 - A **Principal Voice** is one possible **Preservation Target**, not a universal requirement
 - The **Musicological Engine** produces **Musicological Analysis** before an arrangement plan is made
 - Symbolic facts, historical practices, interpretive judgments, and validation results remain distinguishable within the **Musicological Engine**
+- The **Musicology Core** supplies stable concepts and operations to a generic model, while repertoire evidence and reviewed Knowledge Packs supply specialist practice the model may not know from training
+- Feature-based corpus discovery may surface recurring structures before their historical terminology or interpretation is known
+- The **Musicology Core** contains analytical definitions, feature vocabularies, typed operations, and validation primitives; historically contingent applicability, prevalence, preference, and prohibition remain reviewed Knowledge Pack content
+- The **Musicology Core** is deliberately small and demand-driven: concepts and operations are added only when an actual analysis, strategy, or evaluation needs them, while the model remains the primary interpretive collaborator
+- Modern analytical labels may provide a working vocabulary while historical terms, translations, and claimed equivalences remain separately cited and may be disputed
 - Curated historical knowledge consists of cited **Historical Practice Claims**, not unsourced universal rules
 - Conflicting **Historical Practice Claims** remain distinct alternatives with their own scope and authority
+- Target-only repertoire yields cited observations within a **Realization Context**, never a reconstructed source; any claim about transformation from an earlier source requires independent source evidence
+- One **Attested Realization** may support an optional generated alternative after Owner review, but cannot alone establish a default preference
+- An **Attested Realization** distinguishes directly notated observation, interpretation-dependent analytical inference, performance-practice hypothesis, and reviewed playtest evidence; one form cannot silently assume the authority of another
+- A **Recurring Idiom** preserves the supporting observations, their independence assessment, counterevidence, applicability boundaries, and uncertainty
+- Recurrence strength is assessed through **Idiom Evidence Lineages** and scope diversity rather than raw passage, file, or occurrence counts
+- Repetition within one work, across works by one composer, and across independent composers or transmission lineages support progressively different possible scopes rather than one undifferentiated confidence total
+- Method statements and repertoire observations remain distinct evidence kinds even when they corroborate one another
+- **Musical Idiom** and **Instrumental Idiom** are distinct but may be linked; observing a musical practice in instrumental repertoire does not by itself make that practice instrument-specific
+- Idiom applicability may independently constrain composer or circle, period, region, genre or dance, formal location, Texture, Realization Context, instrument configuration, technique, and Preservation Policy
+- An applicable idiom may propose a candidate outside the active **Preservation Policy**, but that candidate remains visibly ineligible for adoption until the Owner changes policy or approves a score-anchored **Policy Exception**
+- An idiom's declared preservation effects guide proposal and explanation; the resulting **Transformation Report** and **Preservation Audit** determine what actually changed
+- Idiom evaluation separates corpus recognition from generative usefulness: recognizing an attested practice does not prove that a new arrangement applies it well, and useful generation does not manufacture historical evidence
+- Held-out evaluation tests positive contexts, near misses, counterexamples, non-applicable targets, preservation effects, mechanics, and musical dimensions rather than relying on whole-score similarity
+- Claims that a treatment is typical, preferred, obligatory, or prohibited require stronger evidence than one **Attested Realization**
+- A descriptive observation or frequency count cannot change generation until a separate reviewed derivation authorizes an explicit compiler consequence
+- A **Guided Knowledge Session** may draft and audition executable consequences, but neither model output nor a successful preview activates the resulting **Knowledge Candidate**
+- Owner review of passage analysis, optional-strategy use, and default preference are distinct decisions and may occur separately
+- Corpus-wide provisional analysis may suggest research leads, but an **Attested Realization** requires purpose-scoped review of the exact cited passage and every musical dimension material to the observation
+- Uncertainty elsewhere in a source does not block a passage-scoped observation; later correction of relied-upon evidence invalidates dependent candidates and triggers **Knowledge Reassessment**
+- Imported repertoire may be indexed locally and provisionally without creating or activating Knowledge Candidates; interpretive comparison and promotion begin through a user-initiated **Guided Knowledge Session**
+- Vellum may later suggest reassessment when new evidence materially corroborates, contradicts, or narrows reviewed knowledge, but speculative background discovery does not interrupt ordinary arranging
+- The repertoire corpus is a derived searchable index over scores and segments in the **Owner Reference Library**, not a parallel source library or independent authority store
+- Idiom discovery retrieves actual indexed passages through deterministic musical and bibliographic facets before model interpretation; every claimed example resolves to a citable corpus passage
+- A model may refine retrieval queries and interpret returned passages, but model memory or an unsupported similarity assertion cannot become corpus evidence
+- A remote **Guided Knowledge Session** receives reviewed symbolic excerpts by default; facsimile crops require an explicit purpose-scoped selection or Access Decision, and whole books or folders are never silently transmitted
+- Compact or derived symbolic source content remains subject to source rights and privacy decisions rather than becoming unrestricted merely because it is cheaper to transmit
+- Passage selection from facsimile-linked or symbolic notation is the primary entry point to a **Guided Knowledge Session**; topic-first research must retrieve and expose concrete corpus evidence before proposing reusable knowledge
+- Historical-tablature import defaults to transcription, uncertainty review, retypesetting, and literal playback; idiom study and Knowledge Candidate creation are optional follow-on actions
+- The first MEI-native historical-tablature proof uses page 9 of de Visée's 1686 _Pièces pour la guittare_: facsimile import, Diplomatic Tablature Transcription, uncertainty correction, Verovio rendering, selection, and synchronized literal playback form one reviewable vertical
+- No passage from that proof may support idiom extraction or a Knowledge Candidate until the exact Diplomatic Tablature Transcription version and its applicable Tablature Interpretation have passed their transcription acceptance gate; later corrections invalidate dependent observations rather than being absorbed silently
+- **Transcription Acceptance** requires valid constrained MEI, a facsimile region for every diplomatic token, passing deterministic structural and consistency checks, no unresolved Critical Uncertainty in visible source evidence, and one complete-page Owner review of the rendered transcription beside its facsimile
+- High-confidence tokens do not require individual confirmation; recognition confidence prioritizes review, while whole-page Transcription Acceptance remains the explicit authorization boundary
+- **Transcription Acceptance** and **Interpretation Acceptance** are separate version-bound decisions even when one review session presents them together; approval that visible tokens match the facsimile does not approve tuning, rhythm, sounding events, or analytical use
+- An **Interpretation Acceptance** names its exact Diplomatic Tablature Transcription and Tablature Interpretation versions plus its authorized purposes; an Interpretation Revision requires a new acceptance rather than inheriting the prior decision
+- An unaccepted **Tablature Interpretation** may produce clearly labeled provisional playback for audition and correction, but it cannot authorize analysis, Attested Realizations, idiom evidence, Knowledge Candidates, or publication as an accepted Reading Edition
+- Provisional playback records the exact interpretation version and never converts repeated audition, absence of correction, or playback plausibility into implicit **Interpretation Acceptance**
+- **Interpretation Acceptance** is non-exclusive: accepting one viable reading for a purpose preserves other readings and their evidence for comparison unless the Owner explicitly rejects or withdraws them
+- Explicit interpretation rejection records the rejected version, reason, evidence, and scope without deleting it or implying that every other interpretation is accepted
+- An executable idiom uses a **Realization Strategy** interpreted by Vellum; it branches or specializes the existing **Arrangement Plan** rather than bypassing planning or directly emitting an Arrangement Score
+- Target compilers remain responsible for exact pitches, courses, fingers, held state, notation, and mechanics produced from a **Realization Strategy**
+- A **Strategy Use Policy** distinguishes research-only, candidate-only, selection-eligible, and preferred authority; permission to audition never implies permission to select automatically
+- A single reviewed **Attested Realization** may justify candidate-only use, while broader selection or preference authority requires scope-appropriate evidence and validation
+- A **Personal Default** may prefer a historically rare strategy for the Owner without converting personal taste into a claim of historical prevalence
+- Owner edits and playtests may produce attributed **Strategy Refinement Candidates**, but never mutate the source-backed strategy or establish historical authority without independent evidence
+- Rejection of one generated realization may identify an applicability, implementation, ergonomic, or contextual failure without refuting the underlying idiom
+- A **Musical Idiom** is independently available to sibling target arrangements by default; it becomes mandatory across an **Arrangement Family** only through an explicit **Family Commitment**
+- **Instrumental Idioms** enter target specialization, and any resulting divergence among sibling arrangements remains explained and inspectable
+- A **Diplomatic Tablature Transcription** precedes interpreted normalization for historical tablature and preserves notation-specific evidence that a pitch-only or MusicXML representation may lose
+- Every diplomatic token remains linked to its facsimile region; consistency checks may flag suspected errors but cannot silently alter visible source evidence
+- Typed editor commands mutate validated canonical MEI into a new transcription version; browser, spatial, interpretation, analysis, playback, and engraving projections are rebuildable views pinned to that MEI version
+- Vellum pins and validates one constrained MEI version and deterministic serialization; MEI does not replace the separate domain records for analysis, planning, knowledge, arranging, or playtest evidence
+- Pinned Verovio is the primary renderer and interactive-notation foundation for MEI-native **Diplomatic Editions** and **Reading Editions**; its SVG, pagination, element lookup, and timing products are rebuildable projections rather than canonical musical state
+- Vellum owns the **Interactive Edition Surface** and adapts proven Verovio App navigation and playback-synchronization patterns; it does not embed or remotely import the hosted Verovio App, inherit its storage or UI state, or load its runtime dependencies from public CDNs
+- The **Interactive Edition Surface** renders through a locally bundled, pinned Verovio WASM runtime in a Web Worker so layout, reflow, zoom, element lookup, and timing work do not block the browser interface
+- The Verovio Web Worker is projection-only and never owns canonical MEI; it may render an explicitly labeled optimistic edit preview, but its transient state cannot be accepted, exported, analyzed, or used as evidence
+- Every transcription edit crosses a typed server command boundary, is validated against the expected parent version, and atomically produces a new canonical Diplomatic Tablature Transcription version or no change
+- The editor may stage and optimistically preview multiple typed Transcription Corrections as one **Correction Batch**; committing validates the complete batch against its expected parent and creates exactly one named transcription version, while cancel discards all staged state
+- A **Correction Batch** contains transcription-evidence changes only and cannot mix Interpretation Revisions or Editorial Emendations; those actions create independently reviewable versions in their own layers
+- Undoing a committed **Correction Batch** creates a new inverse batch and canonical version rather than deleting or mutating accepted history
+- If the expected parent is no longer current, batch commit fails without partial application and offers rebase-by-review against the new canonical version rather than silently replaying commands
+- Acceptance, interpretation, analysis, idiom study, and Deliverables may reference only the server-acknowledged canonical version; a stale or rejected optimistic preview is discarded and rerendered from canonical MEI
+- Reproducible PDF and other publication exports use the same pinned Verovio version and versioned rendering profile on the local server; SVG-to-publication conversion remains a Deliverable projection rather than browser state
+- Browser and server rendering paths share representative parity fixtures and may not silently diverge in selected editorial reading, element identity, pagination policy, tablature semantics, or engraving profile
+- Canonical MEI identifiers survive into the rendered surface through an explicit versioned mapping so selection, facsimile linkage, editor commands, uncertainty review, and **Lineage Navigation** address musical objects rather than page coordinates
+- A **Passage Selection** binds exact canonical MEI object identifiers, transcription or score version, selection purpose, and any linked facsimile regions; zoom, reflow, pagination, and rerendering do not change its identity
+- A Passage Selection may describe a contiguous time interval, explicitly selected noncontiguous objects, or both; it can therefore isolate a voice, bass line, suspension chain, chord members, ornaments, or other musical relationship across intervening unselected material
+- Visual drag, shift-click, voice or role filters, facsimile gestures, and playback-range gestures are interchangeable selection inputs only after they resolve to the same canonical Passage Selection representation
+- When a new canonical version supersedes selected elements, Vellum remaps a Passage Selection only through explicit unambiguous lineage; ambiguous, partial, or deleted lineage marks it stale and requests targeted review rather than guessing from geometry or pitch
+- Prompting, playback loops, Correction Batches, analysis, and Guided Knowledge Sessions record the exact Passage Selection version they consumed so later selection remapping cannot rewrite prior actions
+- A model action over a Passage Selection receives a purpose-specific **Selection Context Envelope** constructed by deterministic versioned rules before prompt assembly; the model cannot silently retrieve or infer additional workspace context
+- The Owner can inspect the exact selected objects, automatically included context, linked evidence, and proposed remote payload before dispatch, and may explicitly expand or narrow that envelope
+- Default context expansion remains local and symbolic; facsimile crops or other source bytes still require their applicable purpose-scoped Access Decision and inclusion is never implied by selecting linked notation
+- The resulting Egress Envelope pins the exact Passage Selection and Selection Context Envelope versions actually authorized for transmission
+- A model may return typed proposed Transcription Corrections, Interpretation Revisions, or Editorial Emendations, but it cannot write canonical MEI, accept an interpretation, or publish an edition directly
+- Model-proposed changes are staged in their proper layer against exact parent versions, rendered as optimistic previews with rationale and affected evidence visible, and require explicit Owner commit through the same validated command boundary as manual changes
+- The Owner may accept, reject, or revise individual proposed changes before commit; only the surviving approved changes form the final typed batch, which still validates and commits atomically as one new version
+- Per-change review never partially mutates canonical state, and changing one proposal rerenders the complete staged result so interactions among surviving changes remain visible before commit
+- A committed model-assisted version retains compact provenance linking its exact Model Action Result Commit, original typed proposal, per-change Owner decisions, final approved batch, and resulting canonical version
+- Rejected suggestions and model rationale remain inspectable proposal history but never enter canonical MEI or masquerade as source, interpretation, or editorial content
+- One model proposal cannot mix transcription evidence, interpretation, and editorial emendation into an opaque edit; cross-layer advice is split into independently reviewable proposed actions with disclosed dependencies
+- Verovio-generated SVG passes through a dedicated constrained security profile that permits only the local fragment references and interaction metadata required by pinned output; direct unsanitized `innerHTML` mounting is forbidden
+- Vellum remains authoritative for **Tablature Interpretation**, tuning, performed-form decisions, semantic **Playback Parts**, and playback timing; Verovio MIDI and timemaps are rendering and synchronization aids, not independent source truth
+- LilyPond remains available for Arrangement Score deliverables and as a provisional fallback or comparison renderer; a workflow may remove that dependency only after representative real-source and target-specific visual, interaction, and playback fixtures establish Verovio parity
+- One **Diplomatic Tablature Transcription** may have multiple **Tablature Interpretations**; playback, musical analysis, idiom extraction, and interpretation-dependent editions name the exact version they use
+- Correcting a **Tablature Interpretation** does not rewrite the visible-token evidence in its **Diplomatic Tablature Transcription**
+- **Transcription Correction**, **Interpretation Revision**, and **Editorial Emendation** are distinct versioned actions; mechanical implausibility may motivate review but cannot choose among them automatically
+- A **Diplomatic Edition** follows the reviewed visible source, while a **Reading Edition** may apply disclosed Editorial Emendations
+- Interpretation uncertainty is assessed per musical dimension; it blocks only observations whose required evidence differs across viable **Tablature Interpretations**
+- An observation invariant across every viable interpretation may proceed with that fact recorded, while interpretation-dependent observations remain conditional or incomplete
+- Reviewed transcription corrections may improve a scoped **Notation Recognition Profile**, but they do not become idiom knowledge or silently rewrite existing transcriptions
+- Reapplying a **Notation Recognition Profile** creates a new recognition or transcription version, and use beyond its demonstrated notation or source scope remains reviewable
+- The initial historical-tablature recognizer uses approved facsimile regions, structured multimodal-model extraction, notation-specific examples, and deterministic validation; custom recognition-model training requires measured need
+- Recognition confidence thresholds control provisional transcription and review-queue workload only; they do not establish source-truth authorization, evidentiary readiness, or Knowledge Candidate approval
+- Claim-critical glyphs or dimensions may require review despite exceeding an ordinary auto-accept threshold
+- A **Retypeset Edition** reuses Vellum's engraving and Deliverable pipeline but does not require an Arrangement Plan, Preservation Policy, or Arrangement Search
+- A **Diplomatic Edition** preserves reviewed notation semantics rather than original pixels or exact page geometry; the facsimile remains the authority for historical typography
+- A **Reading Edition** records its editorial normalizations separately from transcription corrections
+- A **Guided Knowledge Session** may compose only supported typed musical operations; introducing a genuinely new kind of operation requires an explicit implementation and validation change
+- New idiom definitions that use existing operations are reviewed knowledge data, not arranger code changes
+- A selection-eligible **Realization Strategy** matches typed, versioned Realization Context facts deterministically; live model-only applicability remains research-only or candidate-only and is disclosed in the candidate derivation
+- Multiple **Realization Strategies** compose automatically only when their compatibility is explicit or their affected musical dimensions do not conflict
+- Incompatible applicable strategies produce distinct inspectable **Arrangement Candidates** rather than an implicit winner; Owner input is deferred unless surviving alternatives materially change musical identity or no eligible candidate remains
 - A **Knowledge Pack Release** has one authority lane and one or more musical domains; subject matter never substitutes for authority
 - Authoritative entries, profiles, and derivations match their Release authority lane; cross-lane references are typed evidence or conflict context and cannot launder authority
 - Knowledge Pack content changes create a new immutable Release, review creates a scoped **Release Attestation**, and retraction or revocation creates a **Release Advisory**
@@ -565,6 +780,7 @@ _Avoid_: French tab
 - Critical ambiguity is surfaced for review while non-critical detail remains accessible without blocking the workflow
 - **Texture** may change between passages within one source
 - A passage may exhibit zero or more **Contrapuntal Techniques** independently of its **Texture**
+- A **Cadential Hemiola** may be part of a passage's **Realization Context** even when the notated time signature does not change
 - Every preserved relation among voices is represented by a **Target Relationship Plan**; retaining the participating pitches does not prove that entry order, subject shape, suspension, cadence, or figure relation survived
 - **Species Counterpoint** is applied only when the source or request belongs to that pedagogical tradition
 - A **Continuo Foundation** is a **Preservation Target** whose bass and figures cannot be silently contradicted

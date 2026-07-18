@@ -17,7 +17,7 @@ The flat LilyPond arrangement store is not Source Truth. Its data is explicitly 
 ## Implemented evidence
 
 - Production: `src/server/lib/omr.ts`, `src/server/lib/source-import-service.ts`, `src/server/lib/workspace-store.ts`, and `src/server/lib/arrangement-route.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T12/verification.json`, `T36/verification.json`, `T37/verification.json`, and `T38/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T12/verification.json`, `T36/verification.json`, `T37/verification.json`, and `T38/verification.json`.
 
 ## Consequences
 

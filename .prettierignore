@@ -6,6 +6,6 @@ dist-server
 *.midi
 package-lock.json
 .beads/.br_history
-.scratch/arrangement-intelligence/evidence/T40/review-packages
+docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T40/review-packages
 test-results
 src/lib/data/authority-path-inventory.v1.json

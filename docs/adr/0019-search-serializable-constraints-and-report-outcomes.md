@@ -17,7 +17,7 @@ No aggregate grade may hide a hard failure. Rankings compare compatible candidat
 ## Implemented evidence
 
 - Production: `src/lib/constraint-search.ts`, `src/lib/imitative-arranger.ts`, `src/lib/preservation-policy.ts`, and `src/server/lib/arrangement-service.ts`.
-- Evaluation: `.scratch/arrangement-intelligence/evidence/T19/verification.json`, `T23/verification.json` through `T26/verification.json`, `T36/verification.json`, and `T38/verification.json`.
+- Evaluation: `docs/archive/execution-waves/2026-07-17/arrangement-intelligence/evidence/T19/verification.json`, `T23/verification.json` through `T26/verification.json`, `T36/verification.json`, and `T38/verification.json`.
 
 ## Consequences
 

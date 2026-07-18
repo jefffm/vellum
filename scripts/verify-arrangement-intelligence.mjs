@@ -32,6 +32,8 @@ const FAMILY_SOURCES = new Map([
 ]);
 const OWNER_ACCEPTED_PROTOTYPE_SCOPE = "owner_accepted_prototype_baseline";
 const OWNER_WAIVED_HUMAN_TRACERS = new Set([41, 42, 43]);
+const HISTORICAL_LOGICAL_ROOT = ".scratch/arrangement-intelligence";
+const ARCHIVED_PHYSICAL_ROOT = "docs/archive/execution-waves/2026-07-17/arrangement-intelligence";
 const COMPLETION_METADATA_PATHS = [
   ".scratch/arrangement-intelligence/PLAN.md",
   ".scratch/arrangement-intelligence/completion-manifest.json",
@@ -139,15 +141,12 @@ function loadIssues(directory) {
 }
 
 export function loadArrangementIntelligenceState(root = process.cwd()) {
-  const manifestPath = path.join(
-    root,
-    ".scratch/arrangement-intelligence/completion-manifest.json"
-  );
+  const manifestPath = path.join(root, ARCHIVED_PHYSICAL_ROOT, "completion-manifest.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const requirementPath = path.join(root, manifest.requirementsLedger);
-  const auditPath = path.join(root, manifest.auditLedger);
-  const planPath = path.join(root, manifest.plan);
-  const issueDirectory = path.join(root, manifest.issueDirectory);
+  const requirementPath = resolveHistoricalPath(root, manifest.requirementsLedger);
+  const auditPath = resolveHistoricalPath(root, manifest.auditLedger);
+  const planPath = resolveHistoricalPath(root, manifest.plan);
+  const issueDirectory = resolveHistoricalPath(root, manifest.issueDirectory);
   const requirementMarkdown = readFileSync(requirementPath, "utf8");
   const auditMarkdown = readFileSync(auditPath, "utf8");
   const planMarkdown = readFileSync(planPath, "utf8");
@@ -161,6 +160,13 @@ export function loadArrangementIntelligenceState(root = process.cwd()) {
     requirementMarkdown,
     auditMarkdown,
   };
+}
+
+function resolveHistoricalPath(root, recordedPath) {
+  const physicalPath = recordedPath.startsWith(`${HISTORICAL_LOGICAL_ROOT}/`)
+    ? `${ARCHIVED_PHYSICAL_ROOT}${recordedPath.slice(HISTORICAL_LOGICAL_ROOT.length)}`
+    : recordedPath;
+  return path.join(root, physicalPath);
 }
 
 function duplicates(values) {
@@ -333,7 +339,7 @@ function validateDependencies(root, dependencies, label, errors) {
       errors.push(`${label} has an invalid dependency record`);
       continue;
     }
-    const candidate = path.resolve(root, dependency.path);
+    const candidate = resolveHistoricalPath(root, dependency.path);
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {
       errors.push(`${label} dependency does not exist: ${dependency.path}`);
       continue;
