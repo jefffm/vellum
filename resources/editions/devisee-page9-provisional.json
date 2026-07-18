@@ -1,0 +1,366 @@
+{
+  "title": "Sarabande (Pièces pour la guittare, 1686, p. 9)",
+  "sourcePage": 9,
+  "meter": { "count": 3, "unit": 4 },
+  "tuning": [
+    { "course": 1, "pname": "e", "oct": 4 },
+    { "course": 2, "pname": "b", "oct": 3 },
+    { "course": 3, "pname": "g", "oct": 3 },
+    { "course": 4, "pname": "d", "oct": 3 },
+    { "course": 5, "pname": "a", "oct": 3 }
+  ],
+  "measures": [
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 5],
+          [3, 3],
+          [5, 3]
+        ],
+        "confidence": 0.72
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.68 },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 }
+    ],
+    [
+      { "dur": 8, "notes": [[1, 3]], "confidence": 0.82 },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 0],
+          [3, 1],
+          [5, 0]
+        ],
+        "confidence": 0.74
+      },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 0],
+          [2, 2],
+          [3, 5]
+        ],
+        "confidence": 0.7
+      }
+    ],
+    [
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.65 },
+      {
+        "dur": 8,
+        "notes": [
+          [1, 2],
+          [3, 1],
+          [5, 0]
+        ],
+        "confidence": 0.72
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.65 }
+    ],
+    [
+      {
+        "dur": 8,
+        "dots": 1,
+        "notes": [
+          [1, 0],
+          [2, 0],
+          [4, 1]
+        ],
+        "confidence": 0.78
+      },
+      { "dur": 16, "notes": [[1, 1]], "confidence": 0.66 },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 0],
+          [3, 1]
+        ],
+        "confidence": 0.73
+      }
+    ],
+    [
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [2, 5],
+          [3, 5],
+          [4, 5],
+          [5, 0]
+        ],
+        "confidence": 0.72
+      },
+      { "dur": 8, "notes": [[2, 1]], "confidence": 0.69 },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 5],
+          [2, 5],
+          [3, 5],
+          [5, 0]
+        ],
+        "confidence": 0.66
+      }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 5],
+          [2, 2],
+          [3, 1]
+        ],
+        "confidence": 0.61
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.7 },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.7 }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 5],
+          [2, 2],
+          [3, 1],
+          [4, 1],
+          [5, 5]
+        ],
+        "confidence": 0.58
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [1, 5],
+          [2, 2],
+          [3, 3],
+          [4, 0]
+        ],
+        "confidence": 0.62
+      }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 3],
+          [2, 0],
+          [3, 1]
+        ],
+        "confidence": 0.66
+      },
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [1, 3],
+          [2, 5],
+          [3, 5],
+          [5, 0]
+        ],
+        "confidence": 0.63
+      },
+      { "dur": 8, "notes": [[2, 1]], "confidence": 0.7 },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.7 }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 0],
+          [2, 5],
+          [3, 5]
+        ],
+        "confidence": 0.76
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 5],
+          [2, 2],
+          [3, 1]
+        ],
+        "confidence": 0.67
+      },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 3],
+          [2, 5],
+          [3, 2]
+        ],
+        "confidence": 0.64
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 },
+      { "dur": 8, "notes": [[1, 3]], "confidence": 0.72 }
+    ],
+    [
+      {
+        "dur": 4,
+        "notes": [
+          [1, 3],
+          [4, 5]
+        ],
+        "confidence": 0.66
+      },
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [1, 3],
+          [3, 0]
+        ],
+        "confidence": 0.7
+      },
+      { "dur": 8, "notes": [[1, 5]], "confidence": 0.72 },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 3],
+          [3, 0]
+        ],
+        "confidence": 0.7
+      }
+    ],
+    [
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [1, 3],
+          [2, 0],
+          [4, 1]
+        ],
+        "confidence": 0.71
+      },
+      {
+        "dur": 8,
+        "notes": [
+          [1, 3],
+          [4, 0]
+        ],
+        "confidence": 0.67
+      },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 },
+      {
+        "dur": 8,
+        "notes": [
+          [1, 1],
+          [5, 5]
+        ],
+        "confidence": 0.6
+      }
+    ],
+    [
+      {
+        "dur": 8,
+        "dots": 1,
+        "notes": [
+          [1, 0],
+          [2, 1],
+          [4, 3]
+        ],
+        "confidence": 0.71
+      },
+      {
+        "dur": 16,
+        "notes": [
+          [1, 3],
+          [3, 3],
+          [4, 1]
+        ],
+        "confidence": 0.64
+      },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 },
+      { "dur": 8, "notes": [[1, 0]], "confidence": 0.76 }
+    ],
+    [
+      {
+        "dur": 4,
+        "notes": [
+          [1, 3],
+          [2, 3],
+          [4, 1],
+          [5, 1]
+        ],
+        "confidence": 0.63
+      },
+      { "dur": 4, "notes": [[2, 1]], "confidence": 0.7 },
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [1, 3],
+          [2, 3]
+        ],
+        "confidence": 0.68
+      },
+      {
+        "dur": 8,
+        "notes": [
+          [1, 0],
+          [3, 5],
+          [4, 1]
+        ],
+        "confidence": 0.65
+      }
+    ],
+    [
+      {
+        "dur": 4,
+        "notes": [
+          [1, 0],
+          [2, 0],
+          [4, 1]
+        ],
+        "confidence": 0.72
+      },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 1],
+          [3, 5]
+        ],
+        "confidence": 0.64
+      },
+      {
+        "dur": 4,
+        "dots": 1,
+        "notes": [
+          [2, 1],
+          [3, 5],
+          [4, 5]
+        ],
+        "confidence": 0.65
+      },
+      { "dur": 8, "notes": [[1, 3]], "confidence": 0.7 }
+    ],
+    [
+      {
+        "dur": 8,
+        "notes": [
+          [1, 5],
+          [2, 3],
+          [4, 0]
+        ],
+        "confidence": 0.64
+      },
+      {
+        "dur": 4,
+        "notes": [
+          [1, 3],
+          [2, 3],
+          [4, 0]
+        ],
+        "confidence": 0.65
+      },
+      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 }
+    ]
+  ]
+}

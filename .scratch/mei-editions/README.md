@@ -2,7 +2,7 @@
 
 Status: active
 
-Current work: T02 — de Visée diplomatic transcription and corrections.
+Current work: T03 — interpretation acceptance and synchronized playback.
 
 Authority: [`SPEC.md`](../../SPEC.md) and
 [ADR 0024](../../docs/adr/0024-use-verovio-for-mei-edition-surfaces.md)

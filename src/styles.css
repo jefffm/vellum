@@ -276,6 +276,90 @@ chat-panel > div > div:has(agent-interface) {
   filter: drop-shadow(0 0 2px rgba(138, 109, 29, 0.65));
 }
 
+.mei-edition-review-grid {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(24rem, 1.25fr);
+  gap: 1rem;
+  min-height: 30rem;
+}
+
+.mei-facsimile-pane,
+.mei-notation-pane,
+.mei-correction-workbench {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #d1cbbd;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.mei-facsimile-pane > header,
+.mei-notation-pane > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.mei-facsimile-zoom {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.mei-facsimile-viewport {
+  overflow: auto;
+  max-height: 68vh;
+  background: #eeeae0;
+}
+
+.mei-facsimile-canvas {
+  position: relative;
+  min-width: 100%;
+}
+
+.mei-facsimile-canvas img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mei-facsimile-highlight {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #a13b2b;
+  border-radius: 0.2rem;
+  background: transparent;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+.mei-correction-workbench {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.mei-correction-workbench form,
+.mei-batch-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+}
+
+.mei-correction-workbench label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 980px) {
+  .mei-edition-review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* LilyPond emits this rule inside generated SVG. Keep it host-owned so the
  * generated-artifact policy can remove all active CSS and <style> elements. */
 .artifact-preview-content > svg tspan,

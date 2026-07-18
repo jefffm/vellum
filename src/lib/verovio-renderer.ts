@@ -5,7 +5,7 @@ export const PINNED_VEROVIO_VERSION = "6.2.0" as const;
 
 export const VELLUM_VEROVIO_OPTIONS = Object.freeze({
   adjustPageHeight: true,
-  breaks: "none",
+  breaks: "encoded",
   footer: "none",
   header: "none",
   pageHeight: 1200,

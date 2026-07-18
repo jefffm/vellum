@@ -16,6 +16,14 @@ import {
   createMeiEditionProofPdfRoute,
   createMeiEditionProofRoute,
 } from "./lib/mei-edition-route.js";
+import {
+  createMeiEditionCorrectionCommitRoute,
+  createMeiEditionCorrectionPreviewRoute,
+  createMeiEditionCreateRoute,
+  createMeiEditionFacsimileRoute,
+  createMeiEditionGetRoute,
+  createMeiEditionUndoRoute,
+} from "./lib/mei-edition-workspace-route.js";
 import type { SubprocessRunner } from "./lib/subprocess.js";
 import { createEngraveRoute } from "./lib/engrave-route.js";
 import { providerConnection } from "./lib/provider-runtime.js";
@@ -505,6 +513,21 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.post("/compile", createCompileRoute({ runner: options.compilerRunner }));
   router.get("/mei-editions/proof", createMeiEditionProofRoute());
   router.post("/mei-editions/proof/export", createMeiEditionProofPdfRoute());
+  router.post("/workspaces/:workspaceId/mei-editions", createMeiEditionCreateRoute());
+  router.get("/workspaces/:workspaceId/mei-editions/:editionId", createMeiEditionGetRoute());
+  router.get(
+    "/workspaces/:workspaceId/mei-editions/:editionId/facsimile",
+    createMeiEditionFacsimileRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/mei-editions/:editionId/correction-preview",
+    createMeiEditionCorrectionPreviewRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/mei-editions/:editionId/correction-batches",
+    createMeiEditionCorrectionCommitRoute()
+  );
+  router.post("/workspaces/:workspaceId/mei-editions/:editionId/undo", createMeiEditionUndoRoute());
   router.post("/engrave", createEngraveRoute());
   router.post("/validate", createValidateRoute({ runner: options.compilerRunner }));
   router.post("/chordify", createChordifyRoute());

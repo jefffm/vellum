@@ -2,7 +2,7 @@
 
 Status: active
 
-Current tracer: T02 — de Visée diplomatic transcription and corrections.
+Current tracer: T03 — interpretation acceptance and synchronized playback.
 
 ## Outcome
 

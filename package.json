@@ -16,6 +16,7 @@
     "proof:baseline": "VELLUM_PRINT_MUSICAL_PROOF_BASELINE=1 vitest run test/e2e/old-hundredth-three-target-baseline.test.ts",
     "proof:musical": "node scripts/run-musical-regressions.mjs",
     "proof:holdout": "npm run server:build --silent && node dist-server/server/private-holdout-cli.js",
+    "edition:import:devisee-page9": "node scripts/import-devisee-page9.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "spec:verify": "node scripts/verify-current-spec.mjs && node scripts/verify-arrangement-intelligence.mjs",

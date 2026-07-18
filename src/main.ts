@@ -56,6 +56,7 @@ import { renderCompilePreview } from "./artifact-preview.js";
 import { isCompatibleRuntimeHealth, VELLUM_API_SCHEMA_VERSION } from "./lib/runtime-contract.js";
 import { completeArtifactHandoff } from "./lib/artifact-handoff.js";
 import { installMeiEditionProofLauncher } from "./mei-edition-surface.js";
+import { restoreLinkedMeiEdition } from "./mei-edition-workspace.js";
 
 export { renderCompilePreview } from "./artifact-preview.js";
 
@@ -328,15 +329,18 @@ export async function main(): Promise<void> {
   const artifactsPanel = document.querySelector<HTMLElement>("#artifacts-panel");
   if (artifactsPanel) {
     installArrangementVersionBridge(artifactsPanel);
-    void restoreLinkedArrangement(artifactsPanel).catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      const failure = document.createElement("p");
-      failure.className = "guided-start-error";
-      failure.textContent = `Could not restore this arrangement: ${message}`;
-      artifactsPanel.replaceChildren(failure);
-    });
+    void restoreLinkedMeiEdition(artifactsPanel)
+      .then((restored) => (restored ? undefined : restoreLinkedArrangement(artifactsPanel)))
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        const failure = document.createElement("p");
+        failure.className = "guided-start-error";
+        failure.textContent = `Could not restore this edition or arrangement: ${message}`;
+        artifactsPanel.replaceChildren(failure);
+      });
   }
-  if (new URL(window.location.href).searchParams.get("editionProof") !== "1") {
+  const startQuery = new URL(window.location.href).searchParams;
+  if (startQuery.get("editionProof") !== "1" && !startQuery.has("meiEdition")) {
     installGuidedStart({
       onComplete: (deliverables) => {
         const panel = document.querySelector<HTMLElement>("#artifacts-panel");

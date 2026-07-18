@@ -15,7 +15,11 @@ export type PassageSelection = Readonly<{
 
 const EVENT_IDS = ["note-1", "note-4", "note-5"] as const;
 
-function renderInWorker(worker: Worker): Promise<VerovioRenderResult> {
+function renderInWorker(
+  worker: Worker,
+  mei: string,
+  eventIds: readonly string[]
+): Promise<VerovioRenderResult> {
   const requestId = crypto.randomUUID();
   return new Promise((resolve, reject) => {
     const receive = (event: MessageEvent<MeiEditionWorkerResponse>) => {
@@ -27,10 +31,24 @@ function renderInWorker(worker: Worker): Promise<VerovioRenderResult> {
     worker.addEventListener("message", receive);
     worker.postMessage({
       requestId,
-      mei: FRENCH_TAB_MEI_FIXTURE,
-      eventIds: EVENT_IDS,
+      mei,
+      eventIds,
     } satisfies MeiEditionWorkerRequest);
   });
+}
+
+export async function renderMeiDocumentInWorker(
+  mei: string,
+  eventIds: readonly string[]
+): Promise<VerovioRenderResult> {
+  const worker = new Worker(new URL("./mei-edition-worker.ts", import.meta.url), {
+    type: "module",
+  });
+  try {
+    return await renderInWorker(worker, mei, eventIds);
+  } finally {
+    worker.terminate();
+  }
 }
 
 function soundEvent(event: VerovioRenderResult["events"][number]): void {
@@ -51,16 +69,13 @@ function soundEvent(event: VerovioRenderResult["events"][number]): void {
 }
 
 export async function renderMeiEditionProof(panel: HTMLElement): Promise<void> {
-  const worker = new Worker(new URL("./mei-edition-worker.ts", import.meta.url), {
-    type: "module",
-  });
   panel.replaceChildren();
   const shell = panel.ownerDocument.createElement("section");
   shell.className = "mei-edition-surface";
   shell.innerHTML = `<header class="artifact-preview-header"><div><p class="artifact-preview-eyebrow">MEI Edition · development proof</p><h1>French tablature edition</h1><p class="artifact-preview-meta">Loading pinned local Verovio…</p></div><div class="artifact-preview-controls"><button type="button" data-play disabled>Play literal preview</button><button type="button" data-export disabled>Export PDF</button></div></header><div class="score-selection-summary" data-selection>Click a tablature event to create a version-bound Passage Selection.</div><div class="artifact-preview-viewport"><div class="artifact-preview-content" data-notation></div></div>`;
   panel.append(shell);
-  try {
-    const result = await renderInWorker(worker);
+  {
+    const result = await renderMeiDocumentInWorker(FRENCH_TAB_MEI_FIXTURE, EVENT_IDS);
     const notation = shell.querySelector<HTMLElement>("[data-notation]")!;
     const svg = mountSafeVerovioSvg(notation, result.svg);
     const meta = shell.querySelector<HTMLElement>(".artifact-preview-meta")!;
@@ -129,8 +144,6 @@ export async function renderMeiEditionProof(panel: HTMLElement): Promise<void> {
           URL.revokeObjectURL(url);
         });
     });
-  } finally {
-    worker.terminate();
   }
 }
 
