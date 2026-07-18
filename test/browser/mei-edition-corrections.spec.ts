@@ -48,6 +48,14 @@ test("facsimile-linked MEI corrections preview, cancel, commit, reload, and undo
     alternatives: index % 2 ? ["alternate reading"] : [],
     critical: index % 2 === 1,
   }));
+  tokens.push({
+    id: "measure-1",
+    kind: "barline",
+    region: { page: 1, x: 0.02, y: 0.1, width: 0.02, height: 0.1 },
+    confidence: 0.99,
+    alternatives: [],
+    critical: false,
+  });
   const created = await data<{ edition: { editionId: string } }>(
     await request.post(`/api/workspaces/${workspace.id}/mei-editions`, {
       data: {
@@ -73,9 +81,21 @@ test("facsimile-linked MEI corrections preview, cancel, commit, reload, and undo
   await surface.locator("[data-source-zoom-in]").click();
   await expect(surface.locator("[data-source-zoom-reset]")).toHaveText("150%");
 
-  await surface.locator('g[data-id="note-1"]').click();
+  await surface.locator('g[data-id="rhythm-1"]').press("Enter");
+  await expect(surface.locator("[data-current]")).toHaveValue("4");
+
+  await expect(surface.locator("[data-critical-review]")).toContainText(
+    "4 unresolved critical readings"
+  );
+  await surface.locator('g[data-id="note-1"]').press("Enter");
+  await expect(surface.locator("[data-token-detail]")).toContainText("note-1");
   await expect(surface.locator("[data-token-detail]")).toContainText("Critical Uncertainty");
   await expect(surface.locator(".mei-facsimile-highlight")).toBeVisible();
+  await surface.locator("[data-confirm-reading]").click();
+  await expect(surface.locator("[data-staged]")).toContainText("note-1 · source reading confirmed");
+  await surface.locator("[data-cancel]").click();
+  await surface.locator('[data-critical-token-id="note-1"]').click();
+  await expect(surface.locator("[data-token-detail]")).toContainText("note-1");
   await surface.locator("[data-replacement]").fill("2");
   await surface.locator("[data-change-form] button[type=submit]").click();
   await expect(surface.locator("[data-staged]")).toContainText("note-1 · tab.course: 1 → 2");

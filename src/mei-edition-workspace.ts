@@ -4,7 +4,9 @@ import type {
   DiplomaticToken,
   MeiAttributeChange,
   MeiEditionVersion,
+  TokenReviewResolution,
 } from "./lib/mei-edition-domain.js";
+import { meiAttributeTarget } from "./lib/mei-attribute-target.js";
 import { renderMeiDocumentInWorker } from "./mei-edition-surface.js";
 import { installMeiEditionInterpretationWorkbench } from "./mei-edition-interpretation-workbench.js";
 import { installMeiEditionSelectionWorkbench } from "./mei-edition-selection-workbench.js";
@@ -40,9 +42,7 @@ function attributeValue(
   attribute: MeiAttributeChange["attribute"]
 ): string | undefined {
   const document = new DOMParser().parseFromString(mei, "application/xml");
-  const element = Array.from(document.getElementsByTagName("*")).find(
-    (candidate) => candidate.getAttribute("xml:id") === tokenId
-  );
+  const element = meiAttributeTarget(document, tokenId, attribute);
   return element?.hasAttribute(attribute) ? element.getAttribute(attribute)! : undefined;
 }
 
@@ -70,7 +70,8 @@ export async function renderMeiEditionWorkspace(
     panel.replaceChildren();
     const shell = panel.ownerDocument.createElement("section");
     shell.className = "mei-edition-surface diplomatic-edition-workspace";
-    shell.innerHTML = `<header class="artifact-preview-header"><div><p class="artifact-preview-eyebrow">Diplomatic Tablature Transcription</p><h1></h1><p class="artifact-preview-meta"></p></div><div class="artifact-preview-controls"><button type="button" data-undo ${edition.version === 1 || preview ? "disabled" : ""}>Undo latest batch</button></div></header><p class="mei-edition-status" role="status" data-status></p><div class="mei-edition-review-grid"><section class="mei-facsimile-pane"><header><strong>Facsimile · page ${edition.sourcePage}</strong><span>Click a token to inspect its exact source region.</span><span class="mei-facsimile-zoom"><button type="button" data-source-zoom-out aria-label="Zoom source out">−</button><button type="button" data-source-zoom-reset>100%</button><button type="button" data-source-zoom-in aria-label="Zoom source in">+</button></span></header><div class="mei-facsimile-viewport"><div class="mei-facsimile-canvas"><img alt="${edition.title}, source page ${edition.sourcePage}"/><span class="mei-facsimile-highlight" hidden></span></div></div></section><section class="mei-notation-pane"><header><strong>${preview ? "Correction preview" : "Canonical MEI"}</strong><span>Verovio ${next.rendererVersion}</span></header><div class="artifact-preview-content" data-notation></div></section></div><section class="mei-correction-workbench"><div data-token-detail>Select a rendered token to stage a typed transcription correction.</div><form data-change-form hidden><label>Attribute<select data-attribute></select></label><label>Current<input data-current readonly/></label><label>Replacement<input data-replacement required/></label><label>Rationale<input data-rationale required value="Confirmed against the source facsimile."/></label><button type="submit">Stage change</button></form><div data-staged></div><div class="mei-batch-controls"><label>Batch name<input data-batch-name value="Page ${edition.sourcePage} diplomatic corrections"/></label><button type="button" data-preview disabled>Preview batch</button><button type="button" data-cancel disabled>Cancel staging</button><button type="button" data-commit disabled>Commit canonical version</button></div><p data-error role="alert"></p></section>`;
+    const criticalTokens = edition.tokens.filter(({ critical }) => critical);
+    shell.innerHTML = `<header class="artifact-preview-header"><div><p class="artifact-preview-eyebrow">Diplomatic Tablature Transcription</p><h1></h1><p class="artifact-preview-meta"></p></div><div class="artifact-preview-controls"><button type="button" data-undo ${edition.version === 1 || preview ? "disabled" : ""}>Undo latest batch</button></div></header><p class="mei-edition-status" role="status" data-status></p><div class="mei-edition-review-grid"><section class="mei-facsimile-pane"><header><strong>Facsimile · page ${edition.sourcePage}</strong><span>Click a token to inspect its exact source region.</span><span class="mei-facsimile-zoom"><button type="button" data-source-zoom-out aria-label="Zoom source out">−</button><button type="button" data-source-zoom-reset>100%</button><button type="button" data-source-zoom-in aria-label="Zoom source in">+</button></span></header><div class="mei-facsimile-viewport"><div class="mei-facsimile-canvas"><img alt="${edition.title}, source page ${edition.sourcePage}"/><span class="mei-facsimile-highlight" hidden></span></div></div></section><section class="mei-notation-pane"><header><strong>${preview ? "Correction preview" : "Canonical MEI"}</strong><span>Verovio ${next.rendererVersion}</span></header><div class="artifact-preview-content" data-notation></div></section></div><section class="mei-critical-review" data-critical-review><header><div><strong>Critical uncertainty review</strong><p>${criticalTokens.length} unresolved critical readings</p></div><span>Choose a reading to jump directly to its source region.</span></header><div class="mei-critical-review-list" data-critical-list></div></section><section class="mei-correction-workbench"><div data-token-detail>Select a rendered token or critical reading to stage a reviewed decision.</div><form data-change-form hidden><label>Attribute<select data-attribute></select></label><label>Current<input data-current readonly/></label><label>Replacement<input data-replacement required/></label><label>Rationale<input data-rationale required value="Confirmed against the source facsimile."/></label><span class="mei-token-review-actions"><button type="submit">Stage correction</button><button type="button" data-confirm-reading hidden>Confirm source reading</button></span></form><div data-staged></div><div class="mei-batch-controls"><label>Batch name<input data-batch-name value="Page ${edition.sourcePage} diplomatic corrections"/></label><button type="button" data-preview disabled>Preview batch</button><button type="button" data-cancel disabled>Cancel staging</button><button type="button" data-commit disabled>Commit canonical version</button></div><p data-error role="alert"></p></section>`;
     panel.append(shell);
     shell.querySelector("h1")!.textContent =
       `${edition.title}${preview ? ` · preview v${edition.version}` : ""}`;
@@ -111,8 +112,11 @@ export async function renderMeiEditionWorkspace(
     const current = shell.querySelector<HTMLInputElement>("[data-current]")!;
     const replacement = shell.querySelector<HTMLInputElement>("[data-replacement]")!;
     const rationale = shell.querySelector<HTMLInputElement>("[data-rationale]")!;
+    const confirmReading = shell.querySelector<HTMLButtonElement>("[data-confirm-reading]")!;
     const highlight = shell.querySelector<HTMLElement>(".mei-facsimile-highlight")!;
+    const sourceViewport = shell.querySelector<HTMLElement>(".mei-facsimile-viewport")!;
     const staged: MeiAttributeChange[] = [...(pending?.changes ?? [])];
+    const reviewed: TokenReviewResolution[] = [...(pending?.reviewResolutions ?? [])];
     let selected: DiplomaticToken | undefined;
     const refreshStaged = () => {
       const list = shell.querySelector<HTMLElement>("[data-staged]")!;
@@ -130,10 +134,24 @@ export async function renderMeiEditionWorkspace(
         row.append(" ", remove);
         list.append(row);
       }
+      for (const [index, resolution] of reviewed.entries()) {
+        const row = document.createElement("p");
+        row.textContent = `${resolution.tokenId} · source reading confirmed`;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.addEventListener("click", () => {
+          reviewed.splice(index, 1);
+          refreshStaged();
+        });
+        row.append(" ", remove);
+        list.append(row);
+      }
       shell
         .querySelectorAll<HTMLButtonElement>("[data-preview], [data-cancel], [data-commit]")
-        .forEach((button) => (button.disabled = staged.length === 0));
+        .forEach((button) => (button.disabled = staged.length + reviewed.length === 0));
     };
+    const selectors = new Map<string, () => void>();
     for (const token of edition.tokens) {
       const node = svg.querySelector<SVGGElement>(`g[data-id="${token.id}"]`);
       if (!node) continue;
@@ -148,6 +166,7 @@ export async function renderMeiEditionWorkspace(
         tokenDetail.textContent = `${token.id} · ${token.kind} · confidence ${Math.round(token.confidence * 100)}%${token.critical ? " · Critical Uncertainty" : ""}`;
         const editableAttributes = correctionAttributes(token);
         form.hidden = editableAttributes.length === 0;
+        confirmReading.hidden = !token.critical;
         attribute.replaceChildren(
           ...editableAttributes.map((name) => {
             const option = document.createElement("option");
@@ -176,12 +195,50 @@ export async function renderMeiEditionWorkspace(
           height: `${token.region.height * 100}%`,
         });
         highlight.hidden = false;
+        if (token.critical) {
+          sourceZoom = Math.max(sourceZoom, 3);
+          updateSourceZoom();
+          requestAnimationFrame(() => {
+            const centerX = (token.region.x + token.region.width / 2) * sourceCanvas.scrollWidth;
+            const centerY = (token.region.y + token.region.height / 2) * sourceCanvas.scrollHeight;
+            sourceViewport.scrollLeft = Math.max(0, centerX - sourceViewport.clientWidth / 2);
+            sourceViewport.scrollTop = Math.max(0, centerY - sourceViewport.clientHeight / 2);
+          });
+        }
       };
-      node.addEventListener("click", select);
+      selectors.set(token.id, select);
+      node.addEventListener("click", (event) => {
+        const target = (event.target as Element | null)?.closest("g[data-id]");
+        if (target === node) select();
+      });
       node.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") select();
+        if (event.target === node && (event.key === "Enter" || event.key === " ")) select();
       });
     }
+    const criticalList = shell.querySelector<HTMLElement>("[data-critical-list]")!;
+    for (const [index, token] of criticalTokens.entries()) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.criticalTokenId = token.id;
+      button.textContent = `${index + 1} of ${criticalTokens.length} · ${token.kind} · ${Math.round(token.confidence * 100)}% · ${token.id}`;
+      button.onclick = () => selectors.get(token.id)?.();
+      criticalList.append(button);
+    }
+    confirmReading.onclick = () => {
+      if (!selected?.critical || reviewed.some(({ tokenId }) => tokenId === selected!.id)) return;
+      reviewed.push({
+        tokenId: selected.id,
+        expectedState: {
+          critical: selected.critical,
+          confidence: selected.confidence,
+          alternatives: [...selected.alternatives],
+        },
+        replacementState: { critical: false, confidence: 1, alternatives: [] },
+        rationale: rationale.value.trim() || "Confirmed against the source facsimile.",
+      });
+      refreshStaged();
+      confirmReading.hidden = true;
+    };
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (!selected || !replacement.value.trim() || !rationale.value.trim()) return;
@@ -200,6 +257,7 @@ export async function renderMeiEditionWorkspace(
       expectedVersion: preview ? edition.parentVersion! : edition.version,
       layer: "transcription",
       changes: staged,
+      ...(reviewed.length ? { reviewResolutions: reviewed } : {}),
     });
     shell.querySelector<HTMLButtonElement>("[data-preview]")!.onclick = () =>
       void api<ProjectedEdition>(
@@ -210,6 +268,7 @@ export async function renderMeiEditionWorkspace(
         .catch(showError);
     shell.querySelector<HTMLButtonElement>("[data-cancel]")!.onclick = () => {
       staged.splice(0);
+      reviewed.splice(0);
       refreshStaged();
     };
     shell.querySelector<HTMLButtonElement>("[data-commit]")!.onclick = () =>

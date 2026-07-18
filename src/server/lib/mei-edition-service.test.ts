@@ -132,6 +132,73 @@ describe("diplomatic MEI Edition Correction Batches", () => {
     expect(undone.parentVersion).toBe(2);
     expect(undone.correctionBatch?.inverseOfBatchId).toBe(batch.id);
     expect(undone.mei).toMatch(/<note[^>]*tab\.course="1"[^>]*tab\.fret="1"[^>]*xml:id="note-1"/);
+    expect(undone.tokens.find((token) => token.id === "note-1")).toMatchObject({
+      confidence: 0.72,
+      alternatives: ["alternate reading"],
+      critical: true,
+    });
+  });
+
+  it("confirms a correct source reading without inventing an MEI attribute change", () => {
+    const { service, workspaceId, edition } = harness();
+    const token = edition.tokens.find(({ id }) => id === "note-1")!;
+    const confirmed = service.commit(workspaceId, edition.editionId, {
+      id: "correction-batch.00000000-0000-4000-8000-000000000103",
+      name: "Confirm source reading",
+      expectedVersion: 1,
+      layer: "transcription",
+      changes: [],
+      reviewResolutions: [
+        {
+          tokenId: token.id,
+          expectedState: {
+            critical: token.critical,
+            confidence: token.confidence,
+            alternatives: [...token.alternatives],
+          },
+          replacementState: { critical: false, confidence: 1, alternatives: [] },
+          rationale: "The visible source confirms the encoded letter and course.",
+        },
+      ],
+    });
+
+    expect(confirmed.mei).toBe(edition.mei);
+    expect(confirmed.correctionBatch?.changes).toEqual([]);
+    expect(confirmed.correctionBatch?.reviewResolutions).toHaveLength(1);
+    expect(confirmed.tokens.find(({ id }) => id === token.id)).toMatchObject({
+      critical: false,
+      confidence: 1,
+      alternatives: [],
+    });
+
+    const reopened = service.undo(workspaceId, edition.editionId, 2);
+    expect(reopened.tokens.find(({ id }) => id === token.id)).toMatchObject({
+      critical: true,
+      confidence: 0.72,
+      alternatives: ["alternate reading"],
+    });
+  });
+
+  it("applies rhythm attributes to the enclosing tablature group", () => {
+    const { service, workspaceId, edition } = harness();
+    const corrected = service.commit(workspaceId, edition.editionId, {
+      id: "correction-batch.00000000-0000-4000-8000-000000000104",
+      name: "Correct rhythm",
+      expectedVersion: 1,
+      layer: "transcription",
+      changes: [
+        {
+          tokenId: "rhythm-1",
+          attribute: "dur",
+          expectedValue: "4",
+          replacementValue: "8",
+          rationale: "The source shows an eighth-note rhythm sign.",
+        },
+      ],
+    });
+
+    expect(corrected.mei).toMatch(/<tabGrp[^>]*dur="8"[^>]*xml:id="event-1"/);
+    expect(corrected.mei).not.toMatch(/<tabDurSym[^>]*dur=/);
   });
 
   it("fails closed for incomplete facsimile linkage and mixed or invalid patches", () => {

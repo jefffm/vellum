@@ -10,7 +10,9 @@ import type {
   MeiEditionVersion,
   ModelCorrectionProvenance,
   SelectionContextEnvelope,
+  TokenReviewResolution,
 } from "../../lib/mei-edition-domain.js";
+import { meiAttributeTarget } from "../../lib/mei-attribute-target.js";
 import { canonicalJson } from "../../lib/canonical-json.js";
 import { ApiRouteError } from "./create-route.js";
 import { MeiEditionStore } from "./mei-edition-store.js";
@@ -117,6 +119,16 @@ export class MeiEditionService {
         replacementValue: change.expectedValue,
         rationale: `Inverse of ${priorBatch.id}: ${change.rationale}`,
       })),
+      ...(priorBatch.reviewResolutions?.length
+        ? {
+            reviewResolutions: priorBatch.reviewResolutions.map((resolution) => ({
+              tokenId: resolution.tokenId,
+              expectedState: resolution.replacementState,
+              replacementState: resolution.expectedState,
+              rationale: `Inverse of ${priorBatch.id}: ${resolution.rationale}`,
+            })),
+          }
+        : {}),
     };
     const next = this.apply(workspaceId, current, inverse, priorBatch.id);
     return this.store.commit(workspaceId, next, expectedVersion);
@@ -132,6 +144,15 @@ export class MeiEditionService {
       throw new ApiRouteError(
         `MEI Edition parent is stale: expected v${command.expectedVersion}, current v${current.version}`,
         409
+      );
+    }
+    if (!command.changes.length && !command.reviewResolutions?.length) {
+      throw new ApiRouteError("A Correction Batch must change or review at least one token", 400);
+    }
+    if (command.modelProvenance && command.reviewResolutions?.length) {
+      throw new ApiRouteError(
+        "A model proposal cannot resolve source uncertainty without a separate Owner review",
+        400
       );
     }
     if (command.modelProvenance)
@@ -150,15 +171,33 @@ export class MeiEditionService {
     const dom = parseMei(current.mei);
     for (const change of command.changes)
       applyAttributeChange(dom.window.document, current.tokens, change);
-    const affected = new Set(command.changes.map((change) => change.tokenId));
+    const explicitReviews = command.reviewResolutions ?? [];
+    validateReviewResolutions(current.tokens, explicitReviews);
+    const reviewedIds = new Set(explicitReviews.map(({ tokenId }) => tokenId));
+    const automaticReviews: TokenReviewResolution[] = command.changes.flatMap((change) => {
+      const token = current.tokens.find(({ id }) => id === change.tokenId);
+      if (!token?.critical || reviewedIds.has(token.id)) return [];
+      reviewedIds.add(token.id);
+      return [
+        {
+          tokenId: token.id,
+          expectedState: tokenReviewState(token),
+          replacementState: { critical: false, confidence: 1, alternatives: [] },
+          rationale: `Resolved by reviewed attribute correction: ${change.rationale}`,
+        },
+      ];
+    });
+    const reviewResolutions = [...explicitReviews, ...automaticReviews];
+    const reviewsById = new Map(
+      reviewResolutions.map((resolution) => [resolution.tokenId, resolution.replacementState])
+    );
     const tokens = current.tokens.map((token) =>
-      affected.has(token.id)
-        ? { ...token, confidence: 1, alternatives: [], critical: false }
-        : token
+      reviewsById.has(token.id) ? { ...token, ...reviewsById.get(token.id)! } : token
     );
     const committedAt = this.now().toISOString();
     const correctionBatch: CorrectionBatchRecord = {
       ...command,
+      ...(reviewResolutions.length ? { reviewResolutions } : {}),
       committedAt,
       ...(inverseOfBatchId ? { inverseOfBatchId } : {}),
     };
@@ -348,6 +387,38 @@ export class MeiEditionService {
   }
 }
 
+function tokenReviewState(token: DiplomaticToken): TokenReviewResolution["expectedState"] {
+  return {
+    critical: token.critical,
+    confidence: token.confidence,
+    alternatives: [...token.alternatives],
+  };
+}
+
+function validateReviewResolutions(
+  tokens: readonly DiplomaticToken[],
+  resolutions: readonly TokenReviewResolution[]
+): void {
+  const seen = new Set<string>();
+  for (const resolution of resolutions) {
+    if (seen.has(resolution.tokenId))
+      throw new ApiRouteError(`Correction Batch reviews ${resolution.tokenId} twice`, 400);
+    seen.add(resolution.tokenId);
+    const token = tokens.find(({ id }) => id === resolution.tokenId);
+    if (!token)
+      throw new ApiRouteError(
+        `Review resolution references unknown diplomatic token: ${resolution.tokenId}`,
+        400
+      );
+    if (JSON.stringify(tokenReviewState(token)) !== JSON.stringify(resolution.expectedState)) {
+      throw new ApiRouteError(`Review precondition failed for ${resolution.tokenId}`, 409);
+    }
+    if (JSON.stringify(resolution.expectedState) === JSON.stringify(resolution.replacementState)) {
+      throw new ApiRouteError(`Review resolution for ${resolution.tokenId} changes no state`, 400);
+    }
+  }
+}
+
 function elementXmlId(element: Element): string | undefined {
   return (
     element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") ??
@@ -475,7 +546,7 @@ function applyAttributeChange(
       400
     );
   }
-  const element = elementByXmlId(document, change.tokenId);
+  const element = meiAttributeTarget(document, change.tokenId, change.attribute);
   if (!element)
     throw new ApiRouteError(`Correction target is absent from MEI: ${change.tokenId}`, 400);
   const current = element.hasAttribute(change.attribute)

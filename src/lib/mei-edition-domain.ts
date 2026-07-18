@@ -58,6 +58,25 @@ export const MeiAttributeChangeSchema = Type.Object(
   { additionalProperties: false }
 );
 
+const TokenReviewStateSchema = Type.Object(
+  {
+    critical: Type.Boolean(),
+    confidence: Type.Number({ minimum: 0, maximum: 1 }),
+    alternatives: Type.Array(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false }
+);
+
+export const TokenReviewResolutionSchema = Type.Object(
+  {
+    tokenId: MeiIdSchema,
+    expectedState: TokenReviewStateSchema,
+    replacementState: TokenReviewStateSchema,
+    rationale: Type.String({ minLength: 1, maxLength: 500 }),
+  },
+  { additionalProperties: false }
+);
+
 export const PassageSelectionSchema = Type.Object(
   {
     id: SelectionIdSchema,
@@ -155,7 +174,10 @@ export const CorrectionBatchCommandSchema = Type.Object(
     name: Type.String({ minLength: 1, maxLength: 120 }),
     expectedVersion: Type.Integer({ minimum: 1 }),
     layer: Type.Literal("transcription"),
-    changes: Type.Array(MeiAttributeChangeSchema, { minItems: 1 }),
+    changes: Type.Array(MeiAttributeChangeSchema),
+    reviewResolutions: Type.Optional(
+      Type.Array(TokenReviewResolutionSchema, { minItems: 1, uniqueItems: true })
+    ),
     modelProvenance: Type.Optional(ModelCorrectionProvenanceSchema),
   },
   { additionalProperties: false }
@@ -167,7 +189,10 @@ export const CorrectionBatchRecordSchema = Type.Object(
     name: Type.String({ minLength: 1, maxLength: 120 }),
     expectedVersion: Type.Integer({ minimum: 1 }),
     layer: Type.Literal("transcription"),
-    changes: Type.Array(MeiAttributeChangeSchema, { minItems: 1 }),
+    changes: Type.Array(MeiAttributeChangeSchema),
+    reviewResolutions: Type.Optional(
+      Type.Array(TokenReviewResolutionSchema, { minItems: 1, uniqueItems: true })
+    ),
     modelProvenance: Type.Optional(ModelCorrectionProvenanceSchema),
     committedAt: IsoDateSchema,
     inverseOfBatchId: Type.Optional(BatchIdSchema),
@@ -311,6 +336,7 @@ export const CreateEditionAcceptanceDecisionCommandSchema = Type.Object(
 export type FacsimileRegion = Static<typeof FacsimileRegionSchema>;
 export type DiplomaticToken = Static<typeof DiplomaticTokenSchema>;
 export type MeiAttributeChange = Static<typeof MeiAttributeChangeSchema>;
+export type TokenReviewResolution = Static<typeof TokenReviewResolutionSchema>;
 export type PassageSelection = Static<typeof PassageSelectionSchema>;
 export type SelectionContextEnvelope = Static<typeof SelectionContextEnvelopeSchema>;
 export type ModelCorrectionProvenance = Static<typeof ModelCorrectionProvenanceSchema>;

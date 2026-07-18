@@ -9,6 +9,7 @@ import type {
   PassageSelection,
   SelectionContextEnvelope,
 } from "./lib/mei-edition-domain.js";
+import { meiAttributeTarget } from "./lib/mei-attribute-target.js";
 import { runBoundedModelAction } from "./lib/vellum-stream-proxy.js";
 
 type ProjectedEdition = Readonly<{
@@ -495,8 +496,6 @@ function attributeValue(
   attribute: MeiAttributeChange["attribute"]
 ): string | undefined {
   const document = new DOMParser().parseFromString(mei, "application/xml");
-  const element = Array.from(document.getElementsByTagName("*")).find(
-    (candidate) => xmlId(candidate) === tokenId
-  );
+  const element = meiAttributeTarget(document, tokenId, attribute);
   return element?.getAttribute(attribute) ?? undefined;
 }

@@ -285,12 +285,45 @@ chat-panel > div > div:has(agent-interface) {
 
 .mei-facsimile-pane,
 .mei-notation-pane,
+.mei-critical-review,
 .mei-correction-workbench {
   min-width: 0;
   padding: 0.75rem;
   border: 1px solid #d1cbbd;
   border-radius: 0.6rem;
   background: #fff;
+}
+
+.mei-critical-review {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  border-color: #c78764;
+  background: #fffaf4;
+}
+
+.mei-critical-review > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mei-critical-review p {
+  margin: 0.2rem 0 0;
+  color: #8a3f2f;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mei-critical-review-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.5rem;
+}
+
+.mei-critical-review-list button {
+  text-align: left;
 }
 
 .mei-interpretation-workbench {
@@ -519,6 +552,11 @@ chat-panel > div > div:has(agent-interface) {
   flex-wrap: wrap;
   align-items: end;
   gap: 0.6rem;
+}
+
+.mei-token-review-actions {
+  display: inline-flex;
+  gap: 0.45rem;
 }
 
 .mei-correction-workbench label {

@@ -9,6 +9,59 @@
     { "course": 4, "pname": "d", "oct": 3 },
     { "course": 5, "pname": "a", "oct": 3 }
   ],
+  "sourceLayout": {
+    "pagePixels": { "width": 3506, "height": 2256 },
+    "systems": [
+      {
+        "measureStart": 1,
+        "rhythmTop": 0.1463,
+        "staffTop": 0.2097,
+        "staffBottom": 0.2895,
+        "measureBounds": [
+          [0.2521, 0.3885],
+          [0.3885, 0.5944],
+          [0.5944, 0.901]
+        ]
+      },
+      {
+        "measureStart": 4,
+        "rhythmTop": 0.3103,
+        "staffTop": 0.3879,
+        "staffBottom": 0.4486,
+        "measureBounds": [
+          [0.0257, 0.2949],
+          [0.2949, 0.476],
+          [0.476, 0.7268],
+          [0.7268, 0.9341]
+        ]
+      },
+      {
+        "measureStart": 8,
+        "rhythmTop": 0.4699,
+        "staffTop": 0.547,
+        "staffBottom": 0.6082,
+        "measureBounds": [
+          [0.0257, 0.1144],
+          [0.1144, 0.3175],
+          [0.3175, 0.5068],
+          [0.5068, 0.692],
+          [0.692, 0.923]
+        ]
+      },
+      {
+        "measureStart": 13,
+        "rhythmTop": 0.6339,
+        "staffTop": 0.7061,
+        "staffBottom": 0.7668,
+        "measureBounds": [
+          [0.0257, 0.2844],
+          [0.2844, 0.4872],
+          [0.4872, 0.7131],
+          [0.7131, 0.8702]
+        ]
+      }
+    ]
+  },
   "measures": [
     [
       {

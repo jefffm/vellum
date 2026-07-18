@@ -1,6 +1,6 @@
 # 02 — De Visée diplomatic transcription and corrections
 
-Status: completed
+Status: in-progress
 
 Type: AFK
 
@@ -15,18 +15,24 @@ Batch and canonical MEI version that survives reload.
 
 ## Acceptance criteria
 
-- [x] Every token in the constrained diplomatic profile—rhythm signs, tablature letters, and
-      measure/layout anchors—has a stable ID and facsimile region in schema-valid MEI. Marks outside
-      this declared profile remain for Owner review rather than being silently inferred.
+- [ ] Every visible token in the constrained diplomatic profile—rhythm signs, tablature letters,
+      and measure/layout anchors—has a stable ID and a source region derived from inspected page
+      geometry, not an evenly divided or assumed system grid. Marks outside this declared profile
+      remain for Owner review rather than being silently inferred.
+- [ ] The complete page-specific musical content is checked event by event against the facsimile
+      and an independent sounding witness where one is available. Disagreements and marks that
+      cannot be read confidently remain Critical Uncertainty; plausible-looking filler is forbidden.
 - [x] Structured extraction remains behind a backend-neutral adapter and records confidence and
       alternatives without treating confidence as acceptance.
-- [x] The review UI provides legible source context, zoom, and non-obscuring uncertainty markers.
+- [x] The review UI provides a deterministic Critical Uncertainty queue, legible source context,
+      zoom, and non-obscuring uncertainty markers.
 - [x] Staging, per-change preview, cancel, atomic commit, stale-parent conflict, and inverse-version
-      undo are covered through the persisted API and UI.
+      undo are covered through the persisted API and UI. A correct uncertain reading can be
+      confirmed as a reversible review decision without inventing an MEI attribute change.
 - [x] Transcription Correction cannot silently become Interpretation Revision or Editorial
       Emendation.
-- [x] Reload restores the exact canonical version, pending review state, facsimile links, and
-      rendered edition.
+- [ ] Reload restores the exact canonical version, pending review state, truthful facsimile links,
+      and source-checked rendered edition.
 
 ## Blocked by
 
@@ -49,3 +55,25 @@ existing LilyPond path changes.
 - Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed.
 - LilyPond source, compiler, and sandbox code were unchanged, so the LilyPond-only sandbox gate was
   not applicable.
+
+## Reopened finding
+
+The attempted T05 review on 2026-07-18 falsified the page-specific result predicate. The source has
+3, 4, 5, and 4 measures on its four systems (after the pickup), while the builder assigned every
+system four equal columns. At least the first event of measure 7 also visibly disagrees with the
+tracked provisional course/fret chord. The earlier gates proved persistence and workflow behavior,
+not transcription truth. T02 therefore remains active until the complete source map and musical
+content are repaired and independently checked.
+
+## Remediation checkpoint
+
+- The builder now rejects a page without explicit inspected system/measure layout and maps the
+  actual 3/4/5/4 page structure instead of assuming four equal systems.
+- Critical readings have a deterministic review queue and source zoom. Confirming an unchanged
+  reading is a first-class reversible review resolution; it no longer requires a fake MEI edit.
+- Rhythm corrections resolve `dur` and `dots` on the enclosing `tabGrp`, matching MEI 5.1's data
+  model, while rendered `tabDurSym` selection remains the user-facing anchor.
+- Host gates passed: typecheck, formatting, current-spec verification, client build, server build,
+  and 1,636 tests with four intentional skips. The full browser suite passed all 45 scenarios.
+- Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed. LilyPond code was
+  unchanged, so the LilyPond-only sandbox gate remained not applicable.

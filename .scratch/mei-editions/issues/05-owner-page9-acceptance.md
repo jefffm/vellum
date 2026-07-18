@@ -4,7 +4,7 @@ Status: ready-for-human
 
 Type: HITL
 
-Blocked by: 04
+Blocked by: 02 remediation and 04
 
 ## What to review
 
@@ -24,4 +24,5 @@ the first idiom-study follow-up.
 
 ## Blocked by
 
+- 02 — Reopened page-specific source-map and transcription result predicate
 - 04 — Passage prompting and model-assisted edits
