@@ -37,6 +37,25 @@ export function buildDiplomaticMei(extraction) {
         width,
         height: layout.staffBottom - layout.staffTop + courseGap * 1.1,
       };
+      const rhythmVisible = event.rhythmVisible !== false;
+      const [rhythmLeft, rhythmRight] = event.rhythmSourceBounds ?? event.sourceBounds;
+      if (
+        rhythmVisible &&
+        (!Number.isFinite(rhythmLeft) ||
+          !Number.isFinite(rhythmRight) ||
+          rhythmLeft < sourceLeft ||
+          rhythmRight > sourceRight ||
+          rhythmLeft >= rhythmRight)
+      ) {
+        throw new Error(`${idPrefix}e${eventNumber} has invalid inspected rhythm bounds`);
+      }
+      const rhythmRegion = {
+        page: extraction.sourcePage,
+        x: rhythmLeft,
+        y: layout.rhythmTop,
+        width: rhythmRight - rhythmLeft,
+        height: layout.staffTop - layout.rhythmTop + 0.008,
+      };
       if (event.kind === "strum") {
         if (event.direction !== "up" && event.direction !== "down") {
           throw new Error(`Historical strum ${idPrefix}e${eventNumber} requires a direction`);
@@ -62,20 +81,12 @@ export function buildDiplomaticMei(extraction) {
         };
         zones.push(zone(strumId, strumRegion));
         tokens.push(token(strumId, "strum", strumRegion, event.confidence));
-        const rhythmVisible = event.rhythmVisible !== false;
         if (event.chordSource === "held" && rhythmVisible) {
           throw new Error(
             `Held historical strum ${idPrefix}e${eventNumber} carries its rhythm in the strum sign`
           );
         }
         const rhythmId = `${idPrefix}rhythm-${eventNumber}`;
-        const rhythmRegion = {
-          page: extraction.sourcePage,
-          x,
-          y: layout.rhythmTop,
-          width,
-          height: layout.staffTop - layout.rhythmTop + 0.008,
-        };
         if (rhythmVisible) {
           zones.push(zone(rhythmId, rhythmRegion));
           tokens.push(token(rhythmId, "rhythm", rhythmRegion, event.confidence));
@@ -99,14 +110,6 @@ export function buildDiplomaticMei(extraction) {
         throw new Error(`Punctuated tablature event ${idPrefix}e${eventNumber} requires notes`);
       }
       const rhythmId = `${idPrefix}rhythm-${eventNumber}`;
-      const rhythmRegion = {
-        page: extraction.sourcePage,
-        x,
-        y: layout.rhythmTop,
-        width,
-        height: layout.staffTop - layout.rhythmTop + 0.008,
-      };
-      const rhythmVisible = event.rhythmVisible !== false;
       if (rhythmVisible) {
         zones.push(zone(rhythmId, rhythmRegion));
         tokens.push(token(rhythmId, "rhythm", rhythmRegion, event.confidence));

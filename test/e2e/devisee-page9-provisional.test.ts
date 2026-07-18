@@ -217,6 +217,9 @@ describe("de Visée page 9 provisional diplomatic extraction", () => {
     const seventhMeasureCritical = built.tokens.find(({ id }) => id === "m7-e2-n1")!;
     expect(seventhMeasureCritical.region.x).toBeGreaterThan(0.7);
     expect(seventhMeasureCritical.region.y).toBeGreaterThan(0.3);
+    const secondMeasureRhythm = built.tokens.find(({ id }) => id === "m2-rhythm-1")!;
+    expect(secondMeasureRhythm.region.x).toBeCloseTo(0.4105, 4);
+    expect(secondMeasureRhythm.region.width).toBeCloseTo(0.0145, 4);
     expect(built.mei).toContain('<sb/><measure xml:id="measure-4"');
     expect(built.mei).toContain(
       '<sb/><measure xml:id="section-2-pickup-measure" facs="#zone-section-2-pickup-measure" n="7a" metcon="false"'
