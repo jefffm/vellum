@@ -1,16 +1,43 @@
 {
   "title": "Sarabande (Pièces pour la guittare, 1686, p. 9)",
   "sourcePage": 9,
-  "meter": { "count": 3, "unit": 4 },
+  "meter": {
+    "count": 3,
+    "unit": 4
+  },
   "tuning": [
-    { "course": 1, "pname": "e", "oct": 4 },
-    { "course": 2, "pname": "b", "oct": 3 },
-    { "course": 3, "pname": "g", "oct": 3 },
-    { "course": 4, "pname": "d", "oct": 3 },
-    { "course": 5, "pname": "a", "oct": 3 }
+    {
+      "course": 1,
+      "pname": "e",
+      "oct": 4
+    },
+    {
+      "course": 2,
+      "pname": "b",
+      "oct": 3
+    },
+    {
+      "course": 3,
+      "pname": "g",
+      "oct": 3
+    },
+    {
+      "course": 4,
+      "pname": "d",
+      "oct": 4
+    },
+    {
+      "course": 5,
+      "pname": "a",
+      "oct": 3
+    }
   ],
   "sourceLayout": {
-    "pagePixels": { "width": 3506, "height": 2256 },
+    "pagePixels": {
+      "width": 3506,
+      "height": 2256
+    },
+    "pickupBounds": [0.173, 0.2521],
     "systems": [
       {
         "measureStart": 1,
@@ -41,7 +68,6 @@
         "staffTop": 0.547,
         "staffBottom": 0.6082,
         "measureBounds": [
-          [0.0257, 0.1144],
           [0.1144, 0.3175],
           [0.3175, 0.5068],
           [0.5068, 0.692],
@@ -49,7 +75,7 @@
         ]
       },
       {
-        "measureStart": 13,
+        "measureStart": 12,
         "rhythmTop": 0.6339,
         "staffTop": 0.7061,
         "staffBottom": 0.7668,
@@ -62,358 +88,665 @@
       }
     ]
   },
+  "repeatEnds": [7, 15],
+  "repeatStarts": [8],
+  "pickup": [
+    {
+      "kind": "pluck",
+      "dur": 8,
+      "rhythmVisible": true,
+      "sourceBounds": [0.184, 0.242],
+      "notes": [
+        [1, 1],
+        [2, 3],
+        [3, 2],
+        [4, 0]
+      ],
+      "confidence": 0.86,
+      "simultaneity": "pince"
+    }
+  ],
+  "sectionPickups": [
+    {
+      "beforeMeasure": 8,
+      "sourceBounds": [0.0257, 0.1144],
+      "events": [
+        {
+          "kind": "strum",
+          "direction": "down",
+          "chordSource": "explicit",
+          "dur": 8,
+          "rhythmVisible": true,
+          "sourceBounds": [0.042, 0.105],
+          "notes": [
+            [1, 0],
+            [2, 1],
+            [3, 2],
+            [4, 2]
+          ],
+          "confidence": 0.72
+        }
+      ]
+    }
+  ],
   "measures": [
     [
       {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.271, 0.303],
+        "notes": [],
+        "confidence": 0.9
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.312, 0.347],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
         "dur": 8,
-        "notes": [
-          [1, 5],
-          [3, 3],
-          [5, 3]
-        ],
-        "confidence": 0.72
-      },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.68 },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 }
-    ],
-    [
-      { "dur": 8, "notes": [[1, 3]], "confidence": 0.82 },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 0],
-          [3, 1],
-          [5, 0]
-        ],
-        "confidence": 0.74
-      },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 0],
-          [2, 2],
-          [3, 5]
-        ],
-        "confidence": 0.7
+        "rhythmVisible": true,
+        "sourceBounds": [0.352, 0.382],
+        "notes": [[1, 3]],
+        "confidence": 0.9
       }
     ],
     [
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.65 },
       {
-        "dur": 8,
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.401, 0.485],
         "notes": [
-          [1, 2],
-          [3, 1],
+          [1, 0],
+          [2, 2],
+          [3, 2],
           [5, 0]
         ],
-        "confidence": 0.72
+        "confidence": 0.55,
+        "simultaneity": "pince"
       },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.65 }
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.495, 0.545],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.548, 0.587],
+        "notes": [
+          [1, 5],
+          [3, 2]
+        ],
+        "confidence": 0.55
+      }
     ],
     [
       {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.606, 0.727],
+        "notes": [
+          [2, 3],
+          [3, 3],
+          [4, 5],
+          [5, 1]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.736, 0.775],
+        "notes": [],
+        "confidence": 0.9
+      },
+      {
+        "kind": "pluck",
         "dur": 8,
-        "dots": 1,
+        "rhythmVisible": true,
+        "sourceBounds": [0.787, 0.837],
+        "notes": [[1, 0]],
+        "confidence": 0.88,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 16,
+        "rhythmVisible": true,
+        "sourceBounds": [0.845, 0.892],
+        "notes": [[1, 1]],
+        "confidence": 0.88
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.038, 0.116],
         "notes": [
           [1, 0],
+          [2, 2],
+          [3, 2],
+          [4, 2]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.12, 0.157],
+        "notes": [],
+        "confidence": 0.9
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.166, 0.238],
+        "notes": [
+          [1, 1],
+          [2, 3],
+          [3, 2],
+          [4, 0]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "down",
+        "chordSource": "held",
+        "dur": 8,
+        "rhythmVisible": false,
+        "sourceBounds": [0.245, 0.286],
+        "notes": [],
+        "confidence": 0.9
+      }
+    ],
+    [
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.311, 0.344],
+        "notes": [],
+        "confidence": 0.9
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.365, 0.408],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.432, 0.469],
+        "notes": [[1, 6]],
+        "confidence": 0.82
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.486, 0.557],
+        "notes": [
+          [1, 3],
+          [2, 1],
+          [3, 0],
+          [4, 5]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.568, 0.618],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.645, 0.716],
+        "notes": [[1, 5]],
+        "confidence": 0.68
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.735, 0.776],
+        "notes": [
+          [1, 3],
+          [3, 0],
+          [4, 1]
+        ],
+        "confidence": 0.6
+      },
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.783, 0.835],
+        "notes": [
+          [1, 3],
+          [2, 3],
+          [4, 1],
+          [5, 0]
+        ],
+        "confidence": 0.58,
+        "dots": 1,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.84, 0.881],
+        "notes": [
+          [1, 5],
+          [2, 5],
+          [3, 5],
+          [5, 0]
+        ],
+        "confidence": 0.62,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.887, 0.927],
+        "notes": [],
+        "confidence": 0.9
+      }
+    ],
+    [
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.126, 0.16],
+        "notes": [],
+        "confidence": 0.9
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "explicit",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.177, 0.238],
+        "notes": [
+          [1, 0],
+          [2, 2],
+          [3, 2],
+          [4, 2]
+        ],
+        "confidence": 0.62,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.266, 0.309],
+        "notes": [[1, 3]],
+        "confidence": 0.86
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.329, 0.374],
+        "notes": [
+          [1, 3],
+          [2, 2]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.386, 0.44],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "strum",
+        "direction": "down",
+        "chordSource": "held",
+        "dur": 8,
+        "rhythmVisible": false,
+        "sourceBounds": [0.459, 0.499],
+        "notes": [],
+        "confidence": 0.9
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.518, 0.575],
+        "notes": [
+          [1, 3],
+          [2, 3],
+          [5, 1]
+        ],
+        "confidence": 0.55,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.592, 0.643],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.654, 0.684],
+        "notes": [[1, 5]],
+        "confidence": 0.83
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.704, 0.753],
+        "notes": [
+          [1, 3],
+          [3, 0],
+          [4, 1]
+        ],
+        "confidence": 0.62,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 16,
+        "rhythmVisible": true,
+        "sourceBounds": [0.762, 0.804],
+        "notes": [
+          [1, 3],
+          [4, 0]
+        ],
+        "confidence": 0.6
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "explicit",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.815, 0.875],
+        "notes": [
+          [1, 3],
+          [3, 0],
+          [5, 0]
+        ],
+        "confidence": 0.58,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.883, 0.915],
+        "notes": [[1, 1]],
+        "confidence": 0.72
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.036, 0.09],
+        "notes": [
+          [1, 3],
           [2, 0],
           [4, 1]
         ],
-        "confidence": 0.78
+        "confidence": 0.61,
+        "dots": 1
       },
-      { "dur": 16, "notes": [[1, 1]], "confidence": 0.66 },
       {
+        "kind": "pluck",
+        "dur": 16,
+        "rhythmVisible": true,
+        "sourceBounds": [0.099, 0.142],
+        "notes": [
+          [1, 3],
+          [4, 0]
+        ],
+        "confidence": 0.59
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "explicit",
         "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.153, 0.235],
+        "notes": [
+          [1, 1],
+          [2, 1],
+          [3, 3],
+          [4, 3],
+          [5, 0]
+        ],
+        "confidence": 0.55,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.246, 0.278],
+        "notes": [[1, 0]],
+        "confidence": 0.8
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.295, 0.354],
+        "notes": [
+          [1, 3],
+          [2, 3],
+          [5, 1]
+        ],
+        "confidence": 0.6,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.367, 0.414],
+        "notes": [],
+        "confidence": 0.9,
+        "dots": 1
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.432, 0.479],
         "notes": [
           [1, 0],
-          [3, 1]
+          [3, 5],
+          [4, 1]
         ],
-        "confidence": 0.73
+        "confidence": 0.58
       }
     ],
     [
       {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [2, 5],
-          [3, 5],
-          [4, 5],
-          [5, 0]
-        ],
-        "confidence": 0.72
-      },
-      { "dur": 8, "notes": [[2, 1]], "confidence": 0.69 },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 5],
-          [2, 5],
-          [3, 5],
-          [5, 0]
-        ],
-        "confidence": 0.66
-      }
-    ],
-    [
-      {
+        "kind": "pluck",
         "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.498, 0.548],
+        "notes": [
+          [1, 0],
+          [3, 0],
+          [4, 1]
+        ],
+        "confidence": 0.59
+      },
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.555, 0.603],
+        "notes": [[1, 1]],
+        "confidence": 0.62
+      },
+      {
+        "kind": "pluck",
+        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.615, 0.665],
+        "notes": [
+          [2, 5],
+          [3, 5],
+          [4, 5]
+        ],
+        "confidence": 0.6,
+        "simultaneity": "pince"
+      },
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.674, 0.706],
+        "notes": [],
+        "confidence": 0.9
+      }
+    ],
+    [
+      {
+        "kind": "pluck",
+        "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.721, 0.757],
         "notes": [
           [1, 5],
-          [2, 2],
-          [3, 1]
+          [2, 3],
+          [4, 0]
         ],
         "confidence": 0.61
       },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.7 },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.7 }
-    ],
-    [
       {
+        "kind": "pluck",
         "dur": 8,
+        "rhythmVisible": true,
+        "sourceBounds": [0.763, 0.8],
         "notes": [
-          [1, 5],
-          [2, 2],
-          [3, 1],
-          [4, 1],
-          [5, 5]
-        ],
-        "confidence": 0.58
-      },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
-      {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [1, 5],
-          [2, 2],
-          [3, 3],
+          [1, 3],
+          [2, 3],
           [4, 0]
         ],
         "confidence": 0.62
-      }
-    ],
-    [
-      {
-        "dur": 8,
-        "notes": [
-          [1, 3],
-          [2, 0],
-          [3, 1]
-        ],
-        "confidence": 0.66
       },
       {
+        "kind": "pluck",
         "dur": 4,
-        "dots": 1,
-        "notes": [
-          [1, 3],
-          [2, 5],
-          [3, 5],
-          [5, 0]
-        ],
-        "confidence": 0.63
-      },
-      { "dur": 8, "notes": [[2, 1]], "confidence": 0.7 },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.7 }
-    ],
-    [
-      {
-        "dur": 8,
-        "notes": [
-          [1, 0],
-          [2, 5],
-          [3, 5]
-        ],
-        "confidence": 0.76
-      },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 5],
-          [2, 2],
-          [3, 1]
-        ],
-        "confidence": 0.67
-      },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 }
-    ],
-    [
-      {
-        "dur": 8,
-        "notes": [
-          [1, 3],
-          [2, 5],
-          [3, 2]
-        ],
-        "confidence": 0.64
-      },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.69 },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 },
-      { "dur": 8, "notes": [[1, 3]], "confidence": 0.72 }
-    ],
-    [
-      {
-        "dur": 4,
-        "notes": [
-          [1, 3],
-          [4, 5]
-        ],
-        "confidence": 0.66
-      },
-      {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [1, 3],
-          [3, 0]
-        ],
-        "confidence": 0.7
-      },
-      { "dur": 8, "notes": [[1, 5]], "confidence": 0.72 },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 3],
-          [3, 0]
-        ],
-        "confidence": 0.7
-      }
-    ],
-    [
-      {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [1, 3],
-          [2, 0],
-          [4, 1]
-        ],
-        "confidence": 0.71
-      },
-      {
-        "dur": 8,
-        "notes": [
-          [1, 3],
-          [4, 0]
-        ],
-        "confidence": 0.67
-      },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.68 },
-      {
-        "dur": 8,
-        "notes": [
-          [1, 1],
-          [5, 5]
-        ],
-        "confidence": 0.6
-      }
-    ],
-    [
-      {
-        "dur": 8,
-        "dots": 1,
-        "notes": [
-          [1, 0],
-          [2, 1],
-          [4, 3]
-        ],
-        "confidence": 0.71
-      },
-      {
-        "dur": 16,
-        "notes": [
-          [1, 3],
-          [3, 3],
-          [4, 1]
-        ],
-        "confidence": 0.64
-      },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 },
-      { "dur": 8, "notes": [[1, 0]], "confidence": 0.76 }
-    ],
-    [
-      {
-        "dur": 4,
-        "notes": [
-          [1, 3],
-          [2, 3],
-          [4, 1],
-          [5, 1]
-        ],
-        "confidence": 0.63
-      },
-      { "dur": 4, "notes": [[2, 1]], "confidence": 0.7 },
-      {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [1, 3],
-          [2, 3]
-        ],
-        "confidence": 0.68
-      },
-      {
-        "dur": 8,
-        "notes": [
-          [1, 0],
-          [3, 5],
-          [4, 1]
-        ],
-        "confidence": 0.65
-      }
-    ],
-    [
-      {
-        "dur": 4,
-        "notes": [
-          [1, 0],
-          [2, 0],
-          [4, 1]
-        ],
-        "confidence": 0.72
-      },
-      {
-        "dur": 4,
-        "notes": [
-          [1, 1],
-          [3, 5]
-        ],
-        "confidence": 0.64
-      },
-      {
-        "dur": 4,
-        "dots": 1,
-        "notes": [
-          [2, 1],
-          [3, 5],
-          [4, 5]
-        ],
-        "confidence": 0.65
-      },
-      { "dur": 8, "notes": [[1, 3]], "confidence": 0.7 }
-    ],
-    [
-      {
-        "dur": 8,
-        "notes": [
-          [1, 5],
-          [2, 3],
-          [4, 0]
-        ],
-        "confidence": 0.64
-      },
-      {
-        "dur": 4,
+        "rhythmVisible": true,
+        "sourceBounds": [0.807, 0.842],
         "notes": [
           [1, 3],
           [2, 3],
           [4, 0]
         ],
-        "confidence": 0.65
+        "confidence": 0.62,
+        "simultaneity": "pince"
       },
-      { "dur": 4, "dots": 1, "notes": [[2, 1]], "confidence": 0.69 }
+      {
+        "kind": "strum",
+        "direction": "up",
+        "chordSource": "held",
+        "dur": 4,
+        "rhythmVisible": false,
+        "sourceBounds": [0.844, 0.865],
+        "notes": [],
+        "confidence": 0.9
+      }
     ]
   ]
 }

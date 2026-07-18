@@ -1,6 +1,6 @@
 # 03 — Interpretation acceptance and synchronized playback
 
-Status: completed
+Status: ready-for-agent
 
 Type: AFK
 
@@ -53,3 +53,28 @@ the existing LilyPond path changes.
 - Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed.
 - LilyPond source, compiler, and sandbox code were unchanged, so the LilyPond-only sandbox gate was
   not applicable.
+
+## Reopened page-specific result
+
+The attempted T05 review proved that the generic implementation did not establish a literal
+page-9 interpretation. The current traversal repeats the entire page, but the source has two
+separately repeated sections: measures 1–7 and 8–15, each preceded by its own pickup. The diplomatic
+source also contains directional strums. Held-shape strums have no invented course/fret children;
+explicit-chord strums preserve the source-written children. Playback must use exact interpretation
+records for both cases and fail closed rather than silently advancing through an unresolved strum.
+T03 becomes active again after the repaired T02 transcription lands.
+
+## Remediation checkpoint
+
+- Interpretation records now encode two disjoint written repeat sections, each with its own pickup,
+  rather than one whole-page repeat count.
+- Every historical strum requires an exact interpretation realization. Held-shape strums derive
+  from accumulated course state; explicit-chord strums must agree with every written course/fret.
+  Playback arpeggiates the realized courses in the encoded direction and fails closed when a strum
+  is unresolved.
+- Focused tests cover AABB traversal, both pickups, directional ordering, explicit disagreement,
+  and unresolved-strum rejection. The host base gates, all 45 browser scenarios, and pinned render
+  and playback evaluations pass.
+- A fresh Chrome audition produced a persisted 72-BPM interpretation with a 1:17 AABB timeline and
+  synchronized canonical-event highlighting. Acceptance remains blocked by T02's 69 unresolved
+  source readings and the late Owner review.

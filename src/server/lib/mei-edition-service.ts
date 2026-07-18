@@ -23,6 +23,7 @@ const EDITABLE_ATTRIBUTES = Object.freeze({
   "tab.fret": /^(?:[0-9]|1[0-2])$/,
   dur: /^(?:1|2|4|8|16|32|64)$/,
   dots: /^(?:1|2|3)$/,
+  "strum.direction": /^(?:up|down)$/,
 });
 
 const PROHIBITED_XML = /<!\s*(?:doctype|entity)\b/i;
@@ -453,7 +454,9 @@ function parseModelProposal(content: string): {
         return (
           typeof candidate.id !== "string" ||
           typeof candidate.tokenId !== "string" ||
-          !["tab.course", "tab.fret", "dur", "dots"].includes(String(candidate.attribute)) ||
+          !["tab.course", "tab.fret", "dur", "dots", "strum.direction"].includes(
+            String(candidate.attribute)
+          ) ||
           typeof candidate.replacementValue !== "string" ||
           typeof candidate.rationale !== "string"
         );
@@ -515,7 +518,9 @@ function validateAndSerializeDocument(dom: JSDOM, tokens: readonly DiplomaticTok
       throw new ApiRouteError(`Diplomatic token has no MEI element: ${token.id}`, 400);
     }
   }
-  for (const element of Array.from(document.querySelectorAll("note, tabDurSym"))) {
+  for (const element of Array.from(
+    document.querySelectorAll('note, tabDurSym:not([type="strum-render-anchor"])')
+  )) {
     const id = element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id");
     if (!id || !tokenIds.has(id)) {
       throw new ApiRouteError(
@@ -549,9 +554,7 @@ function applyAttributeChange(
   const element = meiAttributeTarget(document, change.tokenId, change.attribute);
   if (!element)
     throw new ApiRouteError(`Correction target is absent from MEI: ${change.tokenId}`, 400);
-  const current = element.hasAttribute(change.attribute)
-    ? element.getAttribute(change.attribute)!
-    : undefined;
+  const current = editableAttributeValue(element, change.attribute);
   if (current !== change.expectedValue) {
     throw new ApiRouteError(
       `Correction precondition failed for ${change.tokenId} ${change.attribute}: expected ${change.expectedValue ?? "absent"}, found ${current ?? "absent"}`,
@@ -564,6 +567,27 @@ function applyAttributeChange(
   ) {
     throw new ApiRouteError(`Invalid ${change.attribute} value: ${change.replacementValue}`, 400);
   }
-  if (change.replacementValue === undefined) element.removeAttribute(change.attribute);
+  if (change.attribute === "strum.direction") {
+    if (!change.replacementValue)
+      throw new ApiRouteError("A historical strum direction cannot be removed", 400);
+    const types = (element.getAttribute("type") ?? "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((type) => !type.startsWith("historical-strum-"));
+    element.setAttribute("type", `historical-strum-${change.replacementValue} ${types.join(" ")}`);
+  } else if (change.replacementValue === undefined) element.removeAttribute(change.attribute);
   else element.setAttribute(change.attribute, change.replacementValue);
+}
+
+function editableAttributeValue(
+  element: Element,
+  attribute: MeiAttributeChange["attribute"]
+): string | undefined {
+  if (attribute !== "strum.direction") {
+    return element.hasAttribute(attribute) ? element.getAttribute(attribute)! : undefined;
+  }
+  const type = element.getAttribute("type") ?? "";
+  if (type.split(/\s+/).includes("historical-strum-up")) return "up";
+  if (type.split(/\s+/).includes("historical-strum-down")) return "down";
+  return undefined;
 }

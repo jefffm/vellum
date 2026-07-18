@@ -88,8 +88,76 @@ function parseTunings(value: string): CreateTablatureInterpretationCommand["cour
   });
 }
 
-function measureCount(mei: string): number {
-  return new DOMParser().parseFromString(mei, "application/xml").querySelectorAll("measure").length;
+function sourceRepeatSections(
+  mei: string,
+  totalPasses: number
+): CreateTablatureInterpretationCommand["repeatSections"] {
+  const document = new DOMParser().parseFromString(mei, "application/xml");
+  const measures = Array.from(document.querySelectorAll("measure"));
+  const numbered = measures
+    .map((measure) => ({ measure, number: Number(measure.getAttribute("n")) }))
+    .filter(({ number }) => Number.isInteger(number) && number > 0);
+  const pickupBefore = new Map<number, string>();
+  for (const [index, measure] of measures.entries()) {
+    if (measure.getAttribute("metcon") !== "false") continue;
+    const next = measures
+      .slice(index + 1)
+      .map((candidate) => Number(candidate.getAttribute("n")))
+      .find((number) => Number.isInteger(number) && number > 0);
+    const id = measure.getAttribute("xml:id");
+    if (next && id) pickupBefore.set(next, id);
+  }
+  const ends = numbered
+    .filter(({ measure }) => measure.getAttribute("right") === "rptend")
+    .map(({ number }) => number);
+  const finalNumber = numbered.at(-1)?.number;
+  if (!finalNumber) throw new Error("Interpretation requires numbered measures");
+  if (!ends.includes(finalNumber)) ends.push(finalNumber);
+  let startMeasure = numbered[0]!.number;
+  return ends.map((endMeasure) => {
+    const section = {
+      startMeasure,
+      endMeasure,
+      totalPasses,
+      ...(pickupBefore.get(startMeasure)
+        ? { pickupMeasureId: pickupBefore.get(startMeasure)! }
+        : {}),
+    };
+    startMeasure = endMeasure + 1;
+    return section;
+  });
+}
+
+function sourceStrumRealizations(
+  mei: string
+): CreateTablatureInterpretationCommand["strumRealizations"] {
+  const document = new DOMParser().parseFromString(mei, "application/xml");
+  const held = new Map<number, number>();
+  const result: CreateTablatureInterpretationCommand["strumRealizations"] = [];
+  for (const measure of document.querySelectorAll("measure")) {
+    if (measure.getAttribute("metcon") === "false") held.clear();
+    for (const group of measure.querySelectorAll("tabGrp")) {
+      const notes = Array.from(group.querySelectorAll("note")).map((note) => ({
+        course: Number(note.getAttribute("tab.course")),
+        fret: Number(note.getAttribute("tab.fret")),
+      }));
+      for (const note of notes) held.set(note.course, note.fret);
+      const types = new Set((group.getAttribute("type") ?? "").split(/\s+/));
+      const strum = types.has("historical-strum-up") || types.has("historical-strum-down");
+      if (strum) {
+        const strumId = group.getAttribute("xml:id");
+        if (!strumId || !held.size) {
+          throw new Error("A historical strum has no source or held chord realization");
+        }
+        result.push({
+          strumId,
+          notes: [...held].map(([course, fret]) => ({ course, fret })),
+          spreadMilliseconds: 35,
+        });
+      }
+    }
+  }
+  return result;
 }
 
 export async function installMeiEditionInterpretationWorkbench(
@@ -102,7 +170,7 @@ export async function installMeiEditionInterpretationWorkbench(
   let state = await api<InterpretationState>(`${base}/interpretation-state`);
   const section = shell.ownerDocument.createElement("section");
   section.className = "mei-interpretation-workbench";
-  section.innerHTML = `<header><div><p class="artifact-preview-eyebrow">Tablature Interpretation</p><h2>Audition and acceptance</h2></div><p data-authority>Playback remains provisional until the exact transcription and interpretation are accepted.</p></header><div class="mei-interpretation-grid"><form data-interpretation-form><label>Tempo (quarter BPM)<input data-tempo type="number" min="30" max="240" value="72" required></label><label>Open-string MIDI by course<input data-tunings required></label><label>Repeat passes<input data-passes type="number" min="1" max="4" value="2" required></label><label>Rationale<input data-interpretation-rationale value="Provisional literal realization for review." required></label><label class="mei-inline-check"><input data-revise type="checkbox"> Revise selected interpretation</label><button type="submit">Create provisional interpretation</button></form><section class="mei-acceptance-session"><h3>Whole-page review decisions</h3><p data-transcription-status></p><label>Decision evidence<textarea data-decision-evidence>Compared beside the whole-page facsimile.</textarea></label><div><button type="button" data-accept-transcription>Accept transcription</button><button type="button" data-reject-transcription>Reject transcription</button></div><p data-interpretation-status>Select an interpretation to review it separately.</p><div><button type="button" data-accept-interpretation disabled>Accept interpretation</button><button type="button" data-reject-interpretation disabled>Reject interpretation</button></div></section></div><div class="mei-interpretation-list"><label>Active interpretation<select data-interpretation-select></select></label><span data-lineage></span></div><div class="mei-playback-controls"><button type="button" data-play disabled>Play</button><button type="button" data-pause disabled>Pause</button><button type="button" data-stop disabled>Stop</button><label>Playback position<input type="range" data-position min="0" max="0" step="0.01" value="0" disabled></label><span data-time>0:00 / 0:00</span><button type="button" data-score-zoom-out aria-label="Zoom score out">−</button><button type="button" data-score-zoom-reset>Fit width</button><button type="button" data-score-zoom-in aria-label="Zoom score in">+</button></div><p data-playback-status></p><p data-interpretation-error role="alert"></p>`;
+  section.innerHTML = `<header><div><p class="artifact-preview-eyebrow">Tablature Interpretation</p><h2>Audition and acceptance</h2></div><p data-authority>Playback remains provisional until the exact transcription and interpretation are accepted.</p></header><div class="mei-interpretation-grid"><form data-interpretation-form><label>Tempo (quarter BPM)<input data-tempo type="number" min="30" max="240" value="72" required></label><label>Open-string MIDI by course<input data-tunings required></label><label>Repeat passes per written strain<input data-passes type="number" min="1" max="4" value="2" required></label><p>Written repeat sections, pickups, and source-held strum shapes are preserved automatically in the provisional interpretation.</p><label>Rationale<input data-interpretation-rationale value="Provisional literal realization for review." required></label><label class="mei-inline-check"><input data-revise type="checkbox"> Revise selected interpretation</label><button type="submit">Create provisional interpretation</button></form><section class="mei-acceptance-session"><h3>Whole-page review decisions</h3><p data-transcription-status></p><label>Decision evidence<textarea data-decision-evidence>Compared beside the whole-page facsimile.</textarea></label><div><button type="button" data-accept-transcription>Accept transcription</button><button type="button" data-reject-transcription>Reject transcription</button></div><p data-interpretation-status>Select an interpretation to review it separately.</p><div><button type="button" data-accept-interpretation disabled>Accept interpretation</button><button type="button" data-reject-interpretation disabled>Reject interpretation</button></div></section></div><div class="mei-interpretation-list"><label>Active interpretation<select data-interpretation-select></select></label><span data-lineage></span></div><div class="mei-playback-controls"><button type="button" data-play disabled>Play</button><button type="button" data-pause disabled>Pause</button><button type="button" data-stop disabled>Stop</button><label>Playback position<input type="range" data-position min="0" max="0" step="0.01" value="0" disabled></label><span data-time>0:00 / 0:00</span><button type="button" data-score-zoom-out aria-label="Zoom score out">−</button><button type="button" data-score-zoom-reset>Fit width</button><button type="button" data-score-zoom-in aria-label="Zoom score in">+</button></div><p data-playback-status></p><p data-interpretation-error role="alert"></p>`;
   shell.append(section);
 
   const select = section.querySelector<HTMLSelectElement>("[data-interpretation-select]")!;
@@ -262,11 +330,11 @@ export async function installMeiEditionInterpretationWorkbench(
       ...(revising && selected ? { parentInterpretationId: selected.id } : {}),
       tempo: Number(section.querySelector<HTMLInputElement>("[data-tempo]")!.value),
       courseTunings: parseTunings(section.querySelector<HTMLInputElement>("[data-tunings]")!.value),
-      repeat: {
-        startMeasure: 1,
-        endMeasure: measureCount(edition.mei),
-        totalPasses: Number(section.querySelector<HTMLInputElement>("[data-passes]")!.value),
-      },
+      repeatSections: sourceRepeatSections(
+        edition.mei,
+        Number(section.querySelector<HTMLInputElement>("[data-passes]")!.value)
+      ),
+      strumRealizations: sourceStrumRealizations(edition.mei),
       rationale: section.querySelector<HTMLInputElement>("[data-interpretation-rationale]")!.value,
     };
     void api<{ interpretation: TablatureInterpretation }>(`${base}/interpretations`, {

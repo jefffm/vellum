@@ -19,7 +19,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
-function harness() {
+function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
   const root = mkdtempSync(path.join(tmpdir(), "vellum-mei-interpretation-"));
   roots.push(root);
   let sequence = 0;
@@ -33,7 +33,7 @@ function harness() {
     contentBase64: Buffer.from("%PDF-1.4\n%%EOF\n").toString("base64"),
     provenance: { license: "project-authored test fixture" },
   });
-  const tokenIds = [
+  const tokenIds = options.tokenIds ?? [
     "rhythm-1",
     "note-1",
     "note-2",
@@ -46,7 +46,7 @@ function harness() {
   ];
   const tokens: DiplomaticToken[] = tokenIds.map((id, index) => ({
     id,
-    kind: id.startsWith("rhythm") ? "rhythm" : "tablature",
+    kind: id.startsWith("rhythm") ? "rhythm" : id.startsWith("strum") ? "strum" : "tablature",
     region: { page: 1, x: 0.02 + index * 0.08, y: 0.1, width: 0.04, height: 0.06 },
     confidence: 0.95,
     alternatives: [],
@@ -58,7 +58,7 @@ function harness() {
     sourceArtifactId: source.id,
     sourcePage: 1,
     title: "Project-authored Sarabande",
-    mei: FRENCH_TAB_MEI_FIXTURE,
+    mei: options.mei ?? FRENCH_TAB_MEI_FIXTURE,
     tokens,
     extraction: {
       backendId: "fixture",
@@ -82,7 +82,8 @@ function harness() {
       { course: 4, openMidis: [50] },
       { course: 5, openMidis: [45, 57] },
     ],
-    repeat: { startMeasure: 1, endMeasure: 1, totalPasses: 2 },
+    repeatSections: [{ startMeasure: 1, endMeasure: 1, totalPasses: 2 }],
+    strumRealizations: [],
     rationale: "Provisional French five-course tuning with octave-strung fifth course.",
   };
   return { service, transcription, workspaceId: workspace.id, edition, command };
@@ -204,5 +205,94 @@ describe("versioned tablature interpretation and acceptance", () => {
     expect(() => service.playback(workspaceId, edition.editionId, first.id)).toThrowError(
       /stale transcription/
     );
+  });
+
+  it("repeats two pickup-led strains and requires exact strum realizations", () => {
+    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Two strains</title></titleStmt><pubStmt><p>Test</p></pubStmt></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure xml:id="pickup-a" n="0" metcon="false"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-a-group" dur="8"><note xml:id="pickup-a-note-1" tab.course="1" tab.fret="1"/><note xml:id="pickup-a-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-1" n="1" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-held" dur="2" dots="1" type="historical-strum-up chord-held"/></layer></staff></measure><measure xml:id="pickup-b" n="1a" metcon="false"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-b-group" dur="8"><note xml:id="pickup-b-note" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-2" n="2" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-explicit" dur="2" dots="1" type="historical-strum-down chord-explicit"><note xml:id="strum-explicit-note-1" tab.course="1" tab.fret="2"/><note xml:id="strum-explicit-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const { service, transcription, workspaceId, edition, command } = harness({
+      mei,
+      tokenIds: [
+        "pickup-a-note-1",
+        "pickup-a-note-2",
+        "strum-held",
+        "pickup-b-note",
+        "strum-explicit",
+        "strum-explicit-note-1",
+        "strum-explicit-note-2",
+      ],
+    });
+    const exact = {
+      ...command,
+      repeatSections: [
+        { startMeasure: 1, endMeasure: 1, totalPasses: 2, pickupMeasureId: "pickup-a" },
+        { startMeasure: 2, endMeasure: 2, totalPasses: 2, pickupMeasureId: "pickup-b" },
+      ],
+      strumRealizations: [
+        {
+          strumId: "strum-held",
+          notes: [
+            { course: 1, fret: 1 },
+            { course: 3, fret: 2 },
+          ],
+          spreadMilliseconds: 40,
+        },
+        {
+          strumId: "strum-explicit",
+          notes: [
+            { course: 1, fret: 2 },
+            { course: 3, fret: 2 },
+          ],
+          spreadMilliseconds: 40,
+        },
+      ],
+    } satisfies CreateTablatureInterpretationCommand;
+
+    expect(() =>
+      service.createInterpretation(workspaceId, edition.editionId, {
+        ...exact,
+        strumRealizations: exact.strumRealizations.slice(0, 1),
+      })
+    ).toThrowError(/explicitly realize every historical strum/);
+    expect(() =>
+      service.createInterpretation(workspaceId, edition.editionId, {
+        ...exact,
+        strumRealizations: exact.strumRealizations.map((realization) =>
+          realization.strumId === "strum-explicit"
+            ? { ...realization, notes: [{ course: 1, fret: 1 }] }
+            : realization
+        ),
+      })
+    ).toThrowError(/disagrees with source-written chord/);
+
+    const correctedDirection = transcription.preview(workspaceId, edition.editionId, {
+      id: "correction-batch.00000000-0000-4000-8000-000000000088",
+      name: "Correct source strum direction",
+      expectedVersion: 1,
+      layer: "transcription",
+      changes: [
+        {
+          tokenId: "strum-held",
+          attribute: "strum.direction",
+          expectedValue: "up",
+          replacementValue: "down",
+          rationale: "The source-linked stem points down.",
+        },
+      ],
+    });
+    expect(correctedDirection.mei).toContain('type="historical-strum-down chord-held"');
+
+    const interpretation = service.createInterpretation(workspaceId, edition.editionId, exact);
+    const preview = service.playback(workspaceId, edition.editionId, interpretation.id);
+    expect(preview.measureOccurrences).toHaveLength(8);
+    expect(preview.durationSeconds).toBe(14);
+    const held = preview.events.filter(
+      (event) => event.meiId === "strum-held" && event.iteration === 1
+    );
+    expect(held.map((event) => event.course)).toEqual([1, 3]);
+    expect(held[1]!.startSeconds - held[0]!.startSeconds).toBeCloseTo(0.04);
+    const explicit = preview.events.filter(
+      (event) => event.meiId === "strum-explicit" && event.iteration === 1
+    );
+    expect(explicit.map((event) => event.course)).toEqual([3, 1]);
   });
 });

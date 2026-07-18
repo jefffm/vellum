@@ -128,6 +128,9 @@ export class MeiEditionInterpretationService {
     if (new Set(courseNumbers).size !== courseNumbers.length)
       throw new ApiRouteError("Course tunings must name each course once", 400);
     const requirements = readTablatureRequirements(edition.mei);
+    const tuningByCourse = new Map(
+      command.courseTunings.map((course) => [course.course, course.openMidis] as const)
+    );
     const available = new Set(courseNumbers);
     const missing = requirements.courses.filter((course) => !available.has(course));
     if (missing.length)
@@ -140,12 +143,8 @@ export class MeiEditionInterpretationService {
       if (tuning.openMidis.some((midi) => midi + maxFret > 127))
         throw new ApiRouteError(`Course ${tuning.course} interpretation exceeds MIDI range`, 400);
     }
-    if (
-      command.repeat.startMeasure > command.repeat.endMeasure ||
-      command.repeat.endMeasure > requirements.measureCount
-    ) {
-      throw new ApiRouteError("Interpretation repeat bounds leave the transcription", 400);
-    }
+    assertRepeatSections(command.repeatSections, requirements);
+    assertStrumRealizations(command.strumRealizations, requirements, tuningByCourse);
     const interpretation: TablatureInterpretation = {
       id: `tab-interpretation.${this.createId()}`,
       editionId,
@@ -154,7 +153,8 @@ export class MeiEditionInterpretationService {
       ...(parent ? { parentInterpretationId: parent.id } : {}),
       tempo: command.tempo,
       courseTunings: command.courseTunings,
-      repeat: command.repeat,
+      repeatSections: command.repeatSections,
+      strumRealizations: command.strumRealizations,
       rationale: command.rationale,
       createdAt: this.now().toISOString(),
     };
@@ -295,8 +295,16 @@ function latestDecision(
 
 function readTablatureRequirements(mei: string): {
   courses: number[];
-  measureCount: number;
+  numberedMeasures: number[];
+  pickupMeasureIds: string[];
   maxFretByCourse: Map<number, number>;
+  strums: Map<
+    string,
+    Readonly<{
+      direction: "up" | "down";
+      explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
+    }>
+  >;
 } {
   const dom = new JSDOM(mei, { contentType: "application/xml" });
   try {
@@ -310,14 +318,132 @@ function readTablatureRequirements(mei: string): {
       courses.add(course);
       maxFretByCourse.set(course, Math.max(maxFretByCourse.get(course) ?? 0, fret));
     }
+    const numberedMeasures = Array.from(dom.window.document.querySelectorAll("measure"))
+      .map((measure) => Number(measure.getAttribute("n")))
+      .filter((number) => Number.isInteger(number) && number > 0);
+    const pickupMeasureIds = Array.from(
+      dom.window.document.querySelectorAll('measure[metcon="false"]')
+    ).map((measure) => xmlId(measure));
+    const strums = new Map<
+      string,
+      Readonly<{
+        direction: "up" | "down";
+        explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
+      }>
+    >();
+    for (const group of Array.from(dom.window.document.querySelectorAll("tabGrp[type]"))) {
+      const types = new Set((group.getAttribute("type") ?? "").split(/\s+/));
+      const direction = types.has("historical-strum-up")
+        ? "up"
+        : types.has("historical-strum-down")
+          ? "down"
+          : undefined;
+      if (!direction) continue;
+      const id = xmlId(group);
+      const explicitNotes = Array.from(group.querySelectorAll("note")).map((note) => ({
+        course: Number(note.getAttribute("tab.course")),
+        fret: Number(note.getAttribute("tab.fret")),
+      }));
+      strums.set(id, { direction, explicitNotes });
+    }
     return {
       courses: [...courses].sort((left, right) => left - right),
-      measureCount: dom.window.document.querySelectorAll("measure").length,
+      numberedMeasures,
+      pickupMeasureIds,
       maxFretByCourse,
+      strums,
     };
   } finally {
     dom.window.close();
   }
+}
+
+type TablatureRequirements = ReturnType<typeof readTablatureRequirements>;
+
+function assertRepeatSections(
+  sections: TablatureInterpretation["repeatSections"],
+  requirements: TablatureRequirements
+): void {
+  const expected = [...requirements.numberedMeasures].sort((left, right) => left - right);
+  const covered: number[] = [];
+  let priorEnd = 0;
+  for (const section of sections) {
+    if (section.startMeasure > section.endMeasure || section.startMeasure <= priorEnd) {
+      throw new ApiRouteError("Interpretation repeat sections must be ordered and disjoint", 400);
+    }
+    for (let number = section.startMeasure; number <= section.endMeasure; number += 1) {
+      covered.push(number);
+    }
+    if (
+      section.pickupMeasureId &&
+      !requirements.pickupMeasureIds.includes(section.pickupMeasureId)
+    ) {
+      throw new ApiRouteError(
+        `Interpretation pickup is not in the transcription: ${section.pickupMeasureId}`,
+        400
+      );
+    }
+    priorEnd = section.endMeasure;
+  }
+  if (covered.join(",") !== expected.join(",")) {
+    throw new ApiRouteError(
+      "Interpretation repeat sections must cover every numbered measure exactly once",
+      400
+    );
+  }
+}
+
+function assertStrumRealizations(
+  realizations: TablatureInterpretation["strumRealizations"],
+  requirements: TablatureRequirements,
+  tuningByCourse: ReadonlyMap<number, readonly number[]>
+): void {
+  const byId = new Map(realizations.map((realization) => [realization.strumId, realization]));
+  if (byId.size !== realizations.length) {
+    throw new ApiRouteError("Each historical strum must be realized exactly once", 400);
+  }
+  const expectedIds = [...requirements.strums.keys()].sort();
+  const actualIds = [...byId.keys()].sort();
+  if (actualIds.join(",") !== expectedIds.join(",")) {
+    throw new ApiRouteError(
+      "Interpretation must explicitly realize every historical strum and no others",
+      400
+    );
+  }
+  for (const [strumId, realization] of byId) {
+    const source = requirements.strums.get(strumId)!;
+    if (new Set(realization.notes.map(({ course }) => course)).size !== realization.notes.length) {
+      throw new ApiRouteError(`Strum ${strumId} names a course more than once`, 400);
+    }
+    for (const note of realization.notes) {
+      const openMidis = tuningByCourse.get(note.course);
+      if (!openMidis) {
+        throw new ApiRouteError(`Strum ${strumId} uses an untuned course ${note.course}`, 400);
+      }
+      if (openMidis.some((midi) => midi + note.fret > 127)) {
+        throw new ApiRouteError(`Strum ${strumId} exceeds MIDI range`, 400);
+      }
+    }
+    if (source.explicitNotes.length) {
+      const realizedByCourse = new Map(
+        realization.notes.map(({ course, fret }) => [course, fret] as const)
+      );
+      if (source.explicitNotes.some(({ course, fret }) => realizedByCourse.get(course) !== fret)) {
+        throw new ApiRouteError(
+          `Explicit strum realization disagrees with source-written chord ${strumId}`,
+          400
+        );
+      }
+    }
+  }
+}
+
+function xmlId(element: Element): string {
+  const id =
+    element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") ??
+    element.getAttribute("xml:id");
+  if (!id) throw new ApiRouteError("MEI interpretation encountered an object without xml:id", 400);
+  return id;
 }
 
 function buildEditionPlayback(
@@ -326,31 +452,52 @@ function buildEditionPlayback(
 ): Omit<EditionPlaybackPreview, "authority" | "permits"> {
   const dom = new JSDOM(edition.mei, { contentType: "application/xml" });
   try {
-    const measures = Array.from(dom.window.document.querySelectorAll("measure"));
-    const before = measures.slice(0, interpretation.repeat.startMeasure - 1);
-    const repeated = measures.slice(
-      interpretation.repeat.startMeasure - 1,
-      interpretation.repeat.endMeasure
+    const allMeasures = Array.from(dom.window.document.querySelectorAll("measure"));
+    const numbered = new Map(
+      allMeasures
+        .map((measure) => [Number(measure.getAttribute("n")), measure] as const)
+        .filter(([number]) => Number.isInteger(number) && number > 0)
     );
-    const after = measures.slice(interpretation.repeat.endMeasure);
-    const traversal = [
-      ...before.map((measure) => ({ measure, iteration: 1 })),
-      ...Array.from({ length: interpretation.repeat.totalPasses }, (_, pass) =>
-        repeated.map((measure) => ({ measure, iteration: pass + 1 }))
-      ).flat(),
-      ...after.map((measure) => ({ measure, iteration: 1 })),
-    ];
+    const pickups = new Map(
+      allMeasures
+        .filter((measure) => measure.getAttribute("metcon") === "false")
+        .map((measure) => [xmlId(measure), measure] as const)
+    );
+    const traversal = interpretation.repeatSections.flatMap((section) =>
+      Array.from({ length: section.totalPasses }, (_, pass) => {
+        const measures = Array.from(
+          { length: section.endMeasure - section.startMeasure + 1 },
+          (__, offset) => {
+            const number = section.startMeasure + offset;
+            const measure = numbered.get(number);
+            if (!measure)
+              throw new ApiRouteError(`Interpretation measure ${number} is missing`, 400);
+            return { measure, iteration: pass + 1, measureNumber: number };
+          }
+        );
+        if (!section.pickupMeasureId) return measures;
+        const pickup = pickups.get(section.pickupMeasureId);
+        if (!pickup)
+          throw new ApiRouteError(
+            `Interpretation pickup ${section.pickupMeasureId} is missing`,
+            400
+          );
+        return [{ measure: pickup, iteration: pass + 1, measureNumber: 0 }, ...measures];
+      }).flat()
+    );
     const tunings = new Map(
       interpretation.courseTunings.map((course) => [course.course, course.openMidis] as const)
     );
     const quarterSeconds = 60 / interpretation.tempo;
+    const strums = new Map(
+      interpretation.strumRealizations.map((realization) => [realization.strumId, realization])
+    );
     const events: EditionPlaybackEvent[] = [];
     const measureOccurrences: EditionPlaybackPreview["measureOccurrences"] extends readonly (infer T)[]
       ? T[]
       : never = [];
     let elapsedQuarters = 0;
-    for (const [occurrenceIndex, { measure, iteration }] of traversal.entries()) {
-      const measureNumber = Number(measure.getAttribute("n")) || measures.indexOf(measure) + 1;
+    for (const [occurrenceIndex, { measure, iteration, measureNumber }] of traversal.entries()) {
       const measureStart = elapsedQuarters;
       const measureOccurrenceId = `edition-measure-occurrence.${measureNumber}.${iteration}.${occurrenceIndex + 1}`;
       let inMeasure = 0;
@@ -365,12 +512,34 @@ function buildEditionPlayback(
         )
           throw new ApiRouteError("Tablature Interpretation encountered invalid duration", 400);
         const durationQuarters = (4 / dur) * (2 - 1 / 2 ** dots);
-        for (const note of Array.from(group.querySelectorAll("note"))) {
-          const meiId =
-            note.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") ??
-            note.getAttribute("xml:id")!;
-          const course = Number(note.getAttribute("tab.course"));
-          const fret = Number(note.getAttribute("tab.fret"));
+        const groupTypes = new Set((group.getAttribute("type") ?? "").split(/\s+/));
+        const strumDirection = groupTypes.has("historical-strum-up")
+          ? "up"
+          : groupTypes.has("historical-strum-down")
+            ? "down"
+            : undefined;
+        const strumId = strumDirection ? xmlId(group) : undefined;
+        const realization = strumId ? strums.get(strumId) : undefined;
+        if (strumId && !realization) {
+          throw new ApiRouteError(`Historical strum ${strumId} has no realization`, 409);
+        }
+        const soundingNotes = realization
+          ? [...realization.notes]
+              .sort((left, right) =>
+                strumDirection === "up" ? left.course - right.course : right.course - left.course
+              )
+              .map((note, index) => ({
+                ...note,
+                meiId: strumId!,
+                attackOffsetSeconds: (index * realization.spreadMilliseconds) / 1000,
+              }))
+          : Array.from(group.querySelectorAll("note")).map((note) => ({
+              course: Number(note.getAttribute("tab.course")),
+              fret: Number(note.getAttribute("tab.fret")),
+              meiId: xmlId(note),
+              attackOffsetSeconds: 0,
+            }));
+        for (const { course, fret, meiId, attackOffsetSeconds } of soundingNotes) {
           if (!Number.isInteger(course) || !Number.isInteger(fret) || course < 1 || fret < 0)
             throw new ApiRouteError(
               "Tablature Interpretation encountered invalid course or fret",
@@ -395,8 +564,11 @@ function buildEditionPlayback(
               fret,
               stringIndex: stringIndex + 1,
               midi: openMidi + fret,
-              startSeconds: (measureStart + inMeasure) * quarterSeconds,
-              durationSeconds: durationQuarters * quarterSeconds,
+              startSeconds: (measureStart + inMeasure) * quarterSeconds + attackOffsetSeconds,
+              durationSeconds: Math.max(
+                0.05,
+                durationQuarters * quarterSeconds - attackOffsetSeconds
+              ),
             });
           }
         }

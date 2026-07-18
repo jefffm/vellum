@@ -70,6 +70,7 @@ function selectedObject(
   );
   if (!element) throw new Error(`Selected MEI object is missing: ${token.id}`);
   const measure = element.closest("measure");
+  const measureNumber = Number(measure?.getAttribute("n"));
   const rhythmGroup = element.localName === "tabDurSym" ? element.parentElement : undefined;
   const numeric = (name: string, source: Element = element) => {
     const value = source.getAttribute(name);
@@ -79,12 +80,19 @@ function selectedObject(
     id: token.id,
     kind: token.kind,
     ...(measure && xmlId(measure) ? { measureId: xmlId(measure) } : {}),
-    ...(measure?.getAttribute("n") ? { measureNumber: Number(measure.getAttribute("n")) } : {}),
+    ...(Number.isInteger(measureNumber) && measureNumber > 0 ? { measureNumber } : {}),
     ...(numeric("tab.course") !== undefined ? { course: numeric("tab.course") } : {}),
     ...(numeric("tab.fret") !== undefined ? { fret: numeric("tab.fret") } : {}),
     ...(rhythmGroup?.getAttribute("dur") ? { dur: Number(rhythmGroup.getAttribute("dur")) } : {}),
     ...(rhythmGroup?.getAttribute("dots")
       ? { dots: Number(rhythmGroup.getAttribute("dots")) }
+      : {}),
+    ...(token.kind === "strum"
+      ? {
+          strumDirection: (element.getAttribute("type") ?? "").includes("historical-strum-up")
+            ? ("up" as const)
+            : ("down" as const),
+        }
       : {}),
   };
 }
@@ -146,7 +154,7 @@ function eligible(
   filter: PassageSelection["roleFilter"]
 ): boolean {
   if (filter === "rhythm") return token.kind === "rhythm";
-  if (token.kind !== "tablature") return filter === "all" && token.kind === "rhythm";
+  if (token.kind !== "tablature") return filter === "all" && token.kind !== "barline";
   const course = Number(element.getAttribute("tab.course"));
   if (filter === "all") return true;
   if (filter === "treble_courses") return course <= 2;
@@ -167,7 +175,7 @@ function parseProposal(content: string, selectedIds: ReadonlySet<string>): Parse
     !Array.isArray(value.suggestions)
   )
     throw new Error("The model response is not a typed Vellum proposal");
-  const allowed = new Set(["tab.course", "tab.fret", "dur", "dots"]);
+  const allowed = new Set(["tab.course", "tab.fret", "dur", "dots", "strum.direction"]);
   const suggestions = value.suggestions.map((raw) => {
     if (
       !raw ||
@@ -322,7 +330,7 @@ export async function installMeiEditionSelectionWorkbench(
       const contextDigest = await browserSha256(currentContext);
       const schemaInstruction =
         mode === "edit"
-          ? 'Return only JSON: {"summary":string,"layer":"transcription"|"interpretation"|"emendation","suggestions":[{"id":string,"tokenId":string,"attribute":"tab.course"|"tab.fret"|"dur"|"dots","replacementValue":string,"rationale":string}]}. Use an empty suggestions array when no source-supported correction is warranted.'
+          ? 'Return only JSON: {"summary":string,"layer":"transcription"|"interpretation"|"emendation","suggestions":[{"id":string,"tokenId":string,"attribute":"tab.course"|"tab.fret"|"dur"|"dots"|"strum.direction","replacementValue":string,"rationale":string}]}. Use an empty suggestions array when no source-supported correction is warranted.'
           : "Explain the selected passage in plain text. Do not propose or apply canonical changes.";
       const intent = `${request}\n\nSelection-Context-SHA256: ${contextDigest}\nFacsimile-Included: false\n${schemaInstruction}\n\n${JSON.stringify(currentContext, null, 2)}`;
       modelStatus.textContent = "Awaiting one-time egress authorization…";

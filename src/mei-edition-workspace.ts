@@ -43,12 +43,21 @@ function attributeValue(
 ): string | undefined {
   const document = new DOMParser().parseFromString(mei, "application/xml");
   const element = meiAttributeTarget(document, tokenId, attribute);
+  if (attribute === "strum.direction") {
+    const types = new Set((element?.getAttribute("type") ?? "").split(/\s+/));
+    return types.has("historical-strum-up")
+      ? "up"
+      : types.has("historical-strum-down")
+        ? "down"
+        : undefined;
+  }
   return element?.hasAttribute(attribute) ? element.getAttribute(attribute)! : undefined;
 }
 
 function correctionAttributes(token: DiplomaticToken): MeiAttributeChange["attribute"][] {
   if (token.kind === "rhythm") return ["dur", "dots"];
   if (token.kind === "tablature") return ["tab.course", "tab.fret"];
+  if (token.kind === "strum") return ["strum.direction"];
   return [];
 }
 

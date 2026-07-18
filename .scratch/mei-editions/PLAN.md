@@ -5,10 +5,13 @@ Status: active
 Current tracer: T02 — De Visée diplomatic transcription remediation.
 
 T05 review exposed that T02's generic correction workflow was complete but its page-specific result
-predicate was not: the provisional extraction used an inferred four-measures-per-system grid and
-contains musical readings that do not match the source. T03 and T04's generic implementations
-remain landed, but T05 is not runtime-eligible until T02 again proves a truthful whole-page
-transcription and source map.
+predicate was not: the provisional extraction used an inferred four-measures-per-system grid,
+folded both strain pickups into numbered measures, misclassified historical strums as fret letters,
+and contains musical readings that do not match the source. The literal comparison witness confirms
+seven numbered measures in the first strain and eight in the second (1–7 and 8–15), with an
+anacrusis before each. T03 and T04's generic implementations remain landed, but their page-specific
+results must be rechecked after T02; T05 is not runtime-eligible until the whole page, its AABB
+traversal, and its source map are truthful.
 
 ## Outcome
 
