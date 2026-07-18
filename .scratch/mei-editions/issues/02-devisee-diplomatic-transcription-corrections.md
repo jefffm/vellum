@@ -59,33 +59,41 @@ existing LilyPond path changes.
 
 ## Reopened finding
 
-The attempted T05 review on 2026-07-18 falsified the page-specific result predicate. The source has
-3, 4, 4, and 4 numbered measures on its four systems, plus an opening pickup and a second-strain
-pickup at the start of system three; the builder assigned every system four equal numbered columns.
-At least the first event of measure 7 also visibly disagrees with the
-tracked provisional course/fret chord. The earlier gates proved persistence and workflow behavior,
-not transcription truth. T02 therefore remains active until the complete source map and musical
-content are repaired and independently checked.
+The attempted T05 review on 2026-07-18 falsified the page-specific result predicate. Direct source
+inspection establishes three ordinary spans on system one; four ordinary spans and a narrow 5/8
+closing partial on system two; and the second-strain material on systems three and four. The builder
+had assigned every system four equal numbered columns and then briefly misread a directional strum
+as a new barline. The opening 1/8 and first-strain closing 5/8 are complementary partial measures;
+the closing partial must be represented without inventing a sixteenth numbered measure or filling
+silence with notes. At least one tracked course/fret chord also visibly disagrees with the source.
+The earlier gates proved persistence and workflow behavior, not transcription truth. T02 therefore
+remains active until the complete source map, musical content, partial measures, and repeat/return
+marks are repaired and independently checked.
 
 The review also found that the provisional extractor misclassified black noteheads between the top
 two tablature lines as fret letters. In this French guitar source they are directional strum signs;
 vertical lines through course letters indicate pincé simultaneity. The pickup was folded into the
-first numbered measure, and the declared profile omitted both essential gesture types. A more
-literal Owner-supplied realization is available as a local comparison witness; it supersedes the
-Apke arrangement as the sounding/rhythmic cross-check but does not override the 1686 facsimile for
-course, fret, gesture, ornament, or sustain evidence. Neither local witness is tracked.
+first numbered measure, and the declared profile omitted both essential gesture types. An
+Owner-supplied realization is available as a local comparison witness. It is more literal than the
+Apke arrangement but remains editorial, is not perfectly accurate, and adds material. Neither
+realization may override or fill the 1686 facsimile for course, fret, rhythm, gesture, ornament,
+sustain, voice completion, register, or fingering evidence; disagreement stays unresolved rather
+than being reconciled by preference. Neither local witness is tracked.
 
-That literal witness also falsified the sixteen-measure count. The narrow opening of source system
-three is an anacrusis into the second strain. The diplomatic structure is therefore an opening
-pickup, measures 1–7, a second-strain pickup, and measures 8–15. It also demonstrates that strum
-direction and chord spelling are independent evidence: some signs repeat a held shape, while an
-explicitly written chord can carry a strum sign at the same onset.
+The corrected editorial numbering remains measures 1–7 and 8–15. The diplomatic structure must
+add the source's partial-measure spans and event-level return signs without pretending they are
+ordinary numbered bars. Comparison witnesses corroborate—but do not establish—this geometry and
+the local metric anomaly. The source also demonstrates that strum direction and chord spelling are
+independent evidence: some signs repeat a held shape, while an explicitly written chord can carry a
+strum sign at the same onset. Its internal return signs remain part of the transcription and form
+review rather than being flattened into an assumed AABB traversal.
 
 ## Remediation checkpoint
 
-- The builder now rejects a page without explicit inspected system/measure layout and maps the
-  actual 3/4/4/4 numbered-measure structure plus the two strain pickups instead of assuming four
-  equal systems.
+- The builder rejects a page without explicit inspected layout and maps the inspected 3/4/4/4
+  numbered-measure structure plus the two strain pickups instead of assuming four equal systems.
+  The source-linked first-strain closing partial is a distinct unnumbered `metcon=false` MEI
+  measure after measure 7; encoding it as numbered measure 16 was tested and rejected.
 - Critical readings have a deterministic review queue and source zoom. Confirming an unchanged
   reading is a first-class reversible review resolution; it no longer requires a fake MEI edit.
 - Rhythm corrections resolve `dur` and `dots` on the enclosing `tabGrp`, matching MEI 5.1's data
@@ -94,6 +102,8 @@ explicitly written chord can carry a strum sign at the same onset.
   and 1,640 tests with four intentional skips. The full browser suite passed all 45 scenarios.
 - Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed. LilyPond code was
   unchanged, so the LilyPond-only sandbox gate remained not applicable.
-- A fresh Owner-local import rendered 184 facsimile-linked tokens and a deterministic queue of 69
-  deliberately unresolved critical readings. Chrome showed 21 compact historical strum arrows
-  (18 up, 3 down), no visible internal spacing anchors, and source-linked zoom beside the score.
+- The current 15-measure-plus-closing-partial draft renders 188 facsimile-linked tokens and a
+  deterministic queue of 69 deliberately unresolved critical readings. Fresh Chrome review showed
+  the partial and both `S.` return signs in the Verovio proof, no visible internal spacing anchors,
+  and source-linked zoom beside the score. The Owner-local realization remains a comparison witness,
+  not a source for resolving those readings.

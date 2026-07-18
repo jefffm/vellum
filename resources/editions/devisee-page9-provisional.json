@@ -59,7 +59,7 @@
           [0.0257, 0.2949],
           [0.2949, 0.476],
           [0.476, 0.7268],
-          [0.7268, 0.9341]
+          [0.7268, 0.8819]
         ]
       },
       {
@@ -88,7 +88,7 @@
       }
     ]
   },
-  "repeatEnds": [7, 15],
+  "repeatEnds": [15],
   "repeatStarts": [8],
   "pickup": [
     {
@@ -127,6 +127,52 @@
           "confidence": 0.72
         }
       ]
+    }
+  ],
+  "sectionClosings": [
+    {
+      "afterMeasure": 7,
+      "sourceBounds": [0.8819, 0.9341],
+      "events": [
+        {
+          "kind": "strum",
+          "direction": "down",
+          "chordSource": "held",
+          "dur": 4,
+          "rhythmVisible": false,
+          "sourceBounds": [0.887, 0.904],
+          "notes": [],
+          "confidence": 0.9
+        },
+        {
+          "kind": "strum",
+          "direction": "up",
+          "chordSource": "held",
+          "dur": 4,
+          "dots": 1,
+          "rhythmVisible": false,
+          "sourceBounds": [0.909, 0.927],
+          "notes": [],
+          "confidence": 0.9
+        }
+      ]
+    }
+  ],
+  "sourceReturns": [
+    {
+      "id": "petite-reprise-1",
+      "start": {
+        "measure": 11,
+        "event": 4,
+        "region": { "x": 0.846, "y": 0.609, "width": 0.04, "height": 0.035 },
+        "confidence": 0.86
+      },
+      "end": {
+        "measure": 15,
+        "event": 4,
+        "region": { "x": 0.788, "y": 0.773, "width": 0.04, "height": 0.035 },
+        "confidence": 0.86
+      }
     }
   ],
   "measures": [
@@ -399,16 +445,6 @@
         ],
         "confidence": 0.62,
         "simultaneity": "pince"
-      },
-      {
-        "kind": "strum",
-        "direction": "up",
-        "chordSource": "held",
-        "dur": 4,
-        "rhythmVisible": false,
-        "sourceBounds": [0.887, 0.927],
-        "notes": [],
-        "confidence": 0.9
       }
     ],
     [

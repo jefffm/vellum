@@ -8,6 +8,7 @@ export function buildDiplomaticMei(extraction) {
   const systemStarts = new Set(
     extraction.sourceLayout.systems.slice(1).map(({ measureStart }) => measureStart)
   );
+  const returnMarksByMeasure = sourceReturnMarksByMeasure(extraction);
   const buildGroups = (events, layout, idPrefix) => {
     const [measureLeft, measureRight] = layout.measureBounds;
     return events.map((event, eventIndex) => {
@@ -132,7 +133,7 @@ export function buildDiplomaticMei(extraction) {
   };
   const buildMeasure = (events, measureNumber, layout, options = {}) => {
     const [, measureRight] = layout.measureBounds;
-    const measureId = options.pickupId ?? `measure-${measureNumber}`;
+    const measureId = options.partialId ?? `measure-${measureNumber}`;
     const barlineRegion = {
       page: extraction.sourcePage,
       x: measureRight - 0.004,
@@ -142,9 +143,14 @@ export function buildDiplomaticMei(extraction) {
     };
     zones.push(zone(measureId, barlineRegion));
     tokens.push(token(measureId, "barline", barlineRegion, 0.95));
-    const idPrefix = options.pickupPrefix ?? `m${measureNumber}-`;
+    const idPrefix = options.partialPrefix ?? `m${measureNumber}-`;
     const groups = buildGroups(events, layout, idPrefix);
-    return `${!options.pickup && !options.suppressSystemBreak && systemStarts.has(measureNumber) ? "<sb/>" : ""}<measure xml:id="${measureId}" facs="#zone-${measureId}" n="${options.pickup ? options.pickupNumber : measureNumber}"${options.pickup ? ' metcon="false"' : ""}${options.right ? ` right="${options.right}"` : ""}${options.left ? ` left="${options.left}"` : ""}><staff n="1"><layer n="1">${groups.join("")}</layer></staff></measure>`;
+    const repeatMarks = (returnMarksByMeasure.get(measureNumber) ?? []).map((mark) => {
+      zones.push(zone(mark.id, mark.region));
+      tokens.push(token(mark.id, "other", mark.region, mark.confidence));
+      return `<repeatMark xml:id="${mark.id}" func="segno" type="petite-reprise-${mark.role}" n="${escapeXml(mark.returnId)}" startid="#${mark.eventId}" facs="#zone-${mark.id}">S.</repeatMark>`;
+    });
+    return `${!options.partial && !options.suppressSystemBreak && systemStarts.has(measureNumber) ? "<sb/>" : ""}<measure xml:id="${measureId}" facs="#zone-${measureId}" n="${options.partial ? options.partialNumber : measureNumber}"${options.partial ? ` metcon="false" type="${options.partialType}"` : ""}${options.right ? ` right="${options.right}"` : ""}${options.left ? ` left="${options.left}"` : ""}><staff n="1"><layer n="1">${groups.join("")}</layer></staff>${repeatMarks.join("")}</measure>`;
   };
   const sectionPickups = new Map(
     (extraction.sectionPickups ?? []).map((pickup, pickupIndex) => {
@@ -161,6 +167,21 @@ export function buildDiplomaticMei(extraction) {
   if (sectionPickups.size !== (extraction.sectionPickups ?? []).length) {
     throw new Error("Section pickups must precede distinct numbered measures");
   }
+  const sectionClosings = new Map(
+    (extraction.sectionClosings ?? []).map((closing, closingIndex) => {
+      if (
+        !Number.isInteger(closing.afterMeasure) ||
+        closing.afterMeasure < 1 ||
+        closing.afterMeasure >= extraction.measures.length
+      ) {
+        throw new Error(`Section closing ${closingIndex + 1} has an invalid preceding measure`);
+      }
+      return [closing.afterMeasure, { ...closing, closingIndex }];
+    })
+  );
+  if (sectionClosings.size !== (extraction.sectionClosings ?? []).length) {
+    throw new Error("Section closings must follow distinct numbered measures");
+  }
   const measures = extraction.measures.map((events, measureIndex) => {
     const measureNumber = measureIndex + 1;
     const layout = layoutByMeasure.get(measureNumber);
@@ -172,23 +193,36 @@ export function buildDiplomaticMei(extraction) {
           measureNumber,
           { ...layout, measureBounds: pickup.sourceBounds },
           {
-            pickup: true,
-            pickupId: `section-${pickup.pickupIndex + 2}-pickup-measure`,
-            pickupPrefix: `section-${pickup.pickupIndex + 2}-pickup-`,
-            pickupNumber: `${measureNumber - 1}a`,
+            partial: true,
+            partialId: `section-${pickup.pickupIndex + 2}-pickup-measure`,
+            partialPrefix: `section-${pickup.pickupIndex + 2}-pickup-`,
+            partialNumber: `${measureNumber - 1}a`,
+            partialType: "section-pickup",
           }
         )
       : "";
-    return `${pickup && systemStarts.has(measureNumber) ? "<sb/>" : ""}${pickupMei}${buildMeasure(
-      events,
-      measureNumber,
-      layout,
-      {
-        ...(pickup ? { suppressSystemBreak: true } : {}),
-        ...(extraction.repeatStarts?.includes(measureNumber) ? { left: "rptstart" } : {}),
-        ...(extraction.repeatEnds?.includes(measureNumber) ? { right: "rptend" } : {}),
-      }
-    )}`;
+    const closing = sectionClosings.get(measureNumber);
+    const numberedMeasure = buildMeasure(events, measureNumber, layout, {
+      ...(pickup ? { suppressSystemBreak: true } : {}),
+      ...(extraction.repeatStarts?.includes(measureNumber) ? { left: "rptstart" } : {}),
+      ...(extraction.repeatEnds?.includes(measureNumber) && !closing ? { right: "rptend" } : {}),
+    });
+    const closingMei = closing
+      ? buildMeasure(
+          closing.events,
+          measureNumber,
+          { ...layout, measureBounds: closing.sourceBounds },
+          {
+            partial: true,
+            partialId: `section-${closing.closingIndex + 1}-closing-measure`,
+            partialPrefix: `section-${closing.closingIndex + 1}-closing-`,
+            partialNumber: `${measureNumber}b`,
+            partialType: "section-closing",
+            right: "rptend",
+          }
+        )
+      : "";
+    return `${pickup && systemStarts.has(measureNumber) ? "<sb/>" : ""}${pickupMei}${numberedMeasure}${closingMei}`;
   });
   const pickup = extraction.pickup?.length
     ? buildMeasure(
@@ -199,10 +233,11 @@ export function buildDiplomaticMei(extraction) {
           measureBounds: extraction.sourceLayout.pickupBounds,
         },
         {
-          pickup: true,
-          pickupId: "pickup-measure",
-          pickupPrefix: "pickup-",
-          pickupNumber: "0",
+          partial: true,
+          partialId: "pickup-measure",
+          partialPrefix: "pickup-",
+          partialNumber: "0",
+          partialType: "section-pickup",
         }
       )
     : "";
@@ -211,6 +246,39 @@ export function buildDiplomaticMei(extraction) {
     .join("");
   const mei = `<?xml version="1.0" encoding="UTF-8"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>${escapeXml(extraction.title)}</title></titleStmt><pubStmt><p>Provisional source-linked transcription; not accepted.</p></pubStmt></fileDesc></meiHead><facsimile><surface xml:id="source-page-${extraction.sourcePage}" n="${extraction.sourcePage}">${zones.join("")}</surface></facsimile><music><body><mdiv xml:id="devisee-page9-mdiv"><score xml:id="devisee-page9-score"><scoreDef meter.count="${extraction.meter.count}" meter.unit="${extraction.meter.unit}"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label><tuning>${tuning}</tuning></staffDef></staffGrp></scoreDef><section xml:id="devisee-page9-section">${pickup}${measures.join("")}</section></score></mdiv></body></music></mei>`;
   return { mei, tokens };
+}
+
+function sourceReturnMarksByMeasure(extraction) {
+  const result = new Map();
+  const seen = new Set();
+  for (const [returnIndex, sourceReturn] of (extraction.sourceReturns ?? []).entries()) {
+    if (!sourceReturn.id || seen.has(sourceReturn.id)) {
+      throw new Error(`Source return ${returnIndex + 1} has an invalid or duplicate ID`);
+    }
+    seen.add(sourceReturn.id);
+    for (const role of ["start", "end"]) {
+      const mark = sourceReturn[role];
+      const events = extraction.measures[mark?.measure - 1];
+      const event = events?.[mark?.event - 1];
+      if (!event || !mark.region) {
+        throw new Error(`Source return ${sourceReturn.id} has an invalid ${role} anchor`);
+      }
+      const eventId =
+        event.kind === "strum"
+          ? `m${mark.measure}-strum-${mark.event}`
+          : `m${mark.measure}-event-${mark.event}`;
+      const item = {
+        id: `${sourceReturn.id}-${role}`,
+        returnId: sourceReturn.id,
+        role,
+        eventId,
+        region: { page: extraction.sourcePage, ...mark.region },
+        confidence: mark.confidence,
+      };
+      result.set(mark.measure, [...(result.get(mark.measure) ?? []), item]);
+    }
+  }
+  return result;
 }
 
 function sourceLayoutByMeasure(extraction) {

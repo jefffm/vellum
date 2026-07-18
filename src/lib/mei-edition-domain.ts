@@ -264,6 +264,17 @@ const RepeatSectionSchema = Type.Object(
     endMeasure: Type.Integer({ minimum: 1 }),
     totalPasses: Type.Integer({ minimum: 1, maximum: 4 }),
     pickupMeasureId: Type.Optional(MeiIdSchema),
+    closingMeasureId: Type.Optional(MeiIdSchema),
+    petiteReprise: Type.Optional(
+      Type.Object(
+        {
+          startEventId: MeiIdSchema,
+          endEventId: MeiIdSchema,
+          totalPasses: Type.Integer({ minimum: 2, maximum: 4 }),
+        },
+        { additionalProperties: false }
+      )
+    ),
   },
   { additionalProperties: false }
 );

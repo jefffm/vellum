@@ -208,13 +208,14 @@ describe("versioned tablature interpretation and acceptance", () => {
   });
 
   it("repeats two pickup-led strains and requires exact strum realizations", () => {
-    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Two strains</title></titleStmt><pubStmt><p>Test</p></pubStmt></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure xml:id="pickup-a" n="0" metcon="false"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-a-group" dur="8"><note xml:id="pickup-a-note-1" tab.course="1" tab.fret="1"/><note xml:id="pickup-a-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-1" n="1" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-held" dur="2" dots="1" type="historical-strum-up chord-held"/></layer></staff></measure><measure xml:id="pickup-b" n="1a" metcon="false"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-b-group" dur="8"><note xml:id="pickup-b-note" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-2" n="2" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-explicit" dur="2" dots="1" type="historical-strum-down chord-explicit"><note xml:id="strum-explicit-note-1" tab.course="1" tab.fret="2"/><note xml:id="strum-explicit-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Two strains</title></titleStmt><pubStmt><p>Test</p></pubStmt></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure xml:id="pickup-a" n="0" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-a-group" dur="8"><note xml:id="pickup-a-note-1" tab.course="1" tab.fret="1"/><note xml:id="pickup-a-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-1" n="1"><staff n="1"><layer n="1"><tabGrp xml:id="strum-held" dur="2" dots="1" type="historical-strum-up chord-held"/></layer></staff></measure><measure xml:id="closing-a" n="1b" metcon="false" type="section-closing" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="closing-a-group" dur="4"><note xml:id="closing-a-note" tab.course="1" tab.fret="1"/></tabGrp></layer></staff></measure><measure xml:id="pickup-b" n="1a" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-b-group" dur="8"><note xml:id="pickup-b-note" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-2" n="2" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-explicit" dur="2" dots="1" type="historical-strum-down chord-explicit"><note xml:id="strum-explicit-note-1" tab.course="1" tab.fret="2"/><note xml:id="strum-explicit-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
     const { service, transcription, workspaceId, edition, command } = harness({
       mei,
       tokenIds: [
         "pickup-a-note-1",
         "pickup-a-note-2",
         "strum-held",
+        "closing-a-note",
         "pickup-b-note",
         "strum-explicit",
         "strum-explicit-note-1",
@@ -224,8 +225,24 @@ describe("versioned tablature interpretation and acceptance", () => {
     const exact = {
       ...command,
       repeatSections: [
-        { startMeasure: 1, endMeasure: 1, totalPasses: 2, pickupMeasureId: "pickup-a" },
-        { startMeasure: 2, endMeasure: 2, totalPasses: 2, pickupMeasureId: "pickup-b" },
+        {
+          startMeasure: 1,
+          endMeasure: 1,
+          totalPasses: 2,
+          pickupMeasureId: "pickup-a",
+          closingMeasureId: "closing-a",
+        },
+        {
+          startMeasure: 2,
+          endMeasure: 2,
+          totalPasses: 1,
+          pickupMeasureId: "pickup-b",
+          petiteReprise: {
+            startEventId: "strum-explicit",
+            endEventId: "strum-explicit",
+            totalPasses: 2,
+          },
+        },
       ],
       strumRealizations: [
         {
@@ -283,8 +300,9 @@ describe("versioned tablature interpretation and acceptance", () => {
 
     const interpretation = service.createInterpretation(workspaceId, edition.editionId, exact);
     const preview = service.playback(workspaceId, edition.editionId, interpretation.id);
-    expect(preview.measureOccurrences).toHaveLength(8);
-    expect(preview.durationSeconds).toBe(14);
+    expect(preview.measureOccurrences).toHaveLength(9);
+    expect(preview.durationSeconds).toBe(15.5);
+    expect(preview.events.filter((event) => event.meiId === "closing-a-note")).toHaveLength(2);
     const held = preview.events.filter(
       (event) => event.meiId === "strum-held" && event.iteration === 1
     );

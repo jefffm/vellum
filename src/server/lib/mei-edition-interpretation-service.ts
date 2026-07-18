@@ -297,6 +297,8 @@ function readTablatureRequirements(mei: string): {
   courses: number[];
   numberedMeasures: number[];
   pickupMeasureIds: string[];
+  closingMeasureIds: string[];
+  eventLocations: Map<string, Readonly<{ measure: number; order: number }>>;
   maxFretByCourse: Map<number, number>;
   strums: Map<
     string,
@@ -323,7 +325,21 @@ function readTablatureRequirements(mei: string): {
       .filter((number) => Number.isInteger(number) && number > 0);
     const pickupMeasureIds = Array.from(
       dom.window.document.querySelectorAll('measure[metcon="false"]')
+    )
+      .filter((measure) => measure.getAttribute("type") !== "section-closing")
+      .map((measure) => xmlId(measure));
+    const closingMeasureIds = Array.from(
+      dom.window.document.querySelectorAll('measure[type="section-closing"]')
     ).map((measure) => xmlId(measure));
+    const eventLocations = new Map<string, Readonly<{ measure: number; order: number }>>();
+    let eventOrder = 0;
+    for (const measure of Array.from(dom.window.document.querySelectorAll("measure"))) {
+      const number = Number(measure.getAttribute("n"));
+      if (!Number.isInteger(number) || number < 1) continue;
+      for (const group of Array.from(measure.querySelectorAll("tabGrp"))) {
+        eventLocations.set(xmlId(group), { measure: number, order: eventOrder++ });
+      }
+    }
     const strums = new Map<
       string,
       Readonly<{
@@ -350,6 +366,8 @@ function readTablatureRequirements(mei: string): {
       courses: [...courses].sort((left, right) => left - right),
       numberedMeasures,
       pickupMeasureIds,
+      closingMeasureIds,
+      eventLocations,
       maxFretByCourse,
       strums,
     };
@@ -380,6 +398,37 @@ function assertRepeatSections(
     ) {
       throw new ApiRouteError(
         `Interpretation pickup is not in the transcription: ${section.pickupMeasureId}`,
+        400
+      );
+    }
+    if (section.petiteReprise) {
+      const start = requirements.eventLocations.get(section.petiteReprise.startEventId);
+      const end = requirements.eventLocations.get(section.petiteReprise.endEventId);
+      if (
+        !start ||
+        !end ||
+        start.measure < section.startMeasure ||
+        end.measure > section.endMeasure ||
+        start.order > end.order
+      ) {
+        throw new ApiRouteError(
+          "Interpretation petite reprise must name an ordered event span inside its section",
+          400
+        );
+      }
+      if (section.totalPasses !== 1) {
+        throw new ApiRouteError(
+          "A section with an event-level petite reprise must traverse the whole section once",
+          400
+        );
+      }
+    }
+    if (
+      section.closingMeasureId &&
+      !requirements.closingMeasureIds.includes(section.closingMeasureId)
+    ) {
+      throw new ApiRouteError(
+        `Interpretation closing partial is not in the transcription: ${section.closingMeasureId}`,
         400
       );
     }
@@ -460,11 +509,32 @@ function buildEditionPlayback(
     );
     const pickups = new Map(
       allMeasures
-        .filter((measure) => measure.getAttribute("metcon") === "false")
+        .filter(
+          (measure) =>
+            measure.getAttribute("metcon") === "false" &&
+            measure.getAttribute("type") !== "section-closing"
+        )
         .map((measure) => [xmlId(measure), measure] as const)
     );
-    const traversal = interpretation.repeatSections.flatMap((section) =>
-      Array.from({ length: section.totalPasses }, (_, pass) => {
+    const closings = new Map(
+      allMeasures
+        .filter((measure) => measure.getAttribute("type") === "section-closing")
+        .map((measure) => [xmlId(measure), measure] as const)
+    );
+    const eventMeasure = new Map<string, number>();
+    for (const [number, measure] of numbered) {
+      for (const group of Array.from(measure.querySelectorAll("tabGrp"))) {
+        eventMeasure.set(xmlId(group), number);
+      }
+    }
+    const traversal: Array<{
+      measure: Element;
+      iteration: number;
+      measureNumber: number;
+      startEventId?: string;
+      endEventId?: string;
+    }> = interpretation.repeatSections.flatMap((section) => {
+      const fullPasses = Array.from({ length: section.totalPasses }, (_, pass) => {
         const measures = Array.from(
           { length: section.endMeasure - section.startMeasure + 1 },
           (__, offset) => {
@@ -475,16 +545,57 @@ function buildEditionPlayback(
             return { measure, iteration: pass + 1, measureNumber: number };
           }
         );
-        if (!section.pickupMeasureId) return measures;
-        const pickup = pickups.get(section.pickupMeasureId);
-        if (!pickup)
-          throw new ApiRouteError(
-            `Interpretation pickup ${section.pickupMeasureId} is missing`,
-            400
-          );
-        return [{ measure: pickup, iteration: pass + 1, measureNumber: 0 }, ...measures];
-      }).flat()
-    );
+        const prefix = section.pickupMeasureId
+          ? (() => {
+              const pickup = pickups.get(section.pickupMeasureId!);
+              if (!pickup)
+                throw new ApiRouteError(
+                  `Interpretation pickup ${section.pickupMeasureId} is missing`,
+                  400
+                );
+              return [{ measure: pickup, iteration: pass + 1, measureNumber: 0 }];
+            })()
+          : [];
+        const suffix = section.closingMeasureId
+          ? (() => {
+              const closing = closings.get(section.closingMeasureId!);
+              if (!closing)
+                throw new ApiRouteError(
+                  `Interpretation closing partial ${section.closingMeasureId} is missing`,
+                  400
+                );
+              return [{ measure: closing, iteration: pass + 1, measureNumber: section.endMeasure }];
+            })()
+          : [];
+        return [...prefix, ...measures, ...suffix];
+      }).flat();
+      if (!section.petiteReprise) return fullPasses;
+      const startMeasure = eventMeasure.get(section.petiteReprise.startEventId);
+      const endMeasure = eventMeasure.get(section.petiteReprise.endEventId);
+      if (startMeasure === undefined || endMeasure === undefined) {
+        throw new ApiRouteError("Petite reprise event is missing from playback MEI", 400);
+      }
+      const reprisePasses = Array.from(
+        { length: section.petiteReprise.totalPasses - 1 },
+        (_, pass) =>
+          Array.from({ length: endMeasure - startMeasure + 1 }, (__, offset) => {
+            const number = startMeasure + offset;
+            const measure = numbered.get(number);
+            if (!measure)
+              throw new ApiRouteError(`Interpretation measure ${number} is missing`, 400);
+            return {
+              measure,
+              iteration: pass + 2,
+              measureNumber: number,
+              ...(number === startMeasure
+                ? { startEventId: section.petiteReprise!.startEventId }
+                : {}),
+              ...(number === endMeasure ? { endEventId: section.petiteReprise!.endEventId } : {}),
+            };
+          })
+      ).flat();
+      return [...fullPasses, ...reprisePasses];
+    });
     const tunings = new Map(
       interpretation.courseTunings.map((course) => [course.course, course.openMidis] as const)
     );
@@ -497,11 +608,25 @@ function buildEditionPlayback(
       ? T[]
       : never = [];
     let elapsedQuarters = 0;
-    for (const [occurrenceIndex, { measure, iteration, measureNumber }] of traversal.entries()) {
+    for (const [
+      occurrenceIndex,
+      { measure, iteration, measureNumber, startEventId, endEventId },
+    ] of traversal.entries()) {
       const measureStart = elapsedQuarters;
       const measureOccurrenceId = `edition-measure-occurrence.${measureNumber}.${iteration}.${occurrenceIndex + 1}`;
       let inMeasure = 0;
-      for (const group of Array.from(measure.querySelectorAll("tabGrp"))) {
+      let groups = Array.from(measure.querySelectorAll("tabGrp"));
+      if (startEventId) {
+        const startIndex = groups.findIndex((group) => xmlId(group) === startEventId);
+        if (startIndex < 0) throw new ApiRouteError("Petite reprise start event is missing", 400);
+        groups = groups.slice(startIndex);
+      }
+      if (endEventId) {
+        const endIndex = groups.findIndex((group) => xmlId(group) === endEventId);
+        if (endIndex < 0) throw new ApiRouteError("Petite reprise end event is missing", 400);
+        groups = groups.slice(0, endIndex + 1);
+      }
+      for (const group of groups) {
         const dur = Number(group.getAttribute("dur"));
         const dots = Number(group.getAttribute("dots") ?? 0);
         if (

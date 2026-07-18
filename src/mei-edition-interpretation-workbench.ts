@@ -99,7 +99,11 @@ function sourceRepeatSections(
     .filter(({ number }) => Number.isInteger(number) && number > 0);
   const pickupBefore = new Map<number, string>();
   for (const [index, measure] of measures.entries()) {
-    if (measure.getAttribute("metcon") !== "false") continue;
+    if (
+      measure.getAttribute("metcon") !== "false" ||
+      measure.getAttribute("type") === "section-closing"
+    )
+      continue;
     const next = measures
       .slice(index + 1)
       .map((candidate) => Number(candidate.getAttribute("n")))
@@ -107,20 +111,76 @@ function sourceRepeatSections(
     const id = measure.getAttribute("xml:id");
     if (next && id) pickupBefore.set(next, id);
   }
+  const closingAfter = new Map<number, string>();
+  for (const [index, measure] of measures.entries()) {
+    if (measure.getAttribute("type") !== "section-closing") continue;
+    const prior = measures
+      .slice(0, index)
+      .reverse()
+      .map((candidate) => Number(candidate.getAttribute("n")))
+      .find((number) => Number.isInteger(number) && number > 0);
+    const id = measure.getAttribute("xml:id");
+    if (prior && id) closingAfter.set(prior, id);
+  }
+  const eventMeasure = new Map<string, number>();
+  for (const { measure, number } of numbered) {
+    for (const event of measure.querySelectorAll("tabGrp")) {
+      const id = event.getAttribute("xml:id");
+      if (id) eventMeasure.set(id, number);
+    }
+  }
+  const petiteReprises = new Map<
+    string,
+    { startEventId?: string; endEventId?: string; startMeasure?: number; endMeasure?: number }
+  >();
+  for (const mark of document.querySelectorAll('repeatMark[type^="petite-reprise-"]')) {
+    const returnId = mark.getAttribute("n");
+    const eventId = mark.getAttribute("startid")?.replace(/^#/, "");
+    const role = mark.getAttribute("type")?.replace("petite-reprise-", "");
+    const measure = eventId ? eventMeasure.get(eventId) : undefined;
+    if (!returnId || !eventId || !measure || (role !== "start" && role !== "end")) continue;
+    petiteReprises.set(returnId, {
+      ...petiteReprises.get(returnId),
+      ...(role === "start"
+        ? { startEventId: eventId, startMeasure: measure }
+        : { endEventId: eventId, endMeasure: measure }),
+    });
+  }
   const ends = numbered
     .filter(({ measure }) => measure.getAttribute("right") === "rptend")
     .map(({ number }) => number);
+  for (const end of closingAfter.keys()) if (!ends.includes(end)) ends.push(end);
+  ends.sort((left, right) => left - right);
   const finalNumber = numbered.at(-1)?.number;
   if (!finalNumber) throw new Error("Interpretation requires numbered measures");
   if (!ends.includes(finalNumber)) ends.push(finalNumber);
   let startMeasure = numbered[0]!.number;
   return ends.map((endMeasure) => {
+    const petiteReprise = [...petiteReprises.values()].find(
+      (candidate) =>
+        candidate.startEventId &&
+        candidate.endEventId &&
+        candidate.startMeasure !== undefined &&
+        candidate.endMeasure !== undefined &&
+        candidate.startMeasure >= startMeasure &&
+        candidate.endMeasure <= endMeasure
+    );
     const section = {
       startMeasure,
       endMeasure,
-      totalPasses,
+      totalPasses: petiteReprise ? 1 : totalPasses,
       ...(pickupBefore.get(startMeasure)
         ? { pickupMeasureId: pickupBefore.get(startMeasure)! }
+        : {}),
+      ...(closingAfter.get(endMeasure) ? { closingMeasureId: closingAfter.get(endMeasure)! } : {}),
+      ...(petiteReprise
+        ? {
+            petiteReprise: {
+              startEventId: petiteReprise.startEventId!,
+              endEventId: petiteReprise.endEventId!,
+              totalPasses,
+            },
+          }
         : {}),
     };
     startMeasure = endMeasure + 1;
@@ -135,7 +195,12 @@ function sourceStrumRealizations(
   const held = new Map<number, number>();
   const result: CreateTablatureInterpretationCommand["strumRealizations"] = [];
   for (const measure of document.querySelectorAll("measure")) {
-    if (measure.getAttribute("metcon") === "false") held.clear();
+    if (
+      measure.getAttribute("metcon") === "false" &&
+      measure.getAttribute("type") !== "section-closing"
+    ) {
+      held.clear();
+    }
     for (const group of measure.querySelectorAll("tabGrp")) {
       const notes = Array.from(group.querySelectorAll("note")).map((note) => ({
         course: Number(note.getAttribute("tab.course")),

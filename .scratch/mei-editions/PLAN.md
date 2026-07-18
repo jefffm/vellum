@@ -7,10 +7,15 @@ Current tracer: T02 — De Visée diplomatic transcription remediation.
 T05 review exposed that T02's generic correction workflow was complete but its page-specific result
 predicate was not: the provisional extraction used an inferred four-measures-per-system grid,
 folded both strain pickups into numbered measures, misclassified historical strums as fret letters,
-and contains musical readings that do not match the source. The literal comparison witness confirms
-seven numbered measures in the first strain and eight in the second (1–7 and 8–15), with an
-anacrusis before each. T03 and T04's generic implementations remain landed, but their page-specific
-results must be rechecked after T02; T05 is not runtime-eligible until the whole page, its AABB
+and contains musical readings that do not match the source. Direct inspection now establishes three
+ordinary spans on system one; four ordinary spans plus a narrow 5/8 closing partial on system two;
+and the second-strain material on systems three and four. The opening 1/8 and first-strain closing
+5/8 are complementary partial measures, not license to invent a sixteenth numbered bar. Published
+numbering therefore remains 1–7 and 8–15 while the source-linked MEI must preserve the partial span
+and internal return signs explicitly. Owner-supplied and public realizations are editorial
+comparison witnesses only; they can corroborate structure or sound but cannot supply diplomatic
+content. T03 and T04's generic implementations remain landed, but their page-specific results must
+be rechecked after T02; T05 is not runtime-eligible until the whole page, its written repeat/return
 traversal, and its source map are truthful.
 
 ## Outcome
@@ -39,7 +44,8 @@ MEI edition, then use one accepted selection as bounded repertoire evidence.
 - The Owner-local de Visée scan is an execution input, not a tracked fixture. Automated tests use
   rights-approved or project-authored substitutes.
 - T05 is the sole planned HITL gate. It cannot begin from a merely schema-valid provisional page;
-  T02 must first prove source geometry and musical readings against the complete facsimile. T06
+  T02 must first prove source geometry, musical readings, and repeat/return marks against the
+  complete facsimile. T06
   and T07 resume automatically from its accepted version IDs.
 - T07 removes superseded implementations rather than preserving compatibility by default. It may
   delete a path only after mapping its callers and proving the accepted MEI path covers the

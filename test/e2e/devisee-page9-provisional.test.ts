@@ -209,7 +209,7 @@ describe("de Visée page 9 provisional diplomatic extraction", () => {
     const built = buildDiplomaticMei(extraction);
 
     expect(extraction.measures).toHaveLength(15);
-    expect(built.tokens).toHaveLength(184);
+    expect(built.tokens).toHaveLength(188);
     expect(new Set(built.tokens.map((token) => token.id)).size).toBe(built.tokens.length);
     expect(built.tokens.every((token) => token.region.page === 9)).toBe(true);
     expect(built.tokens.some((token) => token.critical)).toBe(true);
@@ -224,7 +224,15 @@ describe("de Visée page 9 provisional diplomatic extraction", () => {
     expect(built.mei).toContain('</measure><measure xml:id="measure-8"');
     expect(built.mei).toContain('<sb/><measure xml:id="measure-12"');
     expect(built.mei).toContain(
-      '<measure xml:id="measure-7" facs="#zone-measure-7" n="7" right="rptend"'
+      '<measure xml:id="section-1-closing-measure" facs="#zone-section-1-closing-measure" n="7b" metcon="false" type="section-closing" right="rptend"'
+    );
+    expect(built.mei).toContain('xml:id="section-1-closing-strum-1" dur="4"');
+    expect(built.mei).toContain('xml:id="section-1-closing-strum-2" dur="4" dots="1"');
+    expect(built.mei).toContain(
+      '<repeatMark xml:id="petite-reprise-1-start" func="segno" type="petite-reprise-start" n="petite-reprise-1" startid="#m11-event-4"'
+    );
+    expect(built.mei).toContain(
+      '<repeatMark xml:id="petite-reprise-1-end" func="segno" type="petite-reprise-end" n="petite-reprise-1" startid="#m15-strum-4"'
     );
     expect(built.mei).toContain(
       '<measure xml:id="measure-15" facs="#zone-measure-15" n="15" right="rptend"'

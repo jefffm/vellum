@@ -57,9 +57,10 @@ the existing LilyPond path changes.
 ## Reopened page-specific result
 
 The attempted T05 review proved that the generic implementation did not establish a literal
-page-9 interpretation. The current traversal repeats the entire page, but the source has two
-separately repeated sections: measures 1–7 and 8–15, each preceded by its own pickup. The diplomatic
-source also contains directional strums. Held-shape strums have no invented course/fret children;
+page-9 interpretation. Published numbering has measures 1–7 and 8–15, with complementary partial
+measures and internal source return signs whose exact traversal must be resolved before acceptance.
+The diplomatic source also contains directional strums. Held-shape strums have no invented
+course/fret children;
 explicit-chord strums preserve the source-written children. Playback must use exact interpretation
 records for both cases and fail closed rather than silently advancing through an unresolved strum.
 T03 becomes active again after the repaired T02 transcription lands.
@@ -72,9 +73,15 @@ T03 becomes active again after the repaired T02 transcription lands.
   from accumulated course state; explicit-chord strums must agree with every written course/fret.
   Playback arpeggiates the realized courses in the encoded direction and fails closed when a strum
   is unresolved.
-- Focused tests cover AABB traversal, both pickups, directional ordering, explicit disagreement,
-  and unresolved-strum rejection. The host base gates, all 45 browser scenarios, and pinned render
-  and playback evaluations pass.
-- A fresh Chrome audition produced a persisted 72-BPM interpretation with a 1:17 AABB timeline and
-  synchronized canonical-event highlighting. Acceptance remains blocked by T02's 69 unresolved
-  source readings and the late Owner review.
+- Focused tests cover two pickup-led strains, directional ordering, explicit disagreement, and
+  unresolved-strum rejection. The first-strain closing partial is traversed after its numbered
+  measures on every pass. MEI 5.1 `repeatMark` anchors pair the source's two `S.` marks, and the
+  second strain now plays once before repeating only the event-level petite-reprise span from
+  `m11-event-4` through `m15-strum-4`. The final host base gates passed 1,640 tests with four
+  intentional skips; all 45 browser scenarios and both pinned render/playback evaluations passed.
+- A fresh Chrome audition persisted interpretation
+  `tab-interpretation.529a7302-c0ab-4c32-8165-986454cc5878` at 72 BPM. Its 1:10 provisional
+  timeline contains 330 sounding events, traverses both first-strain partials on both passes, plays
+  measures 8–15 once, and then returns from the first `S.` in measure 11 through the final `S.` in
+  measure 15. Canonical-event highlighting followed playback. Acceptance remains blocked only by
+  T02's 69 unresolved source readings and the late Owner review.
