@@ -56,6 +56,14 @@ test("facsimile-linked MEI corrections preview, cancel, commit, reload, and undo
     alternatives: [],
     critical: false,
   });
+  tokens.push({
+    id: "event-1",
+    kind: "pince",
+    region: { page: 1, x: 0.08, y: 0.08, width: 0.16, height: 0.12 },
+    confidence: 0.72,
+    alternatives: ["simultaneity uncertain"],
+    critical: true,
+  });
   const created = await data<{ edition: { editionId: string } }>(
     await request.post(`/api/workspaces/${workspace.id}/mei-editions`, {
       data: {
@@ -85,7 +93,14 @@ test("facsimile-linked MEI corrections preview, cancel, commit, reload, and undo
   await expect(surface.locator("[data-current]")).toHaveValue("4");
 
   await expect(surface.locator("[data-critical-review]")).toContainText(
-    "4 unresolved critical readings"
+    "5 unresolved critical readings"
+  );
+  const pluckTogether = surface.locator('[data-critical-token-id="event-1"]');
+  await expect(pluckTogether).toContainText("pluck together · source vertical stroke");
+  await expect(pluckTogether).not.toContainText("pince");
+  await pluckTogether.click();
+  await expect(surface.locator("[data-token-detail]")).toContainText(
+    "event-1 · pluck together · source vertical stroke"
   );
   await surface.locator('g[data-id="note-1"]').press("Enter");
   await expect(surface.locator("[data-token-detail]")).toContainText("note-1");

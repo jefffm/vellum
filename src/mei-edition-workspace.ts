@@ -61,6 +61,10 @@ function correctionAttributes(token: DiplomaticToken): MeiAttributeChange["attri
   return [];
 }
 
+function diplomaticTokenLabel(token: DiplomaticToken): string {
+  return token.kind === "pince" ? "pluck together · source vertical stroke" : token.kind;
+}
+
 export async function renderMeiEditionWorkspace(
   panel: HTMLElement,
   workspaceId: string,
@@ -172,7 +176,7 @@ export async function renderMeiEditionWorkspace(
           .querySelectorAll(".score-selected")
           .forEach((candidate) => candidate.classList.remove("score-selected"));
         node.classList.add("score-selected");
-        tokenDetail.textContent = `${token.id} · ${token.kind} · confidence ${Math.round(token.confidence * 100)}%${token.critical ? " · Critical Uncertainty" : ""}`;
+        tokenDetail.textContent = `${token.id} · ${diplomaticTokenLabel(token)} · confidence ${Math.round(token.confidence * 100)}%${token.critical ? " · Critical Uncertainty" : ""}`;
         const editableAttributes = correctionAttributes(token);
         form.hidden = editableAttributes.length === 0;
         confirmReading.hidden = !token.critical;
@@ -229,7 +233,7 @@ export async function renderMeiEditionWorkspace(
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.criticalTokenId = token.id;
-      button.textContent = `${index + 1} of ${criticalTokens.length} · ${token.kind} · ${Math.round(token.confidence * 100)}% · ${token.id}`;
+      button.textContent = `${index + 1} of ${criticalTokens.length} · ${diplomaticTokenLabel(token)} · ${Math.round(token.confidence * 100)}% · ${token.id}`;
       button.onclick = () => selectors.get(token.id)?.();
       criticalList.append(button);
     }
