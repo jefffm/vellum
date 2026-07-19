@@ -250,6 +250,22 @@ describe("de Visée page 9 provisional diplomatic extraction", () => {
       built.mei,
       built.tokens.filter((token) => token.kind === "tablature").map((token) => token.id)
     );
+    expect(rendered.svg).toMatch(
+      /data-id="m2-rhythm-1"[^>]*data-rhythm-flags="0"[^>]*class="tabDurSym vellum-notehead-rhythm"/
+    );
+    expect(rendered.svg).toMatch(
+      /data-id="m2-rhythm-3"[^>]*data-rhythm-flags="1"[^>]*class="tabDurSym vellum-notehead-rhythm"/
+    );
+    expect(rendered.svg).toMatch(
+      /data-id="m3-rhythm-4"[^>]*data-rhythm-flags="2"[^>]*class="tabDurSym vellum-notehead-rhythm"/
+    );
+    const defaultGlyphRender = await renderMeiWithVerovio(
+      built.mei.replace(' type="vellum.notehead-rhythm-signs"', ""),
+      built.tokens.filter((token) => token.kind === "tablature").map((token) => token.id)
+    );
+    expect(rendered.midiBase64).toBe(defaultGlyphRender.midiBase64);
+    expect(rendered.timemap).toEqual(defaultGlyphRender.timemap);
+    expect(rendered.events).toEqual(defaultGlyphRender.events);
     expect(rendered.svg).toContain('data-id="m1-strum-1"');
     expect(rendered.svg).toContain('data-id="m1-e3-n1"');
     expect(rendered.svg).toContain('data-id="m15-e3-n1"');

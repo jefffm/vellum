@@ -50,7 +50,7 @@ export async function renderMeiWithVerovio(
       throw new Error(`Expected Verovio ${PINNED_VEROVIO_VERSION}, received ${version}`);
     }
     return Object.freeze({
-      svg: postprocessHistoricalStrums(toolkit.renderToSVG(1)),
+      svg: postprocessSourceNotation(mei, toolkit.renderToSVG(1)),
       midiBase64: toolkit.renderToMIDI(),
       timemap: toolkit.renderToTimemap({ includeMeasures: true, includeRests: true }),
       events: Object.freeze(
@@ -69,6 +69,69 @@ export async function renderMeiWithVerovio(
   } finally {
     toolkit.destroy();
   }
+}
+
+function postprocessSourceNotation(mei: string, svg: string): string {
+  return postprocessHistoricalStrums(postprocessNoteheadRhythmSigns(mei, svg));
+}
+
+function postprocessNoteheadRhythmSigns(mei: string, svg: string): string {
+  if (!/<staffDef\b[^>]*\btype="vellum\.notehead-rhythm-signs"/.test(mei)) return svg;
+  let rendered = svg;
+  const groups = /<tabGrp\b([^>]*)>([\s\S]*?)<\/tabGrp>/g;
+  for (const match of mei.matchAll(groups)) {
+    const attributes = match[1];
+    const body = match[2];
+    const duration = Number(attributes.match(/\bdur="(\d+)"/)?.[1]);
+    const dots = Number(attributes.match(/\bdots="(\d+)"/)?.[1] ?? 0);
+    const rhythmAttributes = body.match(/<tabDurSym\b([^>]*\bfacs="[^"]+"[^>]*)\/?\s*>/)?.[1];
+    const rhythmId = rhythmAttributes?.match(/\bxml:id="([^"]+)"/)?.[1];
+    if (!rhythmId || !Number.isInteger(duration) || duration < 1) continue;
+    const escapedId = rhythmId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const group = new RegExp(
+      `<g data-id="${escapedId}" data-class="tabDurSym" class="tabDurSym">([\\s\\S]*?)<\\/g>`
+    );
+    const renderedGroup = rendered.match(group)?.[0];
+    if (!renderedGroup) continue;
+    const position = renderedGroup
+      .match(/transform="translate\(([-\d.]+),\s*([-\d.]+)\)/)
+      ?.slice(1)
+      .map(Number);
+    if (!position || position.some((value) => !Number.isFinite(value))) continue;
+    const [x, y] = position;
+    const flagCount = Math.max(0, Math.round(Math.log2(duration)) - 2);
+    const noteY = y + 105;
+    const stemX = x + 54;
+    const stemTop = noteY - 315;
+    const openHead = duration <= 2;
+    const head = `<ellipse cx="${x}" cy="${noteY}" rx="62" ry="43" transform="rotate(-18 ${x} ${noteY})" fill="${openHead ? "white" : "currentColor"}" stroke="currentColor" stroke-width="24"/>`;
+    const stem =
+      duration === 1
+        ? ""
+        : `<path d="M${stemX} ${noteY - 4} L${stemX} ${stemTop}" fill="none" stroke="currentColor" stroke-width="26" stroke-linecap="round"/>`;
+    const flags = Array.from({ length: flagCount }, (_, index) => {
+      const flagY = stemTop + index * 74;
+      return `<path data-rhythm-flag="${index + 1}" d="M${stemX} ${flagY} C${stemX + 104} ${flagY + 22} ${stemX + 112} ${flagY + 82} ${stemX + 24} ${flagY + 138} C${stemX + 65} ${flagY + 78} ${stemX + 36} ${flagY + 43} ${stemX} ${flagY + 54} Z" fill="currentColor" stroke="none"/>`;
+    }).join("");
+    const dotMarks = Array.from(
+      { length: dots },
+      (_, index) =>
+        `<circle cx="${x + 132 + index * 58}" cy="${noteY - 8}" r="22" fill="currentColor" stroke="none"/>`
+    ).join("");
+    const durationLabel =
+      duration === 1
+        ? "Whole"
+        : duration === 2
+          ? "Half"
+          : duration === 4
+            ? "Quarter"
+            : duration === 8
+              ? "Eighth"
+              : `${duration}th`;
+    const replacement = `<g data-id="${rhythmId}" data-rhythm-flags="${flagCount}" data-class="tabDurSym" class="tabDurSym vellum-notehead-rhythm" aria-label="${durationLabel} rhythm sign">${head}${stem}${flags}${dotMarks}</g>`;
+    rendered = rendered.replace(group, replacement);
+  }
+  return rendered;
 }
 
 function postprocessHistoricalStrums(svg: string): string {
