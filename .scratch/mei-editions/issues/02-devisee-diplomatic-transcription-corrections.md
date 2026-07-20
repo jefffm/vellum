@@ -1,39 +1,76 @@
-# 02 — De Visée diplomatic transcription and corrections
+# 02 — Source-adaptive de Visée recognition and expert transcription
 
-Status: in-progress
+Status: completed
 
 Type: AFK
 
 Blocked by: 01
 
+## Why this tracer was repivoted
+
+The first implementation proved canonical MEI persistence, facsimile display, Verovio projection,
+and atomic Correction Batches. It did not implement recognition. The live importer read a
+hand-authored page JSON, presented it as a structured extraction result, and required the Owner to
+repair widespread structural and musical guesses. Confidence and several source regions were
+constructed rather than observed. Those results cannot establish this tracer.
+
 ## What to build
 
-Import the Owner-local de Visée page 9 into a provisional facsimile-linked Diplomatic Tablature
-Transcription. Present the facsimile beside Verovio output, route Critical Uncertainty to legible
-review, and let several typed corrections preview and commit atomically as one named Correction
-Batch and canonical MEI version that survives reload.
+Create one source-adaptive recognition attempt directly from the Owner-local de Visée PDF. Detect
+page structure and staff geometry, extract uninterpreted glyph images, cluster repeated glyphs, and
+apply a versioned Notation Recognition Profile containing reviewed examples, vocabulary, and
+spatial rules. Optional multimodal-model assistance may propose labels or diagnose exceptional
+regions but cannot establish source truth.
+
+Feed the candidate into a keyboard-first event workstation designed for exhaustive expert review.
+The user reviews a complete chord or event beside a large source crop, confirms a correct proposal
+and advances in one action, or directly edits course letters, visible rhythm signs, ornaments,
+gesture marks, and event grouping. Local drafts recover after interruption; an explicitly named
+system or page batch crosses the existing canonical command boundary.
 
 ## Acceptance criteria
 
-- [ ] Every visible token in the constrained diplomatic profile—rhythm signs, tablature letters,
-      strum direction, pincé simultaneity, and measure/layout anchors—has a stable ID and a source
-      region derived from inspected page geometry, not an evenly divided or assumed system grid.
-      Marks outside this declared profile remain for Owner review rather than being silently
-      inferred.
-- [ ] The complete page-specific musical content is checked event by event against the facsimile
-      and an independent sounding witness where one is available. Disagreements and marks that
-      cannot be read confidently remain Critical Uncertainty; plausible-looking filler is forbidden.
-- [x] Structured extraction remains behind a backend-neutral adapter and records confidence and
-      alternatives without treating confidence as acceptance.
-- [x] The review UI provides a deterministic Critical Uncertainty queue, legible source context,
-      zoom, and non-obscuring uncertainty markers.
-- [x] Staging, per-change preview, cancel, atomic commit, stale-parent conflict, and inverse-version
-      undo are covered through the persisted API and UI. A correct uncertain reading can be
-      confirmed as a reversible review decision without inventing an MEI attribute change.
-- [x] Transcription Correction cannot silently become Interpretation Revision or Editorial
-      Emendation.
-- [ ] Reload restores the exact canonical version, pending review state, truthful facsimile links,
-      and source-checked rendered edition.
+- [x] The PDF bytes, not a hand-authored musical JSON file, initiate a backend-neutral versioned
+      recognition attempt with preserved configuration, profile version, page/staff geometry,
+      extracted glyphs, clusters, hypotheses, diagnostics, and facsimile mappings.
+- [x] Detected token regions are evidence from image geometry. Course positions derive from detected
+      and reviewed staff lines rather than evenly divided systems or invented course coordinates.
+- [x] The constrained diplomatic representation records visible rhythm glyphs, dots, fret letters,
+      ornaments, vertical/oblique marks, barlines, repeats, and explicit absences separately from
+      interpreted duration, simultaneity, strumming action, tuning, and sounding events.
+- [x] Reviewing a representative glyph identity can propose the same label for matching cluster
+      members; propagated changes are inspectable, rejectable, reversible, and never silently
+      accepted as source truth.
+- [x] The default review unit is a complete source-linked chord or event with neighboring musical
+      context, not an isolated generic attribute form.
+- [x] The ordinary page pass is keyboard-operable: confirm-and-advance, previous/next, course-letter
+      entry, insert/delete, split/merge, ambiguity marking, compact rhythm/ornament entry,
+      repeat-previous, and undo/redo require no pointer input.
+- [x] Correct proposals require one confirmation action. Editing, navigation, and undo remain local
+      and immediate; whole-page Verovio rendering or server writes do not block each keystroke.
+- [x] A recoverable autosaved draft survives navigation and browser closure. Completing the first
+      exhaustive pass publishes canonical MEI version 1 through one named, digest-bound initial
+      review batch tied to its immutable recognition run. Every later manual edit uses an ordinary
+      Correction Batch and creates a successor version; cancel and inverse-version undo retain their
+      existing semantics.
+- [x] Automated fixtures can drive every event to confirmed or explicitly ambiguous state, and
+      progress exposes untouched, reviewed, corrected, regrouped, propagated, rejected, and
+      unresolved counts. The Owner-local page begins T05 as a source-derived candidate, not as a
+      falsely pre-reviewed page.
+- [x] Evaluation compares the resulting visible-token transcription with a private reviewed truth
+      when available and otherwise with rights-approved reviewed fixtures. It reports structure,
+      glyph, course, rhythm-sign, ornament, gesture-mark, region-alignment, propagation, and
+      reviewer-burden properties. Schema validity alone cannot pass.
+- [x] Reload restores the exact canonical version, working-draft state where applicable, truthful
+      facsimile links, review progress, and source-checked rendered edition.
+
+## Explicit non-goals
+
+- General historical-manuscript recognition.
+- Custom model training.
+- Zero-review transcription.
+- Inferring musical interpretation from visual plausibility.
+- Treating an editorial realization as diplomatic source truth.
 
 ## Blocked by
 
@@ -41,69 +78,36 @@ Batch and canonical MEI version that survives reload.
 
 ## Gates
 
-Focused domain, persistence, provisional-page, and correction-workspace tests; then the base gates
-plus browser, render, and playback evaluation. LilyPond sandbox verification applies only if the
-existing LilyPond path changes.
+Focused geometry, clustering, profile, recognition-record, diplomatic-layer, draft-recovery,
+keyboard-workflow, persistence, and correction tests; then the base gates plus browser, render, and
+playback evaluation. The private source-truth comparison remains Owner-local and records bounded
+results without committing source bytes or private truth.
 
-## Evidence
+## Prior evidence retained with corrected scope
 
-- The Owner-local source was imported from outside Git; the tracked provisional data contains no
-  facsimile bytes and asserts no transcription acceptance.
-- Base gates passed on the macOS host: 1,631 tests passed and four skipped; typecheck, formatting,
-  spec verification, browser/server builds all passed.
-- `npm run test:browser`: 43 scenarios passed, including source zoom, transparent region marking,
-  staged cancel, multi-change preview, atomic commit, reload, and inverse-version undo.
-- Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed.
-- LilyPond source, compiler, and sandbox code were unchanged, so the LilyPond-only sandbox gate was
-  not applicable.
+- Canonical MEI persistence, versioning, correction preview/cancel/commit, inverse-version undo,
+  facsimile zoom, non-obscuring markers, and pinned Verovio projection were proven.
+- The former provisional page contained 188 constructed facsimile-linked tokens and 69 unresolved
+  readings. It is retained only as a failure witness and temporary UI-development candidate.
+- Source inspection falsified its assumed system grid, pickup and partial-measure structure, gesture
+  classification, course/fret content, and rhythm presentation. Passing infrastructure gates did
+  not prove transcription truth or recognition quality.
 
-## Reopened finding
+## Completion evidence
 
-The attempted T05 review on 2026-07-18 falsified the page-specific result predicate. Direct source
-inspection establishes three ordinary spans on system one; four ordinary spans and a narrow 5/8
-closing partial on system two; and the second-strain material on systems three and four. The builder
-had assigned every system four equal numbered columns and then briefly misread a directional strum
-as a new barline. The opening 1/8 and first-strain closing 5/8 are complementary partial measures;
-the closing partial must be represented without inventing a sixteenth numbered measure or filling
-silence with notes. At least one tracked course/fret chord also visibly disagrees with the source.
-The earlier gates proved persistence and workflow behavior, not transcription truth. T02 therefore
-remains active until the complete source map, musical content, partial measures, and repeat/return
-marks are repaired and independently checked.
-
-The review also found that the provisional extractor misclassified black noteheads between the top
-two tablature lines as fret letters. In this French guitar source they are directional strum signs;
-vertical lines through course letters indicate pincé simultaneity. The pickup was folded into the
-first numbered measure, and the declared profile omitted both essential gesture types. An
-Owner-supplied realization is available as a local comparison witness. It is more literal than the
-Apke arrangement but remains editorial, is not perfectly accurate, and adds material. Neither
-realization may override or fill the 1686 facsimile for course, fret, rhythm, gesture, ornament,
-sustain, voice completion, register, or fingering evidence; disagreement stays unresolved rather
-than being reconciled by preference. Neither local witness is tracked.
-
-The corrected editorial numbering remains measures 1–7 and 8–15. The diplomatic structure must
-add the source's partial-measure spans and event-level return signs without pretending they are
-ordinary numbered bars. Comparison witnesses corroborate—but do not establish—this geometry and
-the local metric anomaly. The source also demonstrates that strum direction and chord spelling are
-independent evidence: some signs repeat a held shape, while an explicitly written chord can carry a
-strum sign at the same onset. Its internal return signs remain part of the transcription and form
-review rather than being flattened into an assumed AABB traversal.
-
-## Remediation checkpoint
-
-- The builder rejects a page without explicit inspected layout and maps the inspected 3/4/4/4
-  numbered-measure structure plus the two strain pickups instead of assuming four equal systems.
-  The source-linked first-strain closing partial is a distinct unnumbered `metcon=false` MEI
-  measure after measure 7; encoding it as numbered measure 16 was tested and rejected.
-- Critical readings have a deterministic review queue and source zoom. Confirming an unchanged
-  reading is a first-class reversible review resolution; it no longer requires a fake MEI edit.
-- Rhythm corrections resolve `dur` and `dots` on the enclosing `tabGrp`, matching MEI 5.1's data
-  model, while rendered `tabDurSym` selection remains the user-facing anchor.
-- Host gates passed: typecheck, formatting, current-spec verification, client build, server build,
-  and 1,640 tests with four intentional skips. The full browser suite passed all 45 scenarios.
-- Pinned Nix shell: `npm run eval:render` and `npm run eval:playback` both passed. LilyPond code was
-  unchanged, so the LilyPond-only sandbox gate remained not applicable.
-- The current 15-measure-plus-closing-partial draft renders 188 facsimile-linked tokens and a
-  deterministic queue of 69 deliberately unresolved critical readings. Fresh Chrome review showed
-  the partial and both `S.` return signs in the Verovio proof, no visible internal spacing anchors,
-  and source-linked zoom beside the score. The Owner-local realization remains a comparison witness,
-  not a source for resolving those readings.
+- The production importer now submits the PDF to a versioned printed-tablature geometry backend;
+  it no longer reads or labels the provisional musical JSON as recognition output.
+- Recognition records preserve the rendered-page digest, detected systems and staff lines, event
+  and vertical-mark geometry, raw glyphs, typed reusable clusters, scoped profile rules, explicit
+  non-authoritative hypotheses, configuration, and diagnostics. Non-letter debris is ineligible
+  for reviewed fret learning.
+- The event workstation provides unobscured aspect-preserving context, keyboard review and
+  regrouping, explicit cluster propagation and rejection, autosaved recovery, unresolved-event
+  navigation, burden metrics, and one digest-bound publish command for MEI version 1.
+- Focused service and browser predicates prove structural publication, exact source coverage,
+  Verovio rendering without invented duration, profile reuse, debris quarantine, draft recovery,
+  keyboard completion, and burden reporting. An Owner-local PDF smoke run reached the production
+  workstation without committing source bytes or source truth.
+- Gates passed: `npm run typecheck`, `npm test`, `npm run format:check`, `npm run spec:verify`,
+  `npm run build`, `npm run server:build`, `npm run test:browser`, pinned `npm run eval:render`,
+  pinned `npm run eval:playback`, and the explicit nested `npm run sandbox:lilypond:verify` gate.

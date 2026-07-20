@@ -9,8 +9,8 @@ superseded Musical Proofs program is archived at
 ## Outcome
 
 Prove that Vellum can turn one page of historical tablature into a trustworthy, interactive,
-playable MEI edition and then—only after review—use an exact selected passage as evidence for
-instrument intelligence.
+playable MEI edition through source-adaptive recognition and a fast expert-verification pass, and
+then—only after review—use an exact selected passage as evidence for instrument intelligence.
 
 The first vertical is page 9 of Robert de Visée's 1686 _Pièces pour la guittare_. It must proceed
 through facsimile import, Diplomatic Tablature Transcription, uncertainty correction, Verovio
@@ -25,25 +25,32 @@ style learner. It is one convincing path that makes later corpus growth cheap an
 The milestone passes when the Owner can:
 
 1. open the selected de Visée page beside a rendered five-line French tablature edition;
-2. inspect every uncertain token at a legible source region without an overlay obscuring it;
-3. stage several corrections, preview them, and commit one atomic Correction Batch as a new
+2. move through every proposed chord or event in a continuous keyboard-driven pass, confirming a
+   correct event with one action and correcting its course letters, visible rhythm sign, ornaments,
+   gestures, or grouping without opening a generic attribute form or requiring the mouse;
+3. inspect every ambiguous token at a legible source region without an overlay obscuring it;
+4. stage several corrections, preview them, and commit one atomic Correction Batch as a new
    canonical transcription version;
-4. approve separately that the transcription matches the page and that one interpretation is
+5. resume an autosaved working pass after navigation or browser closure without losing input;
+6. approve separately that the transcription matches the page and that one interpretation is
    suitable for literal playback and analysis;
-5. play, pause, seek, zoom, reflow, and follow a restrained marker without losing MEI identity;
-6. select a contiguous passage or noncontiguous musical objects and use that Passage Selection in
+7. play, pause, seek, zoom, reflow, and follow a restrained marker without losing MEI identity;
+8. select a contiguous passage or noncontiguous musical objects and use that Passage Selection in
    an inspectable prompt;
-7. review model-proposed changes individually and commit only an approved typed batch; and
-8. create one cited Attested Realization from the accepted passage without claiming that one
-   occurrence is a recurring or preferred idiom; and
-9. run without the superseded proof-only edition implementations, adapters, routes, fixtures, and
-   tests once replacement coverage is demonstrated.
+9. review model-proposed changes individually and commit only an approved typed batch;
+10. create one cited Attested Realization from the accepted passage without claiming that one
+    occurrence is a recurring or preferred idiom; and
+11. run without the superseded proof-only edition implementations, adapters, routes, fixtures, and
+    tests once replacement coverage is demonstrated.
 
 ## Canonical musical state
 
 The Diplomatic Tablature Transcription is constrained, deterministically serialized MEI 5.1. It
 records visible tablature tokens, stable identifiers, facsimile zones, layout anchors, uncertainty,
 and editorial alternatives without silently imposing sounding pitch or analytical interpretation.
+Visible rhythm evidence records the source glyph, such as flag and dot count or an explicit absence;
+duration belongs to a Tablature Interpretation. Visible vertical or oblique marks likewise remain
+source evidence until an interpretation identifies a simultaneity or strumming gesture.
 
 MEI does not replace Vellum's separate domain records for Source Artifacts, recognition attempts,
 Tablature Interpretations, acceptance decisions, Analysis Records, Knowledge Candidates, or
@@ -71,10 +78,20 @@ deliverables but is not required in this MEI-native edition path.
 
 ## Transcription and interpretation review
 
-Initial historical-tablature recognition uses a structured multimodal-model extraction behind a
-backend-neutral adapter, notation-specific examples, and deterministic validation. Custom model
-training is deferred until measured need. A confidence threshold prioritizes review but grants no
-authority.
+Initial historical-tablature recognition is source-adaptive and runs behind a backend-neutral
+adapter. It first detects page structure, staff geometry, event positions, and uninterpreted glyph
+images; clusters repeated glyphs; and applies a scoped Notation Recognition Profile containing
+reviewed examples, source vocabulary, and spatial rules. Course identity derives from reviewed
+staff geometry rather than a model's musical guess. Optional multimodal-model suggestions may label
+clusters, propose structure, or diagnose exceptional regions, but those outputs remain preserved
+hypotheses and cannot establish the canonical reading. Custom model training is deferred until
+measured need. A confidence threshold prioritizes work but grants no authority.
+
+Each attempt is a versioned recognition record that preserves its source, profile version,
+configuration, detected geometry, glyph clusters, hypotheses, diagnostics, and mappings. A static
+hand-authored transcription cannot be labeled as a recognition backend result. Applying a reviewed
+cluster label may propose the same change to matching occurrences, but propagation remains
+inspectable and reversible.
 
 Transcription Acceptance requires:
 
@@ -89,6 +106,24 @@ Interpretation Acceptance are distinct version-bound decisions even if shown in 
 session. An unaccepted interpretation may be auditioned as provisional playback but cannot support
 analysis, idiom evidence, or publication as an accepted Reading Edition. Accepting one
 interpretation does not reject viable alternatives.
+
+### Expert transcription workstation
+
+Historical tablature review assumes that a competent user will visually check every proposed chord
+or event. The primary review unit is therefore the complete source-linked event, not an isolated MEI
+attribute or confidence alert. The default workspace keeps an enlarged unobscured source crop, an
+editable course grid, visible rhythm and ornament evidence, and enough preceding and following
+context on screen together.
+
+The complete ordinary pass is keyboard-operable. Confirm-and-advance, previous/next event,
+course-letter entry, insert/delete, split/merge, ambiguity marking, rhythm-glyph and ornament
+palettes, repeat-previous operations, and undo/redo do not require pointer input. Correct proposals
+take one confirm action. Expensive whole-page rendering and server persistence do not block local
+navigation: the client maintains an autosaved recoverable draft and updates the event editor
+immediately. Completing the first exhaustive pass publishes canonical MEI version 1 through one
+named, digest-bound initial review batch tied to the immutable recognition run. Every later manual
+change uses an ordinary Correction Batch and creates a new canonical version. The generic attribute
+inspector remains an escape hatch rather than the normal transcription workflow.
 
 ## Correction and model-assisted editing
 
@@ -132,6 +167,12 @@ through supported typed operations; arbitrary code and prompt-only rules are for
 
 Evaluation is small and property-focused:
 
+- page, system, staff, event, barline, repeat, and partial-measure detection;
+- visible-glyph, course-letter, rhythm-sign, ornament, and gesture-mark recognition separately from
+  their musical interpretation;
+- glyph-cluster propagation precision, rejection, and reversibility;
+- reviewer burden: confirmations and corrections per event, regrouping frequency, uninterrupted
+  keyboard-only completion, draft recovery, and whole-page coverage;
 - MEI schema/profile and facsimile-link completeness;
 - renderer security against external references and active content;
 - browser/server identity and editorial-reading parity;
@@ -151,7 +192,7 @@ available.
 The active tracer queue is [`.scratch/mei-editions/PLAN.md`](.scratch/mei-editions/PLAN.md):
 
 1. secure pinned Verovio edition vertical;
-2. de Visée page 9 diplomatic transcription and Correction Batches;
+2. source-adaptive de Visée recognition and the keyboard-first transcription workstation;
 3. interpretation acceptance and synchronized playback;
 4. Passage Selection prompting and model-assisted edits;
 5. late whole-page Owner acceptance; and
@@ -164,7 +205,8 @@ ceremonies, evidence receipts, or qualification machinery.
 
 ## Completion boundary
 
-This specification is complete when the product proof passes, T05 records both Owner decisions,
+This specification is complete when the product proof passes from the source PDF without
+hand-authored musical content masquerading as recognition output, T05 records both Owner decisions,
 T06 creates one properly bounded Attested Realization from the accepted page, and T07 deletes the
 edition prototypes and compatibility paths that the accepted vertical demonstrably replaces. T07
 must inventory reachability before deletion and retain code that still serves an unreplaced

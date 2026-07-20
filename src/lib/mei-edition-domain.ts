@@ -12,6 +12,20 @@ const IsoDateSchema = Type.String({
   pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$",
 });
 
+const InitialReviewMetricsSchema = Type.Object(
+  {
+    untouched: Type.Integer({ minimum: 0 }),
+    reviewed: Type.Integer({ minimum: 0 }),
+    corrected: Type.Integer({ minimum: 0 }),
+    regrouped: Type.Integer({ minimum: 0 }),
+    propagated: Type.Integer({ minimum: 0 }),
+    rejected: Type.Integer({ minimum: 0 }),
+    unresolved: Type.Integer({ minimum: 0 }),
+    keyboardActions: Type.Integer({ minimum: 0 }),
+  },
+  { additionalProperties: false }
+);
+
 export const FacsimileRegionSchema = Type.Object(
   {
     page: Type.Integer({ minimum: 1 }),
@@ -219,6 +233,21 @@ export const MeiEditionVersionSchema = Type.Object(
         backendId: Type.String({ minLength: 1 }),
         backendVersion: Type.String({ minLength: 1 }),
         diagnostics: Type.Array(Type.String({ minLength: 1 })),
+        recognitionRunId: Type.Optional(
+          Type.String({ pattern: "^tab-recognition\\.[a-f0-9-]{16,}$" })
+        ),
+        initialReviewBatch: Type.Optional(
+          Type.Object(
+            {
+              name: Type.String({ minLength: 1, maxLength: 120 }),
+              draftDigest: DigestSchema,
+              confirmedEvents: Type.Integer({ minimum: 0 }),
+              ambiguousEvents: Type.Integer({ minimum: 0 }),
+              reviewMetrics: InitialReviewMetricsSchema,
+            },
+            { additionalProperties: false }
+          )
+        ),
       },
       { additionalProperties: false }
     ),
@@ -240,6 +269,21 @@ export const CreateMeiEditionCommandSchema = Type.Object(
         backendId: Type.String({ minLength: 1 }),
         backendVersion: Type.String({ minLength: 1 }),
         diagnostics: Type.Array(Type.String({ minLength: 1 })),
+        recognitionRunId: Type.Optional(
+          Type.String({ pattern: "^tab-recognition\\.[a-f0-9-]{16,}$" })
+        ),
+        initialReviewBatch: Type.Optional(
+          Type.Object(
+            {
+              name: Type.String({ minLength: 1, maxLength: 120 }),
+              draftDigest: DigestSchema,
+              confirmedEvents: Type.Integer({ minimum: 0 }),
+              ambiguousEvents: Type.Integer({ minimum: 0 }),
+              reviewMetrics: InitialReviewMetricsSchema,
+            },
+            { additionalProperties: false }
+          )
+        ),
       },
       { additionalProperties: false }
     ),

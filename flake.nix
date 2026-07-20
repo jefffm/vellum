@@ -42,7 +42,7 @@
         let
           pkgs = import nixpkgs { inherit system; };
           music21 = mkMusic21 pkgs;
-          python = pkgs.python3.withPackages (_ps: [ music21 ]);
+          python = pkgs.python3.withPackages (ps: [ music21 ps.pillow ]);
         in
         {
           default = pkgs.mkShell {
@@ -54,6 +54,7 @@
                 pkgs.lilypond
                 pkgs.musescore
                 pkgs.podman
+                pkgs.poppler-utils
                 python
               ]
               # The sealed Linux evaluation path needs an explicit nested sandbox binary.
@@ -71,7 +72,7 @@
           pkgs = import nixpkgs { inherit system; };
 
           music21 = mkMusic21 pkgs;
-          vellumPython = pkgs.python3.withPackages (_ps: [ music21 ]);
+          vellumPython = pkgs.python3.withPackages (ps: [ music21 ps.pillow ]);
 
           # -- Node.js server build --
           vellum-server = pkgs.stdenv.mkDerivation rec {
@@ -138,6 +139,7 @@
                     pkgs.nodejs_20
                     pkgs.lilypond
                     pkgs.musescore
+                    pkgs.poppler-utils
                     vellumPython
                   ]
                   ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.bubblewrap ]

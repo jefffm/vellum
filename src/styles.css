@@ -263,6 +263,119 @@ chat-panel > div > div:has(agent-interface) {
   background: #ecece6;
 }
 
+.historical-tab-workspace {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  outline: none;
+  color: var(--text-primary, #2f2925);
+}
+
+.historical-tab-workspace > header,
+.historical-tab-actions,
+.historical-tab-secondary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.historical-tab-actions,
+.historical-tab-secondary-actions {
+  flex-wrap: wrap;
+}
+
+.historical-tab-workspace > header p,
+.historical-tab-workspace > header h1 {
+  margin: 0;
+}
+
+.historical-tab-context {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 0.75rem;
+  background: white;
+}
+
+.historical-tab-context canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(42vh, 540px);
+  object-fit: contain;
+}
+
+.historical-tab-context p {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid #ddd;
+  font-variant-numeric: tabular-nums;
+}
+
+.historical-tab-editor {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(16rem, 1fr);
+  gap: 0.75rem 1rem;
+}
+
+.historical-tab-course-grid {
+  display: grid;
+  grid-row: span 3;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #a44e2d 7%, white);
+}
+
+.historical-tab-course-grid label {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+}
+
+.historical-tab-course-grid label.selected {
+  outline: 2px solid #a44e2d;
+  background: white;
+}
+
+.historical-tab-course-grid input {
+  min-width: 0;
+  font: 700 1.25rem/1.2 serif;
+  text-align: center;
+}
+
+.historical-tab-editor fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
+}
+
+.historical-tab-actions button[data-confirm] {
+  padding-inline: 1.5rem;
+  font-weight: 700;
+  background: #a44e2d;
+  color: white;
+}
+
+.historical-tab-shortcuts {
+  margin: 0;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 760px) {
+  .historical-tab-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .historical-tab-course-grid {
+    grid-row: auto;
+  }
+}
+
 .mei-edition-launcher {
   margin-top: 0.75rem;
 }

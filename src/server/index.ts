@@ -89,6 +89,12 @@ import {
   createWorkspaceRenameRoute,
 } from "./lib/workspace-route.js";
 import { createOmrArtifactContentRoute, createOmrRunRoute } from "./lib/omr-route.js";
+import {
+  createHistoricalTabRecognitionFacsimileRoute,
+  createHistoricalTabRecognitionGetRoute,
+  createHistoricalTabPublishRoute,
+  createHistoricalTabRecognitionRoute,
+} from "./lib/historical-tab-recognition-route.js";
 import { createSourceImportRoute } from "./lib/source-import-route.js";
 import { WorkspaceStore } from "./lib/workspace-store.js";
 import { createNarrowEvaluationCardRoute } from "./lib/narrow-evaluation-route.js";
@@ -812,6 +818,22 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createSourceImportRoute()
   );
   router.post("/workspaces/:workspaceId/omr-runs", createOmrRunRoute());
+  router.post(
+    "/workspaces/:workspaceId/historical-tab-recognition-runs",
+    createHistoricalTabRecognitionRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/historical-tab-recognition-runs/:runId",
+    createHistoricalTabRecognitionGetRoute()
+  );
+  router.get(
+    "/workspaces/:workspaceId/historical-tab-recognition-runs/:runId/facsimile",
+    createHistoricalTabRecognitionFacsimileRoute()
+  );
+  router.post(
+    "/workspaces/:workspaceId/historical-tab-recognition-runs/:runId/publish",
+    createHistoricalTabPublishRoute()
+  );
   router.post("/workspaces/:workspaceId/guided-workflows", createGuidedWorkflowCreateRoute());
   router.get("/workspaces/:workspaceId/guided-workflows/active", createGuidedWorkflowActiveRoute());
   router.patch(

@@ -16,7 +16,10 @@ the first idiom-study follow-up.
 ## Acceptance criteria
 
 - [ ] Every Critical Uncertainty is resolved or the decision records an honest blocker.
-- [ ] The Owner can inspect high-confidence material without confirming every token individually.
+- [ ] The Owner has completed one chord/event-oriented keyboard pass over the whole page; ordinary
+      correct events required confirm-and-advance rather than per-token forms.
+- [ ] Recorded reviewer-burden results show that the source-adaptive candidate reduced repetitive
+      entry rather than transferring complete transcription authorship to the Owner.
 - [ ] The complete rendered page is legible and source-linked at useful zoom levels.
 - [ ] Literal playback and the score-following marker make the chosen reading reviewable.
 - [ ] Transcription Acceptance and Interpretation Acceptance name exact versions and purposes.

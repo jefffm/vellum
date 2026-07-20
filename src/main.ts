@@ -57,6 +57,7 @@ import { isCompatibleRuntimeHealth, VELLUM_API_SCHEMA_VERSION } from "./lib/runt
 import { completeArtifactHandoff } from "./lib/artifact-handoff.js";
 import { installMeiEditionProofLauncher } from "./mei-edition-surface.js";
 import { restoreLinkedMeiEdition } from "./mei-edition-workspace.js";
+import { restoreHistoricalTabWorkspace } from "./historical-tab-workspace.js";
 
 export { renderCompilePreview } from "./artifact-preview.js";
 
@@ -329,7 +330,8 @@ export async function main(): Promise<void> {
   const artifactsPanel = document.querySelector<HTMLElement>("#artifacts-panel");
   if (artifactsPanel) {
     installArrangementVersionBridge(artifactsPanel);
-    void restoreLinkedMeiEdition(artifactsPanel)
+    void restoreHistoricalTabWorkspace(artifactsPanel)
+      .then((restored) => (restored ? true : restoreLinkedMeiEdition(artifactsPanel)))
       .then((restored) => (restored ? undefined : restoreLinkedArrangement(artifactsPanel)))
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
@@ -340,7 +342,11 @@ export async function main(): Promise<void> {
       });
   }
   const startQuery = new URL(window.location.href).searchParams;
-  if (startQuery.get("editionProof") !== "1" && !startQuery.has("meiEdition")) {
+  if (
+    startQuery.get("editionProof") !== "1" &&
+    !startQuery.has("meiEdition") &&
+    !startQuery.has("tabRecognition")
+  ) {
     installGuidedStart({
       onComplete: (deliverables) => {
         const panel = document.querySelector<HTMLElement>("#artifacts-panel");
