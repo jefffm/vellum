@@ -111,3 +111,24 @@ results without committing source bytes or private truth.
 - Gates passed: `npm run typecheck`, `npm test`, `npm run format:check`, `npm run spec:verify`,
   `npm run build`, `npm run server:build`, `npm run test:browser`, pinned `npm run eval:render`,
   pinned `npm run eval:playback`, and the explicit nested `npm run sandbox:lilypond:verify` gate.
+
+## T05 first-system remediation
+
+- The first real run exposed strict barlines and the opening clef as standalone review events. The
+  v3 geometry backend now distinguishes a full-staff barline from a vertically extended musical
+  mark, removes only strict barline and pre-staff anchors from musical event units, and attaches the
+  preserved vertical evidence to a neighboring source event. A project-authored image predicate
+  proves that an extended event stem survives while a strict barline does not become an event.
+- On the immutable Owner-local page, the same source-derived predicate reduced 89 coarse units to
+  71 musical review units across the four systems (15, 22, 17, and 17) without reading or importing
+  the rejected hand-authored musical JSON. Fresh recognition run
+  `tab-recognition.a236ab0d-5775-458c-ad9f-96a6da61effa` preserves backend v3 and its recognizer
+  digest; no musical reading or acceptance was authored automatically.
+- Conservative reviewed-shape reuse now uses a wider source-local distance, reducing 185 eligible
+  glyph components from 167 mostly singleton families to 76 families. Propagation remains
+  fail-closed when more than one reusable component occupies the selected course, because the
+  event-oriented workstation has no basis to guess which visible glyph the Owner labeled.
+- Remediation gates passed on the macOS host: the generated-image predicate and actual Owner-local
+  page smoke passed; 1,645 tests passed with four intentional skips; typecheck, formatting,
+  specification verification, client build, and server build passed; and all 46 browser scenarios
+  passed, including keyboard draft recovery and the real Podman-backed engraving workflow.

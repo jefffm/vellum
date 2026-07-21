@@ -266,6 +266,7 @@ def vertical_candidates(
     left: int,
     right: int,
 ) -> list[dict]:
+    gap = sum(lines[index + 1] - lines[index] for index in range(4)) / 4
     staff_rows = [
         y
         for y in range(lines[0], lines[-1] + 1)
@@ -282,13 +283,39 @@ def vertical_candidates(
     result: list[dict] = []
     for index, run in enumerate(grouped([x for x, _coverage in active], 3), 1):
         coverage = max(dict(active)[x] for x in run)
+        nearby_left = max(0, run[0] - 2)
+        nearby_right = min(width - 1, run[-1] + 2)
+        vertical_ink = [
+            y
+            for y in range(
+                max(0, int(lines[0] - gap * 3.7)),
+                min(height, int(lines[-1] + gap * 2.2) + 1),
+            )
+            if any(mask[y][x] for x in range(nearby_left, nearby_right + 1))
+        ]
+        connected_spans = grouped(vertical_ink, max(3, int(gap * 0.6)))
+        staff_spans = [
+            span
+            for span in connected_spans
+            if span[0] <= lines[-1] and span[-1] >= lines[0]
+        ]
+        staff_span = max(staff_spans, key=len) if staff_spans else list(lines)
+        extension_limit = gap * 0.75
+        has_event_extension = (
+            lines[0] - staff_span[0] > extension_limit
+            or staff_span[-1] - lines[-1] > extension_limit
+        )
         box = Box(run[0], lines[0], run[-1], lines[-1])
         result.append(
             {
                 "id": f"system-{system_index}-vertical-{index}",
                 "region": box.normalized(width, height),
                 "coverage": round(coverage, 4),
-                "classification": "barline-like" if coverage >= 0.9 else "unresolved-vertical-mark",
+                "classification": (
+                    "barline-like"
+                    if coverage >= 0.9 and not has_event_extension
+                    else "unresolved-vertical-mark"
+                ),
             }
         )
     return result
@@ -307,7 +334,7 @@ def default_profile(course_count: int) -> dict:
             "maximumGlyphWidthGap": 1.35,
             "minimumGlyphHeightGap": 0.4,
             "maximumGlyphHeightGap": 1.45,
-            "shapeDistanceThreshold": 8,
+            "shapeDistanceThreshold": 20,
         },
     }
 
@@ -326,6 +353,7 @@ def recognize(image_path: Path, course_count: int, profile: dict | None = None) 
     cleaned = remove_horizontal_rules(mask, max(24, int(width * 0.012)))
     systems: list[dict] = []
     all_glyphs: list[dict] = []
+    excluded_non_event_anchors = 0
 
     for system_index, lines in enumerate(staff_systems, 1):
         gap = sum(lines[index + 1] - lines[index] for index in range(4)) / 4
@@ -378,11 +406,39 @@ def recognize(image_path: Path, course_count: int, profile: dict | None = None) 
             glyphs.append(item)
             all_glyphs.append(item)
 
-        anchors = event_anchors(cleaned, bounds, gap)
+        raw_anchors = event_anchors(cleaned, bounds, gap)
+        strict_barlines = [
+            candidate
+            for candidate in barlines
+            if candidate["classification"] == "barline-like"
+        ]
+        exclusion_radius = max(4, int(gap * 0.35))
+        anchors = [
+            anchor
+            for anchor in raw_anchors
+            if anchor >= staff_left
+            and not any(
+                abs(
+                    anchor
+                    - (
+                        candidate["region"]["x"]
+                        + candidate["region"]["width"] / 2
+                    )
+                    * width
+                )
+                <= exclusion_radius
+                for candidate in strict_barlines
+            )
+        ]
+        excluded_non_event_anchors += len(raw_anchors) - len(anchors)
+        if not anchors:
+            raise ValueError(
+                f"System {system_index} has no musical event anchors after barline filtering"
+            )
         events: list[dict] = []
         for event_index, anchor in enumerate(anchors, 1):
             left_edge = (
-                bounds.left
+                staff_left
                 if event_index == 1
                 else (anchors[event_index - 2] + anchor) // 2
             )
@@ -469,7 +525,7 @@ def recognize(image_path: Path, course_count: int, profile: dict | None = None) 
 
     return {
         "schemaVersion": 1,
-        "backend": {"id": "vellum.printed-tab-geometry", "version": "2"},
+        "backend": {"id": "vellum.printed-tab-geometry", "version": "3"},
         "profile": profile,
         "image": {"width": width, "height": height, "threshold": threshold},
         "systems": systems,
@@ -478,6 +534,7 @@ def recognize(image_path: Path, course_count: int, profile: dict | None = None) 
         "hypotheses": [],
         "diagnostics": [
             f"Detected {len(systems)} five-line systems.",
+            f"Excluded {excluded_non_event_anchors} clef or strict-barline anchors from musical event units.",
             f"Extracted {len(all_glyphs)} uninterpreted glyph components; {len(fret_clusters)} conservative fret-letter clusters are eligible for reviewed reuse.",
             "No course letter, rhythm, ornament, gesture, or duration was accepted automatically.",
         ],

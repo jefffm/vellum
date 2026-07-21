@@ -64,11 +64,15 @@ MEI edition, then use one accepted selection as bounded repertoire evidence.
   performs the complete event-by-event Owner pass over page 9, resolves its visible-token readings
   and repeat/return marks, and records the existing review metrics plus approximate elapsed review
   time. Because page 9 is the first real baseline, T05 does not invent a numeric burden threshold.
-  The Owner instead records whether the candidate materially reduced repetitive entry compared with
-  authoring the transcription and whether any evidence dimension was systematically left for the
-  Owner to author. Either negative judgment fails T05 and routes to the smallest applicable
-  remediation; the measurements establish quantitative targets for later pages. T06
-  and T07 resume automatically from its accepted version IDs.
+  The Owner instead records whether source-derived event placement and the keyboard controls
+  materially reduced locating, regrouping, and repetitive entry compared with authoring an
+  unstructured transcription, and whether every visible-evidence dimension could be recorded
+  without a systematically slow or missing interaction. This is an expert transcription pass, not
+  a zero-authoring recognition claim: blank or uncertain musical labels remain honest proposals to
+  resolve, while invented confident labels would make the pass worse. Either negative burden or
+  interaction judgment fails T05 and routes to the smallest applicable remediation; the
+  measurements establish quantitative targets for later pages. T06 and T07 resume automatically
+  from its accepted version IDs.
 - T05 has an early failure checkpoint after the first complete source system. Isolated recognition
   and geometry errors continue through ordinary review, but a systematic blocker across that system
   stops the pass: an entire evidence dimension is absent, event geometry repeatedly requires

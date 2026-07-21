@@ -22,9 +22,13 @@ the first idiom-study follow-up.
       action counts are accompanied by approximate elapsed review time and the Owner's explicit
       judgment that the candidate materially reduced repetitive entry compared with authoring the
       transcription.
-- [ ] The Owner explicitly confirms that no visible-evidence dimension, including rhythm, dots,
-      ornaments, gesture or vertical marks, repeats, and event grouping, was systematically left for
-      the Owner to author; a negative judgment fails T05 and routes to the applicable remediation.
+- [ ] The Owner explicitly confirms that every visible-evidence dimension—including rhythm, dots,
+      ornaments, gesture or vertical marks, repeats, and event grouping—can be recorded without a
+      missing or systematically slow interaction, and that the source-derived event placement and
+      keyboard workflow materially reduce locating, regrouping, and repetitive entry compared with
+      authoring an unstructured transcription. This expert pass may honestly begin with blank or
+      uncertain label proposals; it does not require invented automatic readings. A negative burden
+      or interaction judgment fails T05 and routes to the applicable remediation.
 - [ ] The exact canonical MEI passes the locally vendored, digest-bound upstream MEI 5.1
       **Pinned MEI Schema** and the separate **Vellum Diplomatic Tablature Profile**, including its
       deterministic token, facsimile-link, permitted-construct, and evidence-layer checks; the

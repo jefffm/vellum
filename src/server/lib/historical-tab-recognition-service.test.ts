@@ -34,7 +34,7 @@ describe("source-adaptive historical tablature recognition", () => {
     const page = Buffer.from("project-authored-png-placeholder");
     const extraction = {
       schemaVersion: 1,
-      backend: { id: "vellum.printed-tab-geometry", version: "2" },
+      backend: { id: "vellum.printed-tab-geometry", version: "3" },
       profile: {
         id: "profile.french-five-course.printed.unlabeled",
         version: 1,

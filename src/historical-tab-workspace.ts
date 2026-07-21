@@ -290,9 +290,15 @@ export function installHistoricalTabWorkspace(
       .map((id) => glyphs.get(id))
       .filter((glyph) => glyph?.courseCandidate === courseIndex + 1)
       .sort((left, right) => (right?.area ?? 0) - (left?.area ?? 0));
-    const clusterId = activeGlyphs.find((glyph) =>
+    const reusableActiveGlyphs = activeGlyphs.filter((glyph) =>
       reusableClusterIds.has(glyph!.clusterId)
-    )?.clusterId;
+    );
+    // A course can contain both a fret letter and another course-aligned mark.
+    // Without a glyph-level Owner selection, guessing which identity was typed
+    // would make a broad propagation actively dangerous. Keep the shortcut only
+    // for the unambiguous one-component case.
+    const clusterId =
+      reusableActiveGlyphs.length === 1 ? reusableActiveGlyphs[0]!.clusterId : undefined;
     if (!clusterId) return [];
     return draft.events.flatMap((event, index) => {
       if (index === draft.cursor || event.courses[courseIndex]) return [];
@@ -354,7 +360,7 @@ export function installHistoricalTabWorkspace(
         .filter((clusterId) => clusterId && clusterById.get(clusterId)?.label)
     ).size;
     shell.querySelector("[data-location]")!.textContent =
-      `Event ${draft.cursor + 1} of ${draft.events.length} · ${event.id} · ${event.state} · ${proposedFretCount} profile proposal${proposedFretCount === 1 ? "" : "s"} (confirmation required) · ${sourceVerticalCount} detected vertical mark${sourceVerticalCount === 1 ? "" : "s"}`;
+      `Event ${draft.cursor + 1} of ${draft.events.length} · ${event.id} · ${event.state} · ${proposedFretCount} profile proposal${proposedFretCount === 1 ? "" : "s"} (confirmation required) · ${sourceVerticalCount} vertical candidate${sourceVerticalCount === 1 ? "" : "s"}`;
     shell.querySelector("[data-diagnostics]")!.textContent = run.diagnostics.join("\n");
     const courses = shell.querySelector("[data-courses]")!;
     courses.innerHTML = event.courses
