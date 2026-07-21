@@ -76,6 +76,19 @@ version IDs; untriggered improvements remain outside the current wave. Page 9 is
 review-burden baseline, so T05 records measured Owner judgment rather than imposing an invented
 numeric threshold; its measurements establish quantitative targets for later pages.
 
+## Observed workstation remediation
+
+- The first live pass exposed a systematic course-entry interruption: entering a valid fret letter
+  in a visible course input rerendered the event without moving to the next course, even though the
+  shell-level letter shortcut did advance. Both paths now advance consistently and retain focus on
+  the next course input.
+- `Tab` is the explicit skip-course shortcut (and `Shift+Tab` moves back) while a course input is
+  active. It changes selection without inventing a fret letter.
+- This workload-changing UI repair retains the immutable recognition attempt but starts the T05
+  pass in the version-4 recoverable-draft namespace. The earlier partial draft remains untouched in
+  its prior local-storage namespace as diagnostic evidence; review state, time, and burden counts
+  restart so final metrics measure one complete pass using the repaired interaction.
+
 ## Blocked by
 
 - None. 02's reopened source-map/transcription predicate and 04's passage-prompting path are

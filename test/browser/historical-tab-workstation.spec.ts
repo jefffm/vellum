@@ -107,6 +107,12 @@ test("keyboard-first historical-tab review confirms, edits, navigates, and resto
   const surface = page.locator(".historical-tab-workspace");
   await expect(surface).toBeVisible();
   await expect(surface.locator("[data-location]")).toContainText("Event 1 of 3");
+  await surface.getByLabel("Course 1 fret letter").focus();
+  await surface.getByLabel("Course 1 fret letter").press("b");
+  await expect(surface.getByLabel("Course 1 fret letter")).toHaveValue("b");
+  await expect(surface.getByLabel("Course 2 fret letter")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(surface.getByLabel("Course 3 fret letter")).toBeFocused();
   await surface.press("S");
   await expect(surface.locator("[data-location]")).toContainText("Event 1 of 4");
   await surface.press("Meta+z");

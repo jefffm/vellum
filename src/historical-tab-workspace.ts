@@ -32,7 +32,7 @@ type EventDraft = {
 };
 
 type WorkingDraft = {
-  schemaVersion: 3;
+  schemaVersion: 4;
   runId: string;
   cursor: number;
   events: EventDraft[];
@@ -69,7 +69,7 @@ const postApi = async <T>(url: string, body: unknown): Promise<T> => {
   return payload.data;
 };
 
-const storageKey = (runId: string) => `vellum.historical-tab-draft.${runId}`;
+const storageKey = (runId: string) => `vellum.historical-tab-draft.v4.${runId}`;
 
 function initialDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
   const clusterLabels = new Map(
@@ -79,7 +79,7 @@ function initialDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
   );
   const glyphs = new Map(run.glyphs.map((glyph) => [glyph.id, glyph] as const));
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     runId: run.id,
     cursor: 0,
     keyboardActions: 0,
@@ -134,53 +134,11 @@ function restoredDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
   const value = localStorage.getItem(storageKey(run.id));
   if (!value) return initialDraft(run);
   try {
-    const parsed = JSON.parse(value) as Omit<
-      WorkingDraft,
-      "schemaVersion" | "keyboardActions" | "reviewElapsedMs" | "ownerJudgment"
-    > & {
-      schemaVersion: 1 | 2 | 3;
-      keyboardActions?: number;
-      reviewElapsedMs?: number;
-      ownerJudgment?: WorkingDraft["ownerJudgment"];
-    };
-    if (
-      (parsed.schemaVersion === 1 || parsed.schemaVersion === 2 || parsed.schemaVersion === 3) &&
-      parsed.runId === run.id &&
-      parsed.events.length
-    ) {
-      const events = parsed.events.map((event) => {
-        const { page: _legacyPage, ...region } = event.region as EventDraft["region"] & {
-          page?: number;
-        };
-        const sourceHasVerticalEvidence = event.sourceEventIds.some(
-          (id) =>
-            run.systems.flatMap((system) => system.events).find((source) => source.id === id)
-              ?.verticalCandidateIds.length
-        );
-        return {
-          ...event,
-          region,
-          verticalMark: event.verticalMark ?? (sourceHasVerticalEvidence ? "unread" : "none"),
-          review: event.review ?? {
-            touched: event.state !== "unreviewed",
-            corrected: false,
-            regrouped: event.sourceEventIds.length !== 1,
-            propagated: false,
-            rejected: false,
-          },
-          propagatedCourses: event.propagatedCourses ?? [],
-        };
-      });
+    const parsed = JSON.parse(value) as WorkingDraft;
+    if (parsed.schemaVersion === 4 && parsed.runId === run.id && parsed.events.length) {
       return {
         ...parsed,
-        schemaVersion: 3,
-        events,
-        keyboardActions: parsed.keyboardActions ?? 0,
-        reviewElapsedMs: Math.max(0, parsed.reviewElapsedMs ?? 0),
-        ownerJudgment: parsed.ownerJudgment ?? {
-          workflowBenefit: "unanswered",
-          evidenceEntry: "unanswered",
-        },
+        reviewElapsedMs: Math.max(0, parsed.reviewElapsedMs),
         cursor: Math.min(parsed.cursor, parsed.events.length - 1),
       };
     }
@@ -213,6 +171,7 @@ export function installHistoricalTabWorkspace(
 ): void {
   let draft = restoredDraft(run);
   let selectedCourse = 0;
+  let courseFocusAfterRender: number | undefined;
   const undo: WorkingDraft[] = [];
   const redo: WorkingDraft[] = [];
   let reviewElapsedMs = draft.reviewElapsedMs;
@@ -220,7 +179,7 @@ export function installHistoricalTabWorkspace(
   const shell = document.createElement("section");
   shell.className = "historical-tab-workspace";
   shell.tabIndex = 0;
-  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><fieldset class="historical-tab-judgment" data-owner-judgment><legend>End-of-pass judgment</legend><label>Did source placement and the keyboard workflow materially reduce locating, regrouping, and repetitive entry?<select data-workflow-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><label>Could every visible-evidence dimension be recorded without a missing or systematically slow interaction?<select data-evidence-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><p data-judgment-status></p></fieldset><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+↑/↓ visible arrow · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
+  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><fieldset class="historical-tab-judgment" data-owner-judgment><legend>End-of-pass judgment</legend><label>Did source placement and the keyboard workflow materially reduce locating, regrouping, and repetitive entry?<select data-workflow-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><label>Could every visible-evidence dimension be recorded without a missing or systematically slow interaction?<select data-evidence-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><p data-judgment-status></p></fieldset><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret and advance · Tab skips course · Shift+Tab moves back · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+↑/↓ visible arrow · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
   panel.replaceChildren(shell);
 
   const canvas = shell.querySelector<HTMLCanvasElement>("[data-crop]")!;
@@ -432,11 +391,17 @@ export function installHistoricalTabWorkspace(
           .forEach((label, index) => label.classList.toggle("selected", index === selectedCourse));
       });
       input.addEventListener("input", () => {
+        const course = Number(input.dataset.course);
+        const letter = input.value.trim().toLowerCase();
+        if (/^[a-ik-n]$/.test(letter) && course < run.profile.courseCount - 1) {
+          selectedCourse = course + 1;
+          courseFocusAfterRender = selectedCourse;
+        }
         mutate(() => {
-          event.courses[Number(input.dataset.course)] = input.value.trim() || null;
+          draft.keyboardActions += 1;
+          event.courses[course] = letter || null;
           event.state = "unreviewed";
           event.review.corrected = true;
-          const course = Number(input.dataset.course);
           if (event.propagatedCourses.includes(course)) {
             event.review.rejected = true;
             event.propagatedCourses = event.propagatedCourses.filter((value) => value !== course);
@@ -530,7 +495,12 @@ export function installHistoricalTabWorkspace(
       context.closePath();
       context.fill();
     }
-    window.setTimeout(() => shell.focus(), 0);
+    const courseToFocus = courseFocusAfterRender;
+    courseFocusAfterRender = undefined;
+    window.setTimeout(() => {
+      if (courseToFocus === undefined) shell.focus();
+      else shell.querySelector<HTMLInputElement>(`[data-course="${courseToFocus}"]`)?.focus();
+    }, 0);
   }
 
   shell.querySelector("[data-confirm]")!.addEventListener("click", confirm);
@@ -780,7 +750,9 @@ export function installHistoricalTabWorkspace(
     }
   });
   shell.addEventListener("keydown", (keyboardEvent) => {
-    if ((keyboardEvent.target as HTMLElement).matches("input, select")) return;
+    const target = keyboardEvent.target as HTMLElement;
+    const isCourseSkip = target.matches("[data-course]") && keyboardEvent.key === "Tab";
+    if (target.matches("input, select") && !isCourseSkip) return;
     const rhythmShortcut: Record<string, EventDraft["rhythmGlyph"]> = {
       "0": "absent",
       "1": "stem",
@@ -926,6 +898,20 @@ export function installHistoricalTabWorkspace(
     } else if (keyboardEvent.key === "?") {
       draft.keyboardActions += 1;
       markAmbiguous();
+    } else if (keyboardEvent.key === "Tab") {
+      const offset = keyboardEvent.shiftKey ? -1 : 1;
+      const nextCourse = Math.max(
+        0,
+        Math.min(run.profile.courseCount - 1, selectedCourse + offset)
+      );
+      if (nextCourse === selectedCourse) return;
+      keyboardEvent.preventDefault();
+      draft.keyboardActions += 1;
+      selectedCourse = nextCourse;
+      courseFocusAfterRender = selectedCourse;
+      recordReviewActivity();
+      persist();
+      render();
     } else if (/^[1-5]$/.test(keyboardEvent.key)) {
       draft.keyboardActions += 1;
       selectedCourse = Number(keyboardEvent.key) - 1;
