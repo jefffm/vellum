@@ -106,6 +106,7 @@ function tokenElementNames(kind: DiplomaticToken["kind"]): ReadonlySet<string> {
   if (kind === "tablature") return new Set(["note"]);
   if (kind === "rhythm") return new Set(["tabDurSym"]);
   if (kind === "strum" || kind === "pince") return new Set(["annot", "tabGrp"]);
+  if (kind === "barline") return new Set(["annot", "measure"]);
   return new Set(["annot"]);
 }
 

@@ -14,12 +14,14 @@ export const FRENCH_TAB_MEI_FIXTURE = String.raw`<?xml version="1.0" encoding="U
     <zone xml:id="zone-rhythm-3" ulx="5300" uly="1000" lrx="5700" lry="1800"/>
     <zone xml:id="zone-note-5" ulx="6100" uly="1000" lrx="6500" lry="1800"/>
     <zone xml:id="zone-note-6" ulx="6900" uly="1000" lrx="7300" lry="1800"/>
+    <zone xml:id="zone-measure-1" ulx="300" uly="900" lrx="7500" lry="1900"/>
+    <zone xml:id="zone-event-1" ulx="450" uly="950" lrx="3350" lry="1850"/>
   </surface></facsimile><body><mdiv><score>
     <scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Five-course guitar</label><tuning>
       <course n="1" pname="e" oct="4"/><course n="2" pname="b" oct="3"/><course n="3" pname="g" oct="3"/><course n="4" pname="d" oct="3"/><course n="5" pname="a" oct="3"/>
     </tuning></staffDef></staffGrp></scoreDef>
-    <section><measure n="1" xml:id="measure-1"><staff n="1"><layer n="1">
-      <tabGrp dur="4" dots="1" xml:id="event-1"><tabDurSym facs="#zone-rhythm-1" xml:id="rhythm-1"/><note facs="#zone-note-1" tab.course="1" tab.fret="1" xml:id="note-1"/><note facs="#zone-note-2" tab.course="3" tab.fret="0" xml:id="note-2"/><note facs="#zone-note-3" tab.course="5" tab.fret="2" xml:id="note-3"/></tabGrp>
+    <section><measure n="1" xml:id="measure-1" facs="#zone-measure-1"><staff n="1"><layer n="1">
+      <tabGrp dur="4" dots="1" xml:id="event-1" facs="#zone-event-1"><tabDurSym facs="#zone-rhythm-1" xml:id="rhythm-1"/><note facs="#zone-note-1" tab.course="1" tab.fret="1" xml:id="note-1"/><note facs="#zone-note-2" tab.course="3" tab.fret="0" xml:id="note-2"/><note facs="#zone-note-3" tab.course="5" tab.fret="2" xml:id="note-3"/></tabGrp>
       <tabGrp dur="8" xml:id="event-2"><tabDurSym facs="#zone-rhythm-2" xml:id="rhythm-2"/><note facs="#zone-note-4" tab.course="1" tab.fret="3" xml:id="note-4"/></tabGrp>
       <tabGrp dur="4" xml:id="event-3"><tabDurSym facs="#zone-rhythm-3" xml:id="rhythm-3"/><note facs="#zone-note-5" tab.course="2" tab.fret="1" xml:id="note-5"/><note facs="#zone-note-6" tab.course="4" tab.fret="2" xml:id="note-6"/></tabGrp>
     </layer></staff></measure></section>

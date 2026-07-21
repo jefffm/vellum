@@ -16,6 +16,8 @@ type EventDraft = {
     | "double-barline"
     | "repeat-start"
     | "repeat-end"
+    | "arrow-up"
+    | "arrow-down"
     | "gesture"
     | "other";
   state: "unreviewed" | "confirmed" | "ambiguous";
@@ -199,7 +201,7 @@ export function installHistoricalTabWorkspace(
   const shell = document.createElement("section");
   shell.className = "historical-tab-workspace";
   shell.tabIndex = 0;
-  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
+  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+↑/↓ visible arrow · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
   panel.replaceChildren(shell);
 
   const canvas = shell.querySelector<HTMLCanvasElement>("[data-crop]")!;
@@ -234,6 +236,8 @@ export function installHistoricalTabWorkspace(
     "double-barline",
     "repeat-start",
     "repeat-end",
+    "arrow-up",
+    "arrow-down",
     "gesture",
     "other",
   ];
@@ -723,6 +727,22 @@ export function installHistoricalTabWorkspace(
         current().state = "unreviewed";
         current().review.corrected = true;
       });
+    } else if (keyboardEvent.altKey && keyboardEvent.key === "ArrowUp") {
+      keyboardEvent.preventDefault();
+      mutate(() => {
+        draft.keyboardActions += 1;
+        current().verticalMark = "arrow-up";
+        current().state = "unreviewed";
+        current().review.corrected = true;
+      });
+    } else if (keyboardEvent.altKey && keyboardEvent.key === "ArrowDown") {
+      keyboardEvent.preventDefault();
+      mutate(() => {
+        draft.keyboardActions += 1;
+        current().verticalMark = "arrow-down";
+        current().state = "unreviewed";
+        current().review.corrected = true;
+      });
     } else if (keyboardEvent.altKey && keyboardEvent.key.toLowerCase() === "r") {
       keyboardEvent.preventDefault();
       mutate(() => {
@@ -733,6 +753,8 @@ export function installHistoricalTabWorkspace(
           "double-barline",
           "repeat-start",
           "repeat-end",
+          "arrow-up",
+          "arrow-down",
           "gesture",
           "other",
         ];

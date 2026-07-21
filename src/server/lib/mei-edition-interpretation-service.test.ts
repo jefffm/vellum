@@ -49,9 +49,11 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
     id,
     kind: id.startsWith("rhythm")
       ? "rhythm"
-      : id.startsWith("strum") && !id.includes("-note")
-        ? "strum"
-        : "tablature",
+      : id.startsWith("arrow")
+        ? "other"
+        : id.startsWith("strum") && !id.includes("-note")
+          ? "strum"
+          : "tablature",
     region: { page: 1, x: 0.02 + index * 0.08, y: 0.1, width: 0.04, height: 0.06 },
     confidence: 0.95,
     alternatives: [],
@@ -87,6 +89,11 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
       { course: 3, openMidis: [55] },
       { course: 4, openMidis: [50] },
       { course: 5, openMidis: [45, 57] },
+    ],
+    eventRhythms: [
+      { eventId: "event-1", duration: 4, dots: 1 },
+      { eventId: "event-2", duration: 8, dots: 0 },
+      { eventId: "event-3", duration: 4, dots: 0 },
     ],
     repeatSections: [{ startMeasure: 1, endMeasure: 1, totalPasses: 2 }],
     strumRealizations: [],
@@ -159,6 +166,79 @@ describe("versioned tablature interpretation and acceptance", () => {
         .map((event) => event.midi)
     ).toEqual([47, 59]);
     expect(preview.events.find((event) => event.meiId === "note-4")?.startSeconds).toBe(1.5);
+
+    const alternateRhythm = service.createInterpretation(workspaceId, edition.editionId, {
+      ...command,
+      eventRhythms: command.eventRhythms.map((reading) =>
+        reading.eventId === "event-1" ? { ...reading, duration: 8 as const, dots: 0 } : reading
+      ),
+      rationale: "Explicit alternative rhythm reading for the first visible sign.",
+    });
+    expect(
+      service
+        .playback(workspaceId, edition.editionId, alternateRhythm.id)
+        .events.find((event) => event.meiId === "note-4")?.startSeconds
+    ).toBe(0.5);
+  });
+
+  it("requires explicit event timing and plays source-adaptive diplomatic MEI without semantic durations", () => {
+    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Diplomatic rhythm signs</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label></staffDef></staffGrp></scoreDef><section><measure xml:id="source-measure-1" n="1" metcon="false" type="reviewed-source-segment"><staff n="1"><layer n="1"><tabGrp xml:id="source-event-1" type="diplomatic-event visible-rhythm-stem"><tabDurSym xml:id="rhythm-1" type="visible-rhythm-stem"/><note xml:id="note-a" tab.course="1" tab.fret="0"/><note xml:id="note-a-2" tab.course="3" tab.fret="2"/></tabGrp><annot xml:id="arrow-1" type="visible-vertical-arrow-up" startid="#source-event-1">arrow-up</annot><tabGrp xml:id="source-event-2" type="diplomatic-event visible-rhythm-absent"><tabDurSym xml:id="rhythm-2" type="visible-rhythm-absent"/><note xml:id="note-b" tab.course="1" tab.fret="1"/></tabGrp><tabGrp xml:id="source-event-3" type="diplomatic-event visible-rhythm-flag-1"><tabDurSym xml:id="rhythm-3" type="visible-rhythm-flag-1"/><note xml:id="note-c" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const { service, workspaceId, edition, command } = harness({
+      mei,
+      tokenIds: [
+        "rhythm-1",
+        "note-a",
+        "note-a-2",
+        "arrow-1",
+        "rhythm-2",
+        "note-b",
+        "rhythm-3",
+        "note-c",
+      ],
+    });
+    const explicit = {
+      ...command,
+      courseTunings: [
+        { course: 1, openMidis: [64] },
+        { course: 3, openMidis: [55] },
+      ],
+      eventRhythms: [
+        { eventId: "source-event-1", duration: 4, dots: 0 },
+        { eventId: "source-event-2", duration: 4, dots: 0 },
+        { eventId: "source-event-3", duration: 8, dots: 0 },
+      ],
+      repeatSections: [{ startMeasure: 1, endMeasure: 1, totalPasses: 1 }],
+      strumRealizations: [
+        {
+          strumId: "source-event-1",
+          direction: "up",
+          notes: [
+            { course: 1, fret: 0 },
+            { course: 3, fret: 2 },
+          ],
+          spreadMilliseconds: 35,
+        },
+      ],
+      rationale: "Quarter sign, inherited quarter, then an eighth-note flag.",
+    } satisfies CreateTablatureInterpretationCommand;
+
+    expect(() =>
+      service.createInterpretation(workspaceId, edition.editionId, {
+        ...explicit,
+        eventRhythms: explicit.eventRhythms.slice(0, 2),
+      })
+    ).toThrowError(/duration of every tablature event/);
+    expect(() =>
+      service.createInterpretation(workspaceId, edition.editionId, {
+        ...explicit,
+        strumRealizations: [{ ...explicit.strumRealizations[0]!, direction: "down" }],
+      })
+    ).toThrowError(/direction disagrees/);
+
+    const interpretation = service.createInterpretation(workspaceId, edition.editionId, explicit);
+    const preview = service.playback(workspaceId, edition.editionId, interpretation.id);
+    expect(preview.durationSeconds).toBe(2.5);
+    expect(preview.events.map((event) => event.startSeconds)).toEqual([0, 0.035, 1, 2]);
   });
 
   it("keeps exact transcription and interpretation decisions separate, immutable, and stale-aware", () => {
@@ -298,9 +378,17 @@ describe("versioned tablature interpretation and acceptance", () => {
           },
         },
       ],
+      eventRhythms: [
+        { eventId: "pickup-a-group", duration: 8, dots: 0 },
+        { eventId: "strum-held", duration: 2, dots: 1 },
+        { eventId: "closing-a-group", duration: 4, dots: 0 },
+        { eventId: "pickup-b-group", duration: 8, dots: 0 },
+        { eventId: "strum-explicit", duration: 2, dots: 1 },
+      ],
       strumRealizations: [
         {
           strumId: "strum-held",
+          direction: "up",
           notes: [
             { course: 1, fret: 1 },
             { course: 3, fret: 2 },
@@ -309,6 +397,7 @@ describe("versioned tablature interpretation and acceptance", () => {
         },
         {
           strumId: "strum-explicit",
+          direction: "down",
           notes: [
             { course: 1, fret: 2 },
             { course: 3, fret: 2 },

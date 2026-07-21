@@ -323,20 +323,54 @@ const RepeatSectionSchema = Type.Object(
   { additionalProperties: false }
 );
 
-const StrumRealizationSchema = Type.Object(
+const StrumNotesSchema = Type.Array(
+  Type.Object(
+    {
+      course: Type.Integer({ minimum: 1, maximum: 13 }),
+      fret: Type.Integer({ minimum: 0, maximum: 24 }),
+    },
+    { additionalProperties: false }
+  ),
+  { minItems: 1 }
+);
+
+const CurrentStrumRealizationSchema = Type.Object(
   {
     strumId: MeiIdSchema,
-    notes: Type.Array(
-      Type.Object(
-        {
-          course: Type.Integer({ minimum: 1, maximum: 13 }),
-          fret: Type.Integer({ minimum: 0, maximum: 24 }),
-        },
-        { additionalProperties: false }
-      ),
-      { minItems: 1 }
-    ),
+    direction: Type.Union([Type.Literal("up"), Type.Literal("down")]),
+    notes: StrumNotesSchema,
     spreadMilliseconds: Type.Integer({ minimum: 0, maximum: 250 }),
+  },
+  { additionalProperties: false }
+);
+
+const LegacyStrumRealizationSchema = Type.Object(
+  {
+    strumId: MeiIdSchema,
+    notes: StrumNotesSchema,
+    spreadMilliseconds: Type.Integer({ minimum: 0, maximum: 250 }),
+  },
+  { additionalProperties: false }
+);
+
+const StrumRealizationSchema = Type.Union([
+  CurrentStrumRealizationSchema,
+  LegacyStrumRealizationSchema,
+]);
+
+const EventRhythmReadingSchema = Type.Object(
+  {
+    eventId: MeiIdSchema,
+    duration: Type.Union([
+      Type.Literal(1),
+      Type.Literal(2),
+      Type.Literal(4),
+      Type.Literal(8),
+      Type.Literal(16),
+      Type.Literal(32),
+      Type.Literal(64),
+    ]),
+    dots: Type.Integer({ minimum: 0, maximum: 3 }),
   },
   { additionalProperties: false }
 );
@@ -350,6 +384,7 @@ export const TablatureInterpretationSchema = Type.Object(
     parentInterpretationId: Type.Optional(InterpretationIdSchema),
     tempo: Type.Integer({ minimum: 30, maximum: 240 }),
     courseTunings: Type.Array(CourseTuningSchema, { minItems: 1, maxItems: 13 }),
+    eventRhythms: Type.Optional(Type.Array(EventRhythmReadingSchema, { minItems: 1 })),
     repeatSections: Type.Array(RepeatSectionSchema, { minItems: 1 }),
     strumRealizations: Type.Array(StrumRealizationSchema),
     rationale: Type.String({ minLength: 1, maxLength: 500 }),
@@ -364,8 +399,9 @@ export const CreateTablatureInterpretationCommandSchema = Type.Object(
     parentInterpretationId: Type.Optional(InterpretationIdSchema),
     tempo: Type.Integer({ minimum: 30, maximum: 240 }),
     courseTunings: Type.Array(CourseTuningSchema, { minItems: 1, maxItems: 13 }),
+    eventRhythms: Type.Array(EventRhythmReadingSchema, { minItems: 1 }),
     repeatSections: Type.Array(RepeatSectionSchema, { minItems: 1 }),
-    strumRealizations: Type.Array(StrumRealizationSchema),
+    strumRealizations: Type.Array(CurrentStrumRealizationSchema),
     rationale: Type.String({ minLength: 1, maxLength: 500 }),
   },
   { additionalProperties: false }

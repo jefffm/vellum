@@ -34,6 +34,9 @@ the first idiom-study follow-up.
       diplomatic subset.
 - [ ] The complete rendered page is legible and source-linked at useful zoom levels.
 - [ ] Literal playback and the score-following marker make the chosen reading reviewable.
+- [ ] The chosen Tablature Interpretation explicitly names every event duration, course tuning,
+      performed repeat section, and directional-strum realization; none is silently recovered from
+      semantic performance attributes in the Diplomatic Tablature Transcription.
 - [ ] Transcription Acceptance and Interpretation Acceptance name exact versions and purposes.
 - [ ] Viable alternatives remain preserved unless explicitly rejected.
 

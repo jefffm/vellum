@@ -532,9 +532,7 @@ function buildReviewedDiplomaticMei(
         kind:
           event.verticalMark.includes("barline") || event.verticalMark.startsWith("repeat")
             ? "barline"
-            : event.verticalMark === "gesture"
-              ? "strum"
-              : "other",
+            : "other",
         region: { page: run.sourcePage, ...verticalRegion },
         confidence: event.state === "confirmed" ? 1 : 0.5,
         alternatives: event.state === "ambiguous" ? ["Owner marked this event ambiguous"] : [],

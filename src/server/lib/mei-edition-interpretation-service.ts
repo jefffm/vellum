@@ -143,6 +143,7 @@ export class MeiEditionInterpretationService {
       if (tuning.openMidis.some((midi) => midi + maxFret > 127))
         throw new ApiRouteError(`Course ${tuning.course} interpretation exceeds MIDI range`, 400);
     }
+    assertEventRhythms(command.eventRhythms, requirements);
     assertRepeatSections(command.repeatSections, requirements);
     assertStrumRealizations(command.strumRealizations, requirements, tuningByCourse);
     const interpretation: TablatureInterpretation = {
@@ -153,6 +154,7 @@ export class MeiEditionInterpretationService {
       ...(parent ? { parentInterpretationId: parent.id } : {}),
       tempo: command.tempo,
       courseTunings: command.courseTunings,
+      eventRhythms: command.eventRhythms,
       repeatSections: command.repeatSections,
       strumRealizations: command.strumRealizations,
       rationale: command.rationale,
@@ -298,12 +300,13 @@ function readTablatureRequirements(mei: string): {
   numberedMeasures: number[];
   pickupMeasureIds: string[];
   closingMeasureIds: string[];
+  eventIds: string[];
   eventLocations: Map<string, Readonly<{ measure: number; order: number }>>;
   maxFretByCourse: Map<number, number>;
   strums: Map<
     string,
     Readonly<{
-      direction: "up" | "down";
+      direction?: "up" | "down";
       explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
     }>
   >;
@@ -323,15 +326,16 @@ function readTablatureRequirements(mei: string): {
     const numberedMeasures = Array.from(dom.window.document.querySelectorAll("measure"))
       .map((measure) => Number(measure.getAttribute("n")))
       .filter((number) => Number.isInteger(number) && number > 0);
-    const pickupMeasureIds = Array.from(
-      dom.window.document.querySelectorAll('measure[metcon="false"]')
-    )
-      .filter((measure) => measure.getAttribute("type") !== "section-closing")
+    const pickupMeasureIds = Array.from(dom.window.document.querySelectorAll("measure"))
+      .filter((measure) => hasType(measure, "section-pickup"))
       .map((measure) => xmlId(measure));
-    const closingMeasureIds = Array.from(
-      dom.window.document.querySelectorAll('measure[type="section-closing"]')
-    ).map((measure) => xmlId(measure));
+    const closingMeasureIds = Array.from(dom.window.document.querySelectorAll("measure"))
+      .filter((measure) => hasType(measure, "section-closing"))
+      .map((measure) => xmlId(measure));
     const eventLocations = new Map<string, Readonly<{ measure: number; order: number }>>();
+    const eventIds = Array.from(dom.window.document.querySelectorAll("tabGrp")).map((group) =>
+      xmlId(group)
+    );
     let eventOrder = 0;
     for (const measure of Array.from(dom.window.document.querySelectorAll("measure"))) {
       const number = Number(measure.getAttribute("n"));
@@ -343,7 +347,7 @@ function readTablatureRequirements(mei: string): {
     const strums = new Map<
       string,
       Readonly<{
-        direction: "up" | "down";
+        direction?: "up" | "down";
         explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
       }>
     >();
@@ -362,11 +366,36 @@ function readTablatureRequirements(mei: string): {
       }));
       strums.set(id, { direction, explicitNotes });
     }
+    const groupsById = new Map(
+      Array.from(dom.window.document.querySelectorAll("tabGrp")).map((group) => [
+        xmlId(group),
+        group,
+      ])
+    );
+    for (const annotation of Array.from(dom.window.document.querySelectorAll("annot[type]"))) {
+      const types = new Set((annotation.getAttribute("type") ?? "").split(/\s+/));
+      const direction = types.has("visible-vertical-arrow-up")
+        ? "up"
+        : types.has("visible-vertical-arrow-down")
+          ? "down"
+          : undefined;
+      if (!direction && !types.has("visible-vertical-gesture")) continue;
+      const targetId = annotation.getAttribute("startid")?.replace(/^#/, "");
+      const group = targetId ? groupsById.get(targetId) : undefined;
+      if (!targetId || !group)
+        throw new ApiRouteError("A visible gesture does not target a tablature event", 400);
+      const explicitNotes = Array.from(group.querySelectorAll("note")).map((note) => ({
+        course: Number(note.getAttribute("tab.course")),
+        fret: Number(note.getAttribute("tab.fret")),
+      }));
+      strums.set(targetId, { ...(direction ? { direction } : {}), explicitNotes });
+    }
     return {
       courses: [...courses].sort((left, right) => left - right),
       numberedMeasures,
       pickupMeasureIds,
       closingMeasureIds,
+      eventIds,
       eventLocations,
       maxFretByCourse,
       strums,
@@ -377,6 +406,24 @@ function readTablatureRequirements(mei: string): {
 }
 
 type TablatureRequirements = ReturnType<typeof readTablatureRequirements>;
+
+function assertEventRhythms(
+  readings: CreateTablatureInterpretationCommand["eventRhythms"],
+  requirements: TablatureRequirements
+): void {
+  const byId = new Map(readings.map((reading) => [reading.eventId, reading]));
+  if (byId.size !== readings.length) {
+    throw new ApiRouteError("Each tablature event must have exactly one rhythm reading", 400);
+  }
+  const expectedIds = [...requirements.eventIds].sort();
+  const actualIds = [...byId.keys()].sort();
+  if (actualIds.join(",") !== expectedIds.join(",")) {
+    throw new ApiRouteError(
+      "Interpretation must explicitly read the duration of every tablature event and no others",
+      400
+    );
+  }
+}
 
 function assertRepeatSections(
   sections: TablatureInterpretation["repeatSections"],
@@ -443,7 +490,7 @@ function assertRepeatSections(
 }
 
 function assertStrumRealizations(
-  realizations: TablatureInterpretation["strumRealizations"],
+  realizations: CreateTablatureInterpretationCommand["strumRealizations"],
   requirements: TablatureRequirements,
   tuningByCourse: ReadonlyMap<number, readonly number[]>
 ): void {
@@ -461,6 +508,12 @@ function assertStrumRealizations(
   }
   for (const [strumId, realization] of byId) {
     const source = requirements.strums.get(strumId)!;
+    if (source.direction && realization.direction !== source.direction) {
+      throw new ApiRouteError(
+        `Strum ${strumId} direction disagrees with the reviewed visible gesture`,
+        400
+      );
+    }
     if (new Set(realization.notes.map(({ course }) => course)).size !== realization.notes.length) {
       throw new ApiRouteError(`Strum ${strumId} names a course more than once`, 400);
     }
@@ -495,6 +548,10 @@ function xmlId(element: Element): string {
   return id;
 }
 
+function hasType(element: Element, expected: string): boolean {
+  return new Set((element.getAttribute("type") ?? "").split(/\s+/).filter(Boolean)).has(expected);
+}
+
 function buildEditionPlayback(
   edition: MeiEditionVersion,
   interpretation: TablatureInterpretation
@@ -509,16 +566,12 @@ function buildEditionPlayback(
     );
     const pickups = new Map(
       allMeasures
-        .filter(
-          (measure) =>
-            measure.getAttribute("metcon") === "false" &&
-            measure.getAttribute("type") !== "section-closing"
-        )
+        .filter((measure) => hasType(measure, "section-pickup"))
         .map((measure) => [xmlId(measure), measure] as const)
     );
     const closings = new Map(
       allMeasures
-        .filter((measure) => measure.getAttribute("type") === "section-closing")
+        .filter((measure) => hasType(measure, "section-closing"))
         .map((measure) => [xmlId(measure), measure] as const)
     );
     const eventMeasure = new Map<string, number>();
@@ -603,6 +656,15 @@ function buildEditionPlayback(
     const strums = new Map(
       interpretation.strumRealizations.map((realization) => [realization.strumId, realization])
     );
+    if (!interpretation.eventRhythms) {
+      throw new ApiRouteError(
+        "Interpretation predates explicit event timing; create a successor interpretation",
+        409
+      );
+    }
+    const eventRhythms = new Map(
+      interpretation.eventRhythms.map((reading) => [reading.eventId, reading])
+    );
     const events: EditionPlaybackEvent[] = [];
     const measureOccurrences: EditionPlaybackPreview["measureOccurrences"] extends readonly (infer T)[]
       ? T[]
@@ -627,23 +689,18 @@ function buildEditionPlayback(
         groups = groups.slice(0, endIndex + 1);
       }
       for (const group of groups) {
-        const dur = Number(group.getAttribute("dur"));
-        const dots = Number(group.getAttribute("dots") ?? 0);
-        if (
-          ![1, 2, 4, 8, 16, 32, 64].includes(dur) ||
-          !Number.isInteger(dots) ||
-          dots < 0 ||
-          dots > 3
-        )
-          throw new ApiRouteError("Tablature Interpretation encountered invalid duration", 400);
-        const durationQuarters = (4 / dur) * (2 - 1 / 2 ** dots);
+        const groupId = xmlId(group);
+        const rhythm = eventRhythms.get(groupId);
+        if (!rhythm)
+          throw new ApiRouteError(`Tablature event ${groupId} has no interpreted duration`, 409);
+        const durationQuarters = (4 / rhythm.duration) * (2 - 1 / 2 ** rhythm.dots);
         const groupTypes = new Set((group.getAttribute("type") ?? "").split(/\s+/));
         const strumDirection = groupTypes.has("historical-strum-up")
           ? "up"
           : groupTypes.has("historical-strum-down")
             ? "down"
             : undefined;
-        const strumId = strumDirection ? xmlId(group) : undefined;
+        const strumId = strums.has(groupId) ? groupId : strumDirection ? groupId : undefined;
         const realization = strumId ? strums.get(strumId) : undefined;
         if (strumId && !realization) {
           throw new ApiRouteError(`Historical strum ${strumId} has no realization`, 409);
@@ -651,7 +708,10 @@ function buildEditionPlayback(
         const soundingNotes = realization
           ? [...realization.notes]
               .sort((left, right) =>
-                strumDirection === "up" ? left.course - right.course : right.course - left.course
+                (("direction" in realization ? realization.direction : undefined) ??
+                  strumDirection) === "up"
+                  ? left.course - right.course
+                  : right.course - left.course
               )
               .map((note, index) => ({
                 ...note,

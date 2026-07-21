@@ -1,6 +1,6 @@
 # 03 — Interpretation acceptance and synchronized playback
 
-Status: ready-for-agent
+Status: completed
 
 Type: AFK
 
@@ -63,7 +63,7 @@ The diplomatic source also contains directional strums. Held-shape strums have n
 course/fret children;
 explicit-chord strums preserve the source-written children. Playback must use exact interpretation
 records for both cases and fail closed rather than silently advancing through an unresolved strum.
-T03 becomes active again after the repaired T02 transcription lands.
+The repaired T02 transcription reopened this tracer; the remediation below completed it again.
 
 ## Remediation checkpoint
 
@@ -85,3 +85,29 @@ T03 becomes active again after the repaired T02 transcription lands.
   measures 8–15 once, and then returns from the first `S.` in measure 11 through the final `S.` in
   measure 15. Canonical-event highlighting followed playback. Acceptance remains blocked only by
   T02's 69 unresolved source readings and the late Owner review.
+
+## Source-adaptive remediation
+
+- Source-adaptive Diplomatic Editions carry only the reviewed visible rhythm glyph and dot evidence;
+  they do not encode semantic `dur` values. Every new Tablature Interpretation now names exactly
+  one duration reading for every `tabGrp`, and playback reads only that immutable mapping. A legacy
+  interpretation remains readable but fails closed for playback until revised with explicit event
+  timing.
+- The provisional interpretation proposal maps a visible stem and one-, two-, or three-flag signs
+  to explicit duration readings and carries the last visible sign across literal `absent` signs.
+  `unread` or leading unresolved absence cannot be auditioned. The complete explicit mapping,
+  tunings, repeat sections, and strum realizations remain inspectable in the workbench.
+- Ordinary source segments marked `metcon="false"` are no longer mistaken for pickups. Only an
+  explicit `section-pickup` has pickup semantics, while reviewed `boundary-repeat-end` evidence can
+  propose separate written repeat sections.
+- The page-9 vertical-mark vocabulary distinguishes literal up- and down-arrow evidence without
+  calling it a strum in the transcription. A Tablature Interpretation separately realizes each
+  such target as a directional strum with exact held or written courses, and a generic unresolved
+  gesture fails closed before audition.
+- When the source-linked staff is explicitly labeled `Guitare` and carries no semantic tuning, the
+  page-9 proposal starts from Vellum's existing five-course French stringing. The editable tuning
+  remains part of the exact interpretation rather than being written into diplomatic MEI.
+- Remediation gates passed on the macOS host: 1,644 tests passed with four intentional skips;
+  typecheck, formatting, specification verification, client build, and server build all passed.
+  All 46 browser scenarios passed with the Podman VM kept in the same process lifetime as the real
+  LilyPond workflow, and the pinned Nix render and playback evaluations both passed.

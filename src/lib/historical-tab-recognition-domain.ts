@@ -245,6 +245,8 @@ const ReviewedEventSchema = Type.Object(
       Type.Literal("double-barline"),
       Type.Literal("repeat-start"),
       Type.Literal("repeat-end"),
+      Type.Literal("arrow-up"),
+      Type.Literal("arrow-down"),
       Type.Literal("gesture"),
       Type.Literal("other"),
     ]),
