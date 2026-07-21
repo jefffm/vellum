@@ -52,6 +52,7 @@
                 pkgs.git
                 pkgs.nodejs_20
                 pkgs.lilypond
+                pkgs.libxml2
                 pkgs.musescore
                 pkgs.podman
                 pkgs.poppler-utils
@@ -123,6 +124,7 @@
               cp -r instruments "$out/lib/vellum/"
               cp -r templates "$out/lib/vellum/"
               cp -r knowledge-packs "$out/lib/vellum/"
+              cp -r vendor "$out/lib/vellum/"
 
               # theory.py is resolved as cwd + "src/server/theory.py"
               # so we replicate that path inside the lib directory
@@ -138,6 +140,7 @@
                   [
                     pkgs.nodejs_20
                     pkgs.lilypond
+                    pkgs.libxml2
                     pkgs.musescore
                     pkgs.poppler-utils
                     vellumPython

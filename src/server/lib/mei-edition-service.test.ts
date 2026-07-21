@@ -76,6 +76,7 @@ function harness() {
     workspaces,
     createId: () => createIdForTest(++sequence),
     workspaceId: workspace.id,
+    sourceArtifactId: source.id,
     edition,
   };
 }
@@ -85,6 +86,39 @@ function createIdForTest(sequence: number): string {
 }
 
 describe("diplomatic MEI Edition Correction Batches", () => {
+  it("fails closed when the pinned schema or diplomatic profile rejects a canonical create", () => {
+    const { service, workspaceId, sourceArtifactId, edition } = harness();
+    expect(() =>
+      service.create(workspaceId, {
+        sourceArtifactId,
+        sourcePage: 9,
+        title: "Invalid upstream MEI",
+        mei: edition.mei.replace("</layer>", "<not-an-mei-element/></layer>"),
+        tokens: edition.tokens,
+        extraction: {
+          backendId: "fixture.invalid-upstream-schema",
+          backendVersion: "1",
+          diagnostics: ["Deliberately invalid schema fixture"],
+        },
+      })
+    ).toThrowError(/Pinned MEI Schema rejected canonical MEI/);
+
+    expect(() =>
+      service.create(workspaceId, {
+        sourceArtifactId,
+        sourcePage: 9,
+        title: "Invalid diplomatic profile",
+        mei: edition.mei.replace('facs="#zone-note-1"', 'facs="https://example.test/note"'),
+        tokens: edition.tokens,
+        extraction: {
+          backendId: "fixture.invalid-vellum-profile",
+          backendVersion: "1",
+          diagnostics: ["Deliberately invalid profile fixture"],
+        },
+      })
+    ).toThrowError(/Vellum Diplomatic Tablature Profile/);
+  });
+
   it("previews without persistence, commits atomically, rejects stale parents, and undoes by successor", () => {
     const { service, workspaceId, edition } = harness();
     const batch = {
@@ -220,6 +254,90 @@ describe("diplomatic MEI Edition Correction Batches", () => {
         ],
       })
     ).toThrowError(ApiRouteError);
+
+    expect(() =>
+      service.commit(workspaceId, edition.editionId, {
+        id: "correction-batch.00000000-0000-4000-8000-000000000105",
+        name: "Remove required fret evidence",
+        expectedVersion: 1,
+        layer: "transcription",
+        changes: [
+          {
+            tokenId: "note-1",
+            attribute: "tab.fret",
+            expectedValue: "1",
+            replacementValue: undefined,
+            rationale: "Deliberately invalid canonical successor",
+          },
+        ],
+      })
+    ).toThrowError(/Vellum Diplomatic Tablature Profile/);
+    expect(service.get(workspaceId, edition.editionId).version).toBe(1);
+  });
+
+  it("does not advance canonical history when inverse undo fails its write lint", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "vellum-mei-undo-lint-"));
+    roots.push(root);
+    let sequence = 0;
+    let lintCalls = 0;
+    const workspaces = new WorkspaceStore({
+      rootDirectory: root,
+      createId: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, "0")}`,
+    });
+    const workspace = workspaces.create({ title: "Undo lint" });
+    const source = workspaces.addSourceArtifact(workspace.id, {
+      filename: "facsimile.pdf",
+      mimeType: "application/pdf",
+      contentBase64: Buffer.from("%PDF-1.4\n%%EOF\n").toString("base64"),
+      provenance: { license: "project-authored test fixture" },
+    });
+    const tokens: DiplomaticToken[] = [
+      {
+        id: "note-1",
+        kind: "tablature",
+        region: { page: 9, x: 0.13, y: 0.1, width: 0.04, height: 0.08 },
+        confidence: 1,
+        alternatives: [],
+        critical: false,
+      },
+    ];
+    const minimalMei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Undo lint</title></titleStmt><pubStmt/></fileDesc></meiHead><music><facsimile><surface><zone xml:id="zone-note-1" ulx="1300" uly="1000" lrx="1700" lry="1800"/></surface></facsimile><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure n="1"><staff n="1"><layer n="1"><tabGrp><note xml:id="note-1" facs="#zone-note-1" tab.course="1" tab.fret="1"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const service = new MeiEditionService({
+      store: new MeiEditionStore({ rootDirectory: root, workspaces }),
+      workspaces,
+      createId: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, "0")}`,
+      validateCanonical: () => {
+        lintCalls += 1;
+        if (lintCalls === 3) throw new ApiRouteError("Synthetic inverse write-lint rejection", 422);
+      },
+    });
+    const edition = service.create(workspace.id, {
+      sourceArtifactId: source.id,
+      sourcePage: 9,
+      title: "Undo lint",
+      mei: minimalMei,
+      tokens,
+      extraction: { backendId: "fixture", backendVersion: "1", diagnostics: ["fixture"] },
+    });
+    service.commit(workspace.id, edition.editionId, {
+      id: "correction-batch.00000000-0000-4000-8000-000000000106",
+      name: "Valid predecessor",
+      expectedVersion: 1,
+      layer: "transcription",
+      changes: [
+        {
+          tokenId: "note-1",
+          attribute: "tab.fret",
+          expectedValue: "1",
+          replacementValue: "2",
+          rationale: "Set up inverse validation",
+        },
+      ],
+    });
+    expect(() => service.undo(workspace.id, edition.editionId, 2)).toThrowError(
+      /Synthetic inverse write-lint rejection/
+    );
+    expect(service.get(workspace.id, edition.editionId).version).toBe(2);
   });
 
   it("binds a reviewed model proposal and every individual decision to the canonical successor", async () => {

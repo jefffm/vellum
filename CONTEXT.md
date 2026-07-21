@@ -316,6 +316,14 @@ _Avoid_: Source score when referring to unverified OMR output
 A facsimile-anchored symbolic record, canonically serialized in Vellum's constrained MEI 5.1 profile, of visible historical tablature tokens, layout locations, and unresolved glyph alternatives before sounding-pitch, voice, duration, tuning, or musical interpretation is imposed.
 _Avoid_: MusicXML conversion, interpreted score, modernized edition, co-authoritative JSON transcription
 
+**Pinned MEI Schema**:
+The exact digest-bound upstream MEI schema used locally to establish generic MEI structural validity without runtime network access.
+_Avoid_: Remotely fetched schema, Vellum Diplomatic Tablature Profile
+
+**Vellum Diplomatic Tablature Profile**:
+Vellum's deterministic domain restrictions on schema-valid MEI for facsimile-linked diplomatic tablature, including permitted notation constructs, stable token identity, and evidence-layer boundaries.
+_Avoid_: Pinned MEI Schema, general-purpose MEI customization, interpretation rules
+
 **Transcription Acceptance**:
 The Owner's whole-page approval of one schema-valid, facsimile-linked Diplomatic Tablature Transcription version after deterministic checks pass and every Critical Uncertainty affecting visible source evidence is resolved.
 _Avoid_: Per-token approval requirement, OCR confidence threshold, interpretation approval, implied source infallibility
@@ -661,6 +669,8 @@ _Avoid_: French tab
 - A **Musical Idiom** is independently available to sibling target arrangements by default; it becomes mandatory across an **Arrangement Family** only through an explicit **Family Commitment**
 - **Instrumental Idioms** enter target specialization, and any resulting divergence among sibling arrangements remains explained and inspectable
 - A **Diplomatic Tablature Transcription** precedes interpreted normalization for historical tablature and preserves notation-specific evidence that a pitch-only or MusicXML representation may lose
+- A canonical **Diplomatic Tablature Transcription** must satisfy both the **Pinned MEI Schema** and the narrower **Vellum Diplomatic Tablature Profile**; neither validation layer substitutes for the other
+- Every canonical Diplomatic Tablature Transcription create, **Correction Batch** commit, and inverse-version undo lints the proposed MEI against both layers atomically; failure returns diagnostics and produces no canonical version
 - Every diplomatic token remains linked to its facsimile region; consistency checks may flag suspected errors but cannot silently alter visible source evidence
 - Typed editor commands mutate validated canonical MEI into a new transcription version; browser, spatial, interpretation, analysis, playback, and engraving projections are rebuildable views pinned to that MEI version
 - Vellum pins and validates one constrained MEI version and deterministic serialization; MEI does not replace the separate domain records for analysis, planning, knowledge, arranging, or playtest evidence
@@ -699,12 +709,15 @@ _Avoid_: French tab
 - One **Diplomatic Tablature Transcription** may have multiple **Tablature Interpretations**; playback, musical analysis, idiom extraction, and interpretation-dependent editions name the exact version they use
 - Correcting a **Tablature Interpretation** does not rewrite the visible-token evidence in its **Diplomatic Tablature Transcription**
 - **Transcription Correction**, **Interpretation Revision**, and **Editorial Emendation** are distinct versioned actions; mechanical implausibility may motivate review but cannot choose among them automatically
+- Correcting visible source evidence after canonical publication creates a successor version through a **Correction Batch**; it never rewrites the accepted version or retroactively mutates its recognition attempt
 - A **Diplomatic Edition** follows the reviewed visible source, while a **Reading Edition** may apply disclosed Editorial Emendations
 - Interpretation uncertainty is assessed per musical dimension; it blocks only observations whose required evidence differs across viable **Tablature Interpretations**
 - An observation invariant across every viable interpretation may proceed with that fact recorded, while interpretation-dependent observations remain conditional or incomplete
 - Reviewed transcription corrections may improve a scoped **Notation Recognition Profile**, but they do not become idiom knowledge or silently rewrite existing transcriptions
 - Reapplying a **Notation Recognition Profile** creates a new recognition or transcription version, and use beyond its demonstrated notation or source scope remains reviewable
 - The initial historical-tablature recognizer is source-adaptive: it detects page and staff geometry, extracts and clusters uninterpreted glyph images, and applies a scoped **Notation Recognition Profile** of reviewed examples, vocabulary, and spatial rules; optional multimodal-model suggestions may assist cluster labeling, structural hypotheses, or exceptional-region diagnosis but cannot establish source truth
+- Changing source bytes, recognition backend or configuration, profile version, detected geometry, clusters, or hypotheses creates a new immutable recognition attempt and fresh review draft; a review-workstation change retains the attempt but restarts review and burden measurement when workload is the behavior under test
+- Renderer-only or MEI-linter-only changes retain the recognition attempt and recoverable draft because they do not alter musical evidence
 - Historical-tablature review assumes expert verification of every proposed chord or event and optimizes that pass around a keyboard-driven event editor, cluster-level propagation, and recoverable local drafts rather than per-token forms; the completed first pass publishes MEI version 1 through one named, digest-bound initial review batch tied to its immutable recognition run, while every later manual edit uses an ordinary **Correction Batch** and creates a successor version
 - Visible rhythm and gesture marks belong to the **Diplomatic Tablature Transcription** as glyph evidence; duration, simultaneity, strumming action, and sounding result belong to a **Tablature Interpretation**
 - Recognition confidence thresholds control provisional transcription and review-queue workload only; they do not establish source-truth authorization, evidentiary readiness, or Knowledge Candidate approval

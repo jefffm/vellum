@@ -15,7 +15,9 @@ import type {
 import { meiAttributeTarget } from "../../lib/mei-attribute-target.js";
 import { canonicalJson } from "../../lib/canonical-json.js";
 import { ApiRouteError } from "./create-route.js";
+import { validateVellumDiplomaticTablatureProfile } from "./mei-diplomatic-profile.js";
 import { MeiEditionStore } from "./mei-edition-store.js";
+import { validateAgainstPinnedMeiSchema } from "./mei-schema-validator.js";
 import { WorkspaceStore } from "./workspace-store.js";
 
 const EDITABLE_ATTRIBUTES = Object.freeze({
@@ -44,6 +46,7 @@ export class MeiEditionService {
   private readonly store: MeiEditionStore;
   private readonly now: () => Date;
   private readonly createId: () => string;
+  private readonly validateCanonical: (mei: string, tokens: readonly DiplomaticToken[]) => void;
   private readonly workspaces: WorkspaceStore;
 
   constructor(options: {
@@ -51,16 +54,20 @@ export class MeiEditionService {
     workspaces?: WorkspaceStore;
     now?: () => Date;
     createId?: () => string;
+    validateCanonical?: (mei: string, tokens: readonly DiplomaticToken[]) => void;
   }) {
     this.store = options.store;
     this.now = options.now ?? (() => new Date());
     this.createId = options.createId ?? randomUUID;
+    this.validateCanonical =
+      options.validateCanonical ?? ((mei) => validateAgainstPinnedMeiSchema(mei));
     this.workspaces =
       options.workspaces ?? new WorkspaceStore({ rootDirectory: options.store.rootDirectory });
   }
 
   create(workspaceId: string, command: CreateMeiEditionCommand): MeiEditionVersion {
     const mei = validateAndSerializeMei(command.mei, command.tokens);
+    this.validateCanonical(mei, command.tokens);
     return this.store.create(workspaceId, {
       editionId: `edition.${this.createId()}`,
       version: 1,
@@ -94,6 +101,7 @@ export class MeiEditionService {
   ): MeiEditionVersion {
     const current = this.store.get(workspaceId, editionId);
     const next = this.apply(workspaceId, current, command);
+    this.validateCanonical(next.mei, next.tokens);
     return this.store.commit(workspaceId, next, command.expectedVersion);
   }
 
@@ -132,6 +140,7 @@ export class MeiEditionService {
         : {}),
     };
     const next = this.apply(workspaceId, current, inverse, priorBatch.id);
+    this.validateCanonical(next.mei, next.tokens);
     return this.store.commit(workspaceId, next, expectedVersion);
   }
 
@@ -506,29 +515,7 @@ function validateAndSerializeMei(mei: string, tokens: readonly DiplomaticToken[]
 
 function validateAndSerializeDocument(dom: JSDOM, tokens: readonly DiplomaticToken[]): string {
   const document = dom.window.document;
-  const tokenIds = new Set<string>();
-  for (const token of tokens) {
-    if (tokenIds.has(token.id))
-      throw new ApiRouteError(`Duplicate diplomatic token: ${token.id}`, 400);
-    tokenIds.add(token.id);
-    if (token.region.x + token.region.width > 1 || token.region.y + token.region.height > 1) {
-      throw new ApiRouteError(`Facsimile region leaves the page for token ${token.id}`, 400);
-    }
-    if (!elementByXmlId(document, token.id)) {
-      throw new ApiRouteError(`Diplomatic token has no MEI element: ${token.id}`, 400);
-    }
-  }
-  for (const element of Array.from(
-    document.querySelectorAll('note, tabDurSym:not([type="strum-render-anchor"])')
-  )) {
-    const id = element.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id");
-    if (!id || !tokenIds.has(id)) {
-      throw new ApiRouteError(
-        "Every visible tablature and rhythm token requires an ID and facsimile region",
-        400
-      );
-    }
-  }
+  validateVellumDiplomaticTablatureProfile(document, tokens);
   return new dom.window.XMLSerializer().serializeToString(document);
 }
 

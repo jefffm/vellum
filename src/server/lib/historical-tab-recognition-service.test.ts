@@ -247,8 +247,10 @@ describe("source-adaptive historical tablature recognition", () => {
     });
     expect(edition.mei).toContain('type="diplomatic-event visible-rhythm-flag-1"');
     expect(edition.mei).not.toMatch(/<tabGrp[^>]+ dur=/);
-    expect(edition.tokens).toHaveLength(6);
+    expect(edition.tokens).toHaveLength(7);
     expect(edition.tokens.some((token) => token.kind === "barline")).toBe(true);
+    expect(edition.tokens.some((token) => token.kind === "other")).toBe(true);
+    expect(edition.mei).toContain('type="visible-other-mark"');
     expect(edition.mei).toContain("diplomatic-system-1-measure-2");
     const rendered = await renderMeiWithVerovio(
       edition.mei,

@@ -471,7 +471,11 @@ function buildReviewedDiplomaticMei(
     });
     const courseAbsences = event.courses
       .flatMap((letter, courseIndex) =>
-        letter ? [] : [`<annot type="course-absence" n="${courseIndex + 1}">absent</annot>`]
+        letter
+          ? []
+          : [
+              `<annot type="course-absence" n="${courseIndex + 1}" startid="#${eventId}">absent</annot>`,
+            ]
       )
       .join("");
     const rhythmId = `${eventId}-rhythm`;
@@ -484,15 +488,36 @@ function buildReviewedDiplomaticMei(
       alternatives: event.state === "ambiguous" ? ["Owner marked this event ambiguous"] : [],
       critical: event.state === "ambiguous",
     });
-    const annotations = [
-      event.ornaments
-        ? `<annot type="visible-ornament">${escape(event.ornaments)}</annot>`
-        : '<annot type="ornament-absence">absent</annot>',
-      event.marks
-        ? `<annot type="visible-other-mark">${escape(event.marks)}</annot>`
-        : '<annot type="other-mark-absence">absent</annot>',
-    ].join("");
-    let verticalAnnotation = '<annot type="visible-vertical-none">none</annot>';
+    let ornamentAnnotation = `<annot type="ornament-absence" startid="#${eventId}">absent</annot>`;
+    if (event.ornaments) {
+      const ornamentId = `${eventId}-ornament`;
+      zones.push(zoneXml(ornamentId, event.region));
+      tokens.push({
+        id: ornamentId,
+        kind: "ornament",
+        region,
+        confidence: event.state === "confirmed" ? 1 : 0.5,
+        alternatives: event.state === "ambiguous" ? ["Owner marked this event ambiguous"] : [],
+        critical: event.state === "ambiguous",
+      });
+      ornamentAnnotation = `<annot xml:id="${ornamentId}" facs="#zone-${ornamentId}" type="visible-ornament" startid="#${eventId}">${escape(event.ornaments)}</annot>`;
+    }
+    let otherMarkAnnotation = `<annot type="other-mark-absence" startid="#${eventId}">absent</annot>`;
+    if (event.marks) {
+      const markId = `${eventId}-other-mark`;
+      zones.push(zoneXml(markId, event.region));
+      tokens.push({
+        id: markId,
+        kind: "other",
+        region,
+        confidence: event.state === "confirmed" ? 1 : 0.5,
+        alternatives: event.state === "ambiguous" ? ["Owner marked this event ambiguous"] : [],
+        critical: event.state === "ambiguous",
+      });
+      otherMarkAnnotation = `<annot xml:id="${markId}" facs="#zone-${markId}" type="visible-other-mark" startid="#${eventId}">${escape(event.marks)}</annot>`;
+    }
+    const annotations = `${ornamentAnnotation}${otherMarkAnnotation}`;
+    let verticalAnnotation = `<annot type="visible-vertical-none" startid="#${eventId}">none</annot>`;
     if (event.verticalMark !== "none") {
       const verticalId = `${eventId}-vertical`;
       const candidate = event.sourceEventIds
@@ -515,9 +540,9 @@ function buildReviewedDiplomaticMei(
         alternatives: event.state === "ambiguous" ? ["Owner marked this event ambiguous"] : [],
         critical: event.state === "ambiguous",
       });
-      verticalAnnotation = `<annot xml:id="${verticalId}" facs="#zone-${verticalId}" type="visible-vertical-${event.verticalMark}">${escape(event.verticalMark)}</annot>`;
+      verticalAnnotation = `<annot xml:id="${verticalId}" facs="#zone-${verticalId}" type="visible-vertical-${event.verticalMark}" startid="#${eventId}">${escape(event.verticalMark)}</annot>`;
     }
-    const group = `<tabGrp xml:id="${eventId}" facs="#zone-${eventId}" type="diplomatic-event visible-rhythm-${event.rhythmGlyph}"${event.dots ? ` dots="${event.dots}"` : ""}><tabDurSym xml:id="${rhythmId}" facs="#zone-${rhythmId}" type="visible-rhythm-${event.rhythmGlyph}"/>${notes.join("")}${courseAbsences}${annotations}${verticalAnnotation}</tabGrp>`;
+    const group = `<tabGrp xml:id="${eventId}" facs="#zone-${eventId}" type="diplomatic-event visible-rhythm-${event.rhythmGlyph}"${event.dots ? ` dots="${event.dots}"` : ""}><tabDurSym xml:id="${rhythmId}" facs="#zone-${rhythmId}" type="visible-rhythm-${event.rhythmGlyph}"/>${notes.join("")}</tabGrp>${courseAbsences}${annotations}${verticalAnnotation}`;
     const systemId = eventBySourceId.get(event.sourceEventIds[0]!)!;
     groupsBySystem.set(systemId, [
       ...(groupsBySystem.get(systemId) ?? []),
@@ -552,7 +577,7 @@ function buildReviewedDiplomaticMei(
     })
     .join("");
   return {
-    mei: `<?xml version="1.0" encoding="UTF-8"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>${escape(command.title)}</title></titleStmt><pubStmt><p>Source-reviewed diplomatic transcription.</p></pubStmt></fileDesc></meiHead><facsimile><surface xml:id="source-page-${run.sourcePage}" n="${run.sourcePage}">${zones.join("")}</surface></facsimile><music><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label></staffDef></staffGrp></scoreDef><section>${body}</section></score></mdiv></body></music></mei>`,
+    mei: `<?xml version="1.0" encoding="UTF-8"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>${escape(command.title)}</title></titleStmt><pubStmt/></fileDesc></meiHead><music><facsimile><surface xml:id="source-page-${run.sourcePage}" n="${run.sourcePage}">${zones.join("")}</surface></facsimile><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label></staffDef></staffGrp></scoreDef><section>${body}</section></score></mdiv></body></music></mei>`,
     tokens,
   };
 }

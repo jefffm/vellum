@@ -37,6 +37,16 @@ commit creates one canonical version, cancel discards the staging state, and und
 inverse version rather than rewriting history. A batch cannot mix transcription evidence with
 interpretation revisions or editorial emendations.
 
+Every canonical create, Correction Batch commit, and inverse-version undo must pass both the
+locally vendored, digest-bound upstream MEI 5.1 Pinned MEI Schema and the separate Vellum
+Diplomatic Tablature Profile. This is a fail-closed write lint: failure returns useful diagnostics
+and produces no canonical version. It does not add a conformance-record subsystem, custom ODD,
+general-purpose XML editor, runtime schema fetch, or historical migration. An optimistic projection
+may be temporarily invalid, but it remains visibly noncanonical and cannot cross the server write
+boundary. The pinned upstream schema is `mei-all.rng`: MEI's CMN customization excludes the
+facsimile module required by source-linked diplomatic transcription, while the Vellum profile
+supplies the constrained permitted subset.
+
 Vellum remains authoritative for canonical MEI, editorial versions, Tablature Interpretations,
 Performed Form, semantic Playback Parts, and playback timing. Verovio SVG, MIDI, timemaps, and
 element lookup are rebuildable rendering and synchronization products. LilyPond remains an

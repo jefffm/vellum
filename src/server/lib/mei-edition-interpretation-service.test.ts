@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { JSDOM } from "jsdom";
 import { afterEach, describe, expect, it } from "vitest";
 
 import type {
@@ -46,7 +47,11 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
   ];
   const tokens: DiplomaticToken[] = tokenIds.map((id, index) => ({
     id,
-    kind: id.startsWith("rhythm") ? "rhythm" : id.startsWith("strum") ? "strum" : "tablature",
+    kind: id.startsWith("rhythm")
+      ? "rhythm"
+      : id.startsWith("strum") && !id.includes("-note")
+        ? "strum"
+        : "tablature",
     region: { page: 1, x: 0.02 + index * 0.08, y: 0.1, width: 0.04, height: 0.06 },
     confidence: 0.95,
     alternatives: [],
@@ -54,11 +59,12 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
   }));
   const editions = new MeiEditionStore({ rootDirectory: root, workspaces });
   const transcription = new MeiEditionService({ store: editions, createId, now });
+  const mei = linkFixtureTokensToFacsimile(options.mei ?? FRENCH_TAB_MEI_FIXTURE, tokens);
   const edition = transcription.create(workspace.id, {
     sourceArtifactId: source.id,
     sourcePage: 1,
     title: "Project-authored Sarabande",
-    mei: options.mei ?? FRENCH_TAB_MEI_FIXTURE,
+    mei,
     tokens,
     extraction: {
       backendId: "fixture",
@@ -87,6 +93,54 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
     rationale: "Provisional French five-course tuning with octave-strung fifth course.",
   };
   return { service, transcription, workspaceId: workspace.id, edition, command };
+}
+
+function linkFixtureTokensToFacsimile(mei: string, tokens: readonly DiplomaticToken[]): string {
+  const dom = new JSDOM(mei, { contentType: "application/xml" });
+  try {
+    const document = dom.window.document;
+    const namespace = "http://www.music-encoding.org/ns/mei";
+    const music = document.querySelector("music")!;
+    let facsimile = document.querySelector("facsimile");
+    if (!facsimile) {
+      facsimile = document.createElementNS(namespace, "facsimile");
+      music.insertBefore(facsimile, music.firstChild);
+    }
+    let surface = facsimile.querySelector("surface");
+    if (!surface) {
+      surface = document.createElementNS(namespace, "surface");
+      facsimile.append(surface);
+    }
+    for (const [index, token] of tokens.entries()) {
+      const zoneId = `zone-${token.id}`;
+      if (
+        !Array.from(document.querySelectorAll("zone")).some((zone) => zoneId === zoneIdOf(zone))
+      ) {
+        const zone = document.createElementNS(namespace, "zone");
+        zone.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:id", zoneId);
+        zone.setAttribute("ulx", String(200 + index * 800));
+        zone.setAttribute("uly", "1000");
+        zone.setAttribute("lrx", String(600 + index * 800));
+        zone.setAttribute("lry", "1600");
+        surface.append(zone);
+      }
+      const element = Array.from(document.getElementsByTagName("*")).find(
+        (candidate) =>
+          candidate.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") === token.id ||
+          candidate.getAttribute("xml:id") === token.id
+      );
+      element?.setAttribute("facs", `#${zoneId}`);
+    }
+    return new dom.window.XMLSerializer().serializeToString(document);
+  } finally {
+    dom.window.close();
+  }
+}
+
+function zoneIdOf(zone: Element): string | null {
+  return (
+    zone.getAttributeNS("http://www.w3.org/XML/1998/namespace", "id") ?? zone.getAttribute("xml:id")
+  );
 }
 
 describe("versioned tablature interpretation and acceptance", () => {
@@ -208,7 +262,7 @@ describe("versioned tablature interpretation and acceptance", () => {
   });
 
   it("repeats two pickup-led strains and requires exact strum realizations", () => {
-    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Two strains</title></titleStmt><pubStmt><p>Test</p></pubStmt></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure xml:id="pickup-a" n="0" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-a-group" dur="8"><note xml:id="pickup-a-note-1" tab.course="1" tab.fret="1"/><note xml:id="pickup-a-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-1" n="1"><staff n="1"><layer n="1"><tabGrp xml:id="strum-held" dur="2" dots="1" type="historical-strum-up chord-held"/></layer></staff></measure><measure xml:id="closing-a" n="1b" metcon="false" type="section-closing" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="closing-a-group" dur="4"><note xml:id="closing-a-note" tab.course="1" tab.fret="1"/></tabGrp></layer></staff></measure><measure xml:id="pickup-b" n="1a" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-b-group" dur="8"><note xml:id="pickup-b-note" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-2" n="2" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-explicit" dur="2" dots="1" type="historical-strum-down chord-explicit"><note xml:id="strum-explicit-note-1" tab.course="1" tab.fret="2"/><note xml:id="strum-explicit-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Two strains</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef meter.count="3" meter.unit="4"><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"/></staffGrp></scoreDef><section><measure xml:id="pickup-a" n="0" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-a-group" dur="8"><note xml:id="pickup-a-note-1" tab.course="1" tab.fret="1"/><note xml:id="pickup-a-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-1" n="1"><staff n="1"><layer n="1"><tabGrp xml:id="strum-held" dur="2" dots="1" type="historical-strum-up chord-held"/></layer></staff></measure><measure xml:id="closing-a" n="1b" metcon="false" type="section-closing" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="closing-a-group" dur="4"><note xml:id="closing-a-note" tab.course="1" tab.fret="1"/></tabGrp></layer></staff></measure><measure xml:id="pickup-b" n="1a" metcon="false" type="section-pickup"><staff n="1"><layer n="1"><tabGrp xml:id="pickup-b-group" dur="8"><note xml:id="pickup-b-note" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure><measure xml:id="measure-2" n="2" right="rptend"><staff n="1"><layer n="1"><tabGrp xml:id="strum-explicit" dur="2" dots="1" type="historical-strum-down chord-explicit"><note xml:id="strum-explicit-note-1" tab.course="1" tab.fret="2"/><note xml:id="strum-explicit-note-2" tab.course="3" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
     const { service, transcription, workspaceId, edition, command } = harness({
       mei,
       tokenIds: [

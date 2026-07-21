@@ -19,6 +19,18 @@ keyboard-first event-review pass. T03 and T04's generic implementations remain l
 performs the exhaustive source review, publishes MEI version 1, and then uses those existing paths
 to prepare and separately accept one literal interpretation.
 
+## Immediate sequence
+
+1. The fail-closed canonical MEI write lint described below is landed and verified.
+2. Prepare T05 autonomously through the review and acceptance surfaces already delivered by T02
+   through T04; defer the Owner's exact musical decisions until every machine-checkable blocker is
+   cleared.
+3. After the first complete source system, stop only for a demonstrated systematic blocker.
+4. If viable, complete the whole-page pass and record measured Owner judgment and burden metrics.
+5. Implement only the smallest recognition, geometry, propagation, or rendering remediation that
+   an observed failure triggers, then restart or resume according to the identity rule below.
+6. If T05 passes, proceed directly to T06 without implementing untriggered improvements.
+
 ## Outcome
 
 Turn page 9 of de Visée's 1686 _Pièces pour la guittare_ into a reviewed, interactive, playable
@@ -50,8 +62,42 @@ MEI edition, then use one accepted selection as bounded repertoire evidence.
   produce a source-derived candidate and prove the keyboard workflow, draft recovery, propagation,
   versioning, and reviewer-burden instrumentation with rights-approved automated fixtures. T05 then
   performs the complete event-by-event Owner pass over page 9, resolves its visible-token readings
-  and repeat/return marks, and records the actual reviewer burden. T06
+  and repeat/return marks, and records the existing review metrics plus approximate elapsed review
+  time. Because page 9 is the first real baseline, T05 does not invent a numeric burden threshold.
+  The Owner instead records whether the candidate materially reduced repetitive entry compared with
+  authoring the transcription and whether any evidence dimension was systematically left for the
+  Owner to author. Either negative judgment fails T05 and routes to the smallest applicable
+  remediation; the measurements establish quantitative targets for later pages. T06
   and T07 resume automatically from its accepted version IDs.
+- T05 has an early failure checkpoint after the first complete source system. Isolated recognition
+  and geometry errors continue through ordinary review, but a systematic blocker across that system
+  stops the pass: an entire evidence dimension is absent, event geometry repeatedly requires
+  reconstruction, or rendering prevents reliable review. Preserve the partial metrics as diagnostic
+  evidence only; do not publish a partial initial review batch or describe it as T05 acceptance.
+  After the narrow remediation, apply the identity rule: changes to source bytes, backend,
+  recognition configuration, profile version, detected geometry, clusters, or hypotheses create a
+  new immutable recognition attempt and fresh draft; workload-changing review UI retains the
+  attempt but restarts the complete pass and burden measurement; renderer-only changes retain and
+  resume the draft; MEI-linter-only changes retain the attempt and draft; post-publication visible-
+  evidence changes use a successor Correction Batch.
+- T05 uses the review and acceptance surfaces already delivered by T02 through T04; it is not a
+  second implementation wave. Recognition breadth, spatial correction, cluster review, and render
+  resilience remain conditional remediation triggered only by observed T05 failure. A failed pass
+  records the dominant blocker and reopens the smallest applicable tracer rather than adopting the
+  entire improvement sequence. Missing source-derived evidence dimensions route to T02 recognition,
+  geometry or event-boundary failures to T02 spatial review, repeated cluster corrections to T02
+  propagation review, and rendering failures to T01's Verovio surface.
+- Before Transcription Acceptance is recorded, the exact canonical MEI must pass the locally
+  vendored, digest-bound upstream MEI 5.1 **Pinned MEI Schema** and the separate **Vellum
+  Diplomatic Tablature Profile**. The latter retains Vellum's token, facsimile-link, permitted-
+  construct, and evidence-layer checks. Both layers form one fail-closed lint on every canonical
+  create, Correction Batch commit, and inverse-version undo: failure returns useful diagnostics and
+  produces no canonical version. This does not add a conformance-record subsystem, custom ODD,
+  general-purpose XML editor, runtime schema fetch, historical migration, or external mei-friend
+  integration. The pinned upstream schema is `mei-all.rng`, because MEI's CMN customization omits
+  the facsimile module required by source-linked diplomatic transcription; the separate Vellum
+  profile supplies the constrained permitted subset. The page-9 publication path runs the same
+  lint before creating canonical version 1.
 - T07 removes superseded implementations rather than preserving compatibility by default. It may
   delete a path only after mapping its callers and proving the accepted MEI path covers the
   retained behavior. Still-live arrangement and LilyPond deliverable capabilities are not

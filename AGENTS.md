@@ -38,8 +38,10 @@ The active execution wave is `.scratch/mei-editions`. Before implementation:
 6. Complete, test, commit, and push one tracer before beginning a dependent tracer. Ordinary Git
    history is the execution record; no separate evidence-receipt or publication-attestation
    commit is required.
-7. T01 is current. Execute T01–T04 autonomously in dependency order, stop at T05 for the exact
-   Owner acceptance decisions, and resume T06 only from accepted version IDs.
+7. T05 is current. T01–T04 and T02's source-adaptive recognition repivot are landed. Complete the
+   narrow fail-closed canonical MEI write lint and every autonomous T05 preparation or observed
+   remediation before requesting the exact Owner acceptance decisions; resume T06 only from
+   accepted version IDs.
 
 Do not reopen `docs/archive/execution-waves/2026-07-17/instrument-intelligence`. It is the frozen,
 superseded 107-tracer high-assurance program. Do not run its trust bootstrap, manifest writer,
