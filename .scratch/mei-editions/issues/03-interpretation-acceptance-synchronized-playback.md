@@ -102,8 +102,10 @@ The repaired T02 transcription reopened this tracer; the remediation below compl
   propose separate written repeat sections.
 - The page-9 vertical-mark vocabulary distinguishes literal up- and down-arrow evidence without
   calling it a strum in the transcription. A Tablature Interpretation separately realizes each
-  such target as a directional strum with exact held or written courses, and a generic unresolved
-  gesture fails closed before audition.
+  such target as a directional strum with exact held or written courses. A generic vertical mark
+  remains undecided diplomatic evidence until the interpretation explicitly records either a
+  pincé on a source-written simultaneity or an up/down strum; the workbench proposes pincé while
+  keeping all three readings editable, and any omitted or contradictory resolution fails closed.
 - When the source-linked staff is explicitly labeled `Guitare` and carries no semantic tuning, the
   page-9 proposal starts from Vellum's existing five-course French stringing. The editable tuning
   remains part of the exact interpretation rather than being written into diplomatic MEI.

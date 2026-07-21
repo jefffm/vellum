@@ -49,7 +49,7 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
     id,
     kind: id.startsWith("rhythm")
       ? "rhythm"
-      : id.startsWith("arrow")
+      : id.startsWith("arrow") || id.startsWith("gesture")
         ? "other"
         : id.startsWith("strum") && !id.includes("-note")
           ? "strum"
@@ -97,6 +97,7 @@ function harness(options: { mei?: string; tokenIds?: string[] } = {}) {
     ],
     repeatSections: [{ startMeasure: 1, endMeasure: 1, totalPasses: 2 }],
     strumRealizations: [],
+    pinceRealizations: [],
     rationale: "Provisional French five-course tuning with octave-strung fifth course.",
   };
   return { service, transcription, workspaceId: workspace.id, edition, command };
@@ -182,7 +183,7 @@ describe("versioned tablature interpretation and acceptance", () => {
   });
 
   it("requires explicit event timing and plays source-adaptive diplomatic MEI without semantic durations", () => {
-    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Diplomatic rhythm signs</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label></staffDef></staffGrp></scoreDef><section><measure xml:id="source-measure-1" n="1" metcon="false" type="reviewed-source-segment"><staff n="1"><layer n="1"><tabGrp xml:id="source-event-1" type="diplomatic-event visible-rhythm-stem"><tabDurSym xml:id="rhythm-1" type="visible-rhythm-stem"/><note xml:id="note-a" tab.course="1" tab.fret="0"/><note xml:id="note-a-2" tab.course="3" tab.fret="2"/></tabGrp><annot xml:id="arrow-1" type="visible-vertical-arrow-up" startid="#source-event-1">arrow-up</annot><tabGrp xml:id="source-event-2" type="diplomatic-event visible-rhythm-absent"><tabDurSym xml:id="rhythm-2" type="visible-rhythm-absent"/><note xml:id="note-b" tab.course="1" tab.fret="1"/></tabGrp><tabGrp xml:id="source-event-3" type="diplomatic-event visible-rhythm-flag-1"><tabDurSym xml:id="rhythm-3" type="visible-rhythm-flag-1"/><note xml:id="note-c" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
+    const mei = `<?xml version="1.0"?><mei xmlns="http://www.music-encoding.org/ns/mei" meiversion="5.1"><meiHead><fileDesc><titleStmt><title>Diplomatic rhythm signs</title></titleStmt><pubStmt/></fileDesc></meiHead><music><body><mdiv><score><scoreDef><staffGrp><staffDef n="1" lines="5" notationtype="tab.lute.french"><label>Guitare</label></staffDef></staffGrp></scoreDef><section><measure xml:id="source-measure-1" n="1" metcon="false" type="reviewed-source-segment"><staff n="1"><layer n="1"><tabGrp xml:id="source-event-1" type="diplomatic-event visible-rhythm-stem"><tabDurSym xml:id="rhythm-1" type="visible-rhythm-stem"/><note xml:id="note-a" tab.course="1" tab.fret="0"/><note xml:id="note-a-2" tab.course="3" tab.fret="2"/></tabGrp><annot xml:id="arrow-1" type="visible-vertical-arrow-up" startid="#source-event-1">arrow-up</annot><tabGrp xml:id="source-event-2" type="diplomatic-event visible-rhythm-absent"><tabDurSym xml:id="rhythm-2" type="visible-rhythm-absent"/><note xml:id="note-b" tab.course="1" tab.fret="1"/><note xml:id="note-b-2" tab.course="3" tab.fret="3"/></tabGrp><annot xml:id="gesture-1" type="visible-vertical-gesture" startid="#source-event-2">vertical-stroke</annot><tabGrp xml:id="source-event-3" type="diplomatic-event visible-rhythm-flag-1"><tabDurSym xml:id="rhythm-3" type="visible-rhythm-flag-1"/><note xml:id="note-c" tab.course="1" tab.fret="2"/></tabGrp></layer></staff></measure></section></score></mdiv></body></music></mei>`;
     const { service, workspaceId, edition, command } = harness({
       mei,
       tokenIds: [
@@ -192,6 +193,8 @@ describe("versioned tablature interpretation and acceptance", () => {
         "arrow-1",
         "rhythm-2",
         "note-b",
+        "note-b-2",
+        "gesture-1",
         "rhythm-3",
         "note-c",
       ],
@@ -219,6 +222,7 @@ describe("versioned tablature interpretation and acceptance", () => {
           spreadMilliseconds: 35,
         },
       ],
+      pinceRealizations: [{ eventId: "source-event-2" }],
       rationale: "Quarter sign, inherited quarter, then an eighth-note flag.",
     } satisfies CreateTablatureInterpretationCommand;
 
@@ -234,11 +238,41 @@ describe("versioned tablature interpretation and acceptance", () => {
         strumRealizations: [{ ...explicit.strumRealizations[0]!, direction: "down" }],
       })
     ).toThrowError(/direction disagrees/);
+    expect(() =>
+      service.createInterpretation(workspaceId, edition.editionId, {
+        ...explicit,
+        pinceRealizations: [],
+      })
+    ).toThrowError(/resolve every generic visible gesture/);
 
     const interpretation = service.createInterpretation(workspaceId, edition.editionId, explicit);
+    expect(interpretation.pinceRealizations).toEqual([{ eventId: "source-event-2" }]);
     const preview = service.playback(workspaceId, edition.editionId, interpretation.id);
     expect(preview.durationSeconds).toBe(2.5);
-    expect(preview.events.map((event) => event.startSeconds)).toEqual([0, 0.035, 1, 2]);
+    expect(preview.events.map((event) => event.startSeconds)).toEqual([0, 0.035, 1, 1, 2]);
+
+    const genericStrum = service.createInterpretation(workspaceId, edition.editionId, {
+      ...explicit,
+      pinceRealizations: [],
+      strumRealizations: [
+        ...explicit.strumRealizations,
+        {
+          strumId: "source-event-2",
+          direction: "down",
+          notes: [
+            { course: 1, fret: 1 },
+            { course: 3, fret: 3 },
+          ],
+          spreadMilliseconds: 35,
+        },
+      ],
+      rationale: "Alternative reading of the generic mark as a downward strum.",
+    });
+    expect(
+      service
+        .playback(workspaceId, edition.editionId, genericStrum.id)
+        .events.map((event) => event.startSeconds)
+    ).toEqual([0, 0.035, 1, 1.035, 2]);
   });
 
   it("keeps exact transcription and interpretation decisions separate, immutable, and stale-aware", () => {

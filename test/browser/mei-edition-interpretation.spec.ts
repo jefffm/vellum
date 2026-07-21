@@ -15,6 +15,10 @@ test("exact interpretation drives provisional playback and separate acceptance",
   page,
   request,
 }) => {
+  const meiWithGenericGesture = FRENCH_TAB_MEI_FIXTURE.replace(
+    '</tabGrp>\n      <tabGrp dur="8" xml:id="event-2">',
+    '</tabGrp><annot xml:id="gesture-1" facs="#zone-event-1" type="visible-vertical-gesture" startid="#event-1">vertical-stroke</annot>\n      <tabGrp dur="8" xml:id="event-2">'
+  );
   const workspace = await data<{ id: string }>(
     await request.post("/api/workspaces", { data: { title: "MEI interpretation browser test" } })
   );
@@ -39,10 +43,11 @@ test("exact interpretation drives provisional playback and separate acceptance",
     "rhythm-3",
     "note-5",
     "note-6",
+    "gesture-1",
   ];
   const tokens: DiplomaticToken[] = ids.map((id, index) => ({
     id,
-    kind: id.startsWith("rhythm") ? "rhythm" : "tablature",
+    kind: id.startsWith("rhythm") ? "rhythm" : id === "gesture-1" ? "other" : "tablature",
     region: { page: 1, x: 0.06 + index * 0.08, y: 0.12, width: 0.045, height: 0.08 },
     confidence: 0.95,
     alternatives: [],
@@ -54,7 +59,7 @@ test("exact interpretation drives provisional playback and separate acceptance",
         sourceArtifactId: source.id,
         sourcePage: 1,
         title: "Project-authored Sarabande",
-        mei: FRENCH_TAB_MEI_FIXTURE,
+        mei: meiWithGenericGesture,
         tokens,
         extraction: {
           backendId: "fixture.browser-structured-extraction",
@@ -69,6 +74,8 @@ test("exact interpretation drives provisional playback and separate acceptance",
   const surface = page.locator(".diplomatic-edition-workspace");
   const workbench = surface.locator(".mei-interpretation-workbench");
   await expect(workbench).toBeVisible();
+  await expect(workbench.locator("[data-gesture-readings]")).toBeVisible();
+  await expect(workbench.locator('[data-gesture-event-id="event-1"]')).toHaveValue("pince");
   await workbench.locator("[data-tempo]").fill("60");
   await workbench.locator("[data-tunings]").fill("1:64; 2:59; 3:55; 4:50; 5:45,57");
   await workbench.locator("[data-passes]").fill("2");
@@ -117,8 +124,12 @@ test("exact interpretation drives provisional playback and separate acceptance",
   );
   expect(stateResponse.ok()).toBe(true);
   const state = (await stateResponse.json()) as {
-    data: { interpretations: unknown[]; decisions: unknown[] };
+    data: {
+      interpretations: Array<{ pinceRealizations?: Array<{ eventId: string }> }>;
+      decisions: unknown[];
+    };
   };
   expect(state.data.interpretations).toHaveLength(1);
+  expect(state.data.interpretations[0]?.pinceRealizations).toEqual([{ eventId: "event-1" }]);
   expect(state.data.decisions).toHaveLength(2);
 });

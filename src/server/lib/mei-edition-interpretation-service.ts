@@ -145,7 +145,12 @@ export class MeiEditionInterpretationService {
     }
     assertEventRhythms(command.eventRhythms, requirements);
     assertRepeatSections(command.repeatSections, requirements);
-    assertStrumRealizations(command.strumRealizations, requirements, tuningByCourse);
+    const pinceIds = assertPinceRealizations(
+      command.pinceRealizations,
+      command.strumRealizations,
+      requirements
+    );
+    assertStrumRealizations(command.strumRealizations, requirements, tuningByCourse, pinceIds);
     const interpretation: TablatureInterpretation = {
       id: `tab-interpretation.${this.createId()}`,
       editionId,
@@ -157,6 +162,7 @@ export class MeiEditionInterpretationService {
       eventRhythms: command.eventRhythms,
       repeatSections: command.repeatSections,
       strumRealizations: command.strumRealizations,
+      pinceRealizations: command.pinceRealizations,
       rationale: command.rationale,
       createdAt: this.now().toISOString(),
     };
@@ -308,6 +314,7 @@ function readTablatureRequirements(mei: string): {
     Readonly<{
       direction?: "up" | "down";
       explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
+      genericGesture: boolean;
     }>
   >;
 } {
@@ -349,6 +356,7 @@ function readTablatureRequirements(mei: string): {
       Readonly<{
         direction?: "up" | "down";
         explicitNotes: readonly Readonly<{ course: number; fret: number }>[];
+        genericGesture: boolean;
       }>
     >();
     for (const group of Array.from(dom.window.document.querySelectorAll("tabGrp[type]"))) {
@@ -364,7 +372,7 @@ function readTablatureRequirements(mei: string): {
         course: Number(note.getAttribute("tab.course")),
         fret: Number(note.getAttribute("tab.fret")),
       }));
-      strums.set(id, { direction, explicitNotes });
+      strums.set(id, { direction, explicitNotes, genericGesture: false });
     }
     const groupsById = new Map(
       Array.from(dom.window.document.querySelectorAll("tabGrp")).map((group) => [
@@ -388,7 +396,11 @@ function readTablatureRequirements(mei: string): {
         course: Number(note.getAttribute("tab.course")),
         fret: Number(note.getAttribute("tab.fret")),
       }));
-      strums.set(targetId, { ...(direction ? { direction } : {}), explicitNotes });
+      strums.set(targetId, {
+        ...(direction ? { direction } : {}),
+        explicitNotes,
+        genericGesture: !direction,
+      });
     }
     return {
       courses: [...courses].sort((left, right) => left - right),
@@ -492,13 +504,14 @@ function assertRepeatSections(
 function assertStrumRealizations(
   realizations: CreateTablatureInterpretationCommand["strumRealizations"],
   requirements: TablatureRequirements,
-  tuningByCourse: ReadonlyMap<number, readonly number[]>
+  tuningByCourse: ReadonlyMap<number, readonly number[]>,
+  pinceIds: ReadonlySet<string>
 ): void {
   const byId = new Map(realizations.map((realization) => [realization.strumId, realization]));
   if (byId.size !== realizations.length) {
     throw new ApiRouteError("Each historical strum must be realized exactly once", 400);
   }
-  const expectedIds = [...requirements.strums.keys()].sort();
+  const expectedIds = [...requirements.strums.keys()].filter((id) => !pinceIds.has(id)).sort();
   const actualIds = [...byId.keys()].sort();
   if (actualIds.join(",") !== expectedIds.join(",")) {
     throw new ApiRouteError(
@@ -538,6 +551,41 @@ function assertStrumRealizations(
       }
     }
   }
+}
+
+function assertPinceRealizations(
+  realizations: CreateTablatureInterpretationCommand["pinceRealizations"],
+  strumRealizations: CreateTablatureInterpretationCommand["strumRealizations"],
+  requirements: TablatureRequirements
+): ReadonlySet<string> {
+  const pinceIds = realizations.map(({ eventId }) => eventId);
+  if (new Set(pinceIds).size !== pinceIds.length) {
+    throw new ApiRouteError("Each pincé gesture must be realized exactly once", 400);
+  }
+  const genericIds = [...requirements.strums]
+    .filter(([, requirement]) => requirement.genericGesture)
+    .map(([id]) => id)
+    .sort();
+  const genericStrumIds = strumRealizations
+    .map(({ strumId }) => strumId)
+    .filter((id) => requirements.strums.get(id)?.genericGesture);
+  if (pinceIds.some((id) => genericStrumIds.includes(id))) {
+    throw new ApiRouteError("A visible gesture cannot be both pincé and strummed", 400);
+  }
+  const resolvedIds = [...new Set([...pinceIds, ...genericStrumIds])].sort();
+  if (resolvedIds.join(",") !== genericIds.join(",")) {
+    throw new ApiRouteError(
+      "Interpretation must explicitly resolve every generic visible gesture as pincé or strum",
+      400
+    );
+  }
+  for (const id of pinceIds) {
+    const source = requirements.strums.get(id);
+    if (!source?.genericGesture || source.explicitNotes.length < 2) {
+      throw new ApiRouteError(`Pincé ${id} does not target a source-written chord`, 400);
+    }
+  }
+  return new Set(pinceIds);
 }
 
 function xmlId(element: Element): string {

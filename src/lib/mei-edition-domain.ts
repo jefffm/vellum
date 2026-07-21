@@ -368,6 +368,13 @@ const StrumRealizationSchema = Type.Union([
   LegacyStrumRealizationSchema,
 ]);
 
+const PinceRealizationSchema = Type.Object(
+  {
+    eventId: MeiIdSchema,
+  },
+  { additionalProperties: false }
+);
+
 const EventRhythmReadingSchema = Type.Object(
   {
     eventId: MeiIdSchema,
@@ -397,6 +404,7 @@ export const TablatureInterpretationSchema = Type.Object(
     eventRhythms: Type.Optional(Type.Array(EventRhythmReadingSchema, { minItems: 1 })),
     repeatSections: Type.Array(RepeatSectionSchema, { minItems: 1 }),
     strumRealizations: Type.Array(StrumRealizationSchema),
+    pinceRealizations: Type.Optional(Type.Array(PinceRealizationSchema)),
     rationale: Type.String({ minLength: 1, maxLength: 500 }),
     createdAt: IsoDateSchema,
   },
@@ -412,6 +420,7 @@ export const CreateTablatureInterpretationCommandSchema = Type.Object(
     eventRhythms: Type.Array(EventRhythmReadingSchema, { minItems: 1 }),
     repeatSections: Type.Array(RepeatSectionSchema, { minItems: 1 }),
     strumRealizations: Type.Array(CurrentStrumRealizationSchema),
+    pinceRealizations: Type.Array(PinceRealizationSchema),
     rationale: Type.String({ minLength: 1, maxLength: 500 }),
   },
   { additionalProperties: false }
