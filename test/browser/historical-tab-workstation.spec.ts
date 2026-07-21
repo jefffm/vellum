@@ -152,11 +152,30 @@ test("keyboard-first historical-tab review confirms, edits, navigates, and resto
   await surface.press("R");
   await surface.press("Enter");
   const publish = surface.locator("[data-publish]");
+  await expect(publish).toBeDisabled();
+  await surface
+    .getByLabel(
+      "Did source placement and the keyboard workflow materially reduce locating, regrouping, and repetitive entry?"
+    )
+    .selectOption("yes");
+  await surface
+    .getByLabel(
+      "Could every visible-evidence dimension be recorded without a missing or systematically slow interaction?"
+    )
+    .selectOption("yes");
   await expect(publish).toBeEnabled();
   await publish.click();
   await expect.poll(() => publishedBody).toBeTruthy();
   expect(publishedBody).toMatchObject({
     title: "Source page 1 diplomatic transcription",
-    reviewMetrics: { reviewed: 3, unresolved: 1 },
+    reviewMetrics: {
+      reviewed: 3,
+      unresolved: 1,
+      elapsedReviewSeconds: expect.any(Number),
+      ownerJudgment: {
+        materiallyReducedRepetitiveEntry: true,
+        allEvidenceDimensionsEfficientlyRecordable: true,
+      },
+    },
   });
 });

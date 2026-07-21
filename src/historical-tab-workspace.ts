@@ -32,11 +32,16 @@ type EventDraft = {
 };
 
 type WorkingDraft = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   runId: string;
   cursor: number;
   events: EventDraft[];
   keyboardActions: number;
+  reviewElapsedMs: number;
+  ownerJudgment: {
+    workflowBenefit: "unanswered" | "yes" | "no";
+    evidenceEntry: "unanswered" | "yes" | "no";
+  };
   updatedAt: string;
 };
 
@@ -74,10 +79,12 @@ function initialDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
   );
   const glyphs = new Map(run.glyphs.map((glyph) => [glyph.id, glyph] as const));
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     runId: run.id,
     cursor: 0,
     keyboardActions: 0,
+    reviewElapsedMs: 0,
+    ownerJudgment: { workflowBenefit: "unanswered", evidenceEntry: "unanswered" },
     updatedAt: new Date().toISOString(),
     events: run.systems.flatMap((system) =>
       system.events.map((event) => {
@@ -127,12 +134,17 @@ function restoredDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
   const value = localStorage.getItem(storageKey(run.id));
   if (!value) return initialDraft(run);
   try {
-    const parsed = JSON.parse(value) as Omit<WorkingDraft, "schemaVersion" | "keyboardActions"> & {
-      schemaVersion: 1 | 2;
+    const parsed = JSON.parse(value) as Omit<
+      WorkingDraft,
+      "schemaVersion" | "keyboardActions" | "reviewElapsedMs" | "ownerJudgment"
+    > & {
+      schemaVersion: 1 | 2 | 3;
       keyboardActions?: number;
+      reviewElapsedMs?: number;
+      ownerJudgment?: WorkingDraft["ownerJudgment"];
     };
     if (
-      (parsed.schemaVersion === 1 || parsed.schemaVersion === 2) &&
+      (parsed.schemaVersion === 1 || parsed.schemaVersion === 2 || parsed.schemaVersion === 3) &&
       parsed.runId === run.id &&
       parsed.events.length
     ) {
@@ -161,9 +173,14 @@ function restoredDraft(run: HistoricalTabRecognitionRun): WorkingDraft {
       });
       return {
         ...parsed,
-        schemaVersion: 2,
+        schemaVersion: 3,
         events,
         keyboardActions: parsed.keyboardActions ?? 0,
+        reviewElapsedMs: Math.max(0, parsed.reviewElapsedMs ?? 0),
+        ownerJudgment: parsed.ownerJudgment ?? {
+          workflowBenefit: "unanswered",
+          evidenceEntry: "unanswered",
+        },
         cursor: Math.min(parsed.cursor, parsed.events.length - 1),
       };
     }
@@ -198,10 +215,12 @@ export function installHistoricalTabWorkspace(
   let selectedCourse = 0;
   const undo: WorkingDraft[] = [];
   const redo: WorkingDraft[] = [];
+  let reviewElapsedMs = draft.reviewElapsedMs;
+  let lastReviewActivityAt: number | undefined;
   const shell = document.createElement("section");
   shell.className = "historical-tab-workspace";
   shell.tabIndex = 0;
-  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+↑/↓ visible arrow · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
+  shell.innerHTML = `<header><div><p>Diplomatic transcription</p><h1>Keyboard review</h1></div><div><div data-progress></div><div data-burden></div><button data-publish disabled>Publish reviewed MEI</button></div></header><div class="historical-tab-context"><canvas data-crop></canvas><p data-location></p></div><div class="historical-tab-editor"><div class="historical-tab-course-grid" data-courses></div><fieldset data-rhythm><legend>Visible rhythm sign</legend></fieldset><fieldset data-vertical><legend>Vertical mark after/within event</legend></fieldset><label>Ornaments<input data-ornaments autocomplete="off" placeholder="literal visible mark"/></label><label>Other visible marks<input data-marks autocomplete="off" placeholder="literal visible mark"/></label><button data-propagate hidden></button></div><div class="historical-tab-actions"><button data-previous>Previous</button><button data-unresolved>Next unresolved <kbd>U</kbd></button><button data-ambiguous>Mark ambiguous</button><button data-confirm>Confirm &amp; next <kbd>Enter</kbd></button><button data-next>Next</button></div><fieldset class="historical-tab-judgment" data-owner-judgment><legend>End-of-pass judgment</legend><label>Did source placement and the keyboard workflow materially reduce locating, regrouping, and repetitive entry?<select data-workflow-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><label>Could every visible-evidence dimension be recorded without a missing or systematically slow interaction?<select data-evidence-judgment><option value="unanswered">Answer after the complete pass</option><option value="yes">Yes</option><option value="no">No — T05 is blocked</option></select></label><p data-judgment-status></p></fieldset><details><summary>Structure and history</summary><div class="historical-tab-secondary-actions"><button data-copy-rhythm>Repeat previous rhythm <kbd>R</kbd></button><button data-copy-all>Repeat previous entry <kbd>=</kbd></button><button data-split>Split event <kbd>S</kbd></button><button data-merge>Merge with next <kbd>M</kbd></button><button data-undo>Undo <kbd>⌘Z</kbd></button><button data-redo>Redo <kbd>⇧⌘Z</kbd></button></div><pre data-diagnostics></pre></details><p data-error role="alert"></p><p class="historical-tab-shortcuts">Keys: 1–5 course · a–i/k–n fret · Alt+0–4 rhythm · Alt+B/N/G vertical mark · Alt+↑/↓ visible arrow · Alt+R cycles vertical marks · Alt+O/K edits literal marks · R repeats rhythm · = repeats entry · P propagates selected reviewed shape · U next unresolved · S/M split/merge · ⌘Z/⇧⌘Z undo/redo · . dots · Delete clears · Enter confirms · [ / ] navigate · ? ambiguous</p>`;
   panel.replaceChildren(shell);
 
   const canvas = shell.querySelector<HTMLCanvasElement>("[data-crop]")!;
@@ -253,25 +272,45 @@ export function installHistoricalTabWorkspace(
         .join("")
     );
 
+  const recordReviewActivity = () => {
+    const now = Date.now();
+    if (lastReviewActivityAt !== undefined) {
+      reviewElapsedMs += Math.min(now - lastReviewActivityAt, 5 * 60_000);
+    }
+    lastReviewActivityAt = now;
+  };
   const snapshot = (): WorkingDraft => structuredClone(draft);
+  const persist = () => {
+    draft.reviewElapsedMs = reviewElapsedMs;
+    draft.updatedAt = new Date().toISOString();
+    localStorage.setItem(storageKey(run.id), JSON.stringify(draft));
+  };
   const mutate = (change: () => void) => {
     undo.push(snapshot());
     if (undo.length > 100) undo.shift();
     redo.length = 0;
     change();
+    recordReviewActivity();
     persist();
     render();
-  };
-  const persist = () => {
-    draft.updatedAt = new Date().toISOString();
-    localStorage.setItem(storageKey(run.id), JSON.stringify(draft));
   };
   const move = (offset: number) => {
     draft.cursor = Math.max(0, Math.min(draft.events.length - 1, draft.cursor + offset));
     selectedCourse = 0;
+    recordReviewActivity();
     persist();
     render();
   };
+  const pauseReviewClock = () => {
+    if (lastReviewActivityAt === undefined) return;
+    recordReviewActivity();
+    lastReviewActivityAt = undefined;
+    persist();
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseReviewClock();
+  });
+  window.addEventListener("pagehide", pauseReviewClock);
   const current = () => draft.events[draft.cursor]!;
   const sourceEvents = new Map(
     run.systems.flatMap((system) => system.events.map((event) => [event.id, event] as const))
@@ -344,11 +383,27 @@ export function installHistoricalTabWorkspace(
       { corrected: 0, regrouped: 0, propagated: 0, rejected: 0 }
     );
     shell.querySelector("[data-burden]")!.textContent =
-      `${reviewCounts.corrected} corrected · ${reviewCounts.regrouped} regrouped · ${reviewCounts.propagated} propagated · ${reviewCounts.rejected} rejected`;
+      `${reviewCounts.corrected} corrected · ${reviewCounts.regrouped} regrouped · ${reviewCounts.propagated} propagated · ${reviewCounts.rejected} rejected · ${formatElapsed(reviewElapsedMs)} active review`;
     const publish = shell.querySelector<HTMLButtonElement>("[data-publish]")!;
+    const positiveJudgment =
+      draft.ownerJudgment.workflowBenefit === "yes" && draft.ownerJudgment.evidenceEntry === "yes";
     publish.disabled =
       counts.unreviewed > 0 ||
-      draft.events.some((item) => item.rhythmGlyph === "unread" || item.verticalMark === "unread");
+      draft.events.some(
+        (item) => item.rhythmGlyph === "unread" || item.verticalMark === "unread"
+      ) ||
+      !positiveJudgment;
+    shell.querySelector<HTMLSelectElement>("[data-workflow-judgment]")!.value =
+      draft.ownerJudgment.workflowBenefit;
+    shell.querySelector<HTMLSelectElement>("[data-evidence-judgment]")!.value =
+      draft.ownerJudgment.evidenceEntry;
+    const judgmentStatus = shell.querySelector<HTMLElement>("[data-judgment-status]")!;
+    judgmentStatus.textContent =
+      draft.ownerJudgment.workflowBenefit === "no" || draft.ownerJudgment.evidenceEntry === "no"
+        ? "T05 is blocked. Keep this recoverable draft and report the dominant workflow problem; do not publish."
+        : positiveJudgment
+          ? "Both Owner burden judgments are recorded and will be stored with the initial review batch."
+          : "Complete the page, then record both judgments once before publication.";
     const sourceVerticalCount = event.sourceEventIds.reduce(
       (count, id) => count + (sourceEvents.get(id)?.verticalCandidateIds.length ?? 0),
       0
@@ -497,6 +552,7 @@ export function installHistoricalTabWorkspace(
     if (target === undefined) return;
     draft.cursor = target;
     selectedCourse = 0;
+    recordReviewActivity();
     persist();
     render();
   };
@@ -612,6 +668,7 @@ export function installHistoricalTabWorkspace(
     if (!prior) return;
     redo.push(snapshot());
     draft = prior;
+    recordReviewActivity();
     persist();
     render();
   });
@@ -620,8 +677,22 @@ export function installHistoricalTabWorkspace(
     if (!next) return;
     undo.push(snapshot());
     draft = next;
+    recordReviewActivity();
     persist();
     render();
+  });
+  shell.querySelector("[data-owner-judgment]")!.addEventListener("change", (browserEvent) => {
+    const input = browserEvent.target as HTMLSelectElement;
+    mutate(() => {
+      if (input.matches("[data-workflow-judgment]")) {
+        draft.ownerJudgment.workflowBenefit =
+          input.value as WorkingDraft["ownerJudgment"]["workflowBenefit"];
+      }
+      if (input.matches("[data-evidence-judgment]")) {
+        draft.ownerJudgment.evidenceEntry =
+          input.value as WorkingDraft["ownerJudgment"]["evidenceEntry"];
+      }
+    });
   });
   shell.querySelector("[data-propagate]")!.addEventListener("click", () => {
     const letter = current().courses[selectedCourse];
@@ -644,7 +715,15 @@ export function installHistoricalTabWorkspace(
     button.disabled = true;
     error.textContent = "";
     try {
-      const reviewMetrics = draft.events.reduce(
+      recordReviewActivity();
+      persist();
+      if (
+        draft.ownerJudgment.workflowBenefit !== "yes" ||
+        draft.ownerJudgment.evidenceEntry !== "yes"
+      ) {
+        throw new Error("Both positive end-of-pass judgments are required to publish this review.");
+      }
+      const eventMetrics = draft.events.reduce(
         (result, event) => ({
           untouched: result.untouched + Number(!event.review.touched),
           reviewed: result.reviewed + Number(event.state !== "unreviewed"),
@@ -672,6 +751,14 @@ export function installHistoricalTabWorkspace(
           keyboardActions: draft.keyboardActions,
         }
       );
+      const reviewMetrics = {
+        ...eventMetrics,
+        elapsedReviewSeconds: Math.max(1, Math.round(reviewElapsedMs / 1000)),
+        ownerJudgment: {
+          materiallyReducedRepetitiveEntry: true as const,
+          allEvidenceDimensionsEfficientlyRecordable: true as const,
+        },
+      };
       const published = await postApi<{
         edition: { editionId: string };
         recognitionProfile: { id: string };
@@ -875,4 +962,12 @@ export function installHistoricalTabWorkspace(
     }
   });
   render();
+}
+
+function formatElapsed(milliseconds: number): string {
+  const totalMinutes = Math.max(0, Math.round(milliseconds / 60_000));
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
 }

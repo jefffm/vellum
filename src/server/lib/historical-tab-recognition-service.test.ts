@@ -212,6 +212,11 @@ describe("source-adaptive historical tablature recognition", () => {
         rejected: 0,
         unresolved: 0,
         keyboardActions: 12,
+        elapsedReviewSeconds: 420,
+        ownerJudgment: {
+          materiallyReducedRepetitiveEntry: true,
+          allEvidenceDimensionsEfficientlyRecordable: true,
+        },
       },
     };
     const evaluation = evaluateHistoricalTabRecognition(reviewedDraft, reviewedDraft.events);
@@ -234,6 +239,19 @@ describe("source-adaptive historical tablature recognition", () => {
       )
     ).toMatchObject({ status: "fail", mismatches: { courses: ["system-1-event-1"] } });
 
+    expect(() =>
+      service.publish(workspace.id, run.id, {
+        ...reviewedDraft,
+        reviewMetrics: {
+          ...reviewedDraft.reviewMetrics,
+          ownerJudgment: {
+            materiallyReducedRepetitiveEntry: false,
+            allEvidenceDimensionsEfficientlyRecordable: true,
+          },
+        },
+      } as unknown as PublishHistoricalTabDraftCommand)
+    ).toThrow("Review metrics do not match the publishable draft");
+
     const published = service.publish(workspace.id, run.id, reviewedDraft);
     const { edition, recognitionProfile } = published;
     expect(edition.extraction).toMatchObject({
@@ -242,7 +260,15 @@ describe("source-adaptive historical tablature recognition", () => {
         name: "Initial system review",
         confirmedEvents: 2,
         ambiguousEvents: 0,
-        reviewMetrics: { corrected: 2, keyboardActions: 12 },
+        reviewMetrics: {
+          corrected: 2,
+          keyboardActions: 12,
+          elapsedReviewSeconds: 420,
+          ownerJudgment: {
+            materiallyReducedRepetitiveEntry: true,
+            allEvidenceDimensionsEfficientlyRecordable: true,
+          },
+        },
       },
     });
     expect(edition.mei).toContain('type="diplomatic-event visible-rhythm-flag-1"');

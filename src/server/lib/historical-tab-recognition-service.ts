@@ -258,6 +258,9 @@ export class HistoricalTabRecognitionService {
       command.reviewMetrics.reviewed !== command.events.length ||
       command.reviewMetrics.untouched !== 0 ||
       command.reviewMetrics.unresolved !== ambiguousEvents ||
+      command.reviewMetrics.elapsedReviewSeconds < 1 ||
+      !command.reviewMetrics.ownerJudgment.materiallyReducedRepetitiveEntry ||
+      !command.reviewMetrics.ownerJudgment.allEvidenceDimensionsEfficientlyRecordable ||
       [
         command.reviewMetrics.corrected,
         command.reviewMetrics.regrouped,

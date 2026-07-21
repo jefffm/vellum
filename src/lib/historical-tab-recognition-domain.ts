@@ -270,6 +270,14 @@ export const PublishHistoricalTabDraftCommandSchema = Type.Object(
         rejected: Type.Integer({ minimum: 0 }),
         unresolved: Type.Integer({ minimum: 0 }),
         keyboardActions: Type.Integer({ minimum: 0 }),
+        elapsedReviewSeconds: Type.Integer({ minimum: 1 }),
+        ownerJudgment: Type.Object(
+          {
+            materiallyReducedRepetitiveEntry: Type.Literal(true),
+            allEvidenceDimensionsEfficientlyRecordable: Type.Literal(true),
+          },
+          { additionalProperties: false }
+        ),
       },
       { additionalProperties: false }
     ),

@@ -353,6 +353,23 @@ chat-panel > div > div:has(agent-interface) {
   gap: 0.45rem 0.8rem;
 }
 
+.historical-tab-judgment {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(16rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.historical-tab-judgment label {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+
+.historical-tab-judgment p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .historical-tab-actions button[data-confirm] {
   padding-inline: 1.5rem;
   font-weight: 700;
@@ -369,6 +386,14 @@ chat-panel > div > div:has(agent-interface) {
 @media (max-width: 760px) {
   .historical-tab-editor {
     grid-template-columns: 1fr;
+  }
+
+  .historical-tab-judgment {
+    grid-template-columns: 1fr;
+  }
+
+  .historical-tab-judgment p {
+    grid-column: auto;
   }
 
   .historical-tab-course-grid {

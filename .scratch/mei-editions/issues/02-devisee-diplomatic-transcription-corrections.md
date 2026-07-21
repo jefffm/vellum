@@ -128,6 +128,10 @@ results without committing source bytes or private truth.
   glyph components from 167 mostly singleton families to 76 families. Propagation remains
   fail-closed when more than one reusable component occupies the selected course, because the
   event-oriented workstation has no basis to guess which visible glyph the Owner labeled.
+- The recoverable review draft now retains interruption-safe active review time and the two
+  explicit end-of-pass Owner judgments required by T05. Publication is fail-closed unless the page
+  is complete and both interaction judgments pass; the initial review batch stores the elapsed
+  time and judgments beside its correction and keyboard-action counts.
 - Remediation gates passed on the macOS host: the generated-image predicate and actual Owner-local
   page smoke passed; 1,645 tests passed with four intentional skips; typecheck, formatting,
   specification verification, client build, and server build passed; and all 46 browser scenarios
